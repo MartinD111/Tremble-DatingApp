@@ -1,6 +1,6 @@
 # 🏗️ Tremble — The Proximity Discovery Experience
 
-Tremble is a next-generation mobile platform engineered by **AM Solutions d.o.o.** It focuses on high-fidelity proximity matching, designed to bridge the gap between digital discovery and real-world interaction.
+Tremble is a next-generation mobile platform engineered by **AMS Solutions d.o.o.** It focuses on high-fidelity proximity matching, designed to bridge the gap between digital discovery and real-world interaction.
 
 ---
 
@@ -28,4 +28,4 @@ We take user privacy seriously. Tremble utilizes localized on-device processing 
 
 ---
 
-© 2026 **AM Solutions d.o.o.** All rights reserved.
+© 2026 **AMS Solutions d.o.o.** All rights reserved.
