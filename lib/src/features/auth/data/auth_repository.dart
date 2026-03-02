@@ -333,13 +333,6 @@ final currentUidProvider = Provider<String?>((ref) {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// App language shortcut (used in many screens)
-// ─────────────────────────────────────────────────────────────────────────────
-final appLanguageProvider = StateProvider<String>((ref) {
-  return ref.watch(authStateProvider)?.appLanguage ?? 'en';
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
 // AuthRepository — wraps FirebaseAuth + Firestore
 // ─────────────────────────────────────────────────────────────────────────────
 class AuthRepository {
@@ -508,31 +501,3 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
     return verified;
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Location suggestions (unchanged — needed by registration_flow.dart)
-// ─────────────────────────────────────────────────────────────────────────────
-const List<String> locationSuggestions = [
-  'Ljubljana, Slovenija',
-  'Maribor, Slovenija',
-  'Koper, Slovenija',
-  'Kranj, Slovenija',
-  'Celje, Slovenija',
-  'Velenje, Slovenija',
-  'Novo Mesto, Slovenija',
-  'Nova Gorica, Slovenija',
-  'Zagreb, Hrvaška',
-  'Beograd, Srbija',
-  'Wien, Avstrija',
-  'München, Nemčija',
-  'Graz, Avstrija',
-  'Trst, Italija',
-];
-
-const List<Map<String, String>> availableLanguages = [
-  {'code': 'sl', 'label': '🇸🇮 Slovenščina'},
-  {'code': 'en', 'label': '🇬🇧 English'},
-  {'code': 'de', 'label': '🇩🇪 Deutsch'},
-  {'code': 'hr', 'label': '🇭🇷 Hrvatski'},
-  {'code': 'it', 'label': '🇮🇹 Italiano'},
-];
