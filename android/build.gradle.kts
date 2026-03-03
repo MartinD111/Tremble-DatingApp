@@ -4,7 +4,6 @@ plugins {
 }
 
 allprojects {
-    apply(plugin = "eclipse")
     repositories {
         google()
         mavenCentral()
