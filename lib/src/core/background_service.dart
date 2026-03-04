@@ -9,8 +9,8 @@ Future<void> initializeBackgroundService() async {
   final service = FlutterBackgroundService();
 
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'pulse_background', // id
-    'Pulse Background Service', // title
+    'tremble_background', // id
+    'Tremble Background Service', // title
     description: 'This channel is used for important notifications.',
     importance: Importance.low,
   );
@@ -31,8 +31,8 @@ Future<void> initializeBackgroundService() async {
       onStart: onStart,
       autoStart: false, // Start only when Radar is active
       isForegroundMode: true,
-      notificationChannelId: 'pulse_background',
-      initialNotificationTitle: 'Pulse Radar',
+      notificationChannelId: 'tremble_background',
+      initialNotificationTitle: 'Tremble Radar',
       initialNotificationContent: 'Looking for matches...',
       foregroundServiceNotificationId: 888,
     ),

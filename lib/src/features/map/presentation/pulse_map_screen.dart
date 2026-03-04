@@ -35,13 +35,13 @@ class PulseMapScreen extends ConsumerWidget {
                 ]),
                 child: TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.pulse',
+                  userAgentPackageName: 'com.amssolutions.tremble',
                 ),
               )
             else
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.pulse',
+                userAgentPackageName: 'com.amssolutions.tremble',
               ),
 
             MarkerLayer(
@@ -89,7 +89,7 @@ class PulseMapScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Pulse Map",
+              Text("Tremble Map",
                   style: GoogleFonts.outfit(
                       color: isDark ? Colors.white : Colors.black87,
                       fontSize: 32,

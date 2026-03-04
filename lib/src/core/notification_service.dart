@@ -27,8 +27,8 @@ class NotificationService {
   static Future<void> showMatchNotification(String name, int age) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'pulse_matches', // channel id
-      'Pulse Matches', // channel name
+      'tremble_matches', // channel id
+      'Tremble Matches', // channel name
       channelDescription: 'Notifications for new matches found nearby',
       importance: Importance.max,
       priority: Priority.high,
