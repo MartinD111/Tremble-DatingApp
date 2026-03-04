@@ -2254,7 +2254,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       id: 'generated_id',
       name: _nameController.text,
       email: _emailController.text,
-      password: _passwordController.text,
+      // password removed — never stored in app state
       photoUrls: photoUrls,
       age: _birthDate != null ? _calcAge(_birthDate!) : 20,
       birthDate: _birthDate,
