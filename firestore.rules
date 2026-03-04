@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ══════════════════════════════════════════════════════
+    // USERS — read own profile only, writes via Cloud Functions
+    // ══════════════════════════════════════════════════════
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false; // All writes through Cloud Functions
+    }
+
+    // ══════════════════════════════════════════════════════
+    // MATCHES — read own matches only (as userA or userB)
+    // ══════════════════════════════════════════════════════
+    match /matches/{matchId} {
+      allow read: if request.auth != null &&
+                    (resource.data.userA == request.auth.uid ||
+                     resource.data.userB == request.auth.uid);
+      allow write: if false;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // GREETINGS — read own greetings (sent or received)
+    // ══════════════════════════════════════════════════════
+    match /greetings/{greetingId} {
+      allow read: if request.auth != null &&
+                    (resource.data.fromUid == request.auth.uid ||
+                     resource.data.toUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // PROXIMITY — read active users (for nearby discovery)
+    // Write only through Cloud Functions
+    // ══════════════════════════════════════════════════════
+    match /proximity/{userId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // RATE LIMITS — server-managed TTL documents
+    // ══════════════════════════════════════════════════════
+    match /rateLimits/{doc} {
+      allow read, write: if false;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // IDEMPOTENCY KEYS — server-managed
+    // ══════════════════════════════════════════════════════
+    match /idempotencyKeys/{doc} {
+      allow read, write: if false;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // GDPR REQUESTS — server-managed audit log
+    // ══════════════════════════════════════════════════════
+    match /gdprRequests/{doc} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // ══════════════════════════════════════════════════════
+    // DEFAULT DENY — everything else is blocked
+    // ══════════════════════════════════════════════════════
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
