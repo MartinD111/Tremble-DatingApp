@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api_client.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AuthUser — same data model, unchanged so rest of app compiles
+// AuthUser — data model (password field REMOVED for security)
 // ─────────────────────────────────────────────────────────────────────────────
 class AuthUser {
   final String id;
@@ -15,7 +16,7 @@ class AuthUser {
   final String? gender;
   final String? interestedIn;
   final String? email;
-  final String? password;
+  // REMOVED: final String? password; — never store passwords in app state
   final int? height;
   final int? heightRangeStart;
   final int? heightRangeEnd;
@@ -59,7 +60,6 @@ class AuthUser {
     this.age,
     this.birthDate,
     this.email,
-    this.password,
     this.height,
     this.heightRangeStart,
     this.heightRangeEnd,
@@ -102,45 +102,49 @@ class AuthUser {
     this.maxDistance = 50,
   });
 
-  // ── Firestore serialization ───────────────────────────────────────────────
-  Map<String, dynamic> toFirestore() {
+  // ── Serialization for Cloud Functions API ─────────────────────────────────
+  // NOTE: isAdmin/isPremium are NEVER sent to the server — they are
+  // server-managed fields. The Cloud Functions .strict() schema rejects them.
+  Map<String, dynamic> toApiPayload() {
     return {
-      'name': name,
-      'age': age,
-      'isOnboarded': isOnboarded,
-      'birthDate': birthDate != null ? Timestamp.fromDate(birthDate!) : null,
-      'photoUrls': photoUrls,
-      'gender': gender,
-      'interestedIn': interestedIn,
-      'email': email,
-      'height': height,
-      'heightRangeStart': heightRangeStart,
-      'heightRangeEnd': heightRangeEnd,
-      'isSmoker': isSmoker,
-      'partnerSmokingPreference': partnerSmokingPreference,
-      'occupation': occupation,
-      'drinkingHabit': drinkingHabit,
-      'introvertScale': introvertScale,
-      'partnerIntrovertPreference': partnerIntrovertPreference,
-      'exerciseHabit': exerciseHabit,
-      'sleepSchedule': sleepSchedule,
-      'petPreference': petPreference,
-      'childrenPreference': childrenPreference,
-      'location': location,
-      'religion': religion,
-      'religionPreference': religionPreference,
-      'ethnicity': ethnicity,
-      'ethnicityPreference': ethnicityPreference,
-      'hairColor': hairColor,
-      'hairColorPreference': hairColorPreference,
-      'politicalAffiliation': politicalAffiliation,
-      'politicalAffiliationPreference': politicalAffiliationPreference,
+      if (name != null) 'name': name,
+      if (age != null) 'age': age,
+      if (birthDate != null) 'birthDate': birthDate!.toIso8601String(),
+      if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
+      if (gender != null) 'gender': gender,
+      if (interestedIn != null) 'interestedIn': interestedIn,
+      if (height != null) 'height': height,
+      if (heightRangeStart != null) 'heightRangeStart': heightRangeStart,
+      if (heightRangeEnd != null) 'heightRangeEnd': heightRangeEnd,
+      if (isSmoker != null) 'isSmoker': isSmoker,
+      if (partnerSmokingPreference != null)
+        'partnerSmokingPreference': partnerSmokingPreference,
+      if (occupation != null) 'occupation': occupation,
+      if (drinkingHabit != null) 'drinkingHabit': drinkingHabit,
+      if (introvertScale != null) 'introvertScale': introvertScale,
+      if (partnerIntrovertPreference != null)
+        'partnerIntrovertPreference': partnerIntrovertPreference,
+      if (exerciseHabit != null) 'exerciseHabit': exerciseHabit,
+      if (sleepSchedule != null) 'sleepSchedule': sleepSchedule,
+      if (petPreference != null) 'petPreference': petPreference,
+      if (childrenPreference != null) 'childrenPreference': childrenPreference,
+      if (location != null) 'location': location,
+      if (religion != null) 'religion': religion,
+      if (religionPreference != null) 'religionPreference': religionPreference,
+      if (ethnicity != null) 'ethnicity': ethnicity,
+      if (ethnicityPreference != null)
+        'ethnicityPreference': ethnicityPreference,
+      if (hairColor != null) 'hairColor': hairColor,
+      if (hairColorPreference != null)
+        'hairColorPreference': hairColorPreference,
+      if (politicalAffiliation != null)
+        'politicalAffiliation': politicalAffiliation,
+      if (politicalAffiliationPreference != null)
+        'politicalAffiliationPreference': politicalAffiliationPreference,
       'lookingFor': lookingFor,
       'languages': languages,
       'hobbies': hobbies,
       'prompts': prompts,
-      'isAdmin': isAdmin,
-      'isPremium': isPremium,
       'isDarkMode': isDarkMode,
       'isPrideMode': isPrideMode,
       'appLanguage': appLanguage,
@@ -148,7 +152,6 @@ class AuthUser {
       'ageRangeEnd': ageRangeEnd,
       'showPingAnimation': showPingAnimation,
       'maxDistance': maxDistance,
-      'updatedAt': FieldValue.serverTimestamp(),
     };
   }
 
@@ -210,7 +213,6 @@ class AuthUser {
     int? age,
     DateTime? birthDate,
     String? email,
-    String? password,
     int? height,
     int? heightRangeStart,
     int? heightRangeEnd,
@@ -258,7 +260,6 @@ class AuthUser {
       age: age ?? this.age,
       birthDate: birthDate ?? this.birthDate,
       email: email ?? this.email,
-      password: password ?? this.password,
       height: height ?? this.height,
       heightRangeStart: heightRangeStart ?? this.heightRangeStart,
       heightRangeEnd: heightRangeEnd ?? this.heightRangeEnd,
@@ -333,11 +334,12 @@ final currentUidProvider = Provider<String?>((ref) {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AuthRepository — wraps FirebaseAuth + Firestore
+// AuthRepository — wraps FirebaseAuth + Cloud Functions API
 // ─────────────────────────────────────────────────────────────────────────────
 class AuthRepository {
   final FirebaseAuth _auth;
   final FirebaseFirestore _db;
+  final TrembleApiClient _api = TrembleApiClient();
 
   AuthRepository(
       {required FirebaseAuth auth, required FirebaseFirestore firestore})
@@ -353,7 +355,7 @@ class AuthRepository {
       email: email.trim(),
       password: password,
     );
-    return _fetchOrCreateUser(cred.user!);
+    return _fetchUser(cred.user!);
   }
 
   // ── Register ─────────────────────────────────────────────────────────────
@@ -364,19 +366,18 @@ class AuthRepository {
     );
     // Send verification email
     await cred.user!.sendEmailVerification();
-    // Create stub user doc in Firestore
-    final user = AuthUser(
+    // The Cloud Function `onUserCreated` trigger automatically creates
+    // the Firestore user stub — no direct write needed here.
+    return AuthUser(
       id: cred.user!.uid,
       email: email.trim(),
       isOnboarded: false,
       isEmailVerified: false,
     );
-    await _users.doc(user.id).set(user.toFirestore());
-    return user;
   }
 
-  // ── Fetch user from Firestore ─────────────────────────────────────────────
-  Future<AuthUser> _fetchOrCreateUser(User firebaseUser) async {
+  // ── Fetch user from Firestore (READ only — this is fine client-side) ────
+  Future<AuthUser> _fetchUser(User firebaseUser) async {
     final doc = await _users.doc(firebaseUser.uid).get();
     if (doc.exists && doc.data() != null) {
       return AuthUser.fromFirestore(
@@ -385,28 +386,26 @@ class AuthRepository {
         emailVerified: firebaseUser.emailVerified,
       );
     }
-    // First login — create stub
-    final user = AuthUser(
+    // User doc not yet created by Cloud Function — return minimal stub.
+    // The `onUserCreated` trigger will create the doc shortly.
+    return AuthUser(
       id: firebaseUser.uid,
       email: firebaseUser.email,
       isOnboarded: false,
       isEmailVerified: firebaseUser.emailVerified,
     );
-    await _users.doc(user.id).set(user.toFirestore());
-    return user;
   }
 
-  // ── Save full profile (after onboarding) ─────────────────────────────────
+  // ── Complete onboarding (via Cloud Functions) ────────────────────────────
   Future<void> completeOnboarding(AuthUser user) async {
-    await _users.doc(user.id).set(
-          user.copyWith(isOnboarded: true).toFirestore(),
-          SetOptions(merge: true),
-        );
+    final payload = user.toApiPayload();
+    payload['consentGiven'] = true; // GDPR consent
+    await _api.call('completeOnboarding', data: payload);
   }
 
-  // ── Partial profile update (settings, preferences) ───────────────────────
+  // ── Update profile (via Cloud Functions) ─────────────────────────────────
   Future<void> updateProfile(AuthUser user) async {
-    await _users.doc(user.id).set(user.toFirestore(), SetOptions(merge: true));
+    await _api.call('updateProfile', data: user.toApiPayload());
   }
 
   // ── Logout ────────────────────────────────────────────────────────────────
@@ -436,7 +435,7 @@ class AuthRepository {
   Stream<AuthUser?> authStateChanges() {
     return _auth.authStateChanges().asyncMap((firebaseUser) async {
       if (firebaseUser == null) return null;
-      return _fetchOrCreateUser(firebaseUser);
+      return _fetchUser(firebaseUser);
     });
   }
 

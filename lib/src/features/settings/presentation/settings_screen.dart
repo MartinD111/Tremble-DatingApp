@@ -6,7 +6,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/primary_button.dart';
-import '../../dashboard/presentation/home_screen.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
 
@@ -1125,9 +1124,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             activeThumbColor: Colors.red,
             activeTrackColor: Colors.red.withValues(alpha: 0.5),
             inactiveTrackColor: Colors.white24,
-            onChanged: (val) {
-              _updateProfile(user.copyWith(isAdmin: val));
-            },
+            onChanged: null, // Admin status is server-managed only
           ),
         ],
       ),
@@ -1152,16 +1149,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         activeThumbColor: Colors.amber,
         activeTrackColor: Colors.amber.withValues(alpha: 0.5),
         inactiveTrackColor: Colors.white24,
-        onChanged: (val) {
-          // If settings is the active tab, changing premium changes its index.
-          final currentIndex = ref.read(navIndexProvider);
-          if (currentIndex == 3 && !val) {
-            ref.read(navIndexProvider.notifier).state = 2;
-          } else if (currentIndex == 2 && val) {
-            ref.read(navIndexProvider.notifier).state = 3;
-          }
-          _updateProfile(user.copyWith(isPremium: val));
-        },
+        onChanged: null, // Premium status is server-managed only
       ),
     );
   }

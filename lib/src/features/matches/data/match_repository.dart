@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api_client.dart';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// MatchProfile — data model for matched users
+// ─────────────────────────────────────────────────────────────────────────────
 class MatchProfile {
   final String id;
   final String name;
@@ -9,7 +13,7 @@ class MatchProfile {
   final List<String> hobbies;
   final String bio;
 
-  // New Fields
+  // Extended fields
   final int? height;
   final String? politicalAffiliation;
   final String? religion;
@@ -18,16 +22,16 @@ class MatchProfile {
   final String? company;
   final String? school;
   final bool? isSmoker;
-  final String? drinkingHabit; // 'Nikoli', 'Družabno', 'Ob priliki'
-  final int? introvertLevel; // 1-5 scale (1=Introvert, 5=Extrovert)
+  final String? drinkingHabit;
+  final int? introvertLevel;
   final List<Map<String, String>> prompts;
   final String gender;
 
   // Lifestyle
-  final String? exerciseHabit; // 'Včasih', 'Ne', 'Redno', 'Zelo aktiven'
-  final String? sleepSchedule; // 'Nočna ptica', 'Jutranja ptica'
-  final String? petPreference; // 'Dog person', 'Cat person'
-  final String? childrenPreference; // 'Da', 'Ne', 'Da, ampak kasneje'
+  final String? exerciseHabit;
+  final String? sleepSchedule;
+  final String? petPreference;
+  final String? childrenPreference;
   final String? hairColor;
   final List<String> lookingFor;
 
@@ -57,50 +61,101 @@ class MatchProfile {
     this.hairColor,
     this.lookingFor = const [],
   });
+
+  /// Create a MatchProfile from Cloud Functions response data.
+  factory MatchProfile.fromApi(Map<String, dynamic> data) {
+    final photoUrls = List<String>.from(data['photoUrls'] ?? []);
+    return MatchProfile(
+      id: data['id'] as String? ?? '',
+      name: data['name'] as String? ?? 'Unknown',
+      age: data['age'] as int? ?? 0,
+      imageUrl: photoUrls.isNotEmpty
+          ? photoUrls.first
+          : 'https://via.placeholder.com/150',
+      hobbies: List<String>.from(data['hobbies'] ?? []),
+      bio: '', // Bio not stored server-side; derived from prompts
+      height: data['height'] as int?,
+      politicalAffiliation: data['politicalAffiliation'] as String?,
+      religion: data['religion'] as String?,
+      ethnicity: data['ethnicity'] as String?,
+      jobTitle: data['occupation'] as String?,
+      isSmoker: data['isSmoker'] as bool?,
+      drinkingHabit: data['drinkingHabit'] as String?,
+      introvertLevel: data['introvertScale'] as int?,
+      gender: data['gender'] as String? ?? 'Female',
+      exerciseHabit: data['exerciseHabit'] as String?,
+      sleepSchedule: data['sleepSchedule'] as String?,
+      petPreference: data['petPreference'] as String?,
+      childrenPreference: data['childrenPreference'] as String?,
+      hairColor: data['hairColor'] as String?,
+      lookingFor: List<String>.from(data['lookingFor'] ?? []),
+    );
+  }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// MatchRepository — real backend via Cloud Functions
+// ─────────────────────────────────────────────────────────────────────────────
 class MatchRepository {
-  final _mockMatch = const MatchProfile(
-    id: 'm1',
-    name: 'Eva',
-    age: 22,
-    imageUrl: 'https://randomuser.me/api/portraits/women/68.jpg',
-    hobbies: ['Potovanja', 'Kava', 'Glasba', 'Šport'],
-    bio:
-        "Uživam v dobri kavi, sprehodih v naravi in spontanih izletih. Vedno za akcijo!",
-    jobTitle: 'Grafična Oblikovalka',
-    company: 'Freelance',
-    school: 'ALUO',
-    height: 172,
-    politicalAffiliation: 'politics_center_left',
-    religion: 'agnostic',
-    ethnicity: 'white',
-    isSmoker: false,
-    drinkingHabit: 'Družabno',
-    introvertLevel: 4,
-    gender: 'Female',
-    exerciseHabit: 'Redno',
-    sleepSchedule: 'Nočna ptica',
-    petPreference: 'Cat person',
-    childrenPreference: 'Da',
-    lookingFor: ['Dolgoročno razmerje', 'Prijateljstvo'],
-    prompts: [
-      {
-        'question': 'Moj idealen zmenek...',
-        'answer': 'Piknik na plaži ob sončnem zahodu s kozarcem vina.'
-      },
-      {
-        'question': 'Najbolj sem ponosna na...',
-        'answer': 'Da sem pretekla ljubljanski maraton prejšnje leto!'
-      },
-    ],
-  );
+  final TrembleApiClient _api = TrembleApiClient();
 
-  Stream<MatchProfile?> simulateMatches() async* {
+  /// Send a greeting to another user.
+  /// Returns true if it resulted in an instant match (mutual interest).
+  Future<bool> sendGreeting(String toUserId, {String? message}) async {
+    final result = await _api.call('sendGreeting', data: {
+      'toUserId': toUserId,
+      if (message != null) 'message': message,
+    });
+    return result['matched'] as bool? ?? false;
+  }
+
+  /// Respond to a greeting (accept or decline).
+  Future<void> respondToGreeting(String greetingId,
+      {required bool accept}) async {
+    await _api.call('respondToGreeting', data: {
+      'greetingId': greetingId,
+      'accept': accept,
+    });
+  }
+
+  /// Get all accepted matches for the current user.
+  Future<List<MatchProfile>> getMatches() async {
+    final result = await _api.call('getMatches');
+    final matchesList = result['matches'] as List<dynamic>? ?? [];
+    return matchesList
+        .map((m) => MatchProfile.fromApi(Map<String, dynamic>.from(m)))
+        .toList();
+  }
+
+  /// Get pending greetings (received and sent).
+  Future<Map<String, List<Map<String, dynamic>>>> getPendingGreetings() async {
+    final result = await _api.call('getPendingGreetings');
+    return {
+      'received': List<Map<String, dynamic>>.from(
+          (result['received'] as List<dynamic>?)
+                  ?.map((e) => Map<String, dynamic>.from(e))
+                  .toList() ??
+              []),
+      'sent': List<Map<String, dynamic>>.from((result['sent'] as List<dynamic>?)
+              ?.map((e) => Map<String, dynamic>.from(e))
+              .toList() ??
+          []),
+    };
+  }
+
+  /// Stream that polls for new matches periodically.
+  /// Replaces the old mock simulateMatches() with real polling.
+  Stream<List<MatchProfile>> watchMatches({
+    Duration interval = const Duration(seconds: 30),
+  }) async* {
     while (true) {
-      await Future.delayed(const Duration(seconds: 2));
-      yield _mockMatch;
-      await Future.delayed(const Duration(seconds: 300));
+      try {
+        final matches = await getMatches();
+        yield matches;
+      } catch (e) {
+        yield []; // Return empty on error, will retry
+      }
+      await Future.delayed(interval);
     }
   }
 
@@ -140,22 +195,36 @@ class MatchRepository {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Providers
+// ─────────────────────────────────────────────────────────────────────────────
+
 final matchRepositoryProvider = Provider((ref) => MatchRepository());
 
-final matchStreamProvider = StreamProvider<MatchProfile?>((ref) {
-  return ref.watch(matchRepositoryProvider).simulateMatches();
+/// Stream of real matches from the server.
+final matchesStreamProvider = StreamProvider<List<MatchProfile>>((ref) {
+  return ref.watch(matchRepositoryProvider).watchMatches();
 });
 
-// Controller to handle user actions (Like/Pass)
+/// Controller to handle user actions (Like/Pass/Greet)
 class MatchController extends StateNotifier<MatchProfile?> {
-  MatchController() : super(null);
+  final MatchRepository _repo;
+
+  MatchController(this._repo) : super(null);
 
   void setMatch(MatchProfile? match) => state = match;
   void dismiss() => state = null;
-  void like() => state = null; // In real app, send api request
+
+  /// Send a greeting to the currently displayed match.
+  Future<bool> greet({String? message}) async {
+    if (state == null) return false;
+    final matched = await _repo.sendGreeting(state!.id, message: message);
+    state = null;
+    return matched;
+  }
 }
 
 final matchControllerProvider =
     StateNotifierProvider<MatchController, MatchProfile?>((ref) {
-  return MatchController();
+  return MatchController(ref.watch(matchRepositoryProvider));
 });
