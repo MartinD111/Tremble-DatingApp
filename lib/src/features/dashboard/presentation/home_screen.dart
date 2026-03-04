@@ -30,13 +30,13 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Listen to the stream and update controller
-    ref.listen(matchStreamProvider, (prev, next) {
+    ref.listen(matchesStreamProvider, (prev, next) {
       final isScanning = ref.read(isScanningProvider);
       if (!isScanning) return; // Only match when radar is active
 
-      next.whenData((match) {
-        if (match != null) {
-          ref.read(matchControllerProvider.notifier).setMatch(match);
+      next.whenData((matches) {
+        if (matches.isNotEmpty) {
+          ref.read(matchControllerProvider.notifier).setMatch(matches.first);
         }
       });
     });

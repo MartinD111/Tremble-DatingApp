@@ -5,7 +5,7 @@
  * Uses geohash-based queries for efficient proximity filtering.
  */
 
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onCall } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
@@ -166,7 +166,7 @@ export const findNearby = onCall(
         const data = validateRequest(findNearbySchema, request.data);
 
         // Get the geohash prefix for the search radius
-        const precision = geohashPrecisionForRadius(data.radiusKm);
+        const precision = geohashPrecisionForRadius(data.radiusKm ?? 5);
         const centerGeohash = encodeGeohash(
             data.latitude,
             data.longitude,
@@ -199,7 +199,7 @@ export const findNearby = onCall(
                 docData.lng
             );
 
-            if (distance <= data.radiusKm) {
+            if (distance <= (data.radiusKm ?? 5)) {
                 nearbyUsers.push({
                     userId: doc.id,
                     distanceKm: Math.round(distance * 10) / 10,

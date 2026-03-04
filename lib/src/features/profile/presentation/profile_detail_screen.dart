@@ -154,7 +154,7 @@ class ProfileDetailScreen extends ConsumerWidget {
           text: 'Pozdrav',
           color: Colors.greenAccent,
           onTap: () {
-            ref.read(matchControllerProvider.notifier).like();
+            ref.read(matchControllerProvider.notifier).greet();
 
             // Set strong directional ping on radar
             ref.read(pingDistanceProvider.notifier).state = 0.8; // Edge

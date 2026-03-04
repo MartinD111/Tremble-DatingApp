@@ -114,3 +114,14 @@ node_modules/
 **/.settings/
 **/.gradle/
 .idea/
+
+# ── Secrets & Environment — NEVER commit these ───────────
+.env
+.env.local
+.env.*.local
+functions/.env.local
+functions/.secret.local
+
+# Cloud Functions build output
+functions/lib/
+functions/node_modules/
