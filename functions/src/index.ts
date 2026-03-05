@@ -46,3 +46,6 @@ export {
     exportUserData,
     deleteUserAccount,
 } from "./modules/gdpr/gdpr.functions";
+
+// ── Email Module (Resend) ─────────────────────────────────
+export { resendVerificationEmail } from "./modules/email/email.functions";

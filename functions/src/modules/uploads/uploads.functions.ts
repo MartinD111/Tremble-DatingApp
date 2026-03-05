@@ -50,7 +50,7 @@ export const generateUploadUrl = onCall(
         // R2 is S3-compatible — use the AWS SDK
         const s3Client = new S3Client({
             region: "auto",
-            endpoint: `https://${config.r2.accountId}.r2.cloudflarestorage.com`,
+            endpoint: config.r2.endpoint,
             credentials: {
                 accessKeyId: config.r2.accessKeyId,
                 secretAccessKey: config.r2.secretAccessKey,

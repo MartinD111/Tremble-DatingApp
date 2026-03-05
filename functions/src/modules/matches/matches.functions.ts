@@ -14,6 +14,7 @@ import {
     sendGreetingSchema,
     respondToGreetingSchema,
 } from "./matches.schema";
+import { sendMatchNotificationEmail } from "../email/email.functions";
 
 const db = getFirestore();
 
@@ -92,6 +93,21 @@ export const sendGreeting = onCall(
 
             await batch.commit();
 
+            // Notify both users via email — fire and forget
+            const [userADoc, userBDoc] = await Promise.all([
+                db.collection("users").doc(uid).get(),
+                db.collection("users").doc(data.toUserId).get(),
+            ]);
+            const userAEmail = userADoc.data()?.email as string | undefined;
+            const userBEmail = userBDoc.data()?.email as string | undefined;
+            const userAName = userADoc.data()?.name as string | undefined;
+            const userBName = userBDoc.data()?.name as string | undefined;
+
+            if (userAEmail && userBName)
+                sendMatchNotificationEmail(userAEmail, userBName).catch(() => null);
+            if (userBEmail && userAName)
+                sendMatchNotificationEmail(userBEmail, userAName).catch(() => null);
+
             console.log(`[MATCHES] Auto-match: ${uid} ↔ ${data.toUserId}`);
             return { success: true, matched: true };
         }
@@ -165,6 +181,22 @@ export const respondToGreeting = onCall(
         }
 
         await batch.commit();
+
+        if (data.accept) {
+            // Notify both users via email on acceptance — fire and forget
+            const [senderDoc, recipientDoc] = await Promise.all([
+                db.collection("users").doc(greetingData.fromUid).get(),
+                db.collection("users").doc(uid).get(),
+            ]);
+            const senderEmail = senderDoc.data()?.email as string | undefined;
+            const recipientEmail = recipientDoc.data()?.email as string | undefined;
+            const senderName = senderDoc.data()?.name as string | undefined;
+            const recipientName = recipientDoc.data()?.name as string | undefined;
+            if (senderEmail && recipientName)
+                sendMatchNotificationEmail(senderEmail, recipientName).catch(() => null);
+            if (recipientEmail && senderName)
+                sendMatchNotificationEmail(recipientEmail, senderName).catch(() => null);
+        }
 
         console.log(
             `[MATCHES] Greeting ${data.greetingId}: ${data.accept ? "accepted" : "declined"}`
