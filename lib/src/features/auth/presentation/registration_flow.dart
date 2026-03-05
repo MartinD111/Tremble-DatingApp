@@ -129,10 +129,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   final ImagePicker _picker = ImagePicker();
 
   // Prompt
-  // Using a list of prompts and answers to allow swiping multiple?
-  // User said: "one big square in middle, swajp levo or desno"
   String? _selectedPromptKey;
   final TextEditingController _promptAnswerController = TextEditingController();
+
+  // GDPR consent
+  bool _consentTerms = false;
+  bool _consentPrivacy = false;
+  bool get _consentGiven => _consentTerms && _consentPrivacy;
 
   // helpers
   String tr(String key) => t(key, _selectedLanguage);
@@ -412,6 +415,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _buildPageWhatToMeet(),
                 _buildPageHobbies(),
                 _buildPagePhotos(),
+                _buildPageConsent(),
                 _buildPagePrompt(),
               ],
             ),
@@ -2227,9 +2231,155 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   // ══════════════════════════════════════════════════════
+  // PAGE — GDPR CONSENT
+  // ══════════════════════════════════════════════════════
+  Widget _buildPageConsent() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _backButton(),
+            const SizedBox(height: 24),
+            _stepHeader(
+              tr('consent_title'),
+              subtitle: tr('consent_subtitle'),
+            ),
+            const SizedBox(height: 32),
+            // Terms of Service
+            _consentTile(
+              value: _consentTerms,
+              onChanged: (v) => setState(() => _consentTerms = v),
+              richText: TextSpan(
+                style: const TextStyle(
+                    color: Colors.white70, fontSize: 14, height: 1.5),
+                children: [
+                  const TextSpan(text: 'I agree to the '),
+                  WidgetSpan(
+                    child: GestureDetector(
+                      onTap: () {},
+                      child: const Text('Terms of Service',
+                          style: TextStyle(
+                              color: Color(0xFF00D9A6),
+                              fontSize: 14,
+                              decoration: TextDecoration.underline)),
+                    ),
+                  ),
+                  const TextSpan(text: ' of Tremble.'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Privacy Policy
+            _consentTile(
+              value: _consentPrivacy,
+              onChanged: (v) => setState(() => _consentPrivacy = v),
+              richText: TextSpan(
+                style: const TextStyle(
+                    color: Colors.white70, fontSize: 14, height: 1.5),
+                children: [
+                  const TextSpan(text: 'I have read and accept the '),
+                  WidgetSpan(
+                    child: GestureDetector(
+                      onTap: () {},
+                      child: const Text('Privacy Policy',
+                          style: TextStyle(
+                              color: Color(0xFF00D9A6),
+                              fontSize: 14,
+                              decoration: TextDecoration.underline)),
+                    ),
+                  ),
+                  const TextSpan(text: ', including GDPR data processing.'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Data minimization notice
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.shield_outlined,
+                      color: Color(0xFF00D9A6), size: 20),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Your data is stored securely, never sold to third parties, '
+                      'and can be exported or deleted at any time from Settings.',
+                      style: TextStyle(
+                          color: Colors.white54, fontSize: 13, height: 1.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            _continueButton(
+              enabled: _consentGiven,
+              onTap: _nextPage,
+              label: 'Continue',
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _consentTile({
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required InlineSpan richText,
+  }) {
+    const teal = Color(0xFF00D9A6);
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: value ? teal : Colors.transparent,
+              borderRadius: BorderRadius.circular(6),
+              border:
+                  Border.all(color: value ? teal : Colors.white38, width: 2),
+            ),
+            child: value
+                ? const Icon(Icons.check, color: Colors.black, size: 16)
+                : null,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: RichText(text: richText),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════
   // COMPLETE REGISTRATION
   // ══════════════════════════════════════════════════════
   void completeRegistration() async {
+    // Safety guard — consent page enforces this, but double-check
+    if (!_consentGiven) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                'Please accept the Terms and Privacy Policy to continue.')),
+      );
+      return;
+    }
     final photoUrls =
         _photos.where((p) => p != null).map((p) => p!.path).toList();
     final Map<String, String> prompts = {};

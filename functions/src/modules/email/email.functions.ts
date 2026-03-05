@@ -19,11 +19,11 @@ const db = getFirestore();
 
 
 function getResend(): Resend {
-    const config = getConfig();
-    if (!config.resend.apiKey) {
-        throw new HttpsError("internal", "Email service not configured.");
-    }
-    return new Resend(config.resend.apiKey);
+  const config = getConfig();
+  if (!config.resend.apiKey) {
+    throw new HttpsError("internal", "Email service not configured.");
+  }
+  return new Resend(config.resend.apiKey);
 }
 
 // ── Internal send helpers ─────────────────────────────────
@@ -33,17 +33,17 @@ function getResend(): Resend {
  * Called internally by completeOnboarding.
  */
 export async function sendWelcomeEmail(
-    toEmail: string,
-    name: string
+  toEmail: string,
+  name: string
 ): Promise<void> {
-    const { fromEmail } = getConfig().resend;
-    const resend = getResend();
+  const { fromEmail } = getConfig().resend;
+  const resend = getResend();
 
-    await resend.emails.send({
-        from: `Tremble <${fromEmail}>`,
-        to: [toEmail],
-        subject: "Dobrodošel v Tremble! 👋",
-        html: `
+  await resend.emails.send({
+    from: `Tremble <${fromEmail}>`,
+    to: [toEmail],
+    subject: "Dobrodošel v Tremble! 👋",
+    html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px;">
           <h1 style="color: #e91e8c; font-size: 28px;">Dobrodošel, ${name}! 🎉</h1>
           <p style="font-size: 16px; line-height: 1.6; color: #333;">
@@ -54,9 +54,9 @@ export async function sendWelcomeEmail(
             Ekipa Tremble 🖤
           </p>
         </div>`,
-    });
+  });
 
-    console.log(`[EMAIL] Welcome email sent to ${toEmail}`);
+  console.log(`[EMAIL] Welcome email sent to ${toEmail}`);
 }
 
 /**
@@ -64,24 +64,24 @@ export async function sendWelcomeEmail(
  * Called internally when two users match.
  */
 export async function sendMatchNotificationEmail(
-    toEmail: string,
-    matchName: string
+  toEmail: string,
+  matchName: string
 ): Promise<void> {
-    const { fromEmail } = getConfig().resend;
-    const resend = getResend();
+  const { fromEmail } = getConfig().resend;
+  const resend = getResend();
 
-    await resend.emails.send({
-        from: `Tremble <${fromEmail}>`,
-        to: [toEmail],
-        subject: `💌 Match z ${matchName}!`,
-        html: `
+  await resend.emails.send({
+    from: `Tremble <${fromEmail}>`,
+    to: [toEmail],
+    subject: `💌 Match z ${matchName}!`,
+    html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px;">
           <h1 style="color: #e91e8c; font-size: 24px;">Imata Match! 🎉</h1>
           <p style="font-size: 16px; line-height: 1.6; color: #333;">
             Ti in <strong>${matchName}</strong> sta si vzajemno poslala pozdrav.
             Odpri Tremble in začni pogovor!
           </p>
-          <a href="https://tremble.dating"
+          <a href="https://trembledating.com"
              style="display:inline-block; margin-top:20px; padding:14px 28px;
                     background:#e91e8c; color:#fff; border-radius:8px;
                     text-decoration:none; font-weight:bold; font-size:16px;">
@@ -91,9 +91,9 @@ export async function sendMatchNotificationEmail(
             Ekipa Tremble 🖤
           </p>
         </div>`,
-    });
+  });
 
-    console.log(`[EMAIL] Match notification sent to ${toEmail} — matched with ${matchName}`);
+  console.log(`[EMAIL] Match notification sent to ${toEmail} — matched with ${matchName}`);
 }
 
 /**
@@ -101,17 +101,17 @@ export async function sendMatchNotificationEmail(
  * Called internally before deleting the account.
  */
 export async function sendDeletionConfirmationEmail(
-    toEmail: string,
-    name: string
+  toEmail: string,
+  name: string
 ): Promise<void> {
-    const { fromEmail } = getConfig().resend;
-    const resend = getResend();
+  const { fromEmail } = getConfig().resend;
+  const resend = getResend();
 
-    await resend.emails.send({
-        from: `Tremble <${fromEmail}>`,
-        to: [toEmail],
-        subject: "Tvoj račun je bil izbrisan — Tremble",
-        html: `
+  await resend.emails.send({
+    from: `Tremble <${fromEmail}>`,
+    to: [toEmail],
+    subject: "Tvoj račun je bil izbrisan — Tremble",
+    html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px;">
           <h1 style="color: #333; font-size: 22px;">Račun izbrisan</h1>
           <p style="font-size: 16px; line-height: 1.6; color: #555;">
@@ -123,37 +123,37 @@ export async function sendDeletionConfirmationEmail(
             Ekipa Tremble
           </p>
         </div>`,
-    });
+  });
 
-    console.log(`[EMAIL] Deletion confirmation sent to ${toEmail}`);
+  console.log(`[EMAIL] Deletion confirmation sent to ${toEmail}`);
 }
 
 // ── Public callable: resend verification email ────────────
 
 export const resendVerificationEmail = onCall(
-    { maxInstances: 10 },
-    async (request) => {
-        const uid = requireAuth(request);
+  { maxInstances: 10 },
+  async (request) => {
+    const uid = requireAuth(request);
 
-        await checkRateLimit(uid, "resendVerificationEmail", {
-            maxRequests: 3,
-            windowMs: 300_000, // 3 per 5 minutes
-        });
+    await checkRateLimit(uid, "resendVerificationEmail", {
+      maxRequests: 3,
+      windowMs: 300_000, // 3 per 5 minutes
+    });
 
-        const userDoc = await db.collection("users").doc(uid).get();
-        if (!userDoc.exists) {
-            throw new HttpsError("not-found", "User not found.");
-        }
-
-        const data = userDoc.data()!;
-        if (data.isEmailVerified) {
-            throw new HttpsError(
-                "failed-precondition",
-                "Email is already verified."
-            );
-        }
-
-        // Verification is handled by Firebase Auth; this just reminds them
-        return { message: "Please check your inbox for the verification email." };
+    const userDoc = await db.collection("users").doc(uid).get();
+    if (!userDoc.exists) {
+      throw new HttpsError("not-found", "User not found.");
     }
+
+    const data = userDoc.data()!;
+    if (data.isEmailVerified) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Email is already verified."
+      );
+    }
+
+    // Verification is handled by Firebase Auth; this just reminds them
+    return { message: "Please check your inbox for the verification email." };
+  }
 );

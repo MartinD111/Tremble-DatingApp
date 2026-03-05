@@ -50,7 +50,7 @@ export function getConfig(): AppConfig {
         },
         resend: {
             apiKey: process.env.RESEND_API_KEY || "",
-            fromEmail: process.env.RESEND_FROM_EMAIL || "noreply@tremble.dating",
+            fromEmail: process.env.RESEND_FROM_EMAIL || "noreply@trembledating.com",
         },
         environment: env,
         rateLimits: {
