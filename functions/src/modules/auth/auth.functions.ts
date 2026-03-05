@@ -12,6 +12,7 @@ import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { validateRequest } from "../../middleware/validate";
 import { completeOnboardingSchema } from "./auth.schema";
+import { sendWelcomeEmail } from "../email/email.functions";
 
 const db = getFirestore();
 
@@ -107,6 +108,16 @@ export const completeOnboarding = onCall(
             );
 
         console.log(`[AUTH] Onboarding completed: ${uid}`);
+
+        // Send welcome email — fire and forget (don't block response)
+        const userDoc = await db.collection("users").doc(uid).get();
+        const email = userDoc.data()?.email as string | undefined;
+        if (email && data.name) {
+            sendWelcomeEmail(email, data.name).catch((err) =>
+                console.error(`[AUTH] Welcome email failed for ${uid}:`, err)
+            );
+        }
+
         return { success: true };
     }
 );
