@@ -5,6 +5,8 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
     // Google services / Firebase
     id("com.google.gms.google-services")
+    // Crashlytics — native crash reporting
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -60,4 +62,5 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-crashlytics")
 }
