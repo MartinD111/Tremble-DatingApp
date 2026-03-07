@@ -10,6 +10,8 @@ Install these tools on your machine:
 | Dart SDK | ≥ 3.2.0 | (bundled with Flutter) |
 | Android Studio / SDK | Latest | https://developer.android.com/studio |
 | Java JDK | 17 | https://adoptium.net |
+| Xcode (Mac only) | Latest | Mac App Store |
+| CocoaPods (Mac iOS) | Latest | `gem install cocoapods --user-install` or `brew install cocoapods` |
 | VS Code | Latest | + Flutter + Dart extensions |
 
 ---
@@ -59,7 +61,9 @@ flutter run -d windows
 
 | File | Why |
 |------|-----|
-| `android/app/google-services.json` | Firebase secrets |
+| `android/app/google-services.json` | Firebase secrets (Android) |
+| `ios/Runner/GoogleService-Info.plist` | Firebase secrets (iOS/Mac) |
+| `macos/Runner/GoogleService-Info.plist` | Firebase secrets (Mac) |
 | `lib/src/core/firebase_options.dart` | Firebase secrets |
 | `android/local.properties` | Local SDK paths |
 | `android/.project`, `.classpath`, `.settings/` | IDE auto-generated |
