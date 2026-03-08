@@ -1,0 +1,7 @@
+# policies/cost.yaml
+rules:
+  - id: infra_change_requires_cost_estimate
+    action: block_merge_without_estimate
+
+  - id: new_infra_requires_founder_approval
+    applies_to: [databases, compute, paid_apis]

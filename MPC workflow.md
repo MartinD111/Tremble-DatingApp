@@ -20,7 +20,7 @@ When this file is detected in the workspace, the system immediately adopts the f
 
 ```
 Control Plane Offline
-Request initialization: Initialize MPC v5 for [Project Name]
+Request initialization: Initialize MPC Workflow for [Tremble]
 ```
 
 3. No code may be written until:
