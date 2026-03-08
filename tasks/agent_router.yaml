@@ -1,0 +1,358 @@
+version: "2.0"
+meta:
+  name: "MASTER PROJECT CONTROLLER (MPC Workflow) — Agent Router"
+  maintained_by: "platform/automation"
+  last_modified: "2026-03-09"
+  notes: >
+    Path: tasks/agent_router.yaml
+    The Dispatcher reads this config to auto-assign agents and enforce sequencing.
+    All tasks must be validated against task_schema before routing begins.
+    The router stores a per-task audit trail in tasks/context.md.
+    HIGH RISK and CRITICAL tasks pause for founder approval before the implementer proceeds.
+
+# ---------------------------------------------------------------------------
+# TASK SCHEMA
+# All tasks submitted to the router must conform to this structure.
+# ---------------------------------------------------------------------------
+task_schema:
+  required:
+    - plan_id
+    - title
+    - description
+    - risk_level
+    - affected_components
+    - requested_by
+  properties:
+    plan_id:
+      type: string
+      pattern: "^[0-9]{8}-[a-z0-9\\-]+$"
+      description: "Must exist in tasks/plan.md before task is submitted."
+    title:
+      type: string
+      minLength: 5
+      maxLength: 120
+    description:
+      type: string
+      minLength: 20
+    risk_level:
+      type: string
+      enum: [low, medium, high, critical]
+      description: >
+        low: no infra change, no auth/PII touch, no external model calls.
+        medium: moderate scope, internal services only.
+        high: infra change, auth/PII touch, or external model call.
+        critical: production data, security boundaries, or full service impact.
+    affected_components:
+      type: array
+      items: { type: string }
+      minItems: 1
+    requested_by:
+      type: string
+      description: "Role or name of the person initiating the task."
+    estimated_change_size:
+      type: integer
+      description: "Rough lines of code or story points. Used for SLA calculation."
+    external_model_calls:
+      type: boolean
+      description: "True if this task introduces or modifies any LLM/AI API calls."
+      default: false
+    infra_change:
+      type: boolean
+      description: "True if this task modifies infrastructure (cloud, database, networking)."
+      default: false
+    touches_pii:
+      type: boolean
+      description: "True if this task reads, writes, or transmits user PII."
+      default: false
+    touches_auth:
+      type: boolean
+      description: "True if this task modifies authentication, authorization, or session logic."
+      default: false
+    cost_estimate_monthly_usd:
+      type: number
+      description: "Required if infra_change: true. Conservative monthly cost estimate."
+    adr_reference:
+      type: string
+      description: "Required for high/critical tasks that change architecture. E.g. ADR-007."
+    attachments:
+      type: array
+      items: { type: string }
+      description: "URLs to supporting documents, designs, or research."
+
+# ---------------------------------------------------------------------------
+# AGENT DEFINITIONS
+# Each agent has explicit responsibilities and acceptance criteria.
+# An agent's output must satisfy its acceptance_criteria before the next
+# agent in the chain is activated.
+# ---------------------------------------------------------------------------
+agents:
+
+  architect:
+    role: "Architect"
+    responsibilities:
+      - "Validate the proposed design against tasks/system_map.md"
+      - "Identify dependency cycles, insecure data flows, or excessive coupling"
+      - "Write or update an ADR in tasks/decisions/ for any design deviation"
+      - "Update system_map.md if service boundaries or data flows change"
+    acceptance_criteria:
+      - "system_map.md updated if APIs, services, or data flows change"
+      - "Architecture validator: pass, OR accepted ADR on file"
+      - "No unresolved dependency cycles"
+    outputs_required:
+      - design_document_url
+      - validation_report_url
+      - architect_signoff          # boolean
+    max_time_minutes: 240
+    escalates_to_founder_if:
+      - "Design introduces new paid infrastructure component"
+      - "Design changes data flows involving PII"
+      - "Design conflicts with an existing ADR"
+
+  researcher:
+    role: "Researcher"
+    responsibilities:
+      - "Survey available tools, libraries, and APIs relevant to the task"
+      - "Produce a trade-off matrix: performance vs cost vs security vs maintainability"
+      - "Identify compatibility constraints with existing stack"
+      - "Recommend a preferred option with clear rationale"
+    acceptance_criteria:
+      - "Trade-off matrix covering at least 2 alternatives"
+      - "Recommended option includes rationale and known risks"
+      - "Research notes stored in tasks/decisions/ or linked from context.md"
+    outputs_required:
+      - research_notes_url
+      - recommended_options         # array of option names
+      - chosen_option_reason
+    max_time_minutes: 180
+
+  implementer:
+    role: "Implementer"
+    responsibilities:
+      - "Write atomic, reversible code changes — one logical change per commit"
+      - "Write unit tests for all new or modified logic (coverage must not regress)"
+      - "Write inline documentation for public interfaces"
+      - "Reference the Plan-ID in commit messages and PR title"
+    acceptance_criteria:
+      - "All unit tests added and passing"
+      - "Test coverage does not decrease from baseline"
+      - "PR references Plan-ID and includes completed verification checklist"
+      - "No secrets, hardcoded IDs, or banned licenses introduced"
+    outputs_required:
+      - pr_url
+      - test_report_url
+      - changelog
+    max_time_minutes: 480
+    blocked_until:
+      - "architect.architect_signoff == true"
+      - "If risk_level in [high, critical]: founder_approval received"
+
+  auditor:
+    role: "Auditor"
+    responsibilities:
+      - "Run all security and privacy policy checks against security.yaml"
+      - "Verify PII handling complies with privacy.yaml retention limits"
+      - "Check for banned licenses, insecure dependencies, and secret leaks"
+      - "Produce a remediation plan for any high/medium violations found"
+    acceptance_criteria:
+      - "No critical policy violations unresolved"
+      - "All high violations have documented mitigations or accepted waivers"
+      - "Waiver (if any) references a debt.md entry and has founder sign-off"
+    outputs_required:
+      - security_report_url
+      - policy_violations           # array, may be empty
+      - remediation_plan_url
+    max_time_minutes: 180
+
+  qa:
+    role: "QA Engineer"
+    responsibilities:
+      - "Run integration and end-to-end tests against preprod environment"
+      - "Attempt to break the feature: edge cases, boundary inputs, race conditions"
+      - "Execute at least one chaos scenario per high/critical task"
+      - "Define rollback criteria and canary thresholds for the SRE"
+    acceptance_criteria:
+      - "All integration tests pass in preprod"
+      - "Chaos scenarios executed and results documented"
+      - "Readiness score >= 80 (0–100)"
+      - "Rollback steps documented and validated"
+    outputs_required:
+      - integration_report_url
+      - chaos_test_results_url
+      - readiness_score             # numeric 0–100
+      - rollback_steps_url
+    max_time_minutes: 300
+
+  sre:
+    role: "Site Reliability Engineer"
+    responsibilities:
+      - "Evaluate SLO impact of the change on production traffic"
+      - "Define canary release thresholds (error rate, latency, crash rate)"
+      - "Configure automatic rollback triggers in the release pipeline"
+      - "Verify that observability (metrics, logs, traces, alerts) is in place"
+    acceptance_criteria:
+      - "SLO impact assessment complete"
+      - "Canary thresholds defined and configured"
+      - "Rollback trigger conditions set in release pipeline"
+      - "All five observability pillars present for affected services"
+    outputs_required:
+      - slo_impact_report_url
+      - canary_config_url
+      - rollback_trigger_config_url
+    max_time_minutes: 240
+
+# ---------------------------------------------------------------------------
+# ROUTING RULES
+# Map risk level + task flags to an ordered agent chain.
+# Routing is sequential — each agent must satisfy acceptance_criteria
+# before the next agent activates.
+# ---------------------------------------------------------------------------
+routing_rules:
+
+  - id: ROUTE-LOW
+    description: "Low-risk internal changes with no infra, PII, or AI involvement."
+    match:
+      risk_level: low
+      infra_change: false
+      external_model_calls: false
+      touches_pii: false
+      touches_auth: false
+    route:
+      - implementer
+      - qa
+    founder_approval_required: false
+
+  - id: ROUTE-MEDIUM
+    description: "Medium-risk changes touching internal services or moderate complexity."
+    match:
+      risk_level: medium
+    route:
+      - architect
+      - implementer
+      - auditor
+      - qa
+    founder_approval_required: false
+
+  - id: ROUTE-HIGH
+    description: "High-risk changes: infra, auth, PII, or external AI model calls."
+    match:
+      risk_level: high
+    route:
+      - architect
+      - researcher
+      - implementer
+      - auditor
+      - qa
+      - sre
+    founder_approval_required: true
+    founder_approval_gate: "after_architect"
+    notes: >
+      Founder reviews the architect's design and ADR before the implementer begins.
+      This prevents wasted implementation effort on rejected designs.
+
+  - id: ROUTE-CRITICAL
+    description: "Critical changes: production data, security boundaries, full-service impact."
+    match:
+      risk_level: critical
+    route:
+      - architect
+      - researcher
+      - implementer
+      - auditor
+      - qa
+      - sre
+    founder_approval_required: true
+    founder_approval_gate: "after_architect"
+    additional_gates:
+      - "post_auditor_founder_review"   # second review after security audit
+    notes: >
+      Two founder review gates: after architect (design approval) and after auditor
+      (security clearance). No merge without both sign-offs.
+
+# ---------------------------------------------------------------------------
+# HUMAN ESCALATION RULES
+# The AI must STOP and surface to the founder when any of these are true.
+# It must not retry, guess, or proceed autonomously.
+# ---------------------------------------------------------------------------
+human_escalation_rules:
+  - condition: "confidence_in_approach < threshold"
+    action: "Pause. Surface uncertainty to founder with options."
+  - condition: "task touches auth, payments, or user PII"
+    action: "Mandatory founder review before implementer proceeds."
+  - condition: "two consecutive verification attempts failed"
+    action: "Stop. Do not retry. Report failure to founder with full context."
+  - condition: "ADR is required (new architectural decision)"
+    action: "Write ADR draft. Do not implement until founder approves."
+  - condition: "new paid infrastructure component would be introduced"
+    action: "Provide cost estimate and wait for explicit founder approval."
+  - condition: "incident level reaches L2 or above"
+    action: "Declare incident. Notify founder immediately. Initiate rollback if applicable."
+  - condition: "policy_violations contains severity: critical"
+    action: "Block all work on this task. Surface violation and remediation plan."
+
+# ---------------------------------------------------------------------------
+# SLA DEFINITIONS
+# Maximum total time allowed per task by risk level.
+# Used to detect stalled tasks and trigger escalation.
+# ---------------------------------------------------------------------------
+sla:
+  default_response_minutes: 60
+  stall_detection_enabled: true
+  stall_alert_channel: "#mpc-alerts"
+  max_total_minutes_by_risk:
+    low: 1440        # 1 day
+    medium: 10080    # 1 week
+    high: 20160      # 2 weeks
+    critical: 40320  # 4 weeks
+
+# ---------------------------------------------------------------------------
+# AGENT OUTPUT SCHEMA
+# What each agent must produce before the next agent activates.
+# ---------------------------------------------------------------------------
+agent_output_schema:
+  architect:
+    required:
+      - design_document_url:    string
+      - validation_report_url:  string
+      - architect_signoff:      boolean
+  researcher:
+    required:
+      - research_notes_url:     string
+      - recommended_options:    array
+      - chosen_option_reason:   string
+  implementer:
+    required:
+      - pr_url:                 string
+      - test_report_url:        string
+      - changelog:              string
+  auditor:
+    required:
+      - security_report_url:    string
+      - policy_violations:      array   # empty array if none
+      - remediation_plan_url:   string
+  qa:
+    required:
+      - integration_report_url:   string
+      - chaos_test_results_url:   string
+      - readiness_score:          number  # 0–100; must be >= 80 to pass
+      - rollback_steps_url:       string
+  sre:
+    required:
+      - slo_impact_report_url:          string
+      - canary_config_url:              string
+      - rollback_trigger_config_url:    string
+
+
+
+# ---------------------------------------------------------------------------
+# IMPLEMENTATION NOTES
+# ---------------------------------------------------------------------------
+# - Router must validate every task against task_schema before enqueuing.
+# - Router must store per-task audit trail in tasks/context.md (append, never overwrite).
+# - Router must append agent outputs to the relevant task entry in context.md.
+# - Router must expose:
+#     POST /tasks          → create and enqueue a new task
+#     GET  /tasks/:id      → query task status and current agent
+#     POST /tasks/:id/override → force re-route (manual override, requires founder auth)
+# - Stalled tasks (no agent output within SLA window) trigger a #mpc-alerts notification.
+# - All routing decisions are immutable once recorded in context.md.
+#   If a route must change, create a new task with a new plan_id and reference the original.

@@ -1,0 +1,349 @@
+version: "2.0"
+meta:
+  name: "MASTER PROJECT CONTROLLER (MPC Workflow) — Security & Compliance Policies"
+  maintained_by: "platform/security-team"
+  last_reviewed: "2026-03-09"
+  enforcement: "ci"    # supported: ci, manual, advisory
+  notes: >
+    Drop into: tasks/policies/security.yaml
+    CI parses this file and enforces all rules automatically.
+    Any rule at severity: critical or high will block_merge by default (see policy_tuning).
+    Rules at severity: medium require_approval. Rules at severity: low warn only.
+    To suppress a rule for a PR, the PR must include a documented waiver signed off by the founder.
+
+# ---------------------------------------------------------------------------
+# GLOBAL DEFAULTS
+# ---------------------------------------------------------------------------
+global_defaults:
+  fail_on_error: true
+  autofix_allowed: false
+  notification_channel: "#security-alerts"
+  waiver_policy:
+    allowed: true
+    requires: "founder_approval"
+    waiver_expiry_days: 30
+    waiver_must_reference: "debt.md entry"
+
+# ---------------------------------------------------------------------------
+# SECURITY RULES
+# ---------------------------------------------------------------------------
+rules:
+
+  # ── Secrets & Credentials ────────────────────────────────────────────────
+
+  - id: SEC-001
+    title: "No plaintext secrets in repo"
+    category: secrets
+    description: >
+      Detect accidental plaintext secrets (API keys, tokens, credentials) in source
+      and commit history. Includes common cloud provider key patterns.
+    severity: critical
+    action: block_merge
+    detector:
+      type: regex_list
+      scan_targets: [source, commit_history, env_files, docker_files]
+      patterns:
+        - "(?i)aws_access_key_id\\s*[:=]\\s*[A-Z0-9]{16,}"
+        - "(?i)-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----"
+        - "(?i)api_key\\s*[:=]\\s*['\"][A-Za-z0-9\\-_]{20,}['\"]"
+        - "(?i)secret\\s*[:=]\\s*['\"][A-Za-z0-9\\-_]{16,}['\"]"
+        - "(?i)password\\s*[:=]\\s*['\"][^'\"]{8,}['\"]"
+        - "(?i)(sk|pk)_(live|test)_[A-Za-z0-9]{24,}"   # Stripe keys
+        - "CLOUDFLARE_API_TOKEN\\s*[:=]\\s*[A-Za-z0-9\\-_]{40}"
+    remediation: >
+      1. Remove the secret from source immediately.
+      2. Rotate the credential in the provider dashboard.
+      3. Store the new value in the secrets manager (never in source).
+      4. Run `git-filter-repo` or BFG to purge from history.
+      5. Log incident in lessons.md.
+    auto_fix: false
+    examples:
+      - "Violation: API_KEY = \"AKIA...\" found in src/config.py"
+      - "Violation: CLOUDFLARE_API_TOKEN=abc123 found in .env committed to repo"
+
+  # ── Dependencies ─────────────────────────────────────────────────────────
+
+  - id: SEC-002
+    title: "Dependency Vulnerability Threshold"
+    category: dependencies
+    description: >
+      Block merges when critical CVEs are present in the dependency tree.
+      Medium and low severity issues are warnings unless they affect a core security boundary.
+    severity: critical
+    action: block_merge
+    detector:
+      type: sca
+      engine: "snyk|owasp-dependency-check|npm-audit"
+      policy:
+        block_on: ["critical"]
+        warn_on: ["high", "medium"]
+        ignore_on: ["low"]
+    remediation: >
+      Patch or upgrade the dependency to a fixed version.
+      If no fix is available, add compensating controls and document the accepted risk in debt.md.
+    auto_fix: false
+
+  - id: SEC-003
+    title: "Prohibited Licenses"
+    category: dependencies
+    description: >
+      Prevent introduction of dependencies with licenses incompatible with commercial use
+      or that impose copyleft obligations on proprietary code.
+    severity: high
+    action: block_merge
+    detector:
+      type: license_scan
+      banned_licenses:
+        - "GPL-2.0-only"
+        - "GPL-3.0-only"
+        - "AGPL-3.0-only"
+        - "LGPL-2.1-only"
+        - "Unlicense"
+        - "CC-BY-NC-4.0"
+    allowed_licenses:
+      - "MIT"
+      - "Apache-2.0"
+      - "BSD-2-Clause"
+      - "BSD-3-Clause"
+      - "ISC"
+      - "MPL-2.0"
+    remediation: >
+      Replace with a compatibly licensed dependency or obtain a legal waiver.
+      Document in ADR if a waiver is accepted.
+    auto_fix: false
+
+  # ── Encryption & Data Protection ─────────────────────────────────────────
+
+  - id: SEC-004
+    title: "Encryption at Rest & Transit Required"
+    category: data_protection
+    description: >
+      All storage services and network transports must be encrypted.
+      TLS 1.0 and 1.1 are prohibited.
+    severity: critical
+    action: block_merge
+    detector:
+      type: infra_check
+      checks:
+        - "storage.encryption_at_rest == true"
+        - "transport.tls_min_version >= 1.2"
+        - "database.encryption_at_rest == true"
+        - "object_storage.server_side_encryption == true"
+    remediation: >
+      Enable provider-managed encryption on all storage.
+      Enforce TLS 1.2+ in infrastructure config and load balancer settings.
+    auto_fix: false
+
+  - id: SEC-005
+    title: "PII Flow & Retention Limits"
+    category: privacy
+    description: >
+      Detect code that persists PII beyond the allowed retention window.
+      Ensure deletion jobs and ephemeral token patterns are in place.
+      Applies to: location data, device identifiers, email addresses, biometric signals.
+    severity: critical
+    action: block_merge
+    detector:
+      type: dataflow_static
+      checks:
+        - "user_location.retention_days <= policies/privacy.max_retention_days"
+        - "pii_storage_class != 'permanent'"
+        - "ble_scan_data.stored_to_disk == false"
+        - "user_email.encrypted_at_rest == true"
+    remediation: >
+      Store only ephemeral tokens or cached data — never raw PII permanently.
+      Add automated data deletion jobs and reference them in context.md.
+      Log the data flow in system_map.md under the relevant service.
+    auto_fix: false
+
+  # ── Auth & Rate Limiting ──────────────────────────────────────────────────
+
+  - id: SEC-011
+    title: "Auth Endpoints Must Have Rate Limiting"
+    category: auth
+    description: >
+      Any endpoint handling authentication, registration, or password reset
+      must have rate limiting configured to prevent brute-force attacks.
+    severity: critical
+    action: block_merge
+    detector:
+      type: code_scan
+      patterns:
+        - "router\\.(post|put)\\(['\"].*/(login|auth|register|reset|verify)"
+      required_companion:
+        - "rateLimit("
+        - "rateLimiter"
+    remediation: >
+      Add rate limiting middleware to all auth endpoints before the handler.
+      Configure appropriate thresholds (e.g. 10 requests/minute per IP).
+    auto_fix: false
+
+  - id: SEC-012
+    title: "No Hardcoded User IDs or Roles in Code"
+    category: auth
+    description: >
+      Hardcoded user IDs, admin flags, or role strings in application logic
+      bypass access control and create privilege escalation risks.
+    severity: high
+    action: block_merge
+    detector:
+      type: regex_list
+      patterns:
+        - "(?i)role\\s*==\\s*['\"]admin['\"]"
+        - "(?i)user_id\\s*==\\s*['\"]?[0-9a-f\\-]{8,}['\"]?"
+        - "(?i)is_admin\\s*=\\s*true"
+    remediation: >
+      Move role and permission checks to a centralized policy service or middleware.
+      Never hardcode role strings in business logic.
+    auto_fix: false
+
+  # ── Process & Traceability ────────────────────────────────────────────────
+
+  - id: SEC-006
+    title: "Plan ID Required in PR Title"
+    category: process
+    description: >
+      Every PR must reference a Plan ID from tasks/plan.md to ensure
+      full traceability from requirement to deployment.
+    severity: high
+    action: block_merge
+    detector:
+      type: pr_title_regex
+      pattern: "\\[PLAN-ID: ?[0-9]{8}-[a-z0-9\\-]+\\]"
+    remediation: >
+      Add the Plan ID to the PR title in format: [PLAN-ID: YYYYMMDD-short-name]
+      The Plan ID must exist in tasks/plan.md.
+    auto_fix: false
+
+  - id: SEC-007
+    title: "Verification Checklist Required"
+    category: process
+    description: >
+      Every PR must include a completed verification checklist covering
+      unit tests, integration tests, security scan, and performance baseline.
+    severity: high
+    action: block_merge
+    detector:
+      type: pr_body_contains
+      required_phrases:
+        - "Verification checklist"
+        - "unit tests"
+        - "integration tests"
+        - "security scan"
+    remediation: >
+      Populate the PR description with the required verification checklist
+      and link to evidence (test reports, logs, screenshots).
+    auto_fix: false
+
+  - id: SEC-013
+    title: "ADR Required for Architecture Changes"
+    category: process
+    description: >
+      Any change that introduces a new service, modifies data flows between services,
+      or changes an infrastructure provider must include an ADR in tasks/decisions/.
+    severity: high
+    action: block_merge
+    detector:
+      type: pr_body_contains
+      required_phrases:
+        - "ADR-"
+    remediation: >
+      Write an Architecture Decision Record in tasks/decisions/ADR-NNN-description.md
+      and reference it in the PR body.
+    auto_fix: false
+
+  # ── AI Safety ─────────────────────────────────────────────────────────────
+
+  - id: SEC-008
+    title: "AI Feature Safety Checks"
+    category: ai_safety
+    description: >
+      Any change that invokes external LLMs or on-device AI models must include
+      PII filtering, context sanitization, and adversarial prompt tests.
+      Applies to: OpenAI, Anthropic, Gemini, or any model_call() abstraction.
+    severity: critical
+    action: block_merge
+    detector:
+      type: code_scan
+      patterns:
+        - "openai\\."
+        - "anthropic\\."
+        - "model_call\\("
+        - "generative_model\\."
+      required_artifacts:
+        - "PII filter unit tests"
+        - "adversarial prompt tests"
+        - "safety policy verification report"
+    remediation: >
+      Add PII filters before model input and output safety filters after.
+      Document model endpoint, access rules, and data retention in system_map.md.
+      Run adversarial prompt test suite and attach results to PR.
+    auto_fix: false
+
+  # ── Infrastructure & Cost ─────────────────────────────────────────────────
+
+  - id: SEC-009
+    title: "Infrastructure Cost Estimate Required"
+    category: cost_governance
+    description: >
+      Every infra change must include a conservative monthly cost estimate.
+      Changes estimated above $100/month require explicit founder approval before merge.
+    severity: medium
+    action: require_approval
+    detector:
+      type: pr_body_contains
+      required_phrases:
+        - "Infra cost estimate"
+        - "Monthly cost:"
+    thresholds:
+      auto_approve_below_usd: 100
+      founder_approval_above_usd: 100
+    remediation: >
+      Add an estimated monthly cost to the PR body.
+      Set budget alerts and quotas in the cloud provider dashboard.
+      Log in debt.md if the estimate is uncertain.
+    auto_fix: false
+
+  - id: SEC-010
+    title: "Large File Handling Policy"
+    category: infrastructure
+    description: >
+      Prevent binary or large files being committed to the repository.
+      Files above 5MB must use external object storage and be referenced by URL.
+    severity: medium
+    action: block_merge
+    detector:
+      type: git_diff_file_size
+      max_size_bytes: 5242880   # 5 MB
+      exempt_extensions: [".md", ".yaml", ".json", ".txt"]
+    remediation: >
+      Upload large files to Cloudflare R2 (or equivalent object storage)
+      and reference the signed URL from code.
+      Never commit binary assets, fixtures, or test data > 5MB.
+    auto_fix: false
+
+# ---------------------------------------------------------------------------
+# POLICY STRICTNESS MATRIX
+# Controls CI behavior per severity level.
+# ---------------------------------------------------------------------------
+policy_tuning:
+  critical: block_merge
+  high: block_merge
+  medium: require_approval
+  low: warn
+
+# ---------------------------------------------------------------------------
+# CI HOOKS
+# Reference to scripts CI must call for each check category.
+# All scripts must exit 0 on pass, non-zero on failure.
+# ---------------------------------------------------------------------------
+hooks:
+  secret_scan:            "scripts/ci/secret_scan.sh"
+  dependency_scan:        "scripts/ci/dependency_scan.sh"
+  license_scan:           "scripts/ci/license_scan.sh"
+  architecture_validate:  "scripts/ci/architecture_validate.sh"
+  ai_safety_check:        "scripts/ci/ai_safety_check.sh"
+  sast_scan:              "scripts/ci/sast_scan.sh"
+  dast_scan:              "scripts/ci/dast_scan.sh"
+  slo_evaluator:          "scripts/ci/slo_evaluator.sh"
+  policy_engine:          "scripts/ci/policy_engine.py"
