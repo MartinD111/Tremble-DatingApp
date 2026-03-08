@@ -1,0 +1,7 @@
+# policies/release.yaml
+rules:
+  - id: all_tests_must_pass
+    action: block_merge
+  - id: pass_quality_score
+    threshold: 85
+    action: block_release

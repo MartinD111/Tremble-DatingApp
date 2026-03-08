@@ -1,0 +1,5 @@
+# policies/privacy.yaml
+rules:
+  - id: pii_must_be_encrypted_at_rest
+    severity: critical
+    action: block_merge
