@@ -6,8 +6,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/primary_button.dart';
+import '../../../shared/ui/premium_paywall.dart'; // Paywall Modal
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
+import '../../../core/api_client.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
 
@@ -98,6 +100,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       onPressed: () {
                         ref.read(authStateProvider.notifier).logout();
                       }),
+                  const SizedBox(height: 15),
+                  // GDPR: Right to Erasure (Article 17)
+                  PrimaryButton(
+                      text: '🗑️  Delete Account',
+                      isSecondary: true,
+                      onPressed: _showDeleteAccountDialog),
                 ],
               ),
             ),
@@ -232,6 +240,131 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     );
   }
 
+  /// GDPR Article 17 — Right to Erasure.
+  /// Permanently deletes all user data from Firestore and Firebase Auth.
+  void _showDeleteAccountDialog() {
+    bool confirmed = false;
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E1E2E),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Row(children: [
+                const Icon(LucideIcons.alertTriangle,
+                    color: Colors.redAccent, size: 22),
+                const SizedBox(width: 10),
+                Text('Delete Account',
+                    style: GoogleFonts.outfit(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+              ]),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'This action is permanent and cannot be undone.\n\n'
+                    'All your data will be permanently deleted:\n'
+                    '• Your profile and photos\n'
+                    '• Your matches and conversations\n'
+                    '• Your location history\n'
+                    '• Your account credentials',
+                    style: TextStyle(color: Colors.white70, height: 1.5),
+                  ),
+                  const SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: () => setDialogState(() => confirmed = !confirmed),
+                    child: Row(children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color:
+                              confirmed ? Colors.redAccent : Colors.transparent,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color:
+                                  confirmed ? Colors.redAccent : Colors.white38,
+                              width: 2),
+                        ),
+                        child: confirmed
+                            ? const Icon(Icons.check,
+                                color: Colors.white, size: 14)
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'I understand that this action is permanent.',
+                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                        ),
+                      )
+                    ]),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel',
+                      style: TextStyle(color: Colors.white54)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: (!confirmed || isLoading)
+                      ? null
+                      : () async {
+                          setDialogState(() => isLoading = true);
+                          try {
+                            await TrembleApiClient().call('deleteUserAccount');
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              // Force logout and back to login
+                              await ref
+                                  .read(authStateProvider.notifier)
+                                  .logout();
+                              if (context.mounted) {
+                                context.go('/login');
+                              }
+                            }
+                          } catch (e) {
+                            setDialogState(() => isLoading = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Deletion failed: ${e.toString()}')),
+                              );
+                            }
+                          }
+                        },
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Text('Delete My Account',
+                          style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildProfileSection(AuthUser user) {
     final hasPhotos = user.photoUrls.isNotEmpty;
     final photoCount = user.photoUrls.length;
@@ -285,8 +418,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withValues(alpha: 0.15),
-                              Colors.black.withValues(alpha: 0.75),
+                              Colors.black.withOpacity(0.15),
+                              Colors.black.withOpacity(0.75),
                             ],
                             stops: const [0.0, 0.5, 1.0],
                           ),
@@ -325,6 +458,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             ],
                           ),
                         ],
+                        const SizedBox(height: 10),
+                        Text(
+                          user.isPremium ? "Premium Member ✨" : "Free Plan",
+                          style: GoogleFonts.outfit(
+                            color: user.isPremium
+                                ? const Color(0xFFFFD700)
+                                : Colors.white70,
+                            fontWeight: user.isPremium
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        if (!user.isPremium) ...[
+                          const SizedBox(height: 10),
+                          PrimaryButton(
+                            text: "Nadgradnja",
+                            width: 120,
+                            height: 36,
+                            onPressed: () {
+                              PremiumPaywallBottomSheet.show(context);
+                            },
+                          )
+                        ]
                       ],
                     ),
                   ),

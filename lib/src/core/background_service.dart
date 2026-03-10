@@ -3,15 +3,22 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:battery_plus/battery_plus.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'notification_service.dart';
+import 'ble_service.dart';
+import 'geo_service.dart';
 
+/// Configure and register the background service.
+/// Call once in main() before runApp().
 Future<void> initializeBackgroundService() async {
   final service = FlutterBackgroundService();
 
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'tremble_background', // id
-    'Tremble Background Service', // title
-    description: 'This channel is used for important notifications.',
+    'tremble_background',
+    'Tremble Background Service',
+    description: 'Tremble Radar is active and looking for nearby matches.',
     importance: Importance.low,
   );
 
@@ -29,11 +36,11 @@ Future<void> initializeBackgroundService() async {
   await service.configure(
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
-      autoStart: false, // Start only when Radar is active
+      autoStart: false, // Started explicitly when user enables Radar
       isForegroundMode: true,
       notificationChannelId: 'tremble_background',
       initialNotificationTitle: 'Tremble Radar',
-      initialNotificationContent: 'Looking for matches...',
+      initialNotificationContent: 'Looking for nearby matches...',
       foregroundServiceNotificationId: 888,
     ),
     iosConfiguration: IosConfiguration(
@@ -54,30 +61,58 @@ Future<bool> onIosBackground(ServiceInstance service) async {
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize notifications in the background isolate
+  // Re-initialize Firebase in the background isolate
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService.initialize();
 
-  // Listen for stop event
-  service.on('stopService').listen((event) {
+  final bleService = BleService();
+  final geoService = GeoService();
+  final battery = Battery();
+
+  // Start both engines
+  await geoService.start();
+  await bleService.start();
+
+  // Listen for radar mode commands from UI
+  service.on('stopService').listen((_) async {
+    bleService.stop();
+    geoService.stop();
     service.stopSelf();
   });
 
-  // Mock Scanning Loop
-  Timer.periodic(const Duration(seconds: 15), (timer) async {
+  service.on('pauseRadar').listen((_) async {
+    bleService.stop();
+    geoService.stop();
+  });
+
+  service.on('resumeRadar').listen((_) async {
+    await geoService.start();
+    await bleService.start();
+  });
+
+  // Update the persistent notification and emit radarMode to UI every 60s
+  Timer.periodic(const Duration(seconds: 60), (_) async {
+    final isLowPower = geoService.isLowPowerMode;
+    final level = await battery.batteryLevel;
+
+    // Update Android foreground notification content
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
-        // Update notification if needed
-        // service.setForegroundNotificationInfo(...)
+        service.setForegroundNotificationInfo(
+          title: 'Tremble Radar',
+          content: isLowPower
+              ? 'Power-saving mode — Geo matching active ($level%)'
+              : 'Scanning for nearby matches... ($level%)',
+        );
       }
     }
 
-    // SIMULATION: 20% chance to find a match every 15 seconds
-    if (DateTime.now().second % 5 == 0) {
-      // Trigger Notification
-      await NotificationService.showMatchNotification("Ana", 24);
-    }
-
-    // print('FLUTTER BACKGROUND SERVICE: Scanning...');
+    // Emit radar state to UI so it can show the amber battery pill
+    service.invoke('radarState', {
+      'mode': isLowPower ? 'degraded' : 'full',
+      'batteryLevel': level,
+    });
   });
 }

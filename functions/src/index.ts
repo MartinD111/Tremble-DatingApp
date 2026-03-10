@@ -39,6 +39,7 @@ export {
     updateLocation,
     findNearby,
     setInactive,
+    onBleProximity,
 } from "./modules/proximity/proximity.functions";
 
 // ── GDPR Module ──────────────────────────────────────────

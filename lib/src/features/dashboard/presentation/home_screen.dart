@@ -24,6 +24,11 @@ final pingAngleProvider = StateProvider<double?>((ref) => null);
 // Tracks whether the nav bar is currently visible
 final isNavBarVisibleProvider = StateProvider<bool>((ref) => true);
 
+/// Radar power mode — updated by background service isolate via 'radarState' event.
+/// 'full' = BLE + Geo active, 'degraded' = Geo-only (battery saver on)
+final radarModeProvider = StateProvider<String>((ref) => 'full');
+final radarBatteryLevelProvider = StateProvider<int>((ref) => 100);
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -52,10 +57,18 @@ class HomeScreen extends ConsumerWidget {
           barrierColor: Colors.black54,
           transitionDuration: const Duration(milliseconds: 200),
         ).then((_) {
-          // Ensure controller is cleared if dialog is dismissed via barrier
           ref.read(matchControllerProvider.notifier).dismiss();
         });
       }
+    });
+
+    // Listen for radar mode updates from the background service isolate
+    FlutterBackgroundService().on('radarState').listen((event) {
+      if (event == null) return;
+      final mode = event['mode'] as String? ?? 'full';
+      final battery = event['batteryLevel'] as int? ?? 100;
+      ref.read(radarModeProvider.notifier).state = mode;
+      ref.read(radarBatteryLevelProvider.notifier).state = battery;
     });
 
     final user = ref.watch(authStateProvider);
@@ -63,6 +76,8 @@ class HomeScreen extends ConsumerWidget {
     final isScanning = ref.watch(isScanningProvider);
     final pingDistance = ref.watch(pingDistanceProvider);
     final pingAngle = ref.watch(pingAngleProvider);
+    final radarMode = ref.watch(radarModeProvider);
+    final batteryLevel = ref.watch(radarBatteryLevelProvider);
     final bool canAccessRadar =
         user?.isEmailVerified == true || user?.isAdmin == true;
     final bool isPremium = user?.isPremium == true;
@@ -74,7 +89,7 @@ class HomeScreen extends ConsumerWidget {
     if (isPremium) {
       screens = [
         _buildRadarView(ref, context, canAccessRadar, isScanning, isPremium,
-            pingDistance, pingAngle),
+            pingDistance, pingAngle, radarMode, batteryLevel),
         const PulseMapScreen(),
         const MatchesScreen(),
         const SettingsScreen(),
@@ -88,7 +103,7 @@ class HomeScreen extends ConsumerWidget {
     } else {
       screens = [
         _buildRadarView(ref, context, canAccessRadar, isScanning, isPremium,
-            pingDistance, pingAngle),
+            pingDistance, pingAngle, radarMode, batteryLevel),
         const MatchesScreen(),
         const SettingsScreen(),
       ];
@@ -177,7 +192,10 @@ class HomeScreen extends ConsumerWidget {
       bool isScanning,
       bool isPremium,
       double? pingDistance,
-      double? pingAngle) {
+      double? pingAngle,
+      String radarMode,
+      int batteryLevel) {
+    final isDegraded = radarMode == 'degraded';
     return Stack(
       children: [
         // Radar View (Conditional)
@@ -218,20 +236,33 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  if (isScanning)
+                  if (isScanning) ...[
                     Positioned(
                       bottom: 140,
                       left: 0,
                       right: 0,
                       child: Center(
                         child: Text(
-                          "Skeniranje...",
+                          isDegraded
+                              ? "Geo matching \u2014 BLE paused"
+                              : "Skeniranje...",
                           style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.7),
                               letterSpacing: 2),
                         ),
                       ),
-                    )
+                    ),
+                    // ── Power-Save Pill ────────────────────────
+                    if (isDegraded)
+                      Positioned(
+                        top: 56,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: _PowerSavePill(batteryLevel: batteryLevel),
+                        ),
+                      ),
+                  ]
                 ],
               )
             : Center(
@@ -271,3 +302,75 @@ class HomeScreen extends ConsumerWidget {
 }
 
 final navIndexProvider = StateProvider<int>((ref) => 0);
+
+/// Amber animated pill shown on the Radar screen when the background engine
+/// is in battery-saver (degraded) mode — BLE off, Geo-only matching.
+class _PowerSavePill extends StatefulWidget {
+  final int batteryLevel;
+  const _PowerSavePill({required this.batteryLevel});
+
+  @override
+  State<_PowerSavePill> createState() => _PowerSavePillState();
+}
+
+class _PowerSavePillState extends State<_PowerSavePill>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.06).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnim,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFB300).withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFFB300).withValues(alpha: 0.45),
+              blurRadius: 18,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.battery_saver_rounded,
+                color: Colors.black87, size: 16),
+            const SizedBox(width: 7),
+            Text(
+              'Radar v varč. načinu  •  ${widget.batteryLevel}%',
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

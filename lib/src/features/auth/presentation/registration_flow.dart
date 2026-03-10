@@ -128,14 +128,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   final List<File?> _photos = [null, null, null, null, null, null];
   final ImagePicker _picker = ImagePicker();
 
-  // Prompt
-  String? _selectedPromptKey;
-  final TextEditingController _promptAnswerController = TextEditingController();
+  // Prompt (Removed)
 
   // GDPR consent
   bool _consentTerms = false;
   bool _consentPrivacy = false;
-  bool get _consentGiven => _consentTerms && _consentPrivacy;
+  bool _consentDataProcessing =
+      false; // GDPR Art.9 — explicit consent for sensitive data
+  bool get _consentGiven =>
+      _consentTerms && _consentPrivacy && _consentDataProcessing;
 
   // helpers
   String tr(String key) => t(key, _selectedLanguage);
@@ -284,7 +285,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // ────── PROGRESS BAR ──────
   Widget _buildProgressBar() {
-    const totalSteps = 26;
+    const totalSteps = 25;
     final progress = (_currentPage + 1) / totalSteps;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: progress),
@@ -416,7 +417,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _buildPageHobbies(),
                 _buildPagePhotos(),
                 _buildPageConsent(),
-                _buildPagePrompt(),
               ],
             ),
           ),
@@ -2139,98 +2139,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   // ══════════════════════════════════════════════════════
-  // PAGE 20 – PROMPT (Swiping Cards)
-  // ══════════════════════════════════════════════════════
-  Widget _buildPagePrompt() {
-    final promptKeys = [
-      'prompt_2',
-      'prompt_3',
-      'prompt_4',
-      'prompt_5',
-      'prompt_6',
-      'prompt_7',
-      'prompt_8',
-      'prompt_9',
-      'prompt_10'
-    ];
-    return SafeArea(
-      child: Column(children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _backButton(),
-            const SizedBox(height: 16),
-            _stepHeader(tr('select_prompt_title')),
-          ]),
-        ),
-        Expanded(
-          child: PageView.builder(
-            itemCount: promptKeys.length,
-            controller: PageController(viewportFraction: 0.85),
-            itemBuilder: (ctx, i) {
-              final pk = promptKeys[i];
-              final sel = _selectedPromptKey == pk;
-              return Center(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  height: 400,
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                        color: sel ? const Color(0xFF00D9A6) : Colors.white12,
-                        width: sel ? 3 : 1),
-                    boxShadow: sel
-                        ? [
-                            BoxShadow(
-                                color: const Color(0xFF00D9A6)
-                                    .withValues(alpha: 0.2),
-                                blurRadius: 20)
-                          ]
-                        : [],
-                  ),
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(tr(pk),
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 20),
-                        TextField(
-                          onChanged: (v) =>
-                              setState(() => _selectedPromptKey = pk),
-                          onTap: () => setState(() => _selectedPromptKey = pk),
-                          controller: sel ? _promptAnswerController : null,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 18),
-                          textAlign: TextAlign.center,
-                          maxLines: 4,
-                          decoration: InputDecoration(
-                              hintText: tr('write_answer'),
-                              hintStyle: const TextStyle(color: Colors.white24),
-                              border: InputBorder.none),
-                        ),
-                      ]),
-                ),
-              );
-            },
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(24),
-          child: _continueButton(enabled: true, onTap: completeRegistration),
-        ),
-      ]),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
   // PAGE — GDPR CONSENT
   // ══════════════════════════════════════════════════════
   Widget _buildPageConsent() {
@@ -2294,6 +2202,24 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            // Explicit consent for processing sensitive personal data (GDPR Art.9 / ZVOP-2)
+            _consentTile(
+              value: _consentDataProcessing,
+              onChanged: (v) => setState(() => _consentDataProcessing = v),
+              richText: const TextSpan(
+                style:
+                    TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+                children: [
+                  TextSpan(
+                      text:
+                          'I explicitly consent to the processing of my sensitive personal data '
+                          '(location, interests, preferences) for the purpose of proximity matching. '
+                          'I understand this data is encrypted, never sold, and I can withdraw consent '
+                          'at any time from Settings.'),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
             // Data minimization notice
             Container(
@@ -2323,7 +2249,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             const Spacer(),
             _continueButton(
               enabled: _consentGiven,
-              onTap: _nextPage,
+              onTap: completeRegistration,
               label: 'Continue',
             ),
             const SizedBox(height: 16),
@@ -2382,10 +2308,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     }
     final photoUrls =
         _photos.where((p) => p != null).map((p) => p!.path).toList();
-    final Map<String, String> prompts = {};
-    if (_selectedPromptKey != null && _promptAnswerController.text.isNotEmpty) {
-      prompts[_selectedPromptKey!] = _promptAnswerController.text;
-    }
 
     final genderMap = {
       'male': 'Moški',
@@ -2448,7 +2370,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           _customLanguageController.text
       ],
       hobbies: _selectedHobbies,
-      prompts: prompts,
+      prompts: const {},
       isOnboarded: true,
       isEmailVerified: false,
       ageRangeStart: 18,

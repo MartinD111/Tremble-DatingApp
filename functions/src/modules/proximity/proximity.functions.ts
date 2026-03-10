@@ -6,7 +6,9 @@
  */
 
 import { onCall } from "firebase-functions/v2/https";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { z } from "zod";
@@ -232,5 +234,136 @@ export const setInactive = onCall(
         });
 
         return { success: true };
+    }
+);
+
+// ── BLE Proximity Trigger ─────────────────────────────────
+
+/**
+ * onBleProximity — Firestore trigger on proximity_events/{eventId}
+ *
+ * Validates mutual BLE detection: both A→B and B→A must exist within
+ * a 5-minute window. On mutual detection:
+ *  1. Creates a match candidate in `matches/` (status: "ble_candidate")
+ *  2. Sends FCM notification to both users
+ *  3. Proximity event auto-deletes after TTL (client-side) or is cleaned up here.
+ *
+ * Privacy: proximity_events has a 10-minute TTL. Firestore TTL policy
+ * must be configured in Firebase console on the `ttl` field.
+ */
+export const onBleProximity = onDocumentCreated(
+    "proximity_events/{eventId}",
+    async (event) => {
+        const data = event.data?.data();
+        if (!data) return;
+
+        const { from: fromUid, toDeviceId, timestamp } = data as {
+            from: string;
+            toDeviceId: string;
+            timestamp: Timestamp;
+        };
+
+        if (!fromUid || !toDeviceId) return;
+
+        // Resolve toDeviceId → Tremble UID by looking up proximity collection
+        // Devices store their deviceId in proximity/{uid}.deviceId on first scan
+        const toUidSnapshot = await db
+            .collection("proximity")
+            .where("deviceId", "==", toDeviceId)
+            .limit(1)
+            .get();
+
+        if (toUidSnapshot.empty) {
+            console.log(`[BLE] Device ${toDeviceId} not registered — skipping`);
+            return;
+        }
+
+        const toUid = toUidSnapshot.docs[0].id;
+
+        // Prevent self-matching
+        if (fromUid === toUid) return;
+
+        // Check for existing match (prevent duplicates)
+        const existingMatch = await db
+            .collection("matches")
+            .where("userA", "in", [fromUid, toUid])
+            .where("userB", "in", [fromUid, toUid])
+            .limit(1)
+            .get();
+
+        if (!existingMatch.empty) {
+            console.log(`[BLE] Match already exists: ${fromUid} ↔ ${toUid}`);
+            return;
+        }
+
+        // Look for the reverse event: toUid → fromUid within 5-minute window
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const reverseEvents = await db
+            .collection("proximity_events")
+            .where("from", "==", toUid)
+            .where("toDeviceId", "==", fromUid) // fromUid used as deviceId proxy for now
+            .where("timestamp", ">=", Timestamp.fromDate(fiveMinutesAgo))
+            .limit(1)
+            .get();
+
+        if (reverseEvents.empty) {
+            console.log(`[BLE] One-sided detection: ${fromUid} → ${toUid}. Waiting for reverse.`);
+            return;
+        }
+
+        // ── Mutual detection confirmed ────────────────────
+        console.log(`[BLE] Mutual detection: ${fromUid} ↔ ${toUid} — creating match candidate`);
+
+        const matchRef = db.collection("matches").doc();
+        await matchRef.set({
+            userA: fromUid,
+            userB: toUid,
+            status: "ble_candidate",
+            discoveryMethod: "ble",
+            createdAt: FieldValue.serverTimestamp(),
+        });
+
+        // Fetch FCM tokens for both users
+        const [userADoc, userBDoc] = await Promise.all([
+            db.collection("users").doc(fromUid).get(),
+            db.collection("users").doc(toUid).get(),
+        ]);
+
+        const userAToken = userADoc.data()?.fcmToken as string | undefined;
+        const userBToken = userBDoc.data()?.fcmToken as string | undefined;
+        const userAName = userADoc.data()?.name as string | undefined ?? "Someone";
+        const userBName = userBDoc.data()?.name as string | undefined ?? "Someone";
+
+        const messaging = getMessaging();
+        const notifications = [];
+
+        if (userAToken) {
+            notifications.push(
+                messaging.send({
+                    token: userAToken,
+                    notification: {
+                        title: "Tremble 💫",
+                        body: `${userBName} is nearby! Say hello.`,
+                    },
+                    data: { matchId: matchRef.id, type: "ble_match" },
+                })
+            );
+        }
+
+        if (userBToken) {
+            notifications.push(
+                messaging.send({
+                    token: userBToken,
+                    notification: {
+                        title: "Tremble 💫",
+                        body: `${userAName} is nearby! Say hello.`,
+                    },
+                    data: { matchId: matchRef.id, type: "ble_match" },
+                })
+            );
+        }
+
+        await Promise.allSettled(notifications);
+        console.log(`[BLE] Match candidate ${matchRef.id} created and notifications sent.`);
     }
 );
