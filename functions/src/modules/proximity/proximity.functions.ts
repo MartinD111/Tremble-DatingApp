@@ -305,7 +305,7 @@ export const onBleProximity = onDocumentCreated(
         const data = event.data?.data();
         if (!data) return;
 
-        const { from: fromUid, toDeviceId, timestamp } = data as {
+        const { from: fromUid, toDeviceId } = data as {
             from: string;
             toDeviceId: string;
             timestamp: Timestamp;

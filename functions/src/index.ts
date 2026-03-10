@@ -12,8 +12,9 @@ initializeApp();
 
 // ── Auth Module ──────────────────────────────────────────
 export {
-    onUserCreated,
+    onUserDocCreated,
     completeOnboarding,
+    verifyGoogleToken,
 } from "./modules/auth/auth.functions";
 
 // ── Users Module ─────────────────────────────────────────

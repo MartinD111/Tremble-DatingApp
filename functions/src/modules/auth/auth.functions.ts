@@ -6,7 +6,7 @@
  */
 
 import { onCall } from "firebase-functions/v2/https";
-import { beforeUserCreated } from "firebase-functions/v2/identity";
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { OAuth2Client } from "google-auth-library";
 import { requireAuth } from "../../middleware/authGuard";
@@ -19,25 +19,28 @@ const db = getFirestore();
 const googleClient = new OAuth2Client();
 
 /**
- * Identity Platform trigger — runs when a new user signs up.
- * Creates the initial user stub in Firestore.
+ * Firestore trigger — runs when a new user document is created.
+ * NOTE: The client must create the initial /users/{uid} document upon sign-up.
+ * This function then enriches it with server-side timestamps.
+ *
+ * Alternative to beforeUserCreated (which requires GCIP / Identity Platform).
  */
-export const onUserCreated = beforeUserCreated(async (event) => {
-    const user = event.data;
+export const onUserDocCreated = onDocumentCreated("users/{uid}", async (event) => {
+    const snap = event.data;
+    if (!snap) return;
 
-    await db
-        .collection("users")
-        .doc(user.uid)
-        .set({
-            email: user.email || null,
+    await snap.ref.set(
+        {
             isOnboarded: false,
             isPremium: true, // Free premium until 10k users
             isAdmin: false,
             createdAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp(),
-        });
+        },
+        { merge: true }
+    );
 
-    console.log(`[AUTH] User created: ${user.uid}`);
+    console.log(`[AUTH] User stub created: ${event.params.uid}`);
 });
 
 /**
@@ -156,9 +159,6 @@ export const verifyGoogleToken = onCall(
                 throw new Error("Invalid token payload");
             }
 
-            // At this point, the token is valid. 
-            // In a custom JWT flow, you'd generate a sign-in token here.
-            // For Firebase, we return the verified metadata.
             return {
                 verified: true,
                 email: payload.email,
