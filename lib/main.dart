@@ -5,14 +5,23 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'src/app.dart';
 import 'src/core/background_service.dart';
-import 'src/core/firebase_options.dart';
+import 'src/core/firebase_options_dev.dart';
+import 'src/core/firebase_options_prod.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Determine environment flavor, defaulting to 'dev'.
+  const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
+
+  // Select the appropriate FirebaseOptions.
+  final firebaseOptions = flavor == 'prod'
+      ? ProdFirebaseOptions.currentPlatform
+      : DevFirebaseOptions.currentPlatform;
+
   // Initialize Firebase
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+    options: firebaseOptions,
   );
 
   // AppCheck — prevents unauthorized apps from hitting Firebase services

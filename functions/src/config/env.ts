@@ -29,23 +29,25 @@ export interface AppConfig {
     };
 }
 
-const R2_ACCOUNT_ID = "8df0214c44c257654f7aa054a8ffb9dc";
-const R2_BUCKET_NAME = "tremble-avatars";
-
 /**
  * Load configuration from environment.
  * Secrets (API keys) come from Firebase Secret Manager via process.env.
  */
 export function getConfig(): AppConfig {
     const env = (process.env.TREMBLE_ENV as AppConfig["environment"]) || "dev";
+    
+    // We expect these to be populated by Firebase Secret Manager in production.
+    // In local emulator, these should be loaded from .env.local
+    const r2AccountId = process.env.R2_ACCOUNT_ID || "missing_account_id";
+    const r2BucketName = process.env.R2_BUCKET_NAME || "missing_bucket_name";
 
     return {
         r2: {
-            accountId: process.env.R2_ACCOUNT_ID || R2_ACCOUNT_ID,
+            accountId: r2AccountId,
             accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
             secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
-            bucketName: process.env.R2_BUCKET_NAME || R2_BUCKET_NAME,
-            endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+            bucketName: r2BucketName,
+            endpoint: `https://${r2AccountId}.r2.cloudflarestorage.com`,
             publicUrl: process.env.R2_PUBLIC_URL || "",
         },
         resend: {
