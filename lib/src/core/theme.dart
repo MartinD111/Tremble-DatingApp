@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class TrembleTheme {
-  // Base Colors
-  static const primaryColor = Color(0xFFE91E63);
-  static const secondaryColor = Color(0xFF87CEEB);
+  // Base Colors - Premium Cyan & Indigo
+  static const primaryColor = Color(0xFF00E5CC); // Electric Cyan
+  static const secondaryColor = Color(0xFF1A237E); // Deep Indigo
 
-  // Male Theme Colors
-  static const malePrimaryColor = Color(0xFF2196F3);
-  static const maleSecondaryColor = Color(0xFF00BCD4);
+  // Male Theme Colors - Deep Emerald
+  static const malePrimaryColor = Color(0xFF004D40); // Deep Teal
+  static const maleSecondaryColor = Color(0xFF00796B); // Teal
 
-  // Dark Mode Colors
-  static const darkPrimaryColor = Color(0xFF880E4F);
-  static const darkSecondaryColor = Color(0xFF1A237E);
-  static const darkMalePrimaryColor = Color(0xFF0D47A1);
-  static const darkMaleSecondaryColor = Color(0xFF006064);
+  // Dark Mode Colors - Midnight & Deep Forest
+  static const darkPrimaryColor = Color(0xFF080B12); // Midnight
+  static const darkSecondaryColor = Color(0xFF00242C); // Dark Petrol
+  static const darkMalePrimaryColor = Color(0xFF001A1A); // Almost Black Green
+  static const darkMaleSecondaryColor = Color(0xFF003838); // Deep Forest
 
   // Pride Colors
   static const List<Color> prideGradient = [

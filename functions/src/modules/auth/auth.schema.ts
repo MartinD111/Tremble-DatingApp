@@ -60,3 +60,8 @@ export const completeOnboardingSchema = z.object({
 });
 
 export type CompleteOnboardingData = z.infer<typeof completeOnboardingSchema>;
+
+/** Schema for Google ID Token verification */
+export const googleAuthSchema = z.object({
+    idToken: z.string().min(1, "ID Token is required"),
+});

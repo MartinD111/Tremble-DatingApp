@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/api_client.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -339,6 +341,8 @@ final currentUidProvider = Provider<String?>((ref) {
 class AuthRepository {
   final FirebaseAuth _auth;
   final FirebaseFirestore _db;
+  final GoogleSignIn _googleSignIn =
+      GoogleSignIn(scopes: <String>['email', 'profile']);
   final TrembleApiClient _api = TrembleApiClient();
 
   AuthRepository(
@@ -356,6 +360,30 @@ class AuthRepository {
       password: password,
     );
     return _fetchUser(cred.user!);
+  }
+
+  // ── Google Sign-In ───────────────────────────────────────────────────────
+  Future<AuthUser> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) throw Exception('Google Sign-In canceled');
+
+      // In google_sign_in v6, authentication is a Future<GoogleSignInAuthentication>
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+      return _fetchUser(userCredential.user!);
+    } catch (e) {
+      debugPrint("[Google Sign-In] Error: $e");
+      rethrow;
+    }
   }
 
   // ── Register ─────────────────────────────────────────────────────────────
@@ -410,6 +438,7 @@ class AuthRepository {
 
   // ── Logout ────────────────────────────────────────────────────────────────
   Future<void> logout() async {
+    await _googleSignIn.signOut();
     await _auth.signOut();
   }
 
@@ -463,6 +492,10 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
 
   Future<void> login(String email, String password) async {
     state = await _repository.loginWithEmail(email, password);
+  }
+
+  Future<void> signInWithGoogle() async {
+    state = await _repository.signInWithGoogle();
   }
 
   Future<void> register(String email, String password) async {

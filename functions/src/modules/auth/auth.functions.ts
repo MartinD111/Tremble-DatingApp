@@ -8,13 +8,15 @@
 import { onCall } from "firebase-functions/v2/https";
 import { beforeUserCreated } from "firebase-functions/v2/identity";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { OAuth2Client } from "google-auth-library";
 import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { validateRequest } from "../../middleware/validate";
-import { completeOnboardingSchema } from "./auth.schema";
+import { completeOnboardingSchema, googleAuthSchema } from "./auth.schema";
 import { sendWelcomeEmail } from "../email/email.functions";
 
 const db = getFirestore();
+const googleClient = new OAuth2Client();
 
 /**
  * Identity Platform trigger — runs when a new user signs up.
@@ -119,5 +121,53 @@ export const completeOnboarding = onCall(
         }
 
         return { success: true };
+    }
+);
+
+/**
+ * Verify Google ID Token — specifically used for secure backend verification
+ * as requested in the security audit.
+ */
+export const verifyGoogleToken = onCall(
+    { maxInstances: 50 },
+    async (request) => {
+        // Rate limit: max 10 verification attempts per minute
+        await checkRateLimit(request.rawRequest.ip || "anon", "verifyGoogleToken", {
+            maxRequests: 10,
+            windowMs: 60_000,
+        });
+
+        const data = validateRequest(googleAuthSchema, request.data);
+        const webClientId = process.env.GOOGLE_WEB_CLIENT_ID;
+
+        if (!webClientId) {
+            console.error("[AUTH] GOOGLE_WEB_CLIENT_ID not set in environment.");
+            throw new Error("Server configuration error");
+        }
+
+        try {
+            const ticket = await googleClient.verifyIdToken({
+                idToken: data.idToken,
+                audience: webClientId,
+            });
+            const payload = ticket.getPayload();
+
+            if (!payload || !payload.email) {
+                throw new Error("Invalid token payload");
+            }
+
+            // At this point, the token is valid. 
+            // In a custom JWT flow, you'd generate a sign-in token here.
+            // For Firebase, we return the verified metadata.
+            return {
+                verified: true,
+                email: payload.email,
+                uid: payload.sub,
+                name: payload.name,
+            };
+        } catch (error) {
+            console.error("[AUTH] Google verification failed:", error);
+            throw new Error("Invalid Google Token");
+        }
     }
 );

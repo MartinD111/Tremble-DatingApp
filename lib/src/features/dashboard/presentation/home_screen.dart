@@ -250,8 +250,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     pingDistance: pingDistance,
                     pingAngle: pingAngle,
                   )),
+
+                  // ── Pulsing Primary Action ────────────────────────
                   Center(
-                    child: GestureDetector(
+                    child: _PulsingRadarButton(
+                      isScanning: isScanning,
                       onTap: () {
                         final newState = !isScanning;
                         ref.read(isScanningProvider.notifier).state = newState;
@@ -259,25 +262,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         if (newState) {
                           debugPrint(
                               "📍 Location Captured: mock_lat: 46.05, mock_lng: 14.50 [Ljubljana]");
-                          // In real app, call Location Service here
                           FlutterBackgroundService().startService();
-                        } else {
-                          // Stop service? Or just let it run but stop notifying?
-                          // Simply invoking stop might kill the isolate
-                          // FlutterBackgroundService().invoke("stopService");
                         }
                       },
-                      child: GlassCard(
-                        opacity: 0.1,
-                        borderRadius: 100,
-                        padding: const EdgeInsets.all(30),
-                        child: Icon(
-                            isScanning ? LucideIcons.radio : LucideIcons.play,
-                            size: 60,
-                            color: isScanning ? Colors.white : Colors.white70),
-                      ),
                     ),
                   ),
+
                   if (isScanning) ...[
                     Positioned(
                       bottom: 140,
@@ -420,6 +410,107 @@ class _PowerSavePillState extends State<_PowerSavePill>
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PulsingRadarButton extends StatefulWidget {
+  final bool isScanning;
+  final VoidCallback onTap;
+
+  const _PulsingRadarButton({required this.isScanning, required this.onTap});
+
+  @override
+  State<_PulsingRadarButton> createState() => _PulsingRadarButtonState();
+}
+
+class _PulsingRadarButtonState extends State<_PulsingRadarButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+    if (widget.isScanning) _pulseController.repeat();
+  }
+
+  @override
+  void didUpdateWidget(_PulsingRadarButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isScanning != oldWidget.isScanning) {
+      if (widget.isScanning) {
+        _pulseController.repeat();
+      } else {
+        _pulseController.stop();
+        _pulseController.reset();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      // SizedBox provides a fixed canvas so ripple rings don't get clipped
+      child: SizedBox(
+        width: 280,
+        height: 280,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Expanding ripple rings when scanning
+            if (widget.isScanning)
+              ...List.generate(3, (index) {
+                return AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, child) {
+                    final progress =
+                        (_pulseController.value + (index * 0.33)) % 1.0;
+                    return Container(
+                      width: 130.0 + (120.0 * progress),
+                      height: 130.0 + (120.0 * progress),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 1.0 - progress),
+                          width: 1.5,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }),
+
+            // Core button
+            GlassCard(
+              opacity: 0.15,
+              borderRadius: 100,
+              padding: const EdgeInsets.all(35),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Icon(
+                  widget.isScanning ? LucideIcons.radio : LucideIcons.play,
+                  key: ValueKey(widget.isScanning),
+                  size: 60,
+                  color: widget.isScanning
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.7),
+                ),
               ),
             ),
           ],

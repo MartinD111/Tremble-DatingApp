@@ -240,6 +240,57 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                           }),
 
                     const SizedBox(height: 16),
+
+                    // Google Sign-In Button
+                    if (!_isLoading) ...[
+                      GestureDetector(
+                        onTap: () async {
+                          setState(() => _isLoading = true);
+                          try {
+                            await ref
+                                .read(authStateProvider.notifier)
+                                .signInWithGoogle();
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text("Google Login failed: $e")),
+                              );
+                            }
+                          } finally {
+                            if (mounted) setState(() => _isLoading = false);
+                          }
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.network(
+                                'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png',
+                                height: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                "Nadaljuj z Googlom",
+                                style: GoogleFonts.outfit(
+                                  color: Colors.black87,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     // Are you new Pill
                     GestureDetector(
                       onTap: () => context.push('/onboarding'),

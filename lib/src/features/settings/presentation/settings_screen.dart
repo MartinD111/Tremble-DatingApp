@@ -411,8 +411,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withOpacity(0.15),
-                              Colors.black.withOpacity(0.75),
+                              Colors.black.withValues(alpha: 0.15),
+                              Colors.black.withValues(alpha: 0.75),
                             ],
                             stops: const [0.0, 0.5, 1.0],
                           ),
