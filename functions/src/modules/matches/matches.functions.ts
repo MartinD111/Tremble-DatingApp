@@ -214,6 +214,9 @@ export const getMatches = onCall(
     async (request) => {
         const uid = requireAuth(request);
 
+        const userDoc = await db.collection("users").doc(uid).get();
+        const blockedUsers = userDoc.data()?.blockedUserIds || [];
+
         // Query where user is userA OR userB
         const [asA, asB] = await Promise.all([
             db
@@ -238,6 +241,7 @@ export const getMatches = onCall(
         for (const doc of allDocs) {
             const data = doc.data();
             const partnerId = data.userA === uid ? data.userB : data.userA;
+            if (blockedUsers.includes(partnerId)) continue; // Do not return blocked matches
             matchedUserIds.add(partnerId);
         }
 

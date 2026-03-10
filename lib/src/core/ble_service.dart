@@ -111,8 +111,9 @@ class BleService {
         'toDeviceId': remoteDeviceId,
         'rssi': result.rssi,
         'timestamp': FieldValue.serverTimestamp(),
-        'ttl':
-            DateTime.now().add(const Duration(minutes: 10)).toIso8601String(),
+        'ttl': Timestamp.fromDate(
+          DateTime.now().add(const Duration(minutes: 10)),
+        ),
       });
     } catch (_) {
       // Silently fail — proximity event is best-effort

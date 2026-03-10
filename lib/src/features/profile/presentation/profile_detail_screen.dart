@@ -8,6 +8,7 @@ import '../../../shared/ui/glass_card.dart';
 import '../../matches/data/match_repository.dart';
 import '../../dashboard/presentation/home_screen.dart'; // For tracking ping/radar
 import '../../auth/data/auth_repository.dart';
+import '../../safety/presentation/widgets/ugc_action_sheet.dart';
 import '../../../core/translations.dart';
 
 class ProfileDetailScreen extends ConsumerWidget {
@@ -180,6 +181,18 @@ class ProfileDetailScreen extends ConsumerWidget {
       elevation: 0,
       pinned: false,
       automaticallyImplyLeading: false,
+      actions: [
+        IconButton(
+          icon: const Icon(LucideIcons.moreVertical, color: Colors.white),
+          onPressed: () {
+            UgcActionSheet.show(
+              context,
+              targetUid: match.id,
+              targetName: match.name,
+            );
+          },
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,

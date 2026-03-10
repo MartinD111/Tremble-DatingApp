@@ -1,7 +1,8 @@
 # ADR-001: BLE Proximity Discovery Engine
 
 Date: 2026-03-10  
-Status: Accepted  
+Status: Implemented  
+Implemented In: `lib/src/core/background_service.dart`, `lib/src/core/ble_service.dart`
 Risk Level: HIGH  
 Requires Founder Approval: YES
 

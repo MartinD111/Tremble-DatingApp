@@ -1269,6 +1269,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             inactiveTrackColor: Colors.white24,
             onChanged: null, // Admin status is server-managed only
           ),
+          Divider(color: Colors.white.withValues(alpha: 0.1)),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(LucideIcons.userX, color: Colors.white70),
+            title: Text(_t('blocked_users'),
+                style: const TextStyle(color: Colors.white)),
+            trailing: const Icon(LucideIcons.chevronRight, color: Colors.white30),
+            onTap: () {
+              context.push('/blocked-users');
+            },
+          ),
         ],
       ),
     );

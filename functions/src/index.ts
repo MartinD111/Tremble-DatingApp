@@ -51,3 +51,10 @@ export {
 
 // ── Email Module (Resend) ─────────────────────────────────
 export { resendVerificationEmail } from "./modules/email/email.functions";
+
+// ── Safety / UGC Module ──────────────────────────────────
+export {
+    blockUser,
+    unblockUser,
+    reportUser,
+} from "./modules/safety/safety.functions";
