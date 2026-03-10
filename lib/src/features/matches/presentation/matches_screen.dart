@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../matches/data/match_repository.dart';
+import '../../safety/presentation/widgets/ugc_action_sheet.dart';
 
 class MatchesScreen extends ConsumerStatefulWidget {
   const MatchesScreen({super.key});
@@ -223,8 +224,23 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                   ),
                                 )
                               else
-                                const Icon(LucideIcons.chevronRight,
-                                    color: Colors.white30, size: 20),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(LucideIcons.moreVertical, color: Colors.white54),
+                                      onPressed: () {
+                                        UgcActionSheet.show(
+                                          context,
+                                          targetUid: match.id,
+                                          targetName: match.name,
+                                        );
+                                      },
+                                    ),
+                                    const Icon(LucideIcons.chevronRight,
+                                        color: Colors.white30, size: 20),
+                                  ],
+                                ),
                               const SizedBox(width: 5),
                             ],
                           ),

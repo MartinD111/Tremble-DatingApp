@@ -124,7 +124,7 @@ export const exportUserData = onCall(
             type: "export",
             status: "processing",
             requestedAt: FieldValue.serverTimestamp(),
-            expiresAt: twoYearsFromNow(), // TTL — Firestore will auto-delete after 2 years
+            ttl: twoYearsFromNow(), // TTL — Firestore will auto-delete after 2 years
         });
 
         // Fetch all user data
@@ -201,7 +201,7 @@ export const deleteUserAccount = onCall(
             type: "delete",
             status: "processing",
             requestedAt: FieldValue.serverTimestamp(),
-            expiresAt: twoYearsFromNow(), // TTL — auto-deleted by Firestore after 2 years
+            ttl: twoYearsFromNow(), // TTL — auto-deleted by Firestore after 2 years
         });
 
         try {

@@ -125,7 +125,7 @@ class GeoService {
 
       // TTL field: proximity doc auto-expires if not refreshed for 2 hours.
       // This prevents stale location data persisting after the user closes the app.
-      final expiresAt = Timestamp.fromDate(
+      final ttl = Timestamp.fromDate(
         DateTime.now().add(const Duration(hours: 2)),
       );
 
@@ -135,7 +135,7 @@ class GeoService {
         'radarActive': true,
         'isLowPowerMode': _isLowPowerMode,
         'updatedAt': FieldValue.serverTimestamp(),
-        'expiresAt': expiresAt, // Firestore TTL — delete if stale > 2h
+        'ttl': ttl, // Firestore TTL — delete if stale > 2h
       }, SetOptions(merge: true));
     } catch (_) {
       // Silently fail — will retry on next tick

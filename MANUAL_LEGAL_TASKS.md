@@ -7,7 +7,7 @@ Ti dokumenti morajo biti dosegljivi preko spleta in posredovani med registracijo
 
 ### Nujno popraviti/vnesti v Privacy Policy:
 * **Hramba podatkov (Retention policy):**
-  - "Evidence zahtev po izbrisu in vpogledih (t.i. gdprRequests) se v naših strežnikih hranijo 22 leti za zakonsko evidenco."
+  - "Evidence zahtev po izbrisu in vpogledih (t.i. gdprRequests) se v naših strežnikih hranijo 2 leti za zakonsko evidenco."
   - "Fotografije in profili uporabnikov, ki zaprejo ali izbrišejo račune, so trajno pobrisane v trenutku zahtevanega izbrisa računa (takoj, hkrati v glavni Firestore bazi in Cloudflare R2 shrambi)."
 * **Zasebnost lokacije:** "Osebam podajamo lokacijo v polmeru ~38 metrov (z zamegljevanjem oziroma GEOHASH 8 metodologijo). Ne hranimo nobenih natančnih koordinat (`lat`, `lng`)."
 * **Starostne omejitve:** Jasno predpisati, da je aplikacija dostopna le polnoletnim (18+). Podatke vpisane s strani maloletnikov brisati takoj ko se zaznajo.

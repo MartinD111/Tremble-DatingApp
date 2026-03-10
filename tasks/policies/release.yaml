@@ -1,7 +1,67 @@
-# policies/release.yaml
+version: "2.0"
+meta:
+  name: "MPC Workflow — Release & Deployment Policies"
+  maintained_by: "platform/release-team"
+  last_reviewed: "2026-03-10"
+  enforcement: "ci"
+
 rules:
-  - id: all_tests_must_pass
-    action: block_merge
-  - id: pass_quality_score
-    threshold: 85
+  # ── Build & Tests ────────────────────────────────────────────────────────
+  - id: REL-001
+    title: "Flutter Analyzer Must Be Clean"
+    category: code_quality
+    description: >
+      `flutter analyze` must return 0 issues (ignoring specific allowed infos).
+    severity: high
     action: block_release
+    detector:
+      type: ci_step
+      command: "flutter analyze"
+
+  - id: REL-002
+    title: "TypeScript Backend Compilation"
+    category: code_quality
+    description: >
+      Cloud Functions must compile locally without TypeScript errors.
+    severity: high
+    action: block_release
+    detector:
+      type: ci_step
+      command: "npm run build"
+      directory: "functions/"
+
+  - id: REL-003
+    title: "No UI Placeholder Text in Production"
+    category: UX
+    description: >
+      No "Lorem ipsum", "TODO", or "Fix me" text should be visible in production screens.
+    severity: medium
+    action: warn
+    detector:
+      type: regex_list
+      patterns:
+        - "(?i)lorem ipsum"
+        - "TODO:"
+        - "FIXME:"
+
+  # ── Store Compliance ─────────────────────────────────────────────────────
+  - id: REL-004
+    title: "App Store Review Guidelines"
+    category: store_compliance
+    description: >
+      Ensure Apple Developer Guidelines and Google Play Policies are met.
+      Specifically: User Block/Report functionality must be present and EULA clearly accessible.
+    severity: critical
+    action: block_release
+    detector:
+      type: feature_check
+      requires:
+        - "Block User"
+        - "Report User"
+        - "EULA Acceptance"
+
+policy_tuning:
+  critical: block_release
+  high: block_merge
+  medium: warn
+  low: warn

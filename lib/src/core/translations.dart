@@ -99,6 +99,21 @@ const Map<String, Map<String, String>> _translations = {
     'account_settings': 'Account settings',
     'premium_account': 'Premium account',
 
+    // --- UGC Safety ---
+    'report_user': 'Report {name}',
+    'block_user': 'Block {name}',
+    'block_confirm_desc': 'Are you sure you want to block {name}?\nThis action will immediately cancel any matches and they will disappear from the app.\n\nYou can always unblock them later in "Blocked Users" settings.',
+    'block_success': '{name} has been blocked.',
+    'report_reasons_desc': 'Why are you reporting this user?',
+    'report_explanation': 'Additional details (optional)',
+    'report_explanation_hint': 'Please provide more context',
+    'report_auto_block_warning': 'Reporting a user will also automatically block them.',
+    'blocked_users': 'Blocked Users',
+    'unblock': 'Unblock',
+    'no_blocked_users': 'You have no blocked users.',
+    'submit': 'Submit',
+    'report_success': 'Thank you. {name} has been reported.',
+
     // --- Preferences ---
     'age_range': 'Age range',
     'who_looking_for': 'Who am I looking for?',
@@ -406,6 +421,22 @@ const Map<String, Map<String, String>> _translations = {
     'app_language': 'Jezik aplikacije',
     'account_settings': 'Nastavitve računa',
     'premium_account': 'Premium account',
+
+    // --- UGC Safety ---
+    'report_user': 'Prijavi {name}',
+    'block_user': 'Blokiraj {name}',
+    'block_confirm_desc': 'Ste prepričani, da želite blokirati osebo {name}?\nTo bo takoj prekinilo morebitne matche in oseba bo izginila iz aplikacije.\n\nOsebo lahko kasneje odblokirate v nastavitvah pod "Blokirani uporabniki".',
+    'block_success': '{name} je bil/a blokiran/a.',
+    'report_reasons_desc': 'Zakaj prijavljate tega uporabnika?',
+    'report_explanation': 'Dodatne podrobnosti (neobvezno)',
+    'report_explanation_hint': 'Prosimo, podajte več konteksta',
+    'report_auto_block_warning': 'Prijava uporabnika bo to osebo tudi samodejno blokirala in prekinila stike.',
+    'blocked_users': 'Blokirani Uporabniki',
+    'unblock': 'Odblokiraj',
+    'no_blocked_users': 'Trenutno nimate blokiranih oseb.',
+    'submit': 'Pošlji',
+    'report_success': 'Hvala. Uporabnik {name} je bil prijavljen.',
+
     'age_range': 'Starostni razpon',
     'who_looking_for': 'Koga iščem?',
     'male': 'Moški',

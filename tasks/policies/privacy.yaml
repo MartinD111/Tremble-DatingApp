@@ -1,5 +1,93 @@
-# policies/privacy.yaml
+version: "2.0"
+meta:
+  name: "MPC Workflow — Privacy & Data Protection Policies"
+  maintained_by: "platform/compliance-team"
+  last_reviewed: "2026-03-10"
+  enforcement: "ci"
+  notes: >
+    Enforces GDPR and ZVOP-2 requirements globally across the codebase.
+    Any violation of user consent models or data minimization immediately blocks merges.
+
 rules:
-  - id: pii_must_be_encrypted_at_rest
+  # ── ZVOP-2 / GDPR Age Requirements ───────────────────────────────────────
+  - id: PRIV-001
+    title: "Strict 18+ Age Gate"
+    category: user_eligibility
+    description: >
+      The application must enforce a strict 18+ age requirement before any
+      personal data is collected. No exemptions.
     severity: critical
     action: block_merge
+    detector:
+      type: code_scan
+      patterns:
+        - "age\\s*<\\s*18"
+      required_companion:
+        - "return" 
+        - "Exception"
+    remediation: >
+      Ensure age < 18 always results in a hard stop / return during the onboarding flow.
+
+  # ── Location Data Minimization ───────────────────────────────────────────
+  - id: PRIV-002
+    title: "No Raw GPS Coordinates in Database"
+    category: data_minimization
+    description: >
+      Raw latitude and longitude must never be saved to the database.
+      Only hashed area codes (e.g., Geohash precision 8) are permitted to protect user tracking.
+    severity: critical
+    action: block_merge
+    detector:
+      type: regex_list
+      patterns:
+        - "['\"]lat['\"]\\s*:"
+        - "['\"]lng['\"]\\s*:"
+        - "['\"]latitude['\"]\\s*:"
+        - "['\"]longitude['\"]\\s*:"
+      check_paths:
+        - "lib/src/core/geo_service.dart"
+        - "functions/src/**"
+    remediation: >
+      Remove lat/lng from Firestore map payloads. Use dart_geohash to generate a geohash string and string matching.
+
+  # ── Data Retention (TTL) ────────────────────────────────────────────────
+  - id: PRIV-003
+    title: "Mandatory TTL on Ephemeral Data"
+    category: retention
+    description: >
+      Ephemeral data (proximity events, radar locations, gdpr request logs) must have a strict automated deletion policy via an `expiresAt` or `ttl` field.
+    severity: high
+    action: block_merge
+    detector:
+      type: code_scan
+      patterns:
+        - "\\.collection\\(['\"]proximity"
+      required_companion:
+        - "expiresAt"
+        - "ttl"
+    remediation: >
+      Add a server timestamp + duration (e.g. 2 hours for location, 10 min for BLE) to the document field.
+
+  # ── Explicit Consent ────────────────────────────────────────────────────
+  - id: PRIV-004
+    title: "Explicit Unbundled Consent"
+    category: consent
+    description: >
+      Consent for specific features (location tracking, sensitive data processing) must be unbundled from general Terms of Service.
+    severity: high
+    action: block_merge
+    detector:
+      type: code_scan
+      patterns:
+        - "_consentGiven\\s*=>"
+      required_companion:
+        - "_consentLocation"
+        - "_consentDataProcessing"
+    remediation: >
+      Ensure frontend registration flows require dedicated checkboxes for location and sensitive data before allowing account creation.
+
+policy_tuning:
+  critical: block_merge
+  high: block_merge
+  medium: require_approval
+  low: warn

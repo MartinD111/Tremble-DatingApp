@@ -180,6 +180,7 @@ export const findNearby = onCall(
         const myAge = requesterData.age;
         const myMinAge = requesterData.ageRangeStart ?? 18;
         const myMaxAge = requesterData.ageRangeEnd ?? 100;
+        const blockedUsers = requesterData.blockedUserIds || [];
 
         // Get the geohash prefix for the search radius
         const precision = geohashPrecisionForRadius(data.radiusKm ?? 5);
@@ -203,6 +204,7 @@ export const findNearby = onCall(
 
         for (const doc of snapshot.docs) {
             if (doc.id === uid) continue; // Skip self
+            if (blockedUsers.includes(doc.id)) continue; // Filter out blocked users
 
             const docData = doc.data();
             const distance = haversineDistance(

@@ -13,6 +13,7 @@ import '../features/matches/data/match_repository.dart'; // MatchProfile is here
 import '../features/profile/presentation/profile_detail_screen.dart'; // Correct path
 import '../features/profile/presentation/profile_card_preview.dart';
 import '../features/profile/presentation/edit_profile_screen.dart';
+import '../features/safety/presentation/blocked_users_screen.dart';
 import '../shared/ui/gradient_scaffold.dart'; // Assume exists
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -64,6 +65,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         builder: (context, state) =>
             const GradientScaffold(child: SettingsScreen()),
+      ),
+      GoRoute(
+        path: '/blocked-users',
+        builder: (context, state) => const BlockedUsersScreen(),
       ),
     ],
     redirect: (context, state) {
