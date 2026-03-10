@@ -134,9 +134,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   bool _consentTerms = false;
   bool _consentPrivacy = false;
   bool _consentDataProcessing =
-      false; // GDPR Art.9 — explicit consent for sensitive data
+      false; // GDPR Art.9 — explicit consent for sensitive data (religion, ethnicity, etc.)
+  bool _consentLocation =
+      false; // GDPR Art.6 / ZVOP-2 — explicit consent for live location tracking
+  // ALL four must be true — no shortcuts (18+ is enforced on birthday page)
   bool get _consentGiven =>
-      _consentTerms && _consentPrivacy && _consentDataProcessing;
+      _consentTerms &&
+      _consentPrivacy &&
+      _consentDataProcessing &&
+      _consentLocation;
 
   // helpers
   String tr(String key) => t(key, _selectedLanguage);
@@ -394,10 +400,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _buildIntroSlide(0),
                 _buildIntroSlide(1),
                 _buildIntroSlide(2),
+                // GDPR / ZVOP-2: Age verification FIRST — must confirm 18+
+                // before any personal data is collected or consent is given.
+                _buildPageBirthday(),
                 _buildPageEmailPassword(),
                 _buildPageName(),
                 _buildPageGender(),
-                _buildPageBirthday(),
                 _buildPageHeight(),
                 _buildPageStatus(),
                 _buildPageExercise(),
@@ -1148,6 +1156,71 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final age = _calcAge(d);
     final dateStr = DateFormat('MMMM d, yyyy').format(d);
     const teal = Color(0xFF00D9A6);
+    const red = Color(0xFFFF4C4C);
+
+    // ── ZVOP-2 čl. 14 / GDPR čl. 8 — HARD STOP FOR UNDER 18 ──────────
+    // App is strictly 18+. Registration is impossible for minors.
+    if (age < 18) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (ctx) => Container(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+          decoration: const BoxDecoration(
+            color: Color(0xFF1A1A2E),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(top: BorderSide(color: Colors.white12)),
+          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 28),
+            const Icon(Icons.block_rounded, color: red, size: 56),
+            const SizedBox(height: 20),
+            Text(
+              'Tremble is 18+ only',
+              style: GoogleFonts.outfit(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'You must be at least 18 years old to use Tremble. '
+              'We are unable to create an account for you at this time.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: Colors.white60, fontSize: 15, height: 1.5),
+            ),
+            const SizedBox(height: 28),
+            GestureDetector(
+              onTap: () => Navigator.pop(ctx),
+              child: Container(
+                width: double.infinity,
+                height: 54,
+                decoration: BoxDecoration(
+                    color: Colors.white12,
+                    borderRadius: BorderRadius.circular(30)),
+                child: Center(
+                    child: Text('Go back',
+                        style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: Colors.white70,
+                            letterSpacing: 1.2))),
+              ),
+            ),
+          ]),
+        ),
+      );
+      return; // Stop — do not proceed to next page
+    }
+    // ──────────────────────────────────────────────────────────────────
 
     showModalBottomSheet(
       context: context,
@@ -1188,7 +1261,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _birthdayConfirmed = true;
               });
               Navigator.pop(ctx);
-              _nextPage(); // Go to height page
+              _nextPage();
             },
             child: Container(
               width: double.infinity,
@@ -2203,7 +2276,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ),
             const SizedBox(height: 16),
-            // Explicit consent for processing sensitive personal data (GDPR Art.9 / ZVOP-2)
+            // Explicit consent for processing sensitive personal data (GDPR Art.9 / ZVOP-2 čl. 17)
             _consentTile(
               value: _consentDataProcessing,
               onChanged: (v) => setState(() => _consentDataProcessing = v),
@@ -2214,9 +2287,27 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   TextSpan(
                       text:
                           'I explicitly consent to the processing of my sensitive personal data '
-                          '(location, interests, preferences) for the purpose of proximity matching. '
+                          '(interests, preferences, religion, ethnicity) for the purpose of matchmaking. '
                           'I understand this data is encrypted, never sold, and I can withdraw consent '
                           'at any time from Settings.'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Mandatory location consent (GDPR Art.6 / ZVOP-2 — live radar requires explicit opt-in)
+            _consentTile(
+              value: _consentLocation,
+              onChanged: (v) => setState(() => _consentLocation = v),
+              richText: const TextSpan(
+                style:
+                    TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+                children: [
+                  TextSpan(
+                      text:
+                          'I consent to live location tracking for the Radar feature. '
+                          'Only an approximate grid position (~38m accuracy) is stored — '
+                          'never my exact coordinates. Location data auto-deletes after 2 hours of inactivity. '
+                          'I can disable Radar at any time from Settings.'),
                 ],
               ),
             ),
@@ -2297,12 +2388,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // COMPLETE REGISTRATION
   // ══════════════════════════════════════════════════════
   void completeRegistration() async {
-    // Safety guard — consent page enforces this, but double-check
+    // Safety guard — consent page enforces all 4 checkboxes, but double-check
     if (!_consentGiven) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text(
-                'Please accept the Terms and Privacy Policy to continue.')),
+            content: Text('Please accept all consent checkboxes to continue.')),
       );
       return;
     }

@@ -5,8 +5,16 @@ import 'package:geolocator/geolocator.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:battery_plus/battery_plus.dart';
 
-/// Geo Service — uploads GPS coordinates to Firestore periodically.
-/// Adjusts update interval based on battery/power-saving state.
+/// Geo Service — uploads minimized location data to Firestore periodically.
+///
+/// GDPR Compliance (Art. 5 — Data Minimization):
+/// - Only a Geohash at precision 8 (~38x19m) is stored. Raw GPS coordinates
+///   (lat, lng) are NEVER written to Firestore. This prevents identification
+///   of a user's exact address or home location.
+///
+/// Proximity tiers:
+///   Free users  — radar shows users in the same geohash cell (~38m)
+///   Premium     — radar shows users in current + 8 adjacent cells (~100m)
 class GeoService {
   static final GeoService _instance = GeoService._internal();
   factory GeoService() => _instance;
@@ -23,17 +31,36 @@ class GeoService {
   static const Duration _normalInterval = Duration(seconds: 60);
   static const Duration _lowPowerInterval = Duration(minutes: 5);
 
-  /// Start uploading GPS coordinates.
+  /// Geohash precision 8 ≈ 38m × 19m cell.
+  /// Free users see matches in the same cell (~38m).
+  /// Premium users see matches across a 3×3 grid (~100m).
+  static const int _geohashPrecision = 8;
+
+  /// Start uploading location data.
+  /// MUST only be called after the user has explicitly consented via
+  /// the in-app location consent screen (locationConsentGiven == true).
   Future<void> start() async {
     await _checkBatteryState();
     _listenBatteryChanges();
     _scheduleUpdate();
   }
 
-  /// Stop all geo updates.
-  void stop() {
+  /// Stop all geo updates and mark user as inactive in Firestore.
+  Future<void> stop() async {
     _geoTimer?.cancel();
     _batterySub?.cancel();
+
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    try {
+      await _firestore.collection('proximity').doc(uid).set({
+        'radarActive': false,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {
+      // Non-critical — silently fail
+    }
   }
 
   /// Returns whether geo is running in degraded (low power) mode.
@@ -56,7 +83,6 @@ class GeoService {
       final wasLow = _isLowPowerMode;
       await _checkBatteryState();
       if (wasLow != _isLowPowerMode) {
-        // Power mode changed — reschedule at appropriate interval
         _geoTimer?.cancel();
         _scheduleUpdate();
       }
@@ -66,7 +92,6 @@ class GeoService {
   void _scheduleUpdate() {
     final interval = _isLowPowerMode ? _lowPowerInterval : _normalInterval;
     _geoTimer = Timer.periodic(interval, (_) => _uploadLocation());
-    // Upload immediately on start
     _uploadLocation();
   }
 
@@ -88,19 +113,29 @@ class GeoService {
         ),
       );
 
-      // Encode geohash at precision 7 (~150m radius queries)
-      final geohash =
-          GeoHasher().encode(pos.longitude, pos.latitude, precision: 7);
+      // GDPR Art. 5 — Data Minimization:
+      // Only encode as Geohash at precision 8 (~38m cell).
+      // Raw coordinates are used locally for encoding ONLY and are
+      // never written to Firestore.
+      final geohash = GeoHasher().encode(
+        pos.longitude,
+        pos.latitude,
+        precision: _geohashPrecision,
+      );
 
-      await _firestore.collection('users').doc(uid).set({
-        'location': {
-          'lat': pos.latitude,
-          'lng': pos.longitude,
-          'geohash': geohash,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
+      // TTL field: proximity doc auto-expires if not refreshed for 2 hours.
+      // This prevents stale location data persisting after the user closes the app.
+      final expiresAt = Timestamp.fromDate(
+        DateTime.now().add(const Duration(hours: 2)),
+      );
+
+      // Write ONLY the minimized geohash — no lat, no lng.
+      await _firestore.collection('proximity').doc(uid).set({
+        'geohash': geohash,
         'radarActive': true,
         'isLowPowerMode': _isLowPowerMode,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'expiresAt': expiresAt, // Firestore TTL — delete if stale > 2h
       }, SetOptions(merge: true));
     } catch (_) {
       // Silently fail — will retry on next tick
