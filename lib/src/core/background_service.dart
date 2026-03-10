@@ -5,6 +5,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'notification_service.dart';
 import 'ble_service.dart';
@@ -92,10 +93,30 @@ void onStart(ServiceInstance service) async {
     await bleService.start();
   });
 
+  // Fetch shared preferences within background
+  final prefs = await SharedPreferences.getInstance();
+
   // Update the persistent notification and emit radarMode to UI every 60s
   Timer.periodic(const Duration(seconds: 60), (_) async {
     final isLowPower = geoService.isLowPowerMode;
     final level = await battery.batteryLevel;
+
+    // Check for "Idle" status (no BLE proximity seen recently)
+    final int lastProximity = prefs.getInt('last_ble_encounter_time') ??
+        DateTime.now().millisecondsSinceEpoch; // default to now if unset
+    final timeSinceEncounter = DateTime.now()
+        .difference(DateTime.fromMillisecondsSinceEpoch(lastProximity));
+
+    if (timeSinceEncounter.inHours >= 6) {
+      final hour = DateTime.now().hour;
+      // Only show during daytime (08:00 - 22:00)
+      if (hour >= 8 && hour < 22) {
+        await NotificationService.showIdleNotification();
+        // Reset the clock to avoid spamming
+        await prefs.setInt(
+            'last_ble_encounter_time', DateTime.now().millisecondsSinceEpoch);
+      }
+    }
 
     // Update Android foreground notification content
     if (service is AndroidServiceInstance) {

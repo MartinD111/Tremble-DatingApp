@@ -66,7 +66,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
           SnackBar(
             content: Row(children: [
               const Text('👋  '),
-              Text('Pozdrav poslan — čakamo na ${widget.match.name}!'),
+              Text('Pozdrav je poslan — čakamo na ${widget.match.name}!'),
             ]),
             backgroundColor: const Color(0xFF00D9A6).withValues(alpha: 0.9),
             behavior: SnackBarBehavior.floating,

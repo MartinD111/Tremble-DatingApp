@@ -116,7 +116,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                       child: GestureDetector(
                         onTap: () => context.push('/forgot-password'),
                         child: Text(
-                          'Forgot your password?',
+                          tr('forgot_password'),
                           style: GoogleFonts.outfit(
                             color: Colors.white70,
                             fontSize: 14,
@@ -221,7 +221,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                       const CircularProgressIndicator(color: Colors.white)
                     else
                       PrimaryButton(
-                          text: "Login", // Should probably be translated
+                          text: tr('login'),
                           onPressed: () async {
                             setState(() => _isLoading = true);
                             try {
@@ -253,7 +253,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         ),
                         child: Center(
                           child: Text(
-                            "Are you new?",
+                            tr('are_you_new'),
                             style: GoogleFonts.outfit(
                               color: Colors.white,
                               fontSize: 16,

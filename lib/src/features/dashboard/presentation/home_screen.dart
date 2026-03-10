@@ -13,6 +13,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../matches/presentation/matches_screen.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../../core/notification_service.dart'; // FCM Notifications
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State
@@ -29,11 +30,28 @@ final isNavBarVisibleProvider = StateProvider<bool>((ref) => true);
 final radarModeProvider = StateProvider<String>((ref) => 'full');
 final radarBatteryLevelProvider = StateProvider<int>((ref) => 100);
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Register FCM Token on dashboard load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(authStateProvider);
+      if (user != null) {
+        NotificationService.getAndSaveToken(user.id);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Listen to the stream and update controller
     ref.listen(matchesStreamProvider, (prev, next) {
       final isScanning = ref.read(isScanningProvider);
@@ -257,11 +275,23 @@ class HomeScreen extends ConsumerWidget {
                       Positioned(
                         top: 56,
                         left: 0,
-                        right: 0,
                         child: Center(
                           child: _PowerSavePill(batteryLevel: batteryLevel),
                         ),
                       ),
+                    // ── DEV TEST: Mock Hotspot Button ────────────────
+                    Positioned(
+                      top: 100,
+                      right: 20,
+                      child: IconButton(
+                        icon:
+                            const Icon(LucideIcons.flame, color: Colors.amber),
+                        onPressed: () {
+                          // Allow the user to manually trigger the Notification
+                          NotificationService.showMockHotspotNotification();
+                        },
+                      ),
+                    ),
                   ]
                 ],
               )
