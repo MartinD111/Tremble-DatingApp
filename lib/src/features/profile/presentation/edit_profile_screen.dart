@@ -530,12 +530,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           onSelected: (s) {
             if (s) setState(() => _gender = value);
           },
-          selectedColor: Colors.white,
-          backgroundColor: Colors.black54,
-          labelStyle: TextStyle(color: sel ? Colors.black : Colors.white),
+          selectedColor: Colors.pinkAccent,
+          backgroundColor: Colors.white.withValues(alpha: 0.1),
+          labelStyle:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           shape: StadiumBorder(
               side:
-                  BorderSide(color: sel ? Colors.transparent : Colors.white24)),
+                  BorderSide(color: sel ? Colors.pinkAccent : Colors.white24)),
           showCheckmark: false,
         );
       }).toList(),
@@ -694,14 +695,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               }
             });
           },
-          selectedColor: Colors.white,
-          backgroundColor: Colors.black54,
-          labelStyle: TextStyle(color: sel ? Colors.black : Colors.white),
+          selectedColor: Colors.pinkAccent,
+          backgroundColor: Colors.white.withValues(alpha: 0.1),
+          labelStyle:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           shape: StadiumBorder(
               side:
-                  BorderSide(color: sel ? Colors.transparent : Colors.white24)),
-          showCheckmark: true,
-          checkmarkColor: Colors.black,
+                  BorderSide(color: sel ? Colors.pinkAccent : Colors.white24)),
+          showCheckmark: false,
         );
       }).toList(),
     );
@@ -738,14 +739,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               }
             });
           },
-          selectedColor: Colors.white,
-          backgroundColor: Colors.black54,
-          labelStyle: TextStyle(color: sel ? Colors.black : Colors.white),
+          selectedColor: Colors.pinkAccent,
+          backgroundColor: Colors.white.withValues(alpha: 0.1),
+          labelStyle:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           shape: StadiumBorder(
               side:
-                  BorderSide(color: sel ? Colors.transparent : Colors.white24)),
-          showCheckmark: true,
-          checkmarkColor: Colors.black,
+                  BorderSide(color: sel ? Colors.pinkAccent : Colors.white24)),
+          showCheckmark: false,
         );
       }).toList(),
     );
@@ -910,20 +911,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _chip(String label, bool sel, ValueChanged<bool> onSelected) {
-    const teal = Color(0xFF00D9A6);
     return ChoiceChip(
       label: Text(label),
       selected: sel,
       onSelected: onSelected,
-      selectedColor: teal,
-      backgroundColor: Colors.white.withValues(alpha: 0.05),
-      labelStyle: TextStyle(
-        color: sel ? Colors.black : Colors.white70,
-        fontWeight: sel ? FontWeight.bold : FontWeight.normal,
+      selectedColor: Colors.pinkAccent,
+      backgroundColor: Colors.white.withValues(alpha: 0.1),
+      labelStyle: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
         fontSize: 13,
       ),
       shape: StadiumBorder(
-          side: BorderSide(color: sel ? Colors.transparent : Colors.white12)),
+          side: BorderSide(color: sel ? Colors.pinkAccent : Colors.white12)),
       showCheckmark: false,
     );
   }

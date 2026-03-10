@@ -167,6 +167,20 @@ export const findNearby = onCall(
 
         const data = validateRequest(findNearbySchema, request.data);
 
+        // Fetch the requesting user's profile to get their matching preferences
+        const requesterDoc = await db.collection("users").doc(uid).get();
+        const requesterData = requesterDoc.data();
+        if (!requesterData) {
+            console.log(`[PROXIMITY] Requester data not found: ${uid}`);
+            return { nearby: [] };
+        }
+
+        const myGender = requesterData.gender; // e.g. "Moški", "Ženska"
+        const myInterest = requesterData.interestedIn; // e.g. "Moški", "Ženska", "Oba", "Both"
+        const myAge = requesterData.age;
+        const myMinAge = requesterData.ageRangeStart ?? 18;
+        const myMaxAge = requesterData.ageRangeEnd ?? 100;
+
         // Get the geohash prefix for the search radius
         const precision = geohashPrecisionForRadius(data.radiusKm ?? 5);
         const centerGeohash = encodeGeohash(
@@ -185,10 +199,7 @@ export const findNearby = onCall(
             .get();
 
         // Filter by actual distance (geohash is approximate)
-        const nearbyUsers: Array<{
-            userId: string;
-            distanceKm: number;
-        }> = [];
+        const candidates: Array<{ id: string; distance: number }> = [];
 
         for (const doc of snapshot.docs) {
             if (doc.id === uid) continue; // Skip self
@@ -202,9 +213,46 @@ export const findNearby = onCall(
             );
 
             if (distance <= (data.radiusKm ?? 5)) {
+                candidates.push({ id: doc.id, distance });
+            }
+        }
+
+        // Fetch user profiles for the candidates to apply gender/preference filters
+        const nearbyUsers: Array<{
+            userId: string;
+            distanceKm: number;
+        }> = [];
+
+        // Concurrently fetch profile data for distance-validated candidates
+        const userDocs = await Promise.all(
+            candidates.map(c => db.collection("users").doc(c.id).get())
+        );
+
+        for (let i = 0; i < userDocs.length; i++) {
+            const candidateDoc = userDocs[i];
+            const candidateData = candidateDoc.data();
+            if (!candidateData) continue;
+
+            const theirGender = candidateData.gender;
+            const theirInterest = candidateData.interestedIn;
+            const theirAge = candidateData.age;
+            const theirMinAge = candidateData.ageRangeStart ?? 18;
+            const theirMaxAge = candidateData.ageRangeEnd ?? 100;
+
+            // Match logic (Orientation)
+            // 1) I must be interested in their gender (or Oba/Both)
+            const iMatchThem = myInterest === "Oba" || myInterest === "Both" || myInterest === theirGender;
+            // 2) They must receive my gender (or Oba/Both)
+            const theyMatchMe = theirInterest === "Oba" || theirInterest === "Both" || theirInterest === myGender;
+
+            // Match logic (Age gating)
+            const ageMatchesMe = !theirAge || (theirAge >= myMinAge && theirAge <= myMaxAge);
+            const ageMatchesThem = !myAge || (myAge >= theirMinAge && myAge <= theirMaxAge);
+
+            if (iMatchThem && theyMatchMe && ageMatchesMe && ageMatchesThem) {
                 nearbyUsers.push({
-                    userId: doc.id,
-                    distanceKm: Math.round(distance * 10) / 10,
+                    userId: candidates[i].id,
+                    distanceKm: Math.round(candidates[i].distance * 10) / 10,
                 });
             }
         }

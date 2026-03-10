@@ -42,14 +42,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }
 
   void _updateProfile(AuthUser updatedUser) {
-    final offset =
-        _scrollController.hasClients ? _scrollController.offset : 0.0;
     ref.read(authStateProvider.notifier).updateProfile(updatedUser);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(offset);
-      }
-    });
   }
 
   @override
@@ -620,16 +613,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     _updateProfile(user.copyWith(appLanguage: code));
                   }
                 },
-                selectedColor: Colors.white,
-                backgroundColor: Colors.black54,
-                labelStyle: TextStyle(
-                    color: isSelected ? Colors.black : Colors.white,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal),
+                selectedColor: Colors.pinkAccent,
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                labelStyle: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
                         color:
-                            isSelected ? Colors.transparent : Colors.white24)),
+                            isSelected ? Colors.pinkAccent : Colors.white24)),
                 showCheckmark: false,
               );
             }).toList(),
@@ -754,14 +745,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     _updateProfile(user.copyWith(interestedIn: value));
                   }
                 },
-                selectedColor: Colors.white,
-                backgroundColor: Colors.black54,
-                labelStyle:
-                    TextStyle(color: isSelected ? Colors.black : Colors.white),
+                selectedColor: Colors.pinkAccent,
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                labelStyle: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
                         color:
-                            isSelected ? Colors.transparent : Colors.white24)),
+                            isSelected ? Colors.pinkAccent : Colors.white24)),
                 showCheckmark: false,
               );
             }).toList(),
@@ -791,16 +782,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         user.copyWith(partnerSmokingPreference: value));
                   }
                 },
-                selectedColor: Colors.white,
-                backgroundColor: Colors.black54,
-                labelStyle: TextStyle(
-                    color: isSelected ? Colors.black : Colors.white,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal),
+                selectedColor: Colors.pinkAccent,
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                labelStyle: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
                         color:
-                            isSelected ? Colors.transparent : Colors.white24)),
+                            isSelected ? Colors.pinkAccent : Colors.white24)),
                 showCheckmark: false,
               );
             }).toList(),
@@ -1046,16 +1035,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     _updateProfile(user.copyWith(sleepSchedule: value));
                   }
                 },
-                selectedColor: Colors.white,
-                backgroundColor: Colors.black54,
-                labelStyle: TextStyle(
-                    color: isSelected ? Colors.black : Colors.white,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal),
+                selectedColor: Colors.pinkAccent,
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                labelStyle: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
                         color:
-                            isSelected ? Colors.transparent : Colors.white24)),
+                            isSelected ? Colors.pinkAccent : Colors.white24)),
                 showCheckmark: false,
               );
             }).toList(),

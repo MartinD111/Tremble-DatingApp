@@ -52,14 +52,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to the stream and update controller
+    // Listen to the stream and update controller with visual Sonar Ping
     ref.listen(matchesStreamProvider, (prev, next) {
       final isScanning = ref.read(isScanningProvider);
       if (!isScanning) return; // Only match when radar is active
 
       next.whenData((matches) {
         if (matches.isNotEmpty) {
-          ref.read(matchControllerProvider.notifier).setMatch(matches.first);
+          final newMatch = matches.first;
+          final isNewMatch =
+              prev?.valueOrNull?.any((m) => m.id == newMatch.id) != true;
+
+          if (isNewMatch) {
+            // Trigger visual ping
+            // Simulating relative angle and distance since actual coordinate math
+            // requires fetching the other user's location which is masked anyway.
+            final randomAngle =
+                (DateTime.now().millisecond / 1000) * 2 * 3.14159;
+            final randomDist =
+                0.4 + (DateTime.now().millisecond / 2000); // 0.4 to 0.9
+
+            ref.read(pingAngleProvider.notifier).state = randomAngle;
+            ref.read(pingDistanceProvider.notifier).state = randomDist;
+
+            // Wait for the radar sweep to pass over the dot (1.5s) then pop dialog
+            Future.delayed(const Duration(milliseconds: 1500), () {
+              if (mounted) {
+                ref.read(pingAngleProvider.notifier).state = null;
+                ref.read(pingDistanceProvider.notifier).state = null;
+                ref.read(matchControllerProvider.notifier).setMatch(newMatch);
+              }
+            });
+          }
         }
       });
     });
