@@ -6,7 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'firebase_options.dart';
+import 'firebase_options_dev.dart';
+import 'firebase_options_prod.dart';
 import 'notification_service.dart';
 import 'ble_service.dart';
 import 'geo_service.dart';
@@ -65,7 +66,11 @@ void onStart(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Re-initialize Firebase in the background isolate
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
+  const firebaseOptions = flavor == 'prod'
+      ? ProdFirebaseOptions.currentPlatform
+      : DevFirebaseOptions.currentPlatform;
+  await Firebase.initializeApp(options: firebaseOptions);
   await NotificationService.initialize();
 
   final bleService = BleService();
