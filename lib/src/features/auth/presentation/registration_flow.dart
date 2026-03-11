@@ -1190,11 +1190,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   color: Colors.white),
             ),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'You must be at least 18 years old to use Tremble. '
               'We are unable to create an account for you at this time.',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                   color: Colors.white60, fontSize: 15, height: 1.5),
             ),
             const SizedBox(height: 28),

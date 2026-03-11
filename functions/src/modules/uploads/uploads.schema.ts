@@ -18,7 +18,7 @@ export const generateUploadUrlSchema = z.object({
         .min(1)
         .max(200)
         .regex(
-            /^[a-zA-Z0-9_\-]+\.[a-zA-Z0-9]+$/,
+            /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/,
             "Invalid filename. Use only alphanumeric characters, dashes, and underscores."
         ),
     mimeType: z.enum(ALLOWED_MIME_TYPES, {

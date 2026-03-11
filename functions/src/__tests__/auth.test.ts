@@ -49,6 +49,7 @@ describe("Auth Module", () => {
             const { requireAuth } = await import("../../src/middleware/authGuard");
 
             expect(() =>
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 requireAuth({ auth: undefined } as any)
             ).toThrow();
         });
