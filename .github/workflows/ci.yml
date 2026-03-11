@@ -70,7 +70,9 @@ jobs:
       - name: Check ADR reference for architecture changes
         run: |
           BODY="${{ steps.pr_meta.outputs.body }}"
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
+          BASE="${{ github.base_ref }}"
+          [ -z "$BASE" ] && BASE="HEAD~1" || BASE="origin/$BASE"
+          CHANGED=$(git diff --name-only $BASE...HEAD \
             | grep -E "(system_map|infra|firebase\.json|pubspec\.yaml)" || true)
           if [ -n "$CHANGED" ]; then
             if ! echo "$BODY" | grep -qE "ADR-[0-9]+"; then
@@ -162,6 +164,8 @@ jobs:
     if: always() && (needs.mpc-policy.result == 'success' || needs.mpc-policy.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: subosito/flutter-action@v2
         with:
@@ -202,10 +206,12 @@ jobs:
         working-directory: functions
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: functions/package-lock.json
 
@@ -229,6 +235,8 @@ jobs:
     needs: [flutter, backend]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: SAST scan
         run: |
@@ -240,8 +248,10 @@ jobs:
 
       - name: AI safety check (SEC-008)
         run: |
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD || true)
-          if [ -n "$CHANGED" ] && git diff origin/${{ github.base_ref }}...HEAD -- $CHANGED \
+          BASE="${{ github.base_ref }}"
+          [ -z "$BASE" ] && BASE="HEAD~1" || BASE="origin/$BASE"
+          CHANGED=$(git diff --name-only $BASE...HEAD || true)
+          if [ -n "$CHANGED" ] && git diff $BASE...HEAD -- $CHANGED \
               | grep -qE "(openai\.|anthropic\.|model_call\()"; then
             echo "🤖 AI feature change detected — running AI safety check..."
             if [ -f scripts/ci/ai_safety_check.sh ]; then
