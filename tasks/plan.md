@@ -6,8 +6,8 @@ Phase 3 – Core Features    [x] Complete (BLE Engine, Geo-matching, Radar UI, G
 - [x] Phase 4: Backend Security & Proximity Refactor (**COMPLETE**)
 - [/] Phase 5: Production Readiness (**ACTIVE**)
   - [x] Environment Setup (Flavors, Secrets, API Key Rotation)
-  - [/] CI/CD Pipelines (Fixing SDK versions)
-  - [ ] AppCheck Integration
+  - [x] CI/CD Pipelines (GitHub Actions stable)
+  - [/] AppCheck Integration
   - [ ] UX Polish & Animations
   - [ ] Premium Flow & Paywall
 - [ ] Phase 6: Final Audit & Launch (**PENDING**)
