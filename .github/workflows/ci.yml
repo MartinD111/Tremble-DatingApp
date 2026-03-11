@@ -163,7 +163,6 @@ jobs:
     # On push events mpc-policy is skipped, so use 'always()' guard
     if: always() && (needs.mpc-policy.result == 'success' || needs.mpc-policy.result == 'skipped')
     steps:
-    steps:
       - uses: actions/checkout@v4
 
       - uses: subosito/flutter-action@v2
@@ -203,7 +202,6 @@ jobs:
     defaults:
       run:
         working-directory: functions
-    steps:
     steps:
       - uses: actions/checkout@v4
 
