@@ -12,10 +12,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  POLICY_DIR: "tasks/policies"
   PLAN_FILE: "tasks/plan.md"
   CONTEXT_FILE: "tasks/context.md"
   QUALITY_SCORE_THRESHOLD: "85"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
 
@@ -163,9 +163,8 @@ jobs:
     # On push events mpc-policy is skipped, so use 'always()' guard
     if: always() && (needs.mpc-policy.result == 'success' || needs.mpc-policy.result == 'skipped')
     steps:
+    steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: subosito/flutter-action@v2
         with:
@@ -205,9 +204,8 @@ jobs:
       run:
         working-directory: functions
     steps:
+    steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
