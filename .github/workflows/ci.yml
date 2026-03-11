@@ -169,6 +169,12 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Setup Firebase options
+        env:
+          FIREBASE_OPTIONS_DEV_BASE64: ${{ secrets.FIREBASE_OPTIONS_DEV_BASE64 }}
+          FIREBASE_OPTIONS_PROD_BASE64: ${{ secrets.FIREBASE_OPTIONS_PROD_BASE64 }}
+        run: bash scripts/ci/setup_firebase_options.sh
+
       - name: Install dependencies
         run: flutter pub get
 
