@@ -125,3 +125,5 @@ functions/.secret.local
 # Cloud Functions build output
 functions/lib/
 functions/node_modules/
+lib/src/core/firebase_options_dev.dart
+lib/src/core/firebase_options_prod.dart
