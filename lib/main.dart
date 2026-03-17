@@ -15,7 +15,7 @@ void main() async {
   const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
 
   // Select the appropriate FirebaseOptions.
-  const firebaseOptions = flavor == 'prod'
+  final firebaseOptions = flavor == 'prod'
       ? ProdFirebaseOptions.currentPlatform
       : DevFirebaseOptions.currentPlatform;
 

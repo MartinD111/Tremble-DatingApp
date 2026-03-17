@@ -14,6 +14,7 @@ import '../../matches/presentation/matches_screen.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
+import 'package:flutter_animate/flutter_animate.dart'; // Animations
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State
@@ -265,7 +266,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           FlutterBackgroundService().startService();
                         }
                       },
-                    ),
+                    ).animate().scale(
+                        duration: 600.ms, curve: Curves.easeOutBack),
                   ),
 
                   if (isScanning) ...[
@@ -281,7 +283,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.7),
                               letterSpacing: 2),
-                        ),
+                        ).animate().fade().slideY(begin: 0.5),
                       ),
                     ),
                     // ── Power-Save Pill ────────────────────────
@@ -290,7 +292,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         top: 56,
                         left: 0,
                         child: Center(
-                          child: _PowerSavePill(batteryLevel: batteryLevel),
+                          child: _PowerSavePill(batteryLevel: batteryLevel)
+                              .animate()
+                              .fade()
+                              .slideY(begin: -1.0, curve: Curves.easeOutBack),
                         ),
                       ),
                     // ── DEV TEST: Mock Hotspot Button ────────────────

@@ -27,7 +27,7 @@ android {
 
     defaultConfig {
         applicationId = "tremble.dating.app"
-        minSdk = 21  // flutter_blue_plus requires API 21+
+        minSdk = flutter.minSdkVersion  // flutter_blue_plus requires API 21+
 
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
