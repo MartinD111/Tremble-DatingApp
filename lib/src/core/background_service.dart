@@ -67,7 +67,7 @@ void onStart(ServiceInstance service) async {
 
   // Re-initialize Firebase in the background isolate
   const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
-  const firebaseOptions = flavor == 'prod'
+  final firebaseOptions = flavor == 'prod'
       ? ProdFirebaseOptions.currentPlatform
       : DevFirebaseOptions.currentPlatform;
   await Firebase.initializeApp(options: firebaseOptions);

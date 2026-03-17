@@ -1,6 +1,6 @@
 plugins {
     // Google services Gradle plugin — apply false means it's declared here but applied in :app
-    id("com.google.gms.google-services") version "4.4.4" apply false
+    id("com.google.gms.google-services") version "4.3.15" apply false
     // Firebase Crashlytics — native crash reporting
     id("com.google.firebase.crashlytics") version "3.0.3" apply false
 }

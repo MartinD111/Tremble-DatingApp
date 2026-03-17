@@ -10,6 +10,7 @@ import '../../dashboard/presentation/home_screen.dart'; // For tracking ping/rad
 import '../../auth/data/auth_repository.dart';
 import '../../safety/presentation/widgets/ugc_action_sheet.dart';
 import '../../../core/translations.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class ProfileDetailScreen extends ConsumerWidget {
   final MatchProfile match;
@@ -73,7 +74,10 @@ class ProfileDetailScreen extends ConsumerWidget {
                           // Action Buttons at the bottom
                           _buildActionButtons(context, ref),
                           const SizedBox(height: 60),
-                        ],
+                        ]
+                            .animate(interval: 50.ms)
+                            .fade(duration: 400.ms, curve: Curves.easeOut)
+                            .slideY(begin: 0.1, duration: 400.ms, curve: Curves.easeOut),
                       ),
                     ),
                   ),
