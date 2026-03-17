@@ -21,11 +21,18 @@ As of March 11, 2026, the Tremble application is now fully environment agnostic.
 - **Production Commands:** Use `--dart-define=FLAVOR=prod` for any production build (`flutter build ipa`, `flutter build apk`).
 - **Secrets Checklist:** Both `am---dating-app` and `tremble-dev` projects in Firebase console now have identical secret keys but environment-specific values.
 
-## Pending in Phase 5
-- [ ] **CI/CD:** GitHub Actions to automate deployments to dev/prod branches.
-- [ ] **UX Polish:** Final animations and design refinements.
-- [ ] **Premium Flow:** Implementation of the paywall and subscription tiers.
-- [ ] **AppCheck:** Activation of production AppCheck keys.
+## Pending in Phase 5 (Team Coordination)
+
+### Aleksandar's Tasks (Lead/Cloud)
+- [x] Backend Environment Agnosticism
+- [x] CI/CD Pipeline Setup (GitHub Actions)
+- [ ] Code Review of Cloud Functions before Prod launch
+- [ ] Final AppCheck activation in Production console
+
+### Martin's Track (Client/Audit)
+- [ ] **[HIGH]** Proximity Foundation Stability Audit (30-min BLE background test via Android Studio)
+- [ ] **[HIGH]** High-Fidelity UI/UX Polish (Glassmorphism, animations)
+- [ ] **[DEFERRED]** Premium Flow (Pending payment structure definition)
 
 ---
-*Session closed by Antigravity at 00:08 local time.*
+*Session closed by Antigravity at 09:30 local time.*
