@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import '../data/auth_repository.dart';
 import 'radar_background.dart';
 import '../../../core/translations.dart';
+import '../../../core/theme_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE INDICES
@@ -89,7 +90,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   String? _exerciseHabit; // 'active' | 'sometimes' | 'almost_never'
   String? _drinkingHabit; // 'socially' | 'never' | 'frequently' | 'sober'
   String? _smokingHabit; // 'yes' | 'no'
-  String? _partnerSmokes; // 'no' | 'idc'
   String? _childrenPreference; // 'want_someday' | 'dont_want' | ...
   double _introversionLevel = 0.5; // 0.0 (Introvert) to 1.0 (Extrovert)
   String? _sleepHabit; // 'night_owl' | 'early_bird'
@@ -107,12 +107,22 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // Appearance toggles
   bool _isClassicAppearance = true;
-  bool _isDarkModeRegistration = false;
 
   String? _religion;
   String? _ethnicity;
   String? _hairColor;
   double _politicalAffiliationValue = 3.0; // 1 to 5 mapping (Left to Right)
+
+  // Partner preferences
+  List<String>? _partnerReligion;
+  List<String>? _partnerEthnicity;
+  List<String>? _partnerHairColor;
+  List<String>? _partnerExerciseHabit;
+  List<String>? _partnerDrinkingHabit;
+  List<String>? _partnerChildrenPreference;
+  List<String>? _partnerSleepHabit;
+  List<String>? _partnerPetPreference;
+  List<String>? _partnerSmokingHabit;
 
   // Dating pref
   String? _datingPreference;
@@ -291,7 +301,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // ────── PROGRESS BAR ──────
   Widget _buildProgressBar() {
-    const totalSteps = 25;
+    const totalSteps = 26;
     final progress = (_currentPage + 1) / totalSteps;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: progress),
@@ -380,8 +390,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       }
     }
 
-    // Determine background brightness based on _isDarkModeRegistration
-    final bgThemeColor = _isDarkModeRegistration
+    // Determine background brightness based on themeModeProvider
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+    final bgThemeColor = isDark
         ? const Color(0xFF1E1E2E)
         : const Color(
             0xFF2A2A3E); // or handle it inside RadarBackground/Scaffold as needed
@@ -400,6 +411,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _buildIntroSlide(0),
                 _buildIntroSlide(1),
                 _buildIntroSlide(2),
+                _buildIntroSlide(3),
                 // GDPR / ZVOP-2: Age verification FIRST — must confirm 18+
                 // before any personal data is collected or consent is given.
                 _buildPageBirthday(),
@@ -487,12 +499,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // INTRO SLIDES (0, 1, 2)
   // ══════════════════════════════════════════════════════
   Widget _buildIntroSlide(int index) {
-    final titles = [tr('onb1_title'), tr('onb2_title'), tr('onb3_title')];
-    final bodies = [tr('onb1_body'), tr('onb2_body'), tr('onb3_body')];
+    final titles = [tr('onb1_title'), tr('onb2_title'), tr('onb3_title'), tr('onb4_title')];
+    final bodies = [tr('onb1_body'), tr('onb2_body'), tr('onb3_body'), tr('onb4_body')];
     final icons = [
       LucideIcons.heartPulse,
       LucideIcons.messagesSquare,
-      LucideIcons.map
+      LucideIcons.map,
+      LucideIcons.user
     ];
 
     return SafeArea(
@@ -935,9 +948,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 const Text('Dark mode',
                     style: TextStyle(color: Colors.white, fontSize: 16)),
                 Switch(
-                  value: _isDarkModeRegistration,
-                  onChanged: (val) =>
-                      setState(() => _isDarkModeRegistration = val),
+                  value: ref.watch(themeModeProvider) == ThemeMode.dark,
+                  onChanged: (val) {
+                    ref.read(themeModeProvider.notifier).setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
+                  },
                   activeThumbColor: const Color(0xFF00D9A6),
                 ),
               ],
@@ -1447,6 +1461,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (val) {
         setState(() => _religion = val);
       },
+      onSavePartner: (val) => setState(() => _partnerReligion = val),
     );
   }
 
@@ -1467,6 +1482,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (val) {
         setState(() => _ethnicity = val);
       },
+      onSavePartner: (val) => setState(() => _partnerEthnicity = val),
     );
   }
 
@@ -1489,6 +1505,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (val) {
         setState(() => _hairColor = val);
       },
+      onSavePartner: (val) => setState(() => _partnerHairColor = val),
     );
   }
 
@@ -1577,6 +1594,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _exerciseHabit = k);
       },
+      onSavePartner: (val) => setState(() => _partnerExerciseHabit = val),
     );
   }
 
@@ -1605,6 +1623,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _drinkingHabit = k);
       },
+      onSavePartner: (val) => setState(() => _partnerDrinkingHabit = val),
     );
   }
 
@@ -1624,20 +1643,24 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               () => setState(() => _smokingHabit = 'yes')),
           _optionPill(tr('smoke_no'), _smokingHabit == 'no',
               () => setState(() => _smokingHabit = 'no')),
-          if (_smokingHabit == 'no') ...[
-            const SizedBox(height: 32),
-            _stepHeader(tr('partner_smokes_q')),
-            const SizedBox(height: 16),
-            _optionPill(tr('no_pref'), _partnerSmokes == 'no',
-                () => setState(() => _partnerSmokes = 'no')),
-            _optionPill(tr('idc'), _partnerSmokes == 'idc',
-                () => setState(() => _partnerSmokes = 'idc')),
-          ],
           const Spacer(),
           _continueButton(
-            enabled: _smokingHabit != null &&
-                (_smokingHabit == 'yes' || _partnerSmokes != null),
-            onTap: () => _nextPage(),
+            enabled: _smokingHabit != null,
+            onTap: () {
+              if (_smokingHabit == 'no') {
+                _showPartnerPreferenceModal(
+                  title: tr('do_you_smoke'),
+                  options: [{'key': 'no', 'label': tr('smoke_no')}],
+                  userSelection: 'no',
+                  showCustom: false,
+                  onSave: (val) {
+                    setState(() => _partnerSmokingHabit = val);
+                  },
+                );
+              } else {
+                _nextPage();
+              }
+            },
           ),
           const SizedBox(height: 16),
         ]),
@@ -1651,6 +1674,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     required List<Map<String, Object>> options,
     required String? selected,
     required ValueChanged<String> onSelect,
+    ValueChanged<List<String>?>? onSavePartner,
+    VoidCallback? overrideContinue,
   }) {
     return SafeArea(
       child: Padding(
@@ -1677,10 +1702,146 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           const Spacer(),
           _continueButton(
             enabled: selected != null,
-            onTap: _nextPage,
+            onTap: overrideContinue ?? () {
+              if (onSavePartner != null && selected != null) {
+                _showPartnerPreferenceModal(
+                  title: title,
+                  options: options,
+                  userSelection: selected,
+                  onSave: onSavePartner,
+                );
+              } else {
+                _nextPage();
+              }
+            },
           ),
           const SizedBox(height: 16),
         ]),
+      ),
+    );
+  }
+
+  void _showPartnerPreferenceModal({
+    required String title,
+    required List<Map<String, Object>> options,
+    required String userSelection,
+    required ValueChanged<List<String>?> onSave,
+    bool showCustom = true,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A1A2E),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: Colors.white12)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(2))),
+            ),
+            const SizedBox(height: 28),
+            Text(
+              'Do you want your partner to have the same preference?',
+              style: GoogleFonts.outfit(
+                  fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            const SizedBox(height: 24),
+            _optionPill('Same as me', false, () {
+              Navigator.pop(ctx);
+              onSave([userSelection]);
+              _nextPage();
+            }),
+            _optionPill("I don't mind", false, () {
+              Navigator.pop(ctx);
+              onSave(null);
+              _nextPage();
+            }),
+            if (showCustom)
+              _optionPill('Custom', false, () {
+                Navigator.pop(ctx);
+                _showCustomPartnerPreferenceModal(title, options, onSave);
+              }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCustomPartnerPreferenceModal(String title, List<Map<String, Object>> options, ValueChanged<List<String>?> onSave) {
+    List<String> tempSelected = [];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return Container(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+            height: MediaQuery.of(context).size.height * 0.75,
+            decoration: const BoxDecoration(
+              color: Color(0xFF1A1A2E),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(top: BorderSide(color: Colors.white12)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(2))),
+                ),
+                const SizedBox(height: 28),
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                      fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView(
+                    children: options.map((o) {
+                      final val = o['key'] as String;
+                      final isSelected = tempSelected.contains(val);
+                      return _optionPill(o['label'] as String, isSelected, () {
+                        setModalState(() {
+                          if (isSelected) {
+                            tempSelected.remove(val);
+                          } else {
+                            tempSelected.add(val);
+                          }
+                        });
+                      }, icon: o['icon'] as IconData?);
+                    }).toList(),
+                  ),
+                ),
+                _continueButton(
+                  enabled: tempSelected.isNotEmpty,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    onSave(tempSelected);
+                    _nextPage();
+                  },
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -1723,6 +1884,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _childrenPreference = k);
       },
+      onSavePartner: (val) => setState(() => _partnerChildrenPreference = val),
     );
   }
 
@@ -1788,6 +1950,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _sleepHabit = k);
       },
+      onSavePartner: (val) => setState(() => _partnerSleepHabit = val),
     );
   }
 
@@ -1825,7 +1988,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ),
           ),
           _continueButton(
-              enabled: _petPreference != null, onTap: () => _nextPage()),
+              enabled: _petPreference != null,
+              onTap: () {
+                _showPartnerPreferenceModal(
+                  title: tr('pets'),
+                  options: [
+                    {'key': 'dog', 'label': tr('dog_person')},
+                    {'key': 'cat', 'label': tr('cat_person')},
+                    {'key': 'something_else', 'label': tr('something_else')},
+                    {'key': 'nothing', 'label': tr('nothing')},
+                  ],
+                  userSelection: _petPreference!,
+                  onSave: (val) => setState(() => _partnerPetPreference = val),
+                );
+              }),
           const SizedBox(height: 16),
         ]),
       ),
@@ -2018,6 +2194,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       ],
       'Potovanja ✈️': ['Roadtrips', 'Camping', 'City breaks', 'Backpacking'],
     };
+
+    final predefinedHobbies = cats.values.expand((element) => element).toSet();
+    final customHobbies = _selectedHobbies.where((h) => !predefinedHobbies.contains(h)).toList();
+
     return SafeArea(
       child: Column(children: [
         Padding(
@@ -2036,6 +2216,38 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              if (customHobbies.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(tr('my_hobbies_custom'),
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: customHobbies.map((hobby) {
+                    return FilterChip(
+                      label: Text(
+                        hobby,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      selected: true,
+                      onSelected: (_) => setState(() => _selectedHobbies.remove(hobby)),
+                      selectedColor: const Color(0xFF00D9A6),
+                      backgroundColor: Colors.white12,
+                      shape: const StadiumBorder(
+                        side: BorderSide(color: Color(0xFF00D9A6)),
+                      ),
+                      checkmarkColor: Colors.black,
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+              ],
               ...cats.entries.map((e) => Theme(
                     data: Theme.of(context)
                         .copyWith(dividerColor: Colors.transparent),
@@ -2451,6 +2663,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   'politics_center_right',
                   'politics_right'
                 ][_politicalAffiliationValue.toInt() - 1],
+      religionPreference: _partnerReligion?.join(', '),
+      ethnicityPreference: _partnerEthnicity?.join(', '),
+      hairColorPreference: _partnerHairColor?.join(', '),
+      partnerExerciseHabit: _partnerExerciseHabit?.join(', '),
+      partnerDrinkingHabit: _partnerDrinkingHabit?.join(', '),
+      partnerSleepSchedule: _partnerSleepHabit?.join(', '),
+      partnerPetPreference: _partnerPetPreference?.join(', '),
+      partnerChildrenPreference: _partnerChildrenPreference?.join(', '),
+      partnerSmokingPreference: _partnerSmokingHabit?.join(', '),
       lookingFor: _datingPreference != null
           ? [datingMap[_datingPreference!] ?? _datingPreference!]
           : [],
@@ -2468,9 +2689,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       appLanguage: _selectedLanguage,
     );
 
-    await ref.read(authStateProvider.notifier).completeOnboarding(user);
-    if (mounted) {
-      context.go('/onboarding');
+    try {
+      await ref.read(authStateProvider.notifier).completeOnboarding(user);
+      if (mounted) {
+        context.go('/');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registration failed: \$e')),
+        );
+      }
     }
   }
 }
