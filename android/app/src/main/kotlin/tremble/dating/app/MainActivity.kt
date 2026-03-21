@@ -1,4 +1,4 @@
-package com.example.pulse
+package tremble.dating.app
 
 import io.flutter.embedding.android.FlutterActivity
 
