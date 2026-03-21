@@ -41,6 +41,11 @@ class AuthUser {
   final String? hairColorPreference;
   final String? politicalAffiliation;
   final String? politicalAffiliationPreference;
+  final String? partnerExerciseHabit;
+  final String? partnerDrinkingHabit;
+  final String? partnerSleepSchedule;
+  final String? partnerPetPreference;
+  final String? partnerChildrenPreference;
   final List<String> lookingFor;
   final List<String> languages;
   final List<String> hobbies;
@@ -87,6 +92,11 @@ class AuthUser {
     this.hairColorPreference,
     this.politicalAffiliation,
     this.politicalAffiliationPreference,
+    this.partnerExerciseHabit,
+    this.partnerDrinkingHabit,
+    this.partnerSleepSchedule,
+    this.partnerPetPreference,
+    this.partnerChildrenPreference,
     this.lookingFor = const [],
     this.languages = const [],
     this.hobbies = const [],
@@ -143,6 +153,11 @@ class AuthUser {
         'politicalAffiliation': politicalAffiliation,
       if (politicalAffiliationPreference != null)
         'politicalAffiliationPreference': politicalAffiliationPreference,
+      if (partnerExerciseHabit != null) 'partnerExerciseHabit': partnerExerciseHabit,
+      if (partnerDrinkingHabit != null) 'partnerDrinkingHabit': partnerDrinkingHabit,
+      if (partnerSleepSchedule != null) 'partnerSleepSchedule': partnerSleepSchedule,
+      if (partnerPetPreference != null) 'partnerPetPreference': partnerPetPreference,
+      if (partnerChildrenPreference != null) 'partnerChildrenPreference': partnerChildrenPreference,
       'lookingFor': lookingFor,
       'languages': languages,
       'hobbies': hobbies,
@@ -192,6 +207,11 @@ class AuthUser {
       politicalAffiliation: data['politicalAffiliation'] as String?,
       politicalAffiliationPreference:
           data['politicalAffiliationPreference'] as String?,
+      partnerExerciseHabit: data['partnerExerciseHabit'] as String?,
+      partnerDrinkingHabit: data['partnerDrinkingHabit'] as String?,
+      partnerSleepSchedule: data['partnerSleepSchedule'] as String?,
+      partnerPetPreference: data['partnerPetPreference'] as String?,
+      partnerChildrenPreference: data['partnerChildrenPreference'] as String?,
       lookingFor: List<String>.from(data['lookingFor'] ?? []),
       languages: List<String>.from(data['languages'] ?? []),
       hobbies: List<String>.from(data['hobbies'] ?? []),
@@ -240,6 +260,11 @@ class AuthUser {
     String? hairColorPreference,
     String? politicalAffiliation,
     String? politicalAffiliationPreference,
+    String? partnerExerciseHabit,
+    String? partnerDrinkingHabit,
+    String? partnerSleepSchedule,
+    String? partnerPetPreference,
+    String? partnerChildrenPreference,
     List<String>? lookingFor,
     List<String>? languages,
     List<String>? hobbies,
@@ -290,6 +315,11 @@ class AuthUser {
       politicalAffiliation: politicalAffiliation ?? this.politicalAffiliation,
       politicalAffiliationPreference:
           politicalAffiliationPreference ?? this.politicalAffiliationPreference,
+      partnerExerciseHabit: partnerExerciseHabit ?? this.partnerExerciseHabit,
+      partnerDrinkingHabit: partnerDrinkingHabit ?? this.partnerDrinkingHabit,
+      partnerSleepSchedule: partnerSleepSchedule ?? this.partnerSleepSchedule,
+      partnerPetPreference: partnerPetPreference ?? this.partnerPetPreference,
+      partnerChildrenPreference: partnerChildrenPreference ?? this.partnerChildrenPreference,
       lookingFor: lookingFor ?? this.lookingFor,
       languages: languages ?? this.languages,
       hobbies: hobbies ?? this.hobbies,
