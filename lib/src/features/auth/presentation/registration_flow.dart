@@ -123,6 +123,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   List<String>? _partnerSleepHabit;
   List<String>? _partnerPetPreference;
   List<String>? _partnerSmokingHabit;
+  String? _partnerPoliticalAffiliationPreference;
+  String? _partnerIntrovertPreference;
 
   // Dating pref
   String? _datingPreference;
@@ -381,29 +383,39 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   @override
   Widget build(BuildContext context) {
-    Color? accentColor;
+    // Determine background brightness based on themeModeProvider
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+
+    // Default base colors
+    Color topColor = isDark ? const Color(0xFF1E1E2E) : const Color(0xFFF0F4F8);
+    Color bottomColor =
+        isDark ? const Color(0xFF2A2A3E) : const Color(0xFFD9E2EC);
+
     if (!_isClassicAppearance) {
       if (_selectedGender == 'male') {
-        accentColor = Colors.cyan;
+        topColor = isDark ? const Color(0xFF0D253F) : const Color(0xFFE0F7FA);
+        bottomColor =
+            isDark ? const Color(0xFF005662) : const Color(0xFF80DEEA);
       } else if (_selectedGender == 'female') {
-        accentColor = Colors.pinkAccent;
+        topColor = isDark ? const Color(0xFF2A0845) : const Color(0xFFF3E5F5);
+        bottomColor =
+            isDark ? const Color(0xFF6441A5) : const Color(0xFFCE93D8);
       }
     }
 
-    // Determine background brightness based on themeModeProvider
-    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
-    final bgThemeColor = isDark
-        ? const Color(0xFF1E1E2E)
-        : const Color(
-            0xFF2A2A3E); // or handle it inside RadarBackground/Scaffold as needed
-
     return Scaffold(
-      backgroundColor: bgThemeColor,
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          RadarBackground(
-            accentColor: accentColor,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 500),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [topColor, bottomColor],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
             child: PageView(
               controller: _pageController,
               physics: const NeverScrollableScrollPhysics(),
@@ -499,8 +511,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // INTRO SLIDES (0, 1, 2)
   // ══════════════════════════════════════════════════════
   Widget _buildIntroSlide(int index) {
-    final titles = [tr('onb1_title'), tr('onb2_title'), tr('onb3_title'), tr('onb4_title')];
-    final bodies = [tr('onb1_body'), tr('onb2_body'), tr('onb3_body'), tr('onb4_body')];
+    final titles = [
+      tr('onb1_title'),
+      tr('onb2_title'),
+      tr('onb3_title'),
+      tr('onb4_title')
+    ];
+    final bodies = [
+      tr('onb1_body'),
+      tr('onb2_body'),
+      tr('onb3_body'),
+      tr('onb4_body')
+    ];
     final icons = [
       LucideIcons.heartPulse,
       LucideIcons.messagesSquare,
@@ -950,7 +972,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 Switch(
                   value: ref.watch(themeModeProvider) == ThemeMode.dark,
                   onChanged: (val) {
-                    ref.read(themeModeProvider.notifier).setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
+                    ref
+                        .read(themeModeProvider.notifier)
+                        .setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
                   },
                   activeThumbColor: const Color(0xFF00D9A6),
                 ),
@@ -1208,8 +1232,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               'You must be at least 18 years old to use Tremble. '
               'We are unable to create an account for you at this time.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: Colors.white60, fontSize: 15, height: 1.5),
+              style:
+                  TextStyle(color: Colors.white60, fontSize: 15, height: 1.5),
             ),
             const SizedBox(height: 28),
             GestureDetector(
@@ -1447,7 +1471,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageReligion() {
     return _subScreen(
       title: tr('religion'),
-      backTarget: 8,
+      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
       options: [
         {'key': 'christianity', 'label': tr('christianity')},
         {'key': 'islam', 'label': tr('islam')},
@@ -1471,7 +1495,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageEthnicity() {
     return _subScreen(
       title: tr('ethnicity'),
-      backTarget: 8,
+      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
       options: [
         {'key': 'white', 'label': tr('ethnicity_white')},
         {'key': 'black', 'label': tr('ethnicity_black')},
@@ -1492,7 +1516,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageHairColor() {
     return _subScreen(
       title: tr('hair_color'),
-      backTarget: 8,
+      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
       options: [
         {'key': 'blonde', 'label': tr('hair_blonde')},
         {'key': 'brunette', 'label': tr('hair_brunette')},
@@ -1559,7 +1583,24 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             setState(() => _politicalAffiliationValue = -1);
           }),
           const Spacer(),
-          _continueButton(enabled: true, onTap: () => _nextPage()),
+          _continueButton(
+              enabled: true,
+              onTap: () {
+                _showPartnerRangeModal(
+                  title: tr('political_affiliation'),
+                  min: 1,
+                  max: 5,
+                  divisions: 4,
+                  labels: [tr('politics_left'), tr('politics_right')],
+                  onSave: (val) {
+                    if (val == null) {
+                      setState(() => _partnerPoliticalAffiliationPreference = null);
+                    } else {
+                      setState(() => _partnerPoliticalAffiliationPreference = '${val.start.toInt()}-${val.end.toInt()}');
+                    }
+                  },
+                );
+              }),
           const SizedBox(height: 16),
         ]),
       ),
@@ -1572,7 +1613,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageExercise() {
     return _subScreen(
       title: tr('do_you_exercise'),
-      backTarget: 8,
+      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
       options: [
         {
           'key': 'active',
@@ -1604,7 +1645,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageDrinking() {
     return _subScreen(
       title: tr('do_you_drink'),
-      backTarget: 8,
+      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
       options: [
         {
           'key': 'socially',
@@ -1650,7 +1691,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               if (_smokingHabit == 'no') {
                 _showPartnerPreferenceModal(
                   title: tr('do_you_smoke'),
-                  options: [{'key': 'no', 'label': tr('smoke_no')}],
+                  options: [
+                    {'key': 'no', 'label': tr('smoke_no')}
+                  ],
                   userSelection: 'no',
                   showCustom: false,
                   onSave: (val) {
@@ -1674,6 +1717,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     required List<Map<String, Object>> options,
     required String? selected,
     required ValueChanged<String> onSelect,
+    bool showCustomPartnerPref = true,
     ValueChanged<List<String>?>? onSavePartner,
     VoidCallback? overrideContinue,
   }) {
@@ -1702,18 +1746,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           const Spacer(),
           _continueButton(
             enabled: selected != null,
-            onTap: overrideContinue ?? () {
-              if (onSavePartner != null && selected != null) {
-                _showPartnerPreferenceModal(
-                  title: title,
-                  options: options,
-                  userSelection: selected,
-                  onSave: onSavePartner,
-                );
-              } else {
-                _nextPage();
-              }
-            },
+            onTap: overrideContinue ??
+                () {
+                  if (onSavePartner != null && selected != null) {
+                    _showPartnerPreferenceModal(
+                      title: title,
+                      options: options,
+                      userSelection: selected,
+                      showCustom: showCustomPartnerPref,
+                      onSave: onSavePartner,
+                    );
+                  } else {
+                    _nextPage();
+                  }
+                },
           ),
           const SizedBox(height: 16),
         ]),
@@ -1728,59 +1774,240 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     required ValueChanged<List<String>?> onSave,
     bool showCustom = true,
   }) {
+    String? tempSelection;
+    final isDark = ref.read(themeModeProvider) == ThemeMode.dark;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1A2E),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(top: BorderSide(color: Colors.white12)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: Colors.white24,
-                      borderRadius: BorderRadius.circular(2))),
-            ),
-            const SizedBox(height: 28),
-            Text(
-              'Do you want your partner to have the same preference?',
-              style: GoogleFonts.outfit(
-                  fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-            const SizedBox(height: 24),
-            _optionPill('Same as me', false, () {
-              Navigator.pop(ctx);
-              onSave([userSelection]);
-              _nextPage();
-            }),
-            _optionPill("I don't mind", false, () {
-              Navigator.pop(ctx);
-              onSave(null);
-              _nextPage();
-            }),
-            if (showCustom)
-              _optionPill('Custom', false, () {
-                Navigator.pop(ctx);
-                _showCustomPartnerPreferenceModal(title, options, onSave);
+      builder: (ctx) => StatefulBuilder(builder: (ctx, setModalState) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(
+                top: BorderSide(
+                    color: isDark ? Colors.white12 : Colors.black12)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black26,
+                        borderRadius: BorderRadius.circular(2))),
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'Ali želiš, da ima tvoj partner enake preference?',
+                style: GoogleFonts.outfit(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
+              ),
+              const SizedBox(height: 24),
+              _optionPill('Enako kot jaz', tempSelection == 'same', () {
+                setModalState(() => tempSelection = 'same');
               }),
-          ],
-        ),
-      ),
+              _optionPill('Vseeno mi je', tempSelection == 'idc', () {
+                setModalState(() => tempSelection = 'idc');
+              }),
+              if (showCustom)
+                _optionPill('Po meri', tempSelection == 'custom', () {
+                  setModalState(() => tempSelection = 'custom');
+                }),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                      },
+                      child: Text(
+                        'Nazaj / Spremeni',
+                        style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: tempSelection != null
+                            ? const Color(0xFF00D9A6)
+                            : (isDark ? Colors.white12 : Colors.black12),
+                        foregroundColor: tempSelection != null
+                            ? Colors.black
+                            : (isDark ? Colors.white38 : Colors.black38),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28)),
+                        elevation: tempSelection != null ? 2 : 0,
+                      ),
+                      onPressed: tempSelection == null
+                          ? null
+                          : () {
+                              Navigator.pop(ctx);
+                              if (tempSelection == 'same') {
+                                onSave([userSelection]);
+                                _nextPage();
+                              } else if (tempSelection == 'idc') {
+                                onSave(null);
+                                _nextPage();
+                              } else if (tempSelection == 'custom') {
+                                _showCustomPartnerPreferenceModal(
+                                    title, options, onSave);
+                              }
+                            },
+                      child: const Text('Nadaljuj',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }),
     );
   }
 
-  void _showCustomPartnerPreferenceModal(String title, List<Map<String, Object>> options, ValueChanged<List<String>?> onSave) {
+  void _showPartnerRangeModal({
+    required String title,
+    required double min,
+    required double max,
+    required int divisions,
+    required List<String> labels,
+    required ValueChanged<RangeValues?> onSave,
+  }) {
+    final isDark = ref.read(themeModeProvider) == ThemeMode.dark;
+    RangeValues tempRange = RangeValues(min, max);
+    bool dontCare = false;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(builder: (ctx, setModalState) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(
+                top: BorderSide(
+                    color: isDark ? Colors.white12 : Colors.black12)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black26,
+                        borderRadius: BorderRadius.circular(2))),
+              ),
+              const SizedBox(height: 28),
+              Text(
+                'Kakšen naj bo tvoj partner?',
+                style: GoogleFonts.outfit(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
+              ),
+              const SizedBox(height: 24),
+              if (!dontCare) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(labels.first,
+                        style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54)),
+                    Text(labels.last,
+                        style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54)),
+                  ],
+                ),
+                RangeSlider(
+                  values: tempRange,
+                  min: min,
+                  max: max,
+                  divisions: divisions > 0 ? divisions : null,
+                  activeColor: const Color(0xFF00D9A6),
+                  inactiveColor: isDark ? Colors.white12 : Colors.black12,
+                  onChanged: (v) => setModalState(() => tempRange = v),
+                ),
+              ],
+              const SizedBox(height: 16),
+              _optionPill('Vseeno mi je', dontCare, () {
+                setModalState(() => dontCare = !dontCare);
+              }),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(
+                        'Nazaj / Spremeni',
+                        style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00D9A6),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        if (dontCare) {
+                          onSave(null);
+                        } else {
+                          onSave(tempRange);
+                        }
+                        _nextPage();
+                      },
+                      child: const Text('Nadaljuj',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  void _showCustomPartnerPreferenceModal(String title,
+      List<Map<String, Object>> options, ValueChanged<List<String>?> onSave) {
     List<String> tempSelected = [];
+    final isDark = ref.read(themeModeProvider) == ThemeMode.dark;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1790,10 +2017,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           return Container(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
             height: MediaQuery.of(context).size.height * 0.75,
-            decoration: const BoxDecoration(
-              color: Color(0xFF1A1A2E),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border(top: BorderSide(color: Colors.white12)),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(
+                  top: BorderSide(
+                      color: isDark ? Colors.white12 : Colors.black12)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1810,7 +2040,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 Text(
                   title,
                   style: GoogleFonts.outfit(
-                      fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
                 ),
                 const SizedBox(height: 16),
                 Expanded(
@@ -1838,6 +2070,22 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     _nextPage();
                   },
                 ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                    },
+                    child: Text(
+                      'Nazaj / Spremeni',
+                      style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -1852,7 +2100,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageChildren() {
     return _subScreen(
       title: tr('do_you_want_children'),
-      backTarget: 8,
+      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
       options: [
         {
           'key': 'want_someday',
@@ -1933,7 +2181,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageSleep() {
     return _subScreen(
       title: tr('sleep'),
-      backTarget: 8,
+      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
       options: [
         {
           'key': 'night_owl',
@@ -1950,6 +2198,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _sleepHabit = k);
       },
+      showCustomPartnerPref: false,
       onSavePartner: (val) => setState(() => _partnerSleepHabit = val),
     );
   }
@@ -2196,7 +2445,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     };
 
     final predefinedHobbies = cats.values.expand((element) => element).toSet();
-    final customHobbies = _selectedHobbies.where((h) => !predefinedHobbies.contains(h)).toList();
+    final customHobbies =
+        _selectedHobbies.where((h) => !predefinedHobbies.contains(h)).toList();
 
     return SafeArea(
       child: Column(children: [
@@ -2236,7 +2486,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                         ),
                       ),
                       selected: true,
-                      onSelected: (_) => setState(() => _selectedHobbies.remove(hobby)),
+                      onSelected: (_) =>
+                          setState(() => _selectedHobbies.remove(hobby)),
                       selectedColor: const Color(0xFF00D9A6),
                       backgroundColor: Colors.white12,
                       shape: const StadiumBorder(
@@ -2672,6 +2923,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       partnerPetPreference: _partnerPetPreference?.join(', '),
       partnerChildrenPreference: _partnerChildrenPreference?.join(', '),
       partnerSmokingPreference: _partnerSmokingHabit?.join(', '),
+      politicalAffiliationPreference: _partnerPoliticalAffiliationPreference,
+      partnerIntrovertPreference: _partnerIntrovertPreference,
       lookingFor: _datingPreference != null
           ? [datingMap[_datingPreference!] ?? _datingPreference!]
           : [],
