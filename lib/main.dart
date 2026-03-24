@@ -27,8 +27,8 @@ void main() async {
   // AppCheck — prevents unauthorized apps from hitting Firebase services
   // Switch androidProvider to AndroidProvider.debug for local emulator testing
   await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.debug,
-    appleProvider: AppleProvider.deviceCheck,
+    providerAndroid: AndroidDebugProvider(),
+    providerApple: AppleDeviceCheckProvider(),
   );
 
   // Pass all uncaught Flutter errors to Crashlytics
