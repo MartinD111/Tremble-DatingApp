@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import '../data/auth_repository.dart';
-import 'radar_background.dart';
 import '../../../core/translations.dart';
 import '../../../core/theme_provider.dart';
 
