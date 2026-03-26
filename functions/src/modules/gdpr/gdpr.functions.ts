@@ -108,7 +108,7 @@ function twoYearsFromNow(): Timestamp {
  * Rate limited to prevent abuse.
  */
 export const exportUserData = onCall(
-    { maxInstances: 10 },
+    { maxInstances: 10, enforceAppCheck: true },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -185,7 +185,7 @@ export const exportUserData = onCall(
  * A GDPR audit log entry is kept for 2 years, then auto-deleted by Firestore TTL.
  */
 export const deleteUserAccount = onCall(
-    { maxInstances: 10 },
+    { maxInstances: 10, enforceAppCheck: true },
     async (request) => {
         const uid = requireAuth(request);
 

@@ -24,10 +24,12 @@ void main() async {
     options: firebaseOptions,
   );
 
-  // AppCheck — prevents unauthorized apps from hitting Firebase services
-  // Switch androidProvider to AndroidProvider.debug for local emulator testing
+  // AppCheck — prevents unauthorized apps from hitting Firebase services.
+  // prod: Play Integrity (hardware attestation), dev: Debug token for emulator.
   await FirebaseAppCheck.instance.activate(
-    providerAndroid: AndroidDebugProvider(),
+    providerAndroid: flavor == 'prod'
+        ? AndroidPlayIntegrityProvider()
+        : AndroidDebugProvider(),
     providerApple: AppleDeviceCheckProvider(),
   );
 
