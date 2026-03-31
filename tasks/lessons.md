@@ -1,17 +1,8 @@
-# Tremble - Lessons & Self-Improvement Loop
+# Permanent Project Knowledge (Lessons)
 
-*This file tracks corrections and architectural lessons to prevent repeated mistakes.*
+Rule #1
+[2026-03-31] Never run un-flavored `flutter build` or `flutter run`. Must provide `--flavor dev --dart-define=FLAVOR=dev` or prod equivalents.
+Source: Multi-Env Setup March 2026.
 
-## Architecture Principles
-1. **Passive Discovery First**: Features must minimize screen time.
-2. **Strict Ephemerality**: Proximity data is processed, not permanently stored.
-3. **Glassmorphic Execution**: High-fidelity, dynamic UX only. No default/basic components.
-
-## Development Rules
-1. **Plan First**: Always update `tasks/todo.md` before executing any non-trivial task.
-2. **Verify Before Done**: Never mark a task complete without proving it works (tests, logs, or UI validation).
-3. **Autonomous Bug Fixing**: Don't ask for permission to fix a clear bug—point to the root cause and resolve it.
-4. **Demand Elegance**: Do not settle for hacky fixes. Refactor to the elegant solution when necessary.
-
-## Corrections Log
-*(Add new technical or workflow corrections here as encountered)*
+Rule #2
+[2026-03] Do not bypass Riverpod strictly typed state. Avoid mutating state directly in UI.

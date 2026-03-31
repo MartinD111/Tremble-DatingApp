@@ -14,22 +14,33 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
-
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    flavorDimensions += "environment"
 
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationId = "com.pulse"
+            versionCode = flutter.versionCode
+            versionName = flutter.versionName
+        }
+        create("prod") {
+            dimension = "environment"
+            applicationId = "tremble.dating.app"
+            versionCode = flutter.versionCode
+            versionName = flutter.versionName
+        }
+    }
 
     defaultConfig {
-        applicationId = "tremble.dating.app"
+        // applicationId is now handled by flavors
         minSdk = flutter.minSdkVersion  // flutter_blue_plus requires API 21+
-
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
     }
 
     buildTypes {
