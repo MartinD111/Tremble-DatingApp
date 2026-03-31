@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" width="100%" height="100%">
+    <defs>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&amp;family=JetBrains+Mono:wght@500&amp;display=swap');
+            
+            .wordmark {
+                font-family: 'Playfair Display', Georgia, serif;
+                font-size: 110px;
+                font-weight: 900;
+                letter-spacing: -0.05em;
+                fill: #1A1A18;
+            }
+            
+            .label {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 14px;
+                fill: #A0A09A;
+                text-transform: uppercase;
+                letter-spacing: 0.15em;
+            }
+
+            .description {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 13px;
+                fill: #6B6B63;
+            }
+
+            /* REFINED LUXURY MOTION:
+               - Ultra-subtle 2.8s pulse.
+               - Minimal stroke expansion to maintain elegance.
+            */
+            @keyframes liquid-pulse {
+                0% { 
+                    opacity: 0.06;
+                    stroke-width: 9;
+                }
+                30% { 
+                    opacity: 1; 
+                    stroke-width: 10;
+                    filter: url(#bloom);
+                }
+                60%, 100% { 
+                    opacity: 0.06;
+                    stroke-width: 9;
+                }
+            }
+
+            .wave-inner { 
+                animation: liquid-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+                animation-delay: 0s;
+            }
+            .wave-mid { 
+                animation: liquid-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+                animation-delay: 0.35s;
+            }
+            .wave-outer { 
+                animation: liquid-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+                animation-delay: 0.7s;
+            }
+        </style>
+
+        <!-- SUBTLE VOLUME GRADIENTS -->
+        <radialGradient id="iconSurface" cx="50%" cy="35%" r="75%">
+            <stop offset="0%" stop-color="#F95B82" />
+            <stop offset="100%" stop-color="#E12F58" />
+        </radialGradient>
+
+        <linearGradient id="strokeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#FFFFFF" />
+            <stop offset="100%" stop-color="#F2F2F2" />
+        </linearGradient>
+
+        <!-- BESPOKE SOFT FILTERS -->
+        <filter id="luxuryShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.12"/>
+        </filter>
+
+        <filter id="bloom" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="1.1" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+
+        <!-- OPTICALLY CENTERED CORE ASSET -->
+        <g id="finalLogo" filter="url(#luxuryShadow)">
+            <path d="M -4, 70 C -34, 60 -64, 30 -64, 0 C -64, -35 -34, -50 -4, -20" 
+                  fill="none" stroke="url(#strokeGrad)" stroke-width="10" stroke-linecap="round" />
+            
+            <path class="wave-outer" d="M 12, -20 C 42, -50 72, -35 72, 0 C 72, 30 42, 60 12, 70" 
+                  fill="none" stroke="url(#strokeGrad)" stroke-linecap="round" opacity="0.06" />
+            
+            <path class="wave-mid" d="M 12, 5 C 29, -15 46, -5 46, 12 C 46, 28 29, 42 12, 50" 
+                  fill="none" stroke="url(#strokeGrad)" stroke-linecap="round" opacity="0.06" />
+            
+            <path class="wave-inner" d="M 12, 25 C 16, 15 26, 18 26, 24 C 26, 30 16, 35 12, 40" 
+                  fill="none" stroke="url(#strokeGrad)" stroke-linecap="round" opacity="0.06" />
+        </g>
+    </defs>
+
+    <rect width="1200" height="600" fill="#FAFAF7" />
+
+    <!-- LOGO COMPOSITION -->
+    <g transform="translate(150, 220)">
+        <text x="0" y="-85" class="label">Tremble — Bespoke Visual Identity</text>
+        
+        <rect x="0" y="0" width="220" height="220" rx="48" ry="48" fill="url(#iconSurface)" />
+        
+        <!-- Subtle Rim-Light highlight -->
+        <path d="M 48, 2.5 L 172, 2.5 C 206, 2.5 217.5, 14 217.5, 48" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.1" stroke-linecap="round"/>
+        
+        <!-- PERFECT OPTICAL CENTER -->
+        <g transform="translate(106, 98) scale(1.12)">
+            <use href="#finalLogo" />
+        </g>
+
+        <text x="300" y="145" class="wordmark" fill="#1A1A18">tremble</text>
+        
+        <g transform="translate(300, 210)">
+            <text x="0" y="0" class="description">Uravnotežena dinamika · Bloom: 1.1px · Shadow: 6px Soft</text>
+            <text x="0" y="22" class="description">Optimizirana vizualna čistost za premijsko izkušnjo.</text>
+        </g>
+    </g>
+</svg>

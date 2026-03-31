@@ -280,10 +280,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         child: Center(
           child: Text(
             label ?? tr('continue_btn'),
-            style: GoogleFonts.outfit(
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               fontSize: 17,
               fontWeight: FontWeight.bold,
-              color: enabled ? Colors.black : Colors.white38,
+              color: enabled ? Colors.black : (Theme.of(context).brightness == Brightness.dark ? Colors.white38 : Colors.black38),
             ),
           ),
         ),
@@ -292,13 +292,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   // ────── BACK BUTTON ──────
-  Widget _backButton() => TextButton.icon(
+  Widget _backButton() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return TextButton.icon(
         onPressed: _prevPage,
-        icon: const Icon(Icons.arrow_back_ios_new,
-            color: Colors.white54, size: 16),
+        icon: Icon(Icons.arrow_back_ios_new,
+            color: isDark ? Colors.white54 : Colors.black54, size: 16),
         label: Text(tr('back'),
-            style: const TextStyle(color: Colors.white54, fontSize: 15)),
+            style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 15)),
       );
+  }
 
   // ────── PROGRESS BAR ──────
   Widget _buildProgressBar() {
@@ -319,15 +322,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // ────── STEP HEADER ──────
   Widget _stepHeader(String title, {String? subtitle}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(title,
-          style: GoogleFonts.outfit(
-              fontSize: 30, fontWeight: FontWeight.bold, color: Colors.white)),
+          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+              fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
       if (subtitle != null) ...[
         const SizedBox(height: 8),
         Text(subtitle,
-            style: const TextStyle(
-                color: Colors.white60, fontSize: 14, height: 1.4)),
+            style: TextStyle(
+                color: isDark ? Colors.white60 : Colors.black54, fontSize: 14, height: 1.4)),
       ],
     ]);
   }
@@ -335,6 +339,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _optionPill(String label, bool selected, VoidCallback onTap,
       {IconData? icon}) {
     const teal = Color(0xFF00D9A6);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -345,20 +350,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         decoration: BoxDecoration(
           color: selected
               ? teal.withValues(alpha: 0.22)
-              : Colors.white.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(30),
+              : (isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.05)),
+          borderRadius: BorderRadius.circular(100),
           border: Border.all(
-              color: selected ? teal : Colors.white38, width: selected ? 2 : 1),
+              color: selected ? teal : (isDark ? Colors.white38 : Colors.black26), width: selected ? 2 : 1),
         ),
         child: Row(
           children: [
             if (icon != null) ...[
-              Icon(icon, color: selected ? teal : Colors.white70, size: 20),
+              Icon(icon, color: selected ? teal : (isDark ? Colors.white70 : Colors.black54), size: 20),
               const SizedBox(width: 12)
             ],
             Text(label,
-                style: TextStyle(
-                    color: selected ? Colors.white : const Color(0xDDFFFFFF),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: selected ? (isDark ? Colors.white : Colors.black) : (isDark ? const Color(0xDDFFFFFF) : Colors.black87),
                     fontSize: 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.w500)),
             const Spacer(),
@@ -614,42 +619,62 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   Widget _inputField(String label, TextEditingController ctrl,
       {IconData? icon, TextInputType? keyboard}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final hintColor = isDark ? Colors.white60 : Colors.black54;
+    final iconColor = isDark ? Colors.white38 : Colors.black38;
+    final borderColor = isDark ? Colors.white30 : Colors.black26;
+    final borderFocusColor = isDark ? Colors.white : Colors.black;
+
     return TextField(
       controller: ctrl,
       keyboardType: keyboard,
-      style: const TextStyle(color: Colors.white, fontSize: 17),
+      style: TextStyle(color: textColor, fontSize: 17),
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white60),
+        labelStyle: TextStyle(color: hintColor),
         prefixIcon:
-            icon != null ? Icon(icon, color: Colors.white38, size: 20) : null,
-        enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white30)),
-        focusedBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white)),
+            icon != null ? Icon(icon, color: iconColor, size: 20) : null,
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(100),
+            borderSide: BorderSide(color: borderColor)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(100),
+            borderSide: BorderSide(color: borderFocusColor, width: 2)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       ),
     );
   }
 
   Widget _passwordInputField() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final hintColor = isDark ? Colors.white60 : Colors.black54;
+    final iconColor = isDark ? Colors.white38 : Colors.black38;
+    final borderColor = isDark ? Colors.white30 : Colors.black26;
+    final borderFocusColor = isDark ? Colors.white : Colors.black;
+
     return TextField(
       controller: _passwordController,
       obscureText: _obscurePassword,
-      style: const TextStyle(color: Colors.white, fontSize: 17),
+      style: TextStyle(color: textColor, fontSize: 17),
       onChanged: _updatePasswordStrength,
       decoration: InputDecoration(
         labelText: tr('password'),
-        labelStyle: const TextStyle(color: Colors.white60),
+        labelStyle: TextStyle(color: hintColor),
         prefixIcon:
-            const Icon(LucideIcons.lock, color: Colors.white38, size: 20),
-        enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white30)),
-        focusedBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white)),
+            Icon(LucideIcons.lock, color: iconColor, size: 20),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(100),
+            borderSide: BorderSide(color: borderColor)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(100),
+            borderSide: BorderSide(color: borderFocusColor, width: 2)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         suffixIcon: IconButton(
           icon: Icon(_obscurePassword ? LucideIcons.eyeOff : LucideIcons.eye,
-              color: Colors.white38, size: 20),
+              color: iconColor, size: 20),
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
       ),
@@ -684,24 +709,34 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Widget _confirmPasswordInputField() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final hintColor = isDark ? Colors.white60 : Colors.black54;
+    final iconColor = isDark ? Colors.white38 : Colors.black38;
+    final borderColor = isDark ? Colors.white30 : Colors.black26;
+    final borderFocusColor = isDark ? Colors.white : Colors.black;
+
     return TextField(
       controller: _confirmPasswordController,
       obscureText: _obscureConfirmPassword,
-      style: const TextStyle(color: Colors.white, fontSize: 17),
+      style: TextStyle(color: textColor, fontSize: 17),
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
         labelText: tr('confirm_password'),
-        labelStyle: const TextStyle(color: Colors.white60),
+        labelStyle: TextStyle(color: hintColor),
         prefixIcon:
-            const Icon(LucideIcons.lock, color: Colors.white38, size: 20),
-        enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white30)),
-        focusedBorder: const UnderlineInputBorder(
-            borderSide: BorderSide(color: Colors.white)),
+            Icon(LucideIcons.lock, color: iconColor, size: 20),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(100),
+            borderSide: BorderSide(color: borderColor)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(100),
+            borderSide: BorderSide(color: borderFocusColor, width: 2)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         suffixIcon: IconButton(
           icon: Icon(
               _obscureConfirmPassword ? LucideIcons.eyeOff : LucideIcons.eye,
-              color: Colors.white38,
+              color: iconColor,
               size: 20),
           onPressed: () => setState(
               () => _obscureConfirmPassword = !_obscureConfirmPassword),
@@ -728,6 +763,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Widget _locationAutocomplete() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final hintColor = isDark ? Colors.white60 : Colors.black54;
+    final iconColor = isDark ? Colors.white38 : Colors.black38;
+    final borderColor = isDark ? Colors.white30 : Colors.black26;
+    final borderFocusColor = isDark ? Colors.white : Colors.black;
+
     return Autocomplete<String>(
       optionsBuilder: (tv) {
         if (tv.text.isEmpty) return const Iterable<String>.empty();
@@ -742,20 +784,23 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         return TextField(
           controller: ctrl,
           focusNode: fn,
-          style: const TextStyle(color: Colors.white, fontSize: 17),
+          style: TextStyle(color: textColor, fontSize: 17),
           onChanged: (v) {
             _locationController.text = v;
             setState(() {});
           },
           decoration: InputDecoration(
             labelText: tr('from_where'),
-            labelStyle: const TextStyle(color: Colors.white60),
+            labelStyle: TextStyle(color: hintColor),
             prefixIcon:
-                const Icon(LucideIcons.mapPin, color: Colors.white38, size: 20),
-            enabledBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white30)),
-            focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.white)),
+                Icon(LucideIcons.mapPin, color: iconColor, size: 20),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(100),
+                borderSide: BorderSide(color: borderColor)),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(100),
+                borderSide: BorderSide(color: borderFocusColor, width: 2)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           ),
         );
       },
@@ -763,7 +808,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         alignment: Alignment.topLeft,
         child: Material(
           elevation: 8,
-          color: const Color(0xFF1E1E2E),
+          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 180, maxWidth: 340),
@@ -775,9 +820,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 final o = opts.elementAt(i);
                 return ListTile(
                     dense: true,
-                    leading: const Icon(LucideIcons.mapPin,
-                        size: 14, color: Colors.white54),
-                    title: Text(o, style: const TextStyle(color: Colors.white)),
+                    leading: Icon(LucideIcons.mapPin,
+                        size: 14, color: isDark ? Colors.white54 : Colors.black54),
+                    title: Text(o, style: TextStyle(color: textColor)),
                     onTap: () => onSel(o));
               },
             ),
@@ -885,18 +930,22 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           TextField(
             controller: _nameController,
             autofocus: true,
-            style: GoogleFonts.outfit(
-                fontSize: 28, color: Colors.white, fontWeight: FontWeight.w500),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontSize: 28, 
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, 
+                fontWeight: FontWeight.w500),
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               hintText: tr('name_hint'),
               hintStyle:
-                  GoogleFonts.outfit(fontSize: 28, color: Colors.white24),
-              border: InputBorder.none,
-              enabledBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white24)),
-              focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white, width: 2)),
+                  Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 28, color: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(100),
+                  borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(100),
+                  borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, width: 2)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             ),
           ),
           const Spacer(),
@@ -938,14 +987,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(20),
-              borderRadius: BorderRadius.circular(16),
+              color: ref.watch(themeModeProvider) == ThemeMode.dark ? Colors.white.withAlpha(20) : Colors.black.withAlpha(15),
+              borderRadius: BorderRadius.circular(100),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Classic or gender based',
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                Text('Classic or gender based',
+                    style: TextStyle(color: ref.watch(themeModeProvider) == ThemeMode.dark ? Colors.white : Colors.black87, fontSize: 16)),
                 Switch(
                   value: _isClassicAppearance,
                   onChanged: (val) =>
@@ -960,14 +1009,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha(20),
-              borderRadius: BorderRadius.circular(16),
+              color: ref.watch(themeModeProvider) == ThemeMode.dark ? Colors.white.withAlpha(20) : Colors.black.withAlpha(15),
+              borderRadius: BorderRadius.circular(100),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Dark mode',
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                Text('Dark mode',
+                    style: TextStyle(color: ref.watch(themeModeProvider) == ThemeMode.dark ? Colors.white : Colors.black87, fontSize: 16)),
                 Switch(
                   value: ref.watch(themeModeProvider) == ThemeMode.dark,
                   onChanged: (val) {
@@ -1470,7 +1519,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageReligion() {
     return _subScreen(
       title: tr('religion'),
-      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
+      backTarget: _currentPage - 1,
       options: [
         {'key': 'christianity', 'label': tr('christianity')},
         {'key': 'islam', 'label': tr('islam')},
@@ -1494,7 +1543,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageEthnicity() {
     return _subScreen(
       title: tr('ethnicity'),
-      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
+      backTarget: _currentPage - 1,
       options: [
         {'key': 'white', 'label': tr('ethnicity_white')},
         {'key': 'black', 'label': tr('ethnicity_black')},
@@ -1515,7 +1564,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageHairColor() {
     return _subScreen(
       title: tr('hair_color'),
-      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
+      backTarget: _currentPage - 1,
       options: [
         {'key': 'blonde', 'label': tr('hair_blonde')},
         {'key': 'brunette', 'label': tr('hair_brunette')},
@@ -1612,7 +1661,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageExercise() {
     return _subScreen(
       title: tr('do_you_exercise'),
-      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
+      backTarget: _currentPage - 1,
       options: [
         {
           'key': 'active',
@@ -1644,7 +1693,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageDrinking() {
     return _subScreen(
       title: tr('do_you_drink'),
-      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
+      backTarget: _currentPage - 1,
       options: [
         {
           'key': 'socially',
@@ -1830,7 +1879,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                         Navigator.pop(ctx);
                       },
                       child: Text(
-                        'Nazaj / Spremeni',
+                        'Nazaj',
                         style: TextStyle(
                             color: isDark ? Colors.white70 : Colors.black54,
                             fontSize: 16,
@@ -1962,7 +2011,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     child: TextButton(
                       onPressed: () => Navigator.pop(ctx),
                       child: Text(
-                        'Nazaj / Spremeni',
+                        'Nazaj',
                         style: TextStyle(
                             color: isDark ? Colors.white70 : Colors.black54,
                             fontSize: 16,
@@ -2099,7 +2148,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageChildren() {
     return _subScreen(
       title: tr('do_you_want_children'),
-      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
+      backTarget: _currentPage - 1,
       options: [
         {
           'key': 'want_someday',
@@ -2180,7 +2229,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageSleep() {
     return _subScreen(
       title: tr('sleep'),
-      backTarget: (_pageController.page?.toInt() ?? 0) - 1,
+      backTarget: _currentPage - 1,
       options: [
         {
           'key': 'night_owl',
@@ -2545,6 +2594,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               label: Text(tr('add_own'),
                                   style: const TextStyle(color: Colors.black)),
                               backgroundColor: const Color(0xFF00D9A6),
+                              shape: const StadiumBorder(),
                               onPressed: () => _showAddHobbyDialog(),
                             ),
                           ],
@@ -2686,8 +2736,34 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             _backButton(),
             const SizedBox(height: 24),
             _stepHeader(
-              tr('consent_title'),
+              'Privacy and GDPR',
               subtitle: tr('consent_subtitle'),
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    final newVal = !_consentGiven;
+                    _consentTerms = newVal;
+                    _consentPrivacy = newVal;
+                    _consentDataProcessing = newVal;
+                    _consentLocation = newVal;
+                  });
+                },
+                icon: Icon(
+                  _consentGiven ? Icons.check_box : Icons.check_box_outline_blank,
+                  color: const Color(0xFF00D9A6),
+                ),
+                label: const Text(
+                  'Izberi Vse',
+                  style: TextStyle(
+                    color: Color(0xFF00D9A6),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 32),
             // Terms of Service
@@ -2695,10 +2771,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               value: _consentTerms,
               onChanged: (v) => setState(() => _consentTerms = v),
               richText: TextSpan(
-                style: const TextStyle(
-                    color: Colors.white70, fontSize: 14, height: 1.5),
+                style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 14, height: 1.5),
                 children: [
-                  const TextSpan(text: 'I agree to the '),
+                   const TextSpan(text: 'I agree to the '),
                   WidgetSpan(
                     child: GestureDetector(
                       onTap: () {},
@@ -2719,10 +2795,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               value: _consentPrivacy,
               onChanged: (v) => setState(() => _consentPrivacy = v),
               richText: TextSpan(
-                style: const TextStyle(
-                    color: Colors.white70, fontSize: 14, height: 1.5),
+                style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 14, height: 1.5),
                 children: [
-                  const TextSpan(text: 'I have read and accept the '),
+                   const TextSpan(text: 'I have read and accept the '),
                   WidgetSpan(
                     child: GestureDetector(
                       onTap: () {},
@@ -2733,7 +2809,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               decoration: TextDecoration.underline)),
                     ),
                   ),
-                  const TextSpan(text: ', including GDPR data processing.'),
+                   const TextSpan(text: ', including GDPR data processing.'),
                 ],
               ),
             ),
@@ -2742,10 +2818,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             _consentTile(
               value: _consentDataProcessing,
               onChanged: (v) => setState(() => _consentDataProcessing = v),
-              richText: const TextSpan(
+              richText: TextSpan(
                 style:
-                    TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
-                children: [
+                    TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 14, height: 1.5),
+                children: const [
                   TextSpan(
                       text:
                           'I explicitly consent to the processing of my sensitive personal data '
@@ -2760,10 +2836,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             _consentTile(
               value: _consentLocation,
               onChanged: (v) => setState(() => _consentLocation = v),
-              richText: const TextSpan(
+              richText: TextSpan(
                 style:
-                    TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
-                children: [
+                    TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 14, height: 1.5),
+                children: const [
                   TextSpan(
                       text:
                           'I consent to live location tracking for the Radar feature. '
@@ -2778,22 +2854,22 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12),
               ),
-              child: const Row(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.shield_outlined,
+                  const Icon(Icons.shield_outlined,
                       color: Color(0xFF00D9A6), size: 20),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Your data is stored securely, never sold to third parties, '
                       'and can be exported or deleted at any time from Settings.',
                       style: TextStyle(
-                          color: Colors.white54, fontSize: 13, height: 1.5),
+                          color: Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54, fontSize: 13, height: 1.5),
                     ),
                   ),
                 ],
@@ -2831,7 +2907,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               color: value ? teal : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
               border:
-                  Border.all(color: value ? teal : Colors.white38, width: 2),
+                  Border.all(color: value ? teal : (Theme.of(context).brightness == Brightness.dark ? Colors.white38 : Colors.black38), width: 2),
             ),
             child: value
                 ? const Icon(Icons.check, color: Colors.black, size: 16)

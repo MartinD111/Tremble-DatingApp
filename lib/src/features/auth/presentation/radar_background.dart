@@ -25,15 +25,15 @@ class _RadarBackgroundState extends State<RadarBackground>
   void initState() {
     super.initState();
 
-    // Rotation animation for radar circles
+    // Slow rotation animation for radar circles
     _rotationController = AnimationController(
-      duration: const Duration(seconds: 8),
+      duration: const Duration(seconds: 24),
       vsync: this,
     )..repeat();
 
-    // Pulse animation for dots
+    // Slow pulse animation for dots
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 4000),
       vsync: this,
     )..repeat();
 
@@ -61,34 +61,18 @@ class _RadarBackgroundState extends State<RadarBackground>
 
   @override
   Widget build(BuildContext context) {
-    // Determine base colors based on accentColor
-    final baseColor = widget.accentColor ?? const Color(0xFF1A237E);
-    final secondaryColor = widget.accentColor != null
-        ? widget.accentColor!
-            .withValues(alpha: 0.7) // Use simpler opacity for now
-        : const Color(0xFF4A148C);
+    // Determine base colors from Theme
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final primaryColor = widget.accentColor ?? Theme.of(context).colorScheme.primary;
 
     return Stack(
       children: [
-        // Glassy gradient background
+        // Ambient background
         Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                baseColor.withValues(alpha: 0.9),
-                secondaryColor.withValues(alpha: 0.9),
-                if (widget.accentColor == null)
-                  const Color(0xFF880E4F).withValues(alpha: 0.9)
-                else
-                  baseColor.withValues(alpha: 0.5), // Fallback/third color
-              ],
-            ),
-          ),
+          color: bgColor,
         ),
 
-        // Animated radar circles
+        // Animated soft radial pulses
         AnimatedBuilder(
           animation: _rotationController,
           builder: (context, child) {
@@ -97,26 +81,11 @@ class _RadarBackgroundState extends State<RadarBackground>
                 rotation: _rotationController.value,
                 pulseAnimation: _pulseController,
                 dots: _dots,
-                accentColor: widget.accentColor,
+                accentColor: primaryColor,
               ),
               size: Size.infinite,
             );
           },
-        ),
-
-        // Glassy overlay
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.white.withValues(alpha: 0.05),
-                Colors.white.withValues(alpha: 0.01),
-                Colors.black.withValues(alpha: 0.2),
-              ],
-            ),
-          ),
         ),
 
         // Content
@@ -156,9 +125,8 @@ class RadarPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = math.min(size.width, size.height) * 0.8;
 
-    final primaryColor = accentColor ?? Colors.blue;
-    final secondaryColor =
-        accentColor != null ? accentColor!.withValues(alpha: 0.5) : Colors.pink;
+    final primaryColor = accentColor ?? const Color(0xFFF4436C); // Fallback to rose if null
+    final secondaryColor = accentColor != null ? accentColor!.withValues(alpha: 0.5) : const Color(0xFFC2185B);
 
     // Draw 4 concentric circles with alternating colors
     for (int i = 0; i < 4; i++) {
@@ -202,8 +170,8 @@ class RadarPainter extends CustomPainter {
         end: Alignment.centerRight,
         colors: [
           Colors.white.withValues(alpha: 0.0),
-          Colors.white.withValues(alpha: 0.6),
-          Colors.cyan.withValues(alpha: 0.8),
+          primaryColor.withValues(alpha: 0.2),
+          primaryColor.withValues(alpha: 0.4),
         ],
       ).createShader(Rect.fromPoints(center, lineEnd))
       ..strokeWidth = 3
@@ -243,7 +211,7 @@ class RadarPainter extends CustomPainter {
 
       // Dot core
       final corePaint = Paint()
-        ..color = Colors.cyan.withValues(alpha: pulseOpacity)
+        ..color = primaryColor.withValues(alpha: pulseOpacity)
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(dotPosition, pulseSize * 0.5, corePaint);

@@ -21,19 +21,23 @@ class PrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
-        backgroundColor:
-            isSecondary ? Colors.white.withValues(alpha: 0.2) : Colors.white,
-        foregroundColor: isSecondary ? Colors.white : const Color(0xFFE91E63),
+        backgroundColor: isSecondary
+            ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.2)
+            : Theme.of(context).colorScheme.primary,
+        foregroundColor: isSecondary
+            ? Theme.of(context).colorScheme.onSurface 
+            : Colors.white,
         minimumSize: Size(width ?? double.infinity, height ?? 56),
         maximumSize: width != null ? Size(width!, height ?? 56) : null,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         elevation: 0,
       ),
       onPressed: onPressed,
       icon: icon != null ? Icon(icon) : const SizedBox.shrink(),
       label: Text(
         text,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16) ?? 
+               const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }
