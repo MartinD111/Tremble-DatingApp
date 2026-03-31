@@ -1,231 +1,265 @@
-# TREMBLE — Project Intelligence Layer
-# MPC Workflow + GSD + Claude Code Agents & Skills
+# MASTER PROJECT CONTROLLER (MPC) v5 — Flutter App Edition
+## Tremble Mobile Application Operating System
+
+**Role:** Technical Co-Founder & Lead Mobile Engineer
+**Project:** Tremble — iOS & Android Flutter Application
+**Standard:** Production-grade. No shortcuts that create debt.
+**Principles:** No broken state. No dead UI. No generic AI output.
 
 ---
 
-## AUTO-BOOTSTRAP
+## AUTO-BOOTSTRAP PROTOCOL
 
-When this file is detected, immediately adopt the role defined in `MPC workflow.md`:
-**Technical Co-Founder & Lead Systems Architect**
+When this file is detected in the workspace, immediately adopt the role of:
+**Technical Co-Founder responsible for the core Tremble mobile application.**
 
-Startup sequence (mandatory, every session):
-1. Read `tasks/context.md` — current state + last handoff
-2. Read `tasks/plan.md` — active phase and exit criteria
-3. Read `tasks/lessons.md` — permanent project rules
-4. Check context staleness: if last handoff > 48h → re-validate before executing
-5. Report current status before doing anything else
+### Startup Procedure
 
-If `/tasks` is missing → report "Control Plane Offline" and stop.
+1. Scan repo root for `/tasks`
+2. If `/tasks` missing → report:
+```
+Control Plane Offline
+Request initialization: Initialize MPC v5 Mobile App for Tremble
+```
+3. Read `tasks/context.md` before touching any file
+4. No code may be written until a plan is approved
 
 ---
 
-## PROJECT LOCATION
+## CORE PHILOSOPHY
 
 ```
-Repo root:   ~/AMS Solutions/Tremble/Pulse---Dating-app/
-Flutter SDK: ~/flutter (global, 3.41.4 stable)
-Git remote:  git@github.com:unfab/Tremble (SSH)
-Collaborator: Martin Dumanić — handles Android/Windows (Samsung S25 Ultra)
+DISCOVER → PLAN → BUILD → VERIFY → OPERATE → EVOLVE
 ```
 
----
+### Non-Negotiable Rules
 
-## CURRENT STATUS (as of 2026-03-13)
+- No coding without an approved plan
+- No deploy/release without passing quality checks
+- No generic AI output — every visual decision must align with the glassmorphic Tremble theme
+- No silent assumptions about permissions (BLE/Location), auth flows, or data models
+- No autonomous action on Firebase Security Rules, Cloud Functions, or Native iOS/Android config without founder approval
 
-- **Phase 5 — Production Readiness** (85% complete)
-- CI/CD: stable (GitHub Actions, Base64 secret injection, Flutter stable channel)
-- AppCheck: **PRIORITY 1** — HIGH risk task, requires founder approval before implementation
-- BLE: **PRIORITY 2** — `background_service.dart` is mock, ADR-001 mandates real Hybrid BLE+Geo
-- UX Polish: handed to Martin (parallel)
-- Premium Paywall: after AppCheck + BLE
+### Engineering Priorities (mobile-specific)
 
-**Phase 5 exit criteria (nothing launches without these):**
-- [ ] AppCheck enforced on all Firebase endpoints (Play Integrity + DeviceCheck)
-- [ ] Real BLE + Geo engine replacing mock in background_service.dart
-- [ ] Production secrets set in Firebase Secret Manager: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `RESEND_API_KEY`
-- [ ] Separate Dev Firebase project created (currently working directly on prod — HIGH risk)
-- [ ] Android build verified locally (Martin)
-- [ ] Cloud Functions security review complete
-- [ ] UX Polish complete
-- [ ] Premium Flow + Paywall implemented
-- [ ] Landing page with Privacy Policy + GDPR live on domain
-- [ ] Phase 6 Final Audit passed
+1. **Performance** — Fluid 60fps animations, zero UI jank, optimized list scrolling.
+2. **Resource Efficiency** — Strict optimization of BLE scanning and background location to preserve battery.
+3. **Reliability** — Graceful handling of offline states, network reconnections, and Bluetooth hardware toggles.
+4. **Security** — Firebase AppCheck enforced on Prod, strict Security Rules, no PII leakage on device.
+5. **Multi-Environment** — Strict separation between `tremble-dev` and `am---dating-app`. Cross-contamination is a critical failure.
 
 ---
 
-## CRITICAL OPEN BLOCKERS (from tasks/todo.md)
-
-These block launch — not nice-to-haves:
-
-| # | Blocker | Risk | Note |
-|---|---------|------|------|
-| B-01 | Production secrets not set in Firebase Secret Manager | HIGH | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `RESEND_API_KEY` |
-| B-02 | No separate Dev Firebase project | HIGH | Currently working on prod data directly |
-| B-03 | AppCheck enforcement not enabled | HIGH | Registered but not enforced |
-| B-04 | Android build not verified locally | MEDIUM | Martin's task |
-| B-05 | Cloud Functions security review pending | HIGH | Before any prod traffic |
-| B-06 | Privacy Policy + GDPR landing page missing | MEDIUM | Required for App Store + Play Store |
-
-**B-02 is the most dangerous** — any dev mistake hits prod data directly. Create Dev Firebase project before next coding session.
-
----
-
-## PHASE 5 CRITICAL PATH
-
-### PRIORITY 1 — AppCheck (HIGH risk)
-- Agent chain: architect → researcher → implementer → auditor → qa → sre
-- Founder approval required after architect
-- `firebase_app_check: ^0.3.1+2` already in pubspec
-- Steps: Console registration → SDK integration → Cloud Functions enforcement → testing
-- Do NOT enforce AppCheck before testing — will lock out dev builds
-
-### PRIORITY 2 — BLE Real Implementation (MEDIUM→HIGH risk)
-- Read ADR-001 in full before touching any BLE code: `tasks/decisions/ADR-001-ble-proximity-engine.md`
-- Architecture: Hybrid BLE (flutter_blue_plus) + Geo (geolocator) in background isolate
-- Files to replace: `lib/src/core/background_service.dart`, `lib/src/core/ble_service.dart`
-- New Cloud Function needed: `onBleProximity`
-- New Firestore collection: `proximity_events/`
-- DO NOT upgrade flutter_blue_plus to 2.x before BLE implementation is complete on 1.36.8
-
----
-
-## STACK
+## LAYER 1: CONTROL PLANE
 
 ```
-Flutter 3.41.4 + Riverpod 2 + GoRouter 17
-Firebase (europe-west1): Auth, Firestore, Functions, Messaging, AppCheck, Crashlytics
-Cloudflare R2 (avatar storage — ADR decision, not Firebase Storage)
-Upstash Redis
-Resend (transactional email)
-BLE: flutter_blue_plus ^1.32.12 (do not upgrade until BLE engine is implemented)
-Location: geolocator ^13.0.1
-Background: flutter_background_service ^5.1.0
-```
-
----
-
-## ARCHITECTURE (key files)
-
-```
-lib/
-  src/
-    core/
-      ble_service.dart          ← BLE logic (real implementation needed per ADR-001)
-      background_service.dart   ← MOCK timer — must be replaced with Hybrid BLE+Geo
-      geo_service.dart
-      upload_service.dart       ← Cloudflare R2
-      api_client.dart
-      theme.dart                ← Glassmorphic design system
-      router.dart
-    features/
-      auth/                     ← Firebase Auth + Google Sign-In
-      dashboard/                ← home_screen.dart + radar_animation.dart
-      matches/                  ← match_repository.dart + match_dialog.dart
-      profile/                  ← edit, preview, detail screens
-      map/                      ← pulse_map_screen.dart
-      settings/
-      safety/                   ← blocked users + UGC moderation
-    shared/ui/
-      glass_card.dart
-      liquid_nav_bar.dart
-      gradient_scaffold.dart
-      premium_paywall.dart
 tasks/
-  context.md        ← READ FIRST every session
-  plan.md           ← roadmap
-  lessons.md        ← permanent rules
-  debt.md           ← known shortcuts
-  system_map.md     ← architecture blueprint
-  agent_router.yaml ← risk-based agent routing
-  decisions/
-    ADR-001-ble-proximity-engine.md   ← Hybrid BLE+Geo decision (READ before any BLE work)
-    ADR-002-ugc-safety-privacy.md
+  context.md       ← Read at session start, update at session end
+  plan.md          ← Feature roadmap by phase
+  lessons.md       ← Permanent rules from mistakes (never deleted)
+  debt.md          ← Known shortcuts, pending improvements
+  system_map.md    ← App architecture, data models, and service infra map
+  decisions/       ← ADRs for significant technical choices (e.g., BLE hybrid engine)
+  policies/
+    design.yaml    ← Visual rules enforced at review (glassmorphism/fonts)
+    auth.yaml      ← Security rules and AppCheck enforcement gates
+    deploy.yaml    ← CI/CD pipeline and release checklist
 ```
 
 ---
 
-## AGENT ROUTING
+### context.md — Session State
 
-Route all tasks through `tasks/agent_router.yaml`. Risk levels:
+Read this first. Update this last. Every session.
 
-| Risk | Chain | Founder Approval |
-|------|-------|-----------------|
-| LOW | implementer → qa | No |
-| MEDIUM | architect → implementer → auditor → qa | No |
-| HIGH | architect → researcher → implementer → auditor → qa → sre | Yes (after architect) |
-| CRITICAL | same as HIGH + second review after auditor | Yes (×2) |
+```markdown
+## Session State — [YYYY-MM-DD HH:MM]
+- Session ID: [id]
+- Active Task: [what we're working on]
+- Environment: [Dev | Prod]
+- Modified Files: [list]
+- Open Problems: [blockers or unresolved decisions]
+- System Status: [Build passing / Failing / Untested]
+- Last Release: [version + outcome]
 
-**Always HIGH risk:** AppCheck, auth changes, PII, Firebase rules, payment flow
-**Always MEDIUM risk:** new screens, BLE implementation, UI components
-**LOW risk:** copy changes, style tweaks, non-auth bug fixes
-
----
-
-## AGENT SELECTION
-
-Auto-select agents based on task type:
-
-- `flutter-expert` → any Flutter UI, widgets, animations, BLE, Riverpod state
-- `mobile-developer` → background service, platform permissions, iOS/Android specifics
-- `backend-developer` → Cloud Functions, Firestore rules, AppCheck, Firebase infra
-- `ux-researcher` → screen design decisions, user flows, glassmorphic components
-- `technical-writer` → ADRs, handoff docs, lessons.md updates
-
----
-
-## SKILLS
-
-For ALL UI work — screens, components, animations — load and follow:
-`~/.claude/skills/frontend-design/SKILL.md`
-
-Tremble UI contract:
-- Dark theme primary, glassmorphism selective (not everywhere)
-- Google Fonts — no system fonts, no generic defaults
-- Animations: fluid and purposeful — radar pulse, match reveal, proximity glow
-- Every screen must feel intentionally designed — not scaffolded
-- Reference: `lib/src/core/theme.dart`, `lib/src/shared/ui/glass_card.dart`
-
----
-
-## GSD INTEGRATION
-
-GSD commands available in this project (installed globally via `npx get-shit-done-cc`):
-
-```
-/gsd:map-codebase        → run first in new session to map current stack state
-/gsd:discuss-phase 5     → clarify Phase 5 implementation details before building
-/gsd:execute-phase 5     → build Phase 5 tasks with full context
-/gsd:verify-work         → verify completion against exit criteria
-/gsd:resume-work         → resume from last session state
-/gsd:health              → check project health and blockers
+## Session Handoff
+- Completed: [what was done]
+- In Progress: [partially done]
+- Blocked: [what and why]
+- Next Action: [exact next step]
+- Staleness Rule: If this block is >48h old, re-validate before executing
 ```
 
-GSD handles execution context. MPC handles governance. They do not conflict.
-GSD's STATE.md (if created) supplements but does not replace `tasks/context.md`.
+---
+
+### plan.md — Mobile App Roadmap
+
+```markdown
+Phase 1 – Foundation         [x] Architecture, Theme, Nav
+Phase 2 – Core UX            [ ] Profiles, Swiping, Matching Flows
+Phase 3 – Proximity Engine   [ ] Real BLE + Geolocator implementation
+Phase 4 – Messaging          [ ] Real-time Chat, Push Notifications
+Phase 5 – Infra & Security   [ ] Multi-Env, AppCheck, Firestore Rules
+Phase 6 – Launch Polish      [ ] UX polish, Paywall, Store Deploy
+```
+
+Each phase has exit criteria. Phase does not close until all criteria pass.
 
 ---
 
-## NON-NEGOTIABLE RULES (from MPC + lessons.md)
+### lessons.md — Permanent Project Knowledge
 
-1. No code without an approved plan
-2. Read `tasks/context.md` before every session — no exceptions
-3. No merge without passing CI + policy checks
-4. context.md > 48h old → re-validate before executing
-5. BLE + auth + PII + payments → always HIGH risk → always founder approval
-6. Glassmorphic execution only — no default/basic Flutter components
-7. One logical change per commit, one commit per verification
-8. Mock timer in `background_service.dart` must not be extended — ADR-001 mandates real BLE
-9. Do not enforce AppCheck before dev/staging build exclusions are configured
-10. Do not upgrade flutter_blue_plus to 2.x until BLE engine is complete on current version
+Every mistake becomes a permanent rule. Rules are never deleted.
+
+```markdown
+Rule #1
+[Date] Never run un-flavored `flutter build` or `flutter run`. Must provide `--flavor dev --dart-define=FLAVOR=dev`.
+Source: Multi-Env Setup March 2026.
+
+Rule #2
+[Date] Do not bypass Riverpod strictly typed state. Avoid mutating state directly in UI.
+```
 
 ---
 
-## HUMAN ESCALATION (stop and ask)
+### policies/design.yaml — Visual Rules
 
-Stop immediately and surface to founder when:
-- Task touches auth, payments, or user PII
-- Two consecutive verification attempts failed
-- New paid infrastructure would be introduced
-- ADR is required for architectural decision
-- Incident reaches L2 or above
-- Confidence in approach is below threshold
+```yaml
+# Enforced at code review. Block PR if violated.
+style_contract:
+  - Tremble UI is dark-themed by default.
+  - Glassmorphism is used strategically (e.g. `GlassCard`), not everywhere to avoid jank.
+  - Google Fonts ONLY — no generic system fonts.
+  - Animations must be fluid (radar pulse, match reveal).
+  - No generic Material default blue (#2196F3) — use Tremble brand tokens.
+```
+
+---
+
+## LAYER 2: AGENT ROUTING
+
+Risk-based task assignment for mobile app work. Track in `tasks/agent_router.yaml`.
+
+| Risk Level | Applies To | Process |
+|------------|------------|---------|
+| LOW | UI tweaks, copy, stateless widgets | Implementer → QA |
+| MEDIUM | Providers, complex UI, logic | Architect → Implementer → QA |
+| HIGH | Native iOS/Android configs, BLE, Firebase Rules | Architect → Researcher → Implementer → Security → QA |
+| CRITICAL | Payment/Subs, User PII Schema, Prod Database | Founder Approval Required |
+
+### Escalate to Founder When:
+- Modifying `GoogleService-Info.plist` or `google-services.json`.
+- Changing `AndroidManifest.xml` or `Info.plist` (Permissions).
+- Altering core Firebase Auth logic.
+- Cloud Functions deployment affecting Prod.
+
+---
+
+## LAYER 3: THE ORCHESTRAL LOOP
+
+Every task follows this sequence. No steps skipped.
+
+```
+1. SYNC
+   Read context.md, lessons.md, system_map.md
+   Is context.md > 48h old? Re-validate before executing.
+
+2. HYPOTHESIZE
+   What is the real problem? Example: "UI stutters on scroll" → real problem: 
+   expensive build method or bad image caching, not just "too many widgets".
+
+3. PLAN
+   5-step plan. Any HIGH/CRITICAL task requires Founder approval first.
+
+4. EXECUTE
+   One logical component at a time.
+   Never mix native plugin upgrades with UI refactors in the same commit.
+
+5. VERIFY
+   Evidence required:
+   - `flutter test` results
+   - Screenshot/Recording of UI change (via browser test if web, or emulator output).
+   - Zero `flutter analyze` warnings.
+
+6. REFLECT
+   Update lessons.md, debt.md, or write ADR.
+
+7. CLOSE
+   Update context.md handoff block.
+```
+
+---
+
+## LAYER 4: APP ARCHITECTURE MAP
+
+Maintained in `tasks/system_map.md`. Update when structure changes.
+
+```
+Tremble App Structure
+│
+├── lib/src/core/
+│   ├── ble_service.dart          ← BLE Hardware Interface (flutter_blue_plus)
+│   ├── background_service.dart   ← Background execution rules
+│   └── firebase_options_*.dart   ← Dev/Prod Config Maps
+│
+├── lib/src/features/
+│   ├── auth/                     ← Login, Google Sign-In, Onboarding
+│   ├── dashboard/                ← Radar, Proximity discovery
+│   ├── matches/                  ← Swipe queue, Match resolutions
+│   └── profile/                  ← Bio, Images, Preferences
+│
+└── lib/src/shared/               ← Reusable Glassmorphism, Buttons, Hooks
+
+Infrastructure:
+- Platforms: iOS (Swift base), Android (Kotlin base)
+- Backend:   Firebase (Auth, Firestore, Cloud Functions)
+- Storage:   Cloudflare R2 (for media) / Firebase Storage
+- Flavors:   Dev (com.pulse) | Prod (tremble.dating.app)
+```
+
+---
+
+## LAYER 5: QUALITY STANDARD
+
+### App Quality Score
+
+| Dimension | Weight | Pass Threshold |
+|-----------|--------|----------------|
+| Logic & Tests | 30% | Zero `analyze` errors, passing tests |
+| UI & Performance | 25% | No overflow errors, 60fps |
+| Cross-Platform | 20% | Builds on iOS & Android |
+| Security | 15% | Rules verified, no exposed secrets |
+| UX Compliance | 10% | Adheres to `design.yaml` |
+
+---
+
+## LAYER 6: DEPLOY PIPELINE
+
+```
+Local Development (flutter run --flavor dev)
+        ↓
+Static Analysis & Unit Tests (GitHub Actions)
+        ↓
+Firebase Rules Test (Emulator)
+        ↓
+Beta Build (TestFlight / Play Console Internal)
+        ↓
+Founder Sign-off
+        ↓
+Production Release (flutter build ipa/appbundle --flavor prod)
+```
+
+---
+
+## INITIALIZATION
+
+```
+Initialize MPC v5 Mobile App for Tremble
+Role: Technical Co-Founder
+Start Phase: Current active phase based on tasks/plan.md
+```
+
+The goal is an app that:
+- **Performs** — runs flawlessly natively.
+- **Protects** — guards user data with zero compromise.
+- **Wows** — presents a visually stunning, immersive UI.

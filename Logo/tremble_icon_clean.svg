@@ -1,0 +1,35 @@
+<svg width="220" height="220" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="iconSurface" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#F95B82" />
+      <stop offset="100%" stop-color="#E12F58" />
+    </radialGradient>
+    <linearGradient id="strokeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F2F2F2" />
+    </linearGradient>
+  </defs>
+
+  <!-- Pink Square -->
+  <rect width="220" height="220" rx="48" fill="url(#iconSurface)" />
+  
+  <!-- Subtle Rim-Light highlight -->
+  <path d="M 48, 2.5 L 172, 2.5 C 206, 2.5 217.5, 14 217.5, 48" stroke="#FFFFFF" stroke-width="1.5" opacity="0.1" stroke-linecap="round"/>
+
+  <!-- Centered Icon Group -->
+  <g transform="translate(110, 110) scale(1.12) translate(-3.5, -20)">
+      <!-- Main curve -->
+      <path d="M -4, 70 C -34, 60 -64, 30 -64, 0 C -64, -35 -34, -50 -4, -20" 
+            fill="none" stroke="url(#strokeGrad)" stroke-width="10" stroke-linecap="round" />
+      
+      <!-- Waves (separate IDs for animation in Flutter) -->
+      <path id="wave_outer" d="M 12, -20 C 42, -50 72, -35 72, 0 C 72, 30 42, 60 12, 70" 
+            fill="none" stroke="url(#strokeGrad)" stroke-width="10" stroke-linecap="round" opacity="0.06" />
+      
+      <path id="wave_mid" d="M 12, 5 C 29, -15 46, -5 46, 12 C 46, 28 29, 42 12, 50" 
+            fill="none" stroke="url(#strokeGrad)" stroke-width="10" stroke-linecap="round" opacity="0.06" />
+      
+      <path id="wave_inner" d="M 12, 25 C 16, 15 26, 18 26, 24 C 26, 30 16, 35 12, 40" 
+            fill="none" stroke="url(#strokeGrad)" stroke-width="10" stroke-linecap="round" opacity="0.06" />
+  </g>
+</svg>

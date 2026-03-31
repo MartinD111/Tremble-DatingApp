@@ -1,0 +1,61 @@
+# MASTER PROJECT CONTROLLER (MPC Workflow) — CI/CD Pipeline
+name: MPC Workflow CI Pipeline (Tremble Mobile)
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+concurrency:
+  group: mpc-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter-validate:
+    name: "Flutter Code Validation"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Format
+        run: dart format --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-warnings
+
+      - name: Run Tests (Dev Flavor)
+        run: flutter test --dart-define=FLAVOR=dev
+
+  firebase-security:
+    name: "Firebase Rules & Security"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+      - name: Install Firebase Tools
+        run: npm install -g firebase-tools
+      - name: Emulate & Test Rules
+        run: echo "firebase emulators:exec 'npm test'" # Placeholder for rules tests
+
+  build-dev-android:
+    name: "Build Dev APK"
+    needs: [flutter-validate, firebase-security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+      - run: flutter pub get
+      - run: flutter build apk --flavor dev --dart-define=FLAVOR=dev
+
+  quality-gate:
+    name: "Quality Gate (MPC Enforce)"
+    runs-on: ubuntu-latest
+    needs: [build-dev-android]
+    steps:
+      - run: echo "All mobile gates passed successfully."

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import '../../../shared/ui/tremble_logo.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../../core/translations.dart';
 import '../data/auth_repository.dart';
@@ -47,15 +47,13 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SvgPicture.asset(
-                      'Logo/tremble ikona animacija 5 z 3d efektom.svg',
-                      height: 120,
-                    ),
-                    const SizedBox(height: 10),
+                    const TrembleLogo(size: 140),
+                    const SizedBox(height: 20),
                     Text("Tremble",
                         style: Theme.of(context).textTheme.displayLarge?.copyWith(
                               fontSize: 48,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1,
                             )),
 
                     const SizedBox(height: 8),
@@ -70,12 +68,12 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     // Email Input
                     TextField(
                       controller: _emailController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                       decoration: InputDecoration(
                         labelText: tr('email'),
-                        labelStyle: const TextStyle(color: Colors.white70),
+                        labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                         prefixIcon:
-                            const Icon(LucideIcons.mail, color: Colors.white70),
+                            Icon(LucideIcons.mail, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide.none,
                           borderRadius: BorderRadius.circular(8),
@@ -94,12 +92,12 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     TextField(
                       controller: _passwordController,
                       obscureText: true,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                       decoration: InputDecoration(
                         labelText: tr('password'),
-                        labelStyle: const TextStyle(color: Colors.white70),
+                        labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                         prefixIcon:
-                            const Icon(LucideIcons.lock, color: Colors.white70),
+                            Icon(LucideIcons.lock, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide.none,
                           borderRadius: BorderRadius.circular(8),
@@ -221,7 +219,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     const SizedBox(height: 24),
 
                     if (_isLoading)
-                      const CircularProgressIndicator(color: Colors.white)
+                      CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)
                     else
                       PrimaryButton(
                           text: tr('login'),
@@ -268,8 +266,9 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(30),
+                            border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -282,7 +281,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                               Text(
                                 "Nadaljuj z Googlom",
                                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                  color: Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   fontSize: 16,
                                 ),
                               ),
@@ -302,7 +301,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         decoration: BoxDecoration(
                           color: Colors.transparent,
                           borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: Colors.white38),
+                          border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
                         ),
                         child: Center(
                           child: Text(
@@ -325,27 +324,27 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.black26,
+                          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: Colors.white24),
+                          border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.language,
-                                color: Colors.white70, size: 18),
+                            Icon(Icons.language,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), size: 18),
                             const SizedBox(width: 8),
                             Text(
                               availableLanguages.firstWhere(
                                   (l) => l['code'] == lang,
                                   orElse: () =>
                                       availableLanguages.first)['label']!,
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 14),
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.arrow_drop_down,
-                                color: Colors.white70, size: 18),
+                            Icon(Icons.arrow_drop_down,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), size: 18),
                           ],
                         ),
                       ),
