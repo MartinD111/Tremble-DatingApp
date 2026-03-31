@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../../core/translations.dart';
 import '../data/auth_repository.dart';
@@ -46,21 +47,24 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(LucideIcons.heartPulse,
-                        size: 80, color: Colors.white),
+                    SvgPicture.asset(
+                      'Logo/tremble ikona animacija 5 z 3d efektom.svg',
+                      height: 120,
+                    ),
                     const SizedBox(height: 10),
                     Text("Tremble",
-                        style: GoogleFonts.outfit(
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
+                        style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                            )),
 
                     const SizedBox(height: 8),
-                    Text(tr('onb1_title'), // Using a translation for subtitle
-                        style: GoogleFonts.outfit(
-                            fontSize: 16,
-                            color: Colors.white60,
-                            letterSpacing: 1.5)),
+                    Text(tr('onb1_title'), 
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontSize: 16,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                              letterSpacing: 0.5,
+                            )),
                     const SizedBox(height: 50),
 
                     // Email Input
@@ -73,15 +77,15 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         prefixIcon:
                             const Icon(LucideIcons.mail, color: Colors.white70),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.white30),
-                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.white),
-                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
                       ),
                     ),
                     const SizedBox(height: 15),
@@ -97,15 +101,15 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         prefixIcon:
                             const Icon(LucideIcons.lock, color: Colors.white70),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.white30),
-                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(color: Colors.white),
-                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -117,11 +121,10 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         onTap: () => context.push('/forgot-password'),
                         child: Text(
                           tr('forgot_password'),
-                          style: GoogleFonts.outfit(
-                            color: Colors.white70,
-                            fontSize: 14,
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                             decoration: TextDecoration.underline,
-                            decorationColor: Colors.white70,
+                            decorationColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                       ),
@@ -278,10 +281,9 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                               const SizedBox(width: 12),
                               Text(
                                 "Nadaljuj z Googlom",
-                                style: GoogleFonts.outfit(
+                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                   color: Colors.black87,
                                   fontSize: 16,
-                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
@@ -305,10 +307,9 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         child: Center(
                           child: Text(
                             tr('are_you_new'),
-                            style: GoogleFonts.outfit(
-                              color: Colors.white,
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),

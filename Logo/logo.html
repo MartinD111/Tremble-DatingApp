@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            background: #FAFAF7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        svg {
+            width: 100%;
+            max-width: 650px;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 160">
+        <defs>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&display=swap');
+
+                .wordmark {
+                    font-family: 'Playfair Display', Georgia, serif;
+                    font-size: 110px;
+                    font-weight: 900;
+                    letter-spacing: -0.05em;
+                    fill: #1A1A18;
+                }
+            </style>
+
+            <g id="heartWifi">
+                <path d="M -3, 70 C -33, 60 -63, 30 -63, 0 C -63, -35 -33, -50 -3, -20" fill="none" stroke="#FFFFFF"
+                    stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M 10, -20 C 40, -50 70, -35 70, 0 C 70, 30 40, 60 10, 70" fill="none" stroke="#FFFFFF"
+                    stroke-width="9" stroke-linecap="round" />
+                <path d="M 10, 5 C 27, -15 44, -5 44, 12 C 44, 28 27, 42 10, 50" fill="none" stroke="#FFFFFF"
+                    stroke-width="9" stroke-linecap="round" />
+                <path d="M 10, 21 C 14, 11 24, 14 24, 20 C 24, 26 14, 31 10, 36" fill="none" stroke="#FFFFFF"
+                    stroke-width="9" stroke-linecap="round" />
+            </g>
+        </defs>
+
+        <g transform="translate(5, 5)">
+            <!-- Roza kvadrat -->
+            <rect x="0" y="0" width="150" height="150" rx="35" ry="35" fill="#F4436C" />
+
+            <!-- Centrirana ikona srca -->
+            <!-- Prvi translate(75, 75) postavi center v sredino kvadrata -->
+            <!-- Drugi translate popravi optično sredino same geometrije srca -->
+            <g transform="translate(75, 75) scale(0.82) translate(-3.5, -20)">
+                <use href="#heartWifi" />
+            </g>
+
+            <!-- Besedilo -->
+            <text x="190" y="112" class="wordmark">tremble</text>
+        </g>
+    </svg>
+
+</body>
+
+</html>

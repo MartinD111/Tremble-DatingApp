@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../data/auth_repository.dart';
 import '../../../core/translations.dart';
@@ -24,22 +23,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       titleKey: 'onb1_title',
       bodyKey: 'onb1_body',
       emoji: '👋',
-      gradient: [Color(0xFF0D3B2E), Color(0xFF0A1628)],
-      accentColor: Color(0xFF00D9A6),
+      accentColor: Color(0xFFF4436C),
     ),
     _OnboardingData(
       titleKey: 'onb2_title',
       bodyKey: 'onb2_body',
       emoji: '🚫',
-      gradient: [Color(0xFF2D1B4E), Color(0xFF0A1628)],
-      accentColor: Color(0xFF9B59B6),
+      accentColor: Color(0xFF64B5F6),
     ),
     _OnboardingData(
       titleKey: 'onb3_title',
       bodyKey: 'onb3_body',
       emoji: '🗺️',
-      gradient: [Color(0xFF1A2C4E), Color(0xFF0A1628)],
-      accentColor: Color(0xFF3498DB),
+      accentColor: Color(0xFFFFD54F),
     ),
   ];
 
@@ -62,11 +58,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       body: AnimatedContainer(
         duration: const Duration(milliseconds: 600),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: slide.gradient,
-          ),
+          color: Theme.of(context).scaffoldBackgroundColor,
         ),
         child: SafeArea(
           child: Column(
@@ -127,25 +119,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         width: double.infinity,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: slide.accentColor,
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                                color: slide.accentColor.withValues(alpha: 0.4),
-                                blurRadius: 16,
-                                spreadRadius: 2)
-                          ],
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(100),
                         ),
                         child: Center(
                           child: Text(
                             isLast
                                 ? tr('confirm_btn').toUpperCase()
                                 : tr('continue_btn').toUpperCase(),
-                            style: GoogleFonts.outfit(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                                letterSpacing: 1.2),
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  letterSpacing: 1.2,
+                                ),
                           ),
                         ),
                       ),
@@ -173,15 +158,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: data.accentColor.withValues(alpha: 0.12),
+              color: data.accentColor.withValues(alpha: 0.1),
               border: Border.all(
-                  color: data.accentColor.withValues(alpha: 0.4), width: 2),
-              boxShadow: [
-                BoxShadow(
-                    color: data.accentColor.withValues(alpha: 0.2),
-                    blurRadius: 32,
-                    spreadRadius: 4)
-              ],
+                  color: data.accentColor.withValues(alpha: 0.2), width: 1),
             ),
             child: Center(
                 child: Text(data.emoji, style: const TextStyle(fontSize: 52))),
@@ -190,19 +169,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           Text(
             tr(data.titleKey),
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                height: 1.2,
-                letterSpacing: 0.5),
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  height: 1.2,
+                ),
           ),
           const SizedBox(height: 20),
           Text(
             tr(data.bodyKey),
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                color: Colors.white60, fontSize: 15, height: 1.6),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  height: 1.6,
+                ),
           ),
         ],
       ),
@@ -214,14 +194,12 @@ class _OnboardingData {
   final String titleKey;
   final String bodyKey;
   final String emoji;
-  final List<Color> gradient;
   final Color accentColor;
 
   const _OnboardingData({
     required this.titleKey,
     required this.bodyKey,
     required this.emoji,
-    required this.gradient,
     required this.accentColor,
   });
 }
