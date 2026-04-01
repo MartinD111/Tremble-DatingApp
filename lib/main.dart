@@ -25,12 +25,14 @@ void main() async {
   );
 
   // AppCheck — prevents unauthorized apps from hitting Firebase services.
-  // prod: Play Integrity (hardware attestation), dev: Debug token for emulator.
+  // prod: Play Integrity (Android) / Device Check (iOS), dev: Debug provider for testing.
   await FirebaseAppCheck.instance.activate(
-    providerAndroid: flavor == 'prod'
-        ? AndroidPlayIntegrityProvider()
-        : AndroidDebugProvider(),
-    providerApple: AppleDeviceCheckProvider(),
+    androidProvider: flavor == 'prod'
+        ? AndroidProvider.playIntegrity
+        : AndroidProvider.debug,
+    appleProvider: flavor == 'prod' 
+        ? AppleProvider.deviceCheck 
+        : AppleProvider.debug,
   );
 
   // Pass all uncaught Flutter errors to Crashlytics
