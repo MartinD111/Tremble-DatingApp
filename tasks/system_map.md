@@ -20,3 +20,8 @@ Infrastructure:
 - Backend:   Firebase (Auth, Firestore, Cloud Functions)
 - Storage:   Cloudflare R2 (for media) / Firebase Storage
 - Flavors:   Dev (com.pulse) | Prod (tremble.dating.app)
+
+## Data Flows & PII (SEC-005)
+- **Onboarding PII:** Collected via `completeOnboarding` (Firebase Function). Includes: Email (encrypted at rest), Birthdate (converted to age), Gender, InterestedIn, Hobbies, Location (ephemeral/obfuscated).
+- **Proximity Data:** BLE RSSI and discovery logs are ephemeral and stored in memory only. No permanent disk storage for local device sightings.
+- **Retention:** All PII follows deletion jobs defined in `functions/src/modules/gdpr`.
