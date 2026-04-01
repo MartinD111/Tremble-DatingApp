@@ -346,6 +346,11 @@ const Map<String, Map<String, String>> _translations = {
     'onb3_title': 'MAP VIEW',
     'onb3_body':
         'Try out one of our premium features. See how many people are currently searching in cities.',
+    'onb4_title': 'STAY IN CONTROL',
+    'onb4_body':
+        'You have full control over who you connect with. Unmatch or block at any time.',
+    'consent_subtitle':
+        'By continuing, you agree to our Terms of Service and Privacy Policy.',
     'dating_preference': 'Dating preference',
     'add_own': '+ Add yours',
     'introversion': 'Introversion',
@@ -647,6 +652,11 @@ const Map<String, Map<String, String>> _translations = {
     'onb3_title': 'POGLED NA KARTO',
     'onb3_body':
         'Preizkusi eno od naših premium funkcij. Poglej, koliko ljudi trenutno išče v mestih.',
+    'onb4_title': 'OHRANITE NADZOR',
+    'onb4_body':
+        'Imate popoln nadzor nad tem, s kom se povežete. Kadarkoli lahko prekinete stik ali blokirate uporabnika.',
+    'consent_subtitle':
+        'Z nadaljevanjem se strinjate z našimi Pogoji poslovanja in Politiko zasebnosti.',
     'dating_preference': 'Dating preference',
     'add_own': '+ Dodaj svoje',
     'introversion': 'Introvertiranost',

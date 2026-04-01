@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/theme_provider.dart';
@@ -40,8 +41,8 @@ class RegistrationFlow extends ConsumerStatefulWidget {
 }
 
 class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
+  late PageController _pageController;
+  late int _currentPage;
 
   // Language - initialize from global provider
   late String _selectedLanguage;
@@ -50,6 +51,21 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   void initState() {
     super.initState();
     _selectedLanguage = ref.read(appLanguageProvider);
+    
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      _currentPage = 4; // Skip intros, go to Birthday directly
+      if (currentUser.email != null) {
+        _emailController.text = currentUser.email!;
+      }
+      if (currentUser.displayName != null) {
+        _nameController.text = currentUser.displayName!;
+      }
+    } else {
+      _currentPage = 0;
+    }
+    
+    _pageController = PageController(initialPage: _currentPage);
   }
 
   // Email/password/location
@@ -160,9 +176,24 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   void _nextPage() {
     // Notify user about verification email when leaving the email/password page
-    if (_currentPage == 3) {
+    if (_currentPage == 5) {
       _showVerificationNotification();
     }
+    
+    // Skip Email/Password (5) and potentially Name (6) if already authenticated
+    if (_currentPage == 4 && FirebaseAuth.instance.currentUser != null) {
+      // If name is already provided (likely via Google), go straight to Gender (7)
+      // Otherwise, go to Name (6) but still skip Email/Password (5)
+      final targetPage = _nameController.text.isNotEmpty ? 7 : 6;
+      _pageController.animateToPage(
+        targetPage,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _currentPage = targetPage);
+      return;
+    }
+
     _pageController.nextPage(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
@@ -171,6 +202,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   void _prevPage() {
+    // Skip Email/Password page (5) if already authenticated
+    if (_currentPage == 6 && FirebaseAuth.instance.currentUser != null) {
+      // Go straight back to Birthday (page 4)
+      _pageController.animateToPage(
+        4,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _currentPage = 4);
+      return;
+    }
+
     _pageController.previousPage(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
@@ -256,9 +299,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       (DateTime.now().difference(d).inDays / 365).floor();
 
   // ────── CONTINUE PILL ──────
-  Widget _continueButton(
-      {required bool enabled, required VoidCallback onTap, String? label}) {
+  Widget _continueButton({required bool enabled, required VoidCallback onTap, String? label}) {
     const teal = Color(0xFF00D9A6);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: enabled ? onTap : null,
       child: AnimatedContainer(
@@ -266,16 +310,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          color: enabled ? teal : Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                      color: teal.withValues(alpha: 0.4),
-                      blurRadius: 16,
-                      spreadRadius: 2)
-                ]
-              : [],
+          color: enabled ? teal : (isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.08)),
+          borderRadius: BorderRadius.circular(100),
+          boxShadow: [
+            if (enabled)
+              BoxShadow(
+                color: teal.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+          ],
         ),
         child: Center(
           child: Text(
@@ -307,13 +351,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildProgressBar() {
     const totalSteps = 26;
     final progress = (_currentPage + 1) / totalSteps;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: progress),
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
       builder: (ctx, val, _) => LinearProgressIndicator(
         value: val,
-        backgroundColor: Colors.white10,
+        backgroundColor: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.08),
         valueColor: const AlwaysStoppedAnimation(Color(0xFF00D9A6)),
         minHeight: 3,
       ),
@@ -381,6 +426,24 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         backgroundColor: const Color(0xFF00D9A6),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  Widget _buildScrollableFormPage({required Widget child}) {
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: child,
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -471,43 +534,45 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // PAGE 19 - STATUS
   // ══════════════════════════════════════════════════════
   Widget _buildPageStatus() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _backButton(),
-            const SizedBox(height: 24),
-            _stepHeader(tr('status')),
-            const SizedBox(height: 32),
-            _optionPill(tr('student'), _status == 'student',
-                () => setState(() => _status = 'student')),
-            _optionPill(tr('employed'), _status == 'employed',
-                () => setState(() => _status = 'employed')),
-            if (_status == 'student' || _status == 'employed') ...[
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final hintColor = isDark ? Colors.white60 : Colors.black54;
+    final borderColor = isDark ? Colors.white30 : Colors.black26;
+    final borderFocusColor = isDark ? Colors.white : Colors.black;
+    return _buildScrollableFormPage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _backButton(),
+          const SizedBox(height: 24),
+          _stepHeader(tr('status')),
+          const SizedBox(height: 32),
+          _optionPill(tr('student'), _status == 'student',
+              () => setState(() => _status = 'student')),
+          _optionPill(tr('employed'), _status == 'employed',
+              () => setState(() => _status = 'employed')),
+          if (_status == 'student' || _status == 'employed') ...[
               const SizedBox(height: 16),
               TextField(
                 controller: _customOccupationController,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: textColor),
                 decoration: InputDecoration(
                   labelText: _status == 'student'
                       ? 'Course of Study (Optional)'
                       : 'Job Title (Optional)',
-                  labelStyle: const TextStyle(color: Colors.white60),
-                  enabledBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white30)),
-                  focusedBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white)),
+                  labelStyle: TextStyle(color: hintColor),
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: borderColor)),
+                  focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: borderFocusColor)),
                 ),
               ),
             ],
-            const Spacer(),
+            const SizedBox(height: 24),
             _continueButton(enabled: _status != null, onTap: _nextPage),
             const SizedBox(height: 16),
           ],
         ),
-      ),
     );
   }
 
@@ -534,6 +599,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       LucideIcons.user
     ];
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : Colors.black87;
+    final bodyColor = isDark ? Colors.white70 : Colors.black54;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -548,14 +616,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               style: GoogleFonts.outfit(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white),
+                  color: titleColor),
             ),
             const SizedBox(height: 24),
             Text(
               bodies[index],
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontSize: 16, color: Colors.white70, height: 1.6),
+              style: TextStyle(
+                  fontSize: 16, color: bodyColor, height: 1.6),
             ),
             const Spacer(),
             _continueButton(enabled: true, onTap: _nextPage),
@@ -682,6 +750,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Widget _passwordStrengthBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final trackColor = isDark ? Colors.white12 : Colors.black12;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: _passwordStrength),
       duration: const Duration(milliseconds: 400),
@@ -692,7 +762,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               height: 5,
               child: LinearProgressIndicator(
                 value: val,
-                backgroundColor: Colors.white12,
+                backgroundColor: trackColor,
                 valueColor: AlwaysStoppedAnimation(_passwordStrengthColor),
               )),
         ),
@@ -746,16 +816,19 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Widget _pwReq(String text, bool met) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final unmetIconColor = isDark ? Colors.white30 : Colors.black26;
+    final unmetTextColor = isDark ? Colors.white38 : Colors.black45;
     return Padding(
       padding: const EdgeInsets.only(bottom: 3),
       child: Row(children: [
         Icon(met ? LucideIcons.checkCircle2 : LucideIcons.circle,
-            size: 14, color: met ? Colors.greenAccent : Colors.white30),
+            size: 14, color: met ? Colors.greenAccent : unmetIconColor),
         const SizedBox(width: 6),
         Text(text,
             style: TextStyle(
                 fontSize: 12,
-                color: met ? Colors.greenAccent : Colors.white38,
+                color: met ? Colors.greenAccent : unmetTextColor,
                 decoration: met ? TextDecoration.lineThrough : null,
                 decorationColor: Colors.greenAccent.withValues(alpha: 0.5))),
       ]),
@@ -834,6 +907,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // ────── PREMIUM PILL ──────
   Widget _buildPremiumPill() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: Alignment.center,
       child: GestureDetector(
@@ -841,7 +915,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           showDialog(
             context: context,
             builder: (ctx) => AlertDialog(
-              backgroundColor: const Color(0xFF1E1E2E),
+              backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
               content: Column(
@@ -853,13 +927,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   Text(
                     tr('premium_free_notice'),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 16, height: 1.4),
+                    style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87, fontSize: 16, height: 1.4),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     tr('current_users_count').replaceAll('{count}', '4.832'),
-                    textAlign: TextAlign.center,
                     style: const TextStyle(
                         color: Color(0xFF00D9A6),
                         fontSize: 18,
@@ -919,10 +992,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // PAGE 2 – NAME
   // ══════════════════════════════════════════════════════
   Widget _buildPageName() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return _buildScrollableFormPage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, 
+        children: [
           _backButton(),
           const SizedBox(height: 40),
           _stepHeader(tr('whats_your_name')),
@@ -948,12 +1021,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 24),
           _continueButton(
               enabled: _nameController.text.trim().isNotEmpty,
               onTap: _nextPage),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -962,10 +1035,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // PAGE 3 – GENDER
   // ══════════════════════════════════════════════════════
   Widget _buildPageGender() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return _buildScrollableFormPage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           _backButton(),
           const SizedBox(height: 40),
           _stepHeader(tr('whats_your_gender')),
@@ -983,7 +1056,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           const SizedBox(height: 32),
           _stepHeader(tr('app_appearance'), subtitle: ''),
           const SizedBox(height: 16),
-          // Toggle 1: Classic or gender based
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -1005,7 +1077,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ),
           ),
           const SizedBox(height: 12),
-          // Toggle 2: Dark mode
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -1029,10 +1100,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ],
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 24),
           _continueButton(enabled: _selectedGender != null, onTap: _nextPage),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -1107,20 +1178,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final maxYear = now.year - 18;
     final minYear = now.year - 100;
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return _buildScrollableFormPage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           _backButton(),
           const SizedBox(height: 24),
           _stepHeader(tr('whats_your_birthday'),
               subtitle: tr('birthday_subtitle')),
           const SizedBox(height: 32),
-          // Drum picker
           SizedBox(
             height: 200,
             child: Row(children: [
-              // Month
               Expanded(
                   child: _drumPicker(
                 items: months,
@@ -1128,7 +1197,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 looping: true,
                 onChanged: (i) => setState(() => _pickerMonth = i + 1),
               )),
-              // Day
               SizedBox(
                   width: 65,
                   child: _drumPicker(
@@ -1137,7 +1205,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     looping: true,
                     onChanged: (i) => setState(() => _pickerDay = i + 1),
                   )),
-              // Year
               SizedBox(
                   width: 90,
                   child: _drumPicker(
@@ -1150,7 +1217,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ]),
           ),
           const SizedBox(height: 20),
-          // Preview chips
           Builder(builder: (_) {
             final d = DateTime(_pickerYear, _pickerMonth, _pickerDay);
             final age = _calcAge(d);
@@ -1161,14 +1227,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               _chip(zodiac),
             ]);
           }),
-          const Spacer(),
+          const SizedBox(height: 24),
           _continueButton(
             enabled: true,
             onTap: () => _showBirthdayConfirmation(),
             label: _birthdayConfirmed ? tr('continue_btn') : tr('continue_btn'),
           ),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -1179,6 +1245,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       required ValueChanged<int> onChanged,
       bool looping = false}) {
     final ctrl = FixedExtentScrollController(initialItem: selectedIndex);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? Colors.white : Colors.black87;
+    final inactiveColor = isDark ? Colors.white38 : Colors.black26;
+
     return ListWheelScrollView.useDelegate(
       controller: ctrl,
       itemExtent: 44,
@@ -1202,7 +1272,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   style: GoogleFonts.outfit(
                     fontSize: selected ? 20 : 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                    color: selected ? Colors.white : Colors.white38,
+                    color: selected ? activeColor : inactiveColor,
                   ),
                   child: Text(items[i]),
                 ));
@@ -1218,7 +1288,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   style: GoogleFonts.outfit(
                     fontSize: selected ? 20 : 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                    color: selected ? Colors.white : Colors.white38,
+                    color: selected ? activeColor : inactiveColor,
                   ),
                   child: Text(items[i]),
                 ));
@@ -1227,15 +1297,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
-  Widget _chip(String label) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.16),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white38)),
-        child: Text(label,
-            style: const TextStyle(color: Colors.white, fontSize: 13)),
-      );
+  Widget _chip(String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+          color: isDark ? Colors.white.withValues(alpha: 0.16) : Colors.black.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isDark ? Colors.white38 : Colors.black26)),
+      child: Text(label,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 13)),
+    );
+  }
 
   void _showBirthdayConfirmation() {
     final d = DateTime(_pickerYear, _pickerMonth, _pickerDay);
@@ -1243,6 +1316,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final dateStr = DateFormat('MMMM d, yyyy').format(d);
     const teal = Color(0xFF00D9A6);
     const red = Color(0xFFFF4C4C);
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1A1A2E) : Colors.white;
+    final titleColor = isDark ? Colors.white : Colors.black87;
+    final bodyColor = isDark ? Colors.white60 : Colors.black54;
+    final borderColor = isDark ? Colors.white12 : Colors.black12;
+    final handleColor = isDark ? Colors.white24 : Colors.black26;
+    final buttonBg = isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
 
     // ── ZVOP-2 čl. 14 / GDPR čl. 8 — HARD STOP FOR UNDER 18 ──────────
     // App is strictly 18+. Registration is impossible for minors.
@@ -1253,17 +1334,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         isScrollControlled: true,
         builder: (ctx) => Container(
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-          decoration: const BoxDecoration(
-            color: Color(0xFF1A1A2E),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(top: BorderSide(color: Colors.white12)),
+          decoration: BoxDecoration(
+            color: sheetBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(top: BorderSide(color: borderColor)),
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: handleColor,
                     borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 28),
             const Icon(Icons.block_rounded, color: red, size: 56),
@@ -1273,15 +1354,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               style: GoogleFonts.outfit(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white),
+                  color: titleColor),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'You must be at least 18 years old to use Tremble. '
               'We are unable to create an account for you at this time.',
               textAlign: TextAlign.center,
               style:
-                  TextStyle(color: Colors.white60, fontSize: 15, height: 1.5),
+                  TextStyle(color: bodyColor, fontSize: 15, height: 1.5),
             ),
             const SizedBox(height: 28),
             GestureDetector(
@@ -1290,14 +1371,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 width: double.infinity,
                 height: 54,
                 decoration: BoxDecoration(
-                    color: Colors.white12,
+                    color: buttonBg,
                     borderRadius: BorderRadius.circular(30)),
                 child: Center(
                     child: Text('Go back',
                         style: GoogleFonts.outfit(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: Colors.white70,
+                            color: isDark ? Colors.white70 : Colors.black87,
                             letterSpacing: 1.2))),
               ),
             ),
@@ -1314,30 +1395,30 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       isScrollControlled: true,
       builder: (ctx) => Container(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1A2E),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(top: BorderSide(color: Colors.white12)),
+        decoration: BoxDecoration(
+          color: sheetBg,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: borderColor)),
         ),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: handleColor,
                   borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 28),
           Text(
             tr('youre_age').replaceAll('{age}', '$age'),
             style: GoogleFonts.outfit(
-                fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                fontSize: 32, fontWeight: FontWeight.bold, color: titleColor),
           ),
           const SizedBox(height: 12),
           Text(
             tr('is_birthday_correct').replaceAll('{date}', dateStr),
             textAlign: TextAlign.center,
-            style: const TextStyle(
-                color: Colors.white60, fontSize: 15, height: 1.5),
+            style: TextStyle(
+                color: bodyColor, fontSize: 15, height: 1.5),
           ),
           const SizedBox(height: 28),
           GestureDetector(
@@ -1372,8 +1453,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(tr('edit_btn').toUpperCase(),
-                style: const TextStyle(
-                    color: Colors.white54, letterSpacing: 1.2, fontSize: 13)),
+                style: TextStyle(
+                    color: isDark ? Colors.white54 : Colors.black54, letterSpacing: 1.2, fontSize: 13)),
           ),
         ]),
       ),
@@ -1407,20 +1488,21 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     int cmIndex = cmItems.indexOf('$_heightCm');
     if (cmIndex == -1) cmIndex = cmItems.indexOf('170');
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final toggleBgColor = isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
+
+    return _buildScrollableFormPage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           _backButton(),
           const SizedBox(height: 24),
           _stepHeader(tr('whats_your_height')),
           const SizedBox(height: 48),
-
-          // Unit Toggle
           Center(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white12,
+                color: toggleBgColor,
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Row(
@@ -1439,7 +1521,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       ),
                       child: Text(tr('height_cm'),
                           style: TextStyle(
-                              color: _isMetric ? Colors.black : Colors.white70,
+                              color: _isMetric 
+                                  ? Colors.black 
+                                  : (isDark ? Colors.white70 : Colors.black54),
                               fontWeight: _isMetric
                                   ? FontWeight.bold
                                   : FontWeight.w500)),
@@ -1458,7 +1542,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       ),
                       child: Text(tr('height_ft_in'),
                           style: TextStyle(
-                              color: !_isMetric ? Colors.black : Colors.white70,
+                              color: !_isMetric 
+                                  ? Colors.black 
+                                  : (isDark ? Colors.white70 : Colors.black54),
                               fontWeight: !_isMetric
                                   ? FontWeight.bold
                                   : FontWeight.w500)),
@@ -1468,41 +1554,35 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ),
           ),
-          const SizedBox(height: 60),
-
-          // Pickers
-          Expanded(
+          const SizedBox(height: 40),
+          SizedBox(
+            height: 200,
             child: Center(
-              child: SizedBox(
-                height: 200,
-                child: _isMetric
-                    ? _drumPicker(
-                        items: cmItems,
-                        selectedIndex: cmIndex,
-                        onChanged: (i) {
-                          setState(() => _heightCm = int.parse(cmItems[i]));
-                        })
-                    : _drumPicker(
-                        items: ftInItems,
-                        selectedIndex: ftInIndex,
-                        onChanged: (i) {
-                          // convert string like 5'7" to cm
-                          final str = ftInItems[i];
-                          final parts = str.split('\'');
-                          final feet = int.parse(parts[0]);
-                          final inches =
-                              int.parse(parts[1].replaceAll('"', ''));
-                          final cm = ((feet * 12 + inches) * 2.54).round();
-                          setState(() => _heightCm = cm);
-                        }),
-              ),
+              child: _isMetric
+                  ? _drumPicker(
+                      items: cmItems,
+                      selectedIndex: cmIndex,
+                      onChanged: (i) {
+                        setState(() => _heightCm = int.parse(cmItems[i]));
+                      })
+                  : _drumPicker(
+                      items: ftInItems,
+                      selectedIndex: ftInIndex,
+                      onChanged: (i) {
+                        final str = ftInItems[i];
+                        final parts = str.split('\'');
+                        final feet = int.parse(parts[0]);
+                        final inches =
+                            int.parse(parts[1].replaceAll('"', ''));
+                        final cm = ((feet * 12 + inches) * 2.54).round();
+                        setState(() => _heightCm = cm);
+                      }),
             ),
           ),
-
-          const Spacer(),
+          const SizedBox(height: 24),
           _continueButton(enabled: true, onTap: _nextPage),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -1592,20 +1672,21 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       tr('politics_center_right'),
       tr('politics_right')
     ];
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(children: [
+    return _buildScrollableFormPage(
+      child: Column(
+        children: [
           _backButton(),
           const SizedBox(height: 40),
           _stepHeader(tr('political_affiliation')),
-          const SizedBox(height: 80),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(tr('politics_left'),
-                style: const TextStyle(color: Colors.white70)),
-            Text(tr('politics_right'),
-                style: const TextStyle(color: Colors.white70)),
-          ]),
+          const SizedBox(height: 48),
+          Builder(builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final labelColor = isDark ? Colors.white70 : Colors.black54;
+            return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Text(tr('politics_left'), style: TextStyle(color: labelColor)),
+              Text(tr('politics_right'), style: TextStyle(color: labelColor)),
+            ]);
+          }),
           Slider(
             value: _politicalAffiliationValue,
             min: 1,
@@ -1613,7 +1694,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             divisions: 4,
             onChanged: (v) => setState(() => _politicalAffiliationValue = v),
             activeColor: const Color(0xFF00D9A6),
-            inactiveColor: Colors.white12,
+            inactiveColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
           ),
           const SizedBox(height: 16),
           Text(labels[_politicalAffiliationValue.toInt() - 1],
@@ -1630,7 +1711,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               tr('politics_undisclosed'), _politicalAffiliationValue == -1, () {
             setState(() => _politicalAffiliationValue = -1);
           }),
-          const Spacer(),
+          const SizedBox(height: 24),
           _continueButton(
               enabled: true,
               onTap: () {
@@ -1650,7 +1731,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 );
               }),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -1720,10 +1801,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // PAGE 10 – SMOKING (Updated with partner pref)
   // ══════════════════════════════════════════════════════
   Widget _buildPageSmoking() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return _buildScrollableFormPage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           _backButton(),
           const SizedBox(height: 24),
           _stepHeader(tr('do_you_smoke')),
@@ -1732,7 +1813,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               () => setState(() => _smokingHabit = 'yes')),
           _optionPill(tr('smoke_no'), _smokingHabit == 'no',
               () => setState(() => _smokingHabit = 'no')),
-          const Spacer(),
+          const SizedBox(height: 24),
           _continueButton(
             enabled: _smokingHabit != null,
             onTap: () {
@@ -1754,7 +1835,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             },
           ),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -1769,19 +1850,21 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     ValueChanged<List<String>?>? onSavePartner,
     VoidCallback? overrideContinue,
   }) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          TextButton.icon(
-            onPressed: () {
-              _goToPage(backTarget);
-            },
-            icon: const Icon(Icons.arrow_back_ios_new,
-                color: Colors.white54, size: 16),
-            label: Text(tr('back'),
-                style: const TextStyle(color: Colors.white54, fontSize: 15)),
-          ),
+    return _buildScrollableFormPage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Builder(builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final backColor = isDark ? Colors.white54 : Colors.black54;
+            return TextButton.icon(
+              onPressed: () {
+                _goToPage(backTarget);
+              },
+              icon: Icon(Icons.arrow_back_ios_new, color: backColor, size: 16),
+              label: Text(tr('back'), style: TextStyle(color: backColor, fontSize: 15)),
+            );
+          }),
           const SizedBox(height: 24),
           _stepHeader(title),
           const SizedBox(height: 40),
@@ -1791,7 +1874,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 () => onSelect(o['key'] as String),
                 icon: o['icon'] as IconData?,
               )),
-          const Spacer(),
+          const SizedBox(height: 24),
           _continueButton(
             enabled: selected != null,
             onTap: overrideContinue ??
@@ -1810,7 +1893,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 },
           ),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -2188,25 +2271,25 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // NEW LIFESTYLE SCREENS
   // ══════════════════════════════════════════════════════
   Widget _buildPageIntroversion() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(children: [
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return _buildScrollableFormPage(
+      child: Column(
+        children: [
           _backButton(),
           const SizedBox(height: 40),
           _stepHeader(tr('introversion')),
-          const SizedBox(height: 80),
+          const SizedBox(height: 48),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(tr('introvert'),
-                style: const TextStyle(color: Colors.white70)),
+                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
             Text(tr('extrovert'),
-                style: const TextStyle(color: Colors.white70)),
+                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
           ]),
           Slider(
             value: _introversionLevel,
             onChanged: (v) => setState(() => _introversionLevel = v),
             activeColor: const Color(0xFF00D9A6),
-            inactiveColor: Colors.white12,
+            inactiveColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),
           const SizedBox(height: 16),
           Text(
@@ -2218,10 +2301,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 fontSize: 18,
                 fontWeight: FontWeight.bold),
           ),
-          const Spacer(),
+          const SizedBox(height: 24),
           _continueButton(enabled: true, onTap: () => _nextPage()),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -2252,38 +2335,38 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Widget _buildPagePets() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(children: [
+    return _buildScrollableFormPage(
+      child: Column(
+        children: [
           _backButton(),
           const SizedBox(height: 24),
           _stepHeader(tr('pets')),
           const SizedBox(height: 24),
-          Expanded(
-            child: ListView(
-              children: [
-                _optionPill(tr('dog_person'), _petPreference == 'dog',
-                    () => setState(() => _petPreference = 'dog')),
-                _optionPill(tr('cat_person'), _petPreference == 'cat',
-                    () => setState(() => _petPreference = 'cat')),
-                _optionPill(
-                    tr('something_else'),
-                    _petPreference == 'something_else',
-                    () => setState(() => _petPreference = 'something_else')),
-                if (_petPreference == 'something_else')
-                  TextField(
-                    controller: _customPetController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                        hintText: tr('write_answer'),
-                        hintStyle: const TextStyle(color: Colors.white30)),
-                  ),
-                _optionPill(tr('nothing'), _petPreference == 'nothing',
-                    () => setState(() => _petPreference = 'nothing')),
-              ],
+          _optionPill(tr('dog_person'), _petPreference == 'dog',
+              () => setState(() => _petPreference = 'dog')),
+          _optionPill(tr('cat_person'), _petPreference == 'cat',
+              () => setState(() => _petPreference = 'cat')),
+          _optionPill(
+              tr('something_else'),
+              _petPreference == 'something_else',
+              () => setState(() => _petPreference = 'something_else')),
+          if (_petPreference == 'something_else')
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Builder(builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                return TextField(
+                  controller: _customPetController,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                  decoration: InputDecoration(
+                      hintText: tr('write_answer'),
+                      hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black38)),
+                );
+              }),
             ),
-          ),
+          _optionPill(tr('nothing'), _petPreference == 'nothing',
+              () => setState(() => _petPreference = 'nothing')),
+          const SizedBox(height: 24),
           _continueButton(
               enabled: _petPreference != null,
               onTap: () {
@@ -2300,7 +2383,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 );
               }),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -2347,15 +2430,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 setState(() => _showCustomLanguage = !_showCustomLanguage);
               }),
               if (_showCustomLanguage)
-                TextField(
-                  controller: _customLanguageController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: tr('write_answer'),
-                    hintStyle: const TextStyle(color: Colors.white30),
-                  ),
-                  onChanged: (v) => setState(() {}),
-                ),
+                Builder(builder: (context) {
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  return TextField(
+                    controller: _customLanguageController,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                    decoration: InputDecoration(
+                      hintText: tr('write_answer'),
+                      hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black38),
+                    ),
+                    onChanged: (v) => setState(() {}),
+                  );
+                }),
             ],
           ),
         ),
@@ -2375,6 +2461,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // PAGE 16 – DATING PREFERENCES (Updated)
   // ══════════════════════════════════════════════════════
   Widget _buildPageDatingPreferences() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final opts = [
       {'key': 'short_term_fun', 'label': tr('short_term_fun')},
       {'key': 'long_term_partner', 'label': tr('long_term_partner')},
@@ -2382,10 +2469,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       {'key': 'long_open_short', 'label': tr('long_open_short')},
       {'key': 'undecided', 'label': tr('undecided')},
     ];
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return _buildScrollableFormPage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           _backButton(),
           const SizedBox(height: 24),
           _stepHeader(tr('dating_preference')),
@@ -2406,11 +2493,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 '${_ageRangePref.end.round()}'),
             onChanged: (v) => setState(() => _ageRangePref = v),
             activeColor: const Color(0xFF00D9A6),
+            inactiveColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),
-          const Spacer(),
+          const SizedBox(height: 24),
           _continueButton(enabled: _datingPreference != null, onTap: _nextPage),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -2428,10 +2516,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         'icon': LucideIcons.userX
       },
     ];
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return _buildScrollableFormPage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           _backButton(),
           const SizedBox(height: 24),
           _stepHeader(tr('what_to_meet_title')),
@@ -2449,10 +2537,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               });
             }, icon: o['icon'] as IconData);
           }),
-          const Spacer(),
+          const SizedBox(height: 24),
           _continueButton(enabled: _wantToMeet.isNotEmpty, onTap: _nextPage),
           const SizedBox(height: 16),
-        ]),
+        ],
       ),
     );
   }
@@ -2461,6 +2549,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // PAGE 18 – HOBBIES (Improved)
   // ══════════════════════════════════════════════════════
   Widget _buildPageHobbies() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final Map<String, List<String>> cats = {
       'Active 🏋️': [
         'Fitnes',
@@ -2518,8 +2607,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(tr('my_hobbies_custom'),
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.bold)),
                 ),
                 Wrap(
                   spacing: 8,
@@ -2537,9 +2627,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       onSelected: (_) =>
                           setState(() => _selectedHobbies.remove(hobby)),
                       selectedColor: const Color(0xFF00D9A6),
-                      backgroundColor: Colors.white12,
-                      shape: const StadiumBorder(
-                        side: BorderSide(color: Color(0xFF00D9A6)),
+                      backgroundColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05),
+                      shape: StadiumBorder(
+                        side: BorderSide(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1)),
                       ),
                       checkmarkColor: Colors.black,
                     );
@@ -2553,10 +2643,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     child: ExpansionTile(
                       title: Text(
                           '${e.key} (${e.value.where((h) => _selectedHobbies.contains(h)).length})',
-                          style: const TextStyle(
-                              color: Colors.white,
+                          style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black87,
                               fontWeight: FontWeight.bold)),
-                      collapsedIconColor: Colors.white,
+                      collapsedIconColor: isDark ? Colors.white : Colors.black54,
                       iconColor: const Color(0xFF00D9A6),
                       children: [
                         Wrap(
@@ -2569,9 +2659,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                 label: Text(
                                   hobby,
                                   style: TextStyle(
-                                    color: sel ? Colors.black : Colors.white,
-                                    fontWeight:
-                                        sel ? FontWeight.bold : FontWeight.w500,
+                                    color: sel ? Colors.black : (isDark ? Colors.white : Colors.black87),
+                                    fontWeight: sel ? FontWeight.bold : FontWeight.w500,
                                   ),
                                 ),
                                 selected: sel,
@@ -2579,12 +2668,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                     ? _selectedHobbies.add(hobby)
                                     : _selectedHobbies.remove(hobby)),
                                 selectedColor: const Color(0xFF00D9A6),
-                                backgroundColor: Colors.white12,
+                                backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
                                 shape: StadiumBorder(
                                   side: BorderSide(
                                     color: sel
                                         ? const Color(0xFF00D9A6)
-                                        : Colors.white24,
+                                        : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26),
                                   ),
                                 ),
                                 checkmarkColor: Colors.black,
@@ -2615,16 +2704,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   void _showAddHobbyDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final ctrl = TextEditingController();
     showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-              backgroundColor: const Color(0xFF1E1E2E),
+              backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               title: Text(tr('add_hobby'),
-                  style: const TextStyle(color: Colors.white)),
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black)),
               content: TextField(
                   controller: ctrl,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
                   autofocus: true),
               actions: [
                 TextButton(
@@ -2647,6 +2737,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // PAGE 13 – PHOTOS
   // ══════════════════════════════════════════════════════
   Widget _buildPagePhotos() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasAtLeastOne = _photos.any((p) => p != null);
     return SafeArea(
       child: Padding(
@@ -2657,7 +2748,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           _stepHeader(tr('select_photo_title')),
           const SizedBox(height: 8),
           Text(tr('photos_hint'),
-              style: const TextStyle(color: Colors.white54, fontSize: 13)),
+              style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.black45,
+                  fontSize: 13)),
           const SizedBox(height: 32),
           Expanded(
             child: GridView.builder(
@@ -2669,21 +2762,21 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 child: Stack(clipBehavior: Clip.none, children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.07),
+                      color: isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                           color: _photos[i] != null
                               ? const Color(0xFF00D9A6)
-                              : Colors.white24),
+                              : (isDark ? Colors.white24 : Colors.black12)),
                       image: _photos[i] != null
                           ? DecorationImage(
                               image: FileImage(_photos[i]!), fit: BoxFit.cover)
                           : null,
                     ),
                     child: _photos[i] == null
-                        ? const Center(
-                            child: Icon(Icons.add,
-                                color: Colors.white38, size: 28))
+                        ? Center(
+                            child: Icon(LucideIcons.plus,
+                                color: isDark ? Colors.white38 : Colors.black26, size: 28))
                         : null,
                   ),
                   if (i == 0)
@@ -2694,7 +2787,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                           padding: const EdgeInsets.all(4),
                           decoration: const BoxDecoration(
                               color: Colors.amber, shape: BoxShape.circle),
-                          child: const Icon(Icons.star,
+                          child: const Icon(LucideIcons.star,
                               size: 10, color: Colors.black),
                         )),
                   if (_photos[i] != null)
@@ -2707,7 +2800,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                             padding: const EdgeInsets.all(3),
                             decoration: const BoxDecoration(
                                 color: Colors.black54, shape: BoxShape.circle),
-                            child: const Icon(Icons.close,
+                            child: const Icon(LucideIcons.x,
                                 size: 12, color: Colors.white),
                           ),
                         )),
@@ -2727,10 +2820,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // PAGE — GDPR CONSENT
   // ══════════════════════════════════════════════════════
   Widget _buildPageConsent() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
+    return _buildScrollableFormPage(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _backButton(),
@@ -2766,7 +2857,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ),
             const SizedBox(height: 32),
-            // Terms of Service
             _consentTile(
               value: _consentTerms,
               onChanged: (v) => setState(() => _consentTerms = v),
@@ -2790,7 +2880,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ),
             const SizedBox(height: 16),
-            // Privacy Policy
             _consentTile(
               value: _consentPrivacy,
               onChanged: (v) => setState(() => _consentPrivacy = v),
@@ -2814,7 +2903,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ),
             const SizedBox(height: 16),
-            // Explicit consent for processing sensitive personal data (GDPR Art.9 / ZVOP-2 čl. 17)
             _consentTile(
               value: _consentDataProcessing,
               onChanged: (v) => setState(() => _consentDataProcessing = v),
@@ -2832,7 +2920,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ),
             const SizedBox(height: 16),
-            // Mandatory location consent (GDPR Art.6 / ZVOP-2 — live radar requires explicit opt-in)
             _consentTile(
               value: _consentLocation,
               onChanged: (v) => setState(() => _consentLocation = v),
@@ -2850,7 +2937,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ),
             const SizedBox(height: 24),
-            // Data minimization notice
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -2875,7 +2961,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 ],
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 24),
             _continueButton(
               enabled: _consentGiven,
               onTap: completeRegistration,
@@ -2884,7 +2970,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             const SizedBox(height: 16),
           ],
         ),
-      ),
     );
   }
 
@@ -2893,6 +2978,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     required ValueChanged<bool> onChanged,
     required InlineSpan richText,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     const teal = Color(0xFF00D9A6);
     return GestureDetector(
       onTap: () => onChanged(!value),
@@ -2907,7 +2993,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               color: value ? teal : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
               border:
-                  Border.all(color: value ? teal : (Theme.of(context).brightness == Brightness.dark ? Colors.white38 : Colors.black38), width: 2),
+                  Border.all(color: value ? teal : (isDark ? Colors.white38 : Colors.black38), width: 2),
             ),
             child: value
                 ? const Icon(Icons.check, color: Colors.black, size: 16)
