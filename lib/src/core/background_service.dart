@@ -77,9 +77,17 @@ void onStart(ServiceInstance service) async {
   final geoService = GeoService();
   final battery = Battery();
 
-  // Start both engines
-  await geoService.start();
-  await bleService.start();
+  // Fetch shared preferences within background — needed for consent check
+  // and for the idle notification timer below.
+  final prefs = await SharedPreferences.getInstance();
+
+  // GDPR consent gate — do not start BLE or Geo without explicit user consent.
+  final hasConsent = prefs.getBool('gdpr_ble_location_consent') ?? false;
+
+  if (hasConsent) {
+    await geoService.start();
+    await bleService.start();
+  }
 
   // Listen for radar mode commands from UI
   service.on('stopService').listen((_) async {
@@ -94,14 +102,16 @@ void onStart(ServiceInstance service) async {
   });
 
   service.on('resumeRadar').listen((_) async {
-    await geoService.start();
-    await bleService.start();
+    // Re-check consent at resume time — user may have granted it since start.
+    final consentAtResume =
+        prefs.getBool('gdpr_ble_location_consent') ?? false;
+    if (consentAtResume) {
+      await geoService.start();
+      await bleService.start();
+    }
   });
 
-  // Fetch shared preferences within background
-  final prefs = await SharedPreferences.getInstance();
-
-  // Update the persistent notification and emit radarMode to UI every 60s
+  // Update the persistent notification and emit radarState to UI every 60s
   Timer.periodic(const Duration(seconds: 60), (_) async {
     final isLowPower = geoService.isLowPowerMode;
     final level = await battery.batteryLevel;
