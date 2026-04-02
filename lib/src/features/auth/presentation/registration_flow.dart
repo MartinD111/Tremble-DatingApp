@@ -343,7 +343,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         icon: Icon(Icons.arrow_back_ios_new,
             color: isDark ? Colors.white54 : Colors.black54, size: 16),
         label: Text(tr('back'),
-            style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 15)),
+            style: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black54, fontSize: 15)),
       );
   }
 
@@ -375,7 +375,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       if (subtitle != null) ...[
         const SizedBox(height: 8),
         Text(subtitle,
-            style: TextStyle(
+            style: GoogleFonts.outfit(
                 color: isDark ? Colors.white60 : Colors.black54, fontSize: 14, height: 1.4)),
       ],
     ]);
@@ -560,11 +560,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   labelText: _status == 'student'
                       ? 'Course of Study (Optional)'
                       : 'Job Title (Optional)',
-                  labelStyle: TextStyle(color: hintColor),
-                  enabledBorder: UnderlineInputBorder(
+                  labelStyle: GoogleFonts.outfit(color: hintColor),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(100),
                       borderSide: BorderSide(color: borderColor)),
-                  focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: borderFocusColor)),
+                  focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(100),
+                      borderSide: BorderSide(color: borderFocusColor, width: 2)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 ),
               ),
             ],
@@ -622,7 +625,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             Text(
               bodies[index],
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: GoogleFonts.outfit(
                   fontSize: 16, color: bodyColor, height: 1.6),
             ),
             const Spacer(),
@@ -697,11 +700,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return TextField(
       controller: ctrl,
       keyboardType: keyboard,
-      style: TextStyle(color: textColor, fontSize: 17),
+      style: GoogleFonts.outfit(color: textColor, fontSize: 17),
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: hintColor),
+        labelStyle: GoogleFonts.outfit(color: hintColor),
         prefixIcon:
             icon != null ? Icon(icon, color: iconColor, size: 20) : null,
         enabledBorder: OutlineInputBorder(
@@ -726,11 +729,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return TextField(
       controller: _passwordController,
       obscureText: _obscurePassword,
-      style: TextStyle(color: textColor, fontSize: 17),
+      style: GoogleFonts.outfit(color: textColor, fontSize: 17),
       onChanged: _updatePasswordStrength,
       decoration: InputDecoration(
         labelText: tr('password'),
-        labelStyle: TextStyle(color: hintColor),
+        labelStyle: GoogleFonts.outfit(color: hintColor),
         prefixIcon:
             Icon(LucideIcons.lock, color: iconColor, size: 20),
         enabledBorder: OutlineInputBorder(
@@ -1362,7 +1365,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               'We are unable to create an account for you at this time.',
               textAlign: TextAlign.center,
               style:
-                  TextStyle(color: bodyColor, fontSize: 15, height: 1.5),
+                  GoogleFonts.outfit(color: bodyColor, fontSize: 15, height: 1.5),
             ),
             const SizedBox(height: 28),
             GestureDetector(
@@ -1417,7 +1420,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           Text(
             tr('is_birthday_correct').replaceAll('{date}', dateStr),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: GoogleFonts.outfit(
                 color: bodyColor, fontSize: 15, height: 1.5),
           ),
           const SizedBox(height: 28),
@@ -1683,8 +1686,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             final isDark = Theme.of(context).brightness == Brightness.dark;
             final labelColor = isDark ? Colors.white70 : Colors.black54;
             return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(tr('politics_left'), style: TextStyle(color: labelColor)),
-              Text(tr('politics_right'), style: TextStyle(color: labelColor)),
+              Text(tr('politics_left'), style: GoogleFonts.outfit(color: labelColor)),
+              Text(tr('politics_right'), style: GoogleFonts.outfit(color: labelColor)),
             ]);
           }),
           Slider(
@@ -1697,11 +1700,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             inactiveColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
           ),
           const SizedBox(height: 16),
-          Text(labels[_politicalAffiliationValue.toInt() - 1],
-              style: const TextStyle(
-                  color: Color(0xFF00D9A6),
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
+          Builder(builder: (context) {
+            final idx = _politicalAffiliationValue.toInt();
+            // Guard against index -1 or 0 when "Don't care" or "Undisclosed" is selected
+            final displayLabel = (idx >= 1 && idx <= labels.length) ? labels[idx - 1] : tr('not_specified');
+            return Text(displayLabel,
+                style: GoogleFonts.outfit(
+                    color: const Color(0xFF00D9A6),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold));
+          }),
           const SizedBox(height: 32),
           _optionPill(tr('politics_dont_care'), _politicalAffiliationValue == 0,
               () {
@@ -2337,6 +2345,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPagePets() {
     return _buildScrollableFormPage(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _backButton(),
           const SizedBox(height: 24),
@@ -2357,10 +2366,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 final isDark = Theme.of(context).brightness == Brightness.dark;
                 return TextField(
                   controller: _customPetController,
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                  style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87),
                   decoration: InputDecoration(
-                      hintText: tr('write_answer'),
-                      hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black38)),
+                    hintText: tr('write_answer'),
+                    hintStyle: GoogleFonts.outfit(color: isDark ? Colors.white30 : Colors.black38),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(100),
+                        borderSide: BorderSide(color: isDark ? Colors.white30 : Colors.black26)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(100),
+                        borderSide: BorderSide(color: isDark ? Colors.white : Colors.black, width: 2)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  ),
                 );
               }),
             ),
@@ -2434,10 +2451,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   final isDark = Theme.of(context).brightness == Brightness.dark;
                   return TextField(
                     controller: _customLanguageController,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                    style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87),
                     decoration: InputDecoration(
                       hintText: tr('write_answer'),
-                      hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black38),
+                      hintStyle: GoogleFonts.outfit(color: isDark ? Colors.white30 : Colors.black38),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(100),
+                          borderSide: BorderSide(color: isDark ? Colors.white30 : Colors.black26)),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(100),
+                          borderSide: BorderSide(color: isDark ? Colors.white : Colors.black, width: 2)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     ),
                     onChanged: (v) => setState(() {}),
                   );
@@ -2607,7 +2631,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(tr('my_hobbies_custom'),
-                      style: TextStyle(
+                      style: GoogleFonts.outfit(
                           color: isDark ? Colors.white : Colors.black87,
                           fontWeight: FontWeight.bold)),
                 ),
@@ -2618,7 +2642,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     return FilterChip(
                       label: Text(
                         hobby,
-                        style: const TextStyle(
+                        style: GoogleFonts.outfit(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
@@ -2643,7 +2667,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     child: ExpansionTile(
                       title: Text(
                           '${e.key} (${e.value.where((h) => _selectedHobbies.contains(h)).length})',
-                          style: TextStyle(
+                          style: GoogleFonts.outfit(
                               color: isDark ? Colors.white : Colors.black87,
                               fontWeight: FontWeight.bold)),
                       collapsedIconColor: isDark ? Colors.white : Colors.black54,
@@ -2658,7 +2682,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               return FilterChip(
                                 label: Text(
                                   hobby,
-                                  style: TextStyle(
+                                  style: GoogleFonts.outfit(
                                     color: sel ? Colors.black : (isDark ? Colors.white : Colors.black87),
                                     fontWeight: sel ? FontWeight.bold : FontWeight.w500,
                                   ),
@@ -2681,7 +2705,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                             }),
                             ActionChip(
                               label: Text(tr('add_own'),
-                                  style: const TextStyle(color: Colors.black)),
+                                  style: GoogleFonts.outfit(color: Colors.black)),
                               backgroundColor: const Color(0xFF00D9A6),
                               shape: const StadiumBorder(),
                               onPressed: () => _showAddHobbyDialog(),
@@ -2711,10 +2735,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         builder: (ctx) => AlertDialog(
               backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               title: Text(tr('add_hobby'),
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                  style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black)),
               content: TextField(
                   controller: ctrl,
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                  style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black),
                   autofocus: true),
               actions: [
                 TextButton(
@@ -2728,7 +2752,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       }
                     },
                     child: Text(tr('add'),
-                        style: const TextStyle(color: Color(0xFF00D9A6)))),
+                        style: GoogleFonts.outfit(color: const Color(0xFF00D9A6)))),
               ],
             ));
   }
@@ -2748,7 +2772,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           _stepHeader(tr('select_photo_title')),
           const SizedBox(height: 8),
           Text(tr('photos_hint'),
-              style: TextStyle(
+              style: GoogleFonts.outfit(
                   color: isDark ? Colors.white54 : Colors.black45,
                   fontSize: 13)),
           const SizedBox(height: 32),
@@ -2847,10 +2871,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   _consentGiven ? Icons.check_box : Icons.check_box_outline_blank,
                   color: const Color(0xFF00D9A6),
                 ),
-                label: const Text(
+                label: Text(
                   'Izberi Vse',
-                  style: TextStyle(
-                    color: Color(0xFF00D9A6),
+                  style: GoogleFonts.outfit(
+                    color: const Color(0xFF00D9A6),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -3015,8 +3039,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     // Safety guard — consent page enforces all 4 checkboxes, but double-check
     if (!_consentGiven) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Please accept all consent checkboxes to continue.')),
+        SnackBar(
+            content: Text('Please accept all consent checkboxes to continue.', style: GoogleFonts.outfit())),
       );
       return;
     }

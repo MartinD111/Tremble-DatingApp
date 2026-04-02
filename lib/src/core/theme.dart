@@ -29,7 +29,7 @@ class TrembleTheme {
   ];
 
   // Border Radii Rules
-  static const BorderRadius inputRadius = BorderRadius.all(Radius.circular(8));
+  static const BorderRadius inputRadius = BorderRadius.all(Radius.circular(100));
   static const BorderRadius cardRadius = BorderRadius.all(Radius.circular(16));
   static const BorderRadius modalRadius = BorderRadius.all(Radius.circular(24));
   static const BorderRadius buttonRadius = BorderRadius.all(Radius.circular(100)); // pill shape
@@ -62,26 +62,22 @@ class TrembleTheme {
 
   static TextTheme _buildTextTheme(Color baseTextColor) {
     return TextTheme(
-      // Playfair Display for headings
-      displayLarge: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.normal),
-      displayMedium: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.normal),
-      displaySmall: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.normal),
-      headlineLarge: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.normal),
-      headlineMedium: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.normal),
-      headlineSmall: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.normal),
-      titleLarge: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w500),
-
-      // Instrument Sans for labels/titles (UI controls)
-      titleMedium: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w500),
-      titleSmall: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w500),
-      labelLarge: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w600, letterSpacing: 0.5),
-      labelMedium: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.normal),
-      labelSmall: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.normal),
-
-      // Lora for body
-      bodyLarge: GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
-      bodyMedium: GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
-      bodySmall: GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
+      // Outfit for all text to ensure total consistency as requested
+      displayLarge: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
+      displayMedium: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
+      displaySmall: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
+      headlineLarge: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
+      headlineMedium: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
+      headlineSmall: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
+      titleLarge: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.w600),
+      titleMedium: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.w500),
+      titleSmall: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.w500),
+      labelLarge: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+      labelMedium: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.normal),
+      labelSmall: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.normal),
+      bodyLarge: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.normal),
+      bodyMedium: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.normal),
+      bodySmall: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.normal),
     );
   }
 
