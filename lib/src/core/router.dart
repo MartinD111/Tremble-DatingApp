@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/registration_flow.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
+import '../features/auth/presentation/permission_gate_screen.dart';
 import '../features/auth/data/auth_repository.dart';
+import 'consent_service.dart';
 
 // Placeholders for screens if they don't exist yet/imported
 import '../features/dashboard/presentation/home_screen.dart';
@@ -18,6 +20,9 @@ import '../shared/ui/gradient_scaffold.dart'; // Assume exists
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+  // Default to true while loading — prevents false redirect flash for returning users.
+  // Resolves quickly from SharedPreferences; new users will see false after first frame.
+  final hasConsent = ref.watch(gdprConsentProvider).asData?.value ?? true;
 
   return GoRouter(
     initialLocation: '/',
@@ -70,12 +75,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/blocked-users',
         builder: (context, state) => const BlockedUsersScreen(),
       ),
+      GoRoute(
+        path: '/permission-gate',
+        builder: (context, state) => const PermissionGateScreen(),
+      ),
     ],
     redirect: (context, state) {
       final isLoggedIn = authState != null;
       final isOnboarded = authState?.isOnboarded ?? false;
       final isLoginRoute = state.uri.toString() == '/login';
       final isOnboardingRoute = state.uri.toString() == '/onboarding';
+      final isPermissionRoute = state.uri.toString() == '/permission-gate';
 
       if (!isLoggedIn) {
         if (isOnboardingRoute) return null;
@@ -85,6 +95,15 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (!isOnboarded) {
         return isOnboardingRoute ? null : '/onboarding';
+      }
+
+      // GDPR consent gate — shown once after onboarding, never again after granted.
+      if (isLoggedIn && isOnboarded && !hasConsent) {
+        return isPermissionRoute ? null : '/permission-gate';
+      }
+
+      if (isLoggedIn && isOnboarded && hasConsent && isPermissionRoute) {
+        return '/';
       }
 
       if (isLoggedIn && isOnboarded && (isLoginRoute || isOnboardingRoute)) {
