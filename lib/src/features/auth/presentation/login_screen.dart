@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../shared/ui/tremble_logo.dart';
 import '../../../shared/ui/primary_button.dart';
@@ -31,6 +32,29 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+
+  String _authErrorMessage(Object e) {
+    if (e is FirebaseAuthException) {
+      switch (e.code) {
+        case 'wrong-password':
+        case 'invalid-credential':
+          return 'Napačno geslo ali e-pošta.';
+        case 'user-not-found':
+          return 'Uporabnik s tem e-poštnim naslovom ne obstaja.';
+        case 'invalid-email':
+          return 'E-poštni naslov ni veljavne oblike.';
+        case 'user-disabled':
+          return 'Ta račun je bil onemogočen.';
+        case 'too-many-requests':
+          return 'Preveč poskusov. Počakaj trenutek in poskusi znova.';
+        case 'network-request-failed':
+          return 'Ni internetne povezave.';
+        default:
+          return 'Prijava ni uspela. Poskusi znova.';
+      }
+    }
+    return 'Prijava ni uspela. Poskusi znova.';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -232,7 +256,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Login failed: $e")),
+                                  SnackBar(content: Text(_authErrorMessage(e))),
                                 );
                               }
                             } finally {
@@ -255,7 +279,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                    content: Text("Google Login failed: $e")),
+                                    content: Text(_authErrorMessage(e))),
                               );
                             }
                           } finally {
