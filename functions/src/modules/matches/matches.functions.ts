@@ -23,7 +23,7 @@ const db = getFirestore();
  * Creates a greeting document; the other user can then accept/decline.
  */
 export const sendGreeting = onCall(
-    { maxInstances: 50, enforceAppCheck: true },
+    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -131,7 +131,7 @@ export const sendGreeting = onCall(
  * If accepted, creates a match document.
  */
 export const respondToGreeting = onCall(
-    { maxInstances: 50, enforceAppCheck: true },
+    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -210,7 +210,7 @@ export const respondToGreeting = onCall(
  * Returns profiles of matched users with limited fields.
  */
 export const getMatches = onCall(
-    { maxInstances: 100, enforceAppCheck: true },
+    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -272,7 +272,7 @@ export const getMatches = onCall(
  * Get pending greetings for the authenticated user.
  */
 export const getPendingGreetings = onCall(
-    { maxInstances: 100, enforceAppCheck: true },
+    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
