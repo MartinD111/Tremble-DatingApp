@@ -1,25 +1,33 @@
 ## Session State — 2026-04-03
-- Session ID: CloudFunctions-Region-Migration-2026-04-03
-- Active Task: D-07 — Cloud Functions region migration to europe-west1
-- Environment: Prod
+- Session ID: Full-Audit-2026-04-03
+- Active Task: Full security + code audit, debt register update
+- Environment: Dev/Prod
 - Modified Files:
-    - functions/src/modules/auth/auth.functions.ts
-    - functions/src/modules/uploads/uploads.functions.ts
-    - functions/src/modules/matches/matches.functions.ts
-    - functions/src/modules/safety/safety.functions.ts
-    - functions/src/modules/gdpr/gdpr.functions.ts
-    - functions/src/modules/proximity/proximity.functions.ts
-    - functions/src/modules/users/users.functions.ts
-    - tasks/context.md, tasks/debt.md
-- Open Problems: D-02 (Production secrets — founder action required), D-09 (Firestore triggers still in us-central1)
-- System Status: npm run build — clean (0 errors)
+    - tasks/context.md
+    - tasks/debt.md
+- Open Problems:
+    - D-03: Consent screen reimplementation (files missing from filesystem)
+    - D-09: Firestore triggers still in us-central1
+    - D-10: proximity_events Firestore rule missing — BLE broken in prod
+    - D-11: Deprecated AppCheck API in main.dart
+    - D-12: Firestore TTL policies unconfirmed in Firebase Console
+    - D-13: GOOGLE_WEB_CLIENT_ID unconfirmed in prod Functions config
+- System Status: flutter analyze 2 info warnings (deprecated API). npm run build clean.
 - Last Release: Phase 5 AppCheck Complete
 
 ## Session Handoff (For Aleksandar)
 - Completed:
-    - **D-07 RESOLVED:** All 18 onCall functions across 7 modules updated to region: "europe-west1". Build passes clean.
+    - **Full audit** — security, code quality, launch readiness, BLE, Firestore rules
+    - **D-07 RESOLVED:** All 18 onCall functions in europe-west1
+    - **D-02:** Production secrets set (R2, Resend) — verify GOOGLE_WEB_CLIENT_ID (D-13)
+    - **D-03 REOPENED:** consent_service.dart and permission_gate_screen.dart do not exist — incorrectly marked resolved
+    - Debt register updated: D-10 through D-13 added
 - Blocked:
-    - D-02: Production Secrets (R2, Resend, Google) — requires manual founder action in Firebase Console.
-    - D-09: Firestore triggers (onBleProximity, onUserDocCreated) still in us-central1 — separate migration required.
-- Next Action: Slider crash fix (registration_flow.dart line 1690) — verify initial value ≥ 1.0.
+    - D-10 (HIGH/Immediate): proximity_events has no write rule → BLE core feature silent fail in prod
+    - D-03 (Medium): Consent/permission gate needs full reimplementation
+    - D-09 (Medium): Firestore triggers still in us-central1
+    - D-12, D-13: Require founder verification in Firebase Console
+- Next Action:
+    1. Fix D-10 — add proximity_events Firestore write rule (immediate, blocks BLE)
+    2. Reimplement D-03 — consent_service.dart + permission_gate_screen.dart
 - Staleness Rule: If this block is >48h old, re-validate before executing.
