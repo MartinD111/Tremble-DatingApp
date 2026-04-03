@@ -15,3 +15,4 @@
 | D-11 | androidProvider/appleProvider deprecated in main.dart — replace with providerAndroid/providerApple before launch | Low    | Phase 6   | 🔴 OPEN |
 | D-12 | Firestore TTL policies for proximity_events, proximity, gdprRequests not confirmed active in Firebase Console | Medium | Phase 5   | 🔴 OPEN |
 | D-13 | GOOGLE_WEB_CLIENT_ID not confirmed set in prod Cloud Functions environment config | High   | Phase 5   | 🔴 OPEN |
+| D-14 | api_client.dart used FirebaseFunctions.instance (us-central1 default) — all onCall functions were migrated to europe-west1 on 2026-04-03 but client was not updated, causing NOT_FOUND on every Cloud Function call | High | Immediate | ✅ RESOLVED — 2026-04-03: changed to FirebaseFunctions.instanceFor(region: 'europe-west1') in lib/src/core/api_client.dart |
