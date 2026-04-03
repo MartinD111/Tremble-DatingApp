@@ -100,14 +100,14 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                             Icon(LucideIcons.mail, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide.none,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(100),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(100),
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
+                        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
                       ),
                     ),
                     const SizedBox(height: 15),
@@ -124,14 +124,14 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                             Icon(LucideIcons.lock, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide.none,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(100),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(100),
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
+                        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -291,7 +291,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(30),
+                            borderRadius: BorderRadius.circular(100),
                             border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
                           ),
                           child: Row(
@@ -324,7 +324,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
                           color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(100),
                           border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
                         ),
                         child: Center(
