@@ -1,24 +1,28 @@
-## Session State — 2026-04-02
-- Session ID: D06-Flutter-BLE-Skill-Fix-2026-04-02
-- Active Task: Fix D-06 — replace mislabeled flutter-ble skill with real implementation patterns
-- Environment: Dev
+## Session State — 2026-04-03
+- Session ID: D06-Prod-Ready-Finalization-2026-04-03
+- Active Task: Finalize production handoff and documentation for Founder (Aleksandar)
+- Environment: Dev/Prod
 - Modified Files:
-    - .agent/skills/flutter-ble/SKILL.md (replaced)
-    - tasks/debt.md, tasks/context.md
+    - lib/src/features/auth/presentation/registration_flow.dart (fixed Google user logic)
+    - lib/src/features/auth/presentation/login_screen.dart (added Slovenian error messages)
+    - .vscode/settings.json (fixed Flutter SDK path)
+    - tasks/context.md, tasks/debt.md, tasks/handoff.md, tasks/todo.md
 - Open Problems: D-02 (Production secrets — founder action required), D-07 (Cloud Functions in wrong region)
-- System Status: flutter analyze — 0 errors, 0 warnings (last known state, no .dart files changed)
+- System Status: flutter analyze — 0 errors (SDK path resolved)
 - Last Release: Phase 5 AppCheck Complete
 
-## Session Handoff
+## Session Handoff (For Aleksandar)
 - Completed:
-    - D-06 RESOLVED: .agent/skills/flutter-ble/SKILL.md replaced with real flutter_blue_plus patterns
-    - Skill covers: UUID constant, singleton pattern, start/stop, battery-aware intervals, scan cycle, Firestore proximity_event write, background delegation, pitfalls, decision rules
-    - All patterns verified directly from ble_service.dart and background_service.dart
-- In Progress: Nothing — control plane clean
+    - **Google Auth Flow:** Users no longer skip intros; they start at page 0 with pre-filled name/email.
+    - **Localization:** Slovenian error messages implemented for common Firebase Auth issues.
+    - **Accessibility:** 18+ age limit enforcement and theme-aware contrast polish.
+    - **Security:** Firebase AppCheck enforced on all 15 callable functions.
+    - **BLE:** Standardized patterns documented in `.agent/skills/flutter-ble/SKILL.md`.
+- In Progress: Finalizing "Founder Action Plan" for production launch.
 - Blocked:
-    - D-02: Production Secrets in Cloud Functions — requires manual founder action
-    - D-07: Cloud Functions in us-central1 instead of europe-west1 — requires founder decision
+    - D-02: Production Secrets (R2, Resend, Google) — requires manual founder action.
+    - D-07: Region Mismatch (us-central1 vs europe-west1) — requires founder decision.
 - Next Action:
-    1. FOUNDER ACTION REQUIRED — D-02: inject production secrets into Cloud Functions (Firebase Console → Functions → Configuration, or GitHub Actions secrets)
-    2. FOUNDER ACTION REQUIRED — D-07: redeploy Cloud Functions to europe-west1
+    1. **FOUNDER ACTION:** Input production secrets in Firebase Console.
+    2. **FOUNDER ACTION:** Confirm region migration for GDPR compliance.
 - Staleness Rule: If this block is >48h old, re-validate before executing.
