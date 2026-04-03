@@ -3133,7 +3133,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: \$e')),
+          SnackBar(content: Text('Registration failed: $e')),
         );
       }
     }
