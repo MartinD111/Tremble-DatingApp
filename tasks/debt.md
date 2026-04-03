@@ -11,7 +11,7 @@
 | D-07 | Cloud Functions deployed to prod (am---dating-app) in us-central1 instead of europe-west1. | High | Phase 5 | ✅ RESOLVED — 2026-04-03: Cloud Functions migrated to europe-west1. 15 us-central1 onCall functions deleted. |
 | D-08 | Flutter SDK Path mismatch in .vscode/settings.json | Low | Immediate | ✅ RESOLVED — 2026-04-03: manually pointed to system SDK |
 | D-09 | Firestore trigger functions onBleProximity and onUserDocCreated still in us-central1 — require separate migration | Medium | Phase 5 | 🔴 OPEN |
-| D-10 | proximity_events collection has no Firestore write rule — BLE proximity detection silently fails in prod, onBleProximity Cloud Function never triggers | High   | Immediate | 🔴 OPEN |
+| D-10 | proximity_events collection has no Firestore write rule — BLE proximity detection silently fails in prod, onBleProximity Cloud Function never triggers | High   | Immediate | ✅ RESOLVED — 2026-04-03: write rule added (auth required), read denied. Deployed to am---dating-app. |
 | D-11 | androidProvider/appleProvider deprecated in main.dart — replace with providerAndroid/providerApple before launch | Low    | Phase 6   | 🔴 OPEN |
 | D-12 | Firestore TTL policies for proximity_events, proximity, gdprRequests not confirmed active in Firebase Console | Medium | Phase 5   | 🔴 OPEN |
 | D-13 | GOOGLE_WEB_CLIENT_ID not confirmed set in prod Cloud Functions environment config | High   | Phase 5   | 🔴 OPEN |
