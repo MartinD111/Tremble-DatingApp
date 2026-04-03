@@ -53,17 +53,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     _selectedLanguage = ref.read(appLanguageProvider);
     
     final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      _currentPage = 4; // Skip intros, go to Birthday directly
-      if (currentUser.email != null) {
-        _emailController.text = currentUser.email!;
-      }
-      if (currentUser.displayName != null) {
-        _nameController.text = currentUser.displayName!;
-      }
-    } else {
-      _currentPage = 0;
+    final isGoogleUser = currentUser?.providerData
+            .any((p) => p.providerId == 'google.com') ??
+        false;
+    if (currentUser != null && isGoogleUser) {
+      // Google users: pre-fill known fields, start from beginning of flow.
+      _emailController.text = currentUser.email ?? '';
+      _nameController.text = currentUser.displayName ?? '';
     }
+    _currentPage = 0;
     
     _pageController = PageController(initialPage: _currentPage);
   }
