@@ -120,7 +120,7 @@ function haversineDistance(
  * Called periodically by the background service.
  */
 export const updateLocation = onCall(
-    { maxInstances: 100, enforceAppCheck: true },
+    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -156,7 +156,7 @@ export const updateLocation = onCall(
  * Returns users within the specified radius.
  */
 export const findNearby = onCall(
-    { maxInstances: 100, enforceAppCheck: true },
+    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -274,7 +274,7 @@ export const findNearby = onCall(
  * Mark user as inactive (called when app goes to background).
  */
 export const setInactive = onCall(
-    { maxInstances: 100, enforceAppCheck: true },
+    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 

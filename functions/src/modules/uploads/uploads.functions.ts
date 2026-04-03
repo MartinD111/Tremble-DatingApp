@@ -24,7 +24,7 @@ import { getConfig } from "../../config/env";
  *   4. Client saves the returned publicUrl to their profile via updateProfile
  */
 export const generateUploadUrl = onCall(
-    { maxInstances: 50, enforceAppCheck: true },
+    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 

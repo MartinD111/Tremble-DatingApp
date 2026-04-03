@@ -18,7 +18,7 @@ const db = getFirestore();
  * Only allows whitelisted fields (no isAdmin/isPremium injection).
  */
 export const updateProfile = onCall(
-    { maxInstances: 50, enforceAppCheck: true },
+    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -53,7 +53,7 @@ export const updateProfile = onCall(
  * Get own profile — returns the authenticated user's full profile.
  */
 export const getProfile = onCall(
-    { maxInstances: 100, enforceAppCheck: true },
+    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -72,7 +72,7 @@ export const getProfile = onCall(
  * Requires verified email.
  */
 export const getPublicProfile = onCall(
-    { maxInstances: 100, enforceAppCheck: true },
+    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         requireVerifiedEmail(request);
 
