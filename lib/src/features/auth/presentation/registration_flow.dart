@@ -1688,7 +1688,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ]);
           }),
           Slider(
-            value: _politicalAffiliationValue,
+            value: _politicalAffiliationValue.clamp(1.0, 5.0),
             min: 1,
             max: 5,
             divisions: 4,
