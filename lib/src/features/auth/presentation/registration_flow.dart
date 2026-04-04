@@ -2760,7 +2760,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ══════════════════════════════════════════════════════
   Widget _buildPagePhotos() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hasAtLeastOne = _photos.any((p) => p != null);
+    const _isDev =
+        String.fromEnvironment('FLAVOR', defaultValue: 'dev') != 'prod';
+    final hasAtLeastOne = _isDev || _photos.any((p) => p != null);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
