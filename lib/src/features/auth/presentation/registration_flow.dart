@@ -3045,11 +3045,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final photoUrls =
         _photos.where((p) => p != null).map((p) => p!.path).toList();
 
-    final genderMap = {
-      'male': 'Moški',
-      'female': 'Ženska',
-      'non_binary': 'Nebinarno'
-    };
     final datingMap = {
       'short_term_fun': 'Kratkoročna zabava',
       'long_term_partner': 'Dolgoročni partner',
@@ -3067,7 +3062,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       age: _birthDate != null ? _calcAge(_birthDate!) : 20,
       birthDate: _birthDate,
       height: _heightCm, // Included height in cm
-      gender: genderMap[_selectedGender ?? 'male'],
+      gender: _selectedGender ?? 'male',
       location:
           _locationController.text.isNotEmpty ? _locationController.text : null,
       interestedIn: _wantToMeet.join(', '),
