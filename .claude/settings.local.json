@@ -6,7 +6,8 @@
       "Bash(where firebase:*)",
       "Bash(npm list:*)",
       "Read(//c/Users/marti/AppData/Roaming/npm//**)",
-      "Read(//c/Users/marti/AppData/Local/**)"
+      "Read(//c/Users/marti/AppData/Local/**)",
+      "Bash(xargs grep:*)"
     ]
   }
 }
