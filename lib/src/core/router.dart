@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/registration_flow.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
+import '../features/auth/presentation/permission_gate_screen.dart';
 import '../features/auth/data/auth_repository.dart';
+import 'consent_service.dart';
 
 // Placeholders for screens if they don't exist yet/imported
 import '../features/dashboard/presentation/home_screen.dart';
@@ -16,16 +18,18 @@ import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/safety/presentation/blocked_users_screen.dart';
 import '../shared/ui/gradient_scaffold.dart'; // Assume exists
 
-// Listens to auth state changes and notifies GoRouter to re-run redirect
-// without recreating the router instance.
+// Listens to auth state and permission gate changes, notifies GoRouter to
+// re-run redirect without recreating the router instance.
 class _RouterNotifier extends ChangeNotifier {
   final Ref _ref;
 
   _RouterNotifier(this._ref) {
     _ref.listen<AuthUser?>(authStateProvider, (_, __) => notifyListeners());
+    _ref.listen<bool>(permissionsPresentedProvider, (_, __) => notifyListeners());
   }
 
   AuthUser? get authState => _ref.read(authStateProvider);
+  bool get permissionsPresented => _ref.read(permissionsPresentedProvider);
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -47,6 +51,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/permissions',
+        builder: (context, state) => const PermissionGateScreen(),
       ),
       GoRoute(
         path: '/',
@@ -89,12 +97,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       final authState = notifier.authState;
       final isLoggedIn = authState != null;
       final isOnboarded = authState?.isOnboarded ?? false;
-      final isLoginRoute = state.uri.toString() == '/login';
-      final isOnboardingRoute = state.uri.toString() == '/onboarding';
+      final permissionsPresented = notifier.permissionsPresented;
+      final path = state.uri.toString();
+      final isLoginRoute = path == '/login';
+      final isOnboardingRoute = path == '/onboarding';
+      final isPermissionsRoute = path == '/permissions';
 
       if (!isLoggedIn) {
         if (isOnboardingRoute) return null;
-        if (state.uri.toString() == '/forgot-password') return null;
+        if (path == '/forgot-password') return null;
         return isLoginRoute ? null : '/login';
       }
 
@@ -102,7 +113,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         return isOnboardingRoute ? null : '/onboarding';
       }
 
-      if (isLoggedIn && isOnboarded && (isLoginRoute || isOnboardingRoute)) {
+      if (!permissionsPresented) {
+        return isPermissionsRoute ? null : '/permissions';
+      }
+
+      if (isLoginRoute || isOnboardingRoute || isPermissionsRoute) {
         return '/';
       }
 

@@ -302,7 +302,7 @@ export const setInactive = onCall(
  * must be configured in Firebase console on the `ttl` field.
  */
 export const onBleProximity = onDocumentCreated(
-    "proximity_events/{eventId}",
+    { document: "proximity_events/{eventId}", region: "europe-west1" },
     async (event) => {
         const data = event.data?.data();
         if (!data) return;

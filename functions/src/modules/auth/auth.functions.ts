@@ -25,7 +25,9 @@ const googleClient = new OAuth2Client();
  *
  * Alternative to beforeUserCreated (which requires GCIP / Identity Platform).
  */
-export const onUserDocCreated = onDocumentCreated("users/{uid}", async (event) => {
+export const onUserDocCreated = onDocumentCreated(
+    { document: "users/{uid}", region: "europe-west1" },
+    async (event) => {
     const snap = event.data;
     if (!snap) return;
 

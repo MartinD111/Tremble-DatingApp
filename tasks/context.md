@@ -1,33 +1,28 @@
 ## Session State — 2026-04-04
-- Session ID: RegFlow-BugFix-2026-04-04
-- Active Task: COMPLETE — registration flow + auth screen fixes
-- Environment: Dev (tremble-dev)
-- Branch: feature/registration-flow-bugfix (NOT merged to main)
+- Session ID: D09-D13-Fix-2026-04-04
+- Active Task: COMPLETE — D-09 and D-13 resolved
+- Environment: Prod (am---dating-app)
+- Branch: main
 - Modified Files:
-    - lib/src/core/router.dart
-    - lib/src/features/auth/presentation/registration_flow.dart
-    - lib/src/features/auth/presentation/forgot_password_screen.dart
+    - functions/src/modules/auth/auth.functions.ts (onUserDocCreated → europe-west1)
+    - functions/src/modules/proximity/proximity.functions.ts (onBleProximity → europe-west1)
+    - functions/src/modules/email/email.functions.ts (resendVerificationEmail → europe-west1)
+    - functions/.env (added GOOGLE_WEB_CLIENT_ID)
+    - functions/.env.example (documented GOOGLE_WEB_CLIENT_ID)
+    - tasks/debt.md (D-09, D-13 marked resolved)
 - Open Problems:
     - D-03: Consent screen reimplementation (consent_service.dart + permission_gate_screen.dart missing)
-    - D-09: Firestore triggers (onBleProximity, onUserDocCreated) still in us-central1
     - D-11: Deprecated androidProvider/appleProvider in main.dart
     - D-12: Firestore TTL policies unconfirmed in Firebase Console
-    - D-13: GOOGLE_WEB_CLIENT_ID unconfirmed in prod Functions config
-- System Status: flutter analyze 2 info warnings only (D-11, pre-existing). 0 errors.
+- System Status: flutter analyze 2 info warnings only (D-11, pre-existing). 0 errors. All 21 functions in europe-west1.
 - Last Release: Phase 5 AppCheck Complete
 
 ## Session Handoff (For Aleksandar)
 - Completed:
-    - Bug 1 FIXED (e022d1a): router.dart — GoRouter recreated on every authStateProvider change caused full nav reset ~2s after cold open. Added _RouterNotifier (ChangeNotifier + refreshListenable). Router created once; redirect re-evaluates in place via notifyListeners().
-    - Bug 2 FIXED (e022d1a): _nextPage() — Google displayName pre-filled _nameController, causing ternary to jump to Gender (7) skipping Name (6). Now always jumps to Name (6) from Birthday (4).
-    - Bug 3 FIXED (e022d1a): _nextPage()/_prevPage() — animateToPage() rendered intermediate pages during skip. Replaced with jumpToPage() — instant, no overlap.
-    - Gender enum mismatch FIXED (5fa9377): completeOnboarding was sending Slovenian strings ('Moški' etc.) instead of English enum values ('male' etc.). Removed genderMap, pass _selectedGender directly.
-    - Forgot password light mode contrast FIXED (9cc7663): All Colors.white* hardcoded — invisible on light RadarBackground. Applied isDark pattern throughout both step builders.
-    - Page-index comment corrected in registration_flow.dart.
+    - D-13 RESOLVED: GOOGLE_WEB_CLIENT_ID added to functions/.env. verifyGoogleToken now functional.
+    - D-09 RESOLVED: onBleProximity, onUserDocCreated, resendVerificationEmail migrated to europe-west1. Old us-central1 instances deleted. All 21 functions now unified in europe-west1.
 - Blocked:
-    - D-13 (HIGH/Phase 5): GOOGLE_WEB_CLIENT_ID not confirmed in prod Functions config
-    - D-09 (Medium/Phase 5): Firestore triggers still in us-central1
-    - D-12 (Medium/Phase 5): TTL policies not confirmed active
+    - D-12 (Medium/Phase 5): TTL policies not confirmed active in Firebase Console
     - D-03 (Medium/Phase 6): consent_service.dart + permission_gate_screen.dart need reimplementation
-- Next Action: Review + merge feature/registration-flow-bugfix → main. Then test on device: `flutter run --flavor dev --dart-define=FLAVOR=dev`. Verify: (1) no jarring redirect on cold open, (2) Google sign-in shows Name step, (3) no page overlap, (4) gender sent correctly to API, (5) forgot password readable in light mode.
+- Next Action: Confirm D-12 TTL policies in Firebase Console (proximity_events, proximity, gdprRequests collections — field: ttl). Manual step in Firebase Console.
 - Staleness Rule: If this block is >48h old, re-validate before executing.
