@@ -4,7 +4,7 @@
 |------|------------------------------------------------|--------|-----------|--------|
 | D-01 | BLE implementation uses mock background logic  | High   | Phase 3   | ✅ RESOLVED — Verified by Claude Code 2026-04-02 — implementation already shipped in ble_service.dart |
 | D-02 | Production Secrets missing in Cloud Functions  | High   | Phase 5   | 🔴 OPEN — requires manual founder action |
-| D-03 | Missing explicit GDPR prompt for Location/BLE  | Medium | Phase 6   | 🔴 OPEN — 2026-04-03 audit: consent_service.dart and permission_gate_screen.dart do not exist in filesystem. D-03 was incorrectly marked resolved. Requires full reimplementation. |
+| D-03 | Missing explicit GDPR prompt for Location/BLE  | Medium | Phase 6   | ✅ RESOLVED — 2026-04-04: consent_service.dart + permission_gate_screen.dart implemented. SharedPrefs-backed permissionsPresentedProvider. Router redirects isOnboarded users to /permissions until gate is shown. Gate requests locationWhenInUse + bluetoothScan, then marks presented. |
 | D-04 | plan.md was out of sync with shipped work      | Low    | Immediate | ✅ RESOLVED — 2026-04-02 |
 | D-05 | background_service.dart BLE mock not replaced despite ble_service.dart being real | High | Phase 3 | ✅ RESOLVED — Verified by Claude Code 2026-04-02 — implementation already shipped in ble_service.dart |
 | D-06 | .agent/skills/flutter-ble/SKILL.md contains firebase-security content — mislabeled, needs replacement | Low | Immediate | ✅ RESOLVED — 2026-04-02: replaced with real flutter_blue_plus patterns |
