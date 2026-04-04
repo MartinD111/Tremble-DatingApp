@@ -13,24 +13,35 @@ import '../../../core/translations.dart';
 import '../../../core/theme_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PAGE INDICES
+// PAGE INDICES (actual PageView order)
 // ─────────────────────────────────────────────────────────────────────────────
-// 0  : Language
-// 1  : Email / Password / Location
-// 2  : Name
-// 3  : Gender
+// 0  : Intro slide 0
+// 1  : Intro slide 1
+// 2  : Intro slide 2
+// 3  : Intro slide 3
 // 4  : Birthday
-// 5  : Height
-// 6  : About you (menu list)
-// 7  : Exercise sub-screen
-// 8  : Drinking sub-screen
-// 9  : Smoking sub-screen
-// 10 : Children sub-screen
-// 11 : Dating preferences
-// 12 : What to meet
-// 13 : Hobbies
-// 14 : Photos
-// 15 : Prompt
+// 5  : Email / Password / Location  (skipped for Google users)
+// 6  : Name
+// 7  : Gender
+// 8  : Height
+// 9  : Status
+// 10 : Exercise
+// 11 : Drinking
+// 12 : Smoking
+// 13 : Children
+// 14 : Introversion
+// 15 : Sleep
+// 16 : Pets
+// 17 : Religion
+// 18 : Ethnicity
+// 19 : Hair colour
+// 20 : Political affiliation
+// 21 : Languages
+// 22 : Dating preferences
+// 23 : What to meet
+// 24 : Hobbies
+// 25 : Photos
+// 26 : Consent
 // ─────────────────────────────────────────────────────────────────────────────
 
 class RegistrationFlow extends ConsumerStatefulWidget {
@@ -178,17 +189,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       _showVerificationNotification();
     }
     
-    // Skip Email/Password (5) and potentially Name (6) if already authenticated
+    // Skip Email/Password (5) for authenticated users — jump directly to Name (6).
+    // Name must always be confirmed, even for Google users whose displayName is pre-filled.
     if (_currentPage == 4 && FirebaseAuth.instance.currentUser != null) {
-      // If name is already provided (likely via Google), go straight to Gender (7)
-      // Otherwise, go to Name (6) but still skip Email/Password (5)
-      final targetPage = _nameController.text.isNotEmpty ? 7 : 6;
-      _pageController.animateToPage(
-        targetPage,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-      );
-      setState(() => _currentPage = targetPage);
+      _pageController.jumpToPage(6);
+      setState(() => _currentPage = 6);
       return;
     }
 
@@ -200,14 +205,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   void _prevPage() {
-    // Skip Email/Password page (5) if already authenticated
+    // Skip Email/Password page (5) if already authenticated — jump back to Birthday (4).
     if (_currentPage == 6 && FirebaseAuth.instance.currentUser != null) {
-      // Go straight back to Birthday (page 4)
-      _pageController.animateToPage(
-        4,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOut,
-      );
+      _pageController.jumpToPage(4);
       setState(() => _currentPage = 4);
       return;
     }

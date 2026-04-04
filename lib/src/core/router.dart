@@ -16,11 +16,25 @@ import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/safety/presentation/blocked_users_screen.dart';
 import '../shared/ui/gradient_scaffold.dart'; // Assume exists
 
+// Listens to auth state changes and notifies GoRouter to re-run redirect
+// without recreating the router instance.
+class _RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  _RouterNotifier(this._ref) {
+    _ref.listen<AuthUser?>(authStateProvider, (_, __) => notifyListeners());
+  }
+
+  AuthUser? get authState => _ref.read(authStateProvider);
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final notifier = _RouterNotifier(ref);
+  ref.onDispose(notifier.dispose);
 
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: notifier,
     routes: [
       GoRoute(
         path: '/login',
@@ -72,6 +86,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
+      final authState = notifier.authState;
       final isLoggedIn = authState != null;
       final isOnboarded = authState?.isOnboarded ?? false;
       final isLoginRoute = state.uri.toString() == '/login';
