@@ -87,48 +87,58 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Widget _buildEmailStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.white60 : Colors.black54;
+    final textHint = isDark ? Colors.white70 : Colors.black45;
+    final borderColor = isDark ? Colors.white30 : Colors.black26;
+    final borderFocusColor = isDark ? Colors.white : Colors.black;
+    final fillColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.05);
+
     return Column(
       key: const ValueKey('email_step'),
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(LucideIcons.keyRound, size: 60, color: Colors.white),
+        Icon(LucideIcons.keyRound, size: 60, color: textPrimary),
         const SizedBox(height: 20),
         Text("Forgot Password",
             style: GoogleFonts.outfit(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.white)),
+                color: textPrimary)),
         const SizedBox(height: 10),
         Text("Enter your email to receive a reset link",
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(fontSize: 15, color: Colors.white60)),
+            style: GoogleFonts.outfit(fontSize: 15, color: textSecondary)),
         const SizedBox(height: 40),
 
         // Email Field
         TextField(
           controller: _emailController,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: textPrimary),
           keyboardType: TextInputType.emailAddress,
           decoration: InputDecoration(
             labelText: 'Email',
-            labelStyle: const TextStyle(color: Colors.white70),
-            prefixIcon: const Icon(LucideIcons.mail, color: Colors.white70),
+            labelStyle: TextStyle(color: textHint),
+            prefixIcon: Icon(LucideIcons.mail, color: textHint),
             enabledBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: Colors.white30),
+              borderSide: BorderSide(color: borderColor),
               borderRadius: BorderRadius.circular(12),
             ),
             focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: Colors.white),
+              borderSide: BorderSide(color: borderFocusColor, width: 2),
               borderRadius: BorderRadius.circular(12),
             ),
             filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.1),
+            fillColor: fillColor,
           ),
         ),
         const SizedBox(height: 25),
 
         if (_isLoading)
-          const CircularProgressIndicator(color: Colors.white)
+          CircularProgressIndicator(color: textPrimary)
         else
           PrimaryButton(
             text: "Send Reset Email",
@@ -138,14 +148,25 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         const SizedBox(height: 20),
         TextButton(
           onPressed: () => context.pop(),
-          child: const Text("Back to Login",
-              style: TextStyle(color: Colors.white70)),
+          child: Text("Back to Login",
+              style: TextStyle(color: textSecondary)),
         ),
       ],
     );
   }
 
   Widget _buildEmailSentStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.white60 : Colors.black54;
+    final textBody = isDark ? Colors.white70 : Colors.black54;
+    final infoBoxBg = isDark
+        ? Colors.blue.withValues(alpha: 0.15)
+        : Colors.blue.withValues(alpha: 0.08);
+    final infoBoxBorder = isDark
+        ? Colors.blue.withValues(alpha: 0.3)
+        : Colors.blue.withValues(alpha: 0.4);
+
     return Column(
       key: const ValueKey('sent_step'),
       mainAxisAlignment: MainAxisAlignment.center,
@@ -167,18 +188,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             style: GoogleFonts.outfit(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.white)),
+                color: textPrimary)),
         const SizedBox(height: 12),
         Text("Check your inbox for ${_emailController.text}",
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white60, fontSize: 15)),
+            style: TextStyle(color: textSecondary, fontSize: 15)),
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.blue.withValues(alpha: 0.15),
+            color: infoBoxBg,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+            border: Border.all(color: infoBoxBorder),
           ),
           child: Row(
             children: [
@@ -188,17 +209,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               Expanded(
                 child: Text("Click the link in the email to continue…",
                     style: GoogleFonts.outfit(
-                        color: Colors.white70, fontSize: 13)),
+                        color: textBody, fontSize: 13)),
               ),
             ],
           ),
         ),
         const SizedBox(height: 30),
-        const SizedBox(
-          width: 40,
-          height: 40,
-          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
-        ),
+        CircularProgressIndicator(color: textPrimary, strokeWidth: 3),
       ],
     );
   }
