@@ -14,7 +14,6 @@
     - functions/.env (added GOOGLE_WEB_CLIENT_ID)
     - functions/.env.example (documented GOOGLE_WEB_CLIENT_ID)
 - Open Problems:
-    - D-11: Deprecated androidProvider/appleProvider in main.dart
     - D-12: Firestore TTL policies unconfirmed in Firebase Console (manual check needed)
 - System Status: flutter analyze 2 info warnings only (D-11, pre-existing). 0 errors. All 21 functions in europe-west1.
 - Last Release: Phase 5 AppCheck Complete
@@ -26,6 +25,5 @@
     - D-03 RESOLVED: consent_service.dart + permission_gate_screen.dart implemented. One-shot permission gate shown after onboarding — requests locationWhenInUse + bluetoothScan, marks presented in SharedPrefs. Router redirects automatically. Commit: 16ea09e.
 - Blocked:
     - D-12 (Medium/Phase 5): TTL policies not confirmed active — go to Firebase Console → Firestore → TTL policies. Collections: proximity_events (field: ttl), proximity (field: ttl). Manual only.
-    - D-11 (Low/Phase 6): androidProvider/appleProvider deprecated in main.dart — rename to providerAndroid/providerApple before launch.
 - Next Action: D-12 manual Firebase Console TTL check, then Phase 5 exit criteria review.
 - Staleness Rule: If this block is >48h old, re-validate before executing.
