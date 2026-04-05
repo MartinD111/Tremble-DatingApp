@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -3129,9 +3130,21 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: $e')),
-        );
+        if (kDebugMode) {
+          // In debug mode: show the error but let the user through anyway.
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('[DEV] API error (bypassed): $e', style: GoogleFonts.outfit()),
+              backgroundColor: Colors.orange.shade800,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+          context.go('/');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Registration failed: $e')),
+          );
+        }
       }
     }
   }
