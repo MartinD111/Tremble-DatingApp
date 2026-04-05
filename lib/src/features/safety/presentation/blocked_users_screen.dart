@@ -9,6 +9,7 @@ import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/safety_repository.dart';
+import '../../../shared/ui/tremble_back_button.dart';
 
 /// Provider to fetch the list of blocked users for the current user.
 final blockedUsersProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
@@ -61,14 +62,20 @@ class BlockedUsersScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: const SizedBox.shrink(),
         title: Text(
           t('blocked_users', lang),
-          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+          style: GoogleFonts.instrumentSans(color: Colors.white, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TrembleBackButton(
+              onPressed: () => Navigator.pop(context),
+              color: Colors.white70,
+            ),
+          ),
+        ],
       ),
       child: blockedUsersAsync.when(
         data: (blockedUsers) {
@@ -81,7 +88,7 @@ class BlockedUsersScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Text(
                     t('no_blocked_users', lang),
-                    style: GoogleFonts.outfit(color: Colors.white54, fontSize: 18),
+                    style: GoogleFonts.instrumentSans(color: Colors.white54, fontSize: 18),
                   ),
                 ],
               ),
@@ -108,7 +115,7 @@ class BlockedUsersScreen extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           blockedUser['name'],
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.instrumentSans(
                             color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,

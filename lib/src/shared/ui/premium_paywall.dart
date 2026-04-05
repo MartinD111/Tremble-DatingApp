@@ -58,7 +58,7 @@ class PremiumPaywallBottomSheet extends StatelessWidget {
             Text(
               'Odkleni Premium',
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.instrumentSans(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -91,7 +91,7 @@ class PremiumPaywallBottomSheet extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: '9,99 €',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.instrumentSans(
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
@@ -120,7 +120,7 @@ class PremiumPaywallBottomSheet extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Kmalu na voljo! (Integracija plačil)'),
-                    backgroundColor: Color(0xFF00D9A6),
+                    backgroundColor: Color(0xFFF4436C),
                   ),
                 );
               },

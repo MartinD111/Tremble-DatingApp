@@ -532,6 +532,11 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
     state = await _repository.registerWithEmail(email, password);
   }
 
+  /// Dev-only: force local auth state without backend calls.
+  void setUser(AuthUser user) {
+    state = user;
+  }
+
   Future<void> updateProfile(AuthUser user) async {
     await _repository.updateProfile(user);
     state = user;

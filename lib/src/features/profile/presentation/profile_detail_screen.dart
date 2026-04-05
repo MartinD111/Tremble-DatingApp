@@ -10,6 +10,7 @@ import '../../dashboard/presentation/home_screen.dart'; // For tracking ping/rad
 import '../../auth/data/auth_repository.dart';
 import '../../safety/presentation/widgets/ugc_action_sheet.dart';
 import '../../../core/translations.dart';
+import '../../../shared/ui/tremble_back_button.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class ProfileDetailScreen extends ConsumerWidget {
@@ -84,17 +85,13 @@ class ProfileDetailScreen extends ConsumerWidget {
                 ],
               ),
 
-              // Custom Back Button
+              // Custom Back Button — top right, pill shaped
               Positioned(
                 top: MediaQuery.of(context).padding.top + 10,
-                left: 20,
-                child: CircleAvatar(
-                  backgroundColor: Colors.black45,
-                  child: IconButton(
-                    icon:
-                        const Icon(LucideIcons.arrowLeft, color: Colors.white),
-                    onPressed: () => _showExitWarning(context, ref),
-                  ),
+                right: 20,
+                child: TrembleBackButton(
+                  onPressed: () => _showExitWarning(context, ref),
+                  color: Colors.white70,
                 ),
               ),
             ],
@@ -108,7 +105,7 @@ class ProfileDetailScreen extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.grey[900],
         title: Text("Opozorilo",
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.instrumentSans(
                 color: Colors.white, fontWeight: FontWeight.bold)),
         content: const Text(
             "Če greš ven, se bo zaznamovalo, kot da si osebo zignoriral.",
@@ -229,7 +226,7 @@ class ProfileDetailScreen extends ConsumerWidget {
                 children: [
                   Text(
                     "${match.name}, ${match.age}",
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.instrumentSans(
                       fontSize: 42,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -300,7 +297,7 @@ class ProfileDetailScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("O meni",
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.instrumentSans(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white)),
@@ -319,7 +316,7 @@ class ProfileDetailScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("Iščem",
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.instrumentSans(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white)),
@@ -426,11 +423,11 @@ class ProfileDetailScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(prompt['question']!,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.instrumentSans(
                         fontSize: 14, color: Colors.pinkAccent)),
                 const SizedBox(height: 8),
                 Text(prompt['answer']!,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.instrumentSans(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -646,7 +643,7 @@ class _ActionTextButton extends StatelessWidget {
                   spreadRadius: 2)
             ]),
         child: Text(text,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.instrumentSans(
                 color: color, fontSize: 18, fontWeight: FontWeight.bold)),
       ),
     );

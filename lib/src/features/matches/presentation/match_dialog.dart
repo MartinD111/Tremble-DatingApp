@@ -68,7 +68,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
               const Text('👋  '),
               Text('Pozdrav je poslan — čakamo na ${widget.match.name}!'),
             ]),
-            backgroundColor: const Color(0xFF00D9A6).withValues(alpha: 0.9),
+            backgroundColor: const Color(0xFFF4436C).withValues(alpha: 0.9),
             behavior: SnackBarBehavior.floating,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -103,10 +103,10 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
                 const SizedBox(height: 16),
                 Text(
                   'Match!',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.instrumentSans(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF00D9A6),
+                    color: const Color(0xFFF4436C),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -119,7 +119,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00D9A6),
+                    backgroundColor: const Color(0xFFF4436C),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                     padding: const EdgeInsets.symmetric(
@@ -184,7 +184,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
                         child: Column(
                           children: [
                             Text('${match.name}, ${match.age}',
-                                style: GoogleFonts.outfit(
+                                style: GoogleFonts.instrumentSans(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black87)),
@@ -258,13 +258,13 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
                       height: 80,
                       decoration: BoxDecoration(
                         color: _isGreeting
-                            ? const Color(0xFF00D9A6).withValues(alpha: 0.5)
-                            : const Color(0xFF00D9A6),
+                            ? const Color(0xFFF4436C).withValues(alpha: 0.5)
+                            : const Color(0xFFF4436C),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
                             color:
-                                const Color(0xFF00D9A6).withValues(alpha: 0.4),
+                                const Color(0xFFF4436C).withValues(alpha: 0.4),
                             blurRadius: 20,
                             spreadRadius: 2,
                           ),

@@ -154,7 +154,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
             children: [
               Text(
                 "Tremble Map",
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.instrumentSans(
                   color: isDark ? Colors.white : Colors.black87,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -190,7 +190,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
           children: [
             Text(
               label,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.instrumentSans(
                 color: Colors.white,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -206,7 +206,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00D9A6),
+                backgroundColor: const Color(0xFFF4436C),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),

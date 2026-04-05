@@ -8,6 +8,7 @@ import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
+import '../../../shared/ui/tremble_back_button.dart';
 
 class ProfileCardPreview extends ConsumerStatefulWidget {
   const ProfileCardPreview({super.key});
@@ -47,12 +48,9 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             pinned: true,
-            leading: IconButton(
-              icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
-              onPressed: () => context.pop(),
-            ),
+            leading: const SizedBox.shrink(),
             title: Text(t('my_card', user.appLanguage),
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.instrumentSans(
                     color: Colors.white, fontWeight: FontWeight.bold)),
             centerTitle: true,
             actions: [
@@ -60,6 +58,13 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                 icon: const Icon(LucideIcons.pencil, color: Colors.white),
                 tooltip: t('edit_profile', user.appLanguage),
                 onPressed: () => context.push('/edit-profile'),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: TrembleBackButton(
+                  onPressed: () => context.pop(),
+                  color: Colors.white70,
+                ),
               ),
             ],
           ),
@@ -141,7 +146,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                   // Name + Age
                   Text(
                     '${user.name ?? 'Guest'}, ${user.age ?? '?'}',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.instrumentSans(
                       color: Colors.white,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -208,7 +213,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(t('hobbies', user.appLanguage),
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.instrumentSans(
                               color: Colors.white70,
                               fontSize: 16,
                               fontWeight: FontWeight.w600)),
@@ -365,7 +370,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(t('lifestyle', user.appLanguage),
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.instrumentSans(
                   color: Colors.white70,
                   fontSize: 16,
                   fontWeight: FontWeight.w600)),
@@ -406,7 +411,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.instrumentSans(
                   color: Colors.white70,
                   fontSize: 16,
                   fontWeight: FontWeight.w600)),

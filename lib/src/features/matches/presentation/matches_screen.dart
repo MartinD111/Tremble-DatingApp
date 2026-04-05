@@ -54,7 +54,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
             children: [
               Expanded(
                 child: Text('Ljudje',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.instrumentSans(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
@@ -100,7 +100,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
           const SizedBox(height: 10),
 
           Text('Upravljaj svoje pretekle stike',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.instrumentSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Colors.white)),
@@ -122,7 +122,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
             child: matchesAsync.when(
               loading: () => const Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xFF00D9A6),
+                  color: Color(0xFFF4436C),
                   strokeWidth: 2,
                 ),
               ),
@@ -134,13 +134,13 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                         size: 48, color: Colors.white24),
                     const SizedBox(height: 12),
                     Text('Napaka pri nalaganju',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.instrumentSans(
                             color: Colors.white38, fontSize: 16)),
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: () => ref.invalidate(matchesStreamProvider),
                       child: const Text('Poskusi znova',
-                          style: TextStyle(color: Color(0xFF00D9A6))),
+                          style: TextStyle(color: Color(0xFFF4436C))),
                     ),
                   ],
                 ),
@@ -160,7 +160,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                             size: 48, color: Colors.white24),
                         const SizedBox(height: 12),
                         Text('Ni matchev',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.instrumentSans(
                                 color: Colors.white38, fontSize: 16)),
                         const SizedBox(height: 6),
                         const Text(
@@ -199,7 +199,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                               // Name & Age
                               Expanded(
                                 child: Text('${match.name}, ${match.age}',
-                                    style: GoogleFonts.outfit(
+                                    style: GoogleFonts.instrumentSans(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                         fontSize: 18)),

@@ -167,7 +167,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(LucideIcons.diamond,
-                                    color: Color(0xFF00D9A6), size: 40),
+                                    color: Color(0xFFF4436C), size: 40),
                                 const SizedBox(height: 16),
                                 Text(
                                   tr('premium_free_notice'),
@@ -183,7 +183,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                                       .replaceAll('{count}', '4.832'),
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-                                      color: Color(0xFF00D9A6),
+                                      color: Color(0xFFF4436C),
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold),
                                 ),
@@ -192,7 +192,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                                   width: double.infinity,
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF00D9A6),
+                                      backgroundColor: const Color(0xFFF4436C),
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(30)),
@@ -217,22 +217,22 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color:
-                              const Color(0xFF00D9A6).withValues(alpha: 0.15),
+                              const Color(0xFFF4436C).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(30),
                           border: Border.all(
-                              color: const Color(0xFF00D9A6)
+                              color: const Color(0xFFF4436C)
                                   .withValues(alpha: 0.5)),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(LucideIcons.diamond,
-                                color: Color(0xFF00D9A6), size: 16),
+                                color: Color(0xFFF4436C), size: 16),
                             SizedBox(width: 8),
                             Text(
                               'Premium račun aktiviran',
                               style: TextStyle(
-                                  color: Color(0xFF00D9A6),
+                                  color: Color(0xFFF4436C),
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold),
                             ),
@@ -424,7 +424,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                   children: [
                     Text(
                       isSlovenian ? 'Izberi jezik' : 'Select Language',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.instrumentSans(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.white),
@@ -465,13 +465,13 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                                   horizontal: 16, vertical: 16),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFF00D9A6)
+                                    ? const Color(0xFFF4436C)
                                         .withValues(alpha: 0.2)
                                     : Colors.white.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isSelected
-                                      ? const Color(0xFF00D9A6)
+                                      ? const Color(0xFFF4436C)
                                       : Colors.transparent,
                                 ),
                               ),
@@ -492,7 +492,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                                   const Spacer(),
                                   if (isSelected)
                                     const Icon(Icons.check_circle,
-                                        color: Color(0xFF00D9A6), size: 20),
+                                        color: Color(0xFFF4436C), size: 20),
                                 ],
                               ),
                             ),

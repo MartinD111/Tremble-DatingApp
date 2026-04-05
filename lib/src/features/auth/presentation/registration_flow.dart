@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/theme_provider.dart';
+import '../../../shared/ui/tremble_back_button.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE INDICES (actual PageView order)
@@ -298,7 +300,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // ────── CONTINUE PILL ──────
   Widget _continueButton({required bool enabled, required VoidCallback onTap, String? label}) {
-    const teal = Color(0xFF00D9A6);
+    const _brandRose = Color(0xFFF4436C);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
@@ -308,12 +310,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          color: enabled ? teal : (isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.08)),
+          color: enabled ? _brandRose : (isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.08)),
           borderRadius: BorderRadius.circular(100),
           boxShadow: [
             if (enabled)
               BoxShadow(
-                color: teal.withValues(alpha: 0.3),
+                color: _brandRose.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -335,14 +337,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // ────── BACK BUTTON ──────
   Widget _backButton() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return TextButton.icon(
-        onPressed: _prevPage,
-        icon: Icon(Icons.arrow_back_ios_new,
-            color: isDark ? Colors.white54 : Colors.black54, size: 16),
-        label: Text(tr('back'),
-            style: GoogleFonts.outfit(color: isDark ? Colors.white54 : Colors.black54, fontSize: 15)),
-      );
+    return Align(
+      alignment: Alignment.topRight,
+      child: TrembleBackButton(onPressed: _prevPage, label: tr('back')),
+    );
   }
 
   // ────── PROGRESS BAR ──────
@@ -357,7 +355,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       builder: (ctx, val, _) => LinearProgressIndicator(
         value: val,
         backgroundColor: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.08),
-        valueColor: const AlwaysStoppedAnimation(Color(0xFF00D9A6)),
+        valueColor: const AlwaysStoppedAnimation(Color(0xFFF4436C)),
         minHeight: 3,
       ),
     );
@@ -373,7 +371,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       if (subtitle != null) ...[
         const SizedBox(height: 8),
         Text(subtitle,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.instrumentSans(
                 color: isDark ? Colors.white60 : Colors.black54, fontSize: 14, height: 1.4)),
       ],
     ]);
@@ -381,7 +379,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   Widget _optionPill(String label, bool selected, VoidCallback onTap,
       {IconData? icon}) {
-    const teal = Color(0xFF00D9A6);
+    const _brandRose = Color(0xFFF4436C);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
@@ -392,16 +390,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: selected
-              ? teal.withValues(alpha: 0.22)
+              ? _brandRose.withValues(alpha: 0.22)
               : (isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
-              color: selected ? teal : (isDark ? Colors.white38 : Colors.black26), width: selected ? 2 : 1),
+              color: selected ? _brandRose : (isDark ? Colors.white38 : Colors.black26), width: selected ? 2 : 1),
         ),
         child: Row(
           children: [
             if (icon != null) ...[
-              Icon(icon, color: selected ? teal : (isDark ? Colors.white70 : Colors.black54), size: 20),
+              Icon(icon, color: selected ? _brandRose : (isDark ? Colors.white70 : Colors.black54), size: 20),
               const SizedBox(width: 12)
             ],
             Text(label,
@@ -410,7 +408,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     fontSize: 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.w500)),
             const Spacer(),
-            if (selected) const Icon(Icons.check_circle, color: teal, size: 20),
+            if (selected) Icon(Icons.check_circle, color: _brandRose, size: 20),
           ],
         ),
       ),
@@ -421,7 +419,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(tr('verification_email')),
-        backgroundColor: const Color(0xFF00D9A6),
+        backgroundColor: const Color(0xFFF4436C),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -558,7 +556,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   labelText: _status == 'student'
                       ? 'Course of Study (Optional)'
                       : 'Job Title (Optional)',
-                  labelStyle: GoogleFonts.outfit(color: hintColor),
+                  labelStyle: GoogleFonts.instrumentSans(color: hintColor),
                   enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(100),
                       borderSide: BorderSide(color: borderColor)),
@@ -609,12 +607,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icons[index], size: 100, color: const Color(0xFF00D9A6)),
+            Icon(icons[index], size: 100, color: const Color(0xFFF4436C)),
             const SizedBox(height: 48),
             Text(
               titles[index],
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.instrumentSans(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: titleColor),
@@ -623,7 +621,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             Text(
               bodies[index],
               textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.instrumentSans(
                   fontSize: 16, color: bodyColor, height: 1.6),
             ),
             const Spacer(),
@@ -698,11 +696,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return TextField(
       controller: ctrl,
       keyboardType: keyboard,
-      style: GoogleFonts.outfit(color: textColor, fontSize: 17),
+      style: GoogleFonts.instrumentSans(color: textColor, fontSize: 17),
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.outfit(color: hintColor),
+        labelStyle: GoogleFonts.instrumentSans(color: hintColor),
         prefixIcon:
             icon != null ? Icon(icon, color: iconColor, size: 20) : null,
         enabledBorder: OutlineInputBorder(
@@ -727,11 +725,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return TextField(
       controller: _passwordController,
       obscureText: _obscurePassword,
-      style: GoogleFonts.outfit(color: textColor, fontSize: 17),
+      style: GoogleFonts.instrumentSans(color: textColor, fontSize: 17),
       onChanged: _updatePasswordStrength,
       decoration: InputDecoration(
         labelText: tr('password'),
-        labelStyle: GoogleFonts.outfit(color: hintColor),
+        labelStyle: GoogleFonts.instrumentSans(color: hintColor),
         prefixIcon:
             Icon(LucideIcons.lock, color: iconColor, size: 20),
         enabledBorder: OutlineInputBorder(
@@ -923,7 +921,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(LucideIcons.diamond,
-                      color: Color(0xFF00D9A6), size: 40),
+                      color: Color(0xFFF4436C), size: 40),
                   const SizedBox(height: 16),
                   Text(
                     tr('premium_free_notice'),
@@ -935,7 +933,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   Text(
                     tr('current_users_count').replaceAll('{count}', '4.832'),
                     style: const TextStyle(
-                        color: Color(0xFF00D9A6),
+                        color: Color(0xFFF4436C),
                         fontSize: 18,
                         fontWeight: FontWeight.bold),
                   ),
@@ -944,7 +942,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00D9A6),
+                        backgroundColor: const Color(0xFFF4436C),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -965,20 +963,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF00D9A6).withValues(alpha: 0.15),
+            color: const Color(0xFFF4436C).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-                color: const Color(0xFF00D9A6).withValues(alpha: 0.5)),
+                color: const Color(0xFFF4436C).withValues(alpha: 0.5)),
           ),
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(LucideIcons.diamond, color: Color(0xFF00D9A6), size: 16),
+              Icon(LucideIcons.diamond, color: Color(0xFFF4436C), size: 16),
               SizedBox(width: 8),
               Text(
                 'Premium račun aktiviran',
                 style: TextStyle(
-                    color: Color(0xFF00D9A6),
+                    color: Color(0xFFF4436C),
                     fontSize: 14,
                     fontWeight: FontWeight.bold),
               ),
@@ -1072,7 +1070,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   value: _isClassicAppearance,
                   onChanged: (val) =>
                       setState(() => _isClassicAppearance = val),
-                  activeThumbColor: const Color(0xFF00D9A6),
+                  activeThumbColor: const Color(0xFFF4436C),
                 ),
               ],
             ),
@@ -1096,7 +1094,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                         .read(themeModeProvider.notifier)
                         .setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
                   },
-                  activeThumbColor: const Color(0xFF00D9A6),
+                  activeThumbColor: const Color(0xFFF4436C),
                 ),
               ],
             ),
@@ -1122,10 +1120,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             border: Border.all(color: Colors.white24),
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(LucideIcons.info, color: Color(0xFF00D9A6), size: 40),
+            const Icon(LucideIcons.info, color: Color(0xFFF4436C), size: 40),
             const SizedBox(height: 16),
             Text(tr('gender_nonbinary_popup_title'),
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.instrumentSans(
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.bold)),
@@ -1141,11 +1139,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                    color: const Color(0xFF00D9A6),
+                    color: const Color(0xFFF4436C),
                     borderRadius: BorderRadius.circular(30)),
                 child: Center(
                     child: Text('OK',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.instrumentSans(
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
                             fontSize: 16))),
@@ -1270,7 +1268,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 return Center(
                     child: AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 200),
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.instrumentSans(
                     fontSize: selected ? 20 : 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                     color: selected ? activeColor : inactiveColor,
@@ -1286,7 +1284,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 return Center(
                     child: AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 200),
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.instrumentSans(
                     fontSize: selected ? 20 : 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                     color: selected ? activeColor : inactiveColor,
@@ -1315,7 +1313,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final d = DateTime(_pickerYear, _pickerMonth, _pickerDay);
     final age = _calcAge(d);
     final dateStr = DateFormat('MMMM d, yyyy').format(d);
-    const teal = Color(0xFF00D9A6);
+    const _brandRose = Color(0xFFF4436C);
     const red = Color(0xFFFF4C4C);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1352,7 +1350,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             const SizedBox(height: 20),
             Text(
               'Tremble is 18+ only',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.instrumentSans(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                   color: titleColor),
@@ -1363,7 +1361,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               'We are unable to create an account for you at this time.',
               textAlign: TextAlign.center,
               style:
-                  GoogleFonts.outfit(color: bodyColor, fontSize: 15, height: 1.5),
+                  GoogleFonts.instrumentSans(color: bodyColor, fontSize: 15, height: 1.5),
             ),
             const SizedBox(height: 28),
             GestureDetector(
@@ -1376,7 +1374,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     borderRadius: BorderRadius.circular(30)),
                 child: Center(
                     child: Text('Go back',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.instrumentSans(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                             color: isDark ? Colors.white70 : Colors.black87,
@@ -1411,14 +1409,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           const SizedBox(height: 28),
           Text(
             tr('youre_age').replaceAll('{age}', '$age'),
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.instrumentSans(
                 fontSize: 32, fontWeight: FontWeight.bold, color: titleColor),
           ),
           const SizedBox(height: 12),
           Text(
             tr('is_birthday_correct').replaceAll('{date}', dateStr),
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.instrumentSans(
                 color: bodyColor, fontSize: 15, height: 1.5),
           ),
           const SizedBox(height: 28),
@@ -1435,15 +1433,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               width: double.infinity,
               height: 54,
               decoration: BoxDecoration(
-                  color: teal,
+                  color: _brandRose,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                        color: teal.withValues(alpha: 0.4), blurRadius: 16)
+                        color: _brandRose.withValues(alpha: 0.4), blurRadius: 16)
                   ]),
               child: Center(
                   child: Text(tr('confirm_btn').toUpperCase(),
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.instrumentSans(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                           color: Colors.black,
@@ -1516,7 +1514,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                           horizontal: 24, vertical: 10),
                       decoration: BoxDecoration(
                         color: _isMetric
-                            ? const Color(0xFF00D9A6)
+                            ? const Color(0xFFF4436C)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -1537,7 +1535,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                           horizontal: 24, vertical: 10),
                       decoration: BoxDecoration(
                         color: !_isMetric
-                            ? const Color(0xFF00D9A6)
+                            ? const Color(0xFFF4436C)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(30),
                       ),
@@ -1684,8 +1682,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             final isDark = Theme.of(context).brightness == Brightness.dark;
             final labelColor = isDark ? Colors.white70 : Colors.black54;
             return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(tr('politics_left'), style: GoogleFonts.outfit(color: labelColor)),
-              Text(tr('politics_right'), style: GoogleFonts.outfit(color: labelColor)),
+              Text(tr('politics_left'), style: GoogleFonts.instrumentSans(color: labelColor)),
+              Text(tr('politics_right'), style: GoogleFonts.instrumentSans(color: labelColor)),
             ]);
           }),
           Slider(
@@ -1694,7 +1692,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             max: 5,
             divisions: 4,
             onChanged: (v) => setState(() => _politicalAffiliationValue = v),
-            activeColor: const Color(0xFF00D9A6),
+            activeColor: const Color(0xFFF4436C),
             inactiveColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
           ),
           const SizedBox(height: 16),
@@ -1703,8 +1701,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             // Guard against index -1 or 0 when "Don't care" or "Undisclosed" is selected
             final displayLabel = (idx >= 1 && idx <= labels.length) ? labels[idx - 1] : tr('not_specified');
             return Text(displayLabel,
-                style: GoogleFonts.outfit(
-                    color: const Color(0xFF00D9A6),
+                style: GoogleFonts.instrumentSans(
+                    color: const Color(0xFFF4436C),
                     fontSize: 18,
                     fontWeight: FontWeight.bold));
           }),
@@ -1860,17 +1858,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Builder(builder: (context) {
-            final isDark = Theme.of(context).brightness == Brightness.dark;
-            final backColor = isDark ? Colors.white54 : Colors.black54;
-            return TextButton.icon(
-              onPressed: () {
-                _goToPage(backTarget);
-              },
-              icon: Icon(Icons.arrow_back_ios_new, color: backColor, size: 16),
-              label: Text(tr('back'), style: TextStyle(color: backColor, fontSize: 15)),
-            );
-          }),
+          Align(
+            alignment: Alignment.topRight,
+            child: TrembleBackButton(
+              onPressed: () => _goToPage(backTarget),
+              label: tr('back'),
+            ),
+          ),
           const SizedBox(height: 24),
           _stepHeader(title),
           const SizedBox(height: 40),
@@ -1943,7 +1937,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               const SizedBox(height: 28),
               Text(
                 'Ali želiš, da ima tvoj partner enake preference?',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.instrumentSans(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
@@ -1981,7 +1975,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: tempSelection != null
-                            ? const Color(0xFF00D9A6)
+                            ? const Color(0xFFF4436C)
                             : (isDark ? Colors.white12 : Colors.black12),
                         foregroundColor: tempSelection != null
                             ? Colors.black
@@ -2061,7 +2055,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               const SizedBox(height: 28),
               Text(
                 'Kakšen naj bo tvoj partner?',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.instrumentSans(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
@@ -2084,7 +2078,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   min: min,
                   max: max,
                   divisions: divisions > 0 ? divisions : null,
-                  activeColor: const Color(0xFF00D9A6),
+                  activeColor: const Color(0xFFF4436C),
                   inactiveColor: isDark ? Colors.white12 : Colors.black12,
                   onChanged: (v) => setModalState(() => tempRange = v),
                 ),
@@ -2112,7 +2106,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00D9A6),
+                        backgroundColor: const Color(0xFFF4436C),
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -2176,7 +2170,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 const SizedBox(height: 28),
                 Text(
                   title,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.instrumentSans(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
@@ -2294,7 +2288,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           Slider(
             value: _introversionLevel,
             onChanged: (v) => setState(() => _introversionLevel = v),
-            activeColor: const Color(0xFF00D9A6),
+            activeColor: const Color(0xFFF4436C),
             inactiveColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),
           const SizedBox(height: 16),
@@ -2303,7 +2297,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 ? '${((1.0 - _introversionLevel) * 100).toInt()}% ${tr('introvert').toLowerCase()}'
                 : '${(_introversionLevel * 100).toInt()}% ${tr('extrovert').toLowerCase()}',
             style: const TextStyle(
-                color: Color(0xFF00D9A6),
+                color: Color(0xFFF4436C),
                 fontSize: 18,
                 fontWeight: FontWeight.bold),
           ),
@@ -2364,10 +2358,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 final isDark = Theme.of(context).brightness == Brightness.dark;
                 return TextField(
                   controller: _customPetController,
-                  style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87),
+                  style: GoogleFonts.instrumentSans(color: isDark ? Colors.white : Colors.black87),
                   decoration: InputDecoration(
                     hintText: tr('write_answer'),
-                    hintStyle: GoogleFonts.outfit(color: isDark ? Colors.white30 : Colors.black38),
+                    hintStyle: GoogleFonts.instrumentSans(color: isDark ? Colors.white30 : Colors.black38),
                     enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(100),
                         borderSide: BorderSide(color: isDark ? Colors.white30 : Colors.black26)),
@@ -2449,10 +2443,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   final isDark = Theme.of(context).brightness == Brightness.dark;
                   return TextField(
                     controller: _customLanguageController,
-                    style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black87),
+                    style: GoogleFonts.instrumentSans(color: isDark ? Colors.white : Colors.black87),
                     decoration: InputDecoration(
                       hintText: tr('write_answer'),
-                      hintStyle: GoogleFonts.outfit(color: isDark ? Colors.white30 : Colors.black38),
+                      hintStyle: GoogleFonts.instrumentSans(color: isDark ? Colors.white30 : Colors.black38),
                       enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(100),
                           borderSide: BorderSide(color: isDark ? Colors.white30 : Colors.black26)),
@@ -2514,7 +2508,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             labels: RangeLabels('${_ageRangePref.start.round()}',
                 '${_ageRangePref.end.round()}'),
             onChanged: (v) => setState(() => _ageRangePref = v),
-            activeColor: const Color(0xFF00D9A6),
+            activeColor: const Color(0xFFF4436C),
             inactiveColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),
           const SizedBox(height: 24),
@@ -2629,7 +2623,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(tr('my_hobbies_custom'),
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.instrumentSans(
                           color: isDark ? Colors.white : Colors.black87,
                           fontWeight: FontWeight.bold)),
                 ),
@@ -2640,7 +2634,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     return FilterChip(
                       label: Text(
                         hobby,
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.instrumentSans(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
@@ -2648,7 +2642,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       selected: true,
                       onSelected: (_) =>
                           setState(() => _selectedHobbies.remove(hobby)),
-                      selectedColor: const Color(0xFF00D9A6),
+                      selectedColor: const Color(0xFFF4436C),
                       backgroundColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05),
                       shape: StadiumBorder(
                         side: BorderSide(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1)),
@@ -2665,11 +2659,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     child: ExpansionTile(
                       title: Text(
                           '${e.key} (${e.value.where((h) => _selectedHobbies.contains(h)).length})',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.instrumentSans(
                               color: isDark ? Colors.white : Colors.black87,
                               fontWeight: FontWeight.bold)),
                       collapsedIconColor: isDark ? Colors.white : Colors.black54,
-                      iconColor: const Color(0xFF00D9A6),
+                      iconColor: const Color(0xFFF4436C),
                       children: [
                         Wrap(
                           spacing: 8,
@@ -2680,7 +2674,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               return FilterChip(
                                 label: Text(
                                   hobby,
-                                  style: GoogleFonts.outfit(
+                                  style: GoogleFonts.instrumentSans(
                                     color: sel ? Colors.black : (isDark ? Colors.white : Colors.black87),
                                     fontWeight: sel ? FontWeight.bold : FontWeight.w500,
                                   ),
@@ -2689,12 +2683,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                 onSelected: (s) => setState(() => s
                                     ? _selectedHobbies.add(hobby)
                                     : _selectedHobbies.remove(hobby)),
-                                selectedColor: const Color(0xFF00D9A6),
+                                selectedColor: const Color(0xFFF4436C),
                                 backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
                                 shape: StadiumBorder(
                                   side: BorderSide(
                                     color: sel
-                                        ? const Color(0xFF00D9A6)
+                                        ? const Color(0xFFF4436C)
                                         : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26),
                                   ),
                                 ),
@@ -2703,8 +2697,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                             }),
                             ActionChip(
                               label: Text(tr('add_own'),
-                                  style: GoogleFonts.outfit(color: Colors.black)),
-                              backgroundColor: const Color(0xFF00D9A6),
+                                  style: GoogleFonts.instrumentSans(color: Colors.black)),
+                              backgroundColor: const Color(0xFFF4436C),
                               shape: const StadiumBorder(),
                               onPressed: () => _showAddHobbyDialog(),
                             ),
@@ -2733,10 +2727,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         builder: (ctx) => AlertDialog(
               backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               title: Text(tr('add_hobby'),
-                  style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black)),
+                  style: GoogleFonts.instrumentSans(color: isDark ? Colors.white : Colors.black)),
               content: TextField(
                   controller: ctrl,
-                  style: GoogleFonts.outfit(color: isDark ? Colors.white : Colors.black),
+                  style: GoogleFonts.instrumentSans(color: isDark ? Colors.white : Colors.black),
                   autofocus: true),
               actions: [
                 TextButton(
@@ -2750,7 +2744,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       }
                     },
                     child: Text(tr('add'),
-                        style: GoogleFonts.outfit(color: const Color(0xFF00D9A6)))),
+                        style: GoogleFonts.instrumentSans(color: const Color(0xFFF4436C)))),
               ],
             ));
   }
@@ -2772,7 +2766,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           _stepHeader(tr('select_photo_title')),
           const SizedBox(height: 8),
           Text(tr('photos_hint'),
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.instrumentSans(
                   color: isDark ? Colors.white54 : Colors.black45,
                   fontSize: 13)),
           const SizedBox(height: 32),
@@ -2790,7 +2784,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                           color: _photos[i] != null
-                              ? const Color(0xFF00D9A6)
+                              ? const Color(0xFFF4436C)
                               : (isDark ? Colors.white24 : Colors.black12)),
                       image: _photos[i] != null
                           ? DecorationImage(
@@ -2869,12 +2863,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 },
                 icon: Icon(
                   _consentGiven ? Icons.check_box : Icons.check_box_outline_blank,
-                  color: const Color(0xFF00D9A6),
+                  color: const Color(0xFFF4436C),
                 ),
                 label: Text(
                   'Izberi Vse',
-                  style: GoogleFonts.outfit(
-                    color: const Color(0xFF00D9A6),
+                  style: GoogleFonts.instrumentSans(
+                    color: const Color(0xFFF4436C),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -2894,7 +2888,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       onTap: () {},
                       child: const Text('Terms of Service',
                           style: TextStyle(
-                              color: Color(0xFF00D9A6),
+                              color: Color(0xFFF4436C),
                               fontSize: 14,
                               decoration: TextDecoration.underline)),
                     ),
@@ -2917,7 +2911,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       onTap: () {},
                       child: const Text('Privacy Policy',
                           style: TextStyle(
-                              color: Color(0xFF00D9A6),
+                              color: Color(0xFFF4436C),
                               fontSize: 14,
                               decoration: TextDecoration.underline)),
                     ),
@@ -2972,7 +2966,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(Icons.shield_outlined,
-                      color: Color(0xFF00D9A6), size: 20),
+                      color: Color(0xFFF4436C), size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -3003,7 +2997,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     required InlineSpan richText,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const teal = Color(0xFF00D9A6);
+    const _brandRose = Color(0xFFF4436C);
     return GestureDetector(
       onTap: () => onChanged(!value),
       child: Row(
@@ -3014,10 +3008,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: value ? teal : Colors.transparent,
+              color: value ? _brandRose : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
               border:
-                  Border.all(color: value ? teal : (isDark ? Colors.white38 : Colors.black38), width: 2),
+                  Border.all(color: value ? _brandRose : (isDark ? Colors.white38 : Colors.black38), width: 2),
             ),
             child: value
                 ? const Icon(Icons.check, color: Colors.black, size: 16)
@@ -3040,7 +3034,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     if (!_consentGiven) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Please accept all consent checkboxes to continue.', style: GoogleFonts.outfit())),
+            content: Text('Please accept all consent checkboxes to continue.', style: GoogleFonts.instrumentSans())),
       );
       return;
     }
@@ -3134,14 +3128,31 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       // isOnboarded is still set to true locally.
       await ref.read(authStateProvider.notifier).completeOnboarding(user);
 
-      if (mounted) {
-        context.go('/');
-      }
+      if (mounted) context.go('/');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: $e')),
-        );
+      if (kDebugMode) {
+        // Dev mode: show error but force local state and navigate through.
+        debugPrint('[DEV] Registration error (bypassed): $e');
+        ref.read(authStateProvider.notifier).setUser(
+              user.copyWith(isOnboarded: true),
+            );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('[DEV] Error bypassed: $e',
+                  style: GoogleFonts.instrumentSans()),
+              backgroundColor: Colors.orange.shade800,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+          context.go('/');
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Registration failed: $e')),
+          );
+        }
       }
     }
   }

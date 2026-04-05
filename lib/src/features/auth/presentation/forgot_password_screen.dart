@@ -104,14 +104,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         Icon(LucideIcons.keyRound, size: 60, color: textPrimary),
         const SizedBox(height: 20),
         Text("Forgot Password",
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.instrumentSans(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: textPrimary)),
         const SizedBox(height: 10),
         Text("Enter your email to receive a reset link",
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(fontSize: 15, color: textSecondary)),
+            style: GoogleFonts.instrumentSans(fontSize: 15, color: textSecondary)),
         const SizedBox(height: 40),
 
         // Email Field
@@ -185,7 +185,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 25),
         Text("Email Sent!",
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.instrumentSans(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: textPrimary)),
@@ -208,7 +208,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text("Click the link in the email to continue…",
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.instrumentSans(
                         color: textBody, fontSize: 13)),
               ),
             ],

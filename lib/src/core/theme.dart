@@ -6,9 +6,14 @@ class TrembleTheme {
   static const backgroundColor = Color(0xFFFAFAF7); // warm cream
   static const textColor = Color(0xFF1A1A18); // deep graphite
   
-  // Functional Colors
-  static const accentYellow = Color(0xFFFFD54F); // softer yellow for ambient indicators
-  static const successGreen = Color(0xFF81C784); // soft green
+  // Brand Colors
+  static const rose = Color(0xFFF4436C); // Tremble Rose — primary
+  static const roseLight = Color(0xFFF9839E); // Rose Light
+  static const roseDark = Color(0xFFC02048); // Rose Dark
+  static const accentYellow = Color(0xFFF5C842); // Signal Yellow — accents, live indicators
+  static const successGreen = Color(0xFF2D9B6F); // Confirm Green — success states, GDPR
+  static const warmGray = Color(0xFF6B6B63); // Warm Gray — secondary text
+  static const border = Color(0xFFE2E2DC); // Border color
 
   // Female Theme Colors (Rose)
   static const femalePrimary = Color(0xFFF4436C); // rose
@@ -62,22 +67,24 @@ class TrembleTheme {
 
   static TextTheme _buildTextTheme(Color baseTextColor) {
     return TextTheme(
-      // Outfit for all text to ensure total consistency as requested
-      displayLarge: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
-      displayMedium: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
-      displaySmall: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
-      headlineLarge: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
-      headlineMedium: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
-      headlineSmall: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.bold),
-      titleLarge: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.w600),
-      titleMedium: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.w500),
-      titleSmall: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.w500),
-      labelLarge: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.w600, letterSpacing: 0.5),
-      labelMedium: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.normal),
-      labelSmall: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.normal),
-      bodyLarge: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.normal),
-      bodyMedium: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.normal),
-      bodySmall: GoogleFonts.outfit(color: baseTextColor, fontWeight: FontWeight.normal),
+      // Display & Headlines — Playfair Display (serif, impactful)
+      displayLarge: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w900, letterSpacing: -0.04 * 96),
+      displayMedium: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w900, letterSpacing: -0.03 * 56),
+      displaySmall: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w700, letterSpacing: -0.02 * 44),
+      headlineLarge: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w700),
+      headlineMedium: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w700),
+      headlineSmall: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w700),
+      // Titles & Labels — Instrument Sans (clean UI font)
+      titleLarge: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w600),
+      titleMedium: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w500),
+      titleSmall: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w500),
+      labelLarge: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w700, letterSpacing: 0.01 * 14),
+      labelMedium: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w500),
+      labelSmall: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w500),
+      // Body — Lora (readable serif)
+      bodyLarge: GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
+      bodyMedium: GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
+      bodySmall: GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
     );
   }
 
@@ -117,7 +124,7 @@ class TrembleTheme {
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide(color: femalePrimary)),
+        focusedBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: const BorderSide(color: femalePrimary)),
         filled: true,
         fillColor: Colors.grey.shade100,
       ),
@@ -130,12 +137,12 @@ class TrembleTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       primaryColor: femaleDarkPrimary,
-      scaffoldBackgroundColor: const Color(0xFF121212),
+      scaffoldBackgroundColor: const Color(0xFF1A1A18),
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF121212),
+        seedColor: const Color(0xFF1A1A18),
         primary: femaleDarkPrimary,
         secondary: const Color(0xFF1E1E1E),
-        surface: const Color(0xFF1E1E1E),
+        surface: const Color(0xFF1E1E2E),
         onSurface: const Color(0xFFE0E0E0),
         brightness: Brightness.dark,
       ),
@@ -149,16 +156,66 @@ class TrembleTheme {
       cardTheme: CardThemeData(
         shape: const RoundedRectangleBorder(borderRadius: cardRadius),
         elevation: 0,
-        color: const Color(0xFF1E1E1E),
+        color: const Color(0xFF1E1E2E),
       ),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide(color: femaleDarkPrimary)),
+        focusedBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: const BorderSide(color: femaleDarkPrimary)),
         filled: true,
         fillColor: const Color(0xFF2C2C2C),
       ),
       textTheme: _buildTextTheme(const Color(0xFFE0E0E0)),
+    );
+  }
+
+  // ─── Brand Font Helpers ───
+  // Use these for direct styling outside the theme text styles.
+
+  /// Display/Headlines — Playfair Display (serif, high impact)
+  static TextStyle displayFont({
+    double fontSize = 32,
+    FontWeight fontWeight = FontWeight.w900,
+    Color? color,
+    double? letterSpacing,
+    double? height,
+  }) {
+    return GoogleFonts.playfairDisplay(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      letterSpacing: letterSpacing ?? -0.03 * fontSize,
+      height: height,
+    );
+  }
+
+  /// Body text — Lora (readable serif)
+  static TextStyle bodyFont({
+    double fontSize = 16,
+    FontWeight fontWeight = FontWeight.normal,
+    Color? color,
+    double? height,
+  }) {
+    return GoogleFonts.lora(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      height: height,
+    );
+  }
+
+  /// UI elements — Instrument Sans (buttons, labels, nav, forms)
+  static TextStyle uiFont({
+    double fontSize = 14,
+    FontWeight fontWeight = FontWeight.w500,
+    Color? color,
+    double? letterSpacing,
+  }) {
+    return GoogleFonts.instrumentSans(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      letterSpacing: letterSpacing,
     );
   }
 }

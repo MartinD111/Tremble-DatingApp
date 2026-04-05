@@ -59,7 +59,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         children: [
           const SizedBox(height: 60),
           Text(_t('settings'),
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.instrumentSans(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
@@ -253,7 +253,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     color: Colors.redAccent, size: 22),
                 const SizedBox(width: 10),
                 Text('Delete Account',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.instrumentSans(
                         color: Colors.white, fontWeight: FontWeight.bold)),
               ]),
               content: Column(
@@ -430,7 +430,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       children: [
                         Text(
                           "${user.name ?? 'Guest'}, ${user.age ?? '?'}",
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.instrumentSans(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -454,7 +454,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         const SizedBox(height: 10),
                         Text(
                           user.isPremium ? "Premium Member ✨" : "Free Plan",
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.instrumentSans(
                             color: user.isPremium
                                 ? const Color(0xFFFFD700)
                                 : Colors.white70,
@@ -513,7 +513,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               onPressed: () => context.push('/profile-preview'),
               icon: const Icon(LucideIcons.eye, size: 18, color: Colors.white),
               label: Text(_t('profile_card_view'),
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.instrumentSans(
                       color: Colors.white, fontWeight: FontWeight.w600)),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.white30),
@@ -892,7 +892,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
                           child: const Text('OK',
-                              style: TextStyle(color: Color(0xFF00D9A6))),
+                              style: TextStyle(color: Color(0xFFF4436C))),
                         ),
                       ],
                     ),

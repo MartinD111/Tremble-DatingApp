@@ -9,6 +9,7 @@ import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
+import '../../../shared/ui/tremble_back_button.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -140,7 +141,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = _lang;
-    const teal = Color(0xFF00D9A6);
+    const brandRose = Color(0xFFF4436C);
 
     return PopScope(
       canPop: !_hasChanges,
@@ -156,10 +157,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
+            leading: const SizedBox.shrink(),
             title: Text(t('edit_profile', lang),
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.instrumentSans(
                     color: Colors.white, fontWeight: FontWeight.bold)),
-            iconTheme: const IconThemeData(color: Colors.white),
             elevation: 0,
             actions: [
               if (_hasChanges)
@@ -167,8 +168,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   onPressed: _saveChanges,
                   child: Text(t('save', lang),
                       style: const TextStyle(
-                          color: teal, fontWeight: FontWeight.bold)),
+                          color: Color(0xFFF4436C), fontWeight: FontWeight.bold)),
                 ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: TrembleBackButton(
+                  onPressed: () async {
+                    if (_hasChanges) {
+                      final shouldPop = await _onWillPop();
+                      if (shouldPop && context.mounted) context.pop();
+                    } else {
+                      context.pop();
+                    }
+                  },
+                  color: Colors.white70,
+                ),
+              ),
             ],
           ),
           body: SingleChildScrollView(
@@ -247,7 +262,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   child: ElevatedButton(
                     onPressed: _hasChanges ? _saveChanges : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _hasChanges ? teal : Colors.white12,
+                      backgroundColor: _hasChanges ? brandRose : Colors.white12,
                       foregroundColor:
                           _hasChanges ? Colors.black : Colors.white24,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -255,7 +270,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           borderRadius: BorderRadius.circular(30)),
                     ),
                     child: Text(t('save_changes', lang),
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.instrumentSans(
                             fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                 ),
@@ -269,7 +284,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildDistanceSlider(String lang) {
-    const teal = Color(0xFF00D9A6);
+    const brandRose = Color(0xFFF4436C);
     final maxDist = _isPremium ? 100.0 : 50.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,7 +296,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 style: TextStyle(color: Colors.white38, fontSize: 12)),
             Text('${_distancePreference.round()}m',
                 style: const TextStyle(
-                    color: teal, fontWeight: FontWeight.bold, fontSize: 16)),
+                    color: brandRose, fontWeight: FontWeight.bold, fontSize: 16)),
             Text('${maxDist.round()}m',
                 style: const TextStyle(color: Colors.white38, fontSize: 12)),
           ],
@@ -291,7 +306,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           min: 10,
           max: maxDist,
           divisions: (maxDist - 10).round(),
-          activeColor: teal,
+          activeColor: brandRose,
           onChanged: (v) {
             setState(() {
               _distancePreference = v;
@@ -321,7 +336,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         Icon(icon, size: 18, color: Colors.white70),
         const SizedBox(width: 8),
         Text(label,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.instrumentSans(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w600)),

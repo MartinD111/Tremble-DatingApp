@@ -52,7 +52,7 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
                 const SizedBox(height: 56),
                 Text(
                   'Enable\nRadar',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.instrumentSans(
                     fontSize: 48,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -62,7 +62,7 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
                 const SizedBox(height: 12),
                 Text(
                   'Tremble needs two permissions to detect nearby people.',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.instrumentSans(
                     fontSize: 15,
                     color: Colors.white.withValues(alpha: 0.7),
                     height: 1.4,
@@ -92,7 +92,7 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
                     onPressed: _isRequesting ? null : _onSkip,
                     child: Text(
                       'Skip for now',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.instrumentSans(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.5),
                       ),
@@ -133,7 +133,7 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
               )
             : Text(
                 'Enable Radar',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.instrumentSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -188,7 +188,7 @@ class _PermissionTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.instrumentSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -197,7 +197,7 @@ class _PermissionTile extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       description,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.instrumentSans(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.65),
                         height: 1.4,

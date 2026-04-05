@@ -74,7 +74,7 @@ class LiquidNavBar extends StatelessWidget {
                         Icon(
                           item.icon,
                           color: isSelected
-                              ? (isPremium ? Colors.amber : Colors.pinkAccent)
+                              ? (isPremium ? Colors.amber : const Color(0xFFF4436C))
                               : Colors.white.withValues(alpha: 0.6),
                           size: 24,
                         ),

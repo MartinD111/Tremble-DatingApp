@@ -323,7 +323,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 20),
                     Text(
                       "Radar je zaklenjen.",
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.instrumentSans(
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.bold),
