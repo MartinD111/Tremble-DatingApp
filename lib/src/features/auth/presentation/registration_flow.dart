@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -3130,27 +3129,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             _passwordController.text,
           );
 
-      // Step 2: Save profile via Cloud Function
-      try {
-        await ref.read(authStateProvider.notifier).completeOnboarding(user);
-      } catch (apiError) {
-        if (kDebugMode) {
-          // API step failed (e.g. Cloud Function unavailable in dev) — show
-          // warning but proceed since Firebase Auth succeeded.
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('[DEV] API error (bypassed): $apiError',
-                    style: GoogleFonts.outfit()),
-                backgroundColor: Colors.orange.shade800,
-                duration: const Duration(seconds: 5),
-              ),
-            );
-          }
-        } else {
-          rethrow;
-        }
-      }
+      // Step 2: Save profile via Cloud Function.
+      // In debug mode, API failures are bypassed inside the notifier and
+      // isOnboarded is still set to true locally.
+      await ref.read(authStateProvider.notifier).completeOnboarding(user);
 
       if (mounted) {
         context.go('/');

@@ -538,7 +538,16 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
   }
 
   Future<void> completeOnboarding(AuthUser user) async {
-    await _repository.completeOnboarding(user);
+    try {
+      await _repository.completeOnboarding(user);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[DEV] completeOnboarding API error (bypassed): $e');
+      } else {
+        rethrow;
+      }
+    }
+    // Always update local state — in debug mode this runs even after API failure.
     state = user.copyWith(isOnboarded: true);
   }
 
