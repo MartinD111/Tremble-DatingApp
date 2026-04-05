@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LiquidNavBar extends StatelessWidget {
   final int currentIndex;
@@ -89,7 +90,7 @@ class LiquidNavBar extends StatelessWidget {
                               padding: const EdgeInsets.only(left: 8.0),
                               child: Text(
                                 item.label,
-                                style: const TextStyle(
+                                style: GoogleFonts.instrumentSans(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,

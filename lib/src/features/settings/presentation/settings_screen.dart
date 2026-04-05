@@ -10,6 +10,7 @@ import '../../../shared/ui/premium_paywall.dart'; // Paywall Modal
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/api_client.dart';
+import '../../../core/theme_provider.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
 
@@ -549,6 +550,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             inactiveTrackColor: Colors.white24,
             onChanged: (val) {
               _updateProfile(user.copyWith(isDarkMode: val));
+              ref.read(themeModeProvider.notifier).setThemeMode(
+                    val ? ThemeMode.dark : ThemeMode.light,
+                  );
             },
           ),
           if (user.interestedIn == 'Oba' || user.interestedIn == 'Both')

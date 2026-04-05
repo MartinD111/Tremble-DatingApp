@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme.dart';
+import '../../core/theme_provider.dart';
 import '../../features/auth/data/auth_repository.dart';
 import '../../features/auth/presentation/radar_background.dart';
 
@@ -29,10 +31,12 @@ class GradientScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider);
     final showPing = user?.showPingAnimation ?? true;
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
 
     final bgColors = gradientColors ??
         TrembleTheme.getGradient(
-          isDarkMode: user?.isDarkMode ?? false,
+          isDarkMode: isDark,
           isPrideMode: user?.isPrideMode ?? false,
           gender: user?.gender,
         );
@@ -59,7 +63,15 @@ class GradientScaffold extends ConsumerWidget {
               accentColor:
                   bgColors.isNotEmpty ? bgColors.first : Colors.pinkAccent,
             ),
-          SafeArea(child: child),
+          SafeArea(
+            child: DefaultTextStyle(
+              style: GoogleFonts.instrumentSans(
+                color: Colors.white,
+                fontSize: 14,
+              ),
+              child: child,
+            ),
+          ),
         ],
       ),
     );

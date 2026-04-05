@@ -110,7 +110,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (!isOnboarded) {
-        return isOnboardingRoute ? null : '/onboarding';
+        // Allow user to stay on login so they can choose when to register.
+        if (isLoginRoute || isOnboardingRoute) return null;
+        return '/login';
       }
 
       if (!permissionsPresented) {

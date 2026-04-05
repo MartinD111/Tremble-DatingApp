@@ -96,12 +96,109 @@ class TrembleTheme {
     );
   }
 
-  static ThemeData get lightTheme {
+  /// Builds a complete ThemeData with brand fonts applied to every Material
+  /// component that renders text (buttons, chips, list tiles, dialogs, etc.).
+  static ThemeData _buildThemeData({
+    required Brightness brightness,
+    required Color primaryColor,
+    required Color scaffoldBg,
+    required ColorScheme colorScheme,
+    required Color onSurface,
+    required Color inputFill,
+    required Color cardColor,
+  }) {
+    final ui = GoogleFonts.instrumentSans(color: onSurface);
+    final hintColor = onSurface.withValues(alpha: 0.5);
+
     return ThemeData(
       useMaterial3: true,
+      brightness: brightness,
+      primaryColor: primaryColor,
+      scaffoldBackgroundColor: scaffoldBg,
+      colorScheme: colorScheme,
+      // ── Buttons ──
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          textStyle: GoogleFonts.instrumentSans(fontSize: 16, fontWeight: FontWeight.w700),
+          shape: const RoundedRectangleBorder(borderRadius: buttonRadius),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          elevation: 0,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          textStyle: GoogleFonts.instrumentSans(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          textStyle: GoogleFonts.instrumentSans(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+      ),
+      // ── Cards ──
+      cardTheme: CardThemeData(
+        shape: const RoundedRectangleBorder(borderRadius: cardRadius),
+        elevation: 0,
+        color: cardColor,
+      ),
+      // ── Input fields ──
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide(color: primaryColor)),
+        filled: true,
+        fillColor: inputFill,
+        labelStyle: GoogleFonts.instrumentSans(color: hintColor),
+        hintStyle: GoogleFonts.instrumentSans(color: hintColor),
+      ),
+      // ── List tiles (used by SwitchListTile, CheckboxListTile, etc.) ──
+      listTileTheme: ListTileThemeData(
+        titleTextStyle: ui.copyWith(fontSize: 16),
+        subtitleTextStyle: ui.copyWith(fontSize: 12, color: hintColor),
+        leadingAndTrailingTextStyle: ui.copyWith(fontSize: 14),
+      ),
+      // ── Dialogs ──
+      dialogTheme: DialogThemeData(
+        titleTextStyle: GoogleFonts.playfairDisplay(
+          color: onSurface, fontSize: 20, fontWeight: FontWeight.w700,
+        ),
+        contentTextStyle: GoogleFonts.lora(color: onSurface, fontSize: 15),
+      ),
+      // ── Chips ──
+      chipTheme: ChipThemeData(
+        labelStyle: ui.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
+      // ── SnackBar ──
+      snackBarTheme: SnackBarThemeData(
+        contentTextStyle: ui.copyWith(fontSize: 14),
+      ),
+      // ── Bottom sheet ──
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+      // ── AppBar ──
+      appBarTheme: AppBarTheme(
+        titleTextStyle: GoogleFonts.instrumentSans(
+          color: onSurface, fontSize: 18, fontWeight: FontWeight.w600,
+        ),
+      ),
+      // ── TabBar ──
+      tabBarTheme: TabBarThemeData(
+        labelStyle: ui.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: ui.copyWith(fontSize: 14),
+      ),
+      // ── Text theme ──
+      textTheme: _buildTextTheme(onSurface),
+    );
+  }
+
+  static ThemeData get lightTheme {
+    return _buildThemeData(
       brightness: Brightness.light,
-      primaryColor: femalePrimary, // Default
-      scaffoldBackgroundColor: backgroundColor,
+      primaryColor: femalePrimary,
+      scaffoldBg: backgroundColor,
       colorScheme: ColorScheme.fromSeed(
         seedColor: backgroundColor,
         primary: femalePrimary,
@@ -109,63 +206,29 @@ class TrembleTheme {
         surface: backgroundColor,
         onSurface: textColor,
       ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          shape: const RoundedRectangleBorder(borderRadius: buttonRadius),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          elevation: 0, // Minimal/no shadow
-        ),
-      ),
-      cardTheme: CardThemeData(
-        shape: const RoundedRectangleBorder(borderRadius: cardRadius),
-        elevation: 0, // Minimal depth
-        color: Colors.white,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: const BorderSide(color: femalePrimary)),
-        filled: true,
-        fillColor: Colors.grey.shade100,
-      ),
-      textTheme: _buildTextTheme(textColor),
+      onSurface: textColor,
+      inputFill: const Color(0xFFEEEEEE),
+      cardColor: Colors.white,
     );
   }
 
   static ThemeData get darkTheme {
-    return ThemeData(
-      useMaterial3: true,
+    const darkOnSurface = Color(0xFFE0E0E0);
+    return _buildThemeData(
       brightness: Brightness.dark,
       primaryColor: femaleDarkPrimary,
-      scaffoldBackgroundColor: const Color(0xFF1A1A18),
+      scaffoldBg: const Color(0xFF1A1A18),
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF1A1A18),
         primary: femaleDarkPrimary,
         secondary: const Color(0xFF1E1E1E),
         surface: const Color(0xFF1E1E2E),
-        onSurface: const Color(0xFFE0E0E0),
+        onSurface: darkOnSurface,
         brightness: Brightness.dark,
       ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          shape: const RoundedRectangleBorder(borderRadius: buttonRadius),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          elevation: 0,
-        ),
-      ),
-      cardTheme: CardThemeData(
-        shape: const RoundedRectangleBorder(borderRadius: cardRadius),
-        elevation: 0,
-        color: const Color(0xFF1E1E2E),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: const BorderSide(color: femaleDarkPrimary)),
-        filled: true,
-        fillColor: const Color(0xFF2C2C2C),
-      ),
-      textTheme: _buildTextTheme(const Color(0xFFE0E0E0)),
+      onSurface: darkOnSurface,
+      inputFill: const Color(0xFF2C2C2C),
+      cardColor: const Color(0xFF1E1E2E),
     );
   }
 
