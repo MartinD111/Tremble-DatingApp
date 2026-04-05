@@ -3124,27 +3124,42 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
 
     try {
-      await ref.read(authStateProvider.notifier).completeOnboarding(user);
+      // Step 1: Create Firebase Auth user
+      await ref.read(authStateProvider.notifier).register(
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
+
+      // Step 2: Save profile via Cloud Function
+      try {
+        await ref.read(authStateProvider.notifier).completeOnboarding(user);
+      } catch (apiError) {
+        if (kDebugMode) {
+          // API step failed (e.g. Cloud Function unavailable in dev) — show
+          // warning but proceed since Firebase Auth succeeded.
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('[DEV] API error (bypassed): $apiError',
+                    style: GoogleFonts.outfit()),
+                backgroundColor: Colors.orange.shade800,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+        } else {
+          rethrow;
+        }
+      }
+
       if (mounted) {
         context.go('/');
       }
     } catch (e) {
       if (mounted) {
-        if (kDebugMode) {
-          // In debug mode: show the error but let the user through anyway.
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('[DEV] API error (bypassed): $e', style: GoogleFonts.outfit()),
-              backgroundColor: Colors.orange.shade800,
-              duration: const Duration(seconds: 5),
-            ),
-          );
-          context.go('/');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Registration failed: $e')),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registration failed: $e')),
+        );
       }
     }
   }
