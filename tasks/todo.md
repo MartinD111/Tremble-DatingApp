@@ -4,7 +4,7 @@
 - [x] Enable Crashlytics in Firebase Console
 - [x] Register iOS/Android apps in Firebase AppCheck console
 - [x] Enable AppCheck enforcement (15 callable functions enforced)
-- [ ] **FOUNDER:** Set Production Firebase secrets: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `RESEND_API_KEY`
+- [x] **FOUNDER:** Set Production Firebase secrets: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `RESEND_API_KEY`
 - [ ] Prepare Production release checklist
 - [x] Onboarding flow theme-aware accessibility & contrast polish
 - [x] Registration flow logic fix (Google user pre-fill, starts at page 0)
