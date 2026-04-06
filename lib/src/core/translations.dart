@@ -403,6 +403,9 @@ const Map<String, Map<String, String>> _translations = {
     'distance': 'Distance',
     'battery_warning': 'This function uses {percent}% more battery than usual.',
     'auto_hide_nav': 'Auto hide navigation bar',
+    'are_you_new': 'Are you new',
+    'forgot_password': 'Forgot password?',
+    'login': 'Login',
   },
 
   // ═══════════════════════════════════════════
@@ -710,9 +713,9 @@ const Map<String, Map<String, String>> _translations = {
     'battery_warning':
         'Ta funkcija porablja {percent}% več baterije kot običajno.',
     'auto_hide_nav': 'Samodejno skrij navigacijsko vrstico',
-    'are_you_new': 'Si nov/-a tukaj?',
-    'forgot_password': 'Si pozabil/-a geslo?',
-    'login': 'Prijava',
+    'are_you_new': 'Are you new',
+    'forgot_password': 'Pozabljeno geslo',
+    'login': 'Login',
   },
 
   // ═══════════════════════════════════════════

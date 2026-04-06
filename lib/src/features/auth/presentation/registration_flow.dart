@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -150,7 +151,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   List<String>? _partnerPetPreference;
   List<String>? _partnerSmokingHabit;
   String? _partnerPoliticalAffiliationPreference;
-  String? _partnerIntrovertPreference;
+  String? _partnerIntroversionRange;
+  String? _partnerHeightRange;
+  String? _expandedHobbyCategory;
 
   // Dating pref
   String? _datingPreference;
@@ -260,10 +263,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       color = Colors.amber;
     } else if (strength < 0.9) {
       label = tr('strong');
-      color = Colors.lightGreen;
+      color = const Color(0xFF2D9B6F);
     } else {
       label = tr('very_strong');
-      color = Colors.green;
+      color = const Color(0xFF2D9B6F);
     }
     setState(() {
       _passwordStrength = strength;
@@ -295,8 +298,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return '♑ Capricorn';
   }
 
-  int _calcAge(DateTime d) =>
-      (DateTime.now().difference(d).inDays / 365).floor();
+  int _calcAge(DateTime d) {
+    final now = DateTime.now();
+    int age = now.year - d.year;
+    if (now.month < d.month || (now.month == d.month && now.day < d.day)) {
+      age--;
+    }
+    return age;
+  }
 
   // ────── CONTINUE PILL ──────
   Widget _continueButton({required bool enabled, required VoidCallback onTap, String? label}) {
@@ -338,7 +347,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ────── BACK BUTTON ──────
   Widget _backButton() {
     return Align(
-      alignment: Alignment.topRight,
+      alignment: Alignment.topLeft,
       child: TrembleBackButton(onPressed: _prevPage, label: tr('back')),
     );
   }
@@ -364,13 +373,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ────── STEP HEADER ──────
   Widget _stepHeader(String title, {String? subtitle}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
       Text(title,
+          textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
               fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
       if (subtitle != null) ...[
         const SizedBox(height: 8),
         Text(subtitle,
+            textAlign: TextAlign.center,
             style: GoogleFonts.instrumentSans(
                 color: isDark ? Colors.white60 : Colors.black54, fontSize: 14, height: 1.4)),
       ],
@@ -824,18 +835,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final unmetIconColor = isDark ? Colors.white30 : Colors.black26;
     final unmetTextColor = isDark ? Colors.white38 : Colors.black45;
+    final successColor = isDark ? Colors.greenAccent : const Color(0xFF2D9B6F);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 3),
       child: Row(children: [
         Icon(met ? LucideIcons.checkCircle2 : LucideIcons.circle,
-            size: 14, color: met ? Colors.greenAccent : unmetIconColor),
+            size: 14, color: met ? successColor : unmetIconColor),
         const SizedBox(width: 6),
         Text(text,
             style: TextStyle(
                 fontSize: 12,
-                color: met ? Colors.greenAccent : unmetTextColor,
+                color: met ? successColor : unmetTextColor,
                 decoration: met ? TextDecoration.lineThrough : null,
-                decorationColor: Colors.greenAccent.withValues(alpha: 0.5))),
+                decorationColor: successColor.withValues(alpha: 0.5))),
       ]),
     );
   }
@@ -1337,14 +1350,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (ctx) => Container(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-          decoration: BoxDecoration(
-            color: sheetBg,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(top: BorderSide(color: borderColor)),
-          ),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
+        builder: (ctx) => ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+              decoration: BoxDecoration(
+                color: sheetBg.withValues(alpha: 0.8),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                border: Border(top: BorderSide(color: borderColor)),
+              ),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
             Container(
                 width: 40,
                 height: 4,
@@ -1388,6 +1405,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ),
           ]),
+            ),
+          ),
         ),
       );
       return; // Stop — do not proceed to next page
@@ -1398,14 +1417,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-        decoration: BoxDecoration(
-          color: sheetBg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(top: BorderSide(color: borderColor)),
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
+      builder: (ctx) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+            decoration: BoxDecoration(
+              color: sheetBg.withValues(alpha: 0.8),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(top: BorderSide(color: borderColor)),
+            ),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
               width: 40,
               height: 4,
@@ -1462,9 +1485,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     color: isDark ? Colors.white54 : Colors.black54, letterSpacing: 1.2, fontSize: 13)),
           ),
         ]),
-      ),
-    );
-  }
+            ),
+          ),
+        ),
+      );
+    }
 
   // ══════════════════════════════════════════════════════
   // PAGE 5 – HEIGHT
@@ -1585,7 +1610,24 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ),
           ),
           const SizedBox(height: 24),
-          _continueButton(enabled: true, onTap: _nextPage),
+          _continueButton(
+              enabled: true,
+              onTap: () {
+                _showPartnerRangeModal(
+                  title: tr('whats_your_height'),
+                  min: 130,
+                  max: 250,
+                  divisions: 120,
+                  labels: ['130 cm', '250 cm'],
+                  onSave: (val) {
+                    if (val == null) {
+                      setState(() => _partnerHeightRange = null);
+                    } else {
+                      setState(() => _partnerHeightRange = '${val.start.toInt()}-${val.end.toInt()}');
+                    }
+                  },
+                );
+              }),
           const SizedBox(height: 16),
         ],
       ),
@@ -1692,20 +1734,30 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               Text(tr('politics_right'), style: GoogleFonts.instrumentSans(color: labelColor)),
             ]);
           }),
-          Slider(
-            value: _politicalAffiliationValue.clamp(1.0, 5.0),
-            min: 1,
-            max: 5,
-            divisions: 4,
-            onChanged: (v) => setState(() => _politicalAffiliationValue = v),
-            activeColor: const Color(0xFFF4436C),
-            inactiveColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              thumbShape: (_politicalAffiliationValue == 0 || _politicalAffiliationValue == -1)
+                  ? const RoundSliderThumbShape(enabledThumbRadius: 0)
+                  : const RoundSliderThumbShape(enabledThumbRadius: 10),
+            ),
+            child: Slider(
+              value: (_politicalAffiliationValue == 0 || _politicalAffiliationValue == -1) ? 3 : _politicalAffiliationValue.clamp(1.0, 5.0),
+              min: 1,
+              max: 5,
+              divisions: 4,
+              onChanged: (v) {
+                if (_politicalAffiliationValue == 0 || _politicalAffiliationValue == -1) return;
+                setState(() => _politicalAffiliationValue = v);
+              },
+              activeColor: const Color(0xFFF4436C),
+              inactiveColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
+            ),
           ),
           const SizedBox(height: 16),
           Builder(builder: (context) {
             final idx = _politicalAffiliationValue.toInt();
             // Guard against index -1 or 0 when "Don't care" or "Undisclosed" is selected
-            final displayLabel = (idx >= 1 && idx <= labels.length) ? labels[idx - 1] : tr('not_specified');
+            final displayLabel = (idx >= 1 && idx <= labels.length && _politicalAffiliationValue > 0) ? labels[idx - 1] : '';
             return Text(displayLabel,
                 style: GoogleFonts.instrumentSans(
                     color: const Color(0xFFF4436C),
@@ -1797,7 +1849,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           'label': tr('drink_frequently'),
           'icon': LucideIcons.trendingUp
         },
-        {'key': 'sober', 'label': tr('drink_sober'), 'icon': LucideIcons.heart},
       ],
       selected: _drinkingHabit,
       onSelect: (k) {
@@ -1862,10 +1913,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }) {
     return _buildScrollableFormPage(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Align(
-            alignment: Alignment.topRight,
+            alignment: Alignment.topLeft,
             child: TrembleBackButton(
               onPressed: () => _goToPage(backTarget),
               label: tr('back'),
@@ -1963,7 +2014,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               Row(
                 children: [
                   Expanded(
-                    child: TextButton(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: isDark ? Colors.white38 : Colors.black26),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: const StadiumBorder(),
+                      ),
                       onPressed: () {
                         Navigator.pop(ctx);
                       },
@@ -2037,16 +2093,21 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(builder: (ctx, setModalState) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        return SafeArea(
+          child: ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-                top: BorderSide(
-                    color: isDark ? Colors.white12 : Colors.black12)),
-          ),
-          child: Column(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+                decoration: BoxDecoration(
+                  color: (isDark ? const Color(0xFF1A1A2E) : Colors.white).withValues(alpha: 0.8),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  border: Border(
+                      top: BorderSide(
+                          color: isDark ? Colors.white12 : Colors.black12)),
+                ),
+                child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -2097,7 +2158,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               Row(
                 children: [
                   Expanded(
-                    child: TextButton(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: isDark ? Colors.white38 : Colors.black26),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: const StadiumBorder(),
+                      ),
                       onPressed: () => Navigator.pop(ctx),
                       child: Text(
                         'Nazaj',
@@ -2136,7 +2202,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ],
           ),
-        );
+        ))));
       }),
     );
   }
@@ -2151,81 +2217,103 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) {
-          return Container(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-            height: MediaQuery.of(context).size.height * 0.75,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border(
-                  top: BorderSide(
-                      color: isDark ? Colors.white12 : Colors.black12)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(2))),
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  title,
-                  style: GoogleFonts.instrumentSans(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: ListView(
-                    children: options.map((o) {
-                      final val = o['key'] as String;
-                      final isSelected = tempSelected.contains(val);
-                      return _optionPill(o['label'] as String, isSelected, () {
-                        setModalState(() {
-                          if (isSelected) {
-                            tempSelected.remove(val);
-                          } else {
-                            tempSelected.add(val);
-                          }
-                        });
-                      }, icon: o['icon'] as IconData?);
-                    }).toList(),
+          return SafeArea(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.75,
                   ),
-                ),
-                _continueButton(
-                  enabled: tempSelected.isNotEmpty,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    onSave(tempSelected);
-                    _nextPage();
-                  },
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                    },
-                    child: Text(
-                      'Nazaj / Spremeni',
-                      style: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black54,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
+                  decoration: BoxDecoration(
+                    color: (isDark ? const Color(0xFF1A1A2E) : Colors.white).withValues(alpha: 0.8),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(28)),
+                    border: Border(
+                        top: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12)),
+                  ),
+                  child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: isDark ? Colors.white24 : Colors.black26,
+                            borderRadius: BorderRadius.circular(2))),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    title,
+                    style: GoogleFonts.instrumentSans(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
+                  ),
+                  const SizedBox(height: 16),
+                  Flexible(
+                    child: ListView(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      children: options.map((o) {
+                        final val = o['key'] as String;
+                        final isSelected = tempSelected.contains(val);
+                        return _optionPill(o['label'] as String, isSelected, () {
+                          setModalState(() {
+                            if (isSelected) {
+                              tempSelected.remove(val);
+                            } else {
+                              tempSelected.add(val);
+                            }
+                          });
+                        }, icon: o['icon'] as IconData?);
+                      }).toList(),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: isDark ? Colors.white38 : Colors.black26),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: const StadiumBorder(),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                          },
+                          child: Text(
+                            'Nazaj',
+                            style: TextStyle(
+                                color: isDark ? Colors.white70 : Colors.black54,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _continueButton(
+                          enabled: tempSelected.isNotEmpty,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            onSave(tempSelected);
+                            _nextPage();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          );
+          )));
         },
       ),
     );
@@ -2298,17 +2386,37 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             inactiveColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),
           const SizedBox(height: 16),
-          Text(
-            _introversionLevel <= 0.5
-                ? '${((1.0 - _introversionLevel) * 100).toInt()}% ${tr('introvert').toLowerCase()}'
-                : '${(_introversionLevel * 100).toInt()}% ${tr('extrovert').toLowerCase()}',
-            style: const TextStyle(
-                color: Color(0xFFF4436C),
-                fontSize: 18,
-                fontWeight: FontWeight.bold),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              _introversionLevel <= 0.5
+                  ? '${((1.0 - _introversionLevel) * 100).toInt()}% ${tr('introvert').toLowerCase()}'
+                  : '${(_introversionLevel * 100).toInt()}% ${tr('extrovert').toLowerCase()}',
+              style: const TextStyle(
+                  color: Color(0xFFF4436C),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
+            ),
           ),
           const SizedBox(height: 24),
-          _continueButton(enabled: true, onTap: () => _nextPage()),
+          _continueButton(
+              enabled: true,
+              onTap: () {
+                _showPartnerRangeModal(
+                  title: tr('introversion'),
+                  min: 0,
+                  max: 1,
+                  divisions: 100,
+                  labels: [tr('introvert'), tr('extrovert')],
+                  onSave: (val) {
+                    if (val == null) {
+                      setState(() => _partnerIntroversionRange = null);
+                    } else {
+                      setState(() => _partnerIntroversionRange = '${(val.start * 100).toInt()}-${(val.end * 100).toInt()}');
+                    }
+                  },
+                );
+              }),
           const SizedBox(height: 16),
         ],
       ),
@@ -2497,7 +2605,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         children: [
           _backButton(),
           const SizedBox(height: 24),
-          _stepHeader(tr('dating_preference')),
+          _stepHeader(tr('who_looking_for')),
           const SizedBox(height: 24),
           ...opts.map((o) => _optionPill(
               o['label']!,
@@ -2663,6 +2771,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     data: Theme.of(context)
                         .copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
+                      key: ValueKey('${e.key}_${_expandedHobbyCategory == e.key}'),
+                      initiallyExpanded: _expandedHobbyCategory == e.key,
+                      onExpansionChanged: (expanded) {
+                        if (expanded) {
+                          setState(() => _expandedHobbyCategory = e.key);
+                        } else if (_expandedHobbyCategory == e.key) {
+                          setState(() => _expandedHobbyCategory = null);
+                        }
+                      },
                       title: Text(
                           '${e.key} (${e.value.where((h) => _selectedHobbies.contains(h)).length})',
                           style: GoogleFonts.instrumentSans(
@@ -2856,26 +2973,29 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ),
             const SizedBox(height: 16),
             Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    final newVal = !_consentGiven;
-                    _consentTerms = newVal;
-                    _consentPrivacy = newVal;
-                    _consentDataProcessing = newVal;
-                    _consentLocation = newVal;
-                  });
-                },
-                icon: Icon(
-                  _consentGiven ? Icons.check_box : Icons.check_box_outline_blank,
-                  color: const Color(0xFFF4436C),
-                ),
-                label: Text(
-                  'Izberi Vse',
-                  style: GoogleFonts.instrumentSans(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 0),
+                child: TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      final newVal = !_consentGiven;
+                      _consentTerms = newVal;
+                      _consentPrivacy = newVal;
+                      _consentDataProcessing = newVal;
+                      _consentLocation = newVal;
+                    });
+                  },
+                  icon: Icon(
+                    _consentGiven ? Icons.check_box : Icons.check_box_outline_blank,
                     color: const Color(0xFFF4436C),
-                    fontWeight: FontWeight.bold,
+                  ),
+                  label: Text(
+                    'Izberi Vse',
+                    style: GoogleFonts.instrumentSans(
+                      color: const Color(0xFFF4436C),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -3104,7 +3224,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       partnerChildrenPreference: _partnerChildrenPreference?.join(', '),
       partnerSmokingPreference: _partnerSmokingHabit?.join(', '),
       politicalAffiliationPreference: _partnerPoliticalAffiliationPreference,
-      partnerIntrovertPreference: _partnerIntrovertPreference,
+      partnerIntrovertPreference: _partnerIntroversionRange,
+      partnerHeightPreference: _partnerHeightRange,
       lookingFor: _datingPreference != null
           ? [datingMap[_datingPreference!] ?? _datingPreference!]
           : [],
@@ -3120,6 +3241,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       ageRangeStart: 18,
       ageRangeEnd: 45,
       appLanguage: _selectedLanguage,
+      isPremium: true, // Auto-premium in development mode as per request
+      isClassicAppearance: _isClassicAppearance,
     );
 
     try {

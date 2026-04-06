@@ -122,111 +122,142 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF1E1E2E),
-              title: Text(_t('change_password'),
-                  style: const TextStyle(color: Colors.white)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: oldPasswordController,
-                    obscureText: obscureOld,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: _t('old_password'),
-                      labelStyle: const TextStyle(color: Colors.white70),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                            obscureOld ? LucideIcons.eyeOff : LucideIcons.eye,
-                            color: Colors.white54),
-                        onPressed: () =>
-                            setState(() => obscureOld = !obscureOld),
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final textColor = isDark ? Colors.white : Colors.black;
+            final iconColor = isDark ? Colors.white54 : Colors.black54;
+
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: GlassCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _t('change_password'),
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
                       ),
-                      enabledBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white54)),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: newPasswordController,
-                    obscureText: obscureNew,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: _t('new_password'),
-                      labelStyle: const TextStyle(color: Colors.white70),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                            obscureNew ? LucideIcons.eyeOff : LucideIcons.eye,
-                            color: Colors.white54),
-                        onPressed: () =>
-                            setState(() => obscureNew = !obscureNew),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: oldPasswordController,
+                        obscureText: obscureOld,
+                        style: TextStyle(color: textColor),
+                        decoration: InputDecoration(
+                          labelText: _t('old_password'),
+                          labelStyle: TextStyle(color: iconColor),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                                obscureOld ? LucideIcons.eyeOff : LucideIcons.eye,
+                                color: iconColor),
+                            onPressed: () =>
+                                setState(() => obscureOld = !obscureOld),
+                          ),
+                          enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: iconColor)),
+                          focusedBorder: const UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.pinkAccent)),
+                        ),
                       ),
-                      enabledBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white54)),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: confirmPasswordController,
-                    obscureText: obscureConfirm,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: _t('confirm_password'),
-                      labelStyle: const TextStyle(color: Colors.white70),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                            obscureConfirm
-                                ? LucideIcons.eyeOff
-                                : LucideIcons.eye,
-                            color: Colors.white54),
-                        onPressed: () =>
-                            setState(() => obscureConfirm = !obscureConfirm),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: newPasswordController,
+                        obscureText: obscureNew,
+                        style: TextStyle(color: textColor),
+                        decoration: InputDecoration(
+                          labelText: _t('new_password'),
+                          labelStyle: TextStyle(color: iconColor),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                                obscureNew ? LucideIcons.eyeOff : LucideIcons.eye,
+                                color: iconColor),
+                            onPressed: () =>
+                                setState(() => obscureNew = !obscureNew),
+                          ),
+                          enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: iconColor)),
+                          focusedBorder: const UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.pinkAccent)),
+                        ),
                       ),
-                      enabledBorder: const UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white54)),
-                    ),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: confirmPasswordController,
+                        obscureText: obscureConfirm,
+                        style: TextStyle(color: textColor),
+                        decoration: InputDecoration(
+                          labelText: _t('confirm_password'),
+                          labelStyle: TextStyle(color: iconColor),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                                obscureConfirm
+                                    ? LucideIcons.eyeOff
+                                    : LucideIcons.eye,
+                                color: iconColor),
+                            onPressed: () =>
+                                setState(() => obscureConfirm = !obscureConfirm),
+                          ),
+                          enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: iconColor)),
+                          focusedBorder: const UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.pinkAccent)),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(_t('cancel'),
+                                style: TextStyle(color: iconColor)),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(100),
+                                )),
+                            onPressed: () async {
+                              if (newPasswordController.text !=
+                                  confirmPasswordController.text) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Passwords don't match")),
+                                );
+                                return;
+                              }
+                              if (newPasswordController.text.length < 8) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text("Password must be at least 8 chars")),
+                                );
+                                return;
+                              }
+                              // Call backend
+                              await ref.read(authStateProvider.notifier).changePassword(
+                                  oldPasswordController.text, newPasswordController.text);
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(_t('password_changed'))),
+                                );
+                              }
+                            },
+                            child: Text(_t('save'),
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(_t('cancel'),
-                      style: const TextStyle(color: Colors.white70)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pinkAccent),
-                  onPressed: () async {
-                    if (newPasswordController.text !=
-                        confirmPasswordController.text) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Passwords don't match")),
-                      );
-                      return;
-                    }
-                    if (newPasswordController.text.length < 8) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text("Password must be at least 8 chars")),
-                      );
-                      return;
-                    }
-                    // Call backend
-                    await ref.read(authStateProvider.notifier).changePassword(
-                        oldPasswordController.text, newPasswordController.text);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(_t('password_changed'))),
-                      );
-                    }
-                  },
-                  child: Text(_t('save'),
-                      style: const TextStyle(color: Colors.white)),
-                ),
-              ],
             );
           },
         );
@@ -255,7 +286,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 const SizedBox(width: 10),
                 Text('Delete Account',
                     style: GoogleFonts.instrumentSans(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
+                        color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold)),
               ]),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -546,8 +577,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 style: const TextStyle(color: Colors.white)),
             value: user.isDarkMode,
             activeThumbColor: Colors.white,
-            activeTrackColor: Colors.grey[800],
-            inactiveTrackColor: Colors.white24,
+            activeTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[400],
+            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
             onChanged: (val) {
               _updateProfile(user.copyWith(isDarkMode: val));
               ref.read(themeModeProvider.notifier).setThemeMode(
@@ -563,7 +594,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               value: user.isPrideMode,
               activeThumbColor: Colors.white,
               activeTrackColor: Colors.purple.withValues(alpha: 0.5),
-              inactiveTrackColor: Colors.white24,
+              inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
               onChanged: (val) {
                 _updateProfile(user.copyWith(isPrideMode: val));
               },
@@ -576,8 +607,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 style: const TextStyle(color: Colors.white38, fontSize: 12)),
             value: !user.showPingAnimation,
             activeThumbColor: Colors.white,
-            activeTrackColor: Colors.grey[800],
-            inactiveTrackColor: Colors.white24,
+            activeTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[400],
+            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
             onChanged: (val) {
               _updateProfile(user.copyWith(showPingAnimation: !val));
             },
@@ -590,8 +621,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 style: TextStyle(color: Colors.white38, fontSize: 12)),
             value: ref.watch(hideNavBarPrefProvider),
             activeThumbColor: Colors.white,
-            activeTrackColor: Colors.grey[800],
-            inactiveTrackColor: Colors.white24,
+            activeTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[400],
+            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
             onChanged: (val) {
               ref.read(hideNavBarPrefProvider.notifier).state = val;
             },
@@ -618,13 +649,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   }
                 },
                 selectedColor: Colors.pinkAccent,
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
                 labelStyle: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
+                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
                         color:
-                            isSelected ? Colors.pinkAccent : Colors.white24)),
+                            isSelected ? Colors.pinkAccent : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12))),
                 showCheckmark: false,
               );
             }).toList(),
@@ -750,13 +781,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   }
                 },
                 selectedColor: Colors.pinkAccent,
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
                 labelStyle: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
+                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
                         color:
-                            isSelected ? Colors.pinkAccent : Colors.white24)),
+                            isSelected ? Colors.pinkAccent : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12))),
                 showCheckmark: false,
               );
             }).toList(),
@@ -787,13 +818,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   }
                 },
                 selectedColor: Colors.pinkAccent,
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
                 labelStyle: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
+                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
                         color:
-                            isSelected ? Colors.pinkAccent : Colors.white24)),
+                            isSelected ? Colors.pinkAccent : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12))),
                 showCheckmark: false,
               );
             }).toList(),
@@ -1040,13 +1071,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   }
                 },
                 selectedColor: Colors.pinkAccent,
-                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
                 labelStyle: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
+                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
                         color:
-                            isSelected ? Colors.pinkAccent : Colors.white24)),
+                            isSelected ? Colors.pinkAccent : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12))),
                 showCheckmark: false,
               );
             }).toList(),
@@ -1270,7 +1301,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             value: user.isAdmin,
             activeThumbColor: Colors.red,
             activeTrackColor: Colors.red.withValues(alpha: 0.5),
-            inactiveTrackColor: Colors.white24,
+            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
             onChanged: null, // Admin status is server-managed only
           ),
           Divider(color: Colors.white.withValues(alpha: 0.1)),
@@ -1300,13 +1331,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             const SizedBox(width: 10),
             Text(_t('premium_account'),
                 style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold)),
           ],
         ),
         value: user.isPremium,
         activeThumbColor: Colors.amber,
         activeTrackColor: Colors.amber.withValues(alpha: 0.5),
-        inactiveTrackColor: Colors.white24,
+        inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
         onChanged: null, // Premium status is server-managed only
       ),
     );

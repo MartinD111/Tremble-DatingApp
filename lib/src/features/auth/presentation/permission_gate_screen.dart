@@ -55,7 +55,7 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
                   style: GoogleFonts.instrumentSans(
                     fontSize: 48,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
                     height: 1.1,
                   ),
                 ),
@@ -64,7 +64,7 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
                   'Tremble needs two permissions to detect nearby people.',
                   style: GoogleFonts.instrumentSans(
                     fontSize: 15,
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.7) : Colors.black87,
                     height: 1.4,
                   ),
                 ),
@@ -94,7 +94,7 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
                       'Skip for now',
                       style: GoogleFonts.instrumentSans(
                         fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.5) : Colors.black54,
                       ),
                     ),
                   ),
@@ -109,26 +109,30 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
   }
 
   Widget _buildCta() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final btnBgColor = isDark ? Colors.white : Colors.black;
+    final btnTextColor = isDark ? Colors.black : Colors.white;
+
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
         onPressed: _isRequesting ? null : _onEnable,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: btnBgColor,
+          foregroundColor: btnTextColor,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100),
           ),
         ),
         child: _isRequesting
-            ? const SizedBox(
+            ? SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.black,
+                  color: btnTextColor,
                 ),
               )
             : Text(
@@ -156,6 +160,14 @@ class _PermissionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.05);
+    final borderColor = isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.1);
+    final iconBgColor = isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.1);
+    final iconColor = isDark ? Colors.white : Colors.black;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subTextColor = isDark ? Colors.white.withValues(alpha: 0.65) : Colors.black87;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
@@ -163,10 +175,10 @@ class _PermissionTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.12),
+            color: bgColor,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: borderColor,
             ),
           ),
           child: Row(
@@ -176,10 +188,10 @@ class _PermissionTile extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: iconBgColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: Colors.white, size: 20),
+                child: Icon(icon, color: iconColor, size: 20),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -191,7 +203,7 @@ class _PermissionTile extends StatelessWidget {
                       style: GoogleFonts.instrumentSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -199,7 +211,7 @@ class _PermissionTile extends StatelessWidget {
                       description,
                       style: GoogleFonts.instrumentSans(
                         fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.65),
+                        color: subTextColor,
                         height: 1.4,
                       ),
                     ),

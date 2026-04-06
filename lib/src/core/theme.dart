@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../features/auth/data/auth_repository.dart';
 
 class TrembleTheme {
   // Base Colors
@@ -15,13 +16,7 @@ class TrembleTheme {
   static const warmGray = Color(0xFF6B6B63); // Warm Gray — secondary text
   static const border = Color(0xFFE2E2DC); // Border color
 
-  // Female Theme Colors (Rose)
-  static const femalePrimary = Color(0xFFF4436C); // rose
-  static const femaleDarkPrimary = Color(0xFFC2185B); // dark rose variant
-
-  // Male Theme Colors (Light Blue)
-  static const malePrimary = Color(0xFF64B5F6); // light blue
-  static const maleDarkPrimary = Color(0xFF1976D2); // royal blue variant
+  // Removed Gendered Colors — Brand Identity v1.0 standardizes Tremble Rose as primary.
 
   // Pride Colors (Soft Pastel Ambient)
   static const List<Color> prideGradient = [
@@ -53,16 +48,15 @@ class TrembleTheme {
 
     if (gender == 'Moški' || gender == 'Male') {
       if (isDarkMode) {
-        return [maleDarkPrimary, malePrimary.withValues(alpha: 0.8)];
+        return [roseDark, rose.withValues(alpha: 0.8)];
       }
-      return [malePrimary, malePrimary.withValues(alpha: 0.8)];
+      return [rose, rose.withValues(alpha: 0.8)];
     }
 
-    // Default (Female/Other)
     if (isDarkMode) {
-      return [femaleDarkPrimary, femalePrimary.withValues(alpha: 0.8)];
+      return [roseDark, rose.withValues(alpha: 0.8)];
     }
-    return [femalePrimary, femalePrimary.withValues(alpha: 0.8)];
+    return [rose, rose.withValues(alpha: 0.8)];
   }
 
   static TextTheme _buildTextTheme(Color baseTextColor) {
@@ -194,14 +188,16 @@ class TrembleTheme {
     );
   }
 
-  static ThemeData get lightTheme {
+  static ThemeData lightTheme(AuthUser? user) {
+    Color primary = rose;
+
     return _buildThemeData(
       brightness: Brightness.light,
-      primaryColor: femalePrimary,
+      primaryColor: primary,
       scaffoldBg: backgroundColor,
       colorScheme: ColorScheme.fromSeed(
         seedColor: backgroundColor,
-        primary: femalePrimary,
+        primary: primary,
         secondary: backgroundColor,
         surface: backgroundColor,
         onSurface: textColor,
@@ -212,15 +208,17 @@ class TrembleTheme {
     );
   }
 
-  static ThemeData get darkTheme {
+  static ThemeData darkTheme(AuthUser? user) {
+    Color primary = roseDark;
+
     const darkOnSurface = Color(0xFFE0E0E0);
     return _buildThemeData(
       brightness: Brightness.dark,
-      primaryColor: femaleDarkPrimary,
+      primaryColor: primary,
       scaffoldBg: const Color(0xFF1A1A18),
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF1A1A18),
-        primary: femaleDarkPrimary,
+        primary: primary,
         secondary: const Color(0xFF1E1E1E),
         surface: const Color(0xFF1E1E2E),
         onSurface: darkOnSurface,

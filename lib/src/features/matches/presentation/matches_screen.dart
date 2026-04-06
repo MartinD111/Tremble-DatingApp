@@ -111,8 +111,9 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                 : 'Ali želiš še kdaj jih srečati ali ne',
             style: TextStyle(
                 color: _isEditMode
-                    ? Colors.pinkAccent.withValues(alpha: 0.7)
-                    : Colors.white70,
+                    ? Colors.redAccent
+                    : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87),
+                fontWeight: _isEditMode ? FontWeight.w600 : FontWeight.normal,
                 fontSize: 14),
           ),
           const SizedBox(height: 20),

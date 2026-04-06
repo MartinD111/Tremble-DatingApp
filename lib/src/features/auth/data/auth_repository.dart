@@ -55,6 +55,8 @@ class AuthUser {
   final bool isPremium;
   final bool isDarkMode;
   final bool isPrideMode;
+  final bool isClassicAppearance;
+  final String? partnerHeightPreference;
   final String appLanguage;
   final int ageRangeStart;
   final int ageRangeEnd;
@@ -107,6 +109,8 @@ class AuthUser {
     this.isPremium = false,
     this.isDarkMode = false,
     this.isPrideMode = false,
+    this.isClassicAppearance = true,
+    this.partnerHeightPreference,
     this.appLanguage = 'en',
     this.ageRangeStart = 18,
     this.ageRangeEnd = 100,
@@ -164,6 +168,9 @@ class AuthUser {
       'prompts': prompts,
       'isDarkMode': isDarkMode,
       'isPrideMode': isPrideMode,
+      'isClassicAppearance': isClassicAppearance,
+      if (partnerHeightPreference != null)
+        'partnerHeightPreference': partnerHeightPreference,
       'appLanguage': appLanguage,
       'ageRangeStart': ageRangeStart,
       'ageRangeEnd': ageRangeEnd,
@@ -220,6 +227,8 @@ class AuthUser {
       isPremium: data['isPremium'] as bool? ?? false,
       isDarkMode: data['isDarkMode'] as bool? ?? false,
       isPrideMode: data['isPrideMode'] as bool? ?? false,
+      isClassicAppearance: data['isClassicAppearance'] as bool? ?? true,
+      partnerHeightPreference: data['partnerHeightPreference'] as String?,
       appLanguage: data['appLanguage'] as String? ?? 'en',
       ageRangeStart: data['ageRangeStart'] as int? ?? 18,
       ageRangeEnd: data['ageRangeEnd'] as int? ?? 100,
@@ -275,6 +284,8 @@ class AuthUser {
     bool? isPremium,
     bool? isDarkMode,
     bool? isPrideMode,
+    bool? isClassicAppearance,
+    String? partnerHeightPreference,
     String? appLanguage,
     int? ageRangeStart,
     int? ageRangeEnd,
@@ -330,6 +341,9 @@ class AuthUser {
       isPremium: isPremium ?? this.isPremium,
       isDarkMode: isDarkMode ?? this.isDarkMode,
       isPrideMode: isPrideMode ?? this.isPrideMode,
+      isClassicAppearance: isClassicAppearance ?? this.isClassicAppearance,
+      partnerHeightPreference:
+          partnerHeightPreference ?? this.partnerHeightPreference,
       appLanguage: appLanguage ?? this.appLanguage,
       ageRangeStart: ageRangeStart ?? this.ageRangeStart,
       ageRangeEnd: ageRangeEnd ?? this.ageRangeEnd,

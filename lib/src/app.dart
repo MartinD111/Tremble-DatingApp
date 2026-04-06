@@ -10,23 +10,18 @@ class TrembleApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider);
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
 
-    // Sync theme with user's Firestore preference on auth state changes.
-    ref.listen<AuthUser?>(authStateProvider, (prev, next) {
-      if (next != null && prev?.isDarkMode != next.isDarkMode) {
-        ref.read(themeModeProvider.notifier).setThemeMode(
-              next.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            );
-      }
-    });
+    final theme = TrembleTheme.lightTheme(user);
+    final darkTheme = TrembleTheme.darkTheme(user);
 
     return MaterialApp.router(
       title: 'Tremble',
       debugShowCheckedModeBanner: false,
-      theme: TrembleTheme.lightTheme,
-      darkTheme: TrembleTheme.darkTheme,
+      theme: theme,
+      darkTheme: darkTheme,
       themeMode: themeMode,
       routerConfig: router,
     );
