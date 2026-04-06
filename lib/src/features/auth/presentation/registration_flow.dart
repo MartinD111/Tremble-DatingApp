@@ -57,6 +57,7 @@ class RegistrationFlow extends ConsumerStatefulWidget {
 class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   late PageController _pageController;
   late int _currentPage;
+  bool _isRegistering = false; // Added for loading state
 
   // Language - initialize from global provider
   late String _selectedLanguage;
@@ -191,17 +192,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   void _nextPage() {
     // Notify user about verification email when leaving the email/password page
     if (_currentPage == 5) {
-      _showVerificationNotification();
+      _registerUser();
+      return; // Handled asynchronously by _registerUser
     }
     
-    // Skip Email/Password (5) for authenticated users — jump directly to Name (6).
-    // Name must always be confirmed, even for Google users whose displayName is pre-filled.
-    if (_currentPage == 4 && FirebaseAuth.instance.currentUser != null) {
-      _pageController.jumpToPage(6);
-      setState(() => _currentPage = 6);
-      return;
-    }
-
     _pageController.nextPage(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
@@ -209,14 +203,55 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     setState(() => _currentPage++);
   }
 
-  void _prevPage() {
-    // Skip Email/Password page (5) if already authenticated — jump back to Birthday (4).
-    if (_currentPage == 6 && FirebaseAuth.instance.currentUser != null) {
-      _pageController.jumpToPage(4);
-      setState(() => _currentPage = 4);
+  Future<void> _registerUser() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    // Check if we already have an authenticated user (Social login)
+    final isSocialUser = currentUser?.providerData.any(
+            (p) => p.providerId == 'google.com' || p.providerId == 'apple.com') ??
+        false;
+
+    if (currentUser != null && isSocialUser) {
+      // Already logged in via Social, just move to next page
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+      setState(() => _currentPage++);
       return;
     }
 
+    // New Email/Password registration
+    setState(() => _isRegistering = true);
+    
+    try {
+      await ref.read(authStateProvider.notifier).register(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      
+      _showVerificationNotification();
+      
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+      setState(() {
+        _currentPage++;
+        _isRegistering = false;
+      });
+    } catch (e) {
+      setState(() => _isRegistering = false);
+      String errorMsg = e.toString().contains('email-already-in-use') 
+          ? tr('email_in_use') 
+          : tr('registration_error');
+          
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMsg, style: GoogleFonts.instrumentSans())),
+      );
+    }
+  }
+
+  void _prevPage() {
     _pageController.previousPage(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
@@ -651,9 +686,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   // ══════════════════════════════════════════════════════
-  // PAGE 3 – EMAIL / PASSWORD / LOCATION
+  // PAGE 5 – EMAIL / PASSWORD / LOCATION
   // ══════════════════════════════════════════════════════
   Widget _buildPageEmailPassword() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final isAlreadyLoggedIn = currentUser != null;
+    final isSocialUser = currentUser?.providerData.any(
+            (p) => p.providerId == 'google.com' || p.providerId == 'apple.com') ??
+        false;
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -662,38 +703,43 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           children: [
             _backButton(),
             const SizedBox(height: 16),
-            _stepHeader('Create account'),
+            _stepHeader('Basic information'),
             const SizedBox(height: 32),
-            _inputField(tr('email'), _emailController,
-                icon: LucideIcons.mail, keyboard: TextInputType.emailAddress),
+            if (isAlreadyLoggedIn && isSocialUser && _emailController.text.isNotEmpty)
+              _inputField(tr('email'), _emailController, icon: LucideIcons.mail, keyboard: TextInputType.emailAddress, readOnly: true)
+            else
+              _inputField(tr('email'), _emailController, icon: LucideIcons.mail, keyboard: TextInputType.emailAddress, readOnly: false),
             const SizedBox(height: 20),
             _locationAutocomplete(),
-            const SizedBox(height: 20),
-            _passwordInputField(),
-            const SizedBox(height: 20),
-            _confirmPasswordInputField(),
-            if (_passwordController.text.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _passwordStrengthBar(),
-              const SizedBox(height: 8),
-              _pwReq(tr('pw_min_length'), _hasMinLength),
-              _pwReq(tr('pw_uppercase'), _hasUppercase),
-              _pwReq(tr('pw_digit'), _hasDigit),
-              _pwReq(tr('pw_special'), _hasSpecialChar),
-              _pwReq(
-                  tr('confirm_password'),
-                  _passwordController.text == _confirmPasswordController.text &&
-                      _confirmPasswordController.text.isNotEmpty),
+            if (!(isAlreadyLoggedIn && isSocialUser)) ...[
+              const SizedBox(height: 20),
+              _passwordInputField(),
+              const SizedBox(height: 20),
+              _confirmPasswordInputField(),
+              if (_passwordController.text.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _passwordStrengthBar(),
+                const SizedBox(height: 8),
+                _pwReq(tr('pw_min_length'), _hasMinLength),
+                _pwReq(tr('pw_uppercase'), _hasUppercase),
+                _pwReq(tr('pw_digit'), _hasDigit),
+                _pwReq(tr('pw_special'), _hasSpecialChar),
+                _pwReq(
+                    tr('confirm_password'),
+                    _passwordController.text == _confirmPasswordController.text &&
+                        _confirmPasswordController.text.isNotEmpty),
+              ],
             ],
             const SizedBox(height: 32),
             _buildPremiumPill(),
             const SizedBox(height: 32),
-            _continueButton(
-              enabled: _emailController.text.isNotEmpty &&
-                  _isPasswordValid &&
-                  _passwordController.text == _confirmPasswordController.text,
-              onTap: _nextPage,
-            ),
+            _isRegistering 
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFFF4436C)))
+              : _continueButton(
+                  enabled: _emailController.text.isNotEmpty &&
+                      ((isAlreadyLoggedIn && isSocialUser) || (_isPasswordValid && _passwordController.text == _confirmPasswordController.text)),
+                  onTap: _nextPage,
+                ),
             const SizedBox(height: 24),
           ],
         ),
@@ -702,7 +748,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Widget _inputField(String label, TextEditingController ctrl,
-      {IconData? icon, TextInputType? keyboard}) {
+      {IconData? icon, TextInputType? keyboard, bool readOnly = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black;
     final hintColor = isDark ? Colors.white60 : Colors.black54;
@@ -713,6 +759,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return TextField(
       controller: ctrl,
       keyboardType: keyboard,
+      readOnly: readOnly,
       style: GoogleFonts.instrumentSans(color: textColor, fontSize: 17),
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
@@ -3158,6 +3205,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // COMPLETE REGISTRATION
   // ══════════════════════════════════════════════════════
   void completeRegistration() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final uid = currentUser?.uid ?? 'generated_id'; // Fallback only if somehow null
+
     // Safety guard — consent page enforces all 4 checkboxes, but double-check
     if (!_consentGiven) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -3178,7 +3228,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     };
 
     final user = AuthUser(
-      id: 'generated_id',
+      id: uid,
       name: _nameController.text,
       email: _emailController.text,
       // password removed — never stored in app state
