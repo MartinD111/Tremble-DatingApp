@@ -286,7 +286,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 const SizedBox(width: 10),
                 Text('Delete Account',
                     style: GoogleFonts.instrumentSans(
-                        color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold)),
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
               ]),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -650,7 +650,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 },
                 selectedColor: Colors.pinkAccent,
                 backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
-                labelStyle: const TextStyle(
+                labelStyle: TextStyle(
                     color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
@@ -782,7 +782,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 },
                 selectedColor: Colors.pinkAccent,
                 backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
-                labelStyle: const TextStyle(
+                labelStyle: TextStyle(
                     color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
@@ -819,7 +819,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 },
                 selectedColor: Colors.pinkAccent,
                 backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
-                labelStyle: const TextStyle(
+                labelStyle: TextStyle(
                     color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
@@ -1072,7 +1072,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 },
                 selectedColor: Colors.pinkAccent,
                 backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
-                labelStyle: const TextStyle(
+                labelStyle: TextStyle(
                     color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
@@ -1330,8 +1330,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             const Icon(LucideIcons.crown, color: Colors.amber, size: 20),
             const SizedBox(width: 10),
             Text(_t('premium_account'),
-                style: const TextStyle(
-                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
           ],
         ),
         value: user.isPremium,
