@@ -2,26 +2,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const _kPermissionsPresented = 'permissions_presented';
+const String gdprConsentKey = 'gdpr_ble_location_consent';
 
-/// Tracks whether the permission gate has been shown to the user.
-/// Initialized in main.dart via ProviderScope.overrides from SharedPreferences.
-final permissionsPresentedProvider = StateProvider<bool>((ref) => false);
+/// Tracks whether the user has granted GDPR consent for BLE + Location access.
+///
+/// Persisted in SharedPreferences. Consumed by:
+///   - router.dart (redirect guard)
+///   - background_service.dart (gate before BleService/GeoService start)
+class GdprConsentNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(gdprConsentKey) ?? false;
+  }
 
-/// Handles OS permission requests and the one-shot "presented" flag.
+  Future<void> grantConsent() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(gdprConsentKey, true);
+    state = const AsyncValue.data(true);
+  }
+}
+
+final gdprConsentProvider =
+    AsyncNotifierProvider<GdprConsentNotifier, bool>(GdprConsentNotifier.new);
+
+/// Handles OS permission requests.
 class ConsentService {
-  /// Returns true if the permission gate has already been shown.
-  static Future<bool> hasPresented() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kPermissionsPresented) ?? false;
-  }
-
-  /// Marks the permission gate as shown. Call before navigating away from the gate.
-  static Future<void> markPresented() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kPermissionsPresented, true);
-  }
-
   /// Request location permission (for Radar / Geo feature).
   static Future<PermissionStatus> requestLocation() =>
       Permission.locationWhenInUse.request();

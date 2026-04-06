@@ -25,11 +25,11 @@ class _RouterNotifier extends ChangeNotifier {
 
   _RouterNotifier(this._ref) {
     _ref.listen<AuthUser?>(authStateProvider, (_, __) => notifyListeners());
-    _ref.listen<bool>(permissionsPresentedProvider, (_, __) => notifyListeners());
+    _ref.listen<AsyncValue<bool>>(gdprConsentProvider, (_, __) => notifyListeners());
   }
 
   AuthUser? get authState => _ref.read(authStateProvider);
-  bool get permissionsPresented => _ref.read(permissionsPresentedProvider);
+  bool get hasConsent => _ref.read(gdprConsentProvider).asData?.value ?? true;
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -53,7 +53,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
-        path: '/permissions',
+        path: '/permission-gate',
         builder: (context, state) => const PermissionGateScreen(),
       ),
       GoRoute(
@@ -97,11 +97,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       final authState = notifier.authState;
       final isLoggedIn = authState != null;
       final isOnboarded = authState?.isOnboarded ?? false;
-      final permissionsPresented = notifier.permissionsPresented;
+      final hasConsent = notifier.hasConsent;
+      
       final path = state.uri.toString();
       final isLoginRoute = path == '/login';
       final isOnboardingRoute = path == '/onboarding';
-      final isPermissionsRoute = path == '/permissions';
+      final isPermissionRoute = path == '/permission-gate';
 
       if (!isLoggedIn) {
         if (isOnboardingRoute) return null;
@@ -115,11 +116,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/login';
       }
 
-      if (!permissionsPresented) {
-        return isPermissionsRoute ? null : '/permissions';
+      // GDPR consent gate — shown once after onboarding, never again after granted.
+      if (isLoggedIn && isOnboarded && !hasConsent) {
+        return isPermissionRoute ? null : '/permission-gate';
       }
 
-      if (isLoginRoute || isOnboardingRoute || isPermissionsRoute) {
+      if (isLoggedIn && isOnboarded && hasConsent && isPermissionRoute) {
+        return '/';
+      }
+
+      if (isLoggedIn && isOnboarded && (isLoginRoute || isOnboardingRoute)) {
         return '/';
       }
 

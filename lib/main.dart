@@ -5,7 +5,6 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'src/app.dart';
 import 'src/core/background_service.dart';
-import 'src/core/consent_service.dart';
 import 'src/core/firebase_options_dev.dart';
 import 'src/core/firebase_options_prod.dart';
 
@@ -41,14 +40,9 @@ void main() async {
 
   await initializeBackgroundService();
 
-  final permissionsPresented = await ConsentService.hasPresented();
-
   runApp(
-    ProviderScope(
-      overrides: [
-        permissionsPresentedProvider.overrideWith((ref) => permissionsPresented),
-      ],
-      child: const TrembleApp(),
+    const ProviderScope(
+      child: TrembleApp(),
     ),
   );
 }

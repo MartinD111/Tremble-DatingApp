@@ -1,10 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/consent_service.dart';
-import 'radar_background.dart';
+import '../../../shared/ui/glass_card.dart';
+import '../../../shared/ui/primary_button.dart';
 
 class PermissionGateScreen extends ConsumerStatefulWidget {
   const PermissionGateScreen({super.key});
@@ -15,183 +15,128 @@ class PermissionGateScreen extends ConsumerStatefulWidget {
 }
 
 class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
+  bool _showDeclined = false;
   bool _isRequesting = false;
 
-  Future<void> _onEnable() async {
+  Future<void> _onAccept() async {
     if (_isRequesting) return;
     setState(() => _isRequesting = true);
 
     await ConsentService.requestLocation();
     await ConsentService.requestBluetooth();
-    await ConsentService.markPresented();
 
     if (mounted) {
-      ref.read(permissionsPresentedProvider.notifier).state = true;
-      // Router redirect handles navigation to '/' automatically
+      await ref.read(gdprConsentProvider.notifier).grantConsent();
+      // Router redirect fires automatically once consent state updates.
     }
   }
 
-  Future<void> _onSkip() async {
-    await ConsentService.markPresented();
-    if (mounted) {
-      ref.read(permissionsPresentedProvider.notifier).state = true;
-    }
+  void _onDecline() {
+    setState(() => _showDeclined = true);
+  }
+
+  void _onTryAgain() {
+    setState(() => _showDeclined = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return RadarBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              const Color(0xFF12001F),
+              Colors.black,
+            ],
+          ),
+        ),
+        child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 56),
-                Text(
-                  'Enable\nRadar',
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
-                    height: 1.1,
+            child: _showDeclined
+                ? _DeclinedView(onTryAgain: _onTryAgain)
+                : _ConsentView(
+                    isLoading: _isRequesting,
+                    onAccept: _onAccept,
+                    onDecline: _onDecline,
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Tremble needs two permissions to detect nearby people.',
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: 15,
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.7) : Colors.black87,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 48),
-                _PermissionTile(
-                  icon: LucideIcons.mapPin,
-                  title: 'Location',
-                  description:
-                      'Used to show you on the Radar and find people nearby. '
-                      'Only a ~38m geohash is stored — your exact coordinates are never saved.',
-                ),
-                const SizedBox(height: 16),
-                _PermissionTile(
-                  icon: LucideIcons.bluetooth,
-                  title: 'Bluetooth',
-                  description:
-                      'Detects other Tremble users within physical proximity. '
-                      'No data is exchanged over BLE — only a presence signal.',
-                ),
-                const Spacer(),
-                _buildCta(),
-                const SizedBox(height: 12),
-                Center(
-                  child: TextButton(
-                    onPressed: _isRequesting ? null : _onSkip,
-                    child: Text(
-                      'Skip for now',
-                      style: GoogleFonts.instrumentSans(
-                        fontSize: 14,
-                        color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.5) : Colors.black54,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
-            ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildCta() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final btnBgColor = isDark ? Colors.white : Colors.black;
-    final btnTextColor = isDark ? Colors.black : Colors.white;
-
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _isRequesting ? null : _onEnable,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: btnBgColor,
-          foregroundColor: btnTextColor,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-          ),
-        ),
-        child: _isRequesting
-            ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: btnTextColor,
-                ),
-              )
-            : Text(
-                'Enable Radar',
-                style: GoogleFonts.instrumentSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
       ),
     );
   }
 }
 
-class _PermissionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
+// ─── Consent prompt ────────────────────────────────────────────────────────
 
-  const _PermissionTile({
-    required this.icon,
-    required this.title,
-    required this.description,
+class _ConsentView extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+
+  const _ConsentView({
+    required this.isLoading,
+    required this.onAccept,
+    required this.onDecline,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.05);
-    final borderColor = isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.1);
-    final iconBgColor = isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.1);
-    final iconColor = isDark ? Colors.white : Colors.black;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final subTextColor = isDark ? Colors.white.withValues(alpha: 0.65) : Colors.black87;
+    final textTheme = Theme.of(context).textTheme;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: borderColor,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 48),
+
+        // Headline
+        Text(
+          'Before we find\nyour people',
+          style: textTheme.displaySmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            height: 1.15,
           ),
+        )
+            .animate()
+            .fadeIn(duration: 500.ms)
+            .slideY(begin: 0.15, end: 0, duration: 500.ms, curve: Curves.easeOut),
+
+        const SizedBox(height: 12),
+
+        Text(
+          'Tremble needs access to two features on your device to detect nearby users. Here is exactly what we use and why.',
+          style: textTheme.bodyLarge?.copyWith(
+            color: Colors.white70,
+            height: 1.5,
+          ),
+        )
+            .animate()
+            .fadeIn(delay: 100.ms, duration: 500.ms),
+
+        const SizedBox(height: 32),
+
+        // Bluetooth card
+        GlassCard(
+          padding: const EdgeInsets.all(20),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 44,
-                height: 44,
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: iconBgColor,
+                  color: const Color(0xFF7C3AED).withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: iconColor, size: 20),
+                child: const Icon(
+                  LucideIcons.bluetooth,
+                  color: Color(0xFFB57BFF),
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -199,29 +144,176 @@ class _PermissionTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
-                      style: GoogleFonts.instrumentSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
-                      ),
+                      'Bluetooth',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      description,
-                      style: GoogleFonts.instrumentSans(
-                        fontSize: 13,
-                        color: subTextColor,
-                        height: 1.4,
-                      ),
+                      'Detects other Tremble users physically nearby. No messages or data are sent over Bluetooth — only an anonymous signal.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white60,
+                            height: 1.45,
+                          ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-        ),
-      ),
+        )
+            .animate()
+            .fadeIn(delay: 200.ms, duration: 500.ms)
+            .slideY(begin: 0.1, end: 0, duration: 450.ms, curve: Curves.easeOut),
+
+        const SizedBox(height: 12),
+
+        // Location card
+        GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0EA5E9).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  LucideIcons.mapPin,
+                  color: Color(0xFF67D5FF),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Location',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Used as a fallback for proximity when Bluetooth is unavailable. Your precise coordinates are never stored or shared.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white60,
+                            height: 1.45,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        )
+            .animate()
+            .fadeIn(delay: 300.ms, duration: 500.ms)
+            .slideY(begin: 0.1, end: 0, duration: 450.ms, curve: Curves.easeOut),
+
+        const SizedBox(height: 16),
+
+        // GDPR footnote
+        Text(
+          'You can withdraw this consent at any time in Settings. Your data is processed under GDPR Article 6(1)(a) — consent.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.white38,
+                height: 1.5,
+              ),
+        )
+            .animate()
+            .fadeIn(delay: 400.ms, duration: 400.ms),
+
+        const Spacer(),
+
+        // Actions
+        PrimaryButton(
+          text: isLoading ? 'Enabling...' : 'Allow Access',
+          onPressed: isLoading ? () {} : onAccept,
+        )
+            .animate()
+            .fadeIn(delay: 450.ms, duration: 400.ms)
+            .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut),
+
+        const SizedBox(height: 12),
+
+        PrimaryButton(
+          text: 'Not Now',
+          isSecondary: true,
+          onPressed: isLoading ? () {} : onDecline,
+        )
+            .animate()
+            .fadeIn(delay: 500.ms, duration: 400.ms),
+
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+}
+
+// ─── Declined explanation ──────────────────────────────────────────────────
+
+class _DeclinedView extends StatelessWidget {
+  final VoidCallback onTryAgain;
+
+  const _DeclinedView({required this.onTryAgain});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 80),
+
+        Icon(
+          LucideIcons.scanLine,
+          color: Color(0xFF7C3AED),
+          size: 48,
+        )
+            .animate()
+            .fadeIn(duration: 400.ms)
+            .scale(begin: const Offset(0.8, 0.8), duration: 400.ms, curve: Curves.easeOut),
+
+        const SizedBox(height: 28),
+
+        Text(
+          'Radar needs\nyour permission',
+          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                height: 1.15,
+              ),
+        ).animate().fadeIn(duration: 400.ms),
+
+        const SizedBox(height: 16),
+
+        GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Text(
+            'Without Bluetooth and Location access, Tremble cannot detect anyone nearby. The core feature — finding people around you — will not work.\n\nNo other part of the app uses these permissions. You can change your mind at any time in Settings.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.white70,
+                  height: 1.6,
+                ),
+          ),
+        ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
+
+        const Spacer(),
+
+        PrimaryButton(
+          text: 'Try Again',
+          onPressed: onTryAgain,
+        ).animate().fadeIn(delay: 150.ms, duration: 400.ms),
+
+        const SizedBox(height: 32),
+      ],
     );
   }
 }
