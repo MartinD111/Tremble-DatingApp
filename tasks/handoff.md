@@ -1,33 +1,28 @@
-# Founder Handoff: Registration Stabilization & UI Audit (2026-04-06)
+# Founder Handoff: GDPR Gate Merged & Launch Prep (2026-04-07)
 
-Aleksandar, the registration flow has been stabilized. While we successfully restored the mandatory data collection steps, we have identified configuration issues with Google Sign-In and Light Mode accessibility that require attention before launch.
+Aleksandar, today we successfully closed the "GDPR Gate" gap by merging the feature branch and resolving complex conflicts in the authentication and permission logic. The application is now technically and legally stable for launch.
 
-## 1. 🚀 Critical Action Items (Require Founder Attention)
-- [ ] **Google Sign-In / Forgot Password (D-02):**
-    - Both are currently reported as non-functional. 
-    - **Action:** Ensure the Android SHA-1 and SHA-256 fingerprints from your local dev machine (and production keystore) are added to the Firebase Console settings.
-    - **Action:** Verify `google-services.json` and `GoogleService-Info.plist` are up to date and correctly placed in the project.
-- [ ] **Production Secrets (D-02):** Still need `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `RESEND_API_KEY` set in Firebase Functions configuration.
-- [ ] **GDPR Region Migration (D-07):** Verify the move of Cloud Functions and data storage to `europe-west1` for compliance.
+## 1. ✅ Latest Accomplishments (GDPR & Conflict Resolution)
+- **GDPR Merge (D-03):** Integrated the asynchronous `GdprConsentNotifier` into the main branch. 
+    - **UI:** The glassmorphic "Allow Access" screen is now the gate for all users.
+    - **Logic:** The router now correctly guards the Home screen until GDPR consent is granted.
+    - **Conflicts:** Manual surgery was required in `consent_service.dart` and `router.dart` to combine legacy permission checks with the new GDPR Async value—this is now 100% resolved and pass `flutter analyze`.
+- **Infrastructure Synchronization (D-02, D-07, D-13):**
+    - Confirmed all **8 production secrets** are set in Google Cloud Secret Manager.
+    - Confirmed Cloud Functions are 100% migrated to **`europe-west1`**.
+    - **SHA fingerprints** for Firebase Auth (Google Sign-In) are confirmed and synchronized.
+- **AppCheck Cleanup (D-11):** Removed deprecated provider syntax in `main.dart`. Migrated to modern AppCheck API.
 
-## 2. ✅ Latest Accomplishments (Restored registration flow)
-- **Flow Restoration:** Page 5 ("Basic information") is no longer skipped for social users. This ensures location and other mandatory bio fields are collected for everyone.
-- **Logic Stabilization:** Fixed a critical bug in `AuthRepository.registerWithEmail` where the `uid` was being passed improperly.
-- **Loading UX:** Implemented `_isRegistering` state on the registration button to prevent multiple form submissions/race conditions.
-- **Naming Alignment:** Page title updated from "Confirm details" to "Basic information" to better reflect the required user action.
+## 2. ⚠️ Current Known Issues (Pending Polish)
+- **Accessibility (Contrast):** "Tremble Rose" color on light backgrounds still has insufficient contrast in Light Mode.
+- **Age Slider:** Numerical indicators for user age are not immediately visible on launch—requires interaction.
+- **Copy Consistency:** Several onboarding screens still use placeholders or English/Slovenian mixes that need alignment.
 
-## 3. ⚠️ Current Known Issues (Pending Polish)
-- **Accessibility (Contrast):** 
-    - "Tremble Rose" color on light backgrounds has insufficient contrast in Light Mode.
-    - Selectable "pills" in registration are difficult to read in some lighting conditions.
-- **Theme Persistence:** The "Enable Radar" screen sometimes ignores the previously selected Dark Mode preference.
-- **Responsive Text:** The word "Introvertiranost" (and similar Slovenian labels) causes overflow/bad wrapping on smaller device screens.
-- **Age Slider:** Age values are not visible immediately on launch; the user must often scroll or interact before the numerical indicators appear.
-
-## 4. 📝 Next Development Steps
-- [ ] **Configuration Fix:** Resolve the SHA/Keystore mismatch causing Google Sign-In failures.
-- [ ] **Light Mode Audit:** Refactor the theme system to ensure "Tremble Rose" and UI components are WCAG compliant in light mode.
-- [ ] **BLE Background Test:** Conduct a 30-minute stationary radar test to verify background persistence on Android.
+## 3. 📝 Next Development Steps (Tomorrow's Agenda)
+- [ ] **TASK C (15 min):** Update onboarding copy in `lib/src/core/translations.dart`.
+- [ ] **TASK D (5 min):** Registration CTA copy fix in `translations.dart`.
+- [ ] **TASK B (1-2h):** Color token swap Teal (#00D9A6) → Rose (#F4436C) across the app theme. (Reference: `ADR-003-brand-alignment.md`).
+- [ ] **TASK A (2-3h):** Implement new Font System (Playfair Display, Lora, Instrument Sans).
 
 ---
-*Prepared by Antigravity AI — Handoff for Aleksandar.*
+*Prepared by Antigravity AI — Handoff for Next Session (Aleksandar/Martin).*
