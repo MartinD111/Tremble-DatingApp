@@ -1195,6 +1195,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final now = DateTime.now();
     final maxYear = now.year - 18;
     final minYear = now.year - 100;
+    final maxDays = DateTime(_pickerYear, _pickerMonth + 1, 0).day;
+    final validDay = _pickerDay > maxDays ? maxDays : _pickerDay;
+    final d = DateTime(_pickerYear, _pickerMonth, validDay);
+    final age = _calcAge(d);
+    final zodiac = _zodiacSign(d);
 
     return _buildScrollableFormPage(
       child: Column(
@@ -1218,10 +1223,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               SizedBox(
                   width: 65,
                   child: _drumPicker(
-                    items: List.generate(31, (i) => '${i + 1}'),
-                    selectedIndex: _pickerDay - 1,
+                    items: List.generate(maxDays, (i) => '${i + 1}'),
+                    selectedIndex: validDay - 1,
                     looping: true,
-                    onChanged: (i) => setState(() => _pickerDay = i + 1),
+                    onChanged: (i) => setState(() => _pickerDay = i + 1 > maxDays ? maxDays : i + 1),
                   )),
               SizedBox(
                   width: 90,
@@ -1235,16 +1240,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ]),
           ),
           const SizedBox(height: 20),
-          Builder(builder: (_) {
-            final d = DateTime(_pickerYear, _pickerMonth, _pickerDay);
-            final age = _calcAge(d);
-            final zodiac = _zodiacSign(d);
-            return Row(children: [
-              _chip('🎂 $age'),
-              const SizedBox(width: 8),
-              _chip(zodiac),
-            ]);
-          }),
+          Row(children: [
+            _chip('🎂 $age'),
+            const SizedBox(width: 8),
+            _chip(zodiac),
+          ]),
           const SizedBox(height: 24),
           _continueButton(
             enabled: true,
@@ -1329,7 +1329,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   void _showBirthdayConfirmation() {
-    final d = DateTime(_pickerYear, _pickerMonth, _pickerDay);
+    final maxDays = DateTime(_pickerYear, _pickerMonth + 1, 0).day;
+    final validDay = _pickerDay > maxDays ? maxDays : _pickerDay;
+    final d = DateTime(_pickerYear, _pickerMonth, validDay);
     final age = _calcAge(d);
     final dateStr = DateFormat('MMMM d, yyyy').format(d);
     const _brandRose = Color(0xFFF4436C);
