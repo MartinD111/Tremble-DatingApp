@@ -215,7 +215,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                "Nadaljuj z Googlom",
+                                tr('continue_with_google'),
                                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                   color: Theme.of(context).colorScheme.onSurface,
                                   fontSize: 16,

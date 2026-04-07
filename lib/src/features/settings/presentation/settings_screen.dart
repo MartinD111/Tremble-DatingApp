@@ -51,7 +51,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     super.build(context);
     final user = ref.watch(authStateProvider);
 
-    if (user == null) return const SizedBox.shrink();
+    if (user == null) {
+      return Center(
+        child: Text(_t('error_user_not_found'), style: GoogleFonts.instrumentSans(color: Colors.white)),
+      );
+    }
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : Colors.black87;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -63,7 +70,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               style: GoogleFonts.instrumentSans(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white)),
+                  color: titleColor)),
           const SizedBox(height: 20),
           Expanded(
             child: SingleChildScrollView(
@@ -477,9 +484,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               const Icon(LucideIcons.mapPin,
                                   size: 14, color: Colors.white70),
                               const SizedBox(width: 4),
-                              Text(user.location!,
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 14)),
+                              Expanded(
+                                child: Text(user.location!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 14)),
+                              ),
                             ],
                           ),
                         ],
@@ -576,9 +587,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             title: Text(_t('dark_mode'),
                 style: const TextStyle(color: Colors.white)),
             value: user.isDarkMode,
-            activeThumbColor: Colors.white,
-            activeTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[400],
-            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
+            activeThumbColor: const Color(0xFFF4436C),
+            activeTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
+            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
             onChanged: (val) {
               _updateProfile(user.copyWith(isDarkMode: val));
               ref.read(themeModeProvider.notifier).setThemeMode(

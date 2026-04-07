@@ -154,7 +154,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   String? _partnerPoliticalAffiliationPreference;
   String? _partnerIntroversionRange;
   String? _partnerHeightRange;
-  String? _expandedHobbyCategory;
 
   // Dating pref
   String? _datingPreference;
@@ -162,6 +161,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // What to meet
   final List<String> _wantToMeet = [];
+  final Map<String, ExpansionTileController> _hobbyTileControllers = {};
+
+  ExpansionTileController _getHobbyTileController(String key) {
+    if (!_hobbyTileControllers.containsKey(key)) {
+      _hobbyTileControllers[key] = ExpansionTileController();
+    }
+    return _hobbyTileControllers[key]!;
+  }
 
   // Hobbies
   final List<String> _selectedHobbies = [];
@@ -694,6 +701,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final isSocialUser = currentUser?.providerData.any(
             (p) => p.providerId == 'google.com' || p.providerId == 'apple.com') ??
         false;
+    final hasPassword =
+        currentUser?.providerData.any((p) => p.providerId == 'password') ??
+            false;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -703,7 +713,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           children: [
             _backButton(),
             const SizedBox(height: 16),
-            _stepHeader('Basic information'),
+            _stepHeader(tr('basic_info')),
             const SizedBox(height: 32),
             if (isAlreadyLoggedIn && isSocialUser && _emailController.text.isNotEmpty)
               _inputField(tr('email'), _emailController, icon: LucideIcons.mail, keyboard: TextInputType.emailAddress, readOnly: true)
@@ -711,7 +721,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               _inputField(tr('email'), _emailController, icon: LucideIcons.mail, keyboard: TextInputType.emailAddress, readOnly: false),
             const SizedBox(height: 20),
             _locationAutocomplete(),
-            if (!(isAlreadyLoggedIn && isSocialUser)) ...[
+            // Show password fields if the user is not logged in OR if they haven't set a password yet (Social users)
+            if (!hasPassword) ...[
               const SizedBox(height: 20),
               _passwordInputField(),
               const SizedBox(height: 20),
@@ -737,7 +748,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ? const Center(child: CircularProgressIndicator(color: Color(0xFFF4436C)))
               : _continueButton(
                   enabled: _emailController.text.isNotEmpty &&
-                      ((isAlreadyLoggedIn && isSocialUser) || (_isPasswordValid && _passwordController.text == _confirmPasswordController.text)),
+                      ((isAlreadyLoggedIn && isSocialUser && _passwordController.text.isEmpty) || 
+                       (_isPasswordValid && _passwordController.text == _confirmPasswordController.text)),
                   onTap: _nextPage,
                 ),
             const SizedBox(height: 24),
@@ -1034,14 +1046,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             border: Border.all(
                 color: const Color(0xFFF4436C).withValues(alpha: 0.5)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(LucideIcons.diamond, color: Color(0xFFF4436C), size: 16),
-              SizedBox(width: 8),
+              const Icon(LucideIcons.diamond, color: Color(0xFFF4436C), size: 16),
+              const SizedBox(width: 8),
               Text(
-                'Premium račun aktiviran',
-                style: TextStyle(
+                tr('premium_account_activated'),
+                style: const TextStyle(
                     color: Color(0xFFF4436C),
                     fontSize: 14,
                     fontWeight: FontWeight.bold),
@@ -1658,7 +1670,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       }),
             ),
           ),
-          const SizedBox(height: 24),
           _continueButton(
               enabled: true,
               onTap: () {
@@ -2194,6 +2205,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   min: min,
                   max: max,
                   divisions: divisions > 0 ? divisions : null,
+                  labels: RangeLabels(
+                    title == tr('introversion') 
+                      ? '${(tempRange.start * 100).toInt()}%' 
+                      : '${tempRange.start.toInt()}',
+                    title == tr('introversion') 
+                      ? '${(tempRange.end * 100).toInt()}%' 
+                      : '${tempRange.end.toInt()}',
+                  ),
                   activeColor: const Color(0xFFF4436C),
                   inactiveColor: isDark ? Colors.white12 : Colors.black12,
                   onChanged: (v) => setModalState(() => tempRange = v),
@@ -2430,7 +2449,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           ]),
           Slider(
             value: _introversionLevel,
-            onChanged: (v) => setState(() => _introversionLevel = v),
+            onChanged: (v) {
+              setState(() => _introversionLevel = v);
+            },
             activeColor: const Color(0xFFF4436C),
             inactiveColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),
@@ -2816,70 +2837,81 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 ),
                 const SizedBox(height: 16),
               ],
-              ...cats.entries.map((e) => Theme(
-                    data: Theme.of(context)
-                        .copyWith(dividerColor: Colors.transparent),
-                    child: ExpansionTile(
-                      key: ValueKey('${e.key}_${_expandedHobbyCategory == e.key}'),
-                      initiallyExpanded: _expandedHobbyCategory == e.key,
-                      onExpansionChanged: (expanded) {
-                        if (expanded) {
-                          setState(() => _expandedHobbyCategory = e.key);
-                        } else if (_expandedHobbyCategory == e.key) {
-                          setState(() => _expandedHobbyCategory = null);
-                        }
-                      },
-                      title: Text(
-                          '${e.key} (${e.value.where((h) => _selectedHobbies.contains(h)).length})',
-                          style: GoogleFonts.instrumentSans(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.bold)),
-                      collapsedIconColor: isDark ? Colors.white : Colors.black54,
+              ...cats.entries.map((e) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    dividerColor: Colors.transparent,
+                    // Ta del zagotovi, da so vse animacije znotraj ExpansionTile gladke
+                    expansionTileTheme: ExpansionTileThemeData(
                       iconColor: const Color(0xFFF4436C),
-                      children: [
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            ...e.value.map((hobby) {
-                              final sel = _selectedHobbies.contains(hobby);
-                              return FilterChip(
-                                label: Text(
-                                  hobby,
-                                  style: GoogleFonts.instrumentSans(
-                                    color: sel ? Colors.black : (isDark ? Colors.white : Colors.black87),
-                                    fontWeight: sel ? FontWeight.bold : FontWeight.w500,
-                                  ),
-                                ),
-                                selected: sel,
-                                onSelected: (s) => setState(() => s
-                                    ? _selectedHobbies.add(hobby)
-                                    : _selectedHobbies.remove(hobby)),
-                                selectedColor: const Color(0xFFF4436C),
-                                backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
-                                shape: StadiumBorder(
-                                  side: BorderSide(
-                                    color: sel
-                                        ? const Color(0xFFF4436C)
-                                        : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26),
-                                  ),
-                                ),
-                                checkmarkColor: Colors.black,
-                              );
-                            }),
-                            ActionChip(
-                              label: Text(tr('add_own'),
-                                  style: GoogleFonts.instrumentSans(color: Colors.black)),
-                              backgroundColor: const Color(0xFFF4436C),
-                              shape: const StadiumBorder(),
-                              onPressed: () => _showAddHobbyDialog(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
+                      collapsedIconColor: isDark ? Colors.white : Colors.black54,
                     ),
-                  )),
+                  ),
+                  child: ExpansionTile(
+                    controller: _getHobbyTileController(e.key),
+                    expansionAnimationStyle: AnimationStyle(
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeInOut,
+                    ),
+                    onExpansionChanged: (expanded) {
+                      if (expanded) {
+                        for (var key in cats.keys) {
+                          if (key != e.key) {
+                            _getHobbyTileController(key).collapse();
+                          }
+                        }
+                      }
+                    },
+                    title: Text(
+                        '${e.key} (${e.value.where((h) => _selectedHobbies.contains(h)).length})',
+                        style: GoogleFonts.instrumentSans(
+                            color: isDark ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.bold)),
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ...e.value.map((hobby) {
+                            final sel = _selectedHobbies.contains(hobby);
+                            return FilterChip(
+                              label: Text(
+                                hobby,
+                                style: GoogleFonts.instrumentSans(
+                                  color: sel ? Colors.black : (isDark ? Colors.white : Colors.black87),
+                                  fontWeight: sel ? FontWeight.bold : FontWeight.w500,
+                                ),
+                              ),
+                              selected: sel,
+                              onSelected: (s) => setState(() => s
+                                  ? _selectedHobbies.add(hobby)
+                                  : _selectedHobbies.remove(hobby)),
+                              selectedColor: const Color(0xFFF4436C),
+                              backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
+                              shape: StadiumBorder(
+                                side: BorderSide(
+                                  color: sel
+                                      ? const Color(0xFFF4436C)
+                                      : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26),
+                                ),
+                              ),
+                              checkmarkColor: Colors.black,
+                            );
+                          }),
+                          ActionChip(
+                            label: Text(tr('add_own'),
+                                style: GoogleFonts.instrumentSans(color: Colors.black)),
+                            backgroundColor: const Color(0xFFF4436C),
+                            shape: const StadiumBorder(),
+                            onPressed: () => _showAddHobbyDialog(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                );
+              }),
             ]),
           ),
         ),

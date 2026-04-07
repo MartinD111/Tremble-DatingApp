@@ -87,6 +87,8 @@ const Map<String, Map<String, String>> _translations = {
     'finish': 'Finish',
     'logout': 'Logout',
     'add': 'Add',
+    'continue_with_google': 'Continue with Google',
+    'continue_with_apple': 'Continue with Apple',
 
     // --- Settings sections ---
     'profile_card_view': 'View profile card',
@@ -406,6 +408,7 @@ const Map<String, Map<String, String>> _translations = {
     'are_you_new': 'Are you new',
     'forgot_password': 'Forgot password?',
     'login': 'Login',
+    'premium_account_activated': 'Premium account activated',
   },
 
   // ═══════════════════════════════════════════
@@ -420,6 +423,8 @@ const Map<String, Map<String, String>> _translations = {
     'finish': 'Zaključi',
     'logout': 'Odjava',
     'add': 'Dodaj',
+    'continue_with_google': 'Nadaljuj z Googlom',
+    'continue_with_apple': 'Nadaljuj z Applom',
     'profile_card_view': 'Ogled profilne kartice',
     'my_card': 'Moja kartica',
     'edit_profile': 'Uredi profil',
@@ -715,7 +720,8 @@ const Map<String, Map<String, String>> _translations = {
     'auto_hide_nav': 'Samodejno skrij navigacijsko vrstico',
     'are_you_new': 'Are you new',
     'forgot_password': 'Pozabljeno geslo',
-    'login': 'Login',
+    'login': 'Prijava',
+    'premium_account_activated': 'Premium račun aktiviran',
   },
 
   // ═══════════════════════════════════════════
