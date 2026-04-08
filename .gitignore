@@ -75,6 +75,9 @@ lib/src/core/firebase_options.dart
 .env.*
 secrets.dart
 lib/src/core/secrets.dart
+# iOS xcconfig files that contain API keys — managed via CI secret injection
+ios/Flutter/Release.xcconfig
+ios/Flutter/Debug.xcconfig
 
 // ─── CUSTOM PROJECT SPECIFIC ─────────────────────────────────────────────────
 analysis.json

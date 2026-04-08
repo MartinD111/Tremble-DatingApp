@@ -1,5 +1,0 @@
-#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
-#include "Generated.xcconfig"
-// Google Maps API key — get from Google Cloud Console > Credentials
-// Restrict to: iOS app (bundle ID)
-MAPS_API_KEY = REVOKED_KEY_REMOVED
