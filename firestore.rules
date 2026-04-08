@@ -3,36 +3,34 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ══════════════════════════════════════════════════════
-    // USERS — read own profile only, writes via Cloud Functions
+    // USERS — branje lastnega profila, pisanje samo preko backend-a
     // ══════════════════════════════════════════════════════
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if false; // All writes through Cloud Functions
+      allow write: if false; 
     }
 
     // ══════════════════════════════════════════════════════
-    // MATCHES — read own matches only (as userA or userB)
+    // MATCHES — branje dovoljeno le vpletenima (userA ali userB)
     // ══════════════════════════════════════════════════════
     match /matches/{matchId} {
       allow read: if request.auth != null &&
                     (resource.data.userA == request.auth.uid ||
                      resource.data.userB == request.auth.uid);
-      allow write: if false;
+      allow write: if false; // Ustvari jih izključno Cloud Function onWaveCreated
+    }
+
+    /// ══════════════════════════════════════════════════════
+    // WAVES — stroga zasebnost, branje le lastnih izhodnih valov
+    // ══════════════════════════════════════════════════════
+    match /waves/{waveId} {
+      allow read: if request.auth != null && resource.data.fromUid == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.fromUid == request.auth.uid;
+      allow update, delete: if false;
     }
 
     // ══════════════════════════════════════════════════════
-    // GREETINGS — read own greetings (sent or received)
-    // ══════════════════════════════════════════════════════
-    match /greetings/{greetingId} {
-      allow read: if request.auth != null &&
-                    (resource.data.fromUid == request.auth.uid ||
-                     resource.data.toUid == request.auth.uid);
-      allow write: if false;
-    }
-
-    // ══════════════════════════════════════════════════════
-    // PROXIMITY — read active users (for nearby discovery)
-    // Write only through Cloud Functions
+    // PROXIMITY — branje aktivnih uporabnikov za radar
     // ══════════════════════════════════════════════════════
     match /proximity/{userId} {
       allow read: if request.auth != null;
@@ -40,8 +38,7 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════════════════════
-    // PROXIMITY EVENTS — BLE client writes, backend-only reads
-    // onBleProximity Cloud Function triggers on these writes
+    // PROXIMITY EVENTS — BLE zapisuje, backend procesira
     // ══════════════════════════════════════════════════════
     match /proximity_events/{eventId} {
       allow write: if request.auth != null;
@@ -49,29 +46,23 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════════════════════
-    // RATE LIMITS — server-managed TTL documents
+    // SISTEMSKI DEL (Rate Limits, Idempotency, GDPR)
     // ══════════════════════════════════════════════════════
     match /rateLimits/{doc} {
       allow read, write: if false;
     }
 
-    // ══════════════════════════════════════════════════════
-    // IDEMPOTENCY KEYS — server-managed
-    // ══════════════════════════════════════════════════════
     match /idempotencyKeys/{doc} {
       allow read, write: if false;
     }
 
-    // ══════════════════════════════════════════════════════
-    // GDPR REQUESTS — server-managed audit log
-    // ══════════════════════════════════════════════════════
     match /gdprRequests/{doc} {
       allow read: if request.auth != null && resource.data.uid == request.auth.uid;
       allow write: if false;
     }
 
     // ══════════════════════════════════════════════════════
-    // DEFAULT DENY — everything else is blocked
+    // DEFAULT DENY
     // ══════════════════════════════════════════════════════
     match /{document=**} {
       allow read, write: if false;

@@ -26,10 +26,8 @@ export {
 
 // ── Matches Module ───────────────────────────────────────
 export {
-    sendGreeting,
-    respondToGreeting,
+    onWaveCreated,
     getMatches,
-    getPendingGreetings,
 } from "./modules/matches/matches.functions";
 
 // ── Uploads Module (Cloudflare R2) ───────────────────────

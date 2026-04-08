@@ -17,6 +17,8 @@ import '../features/profile/presentation/profile_card_preview.dart';
 import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/safety/presentation/blocked_users_screen.dart';
 import '../shared/ui/gradient_scaffold.dart'; // Assume exists
+import '../features/match/presentation/match_reveal_screen.dart';
+import '../features/match/domain/match.dart';
 
 // Listens to auth state and permission gate changes, notifies GoRouter to
 // re-run redirect without recreating the router instance.
@@ -108,6 +110,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/blocked-users',
         builder: (context, state) => const BlockedUsersScreen(),
+      ),
+      GoRoute(
+        path: '/match-reveal',
+        name: 'match_reveal',
+        builder: (context, state) {
+          final match = state.extra as Match?;
+          if (match == null) {
+            return const Scaffold(body: Center(child: Text('Match not found')));
+          }
+          return MatchRevealScreen(match: match);
+        },
       ),
     ],
     redirect: (context, state) {

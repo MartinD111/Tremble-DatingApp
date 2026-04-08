@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'radar_animation.dart';
@@ -16,6 +17,9 @@ import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
 import 'package:flutter_animate/flutter_animate.dart'; // Animations
 import '../../../core/theme.dart'; // TrembleTheme — telemetryTextStyle
+import '../../match/application/match_service.dart';
+import '../../match/data/wave_repository.dart';
+import '../../match/domain/match.dart' as wave_match;
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State
@@ -54,6 +58,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ── Wave Match Reveal Listener ────────────────────────────────────────
+    // Reads the activeMatchesStream and triggers the reveal screen exactly once
+    // per match by atomically marking seenBy BEFORE navigating.
+    ref.listen(activeMatchesStreamProvider, (previous, next) {
+      final matches = next.value;
+      if (matches == null || matches.isEmpty) return;
+
+      final myUid = ref.read(firebaseAuthProvider).currentUser?.uid;
+      if (myUid == null) return;
+
+      final unseenMatch = matches.cast<wave_match.Match?>().firstWhere(
+            (m) => m != null && !m.seenBy.contains(myUid),
+            orElse: () => null,
+          );
+
+      if (unseenMatch != null) {
+        // Atomic: mark seen first to prevent re-trigger on next stream emission
+        ref.read(waveRepositoryProvider).markMatchAsSeen(unseenMatch.id);
+        if (mounted) {
+          context.pushNamed('match_reveal', extra: unseenMatch);
+        }
+      }
+    });
+
     // Listen to the stream and update controller with visual Sonar Ping
     ref.listen(matchesStreamProvider, (prev, next) {
       final isScanning = ref.read(isScanningProvider);
