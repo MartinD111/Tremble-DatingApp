@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Core Product
 status: executing
-last_updated: "2026-04-08"
+last_updated: "2026-04-08T19:54:16.321Z"
 progress:
-  total_phases: 6
+  total_phases: 3
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State: Tremble
@@ -57,6 +57,8 @@ See: `.planning/PROJECT.md` (updated 2026-04-08)
 
 - Gender-specific gradient colors in registration_flow.dart confirmed intentional — preserved with clarifying comment.
 - TrembleTheme.telemetryTextStyle(context) established as the canonical pattern for all telemetry/readout text.
+- [Phase 06-brand-alignment-wave-mechanic]: Removed {name} from wave_sent toast — privacy: recipient not revealed to sender in unidirectional wave mechanic
+- [Phase 06-brand-alignment-wave-mechanic]: Added onb4 keys to 6 language blocks (de, it, fr, hr, sr, hu) that were previously missing them
 
 ## Next Action
 

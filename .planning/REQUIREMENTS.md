@@ -43,8 +43,8 @@ These exist and are verified. They do not need re-implementation but some need p
 
 - [ ] **BRAND-01**: Color token swap — all teal (#00D9A6) replaced with Tremble Rose (#F4436C). Signal Yellow (#F5C842), Deep Graphite (#1A1A18), Warm Cream (#FAFAF7), Confirm Green (#2D9B6F) applied correctly per context
 - [ ] **BRAND-02**: Font system installed in Flutter — Playfair Display 900 (display/H1), Lora 400/500 (body text), Instrument Sans 500–700 (UI/nav/buttons), JetBrains Mono (telemetry/radar readouts)
-- [ ] **BRAND-03**: Onboarding copy updated to brand voice — short, direct, confident. No filler phrases.
-- [ ] **BRAND-04**: Registration CTA copy updated to brand voice
+- [x] **BRAND-03**: Onboarding copy updated to brand voice — short, direct, confident. No filler phrases.
+- [x] **BRAND-04**: Registration CTA copy updated to brand voice
 - [ ] **BRAND-05**: Google Maps API key filled in (Android local.properties + iOS Debug.xcconfig)
 
 ### Wave & Match Mechanic
@@ -144,8 +144,8 @@ These exist and are verified. They do not need re-implementation but some need p
 |-------------|-------|--------|
 | BRAND-01 | Phase 6 | Pending |
 | BRAND-02 | Phase 6 | Pending |
-| BRAND-03 | Phase 6 | Pending |
-| BRAND-04 | Phase 6 | Pending |
+| BRAND-03 | Phase 6 | Complete |
+| BRAND-04 | Phase 6 | Complete |
 | BRAND-05 | Phase 6 | Pending |
 | WAVE-01 | Phase 6 | Pending |
 | WAVE-02 | Phase 6 | Pending |

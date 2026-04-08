@@ -87,8 +87,8 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
   5. flutter analyze runs clean — zero new warnings
 **Plans**: 3 plans
 Plans:
-- [ ] 06-01-PLAN.md — Color token audit + JetBrains Mono on radar telemetry text (BRAND-01, BRAND-02)
-- [ ] 06-02-PLAN.md — Onboarding copy rewrite + greeting_sent → wave_sent rename in all 8 languages (BRAND-03, BRAND-04)
+- [x] 06-01-PLAN.md — Color token audit + JetBrains Mono on radar telemetry text (BRAND-01, BRAND-02)
+- [x] 06-02-PLAN.md — Onboarding copy rewrite + greeting_sent → wave_sent rename in all 8 languages (BRAND-03, BRAND-04)
 - [ ] 06-03-PLAN.md — Maps API key wired to iOS Release.xcconfig + human verification checkpoint (BRAND-05)
 **UI hint**: yes
 
