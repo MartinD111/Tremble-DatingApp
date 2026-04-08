@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'src/app.dart';
 import 'src/core/background_service.dart';
 import 'src/core/firebase_options_dev.dart';
 import 'src/core/firebase_options_prod.dart';
+import 'src/core/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,9 +42,22 @@ void main() async {
 
   await initializeBackgroundService();
 
+  // Pre-load theme before first frame to prevent Dark Mode flash on navigation
+  final prefs = await SharedPreferences.getInstance();
+  final isDark = prefs.getBool('themeMode');
+  final initialTheme =
+      isDark == true ? ThemeMode.dark : ThemeMode.light;
+
   runApp(
-    const ProviderScope(
-      child: TrembleApp(),
+    ProviderScope(
+      overrides: [
+        // Seed the ThemeModeNotifier with the already-loaded value —
+        // avoids the async gap that caused the Light→Dark flash.
+        themeModeProvider.overrideWith(
+          (ref) => ThemeModeNotifier.withInitial(initialTheme),
+        ),
+      ],
+      child: const TrembleApp(),
     ),
   );
 }
