@@ -85,7 +85,11 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
   3. Onboarding and registration copy is updated to brand voice — short, direct, confident
   4. Real Google Maps API key is wired on both platforms (Android + iOS)
   5. flutter analyze runs clean — zero new warnings
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 06-01-PLAN.md — Color token audit + JetBrains Mono on radar telemetry text (BRAND-01, BRAND-02)
+- [ ] 06-02-PLAN.md — Onboarding copy rewrite + greeting_sent → wave_sent rename in all 8 languages (BRAND-03, BRAND-04)
+- [ ] 06-03-PLAN.md — Maps API key wired to iOS Release.xcconfig + human verification checkpoint (BRAND-05)
 **UI hint**: yes
 
 #### Phase 7: Wave Mechanic
@@ -178,7 +182,7 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 | 3. Proximity Engine | v1.0 | - | Complete | 2026-04-08 |
 | 4. Infrastructure | v1.0 | - | Complete | 2026-04-08 |
 | 5. Auth & Routing | v1.0 | - | Complete | 2026-04-08 |
-| 6. Brand Alignment & Wave Mechanic | v1.1 | 0/TBD | Not started | - |
+| 6. Brand Alignment | v1.1 | 0/3 | Not started | - |
 | 7. Messaging & Push Notifications | v1.1 | 0/TBD | Not started | - |
 | 8. Paywall / Tremble Pro | v1.2 | 0/TBD | Not started | - |
 | 9. Security Hardening & GDPR | v1.2 | 0/TBD | Not started | - |
