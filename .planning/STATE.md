@@ -5,12 +5,12 @@
 See: `.planning/PROJECT.md` (updated 2026-04-08)
 
 **Core value:** The proximity event must work reliably, silently, and privately. If BLE fails, nothing else matters.
-**Current focus:** Phase 6 — Brand Alignment & Wave Mechanic
+**Current focus:** Phase 6 — Brand Alignment
 
 ## Current Phase
 
-**Phase 6: Brand Alignment & Wave Mechanic**
-**Status:** Not started — plan with `/gsd:plan-phase 6`
+**Phase 6: Brand Alignment**
+**Status:** Planning in progress
 **Milestone:** v1.1 Core Product
 
 ## Phase Progress
@@ -22,11 +22,12 @@ See: `.planning/PROJECT.md` (updated 2026-04-08)
 | 3 | Proximity Engine | ✅ Complete |
 | 4 | Infrastructure | ✅ Complete |
 | 5 | Auth & Routing | ✅ Complete |
-| 6 | Brand Alignment & Wave Mechanic | 🔲 Not started |
-| 7 | Messaging & Push Notifications | 🔲 Not started |
-| 8 | Paywall / Tremble Pro | 🔲 Not started |
-| 9 | Security Hardening & GDPR | 🔲 Not started |
-| 10 | Launch Polish & Store Deploy | 🔲 Not started |
+| 6 | Brand Alignment | 🟡 Planning |
+| 7 | Wave Mechanic | 🔲 Not started |
+| 8 | Messaging & Push Notifications | 🔲 Not started |
+| 9 | Paywall / Tremble Pro | 🔲 Not started |
+| 10 | Security Hardening & GDPR | 🔲 Not started |
+| 11 | Launch Polish & Store Deploy | 🔲 Not started |
 
 ## Open Blockers
 

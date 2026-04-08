@@ -7,9 +7,9 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 ## Milestones
 
 - [x] **v1.0 Foundation** - Phases 1–5 (shipped 2026-04-08)
-- [ ] **v1.1 Core Product** - Phases 6–7 (brand + wave + messaging)
-- [ ] **v1.2 Monetization & Security** - Phases 8–9 (paywall + hardening)
-- [ ] **v1.3 Launch** - Phase 10 (store submission + landing page)
+- [ ] **v1.1 Core Product** - Phases 6–8 (brand + wave + messaging)
+- [ ] **v1.2 Monetization & Security** - Phases 9–10 (paywall + hardening)
+- [ ] **v1.3 Launch** - Phase 11 (store submission + landing page)
 
 ## Phases
 
@@ -75,23 +75,35 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 
 **Milestone Goal:** The app is visually brand-aligned and the full wave → match → chat loop works end-to-end.
 
-#### Phase 6: Brand Alignment & Wave Mechanic
-**Goal**: The app looks and feels like Tremble, and users can send waves, create mutual matches, and enter chat
+#### Phase 6: Brand Alignment
+**Goal**: The app looks and feels like Tremble — correct colors, fonts, copy, and Maps API key wired
 **Depends on**: Phase 5
-**Requirements**: BRAND-01, BRAND-02, BRAND-03, BRAND-04, BRAND-05, WAVE-01, WAVE-02, WAVE-03, WAVE-04, WAVE-05, WAVE-06
+**Requirements**: BRAND-01, BRAND-02, BRAND-03, BRAND-04, BRAND-05
 **Success Criteria** (what must be TRUE):
   1. No teal (#00D9A6) exists anywhere in the UI — Tremble Rose (#F4436C) is the primary CTA color throughout
   2. All four fonts render correctly: Playfair Display 900 on display/H1, Lora on body, Instrument Sans on UI elements, JetBrains Mono on telemetry readouts
-  3. User can send a wave from the dashboard with one tap — no confirmation dialog
-  4. One-sided waves are never visible to the recipient until mutual interest is confirmed
-  5. A mutual wave creates a match in Firestore and triggers the match reveal screen with brand animation
-  6. After match, both users can see each other's full profile (name, photo, bio, interests)
+  3. Onboarding and registration copy is updated to brand voice — short, direct, confident
+  4. Real Google Maps API key is wired on both platforms (Android + iOS)
+  5. flutter analyze runs clean — zero new warnings
 **Plans**: TBD
 **UI hint**: yes
 
-#### Phase 7: Messaging & Push Notifications
-**Goal**: Matched users can chat in real time and the three approved notification types fire at the right moments
+#### Phase 7: Wave Mechanic
+**Goal**: Users can send waves, mutual waves create matches, and the match reveal + profile unlock work end-to-end
 **Depends on**: Phase 6
+**Requirements**: WAVE-01, WAVE-02, WAVE-03, WAVE-04, WAVE-05, WAVE-06
+**Success Criteria** (what must be TRUE):
+  1. User can send a wave from the dashboard with one tap — no confirmation dialog
+  2. One-sided waves are never visible to the recipient until mutual interest is confirmed
+  3. A mutual wave creates a match in Firestore and triggers the match reveal screen with brand animation
+  4. After match, both users can see each other's full profile (name, photo, bio, interests)
+  5. Wave state is persisted correctly — no duplicate waves, no race conditions
+**Plans**: TBD
+**UI hint**: yes
+
+#### Phase 8: Messaging & Push Notifications
+**Goal**: Matched users can chat in real time and the three approved notification types fire at the right moments
+**Depends on**: Phase 7
 **Requirements**: MSG-01, MSG-02, MSG-03, MSG-04, PUSH-01, PUSH-02, PUSH-03, PUSH-04, PUSH-05
 **Success Criteria** (what must be TRUE):
   1. User can send and receive messages in real time after a mutual wave match
@@ -110,9 +122,9 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 
 **Milestone Goal:** Revenue layer is live and the app meets production security and compliance requirements.
 
-#### Phase 8: Paywall / Tremble Pro
+#### Phase 9: Paywall / Tremble Pro
 **Goal**: The freemium wave limit and Tremble Pro subscription are live and purchasable on both platforms
-**Depends on**: Phase 7
+**Depends on**: Phase 8
 **Requirements**: WAVE-07, PAY-01, PAY-02, PAY-03, PAY-04, PAY-05, PAY-06
 **Success Criteria** (what must be TRUE):
   1. Free tier users are blocked from sending a 6th wave in a calendar month with a clear paywall prompt
@@ -122,9 +134,9 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
   5. When a Pro subscription lapses, the user gracefully reverts to free tier limits without data loss or crash
 **Plans**: TBD
 
-#### Phase 9: Security Hardening & GDPR
+#### Phase 10: Security Hardening & GDPR
 **Goal**: The app is production-security-ready — App Check enforced, Firestore rules hardened, and GDPR deletion pipeline validated end-to-end
-**Depends on**: Phase 8
+**Depends on**: Phase 9
 **Requirements**: SEC-01, SEC-02, SEC-03, SEC-04, SEC-05, SEC-06
 **Success Criteria** (what must be TRUE):
   1. Firebase App Check is enforced in all 21 Cloud Functions — unauthenticated requests are rejected (SEC-001 blocker resolved)
@@ -140,9 +152,9 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 
 **Milestone Goal:** Tremble is live on both stores with a functional marketing landing page.
 
-#### Phase 10: Launch Polish & Store Deploy
+#### Phase 11: Launch Polish & Store Deploy
 **Goal**: Tremble is submitted to and approved by the App Store and Play Store, with a live marketing landing page at trembledating.com
-**Depends on**: Phase 9
+**Depends on**: Phase 10
 **Requirements**: LAUNCH-01, LAUNCH-02, LAUNCH-03, LAUNCH-04, LAUNCH-05, LAUNCH-06, LAUNCH-07
 **Success Criteria** (what must be TRUE):
   1. App Store Connect listing is complete — metadata, keywords, screenshots, and preview video uploaded
