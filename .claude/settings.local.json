@@ -12,7 +12,14 @@
       "Skill(gsd:plan-phase)",
       "Skill(gsd:new-project)",
       "Bash(grep -r \"fontFamily\\\\|Font\\\\b\" /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/lib --include=*.dart -l)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Skill(gsd:execute-phase)",
+      "Bash(git check-ignore:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(chmod:*)",
+      "Skill(gsd:session-report)"
     ]
   }
 }
