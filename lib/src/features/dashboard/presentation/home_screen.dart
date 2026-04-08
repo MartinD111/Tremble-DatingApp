@@ -350,6 +350,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
+// navIndexProvider is intentionally defined here (after HomeScreen) so it is
+// a global Riverpod provider that persists across GoRouter rebuilds.
+// The Settings tab index is preserved when returning from pushed routes
+// like /profile-preview or /edit-profile.
 final navIndexProvider = StateProvider<int>((ref) => 0);
 
 /// Amber animated pill shown on the Radar screen when the background engine

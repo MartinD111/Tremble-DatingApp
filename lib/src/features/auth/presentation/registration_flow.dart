@@ -71,10 +71,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final isGoogleUser = currentUser?.providerData
             .any((p) => p.providerId == 'google.com') ??
         false;
-    if (currentUser != null && isGoogleUser) {
-      // Google users: pre-fill known fields, start from beginning of flow.
+    if (currentUser != null) {
+      // Pre-fill known fields for any authenticated user resuming onboarding
       _emailController.text = currentUser.email ?? '';
-      _nameController.text = currentUser.displayName ?? '';
+      if (isGoogleUser) {
+        _nameController.text = currentUser.displayName ?? '';
+      }
     }
     _currentPage = 0;
     
@@ -161,11 +163,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // What to meet
   final List<String> _wantToMeet = [];
-  final Map<String, ExpansionTileController> _hobbyTileControllers = {};
+  final Map<String, ExpansibleController> _hobbyTileControllers = {};
 
-  ExpansionTileController _getHobbyTileController(String key) {
+  ExpansibleController _getHobbyTileController(String key) {
     if (!_hobbyTileControllers.containsKey(key)) {
-      _hobbyTileControllers[key] = ExpansionTileController();
+      _hobbyTileControllers[key] = ExpansibleController();
     }
     return _hobbyTileControllers[key]!;
   }
@@ -212,13 +214,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   Future<void> _registerUser() async {
     final currentUser = FirebaseAuth.instance.currentUser;
-    // Check if we already have an authenticated user (Social login)
-    final isSocialUser = currentUser?.providerData.any(
-            (p) => p.providerId == 'google.com' || p.providerId == 'apple.com') ??
-        false;
 
-    if (currentUser != null && isSocialUser) {
-      // Already logged in via Social, just move to next page
+    if (currentUser != null) {
+      // Already logged in (via Social or incomplete Email registration), just move to next page
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -390,7 +388,24 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _backButton() {
     return Align(
       alignment: Alignment.topLeft,
-      child: TrembleBackButton(onPressed: _prevPage, label: tr('back')),
+      child: TrembleBackButton(
+        label: tr('back'),
+        onPressed: () async {
+          if (_currentPage > 0) {
+            _pageController.previousPage(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.easeInOut,
+            );
+            setState(() => _currentPage--);
+          } else {
+            // Sign out if leaving onboarding completely to allow fresh start
+            if (FirebaseAuth.instance.currentUser != null) {
+              await FirebaseAuth.instance.signOut();
+            }
+            if (mounted) context.pop();
+          }
+        },
+      ),
     );
   }
 
@@ -715,14 +730,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             const SizedBox(height: 16),
             _stepHeader(tr('basic_info')),
             const SizedBox(height: 32),
-            if (isAlreadyLoggedIn && isSocialUser && _emailController.text.isNotEmpty)
+            if (isAlreadyLoggedIn && (isSocialUser || hasPassword) && _emailController.text.isNotEmpty)
               _inputField(tr('email'), _emailController, icon: LucideIcons.mail, keyboard: TextInputType.emailAddress, readOnly: true)
             else
               _inputField(tr('email'), _emailController, icon: LucideIcons.mail, keyboard: TextInputType.emailAddress, readOnly: false),
             const SizedBox(height: 20),
             _locationAutocomplete(),
             // Show password fields if the user is not logged in OR if they haven't set a password yet (Social users)
-            if (!hasPassword) ...[
+            if (!hasPassword && !isSocialUser) ...[
               const SizedBox(height: 20),
               _passwordInputField(),
               const SizedBox(height: 20),
@@ -748,7 +763,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ? const Center(child: CircularProgressIndicator(color: Color(0xFFF4436C)))
               : _continueButton(
                   enabled: _emailController.text.isNotEmpty &&
-                      ((isAlreadyLoggedIn && isSocialUser && _passwordController.text.isEmpty) || 
+                      ((isAlreadyLoggedIn && (isSocialUser || hasPassword)) || 
                        (_isPasswordValid && _passwordController.text == _confirmPasswordController.text)),
                   onTap: _nextPage,
                 ),
@@ -3330,11 +3345,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
 
     try {
-      // Step 1: Create Firebase Auth user
-      await ref.read(authStateProvider.notifier).register(
-            _emailController.text.trim(),
-            _passwordController.text,
-          );
+      setState(() => _isRegistering = true);
+
+      // Step 1: Firebase Auth user is ALREADY created on page 5 (_registerUser)
+      // We skip register() here to avoid 'email-already-in-use' exception.
 
       // Step 2: Save profile via Cloud Function.
       // In debug mode, API failures are bypassed inside the notifier and

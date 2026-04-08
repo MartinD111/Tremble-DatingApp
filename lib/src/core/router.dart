@@ -23,13 +23,29 @@ import '../shared/ui/gradient_scaffold.dart'; // Assume exists
 class _RouterNotifier extends ChangeNotifier {
   final Ref _ref;
 
+  // True once the first auth state has been emitted by the Firebase stream.
+  // Until then we return null from redirect so GoRouter does nothing — this
+  // prevents the transient null → /login redirect that caused the crash when
+  // navigating back from /profile-preview.
+  bool _initialized = false;
+
   _RouterNotifier(this._ref) {
-    _ref.listen<AuthUser?>(authStateProvider, (_, __) => notifyListeners());
+    // If the auth state is already known (e.g. cached Firebase session),
+    // mark as initialized immediately so the first redirect is not blocked.
+    if (_ref.read(authStateProvider) != null) {
+      _initialized = true;
+    }
+
+    _ref.listen<AuthUser?>(authStateProvider, (prev, next) {
+      _initialized = true;
+      notifyListeners();
+    });
     _ref.listen<AsyncValue<bool>>(gdprConsentProvider, (_, __) => notifyListeners());
   }
 
+  bool get isInitialized => _initialized;
   AuthUser? get authState => _ref.read(authStateProvider);
-  bool get hasConsent => _ref.read(gdprConsentProvider).asData?.value ?? true;
+  bool get hasConsent => _ref.read(gdprConsentProvider).value ?? false;
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -94,25 +110,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
+      if (!notifier.isInitialized) return null;
+
       final authState = notifier.authState;
       final isLoggedIn = authState != null;
       final isOnboarded = authState?.isOnboarded ?? false;
       final hasConsent = notifier.hasConsent;
-      
+
       final path = state.uri.toString();
       final isLoginRoute = path == '/login';
       final isOnboardingRoute = path == '/onboarding';
       final isPermissionRoute = path == '/permission-gate';
+      final isForgotPasswordRoute = path == '/forgot-password';
 
       if (!isLoggedIn) {
-        if (isOnboardingRoute) return null;
-        if (path == '/forgot-password') return null;
+        if (isOnboardingRoute || isForgotPasswordRoute) return null;
         return isLoginRoute ? null : '/login';
       }
 
       if (!isOnboarded) {
-        // Allow user to stay on login so they can choose when to register.
-        if (isLoginRoute || isOnboardingRoute) return null;
+        if (isLoggedIn && isLoginRoute) return '/onboarding';
+        if (isLoginRoute || isOnboardingRoute || isPermissionRoute || isForgotPasswordRoute) return null;
         return '/login';
       }
 

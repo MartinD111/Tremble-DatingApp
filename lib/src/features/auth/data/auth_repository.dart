@@ -452,9 +452,21 @@ class AuthRepository {
   Future<AuthUser> _fetchUser(User firebaseUser) async {
     final doc = await _users.doc(firebaseUser.uid).get();
     if (doc.exists && doc.data() != null) {
+      final data = doc.data()!;
+      bool isOnboarded = data['isOnboarded'] as bool? ?? false;
+      
+      // Self-healing: If they were bugged in yesterday's flow where API call was
+      // skipped due to email-already-in-use, they might have data but isOnboarded == false.
+      // E.g., if we see a 'name', they obviously did at least part of the profile.
+      if (!isOnboarded && data['name'] != null && data['name'].toString().isNotEmpty) {
+        isOnboarded = true;
+        // Fix it in Firestore quietly
+        _users.doc(firebaseUser.uid).update({'isOnboarded': true}).catchError((_) {});
+      }
+
       return AuthUser.fromFirestore(
         firebaseUser.uid,
-        doc.data()!,
+        {...data, 'isOnboarded': isOnboarded},
         emailVerified: firebaseUser.emailVerified,
       );
     }

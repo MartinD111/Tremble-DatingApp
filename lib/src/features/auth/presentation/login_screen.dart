@@ -32,6 +32,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   String _authErrorMessage(Object e) {
     if (e is FirebaseAuthException) {
@@ -115,13 +116,21 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     // Password Input
                     TextField(
                       controller: _passwordController,
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                       decoration: InputDecoration(
                         labelText: tr('password'),
                         labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                         prefixIcon:
                             Icon(LucideIcons.lock, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? LucideIcons.eyeOff : LucideIcons.eye,
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                            size: 20,
+                          ),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide.none,
                           borderRadius: BorderRadius.circular(100),
@@ -230,7 +239,12 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
 
                     // Are you new Pill
                     GestureDetector(
-                      onTap: () => context.push('/onboarding'),
+                      onTap: () async {
+                        if (FirebaseAuth.instance.currentUser != null) {
+                          await FirebaseAuth.instance.signOut();
+                        }
+                        if (context.mounted) context.push('/onboarding');
+                      },
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 16),
