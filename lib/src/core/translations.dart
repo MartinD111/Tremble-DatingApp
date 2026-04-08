@@ -343,18 +343,18 @@ const Map<String, Map<String, String>> _translations = {
     'prompt_10': 'My love language is...',
     'prompt_10_ex': 'e.g. acts of service and quality time',
     'write_answer': 'Write your answer...',
-    'onb1_title': 'MEET PEOPLE LIKE PEOPLE',
+    'onb1_title': 'IT RUNS WHILE YOU LIVE.',
     'onb1_body':
-        'A new way to meet people in the real world. When the app notices someone compatible with you it will automatically give you a notification and you can decide if you want to meet them in real life or not.',
-    'onb2_title': 'NO CHATS AND NO ALGORITHMS',
+        'Tremble works in the background. When someone compatible is physically near you, you get a signal. No scrolling required.',
+    'onb2_title': 'ZERO SWIPES. ONE WAVE.',
     'onb2_body':
-        'We believe in real world interactions. No chats, No ghosting and No catfishing. There are 0 algorithms integrated in our app that are ruining our mental health.',
-    'onb3_title': 'MAP VIEW',
+        'No feeds. No algorithms. No endless chat rooms. Just a proximity signal and one decision: wave or move on.',
+    'onb3_title': 'YOUR CITY, LIVE.',
     'onb3_body':
-        'Try out one of our premium features. See how many people are currently searching in cities.',
-    'onb4_title': 'STAY IN CONTROL',
+        'See who\'s discovering nearby in real time. The more Tremble users around you, the higher the signal.',
+    'onb4_title': 'YOUR RULES.',
     'onb4_body':
-        'You have full control over who you connect with. Unmatch or block at any time.',
+        'Unmatch or block at any time. Unidirectional — no one knows you waved until it\'s mutual.',
     'consent_subtitle':
         'By continuing, you agree to our Terms of Service and Privacy Policy.',
     'dating_preference': 'Dating preference',
@@ -659,18 +659,18 @@ const Map<String, Map<String, String>> _translations = {
     'prompt_10': 'Moj jezik ljubezni je...',
     'prompt_10_ex': 'npr. dejanja in kakovostni čas skupaj',
     'write_answer': 'Napiši odgovor...',
-    'onb1_title': 'SPOZNAVAJ LJUDI KOT LJUDJE',
+    'onb1_title': 'DELUJE, MEDTEM KO ŽIVIŠ.',
     'onb1_body':
-        'Nov način spoznavanja ljudi v resničnem svetu. Ko aplikacija zazna nekoga, ki je združljiv s tabo, ti bo samodejno poslala obvestilo in odločiš se, ali ga želiš spoznati v živo.',
-    'onb2_title': 'BREZ KLEPETA IN BREZ ALGORITMOV',
+        'Tremble deluje v ozadju. Ko je nekdo združljiv z blizu tebe, dobiš signal. Brskanja ni potrebnega.',
+    'onb2_title': 'NIČ POTEZ. EN VAL.',
     'onb2_body':
-        'Verjamemo v interakcije v resničnem svetu. Brez klepeta, brez ghostinga in brez catfishinga. V naši aplikaciji ni algoritmov, ki bi uničevali naše duševno zdravje.',
-    'onb3_title': 'POGLED NA KARTO',
+        'Brez feedov. Brez algoritmov. Brez klepetalnic. Le signal bližine in ena odločitev: val ali naprej.',
+    'onb3_title': 'TVOJE MESTO, V ŽIVO.',
     'onb3_body':
-        'Preizkusi eno od naših premium funkcij. Poglej, koliko ljudi trenutno išče v mestih.',
-    'onb4_title': 'OHRANITE NADZOR',
+        'Poglej, kdo odkriva v bližini v realnem času. Več kot je Tremble uporabnikov okoli tebe, močnejši je signal.',
+    'onb4_title': 'TVOJA PRAVILA.',
     'onb4_body':
-        'Imate popoln nadzor nad tem, s kom se povežete. Kadarkoli lahko prekinete stik ali blokirate uporabnika.',
+        'Odpravi ujemanje ali blokiraj kadarkoli. Enosmerno — nihče ne ve, da si poslal val, dokler ni vzajemno.',
     'consent_subtitle':
         'Z nadaljevanjem se strinjate z našimi Pogoji poslovanja in Politiko zasebnosti.',
     'dating_preference': 'Dating preference',
@@ -939,15 +939,18 @@ const Map<String, Map<String, String>> _translations = {
     'prompt_10': 'Meine Liebessprache ist...',
     'prompt_10_ex': 'z.B. Taten und gemeinsame Zeit',
     'write_answer': 'Antwort schreiben...',
-    'onb1_title': 'MENSCHEN WIE MENSCHEN TREFFEN',
+    'onb1_title': 'ES LÄUFT, WÄHREND DU LEBST.',
     'onb1_body':
-        'Eine neue Art, Menschen in der echten Welt zu treffen. Wenn die App jemanden entdeckt, der zu dir passt, sendet sie dir automatisch eine Benachrichtigung.',
-    'onb2_title': 'KEIN CHAT UND KEINE ALGORITHMEN',
+        'Tremble arbeitet im Hintergrund. Wenn jemand Passendes physisch in deiner Nähe ist, bekommst du ein Signal. Kein Scrollen nötig.',
+    'onb2_title': 'NULL SWIPES. EINE WELLE.',
     'onb2_body':
-        'Wir glauben an echte Begegnungen. Kein Chat, kein Ghosting und kein Catfishing. Es gibt keine Algorithmen in unserer App.',
-    'onb3_title': 'KARTENANSICHT',
+        'Keine Feeds. Keine Algorithmen. Keine endlosen Chatrooms. Nur ein Näherungssignal und eine Entscheidung: Welle senden oder weiter.',
+    'onb3_title': 'DEINE STADT, LIVE.',
     'onb3_body':
-        'Probiere eine unserer Premium-Funktionen aus. Sieh, wie viele Menschen gerade in Städten suchen.',
+        'Sieh, wer gerade in der Nähe entdeckt wird. Je mehr Tremble-Nutzer um dich herum, desto stärker das Signal.',
+    'onb4_title': 'DEINE REGELN.',
+    'onb4_body':
+        'Entmatch oder blockiere jederzeit. Unidirektional — niemand weiß, dass du eine Welle gesendet hast, bis es gegenseitig ist.',
   },
 
   // ═══════════════════════════════════════════
@@ -1105,15 +1108,18 @@ const Map<String, Map<String, String>> _translations = {
     'prompt_10': 'Il mio linguaggio dell\'amore è...',
     'prompt_10_ex': 'es. atti di servizio e tempo di qualità',
     'write_answer': 'Scrivi la tua risposta...',
-    'onb1_title': 'INCONTRA PERSONE COME PERSONE',
+    'onb1_title': 'FUNZIONA MENTRE VIVI.',
     'onb1_body':
-        'Un nuovo modo di incontrare persone nel mondo reale. Quando l\'app nota qualcuno compatibile con te, ti invierà automaticamente una notifica.',
-    'onb2_title': 'NIENTE CHAT E NIENTE ALGORITMI',
+        'Tremble lavora in background. Quando qualcuno compatibile è fisicamente vicino a te, ricevi un segnale. Niente scroll.',
+    'onb2_title': 'ZERO SWIPE. UN\'ONDA.',
     'onb2_body':
-        'Crediamo nelle interazioni nel mondo reale. Niente chat, niente ghosting e niente catfishing. Nella nostra app non ci sono algoritmi.',
-    'onb3_title': 'VISTA MAPPA',
+        'Nessun feed. Nessun algoritmo. Nessuna chat infinita. Solo un segnale di prossimità e una scelta: onda o vai avanti.',
+    'onb3_title': 'LA TUA CITTÀ, IN DIRETTA.',
     'onb3_body':
-        'Prova una delle nostre funzionalità premium. Vedi quante persone stanno cercando nelle città in questo momento.',
+        'Vedi chi sta scoprendo nelle vicinanze in tempo reale. Più utenti Tremble ci sono intorno a te, più forte è il segnale.',
+    'onb4_title': 'LE TUE REGOLE.',
+    'onb4_body':
+        'Rimuovi il match o blocca in qualsiasi momento. Unidirezionale — nessuno sa che hai inviato un\'onda finché non è reciproca.',
   },
 
   // ═══════════════════════════════════════════
@@ -1248,15 +1254,18 @@ const Map<String, Map<String, String>> _translations = {
     'prompt_10': 'Mon langage de l\'amour est...',
     'prompt_10_ex': 'ex. les actes de service et le temps de qualité',
     'write_answer': 'Écris ta réponse...',
-    'onb1_title': 'RENCONTREZ DES PERSONNES COMME DES PERSONNES',
+    'onb1_title': 'ÇA TOURNE PENDANT QUE TU VIS.',
     'onb1_body':
-        'Une nouvelle façon de rencontrer des gens dans le monde réel. Quand l\'app repère quelqu\'un de compatible, elle t\'envoie une notification automatique.',
-    'onb2_title': 'PAS DE CHAT ET PAS D\'ALGORITHMES',
+        'Tremble fonctionne en arrière-plan. Quand quelqu\'un de compatible est physiquement proche de toi, tu reçois un signal. Pas de scroll.',
+    'onb2_title': 'ZÉRO SWIPE. UNE VAGUE.',
     'onb2_body':
-        'Nous croyons aux interactions dans le monde réel. Pas de chat, pas de ghosting et pas de catfishing. Aucun algorithme dans notre app.',
-    'onb3_title': 'VUE CARTE',
+        'Pas de fils d\'actu. Pas d\'algorithmes. Pas de salles de chat sans fin. Juste un signal de proximité et un choix : vague ou passe.',
+    'onb3_title': 'TA VILLE, EN DIRECT.',
     'onb3_body':
-        'Essaie l\'une de nos fonctionnalités premium. Vois combien de personnes recherchent actuellement dans les villes.',
+        'Vois qui découvre à proximité en temps réel. Plus il y a d\'utilisateurs Tremble autour de toi, plus le signal est fort.',
+    'onb4_title': 'TES RÈGLES.',
+    'onb4_body':
+        'Supprime le match ou bloque à tout moment. Unidirectionnel — personne ne sait que tu as envoyé une vague jusqu\'à ce que ce soit mutuel.',
   },
 
   // ═══════════════════════════════════════════
@@ -1386,15 +1395,18 @@ const Map<String, Map<String, String>> _translations = {
     'prompt_10': 'Moj jezik ljubavi je...',
     'prompt_10_ex': 'npr. djela i kvalitetno zajedničko vrijeme',
     'write_answer': 'Napiši odgovor...',
-    'onb1_title': 'UPOZNAJTE LJUDE KAO LJUDE',
+    'onb1_title': 'RADI DOK TI ŽIVIŠ.',
     'onb1_body':
-        'Novi način upoznavanja ljudi u stvarnom svijetu. Kada aplikacija primijeti nekoga kompatibilnog s tobom, automatski će ti poslati obavijest.',
-    'onb2_title': 'BEZ CHATA I BEZ ALGORITAMA',
+        'Tremble radi u pozadini. Kada je netko kompatibilan fizički blizu tebe, dobivate signal. Bez skrolanja.',
+    'onb2_title': 'NULA PREVLAČENJA. JEDAN VAL.',
     'onb2_body':
-        'Vjerujemo u interakcije u stvarnom svijetu. Bez chata, bez ghostinga i bez catfishinga. U našoj aplikaciji nema algoritama.',
-    'onb3_title': 'POGLED KARTE',
+        'Bez feedova. Bez algoritama. Bez beskonačnih chatova. Samo signal blizine i jedna odluka: val ili nastavi.',
+    'onb3_title': 'TVOJ GRAD, UŽIVO.',
     'onb3_body':
-        'Isprobaj jednu od naših premium značajki. Vidi koliko ljudi trenutno traži u gradovima.',
+        'Vidi tko otkriva u blizini u stvarnom vremenu. Što više Tremble korisnika oko tebe, to je signal jači.',
+    'onb4_title': 'TVOJA PRAVILA.',
+    'onb4_body':
+        'Poništi podudaranje ili blokiraj u bilo kojem trenutku. Jednosmjerno — nitko ne zna da si poslao val dok nije uzajamno.',
   },
 
   // ═══════════════════════════════════════════
@@ -1521,15 +1533,18 @@ const Map<String, Map<String, String>> _translations = {
     'prompt_10': 'Moj jezik ljubavi je...',
     'prompt_10_ex': 'npr. dela i kvalitetno zajedničko vreme',
     'write_answer': 'Napiši odgovor...',
-    'onb1_title': 'UPOZNAJTE LJUDE KAO LJUDE',
+    'onb1_title': 'RADI DOK ŽIVIŠ.',
     'onb1_body':
-        'Novi način upoznavanja ljudi u stvarnom svetu. Kada aplikacija primeti nekoga kompatibilnog s tobom, automatski će ti poslati obaveštenje.',
-    'onb2_title': 'BEZ CHATA I BEZ ALGORITAMA',
+        'Tremble radi u pozadini. Kada je neko kompatibilan fizički blizu tebe, dobijate signal. Bez skrolanja.',
+    'onb2_title': 'NULA PREVLAČENJA. JEDAN VAL.',
     'onb2_body':
-        'Verujemo u interakcije u stvarnom svetu. Bez chata, bez ghostinga i bez catfishinga. U našoj aplikaciji nema algoritama.',
-    'onb3_title': 'POGLED MAPE',
+        'Bez feedova. Bez algoritama. Bez beskonačnih ćaskanja. Samo signal blizine i jedna odluka: val ili nastavi.',
+    'onb3_title': 'TVOJ GRAD, UŽIVO.',
     'onb3_body':
-        'Isprobaj jednu od naših premium funkcija. Vidi koliko ljudi trenutno traži u gradovima.',
+        'Vidi ko otkriva u blizini u realnom vremenu. Što više Tremble korisnika oko tebe, to je signal jači.',
+    'onb4_title': 'TVOJA PRAVILA.',
+    'onb4_body':
+        'Poništi podudaranje ili blokiraj u bilo kom trenutku. Jednosmerno — niko ne zna da si poslao val dok nije uzajamno.',
   },
 
   // ═══════════════════════════════════════════
@@ -1655,15 +1670,18 @@ const Map<String, Map<String, String>> _translations = {
     'prompt_10': 'A szeretetnyelv...',
     'prompt_10_ex': 'pl. cselekedetek és minőségi idő együtt',
     'write_answer': 'Írj választ...',
-    'onb1_title': 'TALÁLKOZZATOK EMBERKÉNT',
+    'onb1_title': 'AKKOR IS MŰKÖDIK, AMIKOR ÉLSZ.',
     'onb1_body':
-        'Egy új módja a valós világban való ismerkedésnek. Amikor az alkalmazás egy hozzád illő személyt észlel, automatikusan értesítést küld.',
-    'onb2_title': 'SEM CHAT, SEM ALGORITMUSOK',
+        'A Tremble a háttérben fut. Ha valaki kompatibilis személy fizikailag közel van hozzád, jelet kapsz. Nincs görgetés.',
+    'onb2_title': 'NULLA SWIPE. EGY HULLÁM.',
     'onb2_body':
-        'Hiszünk a való életes interakciókban. Nincs chat, nincs ghosting és nincs catfishing. Nincsenek algoritmusok az alkalmazásunkban.',
-    'onb3_title': 'TÉRKÉPNÉZET',
+        'Nincs hírfolyam. Nincs algoritmus. Nincs végtelen csevegőterem. Csak egy közelségi jel és egy döntés: hullám vagy tovább.',
+    'onb3_title': 'A VÁROSOD, ÉLŐ.',
     'onb3_body':
-        'Próbáld ki prémium funkcióink egyikét. Nézd meg, hány ember keres jelenleg a városokban.',
+        'Nézd meg, ki fedez fel a közelben valós időben. Minél több Tremble-felhasználó van körülötted, annál erősebb a jel.',
+    'onb4_title': 'A TE SZABÁLYAID.',
+    'onb4_body':
+        'Szüntesd meg az egyezést vagy blokkold bármikor. Egyirányú — senki sem tudja, hogy hullámot küldtél, amíg nem kölcsönös.',
   },
 };
 
