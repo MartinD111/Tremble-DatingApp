@@ -15,6 +15,7 @@ import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
 import 'package:flutter_animate/flutter_animate.dart'; // Animations
+import '../../../core/theme.dart'; // TrembleTheme — telemetryTextStyle
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State
@@ -281,9 +282,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           isDegraded
                               ? "Geo matching \u2014 BLE paused"
                               : "Skeniranje...",
-                          style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              letterSpacing: 2),
+                          style: TrembleTheme.telemetryTextStyle(
+                            context,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ).copyWith(letterSpacing: 2),
                         ).animate().fade().slideY(begin: 0.5),
                       ),
                     ),
@@ -415,12 +417,13 @@ class _PowerSavePillState extends State<_PowerSavePill>
             const SizedBox(width: 7),
             Text(
               'Radar v varč. načinu  •  ${widget.batteryLevel}%',
-              style: const TextStyle(
+              style: TrembleTheme.telemetryTextStyle(
+                context,
                 color: Colors.black87,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
-              ),
+              ).copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3),
             ),
           ],
         ),
