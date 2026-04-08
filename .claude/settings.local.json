@@ -8,7 +8,11 @@
       "Read(//c/Users/marti/AppData/Roaming/npm//**)",
       "Read(//c/Users/marti/AppData/Local/**)",
       "Bash(xargs grep:*)",
-      "Skill(gsd:settings)"
+      "Skill(gsd:settings)",
+      "Skill(gsd:plan-phase)",
+      "Skill(gsd:new-project)",
+      "Bash(grep -r \"fontFamily\\\\|Font\\\\b\" /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/lib --include=*.dart -l)",
+      "Bash(node:*)"
     ]
   }
 }
