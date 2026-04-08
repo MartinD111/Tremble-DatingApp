@@ -533,7 +533,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     // Determine background brightness based on themeModeProvider
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
 
-    // Default base colors
+    // Gender-specific gradient — intentional UI, not brand tokens. Do not replace with TrembleTheme colors.
     Color topColor = isDark ? const Color(0xFF1E1E2E) : const Color(0xFFF0F4F8);
     Color bottomColor =
         isDark ? const Color(0xFF2A2A3E) : const Color(0xFFD9E2EC);
