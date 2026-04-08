@@ -40,7 +40,8 @@ class _RouterNotifier extends ChangeNotifier {
       _initialized = true;
       notifyListeners();
     });
-    _ref.listen<AsyncValue<bool>>(gdprConsentProvider, (_, __) => notifyListeners());
+    _ref.listen<AsyncValue<bool>>(
+        gdprConsentProvider, (_, __) => notifyListeners());
   }
 
   bool get isInitialized => _initialized;
@@ -129,9 +130,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (!isOnboarded) {
-        if (isLoggedIn && isLoginRoute) return '/onboarding';
-        if (isLoginRoute || isOnboardingRoute || isPermissionRoute || isForgotPasswordRoute) return null;
-        return '/login';
+        // Non-onboarded logged-in users must complete onboarding.
+        // Never bounce through /login — that creates a redirect loop.
+        if (isOnboardingRoute || isForgotPasswordRoute) return null;
+        return '/onboarding';
       }
 
       // GDPR consent gate — shown once after onboarding, never again after granted.

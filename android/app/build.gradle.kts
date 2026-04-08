@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -8,6 +10,14 @@ plugins {
     // Crashlytics — native crash reporting
     id("com.google.firebase.crashlytics")
 }
+
+// Read secrets from local.properties (gitignored — never commit the actual key)
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: ""
 
 android {
     namespace = "tremble.dating.app"
@@ -41,6 +51,7 @@ android {
         // applicationId is now handled by flavors
         minSdk = flutter.minSdkVersion  // flutter_blue_plus requires API 21+
         targetSdk = flutter.targetSdkVersion
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {

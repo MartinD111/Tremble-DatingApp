@@ -53,6 +53,11 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Google Maps SDK — key injected from local.properties via build.gradle.kts -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
+
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
             android:foregroundServiceType="dataSync|location"

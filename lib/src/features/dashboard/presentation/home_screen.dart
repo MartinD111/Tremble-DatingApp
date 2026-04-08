@@ -266,8 +266,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           FlutterBackgroundService().startService();
                         }
                       },
-                    ).animate().scale(
-                        duration: 600.ms, curve: Curves.easeOutBack),
+                    )
+                        .animate()
+                        .scale(duration: 600.ms, curve: Curves.easeOutBack),
                   ),
 
                   if (isScanning) ...[

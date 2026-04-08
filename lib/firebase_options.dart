@@ -63,8 +63,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '442962390280',
     projectId: 'tremble-dev',
     storageBucket: 'tremble-dev.firebasestorage.app',
-    androidClientId: '442962390280-u6hq3im5h9kbtmvl1u0tclckk7765nbh.apps.googleusercontent.com',
-    iosClientId: '442962390280-6qd7h0n5hetk6iv4norsl5bnghi7gqod.apps.googleusercontent.com',
+    androidClientId:
+        '442962390280-u6hq3im5h9kbtmvl1u0tclckk7765nbh.apps.googleusercontent.com',
+    iosClientId:
+        '442962390280-6qd7h0n5hetk6iv4norsl5bnghi7gqod.apps.googleusercontent.com',
     iosBundleId: 'com.pulse',
   );
 }

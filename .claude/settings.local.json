@@ -7,7 +7,8 @@
       "Bash(npm list:*)",
       "Read(//c/Users/marti/AppData/Roaming/npm//**)",
       "Read(//c/Users/marti/AppData/Local/**)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Skill(gsd:settings)"
     ]
   }
 }

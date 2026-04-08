@@ -14,7 +14,8 @@ class TrembleApiClient {
   factory TrembleApiClient() => _instance;
   TrembleApiClient._internal();
 
-  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+  final FirebaseFunctions _functions =
+      FirebaseFunctions.instanceFor(region: 'europe-west1');
 
   /// Call a Cloud Function by name with optional data.
   ///

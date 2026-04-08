@@ -66,11 +66,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   void initState() {
     super.initState();
     _selectedLanguage = ref.read(appLanguageProvider);
-    
+
     final currentUser = FirebaseAuth.instance.currentUser;
-    final isGoogleUser = currentUser?.providerData
-            .any((p) => p.providerId == 'google.com') ??
-        false;
+    final isGoogleUser =
+        currentUser?.providerData.any((p) => p.providerId == 'google.com') ??
+            false;
     if (currentUser != null) {
       // Pre-fill known fields for any authenticated user resuming onboarding
       _emailController.text = currentUser.email ?? '';
@@ -79,7 +79,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       }
     }
     _currentPage = 0;
-    
+
     _pageController = PageController(initialPage: _currentPage);
   }
 
@@ -204,7 +204,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       _registerUser();
       return; // Handled asynchronously by _registerUser
     }
-    
+
     _pageController.nextPage(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
@@ -227,15 +227,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
     // New Email/Password registration
     setState(() => _isRegistering = true);
-    
+
     try {
       await ref.read(authStateProvider.notifier).register(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-      
+            _emailController.text.trim(),
+            _passwordController.text,
+          );
+
       _showVerificationNotification();
-      
+
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -246,22 +246,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       });
     } catch (e) {
       setState(() => _isRegistering = false);
-      String errorMsg = e.toString().contains('email-already-in-use') 
-          ? tr('email_in_use') 
+      String errorMsg = e.toString().contains('email-already-in-use')
+          ? tr('email_in_use')
           : tr('registration_error');
-          
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMsg, style: GoogleFonts.instrumentSans())),
       );
     }
-  }
-
-  void _prevPage() {
-    _pageController.previousPage(
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeInOut,
-    );
-    setState(() => _currentPage--);
   }
 
   Future<void> _pickImage(int index) async {
@@ -348,7 +340,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   // ────── CONTINUE PILL ──────
-  Widget _continueButton({required bool enabled, required VoidCallback onTap, String? label}) {
+  Widget _continueButton(
+      {required bool enabled, required VoidCallback onTap, String? label}) {
     const _brandRose = Color(0xFFF4436C);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -359,7 +352,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          color: enabled ? _brandRose : (isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.08)),
+          color: enabled
+              ? _brandRose
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.15)
+                  : Colors.black.withValues(alpha: 0.08)),
           borderRadius: BorderRadius.circular(100),
           boxShadow: [
             if (enabled)
@@ -374,10 +371,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           child: Text(
             label ?? tr('continue_btn'),
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: enabled ? Colors.black : (Theme.of(context).brightness == Brightness.dark ? Colors.white38 : Colors.black38),
-            ),
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: enabled
+                      ? Colors.black
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white38
+                          : Colors.black38),
+                ),
           ),
         ),
       ),
@@ -420,7 +421,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       curve: Curves.easeInOut,
       builder: (ctx, val, _) => LinearProgressIndicator(
         value: val,
-        backgroundColor: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.08),
+        backgroundColor:
+            isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.08),
         valueColor: const AlwaysStoppedAnimation(Color(0xFFF4436C)),
         minHeight: 3,
       ),
@@ -434,13 +436,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       Text(title,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
-              fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black)),
       if (subtitle != null) ...[
         const SizedBox(height: 8),
         Text(subtitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.instrumentSans(
-                color: isDark ? Colors.white60 : Colors.black54, fontSize: 14, height: 1.4)),
+                color: isDark ? Colors.white60 : Colors.black54,
+                fontSize: 14,
+                height: 1.4)),
       ],
     ]);
   }
@@ -459,20 +464,31 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         decoration: BoxDecoration(
           color: selected
               ? _brandRose.withValues(alpha: 0.22)
-              : (isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.05)),
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.black.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
-              color: selected ? _brandRose : (isDark ? Colors.white38 : Colors.black26), width: selected ? 2 : 1),
+              color: selected
+                  ? _brandRose
+                  : (isDark ? Colors.white38 : Colors.black26),
+              width: selected ? 2 : 1),
         ),
         child: Row(
           children: [
             if (icon != null) ...[
-              Icon(icon, color: selected ? _brandRose : (isDark ? Colors.white70 : Colors.black54), size: 20),
+              Icon(icon,
+                  color: selected
+                      ? _brandRose
+                      : (isDark ? Colors.white70 : Colors.black54),
+                  size: 20),
               const SizedBox(width: 12)
             ],
             Text(label,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: selected ? (isDark ? Colors.white : Colors.black) : (isDark ? const Color(0xDDFFFFFF) : Colors.black87),
+                    color: selected
+                        ? (isDark ? Colors.white : Colors.black)
+                        : (isDark ? const Color(0xDDFFFFFF) : Colors.black87),
                     fontSize: 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.w500)),
             const Spacer(),
@@ -622,30 +638,31 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           _optionPill(tr('employed'), _status == 'employed',
               () => setState(() => _status = 'employed')),
           if (_status == 'student' || _status == 'employed') ...[
-              const SizedBox(height: 16),
-              TextField(
-                controller: _customOccupationController,
-                style: TextStyle(color: textColor),
-                decoration: InputDecoration(
-                  labelText: _status == 'student'
-                      ? 'Course of Study (Optional)'
-                      : 'Job Title (Optional)',
-                  labelStyle: GoogleFonts.instrumentSans(color: hintColor),
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
-                      borderSide: BorderSide(color: borderColor)),
-                  focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
-                      borderSide: BorderSide(color: borderFocusColor, width: 2)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                ),
-              ),
-            ],
-            const SizedBox(height: 24),
-            _continueButton(enabled: _status != null, onTap: _nextPage),
             const SizedBox(height: 16),
+            TextField(
+              controller: _customOccupationController,
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
+                labelText: _status == 'student'
+                    ? 'Course of Study (Optional)'
+                    : 'Job Title (Optional)',
+                labelStyle: GoogleFonts.instrumentSans(color: hintColor),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(100),
+                    borderSide: BorderSide(color: borderColor)),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(100),
+                    borderSide: BorderSide(color: borderFocusColor, width: 2)),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              ),
+            ),
           ],
-        ),
+          const SizedBox(height: 24),
+          _continueButton(enabled: _status != null, onTap: _nextPage),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 
@@ -687,9 +704,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               titles[index],
               textAlign: TextAlign.center,
               style: GoogleFonts.instrumentSans(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: titleColor),
+                  fontSize: 28, fontWeight: FontWeight.bold, color: titleColor),
             ),
             const SizedBox(height: 24),
             Text(
@@ -713,8 +728,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageEmailPassword() {
     final currentUser = FirebaseAuth.instance.currentUser;
     final isAlreadyLoggedIn = currentUser != null;
-    final isSocialUser = currentUser?.providerData.any(
-            (p) => p.providerId == 'google.com' || p.providerId == 'apple.com') ??
+    final isSocialUser = currentUser?.providerData.any((p) =>
+            p.providerId == 'google.com' || p.providerId == 'apple.com') ??
         false;
     final hasPassword =
         currentUser?.providerData.any((p) => p.providerId == 'password') ??
@@ -730,10 +745,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             const SizedBox(height: 16),
             _stepHeader(tr('basic_info')),
             const SizedBox(height: 32),
-            if (isAlreadyLoggedIn && (isSocialUser || hasPassword) && _emailController.text.isNotEmpty)
-              _inputField(tr('email'), _emailController, icon: LucideIcons.mail, keyboard: TextInputType.emailAddress, readOnly: true)
+            if (isAlreadyLoggedIn &&
+                (isSocialUser || hasPassword) &&
+                _emailController.text.isNotEmpty)
+              _inputField(tr('email'), _emailController,
+                  icon: LucideIcons.mail,
+                  keyboard: TextInputType.emailAddress,
+                  readOnly: true)
             else
-              _inputField(tr('email'), _emailController, icon: LucideIcons.mail, keyboard: TextInputType.emailAddress, readOnly: false),
+              _inputField(tr('email'), _emailController,
+                  icon: LucideIcons.mail,
+                  keyboard: TextInputType.emailAddress,
+                  readOnly: false),
             const SizedBox(height: 20),
             _locationAutocomplete(),
             // Show password fields if the user is not logged in OR if they haven't set a password yet (Social users)
@@ -752,21 +775,25 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _pwReq(tr('pw_special'), _hasSpecialChar),
                 _pwReq(
                     tr('confirm_password'),
-                    _passwordController.text == _confirmPasswordController.text &&
+                    _passwordController.text ==
+                            _confirmPasswordController.text &&
                         _confirmPasswordController.text.isNotEmpty),
               ],
             ],
             const SizedBox(height: 32),
             _buildPremiumPill(),
             const SizedBox(height: 32),
-            _isRegistering 
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFFF4436C)))
-              : _continueButton(
-                  enabled: _emailController.text.isNotEmpty &&
-                      ((isAlreadyLoggedIn && (isSocialUser || hasPassword)) || 
-                       (_isPasswordValid && _passwordController.text == _confirmPasswordController.text)),
-                  onTap: _nextPage,
-                ),
+            _isRegistering
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFF4436C)))
+                : _continueButton(
+                    enabled: _emailController.text.isNotEmpty &&
+                        ((isAlreadyLoggedIn && (isSocialUser || hasPassword)) ||
+                            (_isPasswordValid &&
+                                _passwordController.text ==
+                                    _confirmPasswordController.text)),
+                    onTap: _nextPage,
+                  ),
             const SizedBox(height: 24),
           ],
         ),
@@ -800,7 +827,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(100),
             borderSide: BorderSide(color: borderFocusColor, width: 2)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       ),
     );
   }
@@ -821,15 +849,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       decoration: InputDecoration(
         labelText: tr('password'),
         labelStyle: GoogleFonts.instrumentSans(color: hintColor),
-        prefixIcon:
-            Icon(LucideIcons.lock, color: iconColor, size: 20),
+        prefixIcon: Icon(LucideIcons.lock, color: iconColor, size: 20),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(100),
             borderSide: BorderSide(color: borderColor)),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(100),
             borderSide: BorderSide(color: borderFocusColor, width: 2)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         suffixIcon: IconButton(
           icon: Icon(_obscurePassword ? LucideIcons.eyeOff : LucideIcons.eye,
               color: iconColor, size: 20),
@@ -884,15 +912,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       decoration: InputDecoration(
         labelText: tr('confirm_password'),
         labelStyle: TextStyle(color: hintColor),
-        prefixIcon:
-            Icon(LucideIcons.lock, color: iconColor, size: 20),
+        prefixIcon: Icon(LucideIcons.lock, color: iconColor, size: 20),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(100),
             borderSide: BorderSide(color: borderColor)),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(100),
             borderSide: BorderSide(color: borderFocusColor, width: 2)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         suffixIcon: IconButton(
           icon: Icon(
               _obscureConfirmPassword ? LucideIcons.eyeOff : LucideIcons.eye,
@@ -957,15 +985,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           decoration: InputDecoration(
             labelText: tr('from_where'),
             labelStyle: TextStyle(color: hintColor),
-            prefixIcon:
-                Icon(LucideIcons.mapPin, color: iconColor, size: 20),
+            prefixIcon: Icon(LucideIcons.mapPin, color: iconColor, size: 20),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(100),
                 borderSide: BorderSide(color: borderColor)),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(100),
                 borderSide: BorderSide(color: borderFocusColor, width: 2)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           ),
         );
       },
@@ -986,7 +1014,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 return ListTile(
                     dense: true,
                     leading: Icon(LucideIcons.mapPin,
-                        size: 14, color: isDark ? Colors.white54 : Colors.black54),
+                        size: 14,
+                        color: isDark ? Colors.white54 : Colors.black54),
                     title: Text(o, style: TextStyle(color: textColor)),
                     onTap: () => onSel(o));
               },
@@ -1020,7 +1049,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     tr('premium_free_notice'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black87, fontSize: 16, height: 1.4),
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 16,
+                        height: 1.4),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -1064,7 +1095,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(LucideIcons.diamond, color: Color(0xFFF4436C), size: 16),
+              const Icon(LucideIcons.diamond,
+                  color: Color(0xFFF4436C), size: 16),
               const SizedBox(width: 8),
               Text(
                 tr('premium_account_activated'),
@@ -1083,12 +1115,90 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ══════════════════════════════════════════════════════
   // PAGE 2 – NAME
   // ══════════════════════════════════════════════════════
+  Widget _buildEmailVerificationBanner() {
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email ?? '';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4436C).withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border:
+            Border.all(color: const Color(0xFFF4436C).withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.mark_email_unread_outlined,
+              color: Color(0xFFF4436C), size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tr('verify_email_title'),
+                  style: GoogleFonts.instrumentSans(
+                    color: isDark ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  email,
+                  style: GoogleFonts.instrumentSans(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                await user?.sendEmailVerification();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(tr('verification_email')),
+                      backgroundColor: const Color(0xFFF4436C),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                }
+              } catch (_) {}
+            },
+            style: TextButton.styleFrom(
+                padding: EdgeInsets.zero, minimumSize: Size.zero),
+            child: Text(
+              tr('resend'),
+              style: const TextStyle(color: Color(0xFFF4436C), fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPageName() {
+    final emailNotVerified =
+        !(FirebaseAuth.instance.currentUser?.emailVerified ?? true);
+    final isEmailUser = FirebaseAuth.instance.currentUser?.providerData
+            .any((p) => p.providerId == 'password') ??
+        false;
+
     return _buildScrollableFormPage(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, 
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _backButton(),
+          if (emailNotVerified && isEmailUser) ...[
+            const SizedBox(height: 16),
+            _buildEmailVerificationBanner(),
+          ],
           const SizedBox(height: 40),
           _stepHeader(tr('whats_your_name')),
           const SizedBox(height: 48),
@@ -1096,21 +1206,34 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             controller: _nameController,
             autofocus: true,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: 28, 
-                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, 
+                fontSize: 28,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
                 fontWeight: FontWeight.w500),
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               hintText: tr('name_hint'),
-              hintStyle:
-                  Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 28, color: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26),
+              hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontSize: 28,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white24
+                      : Colors.black26),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(100),
-                  borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26)),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white24
+                          : Colors.black26)),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(100),
-                  borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black, width: 2)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                      width: 2)),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             ),
           ),
           const SizedBox(height: 24),
@@ -1151,14 +1274,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: ref.watch(themeModeProvider) == ThemeMode.dark ? Colors.white.withAlpha(20) : Colors.black.withAlpha(15),
+              color: ref.watch(themeModeProvider) == ThemeMode.dark
+                  ? Colors.white.withAlpha(20)
+                  : Colors.black.withAlpha(15),
               borderRadius: BorderRadius.circular(100),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Classic or gender based',
-                    style: TextStyle(color: ref.watch(themeModeProvider) == ThemeMode.dark ? Colors.white : Colors.black87, fontSize: 16)),
+                    style: TextStyle(
+                        color: ref.watch(themeModeProvider) == ThemeMode.dark
+                            ? Colors.white
+                            : Colors.black87,
+                        fontSize: 16)),
                 Switch(
                   value: _isClassicAppearance,
                   onChanged: (val) =>
@@ -1172,14 +1301,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: ref.watch(themeModeProvider) == ThemeMode.dark ? Colors.white.withAlpha(20) : Colors.black.withAlpha(15),
+              color: ref.watch(themeModeProvider) == ThemeMode.dark
+                  ? Colors.white.withAlpha(20)
+                  : Colors.black.withAlpha(15),
               borderRadius: BorderRadius.circular(100),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Dark mode',
-                    style: TextStyle(color: ref.watch(themeModeProvider) == ThemeMode.dark ? Colors.white : Colors.black87, fontSize: 16)),
+                    style: TextStyle(
+                        color: ref.watch(themeModeProvider) == ThemeMode.dark
+                            ? Colors.white
+                            : Colors.black87,
+                        fontSize: 16)),
                 Switch(
                   value: ref.watch(themeModeProvider) == ThemeMode.dark,
                   onChanged: (val) {
@@ -1300,7 +1435,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     items: List.generate(maxDays, (i) => '${i + 1}'),
                     selectedIndex: validDay - 1,
                     looping: true,
-                    onChanged: (i) => setState(() => _pickerDay = i + 1 > maxDays ? maxDays : i + 1),
+                    onChanged: (i) => setState(
+                        () => _pickerDay = i + 1 > maxDays ? maxDays : i + 1),
                   )),
               SizedBox(
                   width: 90,
@@ -1394,11 +1530,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-          color: isDark ? Colors.white.withValues(alpha: 0.16) : Colors.black.withValues(alpha: 0.08),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.16)
+              : Colors.black.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: isDark ? Colors.white38 : Colors.black26)),
       child: Text(label,
-          style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 13)),
+          style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87, fontSize: 13)),
     );
   }
 
@@ -1417,7 +1556,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final bodyColor = isDark ? Colors.white60 : Colors.black54;
     final borderColor = isDark ? Colors.white12 : Colors.black12;
     final handleColor = isDark ? Colors.white24 : Colors.black26;
-    final buttonBg = isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
+    final buttonBg =
+        isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
 
     // ── ZVOP-2 čl. 14 / GDPR čl. 8 — HARD STOP FOR UNDER 18 ──────────
     // App is strictly 18+. Registration is impossible for minors.
@@ -1434,53 +1574,54 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
               decoration: BoxDecoration(
                 color: sheetBg.withValues(alpha: 0.8),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(28)),
                 border: Border(top: BorderSide(color: borderColor)),
               ),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: handleColor,
-                    borderRadius: BorderRadius.circular(2))),
-            const SizedBox(height: 28),
-            const Icon(Icons.block_rounded, color: red, size: 56),
-            const SizedBox(height: 20),
-            Text(
-              'Tremble is 18+ only',
-              style: GoogleFonts.instrumentSans(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: titleColor),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'You must be at least 18 years old to use Tremble. '
-              'We are unable to create an account for you at this time.',
-              textAlign: TextAlign.center,
-              style:
-                  GoogleFonts.instrumentSans(color: bodyColor, fontSize: 15, height: 1.5),
-            ),
-            const SizedBox(height: 28),
-            GestureDetector(
-              onTap: () => Navigator.pop(ctx),
-              child: Container(
-                width: double.infinity,
-                height: 54,
-                decoration: BoxDecoration(
-                    color: buttonBg,
-                    borderRadius: BorderRadius.circular(30)),
-                child: Center(
-                    child: Text('Go back',
-                        style: GoogleFonts.instrumentSans(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: isDark ? Colors.white70 : Colors.black87,
-                            letterSpacing: 1.2))),
-              ),
-            ),
-          ]),
+                Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: handleColor,
+                        borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 28),
+                const Icon(Icons.block_rounded, color: red, size: 56),
+                const SizedBox(height: 20),
+                Text(
+                  'Tremble is 18+ only',
+                  style: GoogleFonts.instrumentSans(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: titleColor),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'You must be at least 18 years old to use Tremble. '
+                  'We are unable to create an account for you at this time.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.instrumentSans(
+                      color: bodyColor, fontSize: 15, height: 1.5),
+                ),
+                const SizedBox(height: 28),
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx),
+                  child: Container(
+                    width: double.infinity,
+                    height: 54,
+                    decoration: BoxDecoration(
+                        color: buttonBg,
+                        borderRadius: BorderRadius.circular(30)),
+                    child: Center(
+                        child: Text('Go back',
+                            style: GoogleFonts.instrumentSans(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: isDark ? Colors.white70 : Colors.black87,
+                                letterSpacing: 1.2))),
+                  ),
+                ),
+              ]),
             ),
           ),
         ),
@@ -1501,71 +1642,77 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
             decoration: BoxDecoration(
               color: sheetBg.withValues(alpha: 0.8),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(28)),
               border: Border(top: BorderSide(color: borderColor)),
             ),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: handleColor,
-                  borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 28),
-          Text(
-            tr('youre_age').replaceAll('{age}', '$age'),
-            style: GoogleFonts.instrumentSans(
-                fontSize: 32, fontWeight: FontWeight.bold, color: titleColor),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            tr('is_birthday_correct').replaceAll('{date}', dateStr),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.instrumentSans(
-                color: bodyColor, fontSize: 15, height: 1.5),
-          ),
-          const SizedBox(height: 28),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _birthDate = d;
-                _birthdayConfirmed = true;
-              });
-              Navigator.pop(ctx);
-              _nextPage();
-            },
-            child: Container(
-              width: double.infinity,
-              height: 54,
-              decoration: BoxDecoration(
-                  color: _brandRose,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                        color: _brandRose.withValues(alpha: 0.4), blurRadius: 16)
-                  ]),
-              child: Center(
-                  child: Text(tr('confirm_btn').toUpperCase(),
-                      style: GoogleFonts.instrumentSans(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: Colors.black,
-                          letterSpacing: 1.2))),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(tr('edit_btn').toUpperCase(),
-                style: TextStyle(
-                    color: isDark ? Colors.white54 : Colors.black54, letterSpacing: 1.2, fontSize: 13)),
-          ),
-        ]),
-            ),
+              Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: handleColor,
+                      borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 28),
+              Text(
+                tr('youre_age').replaceAll('{age}', '$age'),
+                style: GoogleFonts.instrumentSans(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: titleColor),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                tr('is_birthday_correct').replaceAll('{date}', dateStr),
+                textAlign: TextAlign.center,
+                style: GoogleFonts.instrumentSans(
+                    color: bodyColor, fontSize: 15, height: 1.5),
+              ),
+              const SizedBox(height: 28),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _birthDate = d;
+                    _birthdayConfirmed = true;
+                  });
+                  Navigator.pop(ctx);
+                  _nextPage();
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 54,
+                  decoration: BoxDecoration(
+                      color: _brandRose,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                            color: _brandRose.withValues(alpha: 0.4),
+                            blurRadius: 16)
+                      ]),
+                  child: Center(
+                      child: Text(tr('confirm_btn').toUpperCase(),
+                          style: GoogleFonts.instrumentSans(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Colors.black,
+                              letterSpacing: 1.2))),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(tr('edit_btn').toUpperCase(),
+                    style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black54,
+                        letterSpacing: 1.2,
+                        fontSize: 13)),
+              ),
+            ]),
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
   // ══════════════════════════════════════════════════════
   // PAGE 5 – HEIGHT
@@ -1595,7 +1742,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     if (cmIndex == -1) cmIndex = cmItems.indexOf('170');
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final toggleBgColor = isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
+    final toggleBgColor =
+        isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
 
     return _buildScrollableFormPage(
       child: Column(
@@ -1627,8 +1775,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       ),
                       child: Text(tr('height_cm'),
                           style: TextStyle(
-                              color: _isMetric 
-                                  ? Colors.black 
+                              color: _isMetric
+                                  ? Colors.black
                                   : (isDark ? Colors.white70 : Colors.black54),
                               fontWeight: _isMetric
                                   ? FontWeight.bold
@@ -1648,8 +1796,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       ),
                       child: Text(tr('height_ft_in'),
                           style: TextStyle(
-                              color: !_isMetric 
-                                  ? Colors.black 
+                              color: !_isMetric
+                                  ? Colors.black
                                   : (isDark ? Colors.white70 : Colors.black54),
                               fontWeight: !_isMetric
                                   ? FontWeight.bold
@@ -1678,8 +1826,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                         final str = ftInItems[i];
                         final parts = str.split('\'');
                         final feet = int.parse(parts[0]);
-                        final inches =
-                            int.parse(parts[1].replaceAll('"', ''));
+                        final inches = int.parse(parts[1].replaceAll('"', ''));
                         final cm = ((feet * 12 + inches) * 2.54).round();
                         setState(() => _heightCm = cm);
                       }),
@@ -1698,7 +1845,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     if (val == null) {
                       setState(() => _partnerHeightRange = null);
                     } else {
-                      setState(() => _partnerHeightRange = '${val.start.toInt()}-${val.end.toInt()}');
+                      setState(() => _partnerHeightRange =
+                          '${val.start.toInt()}-${val.end.toInt()}');
                     }
                   },
                 );
@@ -1804,35 +1952,50 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           Builder(builder: (context) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
             final labelColor = isDark ? Colors.white70 : Colors.black54;
-            return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(tr('politics_left'), style: GoogleFonts.instrumentSans(color: labelColor)),
-              Text(tr('politics_right'), style: GoogleFonts.instrumentSans(color: labelColor)),
-            ]);
+            return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(tr('politics_left'),
+                      style: GoogleFonts.instrumentSans(color: labelColor)),
+                  Text(tr('politics_right'),
+                      style: GoogleFonts.instrumentSans(color: labelColor)),
+                ]);
           }),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              thumbShape: (_politicalAffiliationValue == 0 || _politicalAffiliationValue == -1)
+              thumbShape: (_politicalAffiliationValue == 0 ||
+                      _politicalAffiliationValue == -1)
                   ? const RoundSliderThumbShape(enabledThumbRadius: 0)
                   : const RoundSliderThumbShape(enabledThumbRadius: 10),
             ),
             child: Slider(
-              value: (_politicalAffiliationValue == 0 || _politicalAffiliationValue == -1) ? 3 : _politicalAffiliationValue.clamp(1.0, 5.0),
+              value: (_politicalAffiliationValue == 0 ||
+                      _politicalAffiliationValue == -1)
+                  ? 3
+                  : _politicalAffiliationValue.clamp(1.0, 5.0),
               min: 1,
               max: 5,
               divisions: 4,
               onChanged: (v) {
-                if (_politicalAffiliationValue == 0 || _politicalAffiliationValue == -1) return;
+                if (_politicalAffiliationValue == 0 ||
+                    _politicalAffiliationValue == -1) return;
                 setState(() => _politicalAffiliationValue = v);
               },
               activeColor: const Color(0xFFF4436C),
-              inactiveColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
+              inactiveColor: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white12
+                  : Colors.black12,
             ),
           ),
           const SizedBox(height: 16),
           Builder(builder: (context) {
             final idx = _politicalAffiliationValue.toInt();
             // Guard against index -1 or 0 when "Don't care" or "Undisclosed" is selected
-            final displayLabel = (idx >= 1 && idx <= labels.length && _politicalAffiliationValue > 0) ? labels[idx - 1] : '';
+            final displayLabel = (idx >= 1 &&
+                    idx <= labels.length &&
+                    _politicalAffiliationValue > 0)
+                ? labels[idx - 1]
+                : '';
             return Text(displayLabel,
                 style: GoogleFonts.instrumentSans(
                     color: const Color(0xFFF4436C),
@@ -1860,9 +2023,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   labels: [tr('politics_left'), tr('politics_right')],
                   onSave: (val) {
                     if (val == null) {
-                      setState(() => _partnerPoliticalAffiliationPreference = null);
+                      setState(
+                          () => _partnerPoliticalAffiliationPreference = null);
                     } else {
-                      setState(() => _partnerPoliticalAffiliationPreference = '${val.start.toInt()}-${val.end.toInt()}');
+                      setState(() => _partnerPoliticalAffiliationPreference =
+                          '${val.start.toInt()}-${val.end.toInt()}');
                     }
                   },
                 );
@@ -2091,7 +2256,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   Expanded(
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: isDark ? Colors.white38 : Colors.black26),
+                        side: BorderSide(
+                            color: isDark ? Colors.white38 : Colors.black26),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: const StadiumBorder(),
                       ),
@@ -2169,123 +2335,146 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(builder: (ctx, setModalState) {
         return SafeArea(
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-                decoration: BoxDecoration(
-                  color: (isDark ? const Color(0xFF1A1A2E) : Colors.white).withValues(alpha: 0.8),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                  border: Border(
-                      top: BorderSide(
-                          color: isDark ? Colors.white12 : Colors.black12)),
-                ),
-                child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: isDark ? Colors.white24 : Colors.black26,
-                        borderRadius: BorderRadius.circular(2))),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                'Kakšen naj bo tvoj partner?',
-                style: GoogleFonts.instrumentSans(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
-              ),
-              const SizedBox(height: 24),
-              if (!dontCare) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(labels.first,
-                        style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54)),
-                    Text(labels.last,
-                        style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54)),
-                  ],
-                ),
-                RangeSlider(
-                  values: tempRange,
-                  min: min,
-                  max: max,
-                  divisions: divisions > 0 ? divisions : null,
-                  labels: RangeLabels(
-                    title == tr('introversion') 
-                      ? '${(tempRange.start * 100).toInt()}%' 
-                      : '${tempRange.start.toInt()}',
-                    title == tr('introversion') 
-                      ? '${(tempRange.end * 100).toInt()}%' 
-                      : '${tempRange.end.toInt()}',
-                  ),
-                  activeColor: const Color(0xFFF4436C),
-                  inactiveColor: isDark ? Colors.white12 : Colors.black12,
-                  onChanged: (v) => setModalState(() => tempRange = v),
-                ),
-              ],
-              const SizedBox(height: 16),
-              _optionPill('Vseeno mi je', dontCare, () {
-                setModalState(() => dontCare = !dontCare);
-              }),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: isDark ? Colors.white38 : Colors.black26),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: const StadiumBorder(),
+            child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(28)),
+                child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+                      decoration: BoxDecoration(
+                        color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
+                            .withValues(alpha: 0.8),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(28)),
+                        border: Border(
+                            top: BorderSide(
+                                color:
+                                    isDark ? Colors.white12 : Colors.black12)),
                       ),
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(
-                        'Nazaj',
-                        style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Container(
+                                width: 40,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                    color: isDark
+                                        ? Colors.white24
+                                        : Colors.black26,
+                                    borderRadius: BorderRadius.circular(2))),
+                          ),
+                          const SizedBox(height: 28),
+                          Text(
+                            'Kakšen naj bo tvoj partner?',
+                            style: GoogleFonts.instrumentSans(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1E1E2E)),
+                          ),
+                          const SizedBox(height: 24),
+                          if (!dontCare) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(labels.first,
+                                    style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white70
+                                            : Colors.black54)),
+                                Text(labels.last,
+                                    style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white70
+                                            : Colors.black54)),
+                              ],
+                            ),
+                            RangeSlider(
+                              values: tempRange,
+                              min: min,
+                              max: max,
+                              divisions: divisions > 0 ? divisions : null,
+                              labels: RangeLabels(
+                                title == tr('introversion')
+                                    ? '${(tempRange.start * 100).toInt()}%'
+                                    : '${tempRange.start.toInt()}',
+                                title == tr('introversion')
+                                    ? '${(tempRange.end * 100).toInt()}%'
+                                    : '${tempRange.end.toInt()}',
+                              ),
+                              activeColor: const Color(0xFFF4436C),
+                              inactiveColor:
+                                  isDark ? Colors.white12 : Colors.black12,
+                              onChanged: (v) =>
+                                  setModalState(() => tempRange = v),
+                            ),
+                          ],
+                          const SizedBox(height: 16),
+                          _optionPill('Vseeno mi je', dontCare, () {
+                            setModalState(() => dontCare = !dontCare);
+                          }),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.black26),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    shape: const StadiumBorder(),
+                                  ),
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: Text(
+                                    'Nazaj',
+                                    style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white70
+                                            : Colors.black54,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFF4436C),
+                                    foregroundColor: Colors.black,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(28)),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    if (dontCare) {
+                                      onSave(null);
+                                    } else {
+                                      onSave(tempRange);
+                                    }
+                                    _nextPage();
+                                  },
+                                  child: const Text('Nadaljuj',
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF4436C),
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28)),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        if (dontCare) {
-                          onSave(null);
-                        } else {
-                          onSave(tempRange);
-                        }
-                        _nextPage();
-                      },
-                      child: const Text('Nadaljuj',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ))));
+                    ))));
       }),
     );
   }
@@ -2301,102 +2490,116 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) {
           return SafeArea(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.75,
-                  ),
-                  decoration: BoxDecoration(
-                    color: (isDark ? const Color(0xFF1A1A2E) : Colors.white).withValues(alpha: 0.8),
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(28)),
-                    border: Border(
-                        top: BorderSide(
-                            color: isDark ? Colors.white12 : Colors.black12)),
-                  ),
-                  child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
+              child: ClipRRect(
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(28)),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                     child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                            color: isDark ? Colors.white24 : Colors.black26,
-                            borderRadius: BorderRadius.circular(2))),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    title,
-                    style: GoogleFonts.instrumentSans(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
-                  ),
-                  const SizedBox(height: 16),
-                  Flexible(
-                    child: ListView(
-                      shrinkWrap: true,
-                      padding: EdgeInsets.zero,
-                      children: options.map((o) {
-                        final val = o['key'] as String;
-                        final isSelected = tempSelected.contains(val);
-                        return _optionPill(o['label'] as String, isSelected, () {
-                          setModalState(() {
-                            if (isSelected) {
-                              tempSelected.remove(val);
-                            } else {
-                              tempSelected.add(val);
-                            }
-                          });
-                        }, icon: o['icon'] as IconData?);
-                      }).toList(),
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.75,
+                      ),
+                      decoration: BoxDecoration(
+                        color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
+                            .withValues(alpha: 0.8),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(28)),
+                        border: Border(
+                            top: BorderSide(
+                                color:
+                                    isDark ? Colors.white12 : Colors.black12)),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Container(
+                                width: 40,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                    color: isDark
+                                        ? Colors.white24
+                                        : Colors.black26,
+                                    borderRadius: BorderRadius.circular(2))),
+                          ),
+                          const SizedBox(height: 28),
+                          Text(
+                            title,
+                            style: GoogleFonts.instrumentSans(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1E1E2E)),
+                          ),
+                          const SizedBox(height: 16),
+                          Flexible(
+                            child: ListView(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              children: options.map((o) {
+                                final val = o['key'] as String;
+                                final isSelected = tempSelected.contains(val);
+                                return _optionPill(
+                                    o['label'] as String, isSelected, () {
+                                  setModalState(() {
+                                    if (isSelected) {
+                                      tempSelected.remove(val);
+                                    } else {
+                                      tempSelected.add(val);
+                                    }
+                                  });
+                                }, icon: o['icon'] as IconData?);
+                              }).toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(
+                                        color: isDark
+                                            ? Colors.white38
+                                            : Colors.black26),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    shape: const StadiumBorder(),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                  },
+                                  child: Text(
+                                    'Nazaj',
+                                    style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white70
+                                            : Colors.black54,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _continueButton(
+                                  enabled: tempSelected.isNotEmpty,
+                                  onTap: () {
+                                    Navigator.pop(ctx);
+                                    onSave(tempSelected);
+                                    _nextPage();
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: isDark ? Colors.white38 : Colors.black26),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: const StadiumBorder(),
-                          ),
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                          },
-                          child: Text(
-                            'Nazaj',
-                            style: TextStyle(
-                                color: isDark ? Colors.white70 : Colors.black54,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _continueButton(
-                          enabled: tempSelected.isNotEmpty,
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            onSave(tempSelected);
-                            _nextPage();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          )));
+                  )));
         },
       ),
     );
@@ -2458,9 +2661,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           const SizedBox(height: 48),
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(tr('introvert'),
-                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
+                style:
+                    TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
             Text(tr('extrovert'),
-                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
+                style:
+                    TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
           ]),
           Slider(
             value: _introversionLevel,
@@ -2468,7 +2673,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               setState(() => _introversionLevel = v);
             },
             activeColor: const Color(0xFFF4436C),
-            inactiveColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
+            inactiveColor:
+                isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),
           const SizedBox(height: 16),
           FittedBox(
@@ -2497,7 +2703,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     if (val == null) {
                       setState(() => _partnerIntroversionRange = null);
                     } else {
-                      setState(() => _partnerIntroversionRange = '${(val.start * 100).toInt()}-${(val.end * 100).toInt()}');
+                      setState(() => _partnerIntroversionRange =
+                          '${(val.start * 100).toInt()}-${(val.end * 100).toInt()}');
                     }
                   },
                 );
@@ -2546,9 +2753,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               () => setState(() => _petPreference = 'dog')),
           _optionPill(tr('cat_person'), _petPreference == 'cat',
               () => setState(() => _petPreference = 'cat')),
-          _optionPill(
-              tr('something_else'),
-              _petPreference == 'something_else',
+          _optionPill(tr('something_else'), _petPreference == 'something_else',
               () => setState(() => _petPreference = 'something_else')),
           if (_petPreference == 'something_else')
             Padding(
@@ -2557,17 +2762,23 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 final isDark = Theme.of(context).brightness == Brightness.dark;
                 return TextField(
                   controller: _customPetController,
-                  style: GoogleFonts.instrumentSans(color: isDark ? Colors.white : Colors.black87),
+                  style: GoogleFonts.instrumentSans(
+                      color: isDark ? Colors.white : Colors.black87),
                   decoration: InputDecoration(
                     hintText: tr('write_answer'),
-                    hintStyle: GoogleFonts.instrumentSans(color: isDark ? Colors.white30 : Colors.black38),
+                    hintStyle: GoogleFonts.instrumentSans(
+                        color: isDark ? Colors.white30 : Colors.black38),
                     enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(100),
-                        borderSide: BorderSide(color: isDark ? Colors.white30 : Colors.black26)),
+                        borderSide: BorderSide(
+                            color: isDark ? Colors.white30 : Colors.black26)),
                     focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(100),
-                        borderSide: BorderSide(color: isDark ? Colors.white : Colors.black, width: 2)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        borderSide: BorderSide(
+                            color: isDark ? Colors.white : Colors.black,
+                            width: 2)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 16),
                   ),
                 );
               }),
@@ -2639,20 +2850,27 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               }),
               if (_showCustomLanguage)
                 Builder(builder: (context) {
-                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  final isDark =
+                      Theme.of(context).brightness == Brightness.dark;
                   return TextField(
                     controller: _customLanguageController,
-                    style: GoogleFonts.instrumentSans(color: isDark ? Colors.white : Colors.black87),
+                    style: GoogleFonts.instrumentSans(
+                        color: isDark ? Colors.white : Colors.black87),
                     decoration: InputDecoration(
                       hintText: tr('write_answer'),
-                      hintStyle: GoogleFonts.instrumentSans(color: isDark ? Colors.white30 : Colors.black38),
+                      hintStyle: GoogleFonts.instrumentSans(
+                          color: isDark ? Colors.white30 : Colors.black38),
                       enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(color: isDark ? Colors.white30 : Colors.black26)),
+                          borderSide: BorderSide(
+                              color: isDark ? Colors.white30 : Colors.black26)),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(color: isDark ? Colors.white : Colors.black, width: 2)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          borderSide: BorderSide(
+                              color: isDark ? Colors.white : Colors.black,
+                              width: 2)),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 16),
                     ),
                     onChanged: (v) => setState(() {}),
                   );
@@ -2708,7 +2926,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 '${_ageRangePref.end.round()}'),
             onChanged: (v) => setState(() => _ageRangePref = v),
             activeColor: const Color(0xFFF4436C),
-            inactiveColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
+            inactiveColor:
+                isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),
           const SizedBox(height: 24),
           _continueButton(enabled: _datingPreference != null, onTap: _nextPage),
@@ -2842,9 +3061,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       onSelected: (_) =>
                           setState(() => _selectedHobbies.remove(hobby)),
                       selectedColor: const Color(0xFFF4436C),
-                      backgroundColor: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05),
+                      backgroundColor: isDark
+                          ? Colors.white12
+                          : Colors.black.withValues(alpha: 0.05),
                       shape: StadiumBorder(
-                        side: BorderSide(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1)),
+                        side: BorderSide(
+                            color: isDark
+                                ? Colors.white12
+                                : Colors.black.withValues(alpha: 0.1)),
                       ),
                       checkmarkColor: Colors.black,
                     );
@@ -2859,7 +3083,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     // Ta del zagotovi, da so vse animacije znotraj ExpansionTile gladke
                     expansionTileTheme: ExpansionTileThemeData(
                       iconColor: const Color(0xFFF4436C),
-                      collapsedIconColor: isDark ? Colors.white : Colors.black54,
+                      collapsedIconColor:
+                          isDark ? Colors.white : Colors.black54,
                     ),
                   ),
                   child: ExpansionTile(
@@ -2893,8 +3118,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               label: Text(
                                 hobby,
                                 style: GoogleFonts.instrumentSans(
-                                  color: sel ? Colors.black : (isDark ? Colors.white : Colors.black87),
-                                  fontWeight: sel ? FontWeight.bold : FontWeight.w500,
+                                  color: sel
+                                      ? Colors.black
+                                      : (isDark
+                                          ? Colors.white
+                                          : Colors.black87),
+                                  fontWeight:
+                                      sel ? FontWeight.bold : FontWeight.w500,
                                 ),
                               ),
                               selected: sel,
@@ -2902,12 +3132,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                   ? _selectedHobbies.add(hobby)
                                   : _selectedHobbies.remove(hobby)),
                               selectedColor: const Color(0xFFF4436C),
-                              backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12,
+                              backgroundColor: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white12
+                                  : Colors.black12,
                               shape: StadiumBorder(
                                 side: BorderSide(
                                   color: sel
                                       ? const Color(0xFFF4436C)
-                                      : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black26),
+                                      : (Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white24
+                                          : Colors.black26),
                                 ),
                               ),
                               checkmarkColor: Colors.black,
@@ -2915,7 +3151,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                           }),
                           ActionChip(
                             label: Text(tr('add_own'),
-                                style: GoogleFonts.instrumentSans(color: Colors.black)),
+                                style: GoogleFonts.instrumentSans(
+                                    color: Colors.black)),
                             backgroundColor: const Color(0xFFF4436C),
                             shape: const StadiumBorder(),
                             onPressed: () => _showAddHobbyDialog(),
@@ -2946,10 +3183,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         builder: (ctx) => AlertDialog(
               backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               title: Text(tr('add_hobby'),
-                  style: GoogleFonts.instrumentSans(color: isDark ? Colors.white : Colors.black)),
+                  style: GoogleFonts.instrumentSans(
+                      color: isDark ? Colors.white : Colors.black)),
               content: TextField(
                   controller: ctrl,
-                  style: GoogleFonts.instrumentSans(color: isDark ? Colors.white : Colors.black),
+                  style: GoogleFonts.instrumentSans(
+                      color: isDark ? Colors.white : Colors.black),
                   autofocus: true),
               actions: [
                 TextButton(
@@ -2963,7 +3202,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       }
                     },
                     child: Text(tr('add'),
-                        style: GoogleFonts.instrumentSans(color: const Color(0xFFF4436C)))),
+                        style: GoogleFonts.instrumentSans(
+                            color: const Color(0xFFF4436C)))),
               ],
             ));
   }
@@ -2999,7 +3239,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 child: Stack(clipBehavior: Clip.none, children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.05),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.07)
+                          : Colors.black.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                           color: _photos[i] != null
@@ -3013,7 +3255,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     child: _photos[i] == null
                         ? Center(
                             child: Icon(LucideIcons.plus,
-                                color: isDark ? Colors.white38 : Colors.black26, size: 28))
+                                color: isDark ? Colors.white38 : Colors.black26,
+                                size: 28))
                         : null,
                   ),
                   if (i == 0)
@@ -3059,157 +3302,184 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageConsent() {
     return _buildScrollableFormPage(
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _backButton(),
-            const SizedBox(height: 24),
-            _stepHeader(
-              'Privacy and GDPR',
-              subtitle: tr('consent_subtitle'),
-            ),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 0),
-                child: TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      final newVal = !_consentGiven;
-                      _consentTerms = newVal;
-                      _consentPrivacy = newVal;
-                      _consentDataProcessing = newVal;
-                      _consentLocation = newVal;
-                    });
-                  },
-                  icon: Icon(
-                    _consentGiven ? Icons.check_box : Icons.check_box_outline_blank,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _backButton(),
+          const SizedBox(height: 24),
+          _stepHeader(
+            'Privacy and GDPR',
+            subtitle: tr('consent_subtitle'),
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 0),
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    final newVal = !_consentGiven;
+                    _consentTerms = newVal;
+                    _consentPrivacy = newVal;
+                    _consentDataProcessing = newVal;
+                    _consentLocation = newVal;
+                  });
+                },
+                icon: Icon(
+                  _consentGiven
+                      ? Icons.check_box
+                      : Icons.check_box_outline_blank,
+                  color: const Color(0xFFF4436C),
+                ),
+                label: Text(
+                  'Izberi Vse',
+                  style: GoogleFonts.instrumentSans(
                     color: const Color(0xFFF4436C),
-                  ),
-                  label: Text(
-                    'Izberi Vse',
-                    style: GoogleFonts.instrumentSans(
-                      color: const Color(0xFFF4436C),
-                      fontWeight: FontWeight.bold,
-                    ),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 32),
-            _consentTile(
-              value: _consentTerms,
-              onChanged: (v) => setState(() => _consentTerms = v),
-              richText: TextSpan(
-                style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 14, height: 1.5),
-                children: [
-                   const TextSpan(text: 'I agree to the '),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () {},
-                      child: const Text('Terms of Service',
-                          style: TextStyle(
-                              color: Color(0xFFF4436C),
-                              fontSize: 14,
-                              decoration: TextDecoration.underline)),
-                    ),
+          ),
+          const SizedBox(height: 32),
+          _consentTile(
+            value: _consentTerms,
+            onChanged: (v) => setState(() => _consentTerms = v),
+            richText: TextSpan(
+              style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.black87,
+                  fontSize: 14,
+                  height: 1.5),
+              children: [
+                const TextSpan(text: 'I agree to the '),
+                WidgetSpan(
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: const Text('Terms of Service',
+                        style: TextStyle(
+                            color: Color(0xFFF4436C),
+                            fontSize: 14,
+                            decoration: TextDecoration.underline)),
                   ),
-                  const TextSpan(text: ' of Tremble.'),
-                ],
-              ),
+                ),
+                const TextSpan(text: ' of Tremble.'),
+              ],
             ),
-            const SizedBox(height: 16),
-            _consentTile(
-              value: _consentPrivacy,
-              onChanged: (v) => setState(() => _consentPrivacy = v),
-              richText: TextSpan(
-                style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 14, height: 1.5),
-                children: [
-                   const TextSpan(text: 'I have read and accept the '),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () {},
-                      child: const Text('Privacy Policy',
-                          style: TextStyle(
-                              color: Color(0xFFF4436C),
-                              fontSize: 14,
-                              decoration: TextDecoration.underline)),
-                    ),
+          ),
+          const SizedBox(height: 16),
+          _consentTile(
+            value: _consentPrivacy,
+            onChanged: (v) => setState(() => _consentPrivacy = v),
+            richText: TextSpan(
+              style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.black87,
+                  fontSize: 14,
+                  height: 1.5),
+              children: [
+                const TextSpan(text: 'I have read and accept the '),
+                WidgetSpan(
+                  child: GestureDetector(
+                    onTap: () {},
+                    child: const Text('Privacy Policy',
+                        style: TextStyle(
+                            color: Color(0xFFF4436C),
+                            fontSize: 14,
+                            decoration: TextDecoration.underline)),
                   ),
-                   const TextSpan(text: ', including GDPR data processing.'),
-                ],
-              ),
+                ),
+                const TextSpan(text: ', including GDPR data processing.'),
+              ],
             ),
-            const SizedBox(height: 16),
-            _consentTile(
-              value: _consentDataProcessing,
-              onChanged: (v) => setState(() => _consentDataProcessing = v),
-              richText: TextSpan(
-                style:
-                    TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 14, height: 1.5),
-                children: const [
-                  TextSpan(
-                      text:
-                          'I explicitly consent to the processing of my sensitive personal data '
-                          '(interests, preferences, religion, ethnicity) for the purpose of matchmaking. '
-                          'I understand this data is encrypted, never sold, and I can withdraw consent '
-                          'at any time from Settings.'),
-                ],
-              ),
+          ),
+          const SizedBox(height: 16),
+          _consentTile(
+            value: _consentDataProcessing,
+            onChanged: (v) => setState(() => _consentDataProcessing = v),
+            richText: TextSpan(
+              style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.black87,
+                  fontSize: 14,
+                  height: 1.5),
+              children: const [
+                TextSpan(
+                    text:
+                        'I explicitly consent to the processing of my sensitive personal data '
+                        '(interests, preferences, religion, ethnicity) for the purpose of matchmaking. '
+                        'I understand this data is encrypted, never sold, and I can withdraw consent '
+                        'at any time from Settings.'),
+              ],
             ),
-            const SizedBox(height: 16),
-            _consentTile(
-              value: _consentLocation,
-              onChanged: (v) => setState(() => _consentLocation = v),
-              richText: TextSpan(
-                style:
-                    TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 14, height: 1.5),
-                children: const [
-                  TextSpan(
-                      text:
-                          'I consent to live location tracking for the Radar feature. '
-                          'Only an approximate grid position (~38m accuracy) is stored — '
-                          'never my exact coordinates. Location data auto-deletes after 2 hours of inactivity. '
-                          'I can disable Radar at any time from Settings.'),
-                ],
-              ),
+          ),
+          const SizedBox(height: 16),
+          _consentTile(
+            value: _consentLocation,
+            onChanged: (v) => setState(() => _consentLocation = v),
+            richText: TextSpan(
+              style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.black87,
+                  fontSize: 14,
+                  height: 1.5),
+              children: const [
+                TextSpan(
+                    text:
+                        'I consent to live location tracking for the Radar feature. '
+                        'Only an approximate grid position (~38m accuracy) is stored — '
+                        'never my exact coordinates. Location data auto-deletes after 2 hours of inactivity. '
+                        'I can disable Radar at any time from Settings.'),
+              ],
             ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Colors.white12 : Colors.black12),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.shield_outlined,
-                      color: Color(0xFFF4436C), size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Your data is stored securely, never sold to third parties, '
-                      'and can be exported or deleted at any time from Settings.',
-                      style: TextStyle(
-                          color: Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black54, fontSize: 13, height: 1.5),
-                    ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white12
+                      : Colors.black12),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.shield_outlined,
+                    color: Color(0xFFF4436C), size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Your data is stored securely, never sold to third parties, '
+                    'and can be exported or deleted at any time from Settings.',
+                    style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white54
+                            : Colors.black54,
+                        fontSize: 13,
+                        height: 1.5),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            _continueButton(
-              enabled: _consentGiven,
-              onTap: completeRegistration,
-              label: 'Continue',
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+          _continueButton(
+            enabled: _consentGiven,
+            onTap: completeRegistration,
+            label: 'Continue',
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 
@@ -3232,8 +3502,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             decoration: BoxDecoration(
               color: value ? _brandRose : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
-              border:
-                  Border.all(color: value ? _brandRose : (isDark ? Colors.white38 : Colors.black38), width: 2),
+              border: Border.all(
+                  color: value
+                      ? _brandRose
+                      : (isDark ? Colors.white38 : Colors.black38),
+                  width: 2),
             ),
             child: value
                 ? const Icon(Icons.check, color: Colors.black, size: 16)
@@ -3253,13 +3526,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ══════════════════════════════════════════════════════
   void completeRegistration() async {
     final currentUser = FirebaseAuth.instance.currentUser;
-    final uid = currentUser?.uid ?? 'generated_id'; // Fallback only if somehow null
+    final uid =
+        currentUser?.uid ?? 'generated_id'; // Fallback only if somehow null
 
     // Safety guard — consent page enforces all 4 checkboxes, but double-check
     if (!_consentGiven) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Please accept all consent checkboxes to continue.', style: GoogleFonts.instrumentSans())),
+            content: Text('Please accept all consent checkboxes to continue.',
+                style: GoogleFonts.instrumentSans())),
       );
       return;
     }

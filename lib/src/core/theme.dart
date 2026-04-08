@@ -6,13 +6,15 @@ class TrembleTheme {
   // Base Colors
   static const backgroundColor = Color(0xFFFAFAF7); // warm cream
   static const textColor = Color(0xFF1A1A18); // deep graphite
-  
+
   // Brand Colors
   static const rose = Color(0xFFF4436C); // Tremble Rose — primary
   static const roseLight = Color(0xFFF9839E); // Rose Light
   static const roseDark = Color(0xFFC02048); // Rose Dark
-  static const accentYellow = Color(0xFFF5C842); // Signal Yellow — accents, live indicators
-  static const successGreen = Color(0xFF2D9B6F); // Confirm Green — success states, GDPR
+  static const accentYellow =
+      Color(0xFFF5C842); // Signal Yellow — accents, live indicators
+  static const successGreen =
+      Color(0xFF2D9B6F); // Confirm Green — success states, GDPR
   static const warmGray = Color(0xFF6B6B63); // Warm Gray — secondary text
   static const border = Color(0xFFE2E2DC); // Border color
 
@@ -29,10 +31,12 @@ class TrembleTheme {
   ];
 
   // Border Radii Rules
-  static const BorderRadius inputRadius = BorderRadius.all(Radius.circular(100));
+  static const BorderRadius inputRadius =
+      BorderRadius.all(Radius.circular(100));
   static const BorderRadius cardRadius = BorderRadius.all(Radius.circular(16));
   static const BorderRadius modalRadius = BorderRadius.all(Radius.circular(24));
-  static const BorderRadius buttonRadius = BorderRadius.all(Radius.circular(100)); // pill shape
+  static const BorderRadius buttonRadius =
+      BorderRadius.all(Radius.circular(100)); // pill shape
 
   static List<Color> getGradient({
     required bool isDarkMode,
@@ -62,23 +66,46 @@ class TrembleTheme {
   static TextTheme _buildTextTheme(Color baseTextColor) {
     return TextTheme(
       // Display & Headlines — Playfair Display (serif, impactful)
-      displayLarge: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w900, letterSpacing: -0.04 * 96),
-      displayMedium: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w900, letterSpacing: -0.03 * 56),
-      displaySmall: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w700, letterSpacing: -0.02 * 44),
-      headlineLarge: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w700),
-      headlineMedium: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w700),
-      headlineSmall: GoogleFonts.playfairDisplay(color: baseTextColor, fontWeight: FontWeight.w700),
+      displayLarge: GoogleFonts.playfairDisplay(
+          color: baseTextColor,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -0.04 * 96),
+      displayMedium: GoogleFonts.playfairDisplay(
+          color: baseTextColor,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -0.03 * 56),
+      displaySmall: GoogleFonts.playfairDisplay(
+          color: baseTextColor,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.02 * 44),
+      headlineLarge: GoogleFonts.playfairDisplay(
+          color: baseTextColor, fontWeight: FontWeight.w700),
+      headlineMedium: GoogleFonts.playfairDisplay(
+          color: baseTextColor, fontWeight: FontWeight.w700),
+      headlineSmall: GoogleFonts.playfairDisplay(
+          color: baseTextColor, fontWeight: FontWeight.w700),
       // Titles & Labels — Instrument Sans (clean UI font)
-      titleLarge: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w600),
-      titleMedium: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w500),
-      titleSmall: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w500),
-      labelLarge: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w700, letterSpacing: 0.01 * 14),
-      labelMedium: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w500),
-      labelSmall: GoogleFonts.instrumentSans(color: baseTextColor, fontWeight: FontWeight.w500),
+      titleLarge: GoogleFonts.instrumentSans(
+          color: baseTextColor, fontWeight: FontWeight.w600),
+      titleMedium: GoogleFonts.instrumentSans(
+          color: baseTextColor, fontWeight: FontWeight.w500),
+      titleSmall: GoogleFonts.instrumentSans(
+          color: baseTextColor, fontWeight: FontWeight.w500),
+      labelLarge: GoogleFonts.instrumentSans(
+          color: baseTextColor,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.01 * 14),
+      labelMedium: GoogleFonts.instrumentSans(
+          color: baseTextColor, fontWeight: FontWeight.w500),
+      labelSmall: GoogleFonts.instrumentSans(
+          color: baseTextColor, fontWeight: FontWeight.w500),
       // Body — Lora (readable serif)
-      bodyLarge: GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
-      bodyMedium: GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
-      bodySmall: GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
+      bodyLarge:
+          GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
+      bodyMedium:
+          GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
+      bodySmall:
+          GoogleFonts.lora(color: baseTextColor, fontWeight: FontWeight.normal),
     );
   }
 
@@ -113,7 +140,8 @@ class TrembleTheme {
       // ── Buttons ──
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          textStyle: GoogleFonts.instrumentSans(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: GoogleFonts.instrumentSans(
+              fontSize: 16, fontWeight: FontWeight.w700),
           shape: const RoundedRectangleBorder(borderRadius: buttonRadius),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           elevation: 0,
@@ -121,12 +149,14 @@ class TrembleTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          textStyle: GoogleFonts.instrumentSans(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: GoogleFonts.instrumentSans(
+              fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          textStyle: GoogleFonts.instrumentSans(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: GoogleFonts.instrumentSans(
+              fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
       // ── Cards ──
@@ -137,9 +167,13 @@ class TrembleTheme {
       ),
       // ── Input fields ──
       inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: inputRadius, borderSide: BorderSide(color: primaryColor)),
+        border: OutlineInputBorder(
+            borderRadius: inputRadius, borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: inputRadius, borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: inputRadius,
+            borderSide: BorderSide(color: primaryColor)),
         filled: true,
         fillColor: inputFill,
         labelStyle: GoogleFonts.instrumentSans(color: hintColor),
@@ -154,7 +188,9 @@ class TrembleTheme {
       // ── Dialogs ──
       dialogTheme: DialogThemeData(
         titleTextStyle: GoogleFonts.playfairDisplay(
-          color: onSurface, fontSize: 20, fontWeight: FontWeight.w700,
+          color: onSurface,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
         ),
         contentTextStyle: GoogleFonts.lora(color: onSurface, fontSize: 15),
       ),
@@ -175,7 +211,9 @@ class TrembleTheme {
       // ── AppBar ──
       appBarTheme: AppBarTheme(
         titleTextStyle: GoogleFonts.instrumentSans(
-          color: onSurface, fontSize: 18, fontWeight: FontWeight.w600,
+          color: onSurface,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
         ),
       ),
       // ── TabBar ──

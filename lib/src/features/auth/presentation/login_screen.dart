@@ -75,17 +75,21 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     const TrembleLogo(size: 140),
                     const SizedBox(height: 20),
                     Text("Tremble",
-                        style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                              fontSize: 48,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1,
-                            )),
+                        style:
+                            Theme.of(context).textTheme.displayLarge?.copyWith(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -1,
+                                )),
 
                     const SizedBox(height: 8),
-                    Text(tr('onb1_title'), 
+                    Text(tr('onb1_title'),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               fontSize: 16,
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.7),
                               letterSpacing: 0.5,
                             )),
                     const SizedBox(height: 50),
@@ -93,22 +97,34 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     // Email Input
                     TextField(
                       controller: _emailController,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface),
                       decoration: InputDecoration(
                         labelText: tr('email'),
-                        labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
-                        prefixIcon:
-                            Icon(LucideIcons.mail, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
+                        labelStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7)),
+                        prefixIcon: Icon(LucideIcons.mail,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7)),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide.none,
                           borderRadius: BorderRadius.circular(100),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                          borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary),
                           borderRadius: BorderRadius.circular(100),
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                        fillColor: Theme.of(context)
+                            .colorScheme
+                            .surface
+                            .withValues(alpha: 0.5),
                       ),
                     ),
                     const SizedBox(height: 15),
@@ -117,30 +133,48 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     TextField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface),
                       decoration: InputDecoration(
                         labelText: tr('password'),
-                        labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
-                        prefixIcon:
-                            Icon(LucideIcons.lock, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
+                        labelStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7)),
+                        prefixIcon: Icon(LucideIcons.lock,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7)),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? LucideIcons.eyeOff : LucideIcons.eye,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                            _obscurePassword
+                                ? LucideIcons.eyeOff
+                                : LucideIcons.eye,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7),
                             size: 20,
                           ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide.none,
                           borderRadius: BorderRadius.circular(100),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                          borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary),
                           borderRadius: BorderRadius.circular(100),
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                        fillColor: Theme.of(context)
+                            .colorScheme
+                            .surface
+                            .withValues(alpha: 0.5),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -152,11 +186,18 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         onTap: () => context.push('/forgot-password'),
                         child: Text(
                           tr('forgot_password'),
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                            decoration: TextDecoration.underline,
-                            decorationColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
+                          style:
+                              Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.7),
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.7),
+                                  ),
                         ),
                       ),
                     ),
@@ -164,7 +205,8 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     const SizedBox(height: 24),
 
                     if (_isLoading)
-                      CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)
+                      CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.primary)
                     else
                       PrimaryButton(
                           text: tr('login'),
@@ -199,8 +241,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(_authErrorMessage(e))),
+                                SnackBar(content: Text(_authErrorMessage(e))),
                               );
                             }
                           } finally {
@@ -213,7 +254,11 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.surface,
                             borderRadius: BorderRadius.circular(100),
-                            border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
+                            border: Border.all(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outline
+                                    .withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -225,10 +270,15 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                               const SizedBox(width: 12),
                               Text(
                                 tr('continue_with_google'),
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                  fontSize: 16,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelLarge
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                      fontSize: 16,
+                                    ),
                               ),
                             ],
                           ),
@@ -251,15 +301,23 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         decoration: BoxDecoration(
                           color: Colors.transparent,
                           borderRadius: BorderRadius.circular(100),
-                          border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
+                          border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withValues(alpha: 0.5)),
                         ),
                         child: Center(
                           child: Text(
                             tr('are_you_new'),
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 16,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelLarge
+                                ?.copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                  fontSize: 16,
+                                ),
                           ),
                         ),
                       ),
@@ -274,15 +332,26 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surface
+                              .withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4)),
+                          border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .outline
+                                  .withValues(alpha: 0.4)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.language,
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), size: 18),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.7),
+                                size: 18),
                             const SizedBox(width: 8),
                             Text(
                               availableLanguages.firstWhere(
@@ -290,11 +359,17 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                                   orElse: () =>
                                       availableLanguages.first)['label']!,
                               style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                  fontSize: 14),
                             ),
                             const SizedBox(width: 4),
                             Icon(Icons.arrow_drop_down,
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), size: 18),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.7),
+                                size: 18),
                           ],
                         ),
                       ),

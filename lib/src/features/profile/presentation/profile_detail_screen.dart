@@ -78,7 +78,10 @@ class ProfileDetailScreen extends ConsumerWidget {
                         ]
                             .animate(interval: 50.ms)
                             .fade(duration: 400.ms, curve: Curves.easeOut)
-                            .slideY(begin: 0.1, duration: 400.ms, curve: Curves.easeOut),
+                            .slideY(
+                                begin: 0.1,
+                                duration: 400.ms,
+                                curve: Curves.easeOut),
                       ),
                     ),
                   ),

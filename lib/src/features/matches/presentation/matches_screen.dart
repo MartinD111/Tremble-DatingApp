@@ -112,7 +112,9 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
             style: TextStyle(
                 color: _isEditMode
                     ? Colors.redAccent
-                    : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87),
+                    : (Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white70
+                        : Colors.black87),
                 fontWeight: _isEditMode ? FontWeight.w600 : FontWeight.normal,
                 fontSize: 14),
           ),
@@ -229,7 +231,8 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon: const Icon(LucideIcons.moreVertical, color: Colors.white54),
+                                      icon: const Icon(LucideIcons.moreVertical,
+                                          color: Colors.white54),
                                       onPressed: () {
                                         UgcActionSheet.show(
                                           context,

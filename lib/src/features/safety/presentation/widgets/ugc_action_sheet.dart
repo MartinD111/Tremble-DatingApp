@@ -16,20 +16,22 @@ class UgcActionSheet extends ConsumerWidget {
     required this.targetName,
   });
 
-  static void show(BuildContext context, {required String targetUid, required String targetName}) {
+  static void show(BuildContext context,
+      {required String targetUid, required String targetName}) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => UgcActionSheet(targetUid: targetUid, targetName: targetName),
+      builder: (_) =>
+          UgcActionSheet(targetUid: targetUid, targetName: targetName),
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(appLanguageProvider);
-    
+
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -48,7 +50,8 @@ class UgcActionSheet extends ConsumerWidget {
             leading: const Icon(LucideIcons.flag, color: Colors.red),
             title: Text(
               t('report_user', lang).replaceAll('{name}', targetName),
-              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.red, fontWeight: FontWeight.bold),
             ),
             onTap: () {
               Navigator.pop(context); // Close action sheet
@@ -60,7 +63,8 @@ class UgcActionSheet extends ConsumerWidget {
             leading: const Icon(LucideIcons.ban, color: Colors.red),
             title: Text(
               t('block_user', lang).replaceAll('{name}', targetName),
-              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.red, fontWeight: FontWeight.bold),
             ),
             onTap: () {
               Navigator.pop(context); // Close action sheet
@@ -78,7 +82,8 @@ class UgcActionSheet extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(t('block_user', lang).replaceAll('{name}', targetName)),
-        content: Text(t('block_confirm_desc', lang).replaceAll('{name}', targetName)),
+        content: Text(
+            t('block_confirm_desc', lang).replaceAll('{name}', targetName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -92,7 +97,9 @@ class UgcActionSheet extends ConsumerWidget {
                 await ref.read(safetyRepositoryProvider).blockUser(targetUid);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(t('block_success', lang).replaceAll('{name}', targetName))),
+                    SnackBar(
+                        content: Text(t('block_success', lang)
+                            .replaceAll('{name}', targetName))),
                   );
                 }
               } catch (e) {
@@ -103,7 +110,8 @@ class UgcActionSheet extends ConsumerWidget {
                 }
               }
             },
-            child: Text(t('block_user', lang).replaceAll(' {name}', ''), style: const TextStyle(color: Colors.white)),
+            child: Text(t('block_user', lang).replaceAll(' {name}', ''),
+                style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -113,7 +121,8 @@ class UgcActionSheet extends ConsumerWidget {
   void _showReportDialog(BuildContext context, WidgetRef ref, String lang) {
     showDialog(
       context: context,
-      builder: (ctx) => ReportDialog(targetUid: targetUid, targetName: targetName),
+      builder: (ctx) =>
+          ReportDialog(targetUid: targetUid, targetName: targetName),
     );
   }
 }
@@ -157,14 +166,16 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
 
     try {
       await ref.read(safetyRepositoryProvider).reportUser(
-        widget.targetUid,
-        _selectedReasons.toList(),
-        _explanationCtrl.text.trim(),
-      );
+            widget.targetUid,
+            _selectedReasons.toList(),
+            _explanationCtrl.text.trim(),
+          );
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t('report_success', lang).replaceAll('{name}', widget.targetName))),
+          SnackBar(
+              content: Text(t('report_success', lang)
+                  .replaceAll('{name}', widget.targetName))),
         );
       }
     } catch (e) {
@@ -180,9 +191,10 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
-    
+
     return AlertDialog(
-      title: Text(t('report_user', lang).replaceAll('{name}', widget.targetName)),
+      title:
+          Text(t('report_user', lang).replaceAll('{name}', widget.targetName)),
       content: SizedBox(
         width: double.maxFinite,
         child: SingleChildScrollView(
@@ -190,7 +202,8 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(t('report_reasons_desc', lang), style: Theme.of(context).textTheme.bodyMedium),
+              Text(t('report_reasons_desc', lang),
+                  style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 12),
               ..._availableReasons.map((reason) {
                 return CheckboxListTile(
@@ -223,7 +236,8 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
               const SizedBox(height: 16),
               Text(
                 t('report_auto_block_warning', lang),
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.red),
               ),
             ],
           ),
@@ -236,10 +250,17 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          onPressed: (_isSubmitting || _selectedReasons.isEmpty) ? null : () => _submitReport(lang),
+          onPressed: (_isSubmitting || _selectedReasons.isEmpty)
+              ? null
+              : () => _submitReport(lang),
           child: _isSubmitting
-              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text(t('submit', lang), style: const TextStyle(color: Colors.white)),
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2))
+              : Text(t('submit', lang),
+                  style: const TextStyle(color: Colors.white)),
         ),
       ],
     );

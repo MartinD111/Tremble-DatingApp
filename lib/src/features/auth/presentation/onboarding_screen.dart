@@ -127,8 +127,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             isLast
                                 ? tr('confirm_btn').toUpperCase()
                                 : tr('continue_btn').toUpperCase(),
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelLarge
+                                ?.copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
                                   letterSpacing: 1.2,
                                 ),
                           ),
@@ -180,7 +184,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             tr(data.bodyKey),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
                   height: 1.6,
                 ),
           ),

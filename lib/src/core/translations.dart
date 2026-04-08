@@ -104,12 +104,14 @@ const Map<String, Map<String, String>> _translations = {
     // --- UGC Safety ---
     'report_user': 'Report {name}',
     'block_user': 'Block {name}',
-    'block_confirm_desc': 'Are you sure you want to block {name}?\nThis action will immediately cancel any matches and they will disappear from the app.\n\nYou can always unblock them later in "Blocked Users" settings.',
+    'block_confirm_desc':
+        'Are you sure you want to block {name}?\nThis action will immediately cancel any matches and they will disappear from the app.\n\nYou can always unblock them later in "Blocked Users" settings.',
     'block_success': '{name} has been blocked.',
     'report_reasons_desc': 'Why are you reporting this user?',
     'report_explanation': 'Additional details (optional)',
     'report_explanation_hint': 'Please provide more context',
-    'report_auto_block_warning': 'Reporting a user will also automatically block them.',
+    'report_auto_block_warning':
+        'Reporting a user will also automatically block them.',
     'blocked_users': 'Blocked Users',
     'unblock': 'Unblock',
     'no_blocked_users': 'You have no blocked users.',
@@ -223,6 +225,8 @@ const Map<String, Map<String, String>> _translations = {
     'account_created': 'Account created successfully.',
     'verification_email': 'Verification email sent!',
     'check_email': 'Check {email}',
+    'verify_email_title': 'Please verify your email',
+    'resend': 'Resend',
 
     // --- Home ---
     'scanning': 'Scanning...',
@@ -438,12 +442,14 @@ const Map<String, Map<String, String>> _translations = {
     // --- UGC Safety ---
     'report_user': 'Prijavi {name}',
     'block_user': 'Blokiraj {name}',
-    'block_confirm_desc': 'Ste prepričani, da želite blokirati osebo {name}?\nTo bo takoj prekinilo morebitne matche in oseba bo izginila iz aplikacije.\n\nOsebo lahko kasneje odblokirate v nastavitvah pod "Blokirani uporabniki".',
+    'block_confirm_desc':
+        'Ste prepričani, da želite blokirati osebo {name}?\nTo bo takoj prekinilo morebitne matche in oseba bo izginila iz aplikacije.\n\nOsebo lahko kasneje odblokirate v nastavitvah pod "Blokirani uporabniki".',
     'block_success': '{name} je bil/a blokiran/a.',
     'report_reasons_desc': 'Zakaj prijavljate tega uporabnika?',
     'report_explanation': 'Dodatne podrobnosti (neobvezno)',
     'report_explanation_hint': 'Prosimo, podajte več konteksta',
-    'report_auto_block_warning': 'Prijava uporabnika bo to osebo tudi samodejno blokirala in prekinila stike.',
+    'report_auto_block_warning':
+        'Prijava uporabnika bo to osebo tudi samodejno blokirala in prekinila stike.',
     'blocked_users': 'Blokirani Uporabniki',
     'unblock': 'Odblokiraj',
     'no_blocked_users': 'Trenutno nimate blokiranih oseb.',
@@ -544,6 +550,8 @@ const Map<String, Map<String, String>> _translations = {
     'account_created': 'Uspešno ste ustvarili račun.',
     'verification_email': 'E-pošta s potrditvijo je bila poslana!',
     'check_email': 'Preverite {email}',
+    'verify_email_title': 'Prosim, potrdi svojo e-pošto',
+    'resend': 'Pošlji ponovno',
     'scanning': 'Iščem...',
     'radar_locked': 'Radar je zaklenjen.',
     'verify_email_access': 'Prosim, potrdi e-pošto za dostop.',
@@ -839,6 +847,8 @@ const Map<String, Map<String, String>> _translations = {
     'account_created': 'Konto erfolgreich erstellt.',
     'verification_email': 'Bestätigungs-E-Mail gesendet!',
     'check_email': 'Überprüfen {email}',
+    'verify_email_title': 'Bitte E-Mail bestätigen',
+    'resend': 'Erneut senden',
     'scanning': 'Scannen...',
     'radar_locked': 'Radar ist gesperrt.',
     'verify_email_access': 'Bitte E-Mail für Zugang verifizieren.',

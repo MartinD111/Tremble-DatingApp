@@ -1,28 +1,23 @@
-# Founder Handoff: GDPR Gate Merged & Launch Prep (2026-04-07)
+# Session Handoff — 2026-04-08 (Auth, Map & Email Fixes)
 
-Aleksandar, today we successfully closed the "GDPR Gate" gap by merging the feature branch and resolving complex conflicts in the authentication and permission logic. The application is now technically and legally stable for launch.
+## 1. 🚀 Accomplishments
+- **Bug Fix 1 — Auth Redirect Loop:** Removed the redundant login-to-registration bounce. Logged-in users who haven't finished registration now land directly on `/onboarding`.
+- **Bug Fix 2 — Google Maps Integration:** Platform-level infrastructure is now 100% configured for both Android and iOS. The app is ready to render maps, awaiting one final API key.
+- **Bug Fix 3 — Email Verification:** Added a persistent "Check your email" banner on the first onboarding page (Name page). Users can now see their verification status and trigger a "Resend" email from the UI.
+- **MPC Compliance:** Updated `context.md`, `debt.md`, and `learning.md` to reflect these changes.
 
-## 1. ✅ Latest Accomplishments (GDPR & Conflict Resolution)
-- **GDPR Merge (D-03):** Integrated the asynchronous `GdprConsentNotifier` into the main branch. 
-    - **UI:** The glassmorphic "Allow Access" screen is now the gate for all users.
-    - **Logic:** The router now correctly guards the Home screen until GDPR consent is granted.
-    - **Conflicts:** Manual surgery was required in `consent_service.dart` and `router.dart` to combine legacy permission checks with the new GDPR Async value—this is now 100% resolved and pass `flutter analyze`.
-- **Infrastructure Synchronization (D-02, D-07, D-13):**
-    - Confirmed all **8 production secrets** are set in Google Cloud Secret Manager.
-    - Confirmed Cloud Functions are 100% migrated to **`europe-west1`**.
-    - **SHA fingerprints** for Firebase Auth (Google Sign-In) are confirmed and synchronized.
-- **AppCheck Cleanup (D-11):** Removed deprecated provider syntax in `main.dart`. Migrated to modern AppCheck API.
+## 2. ⚠️ Critical Action Required (Aleksandar/Martin)
+The Google Maps feature is currently "dark" because it lacks an active API Key. You must:
+1.  **Get Key:** From the Google Cloud Console (instructions provided in the chat).
+2.  **Inject Key (Local):**
+    - Android: Update `android/local.properties` -> `MAP_API_KEY=YOUR_KEY`
+    - iOS: Update `ios/Flutter/Debug.xcconfig` -> `MAPS_API_KEY=YOUR_KEY`
+3.  **Inject Key (CI/CD):** Add `MAPS_API_KEY` to your GitHub/Google Secrets.
 
-## 2. ⚠️ Current Known Issues (Pending Polish)
-- **Accessibility (Contrast):** "Tremble Rose" color on light backgrounds still has insufficient contrast in Light Mode.
-- **Age Slider:** Numerical indicators for user age are not immediately visible on launch—requires interaction.
-- **Copy Consistency:** Several onboarding screens still use placeholders or English/Slovenian mixes that need alignment.
-
-## 3. 📝 Next Development Steps (Tomorrow's Agenda)
-- [ ] **TASK C (15 min):** Update onboarding copy in `lib/src/core/translations.dart`.
-- [ ] **TASK D (5 min):** Registration CTA copy fix in `translations.dart`.
-- [ ] **TASK B (1-2h):** Color token swap Teal (#00D9A6) → Rose (#F4436C) across the app theme. (Reference: `ADR-003-brand-alignment.md`).
-- [ ] **TASK A (2-3h):** Implement new Font System (Playfair Display, Lora, Instrument Sans).
+## 3. 📝 Next Development Steps
+1.  **Verification:** Test the Map once the key is added.
+2.  **Polish (TASK C/D):** Update onboarding copy and CTA translations in `lib/src/core/translations.dart`.
+3.  **Design (TASK A/B):** Theming updates (Rose color swap and new Font System).
 
 ---
-*Prepared by Antigravity AI — Handoff for Next Session (Aleksandar/Martin).*
+*Prepared by Antigravity AI — Session Closed.*

@@ -168,7 +168,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   onPressed: _saveChanges,
                   child: Text(t('save', lang),
                       style: const TextStyle(
-                          color: Color(0xFFF4436C), fontWeight: FontWeight.bold)),
+                          color: Color(0xFFF4436C),
+                          fontWeight: FontWeight.bold)),
                 ),
               Padding(
                 padding: const EdgeInsets.only(right: 8),
@@ -296,7 +297,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 style: TextStyle(color: Colors.white38, fontSize: 12)),
             Text('${_distancePreference.round()}m',
                 style: const TextStyle(
-                    color: brandRose, fontWeight: FontWeight.bold, fontSize: 16)),
+                    color: brandRose,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16)),
             Text('${maxDist.round()}m',
                 style: const TextStyle(color: Colors.white38, fontSize: 12)),
           ],

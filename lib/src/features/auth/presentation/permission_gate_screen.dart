@@ -101,10 +101,8 @@ class _ConsentView extends StatelessWidget {
             fontWeight: FontWeight.w700,
             height: 1.15,
           ),
-        )
-            .animate()
-            .fadeIn(duration: 500.ms)
-            .slideY(begin: 0.15, end: 0, duration: 500.ms, curve: Curves.easeOut),
+        ).animate().fadeIn(duration: 500.ms).slideY(
+            begin: 0.15, end: 0, duration: 500.ms, curve: Curves.easeOut),
 
         const SizedBox(height: 12),
 
@@ -114,9 +112,7 @@ class _ConsentView extends StatelessWidget {
             color: Colors.white70,
             height: 1.5,
           ),
-        )
-            .animate()
-            .fadeIn(delay: 100.ms, duration: 500.ms),
+        ).animate().fadeIn(delay: 100.ms, duration: 500.ms),
 
         const SizedBox(height: 32),
 
@@ -163,10 +159,8 @@ class _ConsentView extends StatelessWidget {
               ),
             ],
           ),
-        )
-            .animate()
-            .fadeIn(delay: 200.ms, duration: 500.ms)
-            .slideY(begin: 0.1, end: 0, duration: 450.ms, curve: Curves.easeOut),
+        ).animate().fadeIn(delay: 200.ms, duration: 500.ms).slideY(
+            begin: 0.1, end: 0, duration: 450.ms, curve: Curves.easeOut),
 
         const SizedBox(height: 12),
 
@@ -213,10 +207,8 @@ class _ConsentView extends StatelessWidget {
               ),
             ],
           ),
-        )
-            .animate()
-            .fadeIn(delay: 300.ms, duration: 500.ms)
-            .slideY(begin: 0.1, end: 0, duration: 450.ms, curve: Curves.easeOut),
+        ).animate().fadeIn(delay: 300.ms, duration: 500.ms).slideY(
+            begin: 0.1, end: 0, duration: 450.ms, curve: Curves.easeOut),
 
         const SizedBox(height: 16),
 
@@ -227,9 +219,7 @@ class _ConsentView extends StatelessWidget {
                 color: Colors.white38,
                 height: 1.5,
               ),
-        )
-            .animate()
-            .fadeIn(delay: 400.ms, duration: 400.ms),
+        ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
 
         const Spacer(),
 
@@ -237,10 +227,8 @@ class _ConsentView extends StatelessWidget {
         PrimaryButton(
           text: isLoading ? 'Enabling...' : 'Allow Access',
           onPressed: isLoading ? () {} : onAccept,
-        )
-            .animate()
-            .fadeIn(delay: 450.ms, duration: 400.ms)
-            .slideY(begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut),
+        ).animate().fadeIn(delay: 450.ms, duration: 400.ms).slideY(
+            begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut),
 
         const SizedBox(height: 12),
 
@@ -248,9 +236,7 @@ class _ConsentView extends StatelessWidget {
           text: 'Not Now',
           isSecondary: true,
           onPressed: isLoading ? () {} : onDecline,
-        )
-            .animate()
-            .fadeIn(delay: 500.ms, duration: 400.ms),
+        ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
 
         const SizedBox(height: 32),
       ],
@@ -271,18 +257,15 @@ class _DeclinedView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 80),
-
         Icon(
           LucideIcons.scanLine,
           color: Color(0xFF7C3AED),
           size: 48,
-        )
-            .animate()
-            .fadeIn(duration: 400.ms)
-            .scale(begin: const Offset(0.8, 0.8), duration: 400.ms, curve: Curves.easeOut),
-
+        ).animate().fadeIn(duration: 400.ms).scale(
+            begin: const Offset(0.8, 0.8),
+            duration: 400.ms,
+            curve: Curves.easeOut),
         const SizedBox(height: 28),
-
         Text(
           'Radar needs\nyour permission',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
@@ -291,9 +274,7 @@ class _DeclinedView extends StatelessWidget {
                 height: 1.15,
               ),
         ).animate().fadeIn(duration: 400.ms),
-
         const SizedBox(height: 16),
-
         GlassCard(
           padding: const EdgeInsets.all(20),
           child: Text(
@@ -304,14 +285,11 @@ class _DeclinedView extends StatelessWidget {
                 ),
           ),
         ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
-
         const Spacer(),
-
         PrimaryButton(
           text: 'Try Again',
           onPressed: onTryAgain,
         ).animate().fadeIn(delay: 150.ms, duration: 400.ms),
-
         const SizedBox(height: 32),
       ],
     );

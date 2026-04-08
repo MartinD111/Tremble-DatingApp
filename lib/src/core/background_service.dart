@@ -103,8 +103,7 @@ void onStart(ServiceInstance service) async {
 
   service.on('resumeRadar').listen((_) async {
     // Re-check consent at resume time — user may have granted it since start.
-    final consentAtResume =
-        prefs.getBool('gdpr_ble_location_consent') ?? false;
+    final consentAtResume = prefs.getBool('gdpr_ble_location_consent') ?? false;
     if (consentAtResume) {
       await geoService.start();
       await bleService.start();

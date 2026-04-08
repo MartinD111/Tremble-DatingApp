@@ -59,6 +59,9 @@
 	<string>Tremble needs background location access to notify you of nearby matches even when the app is closed.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Tremble uses your location to find potential matches nearby.</string>
+	<!-- Google Maps SDK API key — value injected by CI/CD or set manually for local dev -->
+	<key>MAPS_API_KEY</key>
+	<string>$(MAPS_API_KEY)</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -1,11 +1,13 @@
 import 'dart:io';
 
 void main() {
-  final file = File('lib/src/features/auth/presentation/registration_flow.dart');
+  final file =
+      File('lib/src/features/auth/presentation/registration_flow.dart');
   var content = file.readAsStringSync();
 
-  final regexPol = RegExp(r'_continueButton\(enabled: true, onTap: \(\) => _nextPage\(\)\),(?:\s*)const SizedBox\(height: 16\),(?:\s*)\],(?:\s*)\),(?:\s*)\),(?:\s*)\}(?:\s*)// ══════════════════════════════════════════════════════(?:\s*)// PAGE 6 – EXERCISE');
-  
+  final regexPol = RegExp(
+      r'_continueButton\(enabled: true, onTap: \(\) => _nextPage\(\)\),(?:\s*)const SizedBox\(height: 16\),(?:\s*)\],(?:\s*)\),(?:\s*)\),(?:\s*)\}(?:\s*)// ══════════════════════════════════════════════════════(?:\s*)// PAGE 6 – EXERCISE');
+
   final polDst = '''_continueButton(
               enabled: true,
               onTap: () {
@@ -35,7 +37,8 @@ void main() {
 
   content = content.replaceFirst(regexPol, polDst);
 
-  final regexInt = RegExp(r'_continueButton\(enabled: true, onTap: \(\) => _nextPage\(\)\),(?:\s*)const SizedBox\(height: 16\),(?:\s*)\],(?:\s*)\),(?:\s*)\),(?:\s*)\}(?:\s*)Widget _buildPageSleep\(\)');
+  final regexInt = RegExp(
+      r'_continueButton\(enabled: true, onTap: \(\) => _nextPage\(\)\),(?:\s*)const SizedBox\(height: 16\),(?:\s*)\],(?:\s*)\),(?:\s*)\),(?:\s*)\}(?:\s*)Widget _buildPageSleep\(\)');
 
   final intDst = '''_continueButton(
               enabled: true,

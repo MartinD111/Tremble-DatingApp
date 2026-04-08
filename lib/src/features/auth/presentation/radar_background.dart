@@ -63,7 +63,8 @@ class _RadarBackgroundState extends State<RadarBackground>
   Widget build(BuildContext context) {
     // Determine base colors from Theme
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
-    final primaryColor = widget.accentColor ?? Theme.of(context).colorScheme.primary;
+    final primaryColor =
+        widget.accentColor ?? Theme.of(context).colorScheme.primary;
 
     return Stack(
       children: [
@@ -125,8 +126,11 @@ class RadarPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = math.min(size.width, size.height) * 0.8;
 
-    final primaryColor = accentColor ?? const Color(0xFFF4436C); // Fallback to rose if null
-    final secondaryColor = accentColor != null ? accentColor!.withValues(alpha: 0.5) : const Color(0xFFC2185B);
+    final primaryColor =
+        accentColor ?? const Color(0xFFF4436C); // Fallback to rose if null
+    final secondaryColor = accentColor != null
+        ? accentColor!.withValues(alpha: 0.5)
+        : const Color(0xFFC2185B);
 
     // Draw 4 concentric circles with alternating colors
     for (int i = 0; i < 4; i++) {

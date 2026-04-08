@@ -25,7 +25,7 @@ class PrimaryButton extends StatelessWidget {
             ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.2)
             : Theme.of(context).colorScheme.primary,
         foregroundColor: isSecondary
-            ? Theme.of(context).colorScheme.onSurface 
+            ? Theme.of(context).colorScheme.onSurface
             : Colors.white,
         minimumSize: Size(width ?? double.infinity, height ?? 56),
         maximumSize: width != null ? Size(width!, height ?? 56) : null,
@@ -36,8 +36,8 @@ class PrimaryButton extends StatelessWidget {
       icon: icon != null ? Icon(icon) : const SizedBox.shrink(),
       label: Text(
         text,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16) ?? 
-               const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16) ??
+            const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }

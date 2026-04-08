@@ -45,8 +45,7 @@ void main() async {
   // Pre-load theme before first frame to prevent Dark Mode flash on navigation
   final prefs = await SharedPreferences.getInstance();
   final isDark = prefs.getBool('themeMode');
-  final initialTheme =
-      isDark == true ? ThemeMode.dark : ThemeMode.light;
+  final initialTheme = isDark == true ? ThemeMode.dark : ThemeMode.light;
 
   runApp(
     ProviderScope(

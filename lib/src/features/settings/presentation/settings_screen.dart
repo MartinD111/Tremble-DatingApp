@@ -53,7 +53,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
     if (user == null) {
       return Center(
-        child: Text(_t('error_user_not_found'), style: GoogleFonts.instrumentSans(color: Colors.white)),
+        child: Text(_t('error_user_not_found'),
+            style: GoogleFonts.instrumentSans(color: Colors.white)),
       );
     }
 
@@ -160,7 +161,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           labelStyle: TextStyle(color: iconColor),
                           suffixIcon: IconButton(
                             icon: Icon(
-                                obscureOld ? LucideIcons.eyeOff : LucideIcons.eye,
+                                obscureOld
+                                    ? LucideIcons.eyeOff
+                                    : LucideIcons.eye,
                                 color: iconColor),
                             onPressed: () =>
                                 setState(() => obscureOld = !obscureOld),
@@ -181,7 +184,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           labelStyle: TextStyle(color: iconColor),
                           suffixIcon: IconButton(
                             icon: Icon(
-                                obscureNew ? LucideIcons.eyeOff : LucideIcons.eye,
+                                obscureNew
+                                    ? LucideIcons.eyeOff
+                                    : LucideIcons.eye,
                                 color: iconColor),
                             onPressed: () =>
                                 setState(() => obscureNew = !obscureNew),
@@ -206,8 +211,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                     ? LucideIcons.eyeOff
                                     : LucideIcons.eye,
                                 color: iconColor),
-                            onPressed: () =>
-                                setState(() => obscureConfirm = !obscureConfirm),
+                            onPressed: () => setState(
+                                () => obscureConfirm = !obscureConfirm),
                           ),
                           enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(color: iconColor)),
@@ -227,7 +232,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(width: 10),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(100),
                                 )),
@@ -235,29 +241,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               if (newPasswordController.text !=
                                   confirmPasswordController.text) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Passwords don't match")),
+                                  const SnackBar(
+                                      content: Text("Passwords don't match")),
                                 );
                                 return;
                               }
                               if (newPasswordController.text.length < 8) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                      content: Text("Password must be at least 8 chars")),
+                                      content: Text(
+                                          "Password must be at least 8 chars")),
                                 );
                                 return;
                               }
                               // Call backend
-                              await ref.read(authStateProvider.notifier).changePassword(
-                                  oldPasswordController.text, newPasswordController.text);
+                              await ref
+                                  .read(authStateProvider.notifier)
+                                  .changePassword(oldPasswordController.text,
+                                      newPasswordController.text);
                               if (context.mounted) {
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(_t('password_changed'))),
+                                  SnackBar(
+                                      content: Text(_t('password_changed'))),
                                 );
                               }
                             },
                             child: Text(_t('save'),
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -293,7 +306,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 const SizedBox(width: 10),
                 Text('Delete Account',
                     style: GoogleFonts.instrumentSans(
-                        color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87,
+                        fontWeight: FontWeight.bold)),
               ]),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -588,8 +604,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 style: const TextStyle(color: Colors.white)),
             value: user.isDarkMode,
             activeThumbColor: const Color(0xFFF4436C),
-            activeTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
-            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+            activeTrackColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white24
+                : Colors.black12,
+            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.05),
             onChanged: (val) {
               _updateProfile(user.copyWith(isDarkMode: val));
               ref.read(themeModeProvider.notifier).setThemeMode(
@@ -605,7 +625,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               value: user.isPrideMode,
               activeThumbColor: Colors.white,
               activeTrackColor: Colors.purple.withValues(alpha: 0.5),
-              inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
+              inactiveTrackColor:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white24
+                      : Colors.black12,
               onChanged: (val) {
                 _updateProfile(user.copyWith(isPrideMode: val));
               },
@@ -618,8 +641,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 style: const TextStyle(color: Colors.white38, fontSize: 12)),
             value: !user.showPingAnimation,
             activeThumbColor: Colors.white,
-            activeTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[400],
-            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
+            activeTrackColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[800]
+                : Colors.grey[400],
+            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white24
+                : Colors.black12,
             onChanged: (val) {
               _updateProfile(user.copyWith(showPingAnimation: !val));
             },
@@ -632,8 +659,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 style: TextStyle(color: Colors.white38, fontSize: 12)),
             value: ref.watch(hideNavBarPrefProvider),
             activeThumbColor: Colors.white,
-            activeTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[400],
-            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
+            activeTrackColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[800]
+                : Colors.grey[400],
+            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white24
+                : Colors.black12,
             onChanged: (val) {
               ref.read(hideNavBarPrefProvider.notifier).state = val;
             },
@@ -660,13 +691,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   }
                 },
                 selectedColor: Colors.pinkAccent,
-                backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
                 labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
+                    color: isSelected
+                        ? Colors.white
+                        : (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87),
+                    fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
-                        color:
-                            isSelected ? Colors.pinkAccent : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12))),
+                        color: isSelected
+                            ? Colors.pinkAccent
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white24
+                                : Colors.black12))),
                 showCheckmark: false,
               );
             }).toList(),
@@ -792,13 +833,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   }
                 },
                 selectedColor: Colors.pinkAccent,
-                backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
                 labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
+                    color: isSelected
+                        ? Colors.white
+                        : (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87),
+                    fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
-                        color:
-                            isSelected ? Colors.pinkAccent : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12))),
+                        color: isSelected
+                            ? Colors.pinkAccent
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white24
+                                : Colors.black12))),
                 showCheckmark: false,
               );
             }).toList(),
@@ -829,13 +880,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   }
                 },
                 selectedColor: Colors.pinkAccent,
-                backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
                 labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
+                    color: isSelected
+                        ? Colors.white
+                        : (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87),
+                    fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
-                        color:
-                            isSelected ? Colors.pinkAccent : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12))),
+                        color: isSelected
+                            ? Colors.pinkAccent
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white24
+                                : Colors.black12))),
                 showCheckmark: false,
               );
             }).toList(),
@@ -1082,13 +1143,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   }
                 },
                 selectedColor: Colors.pinkAccent,
-                backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
                 labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87), fontWeight: FontWeight.bold),
+                    color: isSelected
+                        ? Colors.white
+                        : (Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87),
+                    fontWeight: FontWeight.bold),
                 shape: StadiumBorder(
                     side: BorderSide(
-                        color:
-                            isSelected ? Colors.pinkAccent : (Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12))),
+                        color: isSelected
+                            ? Colors.pinkAccent
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white24
+                                : Colors.black12))),
                 showCheckmark: false,
               );
             }).toList(),
@@ -1312,7 +1383,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             value: user.isAdmin,
             activeThumbColor: Colors.red,
             activeTrackColor: Colors.red.withValues(alpha: 0.5),
-            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
+            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white24
+                : Colors.black12,
             onChanged: null, // Admin status is server-managed only
           ),
           Divider(color: Colors.white.withValues(alpha: 0.1)),
@@ -1321,7 +1394,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             leading: const Icon(LucideIcons.userX, color: Colors.white70),
             title: Text(_t('blocked_users'),
                 style: const TextStyle(color: Colors.white)),
-            trailing: const Icon(LucideIcons.chevronRight, color: Colors.white30),
+            trailing:
+                const Icon(LucideIcons.chevronRight, color: Colors.white30),
             onTap: () {
               context.push('/blocked-users');
             },
@@ -1342,13 +1416,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             const SizedBox(width: 10),
             Text(_t('premium_account'),
                 style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold)),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black87,
+                    fontWeight: FontWeight.bold)),
           ],
         ),
         value: user.isPremium,
         activeThumbColor: Colors.amber,
         activeTrackColor: Colors.amber.withValues(alpha: 0.5),
-        inactiveTrackColor: Theme.of(context).brightness == Brightness.dark ? Colors.white24 : Colors.black12,
+        inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white24
+            : Colors.black12,
         onChanged: null, // Premium status is server-managed only
       ),
     );

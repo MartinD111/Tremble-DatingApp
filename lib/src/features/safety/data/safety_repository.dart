@@ -23,7 +23,8 @@ class SafetyRepository {
   }
 
   /// Reports a user for moderation and issues a personal block.
-  Future<void> reportUser(String reportedUid, List<String> reasons, String explanation) async {
+  Future<void> reportUser(
+      String reportedUid, List<String> reasons, String explanation) async {
     await _api.call('reportUser', data: {
       'reportedUid': reportedUid,
       'reasons': reasons,

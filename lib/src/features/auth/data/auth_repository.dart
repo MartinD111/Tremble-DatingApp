@@ -157,11 +157,16 @@ class AuthUser {
         'politicalAffiliation': politicalAffiliation,
       if (politicalAffiliationPreference != null)
         'politicalAffiliationPreference': politicalAffiliationPreference,
-      if (partnerExerciseHabit != null) 'partnerExerciseHabit': partnerExerciseHabit,
-      if (partnerDrinkingHabit != null) 'partnerDrinkingHabit': partnerDrinkingHabit,
-      if (partnerSleepSchedule != null) 'partnerSleepSchedule': partnerSleepSchedule,
-      if (partnerPetPreference != null) 'partnerPetPreference': partnerPetPreference,
-      if (partnerChildrenPreference != null) 'partnerChildrenPreference': partnerChildrenPreference,
+      if (partnerExerciseHabit != null)
+        'partnerExerciseHabit': partnerExerciseHabit,
+      if (partnerDrinkingHabit != null)
+        'partnerDrinkingHabit': partnerDrinkingHabit,
+      if (partnerSleepSchedule != null)
+        'partnerSleepSchedule': partnerSleepSchedule,
+      if (partnerPetPreference != null)
+        'partnerPetPreference': partnerPetPreference,
+      if (partnerChildrenPreference != null)
+        'partnerChildrenPreference': partnerChildrenPreference,
       'lookingFor': lookingFor,
       'languages': languages,
       'hobbies': hobbies,
@@ -330,7 +335,8 @@ class AuthUser {
       partnerDrinkingHabit: partnerDrinkingHabit ?? this.partnerDrinkingHabit,
       partnerSleepSchedule: partnerSleepSchedule ?? this.partnerSleepSchedule,
       partnerPetPreference: partnerPetPreference ?? this.partnerPetPreference,
-      partnerChildrenPreference: partnerChildrenPreference ?? this.partnerChildrenPreference,
+      partnerChildrenPreference:
+          partnerChildrenPreference ?? this.partnerChildrenPreference,
       lookingFor: lookingFor ?? this.lookingFor,
       languages: languages ?? this.languages,
       hobbies: hobbies ?? this.hobbies,
@@ -454,14 +460,18 @@ class AuthRepository {
     if (doc.exists && doc.data() != null) {
       final data = doc.data()!;
       bool isOnboarded = data['isOnboarded'] as bool? ?? false;
-      
+
       // Self-healing: If they were bugged in yesterday's flow where API call was
       // skipped due to email-already-in-use, they might have data but isOnboarded == false.
       // E.g., if we see a 'name', they obviously did at least part of the profile.
-      if (!isOnboarded && data['name'] != null && data['name'].toString().isNotEmpty) {
+      if (!isOnboarded &&
+          data['name'] != null &&
+          data['name'].toString().isNotEmpty) {
         isOnboarded = true;
         // Fix it in Firestore quietly
-        _users.doc(firebaseUser.uid).update({'isOnboarded': true}).catchError((_) {});
+        _users
+            .doc(firebaseUser.uid)
+            .update({'isOnboarded': true}).catchError((_) {});
       }
 
       return AuthUser.fromFirestore(

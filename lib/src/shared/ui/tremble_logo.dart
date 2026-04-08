@@ -34,7 +34,7 @@ class TrembleLogo extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // 2. Rim-Light Overlay
           CustomPaint(
             size: Size(size, size),
@@ -59,32 +59,30 @@ class _AnimatedHeartWifi extends StatelessWidget {
     return CustomPaint(
       size: Size(size, size),
       painter: _HeartWifiPainter(0.06, 0.06, 0.06), // Initial opacity
-    )
-    .animate(onPlay: (controller) => controller.repeat())
-    .custom(
-      duration: 2800.ms,
-      builder: (context, value, child) {
-        // We pulse the 3 waves sequentially
-        // This is a rough estimation of the liquid pulse keyframes from SVG
-        double calcOpacity(double delay, double localValue) {
-          double p = (localValue - delay) % 1.0;
-          if (p < 0) p += 1.0;
-          // Pulse peaks at 0.3, fades out at 0.6
-          if (p < 0.3) return 0.06 + (p / 0.3) * 0.94;
-          if (p < 0.6) return 1.0 - ((p - 0.3) / 0.3) * 0.94;
-          return 0.06;
-        }
+    ).animate(onPlay: (controller) => controller.repeat()).custom(
+          duration: 2800.ms,
+          builder: (context, value, child) {
+            // We pulse the 3 waves sequentially
+            // This is a rough estimation of the liquid pulse keyframes from SVG
+            double calcOpacity(double delay, double localValue) {
+              double p = (localValue - delay) % 1.0;
+              if (p < 0) p += 1.0;
+              // Pulse peaks at 0.3, fades out at 0.6
+              if (p < 0.3) return 0.06 + (p / 0.3) * 0.94;
+              if (p < 0.6) return 1.0 - ((p - 0.3) / 0.3) * 0.94;
+              return 0.06;
+            }
 
-        return CustomPaint(
-          size: Size(size, size),
-          painter: _HeartWifiPainter(
-            calcOpacity(0.0, value),    // Inner
-            calcOpacity(0.12, value),   // Mid
-            calcOpacity(0.25, value),   // Outer
-          ),
+            return CustomPaint(
+              size: Size(size, size),
+              painter: _HeartWifiPainter(
+                calcOpacity(0.0, value), // Inner
+                calcOpacity(0.12, value), // Mid
+                calcOpacity(0.25, value), // Outer
+              ),
+            );
+          },
         );
-      },
-    );
   }
 }
 
@@ -105,8 +103,9 @@ class _RimLightPainter extends CustomPainter {
     final path = Path()
       ..moveTo(size.width * 0.22, 2.5)
       ..lineTo(size.width * 0.78, 2.5)
-      ..arcToPoint(Offset(size.width * 0.98, size.width * 0.22), radius: Radius.circular(radius));
-    
+      ..arcToPoint(Offset(size.width * 0.98, size.width * 0.22),
+          radius: Radius.circular(radius));
+
     canvas.drawPath(path, paint);
   }
 
@@ -126,11 +125,11 @@ class _HeartWifiPainter extends CustomPainter {
     // Scaling and centering parameters match the SVG logic
     final centerX = size.width / 2;
     final centerY = size.height / 2;
-    
+
     // SVG coordinates was basically (110, 110) as center, icon scale 1.12
     // We adjust drawing coordinates to match the paths extracted from the original
     final scale = (size.width / 220.0) * 1.12;
-    
+
     canvas.save();
     canvas.translate(centerX - (3.5 * scale), centerY - (20.0 * scale));
     canvas.scale(scale);
@@ -153,21 +152,24 @@ class _HeartWifiPainter extends CustomPainter {
       ..moveTo(12, -20)
       ..cubicTo(42, -50, 72, -35, 72, 0)
       ..cubicTo(72, 30, 42, 60, 12, 70);
-    canvas.drawPath(pathOuter, basePaint..color = Colors.white.withValues(alpha: outerOpacity));
+    canvas.drawPath(pathOuter,
+        basePaint..color = Colors.white.withValues(alpha: outerOpacity));
 
     // 3. Animated Mid Wave
     final pathMid = Path()
       ..moveTo(12, 5)
       ..cubicTo(29, -15, 46, -5, 46, 12)
       ..cubicTo(46, 28, 29, 42, 12, 50);
-    canvas.drawPath(pathMid, basePaint..color = Colors.white.withValues(alpha: midOpacity));
+    canvas.drawPath(
+        pathMid, basePaint..color = Colors.white.withValues(alpha: midOpacity));
 
     // 4. Animated Inner Wave
     final pathInner = Path()
       ..moveTo(12, 25)
       ..cubicTo(16, 15, 26, 18, 26, 24)
       ..cubicTo(26, 30, 16, 35, 12, 40);
-    canvas.drawPath(pathInner, basePaint..color = Colors.white.withValues(alpha: innerOpacity));
+    canvas.drawPath(pathInner,
+        basePaint..color = Colors.white.withValues(alpha: innerOpacity));
 
     canvas.restore();
   }
