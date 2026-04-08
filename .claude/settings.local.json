@@ -19,7 +19,15 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(chmod:*)",
-      "Skill(gsd:session-report)"
+      "Skill(gsd:session-report)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git stash:*)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --force --tree-filter 'if [ -f ios/Flutter/Debug.xcconfig ]; then sed -i \"\"\"\" \"\"s/REVOKED_KEY_REMOVED/REVOKED_KEY_REMOVED/g\"\" ios/Flutter/Debug.xcconfig; fi' --tag-name-filter cat -- --all)",
+      "Bash(xargs -I{} git update-ref -d {})",
+      "Bash(git reflog:*)",
+      "Bash(git gc:*)",
+      "Bash(git push:*)"
     ]
   }
 }
