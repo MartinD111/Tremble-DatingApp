@@ -216,24 +216,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
               return false;
             },
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 500),
-              switchInCurve: Curves.easeOutQuart,
-              switchOutCurve: Curves.easeInQuart,
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: ScaleTransition(
-                    scale:
-                        Tween<double>(begin: 0.95, end: 1.0).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: KeyedSubtree(
-                key: ValueKey<int>(navIndex),
-                child: screens[navIndex],
-              ),
+            child: IndexedStack(
+              index: navIndex,
+              children: screens,
             ),
           ),
         ),
