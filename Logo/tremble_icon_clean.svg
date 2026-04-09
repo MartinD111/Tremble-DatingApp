@@ -29,7 +29,7 @@
       <path id="wave_mid" d="M 12, 5 C 29, -15 46, -5 46, 12 C 46, 28 29, 42 12, 50" 
             fill="none" stroke="url(#strokeGrad)" stroke-width="10" stroke-linecap="round" opacity="0.06" />
       
-      <path id="wave_inner" d="M 12, 25 C 16, 15 26, 18 26, 24 C 26, 30 16, 35 12, 40" 
+      <path id="wave_inner" d="M 12, 21 C 16, 11 26, 14 26, 20 C 26, 26 16, 31 12, 36"
             fill="none" stroke="url(#strokeGrad)" stroke-width="10" stroke-linecap="round" opacity="0.06" />
   </g>
 </svg>
