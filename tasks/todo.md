@@ -1,17 +1,34 @@
-# Tremble - Production Tasks
+# Tremble - Project TODOs
 
-## Phase 9: Monitoring & Release (In Progress)
-- [x] Enable Crashlytics in Firebase Console
-- [x] Register iOS/Android apps in Firebase AppCheck console
-- [x] Enable AppCheck enforcement (15 callable functions enforced)
-- [x] **FOUNDER:** Set Production Firebase secrets: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `RESEND_API_KEY`
-- [ ] Prepare Production release checklist
-- [x] Onboarding flow theme-aware accessibility & contrast polish
-- [x] Registration flow logic fix (Google user pre-fill, starts at page 0)
-- [x] Fixed system SDK path in .vscode/settings.json
+## Active Focus: Phase 8 & 9 🚀
 
-## Phase 1: Discovery (Complete)
-- [x] Align with Product Owner on exact V1 launch features
-- [x] Outline outstanding dependencies (Apple Dev Account, Play Console, Domain)
-- [x] Google Auth Landing Optimization (Pre-fill mandatory fields)
-- [ ] Set up simple landing page for Privacy Policy & GDPR on the purchased domain (Requirement: move to europe-west1)
+### 1. Phase 9: Security Hardening (Current)
+- [ ] **Step 3:** Enforce Firebase App Check (`enforceAppCheck: true`) on all 21 Cloud Functions.
+- [ ] **Step 4:** Security audit of Firestore rules for `proximity_events` collection.
+- [ ] **Step 5:** Final GDPR deletion pipeline verification with production-like data sets.
+
+### 2. Phase 8: Paywall & RevenueCat
+- [ ] Initialize RevenueCat SDK in `subscription_service.dart`.
+- [ ] Implement `isProProvider` and sync with Firestore `isPremium` field.
+- [ ] Build Glassmorphic `PaywallScreen`.
+- [ ] Implement Wave limits (5/day) for free users in `WaveRepository`.
+
+---
+
+## Technical Debt Cleaning (D-24/D-25)
+- [ ] Complete Phase 2D: Extract remaining registration pages:
+    - [ ] `languages_step.dart`
+    - [ ] `dating_preferences_step.dart`
+    - [ ] `what_to_meet_step.dart`
+- [ ] Phase 2C Cleanup: Move 40+ Slovenian strings to `translations.dart`.
+- [ ] Fix `CircularProgressIndicator` forever spinner in Forgot Password screen.
+
+---
+
+## Infrastructure & Store Prep
+- [ ] Prepare Production release checklist.
+- [ ] **FOUNDER:** Final review of TestFlight build with Rich Push.
+- [ ] Update landing page for Privacy Policy on `trembledating.com`.
+
+---
+*Last Updated: 2026-04-10*

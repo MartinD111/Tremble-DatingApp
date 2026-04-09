@@ -1,74 +1,33 @@
-## Session State — 2026-04-10 09:00
-- Active Task: Phase 2D (D-24) in progress — registration monolith extraction.
+## Session State — 2026-04-10 00:40
+- Active Task: Phase 8 (Paywall / RevenueCat) & Phase 9 (Security Hardening)
 - Environment: Dev (tremble-dev)
 - Branch: main
-- System Status: `flutter analyze` → No issues ✅ | Phase 2D partial (commit 78a8141) ✅
+- System Status: `flutter analyze` → No issues ✅ | Node.js 22 Upgrade ✅ | iOS Rich Push Infra ✅
 
-## Security Work Completed This Session
+## Work Completed This Session
 
 | Action | Status |
-|--------|--------|
-| Rotated Resend API keys (dev + prod) | ✅ Done by founder |
-| Rotated Cloudflare R2 keys (dev + prod) | ✅ Done by founder |
-| Created separate iOS + Android Maps API keys | ✅ Done by founder |
-| Split functions/.env → .env.dev + .env.prod | ✅ Committed (70dfc9b) |
-| Implemented scripts/ci/secret_scan.sh (gitleaks + patterns) | ✅ Committed (70dfc9b) |
-| Gitignored orphan lib/firebase_options.dart files | ✅ Committed (99b300f) |
-| Fixed SVG inner wave Y offset in both logo assets | ✅ Committed (ea8e742) |
+|----|----|
+| Node.js 20 → 22 Upgrade (All 19 functions) | ✅ Done |
+| iOS Notification Service Extension (`ImageNotification`) | ✅ Created & Linked |
+| iOS `.xcconfig` Stabilization (Inclusions moved to end) | ✅ Fixed |
+| Created `ios/Flutter/Profile.xcconfig` | ✅ Added |
+| `project.pbxproj` objectVersion set to 63 | ✅ Sync successful |
 
-## Security Findings Summary (from scan)
+## Phase Status Summary
 
-| Finding | Severity | Status |
-|---------|----------|--------|
-| functions/.env mixed dev/prod credentials | CRIT-01 | ✅ Fixed |
-| lib/firebase_options.dart tracked in git | CRIT-02 | ✅ Fixed |
-| Maps API keys in git history (filter-branch done) | CRIT-03 | ⚠️ Verify revocation |
-| secret_scan.sh was a stub | HIGH-02 | ✅ Fixed |
-| Prod Firebase API keys in git history commit 0044b4f | MED-01 | ⚠️ Mitigated by SEC-001 (App Check) |
-
-## UI Audit — Complete (2026-04-09)
-
-Full audit of all Flutter screens completed. See `.planning/reports/20260409-session-report-3.md` for details.
-
-### P0 Items (must fix before TestFlight)
-
-| ID | Issue | File |
-|----|-------|------|
-| D-19 | Colors.pinkAccent → TrembleTheme.rose in 6+ locations | radar_animation.dart + 5 others |
-| D-20 | DEV TEST flame button rendered in production | home_screen.dart |
-| D-21 | Google logo Image.network from Wikimedia (offline fail) | login_screen.dart |
-| D-22 | Fake map markers with fabricated user counts | pulse_map_screen.dart |
-| D-23 | Hardcoded "Ljubljana, 2km" shown as real data | profile_detail_screen.dart |
-
-### P1 Items (before external users see app)
-
-| ID | Issue |
-|----|-------|
-| D-25 | 40+ hardcoded Slovenian strings bypassing t() |
-| D-26 | ugc_action_sheet.dart white background on dark app |
-| D-27 | Forgot password spinner runs forever |
-| D-24 | registration_flow.dart monolith (27 pages, 1 file) |
-
-## Phase 2D — D-24 Progress (registration_flow.dart extraction)
-
-| Batch | Steps Extracted | Commit | Status |
-|-------|----------------|--------|--------|
-| Session 3 (2026-04-09) | IntroSlide, Name, Gender, Status, Exercise, Drinking, Smoking | 36aec2f | ✅ Done |
-| Session 4 (2026-04-10) | Children, Introversion, Sleep, Pets, Religion, Ethnicity, HairColor, PoliticalAffiliation | 78a8141 | ✅ Done |
-| Remaining | Languages, DatingPreferences, WhatToMeet (complex — list/multi-select) | — | ⏳ Next |
-| Skipped (complex) | Birthday, Email, Height, Hobbies, Photos, Consent | — | 🔜 Future |
-
-**Current:** registration_flow.dart reduced from 3381 → 3048 lines.
-**Remaining simple extractions:** `_buildPageLanguages`, `_buildPageDatingPreferences`, `_buildPageWhatToMeet`.
+| Phase | Description | Status |
+|---|---|---|
+| 2D | Registration Monolith Extraction | 🟡 15/27 Extracted; 3 more simple pending |
+| 7 | Interaction System v2.1 | ✅ COMPLETE (commit 78a8141) |
+| 7.5 | Native iOS Polish (Rich Push) | ✅ COMPLETE (commit/current) |
+| 8 | Paywall / Tremble Pro | ⏳ Next |
+| 9 | Security Hardening | 🟡 Active |
 
 ## Session Handoff
-- **Phase 2A:** ✅ COMPLETE (commit 19aaa9b) — D-19, D-20, D-21, D-23 all fixed
-- **Phase 2B:** ✅ COMPLETE (commit 538d27b) — D-22, onboarding visual polish
-- **Phase 2C:** ✅ COMPLETE (commit 7347371) — D-25, D-26, D-27 fixed
-- **Phase 2D:** 🟡 IN PROGRESS (commit 78a8141) — 15 of 27 pages extracted; 3 more simple + 6 complex remain
-- **Phase 8 (RevenueCat):** Parked — requires both founders present
-- **SEC-001 (App Check):** Blocked on developer account — parking until accounts available
-- **D-15:** Pending — Google Maps API key placeholder still in local.properties + Debug.xcconfig
-- **Next Action:** Extract `_buildPageLanguages`, `_buildPageDatingPreferences`, `_buildPageWhatToMeet` from registration_flow.dart. Then move to Phase 7 (Wave Mechanic) or close D-24 as complete.
+- **Node.js**: All Cloud Functions now running on Node 22. Metadata refreshed via `npm install`.
+- **iOS Rich Push**: `ImageNotification` target is ready. Files created: `NotificationService.swift`, `Info.plist`. Target linked in `project.pbxproj`.
+- **Build Hygiene**: `.xcconfig` files fixed to prevent CocoaPods warnings. `Profile.xcconfig` created to match the Profile build target.
+- **Next Action**: Execute Phase 9 Step 3 (App Check enforcement) OR start Phase 8 (RevenueCat integration).
 
 Staleness rule: if this block is >48h old, re-validate before executing.

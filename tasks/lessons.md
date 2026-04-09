@@ -61,3 +61,7 @@ when `isScanning == true`. It had an empty `onPressed` but was visually present.
 mock data label, test overlay, or console.log must be removed before sharing the app externally.
 Do a grep for `DEV TEST`, `TODO`, `mock`, `hardcoded`, `fake` before every beta build.
 Source: UI audit, April 2026.
+
+**Rule #11 — Use Node.js 22 for all Cloud Functions.**
+[2026-04-10] Firebase Cloud Functions must use Node.js 22 to ensure compliance with the latest runtime requirements and to leverage modern JS/TS features. Update `engines` in `package.json` and run `npm install` to refresh metadata before deployment.
+Source: Technical audit, April 2026.

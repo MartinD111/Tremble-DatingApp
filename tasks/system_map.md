@@ -16,8 +16,8 @@ Tremble App Structure
 └── lib/src/shared/               ← Reusable Glassmorphism, Buttons, Hooks
 
 Infrastructure:
-- Platforms: iOS (Swift base), Android (Kotlin base)
-- Backend:   Firebase (Auth, Firestore, Cloud Functions)
+- Platforms: iOS (Swift base + ImageNotification extension), Android (Kotlin base)
+- Backend:   Firebase (Auth, Firestore, Cloud Functions - Node 22 runtime)
 - Storage:   Cloudflare R2 (for media) / Firebase Storage
 - Flavors:   Dev (com.pulse) | Prod (tremble.dating.app)
 
