@@ -9,6 +9,7 @@ import 'src/core/background_service.dart';
 import 'src/core/firebase_options_dev.dart';
 import 'src/core/firebase_options_prod.dart';
 import 'src/core/theme_provider.dart';
+import 'src/core/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,11 @@ void main() async {
 
   // Pass all uncaught Flutter errors to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+  // Register FCM background handler BEFORE runApp().
+  // Must be called here — Firebase requires this to be registered before
+  // the app is fully running, in a top-level context.
+  NotificationService.registerBackgroundHandler();
 
   await initializeBackgroundService();
 

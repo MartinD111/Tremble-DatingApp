@@ -692,7 +692,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       {'label': t('short_term', lang), 'value': 'Short-term fun'},
       {'label': t('long_term', lang), 'value': 'Long-term relationship'},
       {'label': t('friendship', lang), 'value': 'Friendship'},
-      {'label': t('chat', lang), 'value': 'Chat'},
+      {'label': t('meeting', lang), 'value': 'Meeting'},
+      // 'Chat' removed — Tremble connects people in real life, not via text.
     ];
     return Wrap(
       spacing: 8,

@@ -11,13 +11,17 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════════════════════
-    // MATCHES — branje dovoljeno le vpletenima (userA ali userB)
+    // MATCHES — branje dovoljeno le vpletenima (userIds array)
     // ══════════════════════════════════════════════════════
     match /matches/{matchId} {
       allow read: if request.auth != null &&
-                    (resource.data.userA == request.auth.uid ||
-                     resource.data.userB == request.auth.uid);
-      allow write: if false; // Ustvari jih izključno Cloud Function onWaveCreated
+                    request.auth.uid in resource.data.userIds;
+      // Edina dovoljena klient sprememba je seenBy (markMatchAsSeen po razkritju)
+      allow update: if request.auth != null &&
+                      request.auth.uid in resource.data.userIds &&
+                      request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['seenBy']);
+      allow create, delete: if false; // Izključno Cloud Function onWaveCreated
     }
 
     /// ══════════════════════════════════════════════════════

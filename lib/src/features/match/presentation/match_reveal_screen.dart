@@ -144,7 +144,7 @@ class MatchRevealScreen extends ConsumerWidget {
 
                     const SizedBox(height: 64),
 
-                    // Primary CTA
+                    // Primary CTA — odpri radar, poišči jih v živo
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -157,10 +157,9 @@ class MatchRevealScreen extends ConsumerWidget {
                           ),
                           elevation: 0,
                         ),
-                        onPressed: () =>
-                            context.pushNamed('chat', extra: match.id),
+                        onPressed: () => context.pop(), // Nazaj na radar
                         child: Text(
-                          'POŠLJI SPOROČILO',
+                          'ODPRI RADAR',
                           style: GoogleFonts.instrumentSans(
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.5,
@@ -171,11 +170,11 @@ class MatchRevealScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    // Secondary action
+                    // Secondary action — dismiss
                     TextButton(
                       onPressed: () => context.pop(),
                       child: Text(
-                        'RAZISKUJ NAPREJ',
+                        'NE ZDAJ',
                         style: GoogleFonts.instrumentSans(
                           color: _warmCream.withValues(alpha: 0.5),
                           fontSize: 13,
@@ -185,6 +184,7 @@ class MatchRevealScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 40),
+
                   ],
                 ),
               ),

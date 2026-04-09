@@ -101,10 +101,10 @@ class MatchRepository {
 
   /// Send a greeting to another user.
   /// Returns true if it resulted in an instant match (mutual interest).
-  Future<bool> sendGreeting(String toUserId, {String? message}) async {
+  /// No message parameter — Tremble waves are silent signals, not text.
+  Future<bool> sendGreeting(String toUserId) async {
     final result = await _api.call('sendGreeting', data: {
       'toUserId': toUserId,
-      if (message != null) 'message': message,
     });
     return result['matched'] as bool? ?? false;
   }
@@ -216,9 +216,10 @@ class MatchController extends StateNotifier<MatchProfile?> {
   void dismiss() => state = null;
 
   /// Send a greeting to the currently displayed match.
-  Future<bool> greet({String? message}) async {
+  /// Silent — no text, no message. One tap. That's it.
+  Future<bool> greet() async {
     if (state == null) return false;
-    final matched = await _repo.sendGreeting(state!.id, message: message);
+    final matched = await _repo.sendGreeting(state!.id);
     state = null;
     return matched;
   }

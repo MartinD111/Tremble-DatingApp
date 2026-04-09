@@ -1,25 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/registration_flow.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/auth/presentation/permission_gate_screen.dart';
 import '../features/auth/data/auth_repository.dart';
-import 'consent_service.dart';
-
-// Placeholders for screens if they don't exist yet/imported
 import '../features/dashboard/presentation/home_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
-import '../features/matches/data/match_repository.dart'; // MatchProfile is here
-import '../features/profile/presentation/profile_detail_screen.dart'; // Correct path
+import '../features/matches/data/match_repository.dart';
+import '../features/profile/presentation/profile_detail_screen.dart';
 import '../features/profile/presentation/profile_card_preview.dart';
 import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/safety/presentation/blocked_users_screen.dart';
-import '../shared/ui/gradient_scaffold.dart'; // Assume exists
 import '../features/match/presentation/match_reveal_screen.dart';
 import '../features/match/domain/match.dart';
+import '../shared/ui/gradient_scaffold.dart';
+import 'consent_service.dart';
 
+// ── Navigator Key ─────────────────────────────────────────────────────────────
+// Exposed so notification handlers (outside the widget tree) can navigate.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
+// ── Notification Deep Link Handler ────────────────────────────────────────────
+// Routes MUTUAL_WAVE notifications to the MatchRevealScreen.
+// Fetches the Match document from Firestore using the matchId in the payload.
+Future<void> handleNotificationNavigation(
+  Map<String, dynamic> data, {
+  Duration delay = Duration.zero,
+}) async {
+  final type = data['type'] as String?;
+  final matchId = data['matchId'] as String?;
+
+  if (type != 'MUTUAL_WAVE' || matchId == null) return;
+
+  try {
+    final doc = await FirebaseFirestore.instance
+        .collection('matches')
+        .doc(matchId)
+        .get();
+
+    if (!doc.exists) return;
+
+    final match = Match.fromFirestore(doc);
+
+    // Small delay ensures GoRouter is fully mounted before navigation
+    if (delay > Duration.zero) await Future.delayed(delay);
+
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx != null && ctx.mounted) {
+      ctx.pushNamed('match_reveal', extra: match);
+    }
+  } catch (e) {
+    debugPrint('[ROUTER] Notification navigation failed: $e');
+  }
+}
+
+// ── Router Notifier ───────────────────────────────────────────────────────────
 // Listens to auth state and permission gate changes, notifies GoRouter to
 // re-run redirect without recreating the router instance.
 class _RouterNotifier extends ChangeNotifier {
@@ -32,8 +71,6 @@ class _RouterNotifier extends ChangeNotifier {
   bool _initialized = false;
 
   _RouterNotifier(this._ref) {
-    // If the auth state is already known (e.g. cached Firebase session),
-    // mark as initialized immediately so the first redirect is not blocked.
     if (_ref.read(authStateProvider) != null) {
       _initialized = true;
     }
@@ -51,11 +88,14 @@ class _RouterNotifier extends ChangeNotifier {
   bool get hasConsent => _ref.read(gdprConsentProvider).value ?? false;
 }
 
+// ── Router Provider ───────────────────────────────────────────────────────────
+
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = _RouterNotifier(ref);
   ref.onDispose(notifier.dispose);
 
-  return GoRouter(
+  final router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: notifier,
     routes: [
@@ -83,10 +123,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) {
-          // careful with casting, ensure extra is passed
           final match = state.extra as MatchProfile?;
-          // If match is null, maybe redirect or show error?
-          // For now assuming safe
           if (match == null) {
             return const Scaffold(
                 body: Center(child: Text("Profile not found")));
@@ -143,8 +180,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (!isOnboarded) {
-        // Non-onboarded logged-in users must complete onboarding.
-        // Never bounce through /login — that creates a redirect loop.
         if (isOnboardingRoute || isForgotPasswordRoute) return null;
         return '/onboarding';
       }
@@ -165,4 +200,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
   );
+
+  // ── Notification deep link: cold start (app was terminated) ──────────────
+  // Runs once when the router is first created.
+  // Delay of 500ms ensures GoRouter is fully mounted before navigating.
+  FirebaseMessaging.instance.getInitialMessage().then((message) {
+    if (message != null) {
+      handleNotificationNavigation(
+        message.data,
+        delay: const Duration(milliseconds: 500),
+      );
+    }
+  });
+
+  // ── Notification deep link: app brought from background ───────────────────
+  FirebaseMessaging.onMessageOpenedApp.listen((message) {
+    handleNotificationNavigation(message.data);
+  });
+
+  return router;
 });

@@ -9,22 +9,26 @@
 
 ---
 
-## Active Phase 🚀
 ### Phase 6 — Brand Alignment & Wave Mechanic
-- [ ] Swap teal (#00D9A6) → Tremble Rose (#F4436C) across the app.
-- [ ] Install Font System (Playfair Display / Lora / Instrument Sans / JetBrains Mono).
-- [ ] Update onboarding + CTA copy in `translations.dart`.
-- [ ] Build Wave Mechanic: One-tap send, unidirectional hidden, mutual = match.
-- [ ] Match Reveal screen with brand animation.
-- [ ] **URGENT**: Finalize Google Maps API key injection (Local + CI).
+- [x] Swap teal (#00D9A6) → Tremble Rose (#F4436C) across the app.
+- [x] Install Font System (Playfair Display / Lora / Instrument Sans / JetBrains Mono).
+- [x] Update onboarding + CTA copy in `translations.dart`.
+- [x] Build Wave Mechanic: One-tap send, unidirectional hidden, mutual = match.
+- [x] Match Reveal screen with brand animation.
+- [x] **URGENT**: Finalize Google Maps API key injection (Local + CI).
 
 ---
 
-## Upcoming ⏳
-### Phase 7 — Messaging & Push Notifications
-- Real-time chat after mutual wave (Firestore).
-- FCM + APNs configuration.
-- Notification types: Proximity, Mutual Wave, 24h Reminder.
+## Active Phase 🚀
+### Phase 7 — Interaction System v2.1 ✅ (Flutter complete, Functions pending deploy)
+- [x] CROSSING_PATHS: anonimno BLE obvestilo (15-min anti-spam).
+- [x] INCOMING_WAVE: Rich Push z imenom + sliko pošiljatelja.
+- [x] MUTUAL_WAVE: Match notifikacija z deep link `/radar`.
+- [x] Background "Pomahaj nazaj" handler (top-level, Firestore direct write).
+- [x] Deep link routing — cold start + background-to-foreground.
+- [x] Translations: `notify_*` + `action_*` ključi v EN/SL/DE.
+- [x] **DONE**: `firebase deploy --only functions` → 19 funkcij deployanih v `tremble-dev` ✅
+- [ ] **PENDING (HIGH – Xcode)**: iOS Notification Service Extension za slike v push.
 
 ### Phase 8 — Paywall / Tremble Pro
 - RevenueCat integration.

@@ -8,7 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options_dev.dart';
 import 'firebase_options_prod.dart';
-import 'notification_service.dart';
+
 import 'ble_service.dart';
 import 'geo_service.dart';
 
@@ -71,7 +71,8 @@ void onStart(ServiceInstance service) async {
       ? ProdFirebaseOptions.currentPlatform
       : DevFirebaseOptions.currentPlatform;
   await Firebase.initializeApp(options: firebaseOptions);
-  await NotificationService.initialize();
+  // NotificationService.initialize() is called in the main isolate (home_screen).
+  // The background isolate handles its own local notifications directly.
 
   final bleService = BleService();
   final geoService = GeoService();
@@ -125,7 +126,28 @@ void onStart(ServiceInstance service) async {
       final hour = DateTime.now().hour;
       // Only show during daytime (08:00 - 22:00)
       if (hour >= 8 && hour < 22) {
-        await NotificationService.showIdleNotification();
+        // Show a subtle idle nudge via local notification directly
+        // (background isolate cannot use the main NotificationService instance).
+        final idlePlugin = FlutterLocalNotificationsPlugin();
+        const messages = [
+          'Mogoče se kaj dogaja v bližini.',
+          'Radar je aktiven. Pojdi vživo.',
+        ];
+        final body = (messages.toList()..shuffle()).first;
+        await idlePlugin.show(
+          1,
+          'Tremble',
+          body,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'tremble_proximity',
+              'Tremble — V bližini',
+              importance: Importance.defaultImportance,
+              priority: Priority.defaultPriority,
+            ),
+          ),
+          payload: 'idle',
+        );
         // Reset the clock to avoid spamming
         await prefs.setInt(
             'last_ble_encounter_time', DateTime.now().millisecondsSinceEpoch);

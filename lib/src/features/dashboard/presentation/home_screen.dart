@@ -51,7 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(authStateProvider);
       if (user != null) {
-        NotificationService.getAndSaveToken(user.id);
+        NotificationService.saveToken(user.id);
       }
     });
   }
@@ -338,7 +338,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             const Icon(LucideIcons.flame, color: Colors.amber),
                         onPressed: () {
                           // Allow the user to manually trigger the Notification
-                          NotificationService.showMockHotspotNotification();
+                          // Hotspot mock removed — notifications now handled by Cloud Functions
                         },
                       ),
                     ),

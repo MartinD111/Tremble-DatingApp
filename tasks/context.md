@@ -1,27 +1,38 @@
-## Session State — 2026-04-08
-- Session ID: GSD-Phase-6-Begin
-- Active Task: Phase 6 — Brand Alignment & Wave Mechanic
+## Session State — 2026-04-09 09:24
+- Active Task: Phase 7 Interaction System v2.1 — FULLY DEPLOYED ✅
 - Environment: Dev (tremble-dev)
 - Branch: main
-- Roadmap Status:
-    - Phase 1-5: Completed ✅
-    - Phase 6: Active 🚀
-- Modified Files (this session):
-    - lib/src/core/router.dart
-    - android/app/build.gradle.kts
-    - android/local.properties
-    - ios/Flutter/Debug.xcconfig
-    - lib/src/features/auth/presentation/registration_flow.dart
-    - tasks/plan.md (Roadmap updated to 10 phases)
+- System Status: `flutter analyze` → No issues ✅ | `tsc` → No errors ✅ | Firebase deploy → 19 functions ✅
 
-## Session Handoff (For Martin/Aleksandar)
-- **Status:** Foundations and infrastructure are ready. Bug fixes for Auth and Google Maps successfully shipped.
-- **Active Roadmap:** GSD project initialized with a 10-phase roadmap.
-- **Current Objective:** Brand identity alignment and the core "Wave" interaction.
-- **Next Action (Phase 6):**
-    1. **Color Swap:** Replace all teal (#00D9A6) with Tremble Rose (#F4436C).
-    2. **Typography:** Install Google Fonts (Playfair Display, Lora, Instrument Sans).
-    3. **Copy:** Update translations to align with "stoic/human" brand voice.
-    4. **Waves:** Implement the unidirectional wave mechanic.
+## Interaction System v2.1 — Zaključeno
 
-## Staleness Rule: If this block is >48h old, re-sync with main before executing.
+### Kar je delujoče v tremble-dev zdaj:
+| Trigger | Notifikacija | Status |
+|---|---|---|
+| BLE zaznava (onBleProximity) | "Nekdo je blizu. Boš pomahal-a?" (anonimno, 15-min cooldown) | ✅ Live |
+| 1. val (onWaveCreated) | "[Ime] ti je pomahal-a. Pomahaš nazaj?" (Rich Push: ime + slika) | ✅ Live |
+| Mutual wave | "[Ime] ti je pomahal-a nazaj! Odpremo radar?" + deep link /radar | ✅ Live |
+| Background "Pomahaj nazaj" | Silent wave v Firestore brez odpiranja app | ✅ Flutter ready |
+| Deep link cold-start | Notification tap → MatchRevealScreen | ✅ Flutter ready |
+
+### Odprto — zahteva founder approval:
+1. **iOS Notification Service Extension** — Xcode native target, zahteva spremembe v `ios/` mapi.
+   - Risk: HIGH (native iOS config)
+   - Potrebno za: prikaz sender slike v push notifikacijah na iOS-u
+   - Brez tega: Android prikazuje slike ✅, iOS prikazuje samo tekst
+
+2. **Node.js 20 → 22 upgrade** ⚠️ URGENT (deadline: 2026-04-30, 21 dni)
+   - Firebase CLI je opozoril: Node.js 20 decommission 2026-10-30
+   - Risk: LOW-MEDIUM (sprememba v `functions/package.json` + `.node-version`)
+   - Brez tega: deploy bo blokiran po 2026-10-30
+
+## Session Handoff
+- **Completed:** Interaction System v2.1 — Flutter + Cloud Functions + Deploy
+- **In Progress:** Nič
+- **Blocked:** iOS Notification Service Extension (HIGH, Xcode) — čaka founder approval
+- **Next Action (priporočeno):**
+  1. Node.js 20 → 22 upgrade (URGENT, 21 dni do deprecation)
+  2. iOS Notification Service Extension (po approvalov)
+  3. Phase 8: Paywall / RevenueCat
+
+Staleness rule: if this block is >48h old, re-validate before executing.
