@@ -122,6 +122,11 @@ node_modules/
 .env
 .env.local
 .env.*.local
+# Cloud Functions secrets — ALL variants explicitly blocked
+functions/.env
+functions/.env.*
+functions/.env.dev
+functions/.env.prod
 functions/.env.local
 functions/.secret.local
 
