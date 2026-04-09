@@ -1,48 +1,60 @@
-## Session State — 2026-04-09 10:15
-- Active Task: Phase 7.5 — iOS Native Polish ✅ COMPLETE
+## Session State — 2026-04-09 16:30
+- Active Task: Security Audit + UI Audit complete. Phase 2A (P0 bugfixes) defined, not started.
 - Environment: Dev (tremble-dev)
 - Branch: main
-- System Status: `flutter analyze` → No issues ✅ | `pod install` → Clean ✅ | Firebase deploy → 19 functions ✅
+- System Status: `flutter analyze` → No issues ✅ | Security scan → PASSED ✅ | Firebase deploy → 19 functions ✅
 
-## Interaction System v2.1 — Live ✅
+## Security Work Completed This Session
 
-| Trigger | Notifikacija | Status |
-|---|---|---|
-| BLE zaznava (onBleProximity) | "Nekdo je blizu. Boš pomahal-a?" (anonimno, 15-min cooldown) | ✅ Live |
-| 1. val (onWaveCreated) | "[Ime] ti je pomahal-a. Pomahaš nazaj?" (Rich Push: ime + slika) | ✅ Live |
-| Mutual wave | "[Ime] ti je pomahal-a nazaj! Odpremo radar?" + deep link /radar | ✅ Live |
-| Background "Pomahaj nazaj" | Silent wave v Firestore brez odpiranja app | ✅ Flutter ready |
-| Deep link cold-start | Notification tap → MatchRevealScreen | ✅ Flutter ready |
+| Action | Status |
+|--------|--------|
+| Rotated Resend API keys (dev + prod) | ✅ Done by founder |
+| Rotated Cloudflare R2 keys (dev + prod) | ✅ Done by founder |
+| Created separate iOS + Android Maps API keys | ✅ Done by founder |
+| Split functions/.env → .env.dev + .env.prod | ✅ Committed (70dfc9b) |
+| Implemented scripts/ci/secret_scan.sh (gitleaks + patterns) | ✅ Committed (70dfc9b) |
+| Gitignored orphan lib/firebase_options.dart files | ✅ Committed (99b300f) |
+| Fixed SVG inner wave Y offset in both logo assets | ✅ Committed (ea8e742) |
 
-## Phase 7.5 — iOS Notification Service Extension ✅
+## Security Findings Summary (from scan)
 
-### Kar je narejeno:
-- `ios/ImageNotification/NotificationService.swift` — downloads image from FCM payload, attaches to notification
-- `ios/ImageNotification/Info.plist` — NSExtensionPointIdentifier = com.apple.usernotifications.service
-- Xcode target `ImageNotification` linked in project.pbxproj
-- Bundle IDs: `com.pulse.ImageNotification` (Debug), `tremble.dating.app.ImageNotification` (Release/Profile)
-- `ios/Podfile` — `target 'ImageNotification'` with `pod 'Firebase/Messaging'`
-- .xcconfig (Debug/Release/Profile) include `#include?` Pods references
-- `CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = $(inherited)` in ImageNotification build settings
-- Deployment target: iOS 15.0 on all targets
-- `pod install` → clean ✅
+| Finding | Severity | Status |
+|---------|----------|--------|
+| functions/.env mixed dev/prod credentials | CRIT-01 | ✅ Fixed |
+| lib/firebase_options.dart tracked in git | CRIT-02 | ✅ Fixed |
+| Maps API keys in git history (filter-branch done) | CRIT-03 | ⚠️ Verify revocation |
+| secret_scan.sh was a stub | HIGH-02 | ✅ Fixed |
+| Prod Firebase API keys in git history commit 0044b4f | MED-01 | ⚠️ Mitigated by SEC-001 (App Check) |
 
-### KRITIČNO — ne smeš spremeniti:
-- `objectVersion` v `project.pbxproj` mora ostati **63** (ne 70!)
-  Xcode 26.3 + CocoaPods 1.16.2 zahteva 63. Sprememba na 70 = `pod install` fail.
-- Bundle ID hierarhija mora ostati: parent app ID + `.ImageNotification`
+## UI Audit — Complete (2026-04-09)
 
-### Kaj ostaja za test:
-- Fizična naprava + TestFlight build — preveriti, da se slika pošiljatelja prikaže v iOS push notifikaciji
-- Android rich push že deluje ✅
+Full audit of all Flutter screens completed. See `.planning/reports/20260409-session-report-3.md` for details.
+
+### P0 Items (must fix before TestFlight)
+
+| ID | Issue | File |
+|----|-------|------|
+| D-19 | Colors.pinkAccent → TrembleTheme.rose in 6+ locations | radar_animation.dart + 5 others |
+| D-20 | DEV TEST flame button rendered in production | home_screen.dart |
+| D-21 | Google logo Image.network from Wikimedia (offline fail) | login_screen.dart |
+| D-22 | Fake map markers with fabricated user counts | pulse_map_screen.dart |
+| D-23 | Hardcoded "Ljubljana, 2km" shown as real data | profile_detail_screen.dart |
+
+### P1 Items (before external users see app)
+
+| ID | Issue |
+|----|-------|
+| D-25 | 40+ hardcoded Slovenian strings bypassing t() |
+| D-26 | ugc_action_sheet.dart white background on dark app |
+| D-27 | Forgot password spinner runs forever |
+| D-24 | registration_flow.dart monolith (27 pages, 1 file) |
 
 ## Session Handoff
-- **Completed:** Phase 7 + Phase 7.5 + GDPR deletion pipeline fix (Phase 10 sub-task) ✅
-- **Deployed:** `feature/gdpr-deletion-fix` → tremble-dev ✅ (19/19 functions, 2026-04-09)
-- **Cleaned up:** 6 stale functions removed from tremble-dev (3× greetings era, 3× us-central1 region leftovers)
-- **Decision recorded:** GDPR reports → Option B (anonymise reportedId, keep record for Art. 17(3)(e) legal defence)
-- **NOT deployed to prod:** `am---dating-app` untouched — requires separate founder sign-off before prod deploy
-- **Phase 8 (RevenueCat):** Deliberately deferred — both founders must be present
-- **Next Action:** Founder verifies GDPR functions in tremble-dev Firebase console → merge `feature/gdpr-deletion-fix` → prod deploy → then Phase 8
+- **Completed:** Full security audit + key rotations + CI secret scan + SVG logo fix + full UI audit
+- **Committed:** ea8e742, 99b300f, 70dfc9b (3 new commits this session)
+- **NOT started:** Phase 2A P0 bugfixes (next priority)
+- **Phase 8 (RevenueCat):** Parked — requires both founders present
+- **SEC-001 (App Check):** Blocked on developer account — parking until accounts available
+- **Next Action:** Phase 2A — fix D-19 (pinkAccent), D-20 (debug button), D-21 (Google logo), D-22/D-23 (fake data)
 
 Staleness rule: if this block is >48h old, re-validate before executing.

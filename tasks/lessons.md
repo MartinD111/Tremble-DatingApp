@@ -33,3 +33,31 @@ Source: GDPR deletion pipeline fix, April 2026.
 returning empty data. When renaming a collection: grep the entire functions/ directory for the old name
 and update every reference (queries, exports, deletion pipeline, tests) before deploying.
 Source: GDPR export fix (greetings → waves), April 2026.
+
+**Rule #7 — Google OAuth Web Client ID is NOT a secret. Do not rotate it.**
+[2026-04-09] `GOOGLE_WEB_CLIENT_ID` (format: `XXXXXXXX.apps.googleusercontent.com`) is a public OAuth
+identifier embedded in every compiled app. It cannot be "rotated" without breaking all existing Google
+Sign-In sessions for all users. It belongs in `.env` for environment separation (dev vs prod project),
+but treat it as config — not a secret. Only the OAuth Client Secret (server-side flows) is sensitive.
+Source: Security scan session, April 2026.
+
+**Rule #8 — `functions/.env` must NEVER mix dev and prod credentials.**
+[2026-04-09] Having both dev and prod secrets in one `.env` file means the last block always wins —
+whichever env is active could silently inject prod credentials into a dev emulator or vice versa.
+Always use `functions/.env.dev` and `functions/.env.prod` as separate files. Both must be gitignored.
+Update `.gitignore` with explicit per-file entries, not just wildcards.
+Source: Security audit, April 2026.
+
+**Rule #9 — `Colors.pinkAccent` is NOT the Tremble brand rose. Never use it.**
+[2026-04-09] `Colors.pinkAccent` (#FF4081) is a Material Design default. The Tremble brand rose is
+`TrembleTheme.rose` (#F4436C). In the RadarAnimation and 5+ other screens, `Colors.pinkAccent` was
+used instead of the brand color — most visible in the app's primary widget. Always use theme tokens:
+`TrembleTheme.rose`, `TrembleTheme.roseLight`, `TrembleTheme.roseDark`. Never use Material color names.
+Source: UI audit, April 2026.
+
+**Rule #10 — Remove ALL debug artifacts before any TestFlight or store build.**
+[2026-04-09] A DEV TEST flame button (amber, LucideIcons.flame) was found rendered on HomeScreen
+when `isScanning == true`. It had an empty `onPressed` but was visually present. Any debug button,
+mock data label, test overlay, or console.log must be removed before sharing the app externally.
+Do a grep for `DEV TEST`, `TODO`, `mock`, `hardcoded`, `fake` before every beta build.
+Source: UI audit, April 2026.
