@@ -132,7 +132,7 @@ class BlockedUsersScreen extends ConsumerWidget {
                       ),
                       TextButton(
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.pinkAccent,
+                          foregroundColor: const Color(0xFFF4436C),
                         ),
                         onPressed: () async {
                           // Unblock logic
@@ -164,7 +164,7 @@ class BlockedUsersScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(
-          child: CircularProgressIndicator(color: Colors.pinkAccent),
+          child: CircularProgressIndicator(color: const Color(0xFFF4436C)),
         ),
         error: (error, stack) => Center(
           child:

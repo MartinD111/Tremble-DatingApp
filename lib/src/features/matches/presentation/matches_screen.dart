@@ -32,7 +32,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
         duration: const Duration(seconds: 3),
         action: SnackBarAction(
           label: 'Razveljavi',
-          textColor: Colors.pinkAccent,
+          textColor: const Color(0xFFF4436C),
           onPressed: () => setState(() => _removedIds.remove(matchId)),
         ),
       ),
@@ -66,11 +66,13 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     color: _isEditMode
-                        ? Colors.pinkAccent.withValues(alpha: 0.3)
+                        ? const Color(0xFFF4436C).withValues(alpha: 0.3)
                         : Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: _isEditMode ? Colors.pinkAccent : Colors.white24,
+                      color: _isEditMode
+                          ? const Color(0xFFF4436C)
+                          : Colors.white24,
                     ),
                   ),
                   child: Row(
@@ -79,14 +81,17 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                       Icon(
                         _isEditMode ? LucideIcons.check : LucideIcons.pencil,
                         size: 14,
-                        color: _isEditMode ? Colors.pinkAccent : Colors.white70,
+                        color: _isEditMode
+                            ? const Color(0xFFF4436C)
+                            : Colors.white70,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         _isEditMode ? 'Končaj' : 'Uredi',
                         style: TextStyle(
-                          color:
-                              _isEditMode ? Colors.pinkAccent : Colors.white70,
+                          color: _isEditMode
+                              ? const Color(0xFFF4436C)
+                              : Colors.white70,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),

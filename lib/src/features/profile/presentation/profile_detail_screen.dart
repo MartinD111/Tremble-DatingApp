@@ -134,7 +134,7 @@ class ProfileDetailScreen extends ConsumerWidget {
               }
             },
             child: const Text("Match again in future",
-                style: TextStyle(color: Colors.pinkAccent)),
+                style: TextStyle(color: const Color(0xFFF4436C))),
           ),
         ],
       ),
@@ -332,16 +332,17 @@ class ProfileDetailScreen extends ConsumerWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.pinkAccent.withValues(alpha: 0.2),
+                      color: const Color(0xFFF4436C).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: Colors.pinkAccent.withValues(alpha: 0.5)),
+                          color:
+                              const Color(0xFFF4436C).withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(LucideIcons.heart,
-                            size: 14, color: Colors.pinkAccent),
+                            size: 14, color: const Color(0xFFF4436C)),
                         const SizedBox(width: 6),
                         Text(item,
                             style: const TextStyle(
@@ -405,8 +406,6 @@ class ProfileDetailScreen extends ConsumerWidget {
       addBadge(LucideIcons.users, t('ethnicity_${match.ethnicity}', lang));
     }
 
-    addBadge(LucideIcons.mapPin, "Ljubljana, 2km", Colors.pinkAccent);
-
     return Wrap(
       spacing: 6,
       runSpacing: 6,
@@ -427,7 +426,7 @@ class ProfileDetailScreen extends ConsumerWidget {
               children: [
                 Text(prompt['question']!,
                     style: GoogleFonts.instrumentSans(
-                        fontSize: 14, color: Colors.pinkAccent)),
+                        fontSize: 14, color: const Color(0xFFF4436C))),
                 const SizedBox(height: 8),
                 Text(prompt['answer']!,
                     style: GoogleFonts.instrumentSans(
@@ -589,11 +588,11 @@ class ProfileDetailScreen extends ConsumerWidget {
               ),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: Colors.pinkAccent,
+                  activeTrackColor: const Color(0xFFF4436C),
                   inactiveTrackColor: Colors.white24,
                   thumbColor: Colors.white,
                   disabledThumbColor: Colors.white,
-                  disabledActiveTrackColor: Colors.pinkAccent,
+                  disabledActiveTrackColor: const Color(0xFFF4436C),
                   disabledInactiveTrackColor: Colors.white24,
                 ),
                 child: Slider(
@@ -609,7 +608,7 @@ class ProfileDetailScreen extends ConsumerWidget {
                     ? '${100 - intLevel}% introvert'
                     : '$intLevel% ekstrovert',
                 style: const TextStyle(
-                    color: Colors.pinkAccent,
+                    color: const Color(0xFFF4436C),
                     fontSize: 16,
                     fontWeight: FontWeight.bold),
               ),

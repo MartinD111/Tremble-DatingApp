@@ -171,7 +171,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(color: iconColor)),
                           focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.pinkAccent)),
+                              borderSide:
+                                  BorderSide(color: const Color(0xFFF4436C))),
                         ),
                       ),
                       const SizedBox(height: 15),
@@ -194,7 +195,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(color: iconColor)),
                           focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.pinkAccent)),
+                              borderSide:
+                                  BorderSide(color: const Color(0xFFF4436C))),
                         ),
                       ),
                       const SizedBox(height: 15),
@@ -217,7 +219,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(color: iconColor)),
                           focusedBorder: const UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.pinkAccent)),
+                              borderSide:
+                                  BorderSide(color: const Color(0xFFF4436C))),
                         ),
                       ),
                       const SizedBox(height: 30),
@@ -690,7 +693,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     _updateProfile(user.copyWith(appLanguage: code));
                   }
                 },
-                selectedColor: Colors.pinkAccent,
+                selectedColor: const Color(0xFFF4436C),
                 backgroundColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white.withValues(alpha: 0.1)
                     : Colors.black.withValues(alpha: 0.05),
@@ -704,7 +707,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 shape: StadiumBorder(
                     side: BorderSide(
                         color: isSelected
-                            ? Colors.pinkAccent
+                            ? const Color(0xFFF4436C)
                             : (Theme.of(context).brightness == Brightness.dark
                                 ? Colors.white24
                                 : Colors.black12))),
@@ -743,7 +746,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             min: 18,
             max: 100,
             divisions: 82,
-            activeColor: Colors.pinkAccent,
+            activeColor: const Color(0xFFF4436C),
             inactiveColor: Colors.white24,
             labels: RangeLabels(
               user.ageRangeStart.toString(),
@@ -783,7 +786,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             min: 130,
             max: 250,
             divisions: 120,
-            activeColor: Colors.pinkAccent,
+            activeColor: const Color(0xFFF4436C),
             inactiveColor: Colors.white24,
             labels: RangeLabels(
               (user.heightRangeStart ?? 130).toString(),
@@ -832,7 +835,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     _updateProfile(user.copyWith(interestedIn: value));
                   }
                 },
-                selectedColor: Colors.pinkAccent,
+                selectedColor: const Color(0xFFF4436C),
                 backgroundColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white.withValues(alpha: 0.1)
                     : Colors.black.withValues(alpha: 0.05),
@@ -846,7 +849,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 shape: StadiumBorder(
                     side: BorderSide(
                         color: isSelected
-                            ? Colors.pinkAccent
+                            ? const Color(0xFFF4436C)
                             : (Theme.of(context).brightness == Brightness.dark
                                 ? Colors.white24
                                 : Colors.black12))),
@@ -879,7 +882,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         user.copyWith(partnerSmokingPreference: value));
                   }
                 },
-                selectedColor: Colors.pinkAccent,
+                selectedColor: const Color(0xFFF4436C),
                 backgroundColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white.withValues(alpha: 0.1)
                     : Colors.black.withValues(alpha: 0.05),
@@ -893,7 +896,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 shape: StadiumBorder(
                     side: BorderSide(
                         color: isSelected
-                            ? Colors.pinkAccent
+                            ? const Color(0xFFF4436C)
                             : (Theme.of(context).brightness == Brightness.dark
                                 ? Colors.white24
                                 : Colors.black12))),
@@ -1021,7 +1024,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   min: 0,
                   max: 100,
                   divisions: 100,
-                  activeColor: Colors.pinkAccent,
+                  activeColor: const Color(0xFFF4436C),
                   inactiveColor: Colors.white24,
                   label: label,
                   onChanged: (val) {
@@ -1142,7 +1145,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     _updateProfile(user.copyWith(sleepSchedule: value));
                   }
                 },
-                selectedColor: Colors.pinkAccent,
+                selectedColor: const Color(0xFFF4436C),
                 backgroundColor: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white.withValues(alpha: 0.1)
                     : Colors.black.withValues(alpha: 0.05),
@@ -1156,7 +1159,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 shape: StadiumBorder(
                     side: BorderSide(
                         color: isSelected
-                            ? Colors.pinkAccent
+                            ? const Color(0xFFF4436C)
                             : (Theme.of(context).brightness == Brightness.dark
                                 ? Colors.white24
                                 : Colors.black12))),

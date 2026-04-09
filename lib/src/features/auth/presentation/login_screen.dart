@@ -263,9 +263,26 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.network(
-                                'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png',
+                              Container(
+                                width: 20,
                                 height: 20,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                  border: Border.all(
+                                      color: Colors.grey.shade300, width: 0.5),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'G',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF4285F4),
+                                      height: 1,
+                                    ),
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Text(

@@ -329,19 +329,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               .slideY(begin: -1.0, curve: Curves.easeOutBack),
                         ),
                       ),
-                    // ── DEV TEST: Mock Hotspot Button ────────────────
-                    Positioned(
-                      top: 100,
-                      right: 20,
-                      child: IconButton(
-                        icon:
-                            const Icon(LucideIcons.flame, color: Colors.amber),
-                        onPressed: () {
-                          // Allow the user to manually trigger the Notification
-                          // Hotspot mock removed — notifications now handled by Cloud Functions
-                        },
-                      ),
-                    ),
                   ]
                 ],
               )

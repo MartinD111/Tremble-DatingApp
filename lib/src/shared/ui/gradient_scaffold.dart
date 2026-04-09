@@ -60,8 +60,9 @@ class GradientScaffold extends ConsumerWidget {
           ),
           if (showPing)
             _SubtlePingOverlay(
-              accentColor:
-                  bgColors.isNotEmpty ? bgColors.first : Colors.pinkAccent,
+              accentColor: bgColors.isNotEmpty
+                  ? bgColors.first
+                  : const Color(0xFFF4436C),
             ),
           SafeArea(
             child: DefaultTextStyle(

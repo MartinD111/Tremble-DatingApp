@@ -406,7 +406,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.pinkAccent,
+                          color: const Color(0xFFF4436C),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(t('main', _lang),
@@ -548,13 +548,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           onSelected: (s) {
             if (s) setState(() => _gender = value);
           },
-          selectedColor: Colors.pinkAccent,
+          selectedColor: const Color(0xFFF4436C),
           backgroundColor: Colors.white.withValues(alpha: 0.1),
           labelStyle:
               const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           shape: StadiumBorder(
-              side:
-                  BorderSide(color: sel ? Colors.pinkAccent : Colors.white24)),
+              side: BorderSide(
+                  color: sel ? const Color(0xFFF4436C) : Colors.white24)),
           showCheckmark: false,
         );
       }).toList(),
@@ -585,8 +585,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       title:
           Text(t('smoking', lang), style: const TextStyle(color: Colors.white)),
       value: _isSmoker ?? false,
-      activeThumbColor: Colors.pinkAccent,
-      activeTrackColor: Colors.pinkAccent.withValues(alpha: 0.3),
+      activeThumbColor: const Color(0xFFF4436C),
+      activeTrackColor: const Color(0xFFF4436C).withValues(alpha: 0.3),
       inactiveTrackColor: Colors.white24,
       onChanged: (val) => setState(() => _isSmoker = val),
     );
@@ -676,7 +676,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           min: 1,
           max: 5,
           divisions: 4,
-          activeColor: Colors.pinkAccent,
+          activeColor: const Color(0xFFF4436C),
           inactiveColor: Colors.white24,
           label: label,
           onChanged: (val) => setState(() => _introvertScale = val.round()),
@@ -714,13 +714,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               }
             });
           },
-          selectedColor: Colors.pinkAccent,
+          selectedColor: const Color(0xFFF4436C),
           backgroundColor: Colors.white.withValues(alpha: 0.1),
           labelStyle:
               const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           shape: StadiumBorder(
-              side:
-                  BorderSide(color: sel ? Colors.pinkAccent : Colors.white24)),
+              side: BorderSide(
+                  color: sel ? const Color(0xFFF4436C) : Colors.white24)),
           showCheckmark: false,
         );
       }).toList(),
@@ -758,13 +758,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               }
             });
           },
-          selectedColor: Colors.pinkAccent,
+          selectedColor: const Color(0xFFF4436C),
           backgroundColor: Colors.white.withValues(alpha: 0.1),
           labelStyle:
               const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           shape: StadiumBorder(
-              side:
-                  BorderSide(color: sel ? Colors.pinkAccent : Colors.white24)),
+              side: BorderSide(
+                  color: sel ? const Color(0xFFF4436C) : Colors.white24)),
           showCheckmark: false,
         );
       }).toList(),
@@ -881,7 +881,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               }
             },
             child: Text(t('add', _lang),
-                style: const TextStyle(color: Colors.pinkAccent)),
+                style: const TextStyle(color: const Color(0xFFF4436C))),
           ),
         ],
       ),
@@ -934,7 +934,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       label: Text(label),
       selected: sel,
       onSelected: onSelected,
-      selectedColor: Colors.pinkAccent,
+      selectedColor: const Color(0xFFF4436C),
       backgroundColor: Colors.white.withValues(alpha: 0.1),
       labelStyle: const TextStyle(
         color: Colors.white,
@@ -942,7 +942,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         fontSize: 13,
       ),
       shape: StadiumBorder(
-          side: BorderSide(color: sel ? Colors.pinkAccent : Colors.white12)),
+          side: BorderSide(
+              color: sel ? const Color(0xFFF4436C) : Colors.white12)),
       showCheckmark: false,
     );
   }

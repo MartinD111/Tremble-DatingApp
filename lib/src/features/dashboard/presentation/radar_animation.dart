@@ -139,7 +139,7 @@ class RadarPainter extends CustomPainter {
         endAngle: sweepAngle,
         colors: [
           Colors.transparent,
-          Colors.pinkAccent.withValues(alpha: 0.3),
+          const Color(0xFFF4436C).withValues(alpha: 0.3),
         ],
         stops: const [0.0, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: maxRadius))
@@ -162,7 +162,7 @@ class RadarPainter extends CustomPainter {
     final lineEndX = center.dx + maxRadius * cos(sweepAngle);
     final lineEndY = center.dy + maxRadius * sin(sweepAngle);
     final linePaint = Paint()
-      ..color = Colors.pinkAccent.withValues(alpha: 0.6)
+      ..color = const Color(0xFFF4436C).withValues(alpha: 0.6)
       ..strokeWidth = 2;
     canvas.drawLine(center, Offset(lineEndX, lineEndY), linePaint);
 
@@ -190,7 +190,7 @@ class RadarPainter extends CustomPainter {
       final ringRadius = 8.0 + ringProgress * 30.0;
       final ringAlpha = (1.0 - ringProgress) * 0.8;
       final ringPaint = Paint()
-        ..color = Colors.pinkAccent.withValues(alpha: ringAlpha)
+        ..color = const Color(0xFFF4436C).withValues(alpha: ringAlpha)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3;
       canvas.drawCircle(pingCenter, ringRadius, ringPaint);
@@ -198,13 +198,13 @@ class RadarPainter extends CustomPainter {
 
     // Core dot - larger
     final dotPaint = Paint()
-      ..color = Colors.pinkAccent
+      ..color = const Color(0xFFF4436C)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(pingCenter, 8, dotPaint);
 
     // Glow - more intense
     final glowPaint = Paint()
-      ..color = Colors.pinkAccent.withValues(alpha: 0.6)
+      ..color = const Color(0xFFF4436C).withValues(alpha: 0.6)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(pingCenter, 15, glowPaint);
