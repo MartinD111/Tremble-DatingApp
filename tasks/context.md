@@ -1,8 +1,8 @@
-## Session State — 2026-04-09 20:30
-- Active Task: Phase 2C complete. All P1 items resolved.
+## Session State — 2026-04-10 09:00
+- Active Task: Phase 2D (D-24) in progress — registration monolith extraction.
 - Environment: Dev (tremble-dev)
 - Branch: main
-- System Status: `flutter analyze` → No issues ✅ | Phase 2A + 2B + 2C committed ✅
+- System Status: `flutter analyze` → No issues ✅ | Phase 2D partial (commit 78a8141) ✅
 
 ## Security Work Completed This Session
 
@@ -49,13 +49,26 @@ Full audit of all Flutter screens completed. See `.planning/reports/20260409-ses
 | D-27 | Forgot password spinner runs forever |
 | D-24 | registration_flow.dart monolith (27 pages, 1 file) |
 
+## Phase 2D — D-24 Progress (registration_flow.dart extraction)
+
+| Batch | Steps Extracted | Commit | Status |
+|-------|----------------|--------|--------|
+| Session 3 (2026-04-09) | IntroSlide, Name, Gender, Status, Exercise, Drinking, Smoking | 36aec2f | ✅ Done |
+| Session 4 (2026-04-10) | Children, Introversion, Sleep, Pets, Religion, Ethnicity, HairColor, PoliticalAffiliation | 78a8141 | ✅ Done |
+| Remaining | Languages, DatingPreferences, WhatToMeet (complex — list/multi-select) | — | ⏳ Next |
+| Skipped (complex) | Birthday, Email, Height, Hobbies, Photos, Consent | — | 🔜 Future |
+
+**Current:** registration_flow.dart reduced from 3381 → 3048 lines.
+**Remaining simple extractions:** `_buildPageLanguages`, `_buildPageDatingPreferences`, `_buildPageWhatToMeet`.
+
 ## Session Handoff
-- **Phase 2A:** ✅ COMPLETE (commit 19aaa9b) — D-19 (brand color), D-20 (debug button), D-21 (Google logo), D-23 (fake location) all fixed
-- **Phase 2B:** ✅ COMPLETE (commit 538d27b) — D-22 (fake map markers removed + empty state), onboarding visual polish (TrembleLogo on intro, dot indicators, fixed messagesSquare → activity icon)
-- **Phase 2C:** ✅ COMPLETE (commit 7347371) — D-25 (10 new i18n keys + wired in profile_detail_screen, home_screen, match_dialog, full lifestyle section i18n), D-26 (ugc dark bg), D-27 (forgot password spinner → Back to Login)
+- **Phase 2A:** ✅ COMPLETE (commit 19aaa9b) — D-19, D-20, D-21, D-23 all fixed
+- **Phase 2B:** ✅ COMPLETE (commit 538d27b) — D-22, onboarding visual polish
+- **Phase 2C:** ✅ COMPLETE (commit 7347371) — D-25, D-26, D-27 fixed
+- **Phase 2D:** 🟡 IN PROGRESS (commit 78a8141) — 15 of 27 pages extracted; 3 more simple + 6 complex remain
 - **Phase 8 (RevenueCat):** Parked — requires both founders present
 - **SEC-001 (App Check):** Blocked on developer account — parking until accounts available
 - **D-15:** Pending — Google Maps API key placeholder still in local.properties + Debug.xcconfig
-- **Next Action:** All P0 + P1 audit items resolved. Next session: GSD Phase 7 (Wave Mechanic) or remaining debt items from debt.md.
+- **Next Action:** Extract `_buildPageLanguages`, `_buildPageDatingPreferences`, `_buildPageWhatToMeet` from registration_flow.dart. Then move to Phase 7 (Wave Mechanic) or close D-24 as complete.
 
 Staleness rule: if this block is >48h old, re-validate before executing.
