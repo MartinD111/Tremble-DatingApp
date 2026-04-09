@@ -21,6 +21,14 @@ import 'widgets/registration_steps/status_step.dart';
 import 'widgets/registration_steps/exercise_step.dart';
 import 'widgets/registration_steps/drinking_step.dart';
 import 'widgets/registration_steps/smoking_step.dart';
+import 'widgets/registration_steps/children_step.dart';
+import 'widgets/registration_steps/introversion_step.dart';
+import 'widgets/registration_steps/sleep_step.dart';
+import 'widgets/registration_steps/pets_step.dart';
+import 'widgets/registration_steps/religion_step.dart';
+import 'widgets/registration_steps/ethnicity_step.dart';
+import 'widgets/registration_steps/hair_color_step.dart';
+import 'widgets/registration_steps/political_affiliation_step.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE INDICES (actual PageView order)
@@ -652,14 +660,114 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                         setState(() => _partnerSmokingHabit = v),
                     tr: tr,
                   ),
-                  _buildPageChildren(),
-                  _buildPageIntroversion(),
-                  _buildPageSleep(),
-                  _buildPagePets(),
-                  _buildPageReligion(),
-                  _buildPageEthnicity(),
-                  _buildPageHairColor(),
-                  _buildPagePoliticalAffiliation(),
+                  ChildrenStep(
+                    selected: _childrenPreference,
+                    onSelect: (k) => setState(() => _childrenPreference = k),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    onSavePartner: (v) =>
+                        setState(() => _partnerChildrenPreference = v),
+                    tr: tr,
+                  ),
+                  IntroversionStep(
+                    value: _introversionLevel,
+                    onChanged: (v) => setState(() => _introversionLevel = v),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onContinueTap: () => _showPartnerRangeModal(
+                      title: tr('introversion'),
+                      min: 0,
+                      max: 1,
+                      divisions: 100,
+                      labels: [tr('introvert'), tr('extrovert')],
+                      onSave: (val) {
+                        if (val == null) {
+                          setState(() => _partnerIntroversionRange = null);
+                        } else {
+                          setState(() => _partnerIntroversionRange =
+                              '${(val.start * 100).toInt()}-${(val.end * 100).toInt()}');
+                        }
+                      },
+                    ),
+                    tr: tr,
+                  ),
+                  SleepStep(
+                    selected: _sleepHabit,
+                    onSelect: (k) => setState(() => _sleepHabit = k),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    onSavePartner: (v) =>
+                        setState(() => _partnerSleepHabit = v),
+                    tr: tr,
+                  ),
+                  PetsStep(
+                    selected: _petPreference,
+                    onSelect: (k) => setState(() => _petPreference = k),
+                    customPetController: _customPetController,
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onContinueTap: () => _showPartnerPreferenceModal(
+                      title: tr('pets'),
+                      options: [
+                        {'key': 'dog', 'label': tr('dog_person')},
+                        {'key': 'cat', 'label': tr('cat_person')},
+                        {
+                          'key': 'something_else',
+                          'label': tr('something_else')
+                        },
+                        {'key': 'nothing', 'label': tr('nothing')},
+                      ],
+                      userSelection: _petPreference!,
+                      onSave: (v) => setState(() => _partnerPetPreference = v),
+                    ),
+                    tr: tr,
+                  ),
+                  ReligionStep(
+                    selected: _religion,
+                    onSelect: (v) => setState(() => _religion = v),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    onSavePartner: (v) => setState(() => _partnerReligion = v),
+                    tr: tr,
+                  ),
+                  EthnicityStep(
+                    selected: _ethnicity,
+                    onSelect: (v) => setState(() => _ethnicity = v),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    onSavePartner: (v) => setState(() => _partnerEthnicity = v),
+                    tr: tr,
+                  ),
+                  HairColorStep(
+                    selected: _hairColor,
+                    onSelect: (v) => setState(() => _hairColor = v),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    onSavePartner: (v) => setState(() => _partnerHairColor = v),
+                    tr: tr,
+                  ),
+                  PoliticalAffiliationStep(
+                    value: _politicalAffiliationValue,
+                    onChanged: (v) =>
+                        setState(() => _politicalAffiliationValue = v),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onContinueTap: () => _showPartnerRangeModal(
+                      title: tr('political_affiliation'),
+                      min: 1,
+                      max: 5,
+                      divisions: 4,
+                      labels: [tr('politics_left'), tr('politics_right')],
+                      onSave: (val) {
+                        if (val == null) {
+                          setState(() =>
+                              _partnerPoliticalAffiliationPreference = null);
+                        } else {
+                          setState(() =>
+                              _partnerPoliticalAffiliationPreference =
+                                  '${val.start.toInt()}-${val.end.toInt()}');
+                        }
+                      },
+                    ),
+                    tr: tr,
+                  ),
                   _buildPageLanguages(),
                   _buildPageDatingPreferences(),
                   _buildPageWhatToMeet(),
@@ -1674,247 +1782,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     setState(() => _currentPage = page);
   }
 
-  // ══════════════════════════════════════════════════════
-  // PAGE RELIGION
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageReligion() {
-    return _subScreen(
-      title: tr('religion'),
-      backTarget: _currentPage - 1,
-      options: [
-        {'key': 'christianity', 'label': tr('christianity')},
-        {'key': 'islam', 'label': tr('islam')},
-        {'key': 'hinduism', 'label': tr('hinduism')},
-        {'key': 'buddhism', 'label': tr('buddhism')},
-        {'key': 'judaism', 'label': tr('judaism')},
-        {'key': 'agnostic', 'label': tr('agnostic')},
-        {'key': 'atheist', 'label': tr('atheist')},
-      ],
-      selected: _religion,
-      onSelect: (val) {
-        setState(() => _religion = val);
-      },
-      onSavePartner: (val) => setState(() => _partnerReligion = val),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE ETHNICITY
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageEthnicity() {
-    return _subScreen(
-      title: tr('ethnicity'),
-      backTarget: _currentPage - 1,
-      options: [
-        {'key': 'white', 'label': tr('ethnicity_white')},
-        {'key': 'black', 'label': tr('ethnicity_black')},
-        {'key': 'mixed', 'label': tr('ethnicity_mixed')},
-        {'key': 'asian', 'label': tr('ethnicity_asian')},
-      ],
-      selected: _ethnicity,
-      onSelect: (val) {
-        setState(() => _ethnicity = val);
-      },
-      onSavePartner: (val) => setState(() => _partnerEthnicity = val),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE HAIR COLOR
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageHairColor() {
-    return _subScreen(
-      title: tr('hair_color'),
-      backTarget: _currentPage - 1,
-      options: [
-        {'key': 'blonde', 'label': tr('hair_blonde')},
-        {'key': 'brunette', 'label': tr('hair_brunette')},
-        {'key': 'black', 'label': tr('hair_black')},
-        {'key': 'red', 'label': tr('hair_red')},
-        {'key': 'gray_white', 'label': tr('hair_gray_white')},
-        {'key': 'other', 'label': tr('hair_other')},
-      ],
-      selected: _hairColor,
-      onSelect: (val) {
-        setState(() => _hairColor = val);
-      },
-      onSavePartner: (val) => setState(() => _partnerHairColor = val),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE POLITICAL AFFILIATION
-  // ══════════════════════════════════════════════════════
-  Widget _buildPagePoliticalAffiliation() {
-    final labels = [
-      tr('politics_left'),
-      tr('politics_center_left'),
-      tr('politics_center'),
-      tr('politics_center_right'),
-      tr('politics_right')
-    ];
-    return _buildScrollableFormPage(
-      child: Column(
-        children: [
-          _backButton(),
-          const SizedBox(height: 40),
-          _stepHeader(tr('political_affiliation')),
-          const SizedBox(height: 48),
-          Builder(builder: (context) {
-            final isDark = Theme.of(context).brightness == Brightness.dark;
-            final labelColor = isDark ? Colors.white70 : Colors.black54;
-            return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(tr('politics_left'),
-                      style: GoogleFonts.instrumentSans(color: labelColor)),
-                  Text(tr('politics_right'),
-                      style: GoogleFonts.instrumentSans(color: labelColor)),
-                ]);
-          }),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              thumbShape: (_politicalAffiliationValue == 0 ||
-                      _politicalAffiliationValue == -1)
-                  ? const RoundSliderThumbShape(enabledThumbRadius: 0)
-                  : const RoundSliderThumbShape(enabledThumbRadius: 10),
-            ),
-            child: Slider(
-              value: (_politicalAffiliationValue == 0 ||
-                      _politicalAffiliationValue == -1)
-                  ? 3
-                  : _politicalAffiliationValue.clamp(1.0, 5.0),
-              min: 1,
-              max: 5,
-              divisions: 4,
-              onChanged: (v) {
-                if (_politicalAffiliationValue == 0 ||
-                    _politicalAffiliationValue == -1) return;
-                setState(() => _politicalAffiliationValue = v);
-              },
-              activeColor: const Color(0xFFF4436C),
-              inactiveColor: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white12
-                  : Colors.black12,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Builder(builder: (context) {
-            final idx = _politicalAffiliationValue.toInt();
-            // Guard against index -1 or 0 when "Don't care" or "Undisclosed" is selected
-            final displayLabel = (idx >= 1 &&
-                    idx <= labels.length &&
-                    _politicalAffiliationValue > 0)
-                ? labels[idx - 1]
-                : '';
-            return Text(displayLabel,
-                style: GoogleFonts.instrumentSans(
-                    color: const Color(0xFFF4436C),
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold));
-          }),
-          const SizedBox(height: 32),
-          _optionPill(tr('politics_dont_care'), _politicalAffiliationValue == 0,
-              () {
-            setState(() => _politicalAffiliationValue = 0);
-          }),
-          _optionPill(
-              tr('politics_undisclosed'), _politicalAffiliationValue == -1, () {
-            setState(() => _politicalAffiliationValue = -1);
-          }),
-          const SizedBox(height: 24),
-          _continueButton(
-              enabled: true,
-              onTap: () {
-                _showPartnerRangeModal(
-                  title: tr('political_affiliation'),
-                  min: 1,
-                  max: 5,
-                  divisions: 4,
-                  labels: [tr('politics_left'), tr('politics_right')],
-                  onSave: (val) {
-                    if (val == null) {
-                      setState(
-                          () => _partnerPoliticalAffiliationPreference = null);
-                    } else {
-                      setState(() => _partnerPoliticalAffiliationPreference =
-                          '${val.start.toInt()}-${val.end.toInt()}');
-                    }
-                  },
-                );
-              }),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 6 – EXERCISE
-  // ══════════════════════════════════════════════════════
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 7 – DRINKING
-  // ══════════════════════════════════════════════════════
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 10 – SMOKING (Updated with partner pref)
-  // ══════════════════════════════════════════════════════
-
-  Widget _subScreen({
-    required String title,
-    required int backTarget,
-    required List<Map<String, Object>> options,
-    required String? selected,
-    required ValueChanged<String> onSelect,
-    bool showCustomPartnerPref = true,
-    ValueChanged<List<String>?>? onSavePartner,
-    VoidCallback? overrideContinue,
-  }) {
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: TrembleBackButton(
-              onPressed: () => _goToPage(backTarget),
-              label: tr('back'),
-            ),
-          ),
-          const SizedBox(height: 24),
-          _stepHeader(title),
-          const SizedBox(height: 40),
-          ...options.map((o) => _optionPill(
-                o['label'] as String,
-                selected == o['key'],
-                () => onSelect(o['key'] as String),
-                icon: o['icon'] as IconData?,
-              )),
-          const SizedBox(height: 24),
-          _continueButton(
-            enabled: selected != null,
-            onTap: overrideContinue ??
-                () {
-                  if (onSavePartner != null && selected != null) {
-                    _showPartnerPreferenceModal(
-                      title: title,
-                      options: options,
-                      userSelection: selected,
-                      showCustom: showCustomPartnerPref,
-                      onSave: onSavePartner,
-                    );
-                  } else {
-                    _nextPage();
-                  }
-                },
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
   void _showPartnerPreferenceModal({
     required String title,
     required List<Map<String, Object>> options,
@@ -2321,208 +2188,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     ),
                   )));
         },
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 9 – CHILDREN PREFERENCE
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageChildren() {
-    return _subScreen(
-      title: tr('do_you_want_children'),
-      backTarget: _currentPage - 1,
-      options: [
-        {
-          'key': 'want_someday',
-          'label': tr('children_want_someday'),
-          'icon': LucideIcons.heart
-        },
-        {
-          'key': 'dont_want',
-          'label': tr('children_dont_want'),
-          'icon': LucideIcons.ban
-        },
-        {
-          'key': 'have_and_want_more',
-          'label': tr('children_have_and_want_more'),
-          'icon': LucideIcons.users
-        },
-        {
-          'key': 'have_and_dont_want_more',
-          'label': tr('children_have_and_dont_want_more'),
-          'icon': LucideIcons.userCheck
-        },
-        {
-          'key': 'not_sure',
-          'label': tr('children_not_sure'),
-          'icon': LucideIcons.helpCircle
-        },
-      ],
-      selected: _childrenPreference,
-      onSelect: (k) {
-        setState(() => _childrenPreference = k);
-      },
-      onSavePartner: (val) => setState(() => _partnerChildrenPreference = val),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // NEW LIFESTYLE SCREENS
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageIntroversion() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return _buildScrollableFormPage(
-      child: Column(
-        children: [
-          _backButton(),
-          const SizedBox(height: 40),
-          _stepHeader(tr('introversion')),
-          const SizedBox(height: 48),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(tr('introvert'),
-                style:
-                    TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
-            Text(tr('extrovert'),
-                style:
-                    TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
-          ]),
-          Slider(
-            value: _introversionLevel,
-            onChanged: (v) {
-              setState(() => _introversionLevel = v);
-            },
-            activeColor: const Color(0xFFF4436C),
-            inactiveColor:
-                isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
-          ),
-          const SizedBox(height: 16),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              _introversionLevel <= 0.5
-                  ? '${((1.0 - _introversionLevel) * 100).toInt()}% ${tr('introvert').toLowerCase()}'
-                  : '${(_introversionLevel * 100).toInt()}% ${tr('extrovert').toLowerCase()}',
-              style: const TextStyle(
-                  color: Color(0xFFF4436C),
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 24),
-          _continueButton(
-              enabled: true,
-              onTap: () {
-                _showPartnerRangeModal(
-                  title: tr('introversion'),
-                  min: 0,
-                  max: 1,
-                  divisions: 100,
-                  labels: [tr('introvert'), tr('extrovert')],
-                  onSave: (val) {
-                    if (val == null) {
-                      setState(() => _partnerIntroversionRange = null);
-                    } else {
-                      setState(() => _partnerIntroversionRange =
-                          '${(val.start * 100).toInt()}-${(val.end * 100).toInt()}');
-                    }
-                  },
-                );
-              }),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPageSleep() {
-    return _subScreen(
-      title: tr('sleep'),
-      backTarget: _currentPage - 1,
-      options: [
-        {
-          'key': 'night_owl',
-          'label': tr('night_owl'),
-          'icon': LucideIcons.moon
-        },
-        {
-          'key': 'early_bird',
-          'label': tr('early_bird'),
-          'icon': LucideIcons.sun
-        },
-      ],
-      selected: _sleepHabit,
-      onSelect: (k) {
-        setState(() => _sleepHabit = k);
-      },
-      showCustomPartnerPref: false,
-      onSavePartner: (val) => setState(() => _partnerSleepHabit = val),
-    );
-  }
-
-  Widget _buildPagePets() {
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _backButton(),
-          const SizedBox(height: 24),
-          _stepHeader(tr('pets')),
-          const SizedBox(height: 24),
-          _optionPill(tr('dog_person'), _petPreference == 'dog',
-              () => setState(() => _petPreference = 'dog')),
-          _optionPill(tr('cat_person'), _petPreference == 'cat',
-              () => setState(() => _petPreference = 'cat')),
-          _optionPill(tr('something_else'), _petPreference == 'something_else',
-              () => setState(() => _petPreference = 'something_else')),
-          if (_petPreference == 'something_else')
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Builder(builder: (context) {
-                final isDark = Theme.of(context).brightness == Brightness.dark;
-                return TextField(
-                  controller: _customPetController,
-                  style: GoogleFonts.instrumentSans(
-                      color: isDark ? Colors.white : Colors.black87),
-                  decoration: InputDecoration(
-                    hintText: tr('write_answer'),
-                    hintStyle: GoogleFonts.instrumentSans(
-                        color: isDark ? Colors.white30 : Colors.black38),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(100),
-                        borderSide: BorderSide(
-                            color: isDark ? Colors.white30 : Colors.black26)),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(100),
-                        borderSide: BorderSide(
-                            color: isDark ? Colors.white : Colors.black,
-                            width: 2)),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 16),
-                  ),
-                );
-              }),
-            ),
-          _optionPill(tr('nothing'), _petPreference == 'nothing',
-              () => setState(() => _petPreference = 'nothing')),
-          const SizedBox(height: 24),
-          _continueButton(
-              enabled: _petPreference != null,
-              onTap: () {
-                _showPartnerPreferenceModal(
-                  title: tr('pets'),
-                  options: [
-                    {'key': 'dog', 'label': tr('dog_person')},
-                    {'key': 'cat', 'label': tr('cat_person')},
-                    {'key': 'something_else', 'label': tr('something_else')},
-                    {'key': 'nothing', 'label': tr('nothing')},
-                  ],
-                  userSelection: _petPreference!,
-                  onSave: (val) => setState(() => _partnerPetPreference = val),
-                );
-              }),
-          const SizedBox(height: 16),
-        ],
       ),
     );
   }
