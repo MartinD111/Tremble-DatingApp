@@ -211,7 +211,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
         ),
         const SizedBox(height: 30),
-        CircularProgressIndicator(color: textPrimary, strokeWidth: 3),
+        TextButton(
+          onPressed: () => context.pop(),
+          child: Text('Back to Login',
+              style: TextStyle(color: textSecondary, fontSize: 15)),
+        ),
       ],
     );
   }

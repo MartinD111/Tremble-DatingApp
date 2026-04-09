@@ -20,6 +20,7 @@ class UgcActionSheet extends ConsumerWidget {
       {required String targetUid, required String targetName}) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -32,47 +33,53 @@ class UgcActionSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(appLanguageProvider);
 
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[400],
-              borderRadius: BorderRadius.circular(2),
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF1A1A2E),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          ListTile(
-            leading: const Icon(LucideIcons.flag, color: Colors.red),
-            title: Text(
-              t('report_user', lang).replaceAll('{name}', targetName),
-              style: const TextStyle(
-                  color: Colors.red, fontWeight: FontWeight.bold),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(LucideIcons.flag, color: Colors.red),
+              title: Text(
+                t('report_user', lang).replaceAll('{name}', targetName),
+                style: const TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+              onTap: () {
+                Navigator.pop(context); // Close action sheet
+                _showReportDialog(context, ref, lang);
+              },
             ),
-            onTap: () {
-              Navigator.pop(context); // Close action sheet
-              _showReportDialog(context, ref, lang);
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(LucideIcons.ban, color: Colors.red),
-            title: Text(
-              t('block_user', lang).replaceAll('{name}', targetName),
-              style: const TextStyle(
-                  color: Colors.red, fontWeight: FontWeight.bold),
+            const Divider(),
+            ListTile(
+              leading: const Icon(LucideIcons.ban, color: Colors.red),
+              title: Text(
+                t('block_user', lang).replaceAll('{name}', targetName),
+                style: const TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+              onTap: () {
+                Navigator.pop(context); // Close action sheet
+                _showBlockDialog(context, ref, lang);
+              },
             ),
-            onTap: () {
-              Navigator.pop(context); // Close action sheet
-              _showBlockDialog(context, ref, lang);
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }

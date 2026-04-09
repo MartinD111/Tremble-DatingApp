@@ -17,6 +17,7 @@ import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
 import 'package:flutter_animate/flutter_animate.dart'; // Animations
 import '../../../core/theme.dart'; // TrembleTheme — telemetryTextStyle
+import '../../../core/translations.dart';
 import '../../match/application/match_service.dart';
 import '../../match/data/wave_repository.dart';
 import '../../match/domain/match.dart' as wave_match;
@@ -268,6 +269,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       String radarMode,
       int batteryLevel) {
     final isDegraded = radarMode == 'degraded';
+    final lang = ref.watch(appLanguageProvider);
     return Stack(
       children: [
         // Radar View (Conditional)
@@ -308,8 +310,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Center(
                         child: Text(
                           isDegraded
-                              ? "Geo matching \u2014 BLE paused"
-                              : "Skeniranje...",
+                              ? t('geo_matching_paused', lang)
+                              : t('scanning', lang),
                           style: TrembleTheme.telemetryTextStyle(
                             context,
                             color: Colors.white.withValues(alpha: 0.7),

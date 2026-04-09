@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../data/match_repository.dart';
+import '../../../core/translations.dart';
 
 class MatchDialog extends ConsumerStatefulWidget {
   final MatchProfile match;
@@ -62,11 +63,13 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
         // Mutual match — show celebration
         _showMutualMatchBanner();
       } else {
+        final lang = ref.read(appLanguageProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(children: [
               const Text('👋  '),
-              Text('Pozdrav je poslan — čakamo na ${widget.match.name}!'),
+              Text(t('wave_sent_to', lang)
+                  .replaceAll('{name}', widget.match.name)),
             ]),
             backgroundColor: const Color(0xFFF4436C).withValues(alpha: 0.9),
             behavior: SnackBarBehavior.floating,

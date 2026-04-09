@@ -20,6 +20,7 @@ class ProfileDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     return PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, result) {
@@ -39,12 +40,12 @@ class ProfileDetailScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Bio Section
-                          _buildBioSection(),
+                          _buildBioSection(lang),
                           const SizedBox(height: 20),
 
                           // What they're looking for
                           if (match.lookingFor.isNotEmpty) ...[
-                            _buildLookingForSection(),
+                            _buildLookingForSection(lang),
                             const SizedBox(height: 20),
                           ],
 
@@ -63,12 +64,12 @@ class ProfileDetailScreen extends ConsumerWidget {
                           const SizedBox(height: 20),
 
                           // Interests
-                          _buildInterestsSection(),
+                          _buildInterestsSection(lang),
                           const SizedBox(height: 20),
 
                           // Personality
                           if (match.introvertLevel != null)
-                            _buildPersonalitySection(context),
+                            _buildPersonalitySection(context, lang),
 
                           const SizedBox(height: 40),
 
@@ -103,16 +104,16 @@ class ProfileDetailScreen extends ConsumerWidget {
   }
 
   void _showExitWarning(BuildContext context, WidgetRef ref) {
+    final lang = ref.read(appLanguageProvider);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: Text("Opozorilo",
+        title: Text(t('warning', lang),
             style: GoogleFonts.instrumentSans(
                 color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text(
-            "Če greš ven, se bo zaznamovalo, kot da si osebo zignoriral.",
-            style: TextStyle(color: Colors.white70)),
+        content: Text(t('ignore_warning_body', lang),
+            style: const TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
             onPressed: () {
@@ -122,8 +123,8 @@ class ProfileDetailScreen extends ConsumerWidget {
                 context.pop(); // Pop from profile screen
               }
             },
-            child:
-                const Text("Ignore", style: TextStyle(color: Colors.redAccent)),
+            child: Text(t('ignore', lang),
+                style: const TextStyle(color: Colors.redAccent)),
           ),
           TextButton(
             onPressed: () {
@@ -133,8 +134,8 @@ class ProfileDetailScreen extends ConsumerWidget {
                 context.pop(); // Pop from profile screen
               }
             },
-            child: const Text("Match again in future",
-                style: TextStyle(color: const Color(0xFFF4436C))),
+            child: Text(t('match_again_future', lang),
+                style: const TextStyle(color: Color(0xFFF4436C))),
           ),
         ],
       ),
@@ -295,11 +296,11 @@ class ProfileDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBioSection() {
+  Widget _buildBioSection(String lang) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("O meni",
+        Text(t('about_me', lang),
             style: GoogleFonts.instrumentSans(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -314,11 +315,11 @@ class ProfileDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLookingForSection() {
+  Widget _buildLookingForSection(String lang) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Iščem",
+        Text(t('looking_for', lang),
             style: GoogleFonts.instrumentSans(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -443,6 +444,7 @@ class ProfileDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildLifestyleSection(WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     final habits = <Widget>[];
 
     Widget buildHabitItem(IconData icon, String label, String value) {
@@ -473,49 +475,47 @@ class ProfileDetailScreen extends ConsumerWidget {
     }
 
     if (match.isSmoker != null) {
-      habits.add(buildHabitItem(
-          LucideIcons.cigarette, "Kajenje", match.isSmoker! ? "Da" : "Ne"));
+      habits.add(buildHabitItem(LucideIcons.cigarette, t('smoking', lang),
+          match.isSmoker! ? t('yes', lang) : t('no', lang)));
     }
     if (match.drinkingHabit != null) {
-      habits.add(
-          buildHabitItem(LucideIcons.wine, "Alkohol", match.drinkingHabit!));
+      habits.add(buildHabitItem(
+          LucideIcons.wine, t('alcohol', lang), match.drinkingHabit!));
     }
     if (match.exerciseHabit != null) {
       habits.add(buildHabitItem(
-          LucideIcons.dumbbell, "Telovadba", match.exerciseHabit!));
+          LucideIcons.dumbbell, t('exercise', lang), match.exerciseHabit!));
     }
     if (match.sleepSchedule != null) {
-      habits.add(
-          buildHabitItem(LucideIcons.moon, "Spanje", match.sleepSchedule!));
+      habits.add(buildHabitItem(
+          LucideIcons.moon, t('sleep', lang), match.sleepSchedule!));
     }
     if (match.petPreference != null) {
       habits.add(buildHabitItem(
           LucideIcons.heart,
-          "Ljubljenčki",
+          t('pets', lang),
           match.petPreference == 'Dog person'
               ? '🐶 Dog person'
               : '🐱 Cat person'));
     }
     if (match.childrenPreference != null) {
       habits.add(buildHabitItem(
-          LucideIcons.baby, "Otroci", match.childrenPreference!));
+          LucideIcons.baby, t('children', lang), match.childrenPreference!));
     }
     if (match.religion != null) {
-      final user = ref.read(authStateProvider);
-      final lang = user?.appLanguage ?? 'en';
-      habits.add(
-          buildHabitItem(LucideIcons.heart, "Vera", t(match.religion!, lang)));
+      habits.add(buildHabitItem(
+          LucideIcons.heart, t('religion', lang), t(match.religion!, lang)));
     }
     if (match.ethnicity != null) {
-      habits.add(
-          buildHabitItem(LucideIcons.users, "Etničnost", match.ethnicity!));
+      habits.add(buildHabitItem(
+          LucideIcons.users, t('ethnicity', lang), match.ethnicity!));
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Življenjski slog",
-            style: TextStyle(
+        Text(t('lifestyle', lang),
+            style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
@@ -535,12 +535,12 @@ class ProfileDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildInterestsSection() {
+  Widget _buildInterestsSection(String lang) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Interesi",
-            style: TextStyle(
+        Text(t('interests', lang),
+            style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
@@ -564,14 +564,14 @@ class ProfileDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPersonalitySection(BuildContext context) {
+  Widget _buildPersonalitySection(BuildContext context, String lang) {
     final intLevel = match.introvertLevel ?? 50;
     final val = intLevel.toDouble();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Osebnost",
-            style: TextStyle(
+        Text(t('personality', lang),
+            style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
