@@ -14,7 +14,13 @@ import '../data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/theme_provider.dart';
 import '../../../shared/ui/tremble_back_button.dart';
-import '../../../shared/ui/tremble_logo.dart';
+import 'widgets/registration_steps/intro_slide_step.dart';
+import 'widgets/registration_steps/name_step.dart';
+import 'widgets/registration_steps/gender_step.dart';
+import 'widgets/registration_steps/status_step.dart';
+import 'widgets/registration_steps/exercise_step.dart';
+import 'widgets/registration_steps/drinking_step.dart';
+import 'widgets/registration_steps/smoking_step.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE INDICES (actual PageView order)
@@ -573,21 +579,79 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  _buildIntroSlide(0),
-                  _buildIntroSlide(1),
-                  _buildIntroSlide(2),
-                  _buildIntroSlide(3),
+                  IntroSlideStep(index: 0, onNext: _nextPage, tr: tr),
+                  IntroSlideStep(index: 1, onNext: _nextPage, tr: tr),
+                  IntroSlideStep(index: 2, onNext: _nextPage, tr: tr),
+                  IntroSlideStep(index: 3, onNext: _nextPage, tr: tr),
                   // GDPR / ZVOP-2: Age verification FIRST — must confirm 18+
                   // before any personal data is collected or consent is given.
                   _buildPageBirthday(),
                   _buildPageEmailPassword(),
-                  _buildPageName(),
-                  _buildPageGender(),
+                  NameStep(
+                    nameController: _nameController,
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    tr: tr,
+                    verificationBanner: (!(FirebaseAuth
+                                    .instance.currentUser?.emailVerified ??
+                                true) &&
+                            (FirebaseAuth.instance.currentUser?.providerData
+                                    .any((p) => p.providerId == 'password') ??
+                                false))
+                        ? _buildEmailVerificationBanner()
+                        : null,
+                  ),
+                  GenderStep(
+                    selectedGender: _selectedGender,
+                    onGenderSelect: (g) => setState(() => _selectedGender = g),
+                    isClassicAppearance: _isClassicAppearance,
+                    onAppearanceToggle: (v) =>
+                        setState(() => _isClassicAppearance = v),
+                    isDark: ref.watch(themeModeProvider) == ThemeMode.dark,
+                    onDarkModeToggle: (val) => ref
+                        .read(themeModeProvider.notifier)
+                        .setThemeMode(val ? ThemeMode.dark : ThemeMode.light),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    onNonBinaryTap: _showNonBinaryPopup,
+                    tr: tr,
+                  ),
                   _buildPageHeight(),
-                  _buildPageStatus(),
-                  _buildPageExercise(),
-                  _buildPageDrinking(),
-                  _buildPageSmoking(),
+                  StatusStep(
+                    status: _status,
+                    onStatusSelect: (k) => setState(() => _status = k),
+                    occupationController: _customOccupationController,
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    tr: tr,
+                  ),
+                  ExerciseStep(
+                    selected: _exerciseHabit,
+                    onSelect: (k) => setState(() => _exerciseHabit = k),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    onSavePartner: (v) =>
+                        setState(() => _partnerExerciseHabit = v),
+                    tr: tr,
+                  ),
+                  DrinkingStep(
+                    selected: _drinkingHabit,
+                    onSelect: (k) => setState(() => _drinkingHabit = k),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    onSavePartner: (v) =>
+                        setState(() => _partnerDrinkingHabit = v),
+                    tr: tr,
+                  ),
+                  SmokingStep(
+                    selected: _smokingHabit,
+                    onSelect: (k) => setState(() => _smokingHabit = k),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    onSavePartner: (v) =>
+                        setState(() => _partnerSmokingHabit = v),
+                    tr: tr,
+                  ),
                   _buildPageChildren(),
                   _buildPageIntroversion(),
                   _buildPageSleep(),
@@ -613,163 +677,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             child: _buildProgressBar(),
           ),
         ],
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 19 - STATUS
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageStatus() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final hintColor = isDark ? Colors.white60 : Colors.black54;
-    final borderColor = isDark ? Colors.white30 : Colors.black26;
-    final borderFocusColor = isDark ? Colors.white : Colors.black;
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _backButton(),
-          const SizedBox(height: 24),
-          _stepHeader(tr('status')),
-          const SizedBox(height: 32),
-          _optionPill(tr('student'), _status == 'student',
-              () => setState(() => _status = 'student')),
-          _optionPill(tr('employed'), _status == 'employed',
-              () => setState(() => _status = 'employed')),
-          if (_status == 'student' || _status == 'employed') ...[
-            const SizedBox(height: 16),
-            TextField(
-              controller: _customOccupationController,
-              style: TextStyle(color: textColor),
-              decoration: InputDecoration(
-                labelText: _status == 'student'
-                    ? 'Course of Study (Optional)'
-                    : 'Job Title (Optional)',
-                labelStyle: GoogleFonts.instrumentSans(color: hintColor),
-                enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(100),
-                    borderSide: BorderSide(color: borderColor)),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(100),
-                    borderSide: BorderSide(color: borderFocusColor, width: 2)),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              ),
-            ),
-          ],
-          const SizedBox(height: 24),
-          _continueButton(enabled: _status != null, onTap: _nextPage),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // INTRO SLIDES (0, 1, 2)
-  // ══════════════════════════════════════════════════════
-  Widget _buildIntroSlide(int index) {
-    final titles = [
-      tr('onb1_title'),
-      tr('onb2_title'),
-      tr('onb3_title'),
-      tr('onb4_title')
-    ];
-    final bodies = [
-      tr('onb1_body'),
-      tr('onb2_body'),
-      tr('onb3_body'),
-      tr('onb4_body')
-    ];
-    // Icons chosen to match each slide's concept:
-    // 0 = radar/proximity running in background
-    // 1 = ZERO SWIPES / wave mechanic (NOT chat — Tremble has no messaging)
-    // 2 = city / map discovery
-    // 3 = your profile & preferences
-    final icons = [
-      LucideIcons.heartPulse,
-      LucideIcons.activity,
-      LucideIcons.map,
-      LucideIcons.user
-    ];
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = isDark ? Colors.white : Colors.black87;
-    final bodyColor = isDark ? Colors.white70 : Colors.black54;
-    const brandRose = Color(0xFFF4436C);
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Brand anchor — small logo at top
-            const TrembleLogo(size: 56),
-            const SizedBox(height: 40),
-
-            // Feature icon with glow
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: brandRose.withValues(alpha: 0.12),
-                boxShadow: [
-                  BoxShadow(
-                    color: brandRose.withValues(alpha: 0.22),
-                    blurRadius: 32,
-                    spreadRadius: 4,
-                  ),
-                ],
-              ),
-              child: Icon(icons[index], size: 44, color: brandRose),
-            ),
-            const SizedBox(height: 40),
-
-            Text(
-              titles[index],
-              textAlign: TextAlign.center,
-              style: GoogleFonts.instrumentSans(
-                  fontSize: 28, fontWeight: FontWeight.bold, color: titleColor),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              bodies[index],
-              textAlign: TextAlign.center,
-              style: GoogleFonts.instrumentSans(
-                  fontSize: 16, color: bodyColor, height: 1.6),
-            ),
-            const SizedBox(height: 32),
-
-            // Page dot indicators
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(4, (i) {
-                final isActive = i == index;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: isActive ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? brandRose
-                        : (isDark ? Colors.white30 : Colors.black26),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                );
-              }),
-            ),
-
-            const Spacer(),
-            _continueButton(enabled: true, onTap: _nextPage),
-            const SizedBox(height: 16),
-          ],
-        ),
       ),
     );
   }
@@ -1235,157 +1142,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
-  Widget _buildPageName() {
-    final emailNotVerified =
-        !(FirebaseAuth.instance.currentUser?.emailVerified ?? true);
-    final isEmailUser = FirebaseAuth.instance.currentUser?.providerData
-            .any((p) => p.providerId == 'password') ??
-        false;
-
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _backButton(),
-          if (emailNotVerified && isEmailUser) ...[
-            const SizedBox(height: 16),
-            _buildEmailVerificationBanner(),
-          ],
-          const SizedBox(height: 40),
-          _stepHeader(tr('whats_your_name')),
-          const SizedBox(height: 48),
-          TextField(
-            controller: _nameController,
-            autofocus: true,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: 28,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Colors.black,
-                fontWeight: FontWeight.w500),
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: tr('name_hint'),
-              hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontSize: 28,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white24
-                      : Colors.black26),
-              enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(100),
-                  borderSide: BorderSide(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white24
-                          : Colors.black26)),
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(100),
-                  borderSide: BorderSide(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white
-                          : Colors.black,
-                      width: 2)),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            ),
-          ),
-          const SizedBox(height: 24),
-          _continueButton(
-              enabled: _nameController.text.trim().isNotEmpty,
-              onTap: _nextPage),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
   // ══════════════════════════════════════════════════════
   // PAGE 3 – GENDER
   // ══════════════════════════════════════════════════════
-  Widget _buildPageGender() {
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _backButton(),
-          const SizedBox(height: 40),
-          _stepHeader(tr('whats_your_gender')),
-          const SizedBox(height: 40),
-          _optionPill(tr('gender_male'), _selectedGender == 'male', () {
-            setState(() => _selectedGender = 'male');
-          }, icon: Icons.male),
-          _optionPill(tr('gender_female'), _selectedGender == 'female', () {
-            setState(() => _selectedGender = 'female');
-          }, icon: Icons.female),
-          _optionPill(tr('non_binary'), _selectedGender == 'non_binary', () {
-            setState(() => _selectedGender = 'non_binary');
-            _showNonBinaryPopup();
-          }, icon: LucideIcons.userX),
-          const SizedBox(height: 32),
-          _stepHeader(tr('app_appearance'), subtitle: ''),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: ref.watch(themeModeProvider) == ThemeMode.dark
-                  ? Colors.white.withAlpha(20)
-                  : Colors.black.withAlpha(15),
-              borderRadius: BorderRadius.circular(100),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Classic or gender based',
-                    style: TextStyle(
-                        color: ref.watch(themeModeProvider) == ThemeMode.dark
-                            ? Colors.white
-                            : Colors.black87,
-                        fontSize: 16)),
-                Switch(
-                  value: _isClassicAppearance,
-                  onChanged: (val) =>
-                      setState(() => _isClassicAppearance = val),
-                  activeThumbColor: const Color(0xFFF4436C),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: ref.watch(themeModeProvider) == ThemeMode.dark
-                  ? Colors.white.withAlpha(20)
-                  : Colors.black.withAlpha(15),
-              borderRadius: BorderRadius.circular(100),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Dark mode',
-                    style: TextStyle(
-                        color: ref.watch(themeModeProvider) == ThemeMode.dark
-                            ? Colors.white
-                            : Colors.black87,
-                        fontSize: 16)),
-                Switch(
-                  value: ref.watch(themeModeProvider) == ThemeMode.dark,
-                  onChanged: (val) {
-                    ref
-                        .read(themeModeProvider.notifier)
-                        .setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
-                  },
-                  activeThumbColor: const Color(0xFFF4436C),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          _continueButton(enabled: _selectedGender != null, onTap: _nextPage),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
 
   void _showNonBinaryPopup() {
     showDialog(
@@ -2093,105 +1852,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ══════════════════════════════════════════════════════
   // PAGE 6 – EXERCISE
   // ══════════════════════════════════════════════════════
-  Widget _buildPageExercise() {
-    return _subScreen(
-      title: tr('do_you_exercise'),
-      backTarget: _currentPage - 1,
-      options: [
-        {
-          'key': 'active',
-          'label': tr('exercise_active'),
-          'icon': LucideIcons.zap
-        },
-        {
-          'key': 'sometimes',
-          'label': tr('exercise_sometimes'),
-          'icon': LucideIcons.activity
-        },
-        {
-          'key': 'almost_never',
-          'label': tr('almost_never'),
-          'icon': LucideIcons.moon
-        },
-      ],
-      selected: _exerciseHabit,
-      onSelect: (k) {
-        setState(() => _exerciseHabit = k);
-      },
-      onSavePartner: (val) => setState(() => _partnerExerciseHabit = val),
-    );
-  }
 
   // ══════════════════════════════════════════════════════
   // PAGE 7 – DRINKING
   // ══════════════════════════════════════════════════════
-  Widget _buildPageDrinking() {
-    return _subScreen(
-      title: tr('do_you_drink'),
-      backTarget: _currentPage - 1,
-      options: [
-        {
-          'key': 'socially',
-          'label': tr('drink_socially'),
-          'icon': LucideIcons.users
-        },
-        {'key': 'never', 'label': tr('drink_never'), 'icon': LucideIcons.ban},
-        {
-          'key': 'frequently',
-          'label': tr('drink_frequently'),
-          'icon': LucideIcons.trendingUp
-        },
-      ],
-      selected: _drinkingHabit,
-      onSelect: (k) {
-        setState(() => _drinkingHabit = k);
-      },
-      onSavePartner: (val) => setState(() => _partnerDrinkingHabit = val),
-    );
-  }
 
   // ══════════════════════════════════════════════════════
   // PAGE 10 – SMOKING (Updated with partner pref)
   // ══════════════════════════════════════════════════════
-  Widget _buildPageSmoking() {
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _backButton(),
-          const SizedBox(height: 24),
-          _stepHeader(tr('do_you_smoke')),
-          const SizedBox(height: 32),
-          _optionPill(tr('smoke_yes'), _smokingHabit == 'yes',
-              () => setState(() => _smokingHabit = 'yes')),
-          _optionPill(tr('smoke_no'), _smokingHabit == 'no',
-              () => setState(() => _smokingHabit = 'no')),
-          const SizedBox(height: 24),
-          _continueButton(
-            enabled: _smokingHabit != null,
-            onTap: () {
-              if (_smokingHabit == 'no') {
-                _showPartnerPreferenceModal(
-                  title: tr('do_you_smoke'),
-                  options: [
-                    {'key': 'no', 'label': tr('smoke_no')}
-                  ],
-                  userSelection: 'no',
-                  showCustom: false,
-                  onSave: (val) {
-                    setState(() => _partnerSmokingHabit = val);
-                  },
-                );
-              } else {
-                _nextPage();
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
 
   Widget _subScreen({
     required String title,

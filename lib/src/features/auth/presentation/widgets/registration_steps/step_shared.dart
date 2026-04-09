@@ -1,0 +1,200 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+const Color kBrandRose = Color(0xFFF4436C);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTINUE BUTTON
+// ─────────────────────────────────────────────────────────────────────────────
+class ContinueButton extends StatelessWidget {
+  const ContinueButton({
+    super.key,
+    required this.enabled,
+    required this.onTap,
+    this.label,
+  });
+
+  final bool enabled;
+  final VoidCallback onTap;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          color: enabled
+              ? kBrandRose
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.15)
+                  : Colors.black.withValues(alpha: 0.08)),
+          borderRadius: BorderRadius.circular(100),
+          boxShadow: [
+            if (enabled)
+              BoxShadow(
+                color: kBrandRose.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            label ?? 'Naprej',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: enabled
+                      ? Colors.black
+                      : (Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white38
+                          : Colors.black38),
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OPTION PILL
+// ─────────────────────────────────────────────────────────────────────────────
+class OptionPill extends StatelessWidget {
+  const OptionPill({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: selected
+              ? kBrandRose.withValues(alpha: 0.22)
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.black.withValues(alpha: 0.05)),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: selected
+                ? kBrandRose
+                : (isDark ? Colors.white38 : Colors.black26),
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                color: selected
+                    ? kBrandRose
+                    : (isDark ? Colors.white70 : Colors.black54),
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+            ],
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: selected
+                        ? (isDark ? Colors.white : Colors.black)
+                        : (isDark ? const Color(0xDDFFFFFF) : Colors.black87),
+                    fontSize: 16,
+                    fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                  ),
+            ),
+            const Spacer(),
+            if (selected)
+              const Icon(Icons.check_circle, color: kBrandRose, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP HEADER
+// ─────────────────────────────────────────────────────────────────────────────
+class StepHeader extends StatelessWidget {
+  const StepHeader(this.title, {super.key, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            subtitle!,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.instrumentSans(
+              color: isDark ? Colors.white60 : Colors.black54,
+              fontSize: 14,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCROLLABLE FORM PAGE
+// ─────────────────────────────────────────────────────────────────────────────
+class ScrollableFormPage extends StatelessWidget {
+  const ScrollableFormPage({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(child: child),
+          ),
+        ),
+      ),
+    );
+  }
+}

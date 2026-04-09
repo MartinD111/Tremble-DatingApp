@@ -28,7 +28,16 @@
       "Bash(git reflog:*)",
       "Bash(git gc:*)",
       "Bash(git push:*)",
-      "Bash(dart format:*)"
+      "Bash(dart format:*)",
+      "Skill(gsd:resume-work)",
+      "Bash(git checkout:*)",
+      "Bash(npm test:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(firebase:*)",
+      "Bash(bash scripts/ci/secret_scan.sh)",
+      "Skill(gsd:autonomous)"
     ]
   }
 }
