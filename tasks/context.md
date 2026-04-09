@@ -37,10 +37,12 @@
 - Android rich push že deluje ✅
 
 ## Session Handoff
-- **Completed:** Phase 7 + Phase 7.5 — Interaction System v2.1 + iOS Extension infrastructure
-- **In Progress:** Phase 9/10 — GDPR Deletion Pipeline fix (plan written, awaiting founder decision on `reports` deletion strategy)
-- **Blocked:** GDPR plan Step 2b — founder must decide: Option A (full delete reports) vs Option B (anonymise reportedId, keep for Art. 17(3)(e) legal defence)
+- **Completed:** Phase 7 + Phase 7.5 + GDPR deletion pipeline fix (Phase 10 sub-task) ✅
+- **Deployed:** `feature/gdpr-deletion-fix` → tremble-dev ✅ (19/19 functions, 2026-04-09)
+- **Cleaned up:** 6 stale functions removed from tremble-dev (3× greetings era, 3× us-central1 region leftovers)
+- **Decision recorded:** GDPR reports → Option B (anonymise reportedId, keep record for Art. 17(3)(e) legal defence)
+- **NOT deployed to prod:** `am---dating-app` untouched — requires separate founder sign-off before prod deploy
 - **Phase 8 (RevenueCat):** Deliberately deferred — both founders must be present
-- **Next Action:** Founder answers reports question → execute `feature/gdpr-deletion-fix` → then Phase 8
+- **Next Action:** Founder verifies GDPR functions in tremble-dev Firebase console → merge `feature/gdpr-deletion-fix` → prod deploy → then Phase 8
 
 Staleness rule: if this block is >48h old, re-validate before executing.

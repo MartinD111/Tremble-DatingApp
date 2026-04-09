@@ -19,3 +19,17 @@ Source: Founder correction, April 2026.
 for compatibility with CocoaPods 1.16.2 + Xcode 26.3. Reverting to 70 breaks `pod install`.
 Leave it at 63. Do not "fix" this.
 Source: Phase 7.5 Xcode integration, April 2026.
+
+**Rule #5 — Firestore batches are hard-capped at 500 operations. Always paginate.**
+[2026-04-09] Firestore's `WriteBatch.commit()` silently truncates or throws on >500 ops in a single batch.
+Any function that accumulates docs into a single batch (GDPR deletion, bulk cleanup) MUST use a paginated
+helper (e.g. `deleteBatch`) that slices into 500-doc chunks and commits each chunk separately.
+Pattern: `for (let i = 0; i < refs.length; i += 500) { const b = db.batch(); refs.slice(i,i+500).forEach(r => b.delete(r)); await b.commit(); }`
+Source: GDPR deletion pipeline fix, April 2026.
+
+**Rule #6 — When a Firestore collection is renamed/replaced, audit ALL functions that reference the old name.**
+[2026-04-09] The `greetings` collection was replaced by `waves` in Phase 6, but `exportUserData` and
+`deleteUserAccount` still referenced `greetings` — silently querying a non-existent collection and
+returning empty data. When renaming a collection: grep the entire functions/ directory for the old name
+and update every reference (queries, exports, deletion pipeline, tests) before deploying.
+Source: GDPR export fix (greetings → waves), April 2026.
