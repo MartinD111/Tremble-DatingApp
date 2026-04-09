@@ -89,35 +89,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
           myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
           compassEnabled: false,
-          markers: {
-            Marker(
-              markerId: const MarkerId('ljubljana'),
-              position: const LatLng(46.0569, 14.5058),
-              infoWindow: const InfoWindow(
-                title: 'Ljubljana center',
-                snippet: '124 aktivnih',
-              ),
-              onTap: () => _showPingDetails(context, "Ljubljana", 124),
-            ),
-            Marker(
-              markerId: const MarkerId('btc'),
-              position: const LatLng(46.0500, 14.5200),
-              infoWindow: const InfoWindow(
-                title: 'BTC City',
-                snippet: '45 aktivnih',
-              ),
-              onTap: () => _showPingDetails(context, "BTC City", 45),
-            ),
-            Marker(
-              markerId: const MarkerId('tivoli'),
-              position: const LatLng(46.0600, 14.4900),
-              infoWindow: const InfoWindow(
-                title: 'Park Tivoli',
-                snippet: '32 aktivnih',
-              ),
-              onTap: () => _showPingDetails(context, "Park Tivoli", 32),
-            ),
-          },
+          markers: const {},
         ),
 
         // Top + Bottom gradient overlay (non-interactive)
@@ -169,57 +141,45 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
             ],
           ),
         ),
-      ],
-    );
-  }
 
-  void _showPingDetails(BuildContext context, String label, int intensity) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E1E2E),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white12),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.instrumentSans(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+        // Empty-state pill — shown until real hotspot data is available
+        Positioned(
+          bottom: 40,
+          left: 24,
+          right: 24,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.72)
+                  : Colors.white.withValues(alpha: 0.88),
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(
+                color: isDark ? Colors.white12 : Colors.black12,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              "Aktivnost: Visoka\n$intensity aktivnih v bližini",
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF4436C),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.location_searching_rounded,
+                  size: 16,
+                  color: isDark ? Colors.white54 : Colors.black45,
                 ),
-              ),
-              child: const Text(
-                "Zapri",
-                style:
-                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-              ),
+                const SizedBox(width: 8),
+                Text(
+                  "Hotspot podatki prihajajo kmalu",
+                  style: GoogleFonts.instrumentSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

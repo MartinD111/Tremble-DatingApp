@@ -14,6 +14,7 @@ import '../data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/theme_provider.dart';
 import '../../../shared/ui/tremble_back_button.dart';
+import '../../../shared/ui/tremble_logo.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE INDICES (actual PageView order)
@@ -682,9 +683,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       tr('onb3_body'),
       tr('onb4_body')
     ];
+    // Icons chosen to match each slide's concept:
+    // 0 = radar/proximity running in background
+    // 1 = ZERO SWIPES / wave mechanic (NOT chat — Tremble has no messaging)
+    // 2 = city / map discovery
+    // 3 = your profile & preferences
     final icons = [
       LucideIcons.heartPulse,
-      LucideIcons.messagesSquare,
+      LucideIcons.activity,
       LucideIcons.map,
       LucideIcons.user
     ];
@@ -692,27 +698,73 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final titleColor = isDark ? Colors.white : Colors.black87;
     final bodyColor = isDark ? Colors.white70 : Colors.black54;
+    const brandRose = Color(0xFFF4436C);
+
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icons[index], size: 100, color: const Color(0xFFF4436C)),
-            const SizedBox(height: 48),
+            // Brand anchor — small logo at top
+            const TrembleLogo(size: 56),
+            const SizedBox(height: 40),
+
+            // Feature icon with glow
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: brandRose.withValues(alpha: 0.12),
+                boxShadow: [
+                  BoxShadow(
+                    color: brandRose.withValues(alpha: 0.22),
+                    blurRadius: 32,
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              child: Icon(icons[index], size: 44, color: brandRose),
+            ),
+            const SizedBox(height: 40),
+
             Text(
               titles[index],
               textAlign: TextAlign.center,
               style: GoogleFonts.instrumentSans(
                   fontSize: 28, fontWeight: FontWeight.bold, color: titleColor),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Text(
               bodies[index],
               textAlign: TextAlign.center,
               style: GoogleFonts.instrumentSans(
                   fontSize: 16, color: bodyColor, height: 1.6),
             ),
+            const SizedBox(height: 32),
+
+            // Page dot indicators
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(4, (i) {
+                final isActive = i == index;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: isActive ? 24 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? brandRose
+                        : (isDark ? Colors.white30 : Colors.black26),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                );
+              }),
+            ),
+
             const Spacer(),
             _continueButton(enabled: true, onTap: _nextPage),
             const SizedBox(height: 16),
