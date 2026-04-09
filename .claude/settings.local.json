@@ -27,7 +27,8 @@
       "Bash(xargs -I{} git update-ref -d {})",
       "Bash(git reflog:*)",
       "Bash(git gc:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(dart format:*)"
     ]
   }
 }
