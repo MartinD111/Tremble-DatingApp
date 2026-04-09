@@ -184,7 +184,6 @@ class MatchRevealScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 40),
-
                   ],
                 ),
               ),

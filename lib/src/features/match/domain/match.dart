@@ -30,4 +30,3 @@ class Match {
     return userIds.firstWhere((id) => id != myUid, orElse: () => '');
   }
 }
-

@@ -79,7 +79,8 @@ class NotificationService {
     void Function(Map<String, dynamic> data)? onNotificationTap,
   }) async {
     // ── Local Notifications init ──────────────────────────
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestSoundPermission: true,
       requestBadgePermission: true,
