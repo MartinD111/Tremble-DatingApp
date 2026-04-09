@@ -48,10 +48,22 @@ Notes: Infrastructure for sender profile images in Wave push notifications is re
 - RevenueCat integration.
 - Free vs. Pro (Unlimited waves + priority visibility).
 
-### Phase 9 — Security Hardening & GDPR
-- Firebase App Check enforcement in Cloud Functions.
-- Firestore Rules audit + hardening.
-- GDPR deletion pipeline validation.
+### Phase 9 — Security Hardening & GDPR 🟡 Active
+#### Step 1 — Firestore rules: proximity_events field validation
+- [ ] Add write field validation to `proximity_events` (uid == request.auth.uid + required fields)
+#### Step 2 — GDPR deletion pipeline fix 🟡 Plan written
+- Plan: `.planning/phases/10-security-gdpr/10-01-PLAN.md`
+- [ ] Unit tests (TDD RED) — 4 cases
+- [ ] `deleteBatch` paginated helper
+- [ ] Fix `deleteUserAccount` — waves, proximity_events, proximity_notifications, idempotencyKeys, reports
+- [ ] Fix `exportUserData` — greetings → waves
+- [ ] Emulator integration test
+- [ ] Deploy to tremble-dev
+- ⚠️ PENDING: Founder decision on `reports` deletion (Option A: full delete vs Option B: anonymise reportedId)
+#### Step 3 — Firebase App Check enforcement
+- [ ] Add `enforceAppCheck: true` to all 21 Cloud Functions
+- [ ] Test with emulator (wrong token = rejection)
+- [ ] Deploy to tremble-dev, validate
 
 ### Phase 10 — Launch Polish & Store Deploy
 - App Store + Play Store listings.

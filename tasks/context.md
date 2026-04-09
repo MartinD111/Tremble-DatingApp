@@ -38,8 +38,9 @@
 
 ## Session Handoff
 - **Completed:** Phase 7 + Phase 7.5 — Interaction System v2.1 + iOS Extension infrastructure
-- **In Progress:** Nič
-- **Blocked:** Nič
-- **Next Action:** Phase 8 — RevenueCat Paywall (MAJOR phase — zahteva novo sejo z načrtom)
+- **In Progress:** Phase 9/10 — GDPR Deletion Pipeline fix (plan written, awaiting founder decision on `reports` deletion strategy)
+- **Blocked:** GDPR plan Step 2b — founder must decide: Option A (full delete reports) vs Option B (anonymise reportedId, keep for Art. 17(3)(e) legal defence)
+- **Phase 8 (RevenueCat):** Deliberately deferred — both founders must be present
+- **Next Action:** Founder answers reports question → execute `feature/gdpr-deletion-fix` → then Phase 8
 
 Staleness rule: if this block is >48h old, re-validate before executing.
