@@ -11,6 +11,7 @@ import {
     getFirestore,
     FieldValue,
     Timestamp,
+    DocumentReference,
 } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
@@ -87,6 +88,28 @@ async function deleteR2UserFiles(uid: string): Promise<void> {
     console.log(`[GDPR] R2: deleted ${totalDeleted} files for user ${uid}`);
 }
 
+// ── Batch deletion helper ─────────────────────────────────────────────────
+
+/**
+ * Delete document references in paginated batches of 500.
+ * Firestore batches are capped at 500 operations — this handles arbitrarily
+ * large collections without hitting that limit.
+ */
+async function deleteBatch(refs: DocumentReference[]): Promise<void> {
+    const CHUNK_SIZE = 500;
+    let total = 0;
+    for (let i = 0; i < refs.length; i += CHUNK_SIZE) {
+        const chunk = refs.slice(i, i + CHUNK_SIZE);
+        const batch = db.batch();
+        chunk.forEach((ref) => batch.delete(ref));
+        await batch.commit();
+        total += chunk.length;
+    }
+    if (total > 0) {
+        console.log(`[GDPR] deleteBatch: removed ${total} documents`);
+    }
+}
+
 // ── GDPR Request TTL helper ───────────────────────────────────────────────
 
 /**
@@ -104,7 +127,10 @@ function twoYearsFromNow(): Timestamp {
 /**
  * Export all user data (GDPR Article 15 & 20 — Right of Access & Portability).
  *
- * Returns all personal data in a structured JSON format.
+ * Returns all personal data in a structured JSON format, including:
+ *   - user profile, proximity state, matches
+ *   - waves sent (fromUid == uid) and waves received (toUid == uid)
+ *
  * Rate limited to prevent abuse.
  */
 export const exportUserData = onCall(
@@ -128,7 +154,7 @@ export const exportUserData = onCall(
         });
 
         // Fetch all user data
-        const [userDoc, matchesDocs, greetingsSent, greetingsReceived, proximityDoc] =
+        const [userDoc, matchesDocs, wavesSent, wavesReceived, proximityDoc] =
             await Promise.all([
                 db.collection("users").doc(uid).get(),
                 db
@@ -142,14 +168,8 @@ export const exportUserData = onCall(
                             .get();
                         return [...asA.docs, ...asB.docs];
                     }),
-                db
-                    .collection("greetings")
-                    .where("fromUid", "==", uid)
-                    .get(),
-                db
-                    .collection("greetings")
-                    .where("toUid", "==", uid)
-                    .get(),
+                db.collection("waves").where("fromUid", "==", uid).get(),
+                db.collection("waves").where("toUid", "==", uid).get(),
                 db.collection("proximity").doc(uid).get(),
             ]);
 
@@ -157,14 +177,8 @@ export const exportUserData = onCall(
             exportedAt: new Date().toISOString(),
             user: userDoc.exists ? userDoc.data() : null,
             matches: matchesDocs.map((doc) => ({ id: doc.id, ...doc.data() })),
-            greetingsSent: greetingsSent.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            })),
-            greetingsReceived: greetingsReceived.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            })),
+            wavesSent: wavesSent.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+            wavesReceived: wavesReceived.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
             proximity: proximityDoc.exists ? proximityDoc.data() : null,
         };
 
@@ -177,12 +191,27 @@ export const exportUserData = onCall(
 /**
  * Delete all user data (GDPR Article 17 — Right to Erasure / ZVOP-2 čl. 23).
  *
- * Performs a hard delete of:
- *   - Firestore: profile, proximity, greetings, matches, rate limits
- *   - Cloudflare R2: all uploaded photos/files under users/{uid}/
+ * Performs a hard delete of the following Firestore collections:
+ *   - users/{uid}                          (profile)
+ *   - proximity/{uid}                      (location/BLE state)
+ *   - waves where fromUid == uid           (waves sent)
+ *   - waves where toUid == uid             (waves received)
+ *   - proximity_events where from == uid   (BLE proximity events)
+ *   - proximity_notifications where users array-contains uid
+ *   - idempotencyKeys range {uid}:*        (deduplication keys)
+ *   - reports where reporterId == uid      (reports filed by user — hard delete)
+ *   - reports where reportedId == uid      (reports about user — anonymised per
+ *                                           Art. 17(3)(e): reportedId set to "[deleted]",
+ *                                           document retained for legal defence)
+ *   - matches where userA == uid           (matches as initiator)
+ *   - matches where userB == uid           (matches as recipient)
+ *   - rateLimits range {uid}:*             (rate limit counters)
+ *
+ * Also deletes:
+ *   - Cloudflare R2: all files under users/{uid}/
  *   - Firebase Auth: account record
  *
- * A GDPR audit log entry is kept for 2 years, then auto-deleted by Firestore TTL.
+ * A GDPR audit log entry is kept in gdprRequests for 2 years (Firestore TTL).
  */
 export const deleteUserAccount = onCall(
     { maxInstances: 10, enforceAppCheck: true, region: "europe-west1" },
@@ -205,56 +234,86 @@ export const deleteUserAccount = onCall(
         });
 
         try {
-            const batch = db.batch();
+            // 1. Delete user profile (single doc — direct batch delete)
+            const profileBatch = db.batch();
+            profileBatch.delete(db.collection("users").doc(uid));
+            profileBatch.delete(db.collection("proximity").doc(uid));
+            await profileBatch.commit();
 
-            // 1. Delete user profile
-            batch.delete(db.collection("users").doc(uid));
+            // 2. Delete waves sent by user
+            const wavesSent = await db.collection("waves").where("fromUid", "==", uid).get();
+            await deleteBatch(wavesSent.docs.map((d) => d.ref));
 
-            // 2. Delete proximity data
-            batch.delete(db.collection("proximity").doc(uid));
+            // 3. Delete waves received by user
+            const wavesReceived = await db.collection("waves").where("toUid", "==", uid).get();
+            await deleteBatch(wavesReceived.docs.map((d) => d.ref));
 
-            // 3. Delete all greetings sent by user
-            const sentGreetings = await db
-                .collection("greetings")
-                .where("fromUid", "==", uid)
+            // 4. Delete proximity_events authored by user
+            //    Field name: "from" (see proximity.functions.ts onBleProximity trigger)
+            const proximityEvents = await db
+                .collection("proximity_events")
+                .where("from", "==", uid)
                 .get();
-            sentGreetings.docs.forEach((doc) => batch.delete(doc.ref));
+            await deleteBatch(proximityEvents.docs.map((d) => d.ref));
 
-            // 4. Delete all greetings received by user
-            const receivedGreetings = await db
-                .collection("greetings")
-                .where("toUid", "==", uid)
+            // 5. Delete proximity_notifications involving user
+            //    Documents store users: [fromUid, toUid] array
+            const proximityNotifs = await db
+                .collection("proximity_notifications")
+                .where("users", "array-contains", uid)
                 .get();
-            receivedGreetings.docs.forEach((doc) => batch.delete(doc.ref));
+            await deleteBatch(proximityNotifs.docs.map((d) => d.ref));
 
-            // 5. Delete all matches involving user
-            const matchesAsA = await db
-                .collection("matches")
-                .where("userA", "==", uid)
+            // 6. Delete idempotency keys for this user (format: {uid}:{requestId})
+            const idempotencyKeys = await db
+                .collection("idempotencyKeys")
+                .where("__name__", ">=", `${uid}:`)
+                .where("__name__", "<=", `${uid}:\uf8ff`)
                 .get();
-            matchesAsA.docs.forEach((doc) => batch.delete(doc.ref));
+            await deleteBatch(idempotencyKeys.docs.map((d) => d.ref));
 
-            const matchesAsB = await db
-                .collection("matches")
-                .where("userB", "==", uid)
+            // 7a. Delete reports filed BY this user (user is reporter — full erase)
+            const reportsFiled = await db
+                .collection("reports")
+                .where("reporterId", "==", uid)
                 .get();
-            matchesAsB.docs.forEach((doc) => batch.delete(doc.ref));
+            await deleteBatch(reportsFiled.docs.map((d) => d.ref));
 
-            // 6. Delete rate limit entries
+            // 7b. Anonymise reports ABOUT this user (user is reported subject).
+            //     GDPR Art. 17(3)(e) exemption: moderation evidence retained for legal defence.
+            //     reportedId is replaced with "[deleted]" — no PII remains in the document.
+            const reportsAbout = await db
+                .collection("reports")
+                .where("reportedId", "==", uid)
+                .get();
+            if (!reportsAbout.empty) {
+                const anonymiseBatch = db.batch();
+                reportsAbout.docs.forEach((doc) => {
+                    anonymiseBatch.update(doc.ref, { reportedId: "[deleted]" });
+                });
+                await anonymiseBatch.commit();
+                console.log(`[GDPR] Anonymised ${reportsAbout.size} report(s) about user ${uid} (Art. 17(3)(e))`);
+            }
+
+            // 8. Delete matches involving user
+            const matchesAsA = await db.collection("matches").where("userA", "==", uid).get();
+            await deleteBatch(matchesAsA.docs.map((d) => d.ref));
+
+            const matchesAsB = await db.collection("matches").where("userB", "==", uid).get();
+            await deleteBatch(matchesAsB.docs.map((d) => d.ref));
+
+            // 9. Delete rate limit entries for this user (format: {uid}:{endpoint})
             const rateLimits = await db
                 .collection("rateLimits")
                 .where("__name__", ">=", `${uid}:`)
                 .where("__name__", "<=", `${uid}:\uf8ff`)
                 .get();
-            rateLimits.docs.forEach((doc) => batch.delete(doc.ref));
+            await deleteBatch(rateLimits.docs.map((d) => d.ref));
 
-            // Commit all Firestore deletions
-            await batch.commit();
-
-            // 7. Delete all R2 photos and files for this user (GDPR Art. 17)
+            // 10. Delete all R2 photos and files for this user (GDPR Art. 17)
             await deleteR2UserFiles(uid);
 
-            // 8. Delete Firebase Auth account
+            // 11. Delete Firebase Auth account
             await auth.deleteUser(uid);
 
             // Mark GDPR log as completed (kept for 2 years per TTL)
