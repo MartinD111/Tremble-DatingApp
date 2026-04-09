@@ -13,3 +13,9 @@ There is no chat, no messaging, no text exchange inside the app. This is the ent
 Any implementation of a chat UI, ChatRepository, Message model, or messaging routes is WRONG and must be reverted immediately.
 After MatchRevealScreen, the only action is returning to the Radar to find the person physically.
 Source: Founder correction, April 2026.
+
+**Rule #4 — NEVER change objectVersion in project.pbxproj back to 70.**
+[2026-04-09] During Phase 7.5 iOS Notification Service Extension setup, objectVersion was manually set to 63
+for compatibility with CocoaPods 1.16.2 + Xcode 26.3. Reverting to 70 breaks `pod install`.
+Leave it at 63. Do not "fix" this.
+Source: Phase 7.5 Xcode integration, April 2026.

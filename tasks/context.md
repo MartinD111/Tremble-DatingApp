@@ -1,12 +1,11 @@
-## Session State — 2026-04-09 09:24
-- Active Task: Phase 7 Interaction System v2.1 — FULLY DEPLOYED ✅
+## Session State — 2026-04-09 10:15
+- Active Task: Phase 7.5 — iOS Native Polish ✅ COMPLETE
 - Environment: Dev (tremble-dev)
 - Branch: main
-- System Status: `flutter analyze` → No issues ✅ | `tsc` → No errors ✅ | Firebase deploy → 19 functions ✅
+- System Status: `flutter analyze` → No issues ✅ | `pod install` → Clean ✅ | Firebase deploy → 19 functions ✅
 
-## Interaction System v2.1 — Zaključeno
+## Interaction System v2.1 — Live ✅
 
-### Kar je delujoče v tremble-dev zdaj:
 | Trigger | Notifikacija | Status |
 |---|---|---|
 | BLE zaznava (onBleProximity) | "Nekdo je blizu. Boš pomahal-a?" (anonimno, 15-min cooldown) | ✅ Live |
@@ -15,24 +14,32 @@
 | Background "Pomahaj nazaj" | Silent wave v Firestore brez odpiranja app | ✅ Flutter ready |
 | Deep link cold-start | Notification tap → MatchRevealScreen | ✅ Flutter ready |
 
-### Odprto — zahteva founder approval:
-1. **iOS Notification Service Extension** — Xcode native target, zahteva spremembe v `ios/` mapi.
-   - Risk: HIGH (native iOS config)
-   - Potrebno za: prikaz sender slike v push notifikacijah na iOS-u
-   - Brez tega: Android prikazuje slike ✅, iOS prikazuje samo tekst
+## Phase 7.5 — iOS Notification Service Extension ✅
 
-2. **Node.js 20 → 22 upgrade** ⚠️ URGENT (deadline: 2026-04-30, 21 dni)
-   - Firebase CLI je opozoril: Node.js 20 decommission 2026-10-30
-   - Risk: LOW-MEDIUM (sprememba v `functions/package.json` + `.node-version`)
-   - Brez tega: deploy bo blokiran po 2026-10-30
+### Kar je narejeno:
+- `ios/ImageNotification/NotificationService.swift` — downloads image from FCM payload, attaches to notification
+- `ios/ImageNotification/Info.plist` — NSExtensionPointIdentifier = com.apple.usernotifications.service
+- Xcode target `ImageNotification` linked in project.pbxproj
+- Bundle IDs: `com.pulse.ImageNotification` (Debug), `tremble.dating.app.ImageNotification` (Release/Profile)
+- `ios/Podfile` — `target 'ImageNotification'` with `pod 'Firebase/Messaging'`
+- .xcconfig (Debug/Release/Profile) include `#include?` Pods references
+- `CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = $(inherited)` in ImageNotification build settings
+- Deployment target: iOS 15.0 on all targets
+- `pod install` → clean ✅
+
+### KRITIČNO — ne smeš spremeniti:
+- `objectVersion` v `project.pbxproj` mora ostati **63** (ne 70!)
+  Xcode 26.3 + CocoaPods 1.16.2 zahteva 63. Sprememba na 70 = `pod install` fail.
+- Bundle ID hierarhija mora ostati: parent app ID + `.ImageNotification`
+
+### Kaj ostaja za test:
+- Fizična naprava + TestFlight build — preveriti, da se slika pošiljatelja prikaže v iOS push notifikaciji
+- Android rich push že deluje ✅
 
 ## Session Handoff
-- **Completed:** Interaction System v2.1 — Flutter + Cloud Functions + Deploy
+- **Completed:** Phase 7 + Phase 7.5 — Interaction System v2.1 + iOS Extension infrastructure
 - **In Progress:** Nič
-- **Blocked:** iOS Notification Service Extension (HIGH, Xcode) — čaka founder approval
-- **Next Action (priporočeno):**
-  1. Node.js 20 → 22 upgrade (URGENT, 21 dni do deprecation)
-  2. iOS Notification Service Extension (po approvalov)
-  3. Phase 8: Paywall / RevenueCat
+- **Blocked:** Nič
+- **Next Action:** Phase 8 — RevenueCat Paywall (MAJOR phase — zahteva novo sejo z načrtom)
 
 Staleness rule: if this block is >48h old, re-validate before executing.

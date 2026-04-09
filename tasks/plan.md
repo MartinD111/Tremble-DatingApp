@@ -28,7 +28,21 @@
 - [x] Deep link routing — cold start + background-to-foreground.
 - [x] Translations: `notify_*` + `action_*` ključi v EN/SL/DE.
 - [x] **DONE**: `firebase deploy --only functions` → 19 funkcij deployanih v `tremble-dev` ✅
-- [ ] **PENDING (HIGH – Xcode)**: iOS Notification Service Extension za slike v push.
+- [x] **DONE**: iOS Notification Service Extension — linked in Xcode, pod install clean ✅
+
+### Phase 7.5 — Native iOS Polish ✅ COMPLETE
+- [x] Create `ios/ImageNotification/NotificationService.swift`
+- [x] Create `ios/ImageNotification/Info.plist`
+- [x] Link target in Xcode (project.pbxproj)
+- [x] Bundle IDs: `com.pulse.ImageNotification` (Debug) / `tremble.dating.app.ImageNotification` (Release/Profile)
+- [x] Update ios/Podfile — `target 'ImageNotification'` with `Firebase/Messaging`
+- [x] objectVersion set to 63 (CocoaPods 1.16.2 / Xcode 26.3 compat — DO NOT change back to 70)
+- [x] .xcconfig files include `#include?` for Pods (Debug, Release, Profile)
+- [x] CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = $(inherited)
+- [x] Deployment target: iOS 15.0 across all targets
+- [x] pod install clean ✅
+Notes: Infrastructure for sender profile images in Wave push notifications is ready.
+       Actual rich push image display requires physical device test + TestFlight build.
 
 ### Phase 8 — Paywall / Tremble Pro
 - RevenueCat integration.
