@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-04-10T06:50:23.114Z",
+  "phase": "2D",
+  "phase_name": "Registration Monolith Extraction",
+  "phase_dir": "n/a (tracked in tasks/context.md)",
+  "status": "COMPLETE",
+  "completed_tasks": [
+    {"id": 1, "name": "Extract LanguagesStep (p21)", "status": "done", "commit": "79e9d48"},
+    {"id": 2, "name": "Extract DatingPreferencesStep (p22)", "status": "done", "commit": "79e9d48"},
+    {"id": 3, "name": "Extract WhatToMeetStep (p23)", "status": "done", "commit": "79e9d48"},
+    {"id": 4, "name": "Extract BirthdayStep (p4)", "status": "done", "commit": "34f8b11"},
+    {"id": 5, "name": "Extract HeightStep (p8)", "status": "done", "commit": "34f8b11"},
+    {"id": 6, "name": "Extract EmailLocationStep (p5)", "status": "done", "commit": "uncommitted"},
+    {"id": 7, "name": "Extract HobbiesStep (p24)", "status": "done", "commit": "uncommitted"},
+    {"id": 8, "name": "Extract PhotosStep (p25)", "status": "done", "commit": "uncommitted"},
+    {"id": 9, "name": "Extract ConsentStep (p26)", "status": "done", "commit": "uncommitted"},
+    {"id": 10, "name": "Cleanup orphaned helpers from registration_flow.dart", "status": "done", "commit": "uncommitted"}
+  ],
+  "remaining_tasks": [],
+  "blockers": [
+    {"description": "ADR-001: flutter_blue_plus not wired in background_service.dart", "type": "technical", "workaround": "mock timer still in place"},
+    {"description": "SEC-001: Firebase App Check not enforced in Cloud Functions", "type": "technical", "workaround": "none"}
+  ],
+  "human_actions_pending": [],
+  "decisions": [
+    {"decision": "All 27 registration steps extracted to individual files in widgets/registration_steps/", "rationale": "Monolith decomposition for maintainability", "phase": "2D"},
+    {"decision": "Consent state (4 booleans) moved fully into ConsentStep", "rationale": "Only needed locally; step ensures consent before calling onComplete", "phase": "2D"},
+    {"decision": "Password controllers kept in parent (emailController, passwordController, locationController)", "rationale": "Used by _registerUser and completeRegistration in parent", "phase": "2D"},
+    {"decision": "ExpansibleController for hobby tiles moved into HobbiesStep internal state", "rationale": "Only used by that step", "phase": "2D"}
+  ],
+  "uncommitted_files": [
+    "lib/src/features/auth/presentation/registration_flow.dart",
+    "lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart",
+    "lib/src/features/auth/presentation/widgets/registration_steps/email_location_step.dart",
+    "lib/src/features/auth/presentation/widgets/registration_steps/hobbies_step.dart",
+    "lib/src/features/auth/presentation/widgets/registration_steps/photos_step.dart",
+    "tasks/context.md"
+  ],
+  "next_action": "Commit Phase 2D completion, then start Phase 8 (RevenueCat/Paywall) or Phase 9 Step 3 (App Check enforcement)",
+  "context_notes": "Phase 2D is fully complete. registration_flow.dart reduced from ~3046 lines to ~1400 lines. All 27 steps extracted. flutter analyze clean. Need to commit and update tasks/context.md."
+}

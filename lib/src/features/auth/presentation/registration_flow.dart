@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -12,7 +11,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/theme_provider.dart';
-import '../../../shared/ui/tremble_back_button.dart';
 import 'widgets/registration_steps/intro_slide_step.dart';
 import 'widgets/registration_steps/name_step.dart';
 import 'widgets/registration_steps/gender_step.dart';
@@ -33,6 +31,10 @@ import 'widgets/registration_steps/height_step.dart';
 import 'widgets/registration_steps/languages_step.dart';
 import 'widgets/registration_steps/dating_preferences_step.dart';
 import 'widgets/registration_steps/what_to_meet_step.dart';
+import 'widgets/registration_steps/email_location_step.dart';
+import 'widgets/registration_steps/hobbies_step.dart';
+import 'widgets/registration_steps/photos_step.dart';
+import 'widgets/registration_steps/consent_step.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE INDICES (actual PageView order)
@@ -102,21 +104,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     _pageController = PageController(initialPage: _currentPage);
   }
 
-  // Email/password/location
+  // Email/password/location (controllers kept here; they are read by _registerUser and completeRegistration)
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
-  double _passwordStrength = 0.0;
-  String _passwordStrengthLabel = '';
-  Color _passwordStrengthColor = Colors.red;
-  bool _hasMinLength = false;
-  bool _hasUppercase = false;
-  bool _hasDigit = false;
-  bool _hasSpecialChar = false;
 
   // Name
   final TextEditingController _nameController = TextEditingController();
@@ -181,15 +172,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // What to meet
   final List<String> _wantToMeet = [];
-  final Map<String, ExpansibleController> _hobbyTileControllers = {};
-
-  ExpansibleController _getHobbyTileController(String key) {
-    if (!_hobbyTileControllers.containsKey(key)) {
-      _hobbyTileControllers[key] = ExpansibleController();
-    }
-    return _hobbyTileControllers[key]!;
-  }
-
   // Hobbies
   final List<String> _selectedHobbies = [];
 
@@ -198,20 +180,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   final ImagePicker _picker = ImagePicker();
 
   // Prompt (Removed)
-
-  // GDPR consent
-  bool _consentTerms = false;
-  bool _consentPrivacy = false;
-  bool _consentDataProcessing =
-      false; // GDPR Art.9 — explicit consent for sensitive data (religion, ethnicity, etc.)
-  bool _consentLocation =
-      false; // GDPR Art.6 / ZVOP-2 — explicit consent for live location tracking
-  // ALL four must be true — no shortcuts (18+ is enforced on birthday page)
-  bool get _consentGiven =>
-      _consentTerms &&
-      _consentPrivacy &&
-      _consentDataProcessing &&
-      _consentLocation;
 
   // helpers
   String tr(String key) => t(key, _selectedLanguage);
@@ -281,53 +249,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     }
   }
 
-  void _updatePasswordStrength(String pw) {
-    _hasMinLength = pw.length >= 8;
-    _hasUppercase = pw.contains(RegExp(r'[A-Z]'));
-    _hasDigit = pw.contains(RegExp(r'[0-9]'));
-    _hasSpecialChar =
-        pw.contains(RegExp(r'[!@#%^&*()_+\-=\[\]{};:,.<>?/\\|`~]'));
-    int score = 0;
-    if (_hasMinLength) score++;
-    if (_hasUppercase) score++;
-    if (_hasDigit) score++;
-    if (_hasSpecialChar) score++;
-    if (pw.length >= 12) score++;
-    if (pw.length >= 16) score++;
-    if (pw.contains(RegExp(r'[a-z]'))) score++;
-    double strength = math.min(score / 5.0, 1.0);
-    if (pw.isEmpty) strength = 0.0;
-    String label;
-    Color color;
-    if (strength == 0) {
-      label = '';
-      color = Colors.red;
-    } else if (strength < 0.3) {
-      label = tr('very_weak');
-      color = Colors.red;
-    } else if (strength < 0.5) {
-      label = tr('weak');
-      color = Colors.orange;
-    } else if (strength < 0.7) {
-      label = tr('medium');
-      color = Colors.amber;
-    } else if (strength < 0.9) {
-      label = tr('strong');
-      color = const Color(0xFF2D9B6F);
-    } else {
-      label = tr('very_strong');
-      color = const Color(0xFF2D9B6F);
-    }
-    setState(() {
-      _passwordStrength = strength;
-      _passwordStrengthLabel = label;
-      _passwordStrengthColor = color;
-    });
-  }
-
-  bool get _isPasswordValid =>
-      _hasMinLength && _hasUppercase && _hasDigit && _hasSpecialChar;
-
   int _calcAge(DateTime d) {
     final now = DateTime.now();
     int age = now.year - d.year;
@@ -383,31 +304,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
-  // ────── BACK BUTTON ──────
-  Widget _backButton() {
-    return Align(
-      alignment: Alignment.topLeft,
-      child: TrembleBackButton(
-        label: tr('back'),
-        onPressed: () async {
-          if (_currentPage > 0) {
-            _pageController.previousPage(
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeInOut,
-            );
-            setState(() => _currentPage--);
-          } else {
-            // Sign out if leaving onboarding completely to allow fresh start
-            if (FirebaseAuth.instance.currentUser != null) {
-              await FirebaseAuth.instance.signOut();
-            }
-            if (mounted) context.pop();
-          }
-        },
-      ),
-    );
-  }
-
   // ────── PROGRESS BAR ──────
   Widget _buildProgressBar() {
     const totalSteps = 26;
@@ -425,27 +321,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         minHeight: 3,
       ),
     );
-  }
-
-  // ────── STEP HEADER ──────
-  Widget _stepHeader(String title, {String? subtitle}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-      Text(title,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.displayMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black)),
-      if (subtitle != null) ...[
-        const SizedBox(height: 8),
-        Text(subtitle,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.instrumentSans(
-                color: isDark ? Colors.white60 : Colors.black54,
-                fontSize: 14,
-                height: 1.4)),
-      ],
-    ]);
   }
 
   Widget _optionPill(String label, bool selected, VoidCallback onTap,
@@ -504,24 +379,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         backgroundColor: const Color(0xFFF4436C),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
-
-  Widget _buildScrollableFormPage({required Widget child}) {
-    return SafeArea(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: child,
-              ),
-            ),
-          );
-        },
       ),
     );
   }
@@ -590,7 +447,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     onBack: () => _goToPage(_currentPage - 1),
                     tr: tr,
                   ),
-                  _buildPageEmailPassword(),
+                  EmailLocationStep(
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    locationController: _locationController,
+                    isRegistering: _isRegistering,
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onContinue: _nextPage,
+                    tr: tr,
+                  ),
                   NameStep(
                     nameController: _nameController,
                     onBack: () => _goToPage(_currentPage - 1),
@@ -826,9 +691,28 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     onContinue: _nextPage,
                     tr: tr,
                   ),
-                  _buildPageHobbies(),
-                  _buildPagePhotos(),
-                  _buildPageConsent(),
+                  HobbiesStep(
+                    selectedHobbies: _selectedHobbies,
+                    onAddHobby: (h) => setState(() => _selectedHobbies.add(h)),
+                    onRemoveHobby: (h) =>
+                        setState(() => _selectedHobbies.remove(h)),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onContinue: _nextPage,
+                    tr: tr,
+                  ),
+                  PhotosStep(
+                    photos: _photos,
+                    onPickImage: _pickImage,
+                    onRemovePhoto: (i) => setState(() => _photos[i] = null),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onContinue: _nextPage,
+                    tr: tr,
+                  ),
+                  ConsentStep(
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onComplete: completeRegistration,
+                    tr: tr,
+                  ),
                 ],
               ),
             ),
@@ -840,396 +724,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             child: _buildProgressBar(),
           ),
         ],
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 5 – EMAIL / PASSWORD / LOCATION
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageEmailPassword() {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final isAlreadyLoggedIn = currentUser != null;
-    final isSocialUser = currentUser?.providerData.any((p) =>
-            p.providerId == 'google.com' || p.providerId == 'apple.com') ??
-        false;
-    final hasPassword =
-        currentUser?.providerData.any((p) => p.providerId == 'password') ??
-            false;
-
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _backButton(),
-            const SizedBox(height: 16),
-            _stepHeader(tr('basic_info')),
-            const SizedBox(height: 32),
-            if (isAlreadyLoggedIn &&
-                (isSocialUser || hasPassword) &&
-                _emailController.text.isNotEmpty)
-              _inputField(tr('email'), _emailController,
-                  icon: LucideIcons.mail,
-                  keyboard: TextInputType.emailAddress,
-                  readOnly: true)
-            else
-              _inputField(tr('email'), _emailController,
-                  icon: LucideIcons.mail,
-                  keyboard: TextInputType.emailAddress,
-                  readOnly: false),
-            const SizedBox(height: 20),
-            _locationAutocomplete(),
-            // Show password fields if the user is not logged in OR if they haven't set a password yet (Social users)
-            if (!hasPassword && !isSocialUser) ...[
-              const SizedBox(height: 20),
-              _passwordInputField(),
-              const SizedBox(height: 20),
-              _confirmPasswordInputField(),
-              if (_passwordController.text.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                _passwordStrengthBar(),
-                const SizedBox(height: 8),
-                _pwReq(tr('pw_min_length'), _hasMinLength),
-                _pwReq(tr('pw_uppercase'), _hasUppercase),
-                _pwReq(tr('pw_digit'), _hasDigit),
-                _pwReq(tr('pw_special'), _hasSpecialChar),
-                _pwReq(
-                    tr('confirm_password'),
-                    _passwordController.text ==
-                            _confirmPasswordController.text &&
-                        _confirmPasswordController.text.isNotEmpty),
-              ],
-            ],
-            const SizedBox(height: 32),
-            _buildPremiumPill(),
-            const SizedBox(height: 32),
-            _isRegistering
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFF4436C)))
-                : _continueButton(
-                    enabled: _emailController.text.isNotEmpty &&
-                        ((isAlreadyLoggedIn && (isSocialUser || hasPassword)) ||
-                            (_isPasswordValid &&
-                                _passwordController.text ==
-                                    _confirmPasswordController.text)),
-                    onTap: _nextPage,
-                  ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _inputField(String label, TextEditingController ctrl,
-      {IconData? icon, TextInputType? keyboard, bool readOnly = false}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final hintColor = isDark ? Colors.white60 : Colors.black54;
-    final iconColor = isDark ? Colors.white38 : Colors.black38;
-    final borderColor = isDark ? Colors.white30 : Colors.black26;
-    final borderFocusColor = isDark ? Colors.white : Colors.black;
-
-    return TextField(
-      controller: ctrl,
-      keyboardType: keyboard,
-      readOnly: readOnly,
-      style: GoogleFonts.instrumentSans(color: textColor, fontSize: 17),
-      onChanged: (_) => setState(() {}),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: GoogleFonts.instrumentSans(color: hintColor),
-        prefixIcon:
-            icon != null ? Icon(icon, color: iconColor, size: 20) : null,
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
-            borderSide: BorderSide(color: borderColor)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
-            borderSide: BorderSide(color: borderFocusColor, width: 2)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      ),
-    );
-  }
-
-  Widget _passwordInputField() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final hintColor = isDark ? Colors.white60 : Colors.black54;
-    final iconColor = isDark ? Colors.white38 : Colors.black38;
-    final borderColor = isDark ? Colors.white30 : Colors.black26;
-    final borderFocusColor = isDark ? Colors.white : Colors.black;
-
-    return TextField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      style: GoogleFonts.instrumentSans(color: textColor, fontSize: 17),
-      onChanged: _updatePasswordStrength,
-      decoration: InputDecoration(
-        labelText: tr('password'),
-        labelStyle: GoogleFonts.instrumentSans(color: hintColor),
-        prefixIcon: Icon(LucideIcons.lock, color: iconColor, size: 20),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
-            borderSide: BorderSide(color: borderColor)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
-            borderSide: BorderSide(color: borderFocusColor, width: 2)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        suffixIcon: IconButton(
-          icon: Icon(_obscurePassword ? LucideIcons.eyeOff : LucideIcons.eye,
-              color: iconColor, size: 20),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-        ),
-      ),
-    );
-  }
-
-  Widget _passwordStrengthBar() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final trackColor = isDark ? Colors.white12 : Colors.black12;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: _passwordStrength),
-      duration: const Duration(milliseconds: 400),
-      builder: (ctx, val, _) => Column(children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: SizedBox(
-              height: 5,
-              child: LinearProgressIndicator(
-                value: val,
-                backgroundColor: trackColor,
-                valueColor: AlwaysStoppedAnimation(_passwordStrengthColor),
-              )),
-        ),
-        const SizedBox(height: 4),
-        Align(
-            alignment: Alignment.centerRight,
-            child: Text(_passwordStrengthLabel,
-                style: TextStyle(
-                    color: _passwordStrengthColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600))),
-      ]),
-    );
-  }
-
-  Widget _confirmPasswordInputField() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final hintColor = isDark ? Colors.white60 : Colors.black54;
-    final iconColor = isDark ? Colors.white38 : Colors.black38;
-    final borderColor = isDark ? Colors.white30 : Colors.black26;
-    final borderFocusColor = isDark ? Colors.white : Colors.black;
-
-    return TextField(
-      controller: _confirmPasswordController,
-      obscureText: _obscureConfirmPassword,
-      style: TextStyle(color: textColor, fontSize: 17),
-      onChanged: (_) => setState(() {}),
-      decoration: InputDecoration(
-        labelText: tr('confirm_password'),
-        labelStyle: TextStyle(color: hintColor),
-        prefixIcon: Icon(LucideIcons.lock, color: iconColor, size: 20),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
-            borderSide: BorderSide(color: borderColor)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(100),
-            borderSide: BorderSide(color: borderFocusColor, width: 2)),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        suffixIcon: IconButton(
-          icon: Icon(
-              _obscureConfirmPassword ? LucideIcons.eyeOff : LucideIcons.eye,
-              color: iconColor,
-              size: 20),
-          onPressed: () => setState(
-              () => _obscureConfirmPassword = !_obscureConfirmPassword),
-        ),
-      ),
-    );
-  }
-
-  Widget _pwReq(String text, bool met) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final unmetIconColor = isDark ? Colors.white30 : Colors.black26;
-    final unmetTextColor = isDark ? Colors.white38 : Colors.black45;
-    final successColor = isDark ? Colors.greenAccent : const Color(0xFF2D9B6F);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 3),
-      child: Row(children: [
-        Icon(met ? LucideIcons.checkCircle2 : LucideIcons.circle,
-            size: 14, color: met ? successColor : unmetIconColor),
-        const SizedBox(width: 6),
-        Text(text,
-            style: TextStyle(
-                fontSize: 12,
-                color: met ? successColor : unmetTextColor,
-                decoration: met ? TextDecoration.lineThrough : null,
-                decorationColor: successColor.withValues(alpha: 0.5))),
-      ]),
-    );
-  }
-
-  Widget _locationAutocomplete() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final hintColor = isDark ? Colors.white60 : Colors.black54;
-    final iconColor = isDark ? Colors.white38 : Colors.black38;
-    final borderColor = isDark ? Colors.white30 : Colors.black26;
-    final borderFocusColor = isDark ? Colors.white : Colors.black;
-
-    return Autocomplete<String>(
-      optionsBuilder: (tv) {
-        if (tv.text.isEmpty) return const Iterable<String>.empty();
-        return locationSuggestions
-            .where((c) => c.toLowerCase().contains(tv.text.toLowerCase()));
-      },
-      onSelected: (s) => setState(() => _locationController.text = s),
-      fieldViewBuilder: (ctx, ctrl, fn, _) {
-        if (_locationController.text.isNotEmpty && ctrl.text.isEmpty) {
-          ctrl.text = _locationController.text;
-        }
-        return TextField(
-          controller: ctrl,
-          focusNode: fn,
-          style: TextStyle(color: textColor, fontSize: 17),
-          onChanged: (v) {
-            _locationController.text = v;
-            setState(() {});
-          },
-          decoration: InputDecoration(
-            labelText: tr('from_where'),
-            labelStyle: TextStyle(color: hintColor),
-            prefixIcon: Icon(LucideIcons.mapPin, color: iconColor, size: 20),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(100),
-                borderSide: BorderSide(color: borderColor)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(100),
-                borderSide: BorderSide(color: borderFocusColor, width: 2)),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          ),
-        );
-      },
-      optionsViewBuilder: (ctx, onSel, opts) => Align(
-        alignment: Alignment.topLeft,
-        child: Material(
-          elevation: 8,
-          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 180, maxWidth: 340),
-            child: ListView.builder(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              itemCount: opts.length,
-              itemBuilder: (ctx, i) {
-                final o = opts.elementAt(i);
-                return ListTile(
-                    dense: true,
-                    leading: Icon(LucideIcons.mapPin,
-                        size: 14,
-                        color: isDark ? Colors.white54 : Colors.black54),
-                    title: Text(o, style: TextStyle(color: textColor)),
-                    onTap: () => onSel(o));
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ────── PREMIUM PILL ──────
-  Widget _buildPremiumPill() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Align(
-      alignment: Alignment.center,
-      child: GestureDetector(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(LucideIcons.diamond,
-                      color: Color(0xFFF4436C), size: 40),
-                  const SizedBox(height: 16),
-                  Text(
-                    tr('premium_free_notice'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black87,
-                        fontSize: 16,
-                        height: 1.4),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    tr('current_users_count').replaceAll('{count}', '4.832'),
-                    style: const TextStyle(
-                        color: Color(0xFFF4436C),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF4436C),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('OK',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF4436C).withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(
-                color: const Color(0xFFF4436C).withValues(alpha: 0.5)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(LucideIcons.diamond,
-                  color: Color(0xFFF4436C), size: 16),
-              const SizedBox(width: 8),
-              Text(
-                tr('premium_account_activated'),
-                style: const TextStyle(
-                    color: Color(0xFFF4436C),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -1776,544 +1270,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ══════════════════════════════════════════════════════
   // PAGE 18 – HOBBIES (Improved)
   // ══════════════════════════════════════════════════════
-  Widget _buildPageHobbies() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final Map<String, List<String>> cats = {
-      'Active 🏋️': [
-        'Fitnes',
-        'Pilates',
-        'Sprehodi',
-        'Tek',
-        'Smučanje',
-        'Snowboarding',
-        'Plezanje',
-        'Plavanje'
-      ],
-      'Prosti čas ☕': [
-        'Branje',
-        'Kava',
-        'Čaj',
-        'Kuhanje',
-        'Filmi',
-        'Serije',
-        'Videoigre',
-        'Glasba'
-      ],
-      'Umetnost 🎨': [
-        'Slikanje',
-        'Fotografija',
-        'Pisanje',
-        'Muzeji',
-        'Gledališče'
-      ],
-      'Potovanja ✈️': ['Roadtrips', 'Camping', 'City breaks', 'Backpacking'],
-    };
-
-    final predefinedHobbies = cats.values.expand((element) => element).toSet();
-    final customHobbies =
-        _selectedHobbies.where((h) => !predefinedHobbies.contains(h)).toList();
-
-    return SafeArea(
-      child: Column(children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _backButton(),
-            const SizedBox(height: 16),
-            _stepHeader(tr('hobbies'),
-                subtitle:
-                    '${_selectedHobbies.length} ${tr('hobbies_selected').replaceAll('{count}', '')}'),
-          ]),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              if (customHobbies.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(tr('my_hobbies_custom'),
-                      style: GoogleFonts.instrumentSans(
-                          color: isDark ? Colors.white : Colors.black87,
-                          fontWeight: FontWeight.bold)),
-                ),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: customHobbies.map((hobby) {
-                    return FilterChip(
-                      label: Text(
-                        hobby,
-                        style: GoogleFonts.instrumentSans(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      selected: true,
-                      onSelected: (_) =>
-                          setState(() => _selectedHobbies.remove(hobby)),
-                      selectedColor: const Color(0xFFF4436C),
-                      backgroundColor: isDark
-                          ? Colors.white12
-                          : Colors.black.withValues(alpha: 0.05),
-                      shape: StadiumBorder(
-                        side: BorderSide(
-                            color: isDark
-                                ? Colors.white12
-                                : Colors.black.withValues(alpha: 0.1)),
-                      ),
-                      checkmarkColor: Colors.black,
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
-              ],
-              ...cats.entries.map((e) {
-                return Theme(
-                  data: Theme.of(context).copyWith(
-                    dividerColor: Colors.transparent,
-                    // Ta del zagotovi, da so vse animacije znotraj ExpansionTile gladke
-                    expansionTileTheme: ExpansionTileThemeData(
-                      iconColor: const Color(0xFFF4436C),
-                      collapsedIconColor:
-                          isDark ? Colors.white : Colors.black54,
-                    ),
-                  ),
-                  child: ExpansionTile(
-                    controller: _getHobbyTileController(e.key),
-                    expansionAnimationStyle: AnimationStyle(
-                      duration: const Duration(milliseconds: 350),
-                      curve: Curves.easeInOut,
-                    ),
-                    onExpansionChanged: (expanded) {
-                      if (expanded) {
-                        for (var key in cats.keys) {
-                          if (key != e.key) {
-                            _getHobbyTileController(key).collapse();
-                          }
-                        }
-                      }
-                    },
-                    title: Text(
-                        '${e.key} (${e.value.where((h) => _selectedHobbies.contains(h)).length})',
-                        style: GoogleFonts.instrumentSans(
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontWeight: FontWeight.bold)),
-                    children: [
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          ...e.value.map((hobby) {
-                            final sel = _selectedHobbies.contains(hobby);
-                            return FilterChip(
-                              label: Text(
-                                hobby,
-                                style: GoogleFonts.instrumentSans(
-                                  color: sel
-                                      ? Colors.black
-                                      : (isDark
-                                          ? Colors.white
-                                          : Colors.black87),
-                                  fontWeight:
-                                      sel ? FontWeight.bold : FontWeight.w500,
-                                ),
-                              ),
-                              selected: sel,
-                              onSelected: (s) => setState(() => s
-                                  ? _selectedHobbies.add(hobby)
-                                  : _selectedHobbies.remove(hobby)),
-                              selectedColor: const Color(0xFFF4436C),
-                              backgroundColor: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white12
-                                  : Colors.black12,
-                              shape: StadiumBorder(
-                                side: BorderSide(
-                                  color: sel
-                                      ? const Color(0xFFF4436C)
-                                      : (Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? Colors.white24
-                                          : Colors.black26),
-                                ),
-                              ),
-                              checkmarkColor: Colors.black,
-                            );
-                          }),
-                          ActionChip(
-                            label: Text(tr('add_own'),
-                                style: GoogleFonts.instrumentSans(
-                                    color: Colors.black)),
-                            backgroundColor: const Color(0xFFF4436C),
-                            shape: const StadiumBorder(),
-                            onPressed: () => _showAddHobbyDialog(),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                );
-              }),
-            ]),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: _continueButton(enabled: true, onTap: _nextPage),
-        ),
-      ]),
-    );
-  }
-
-  void _showAddHobbyDialog() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ctrl = TextEditingController();
-    showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-              backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-              title: Text(tr('add_hobby'),
-                  style: GoogleFonts.instrumentSans(
-                      color: isDark ? Colors.white : Colors.black)),
-              content: TextField(
-                  controller: ctrl,
-                  style: GoogleFonts.instrumentSans(
-                      color: isDark ? Colors.white : Colors.black),
-                  autofocus: true),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: Text(tr('cancel'))),
-                TextButton(
-                    onPressed: () {
-                      if (ctrl.text.isNotEmpty) {
-                        setState(() => _selectedHobbies.add(ctrl.text));
-                        Navigator.pop(ctx);
-                      }
-                    },
-                    child: Text(tr('add'),
-                        style: GoogleFonts.instrumentSans(
-                            color: const Color(0xFFF4436C)))),
-              ],
-            ));
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 13 – PHOTOS
-  // ══════════════════════════════════════════════════════
-  Widget _buildPagePhotos() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    const _isDev =
-        String.fromEnvironment('FLAVOR', defaultValue: 'dev') != 'prod';
-    final hasAtLeastOne = _isDev || _photos.any((p) => p != null);
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _backButton(),
-          const SizedBox(height: 24),
-          _stepHeader(tr('select_photo_title')),
-          const SizedBox(height: 8),
-          Text(tr('photos_hint'),
-              style: GoogleFonts.instrumentSans(
-                  color: isDark ? Colors.white54 : Colors.black45,
-                  fontSize: 13)),
-          const SizedBox(height: 32),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3, crossAxisSpacing: 10, mainAxisSpacing: 10),
-              itemCount: 6,
-              itemBuilder: (ctx, i) => GestureDetector(
-                onTap: () => _pickImage(i),
-                child: Stack(clipBehavior: Clip.none, children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.07)
-                          : Colors.black.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color: _photos[i] != null
-                              ? const Color(0xFFF4436C)
-                              : (isDark ? Colors.white24 : Colors.black12)),
-                      image: _photos[i] != null
-                          ? DecorationImage(
-                              image: FileImage(_photos[i]!), fit: BoxFit.cover)
-                          : null,
-                    ),
-                    child: _photos[i] == null
-                        ? Center(
-                            child: Icon(LucideIcons.plus,
-                                color: isDark ? Colors.white38 : Colors.black26,
-                                size: 28))
-                        : null,
-                  ),
-                  if (i == 0)
-                    Positioned(
-                        top: -6,
-                        right: -6,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                              color: Colors.amber, shape: BoxShape.circle),
-                          child: const Icon(LucideIcons.star,
-                              size: 10, color: Colors.black),
-                        )),
-                  if (_photos[i] != null)
-                    Positioned(
-                        top: -6,
-                        right: -6,
-                        child: GestureDetector(
-                          onTap: () => setState(() => _photos[i] = null),
-                          child: Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: const BoxDecoration(
-                                color: Colors.black54, shape: BoxShape.circle),
-                            child: const Icon(LucideIcons.x,
-                                size: 12, color: Colors.white),
-                          ),
-                        )),
-                ]),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _continueButton(enabled: hasAtLeastOne, onTap: _nextPage),
-          const SizedBox(height: 16),
-        ]),
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE — GDPR CONSENT
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageConsent() {
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _backButton(),
-          const SizedBox(height: 24),
-          _stepHeader(
-            'Privacy and GDPR',
-            subtitle: tr('consent_subtitle'),
-          ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 0),
-              child: TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    final newVal = !_consentGiven;
-                    _consentTerms = newVal;
-                    _consentPrivacy = newVal;
-                    _consentDataProcessing = newVal;
-                    _consentLocation = newVal;
-                  });
-                },
-                icon: Icon(
-                  _consentGiven
-                      ? Icons.check_box
-                      : Icons.check_box_outline_blank,
-                  color: const Color(0xFFF4436C),
-                ),
-                label: Text(
-                  'Izberi Vse',
-                  style: GoogleFonts.instrumentSans(
-                    color: const Color(0xFFF4436C),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          _consentTile(
-            value: _consentTerms,
-            onChanged: (v) => setState(() => _consentTerms = v),
-            richText: TextSpan(
-              style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white70
-                      : Colors.black87,
-                  fontSize: 14,
-                  height: 1.5),
-              children: [
-                const TextSpan(text: 'I agree to the '),
-                WidgetSpan(
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: const Text('Terms of Service',
-                        style: TextStyle(
-                            color: Color(0xFFF4436C),
-                            fontSize: 14,
-                            decoration: TextDecoration.underline)),
-                  ),
-                ),
-                const TextSpan(text: ' of Tremble.'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _consentTile(
-            value: _consentPrivacy,
-            onChanged: (v) => setState(() => _consentPrivacy = v),
-            richText: TextSpan(
-              style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white70
-                      : Colors.black87,
-                  fontSize: 14,
-                  height: 1.5),
-              children: [
-                const TextSpan(text: 'I have read and accept the '),
-                WidgetSpan(
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: const Text('Privacy Policy',
-                        style: TextStyle(
-                            color: Color(0xFFF4436C),
-                            fontSize: 14,
-                            decoration: TextDecoration.underline)),
-                  ),
-                ),
-                const TextSpan(text: ', including GDPR data processing.'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _consentTile(
-            value: _consentDataProcessing,
-            onChanged: (v) => setState(() => _consentDataProcessing = v),
-            richText: TextSpan(
-              style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white70
-                      : Colors.black87,
-                  fontSize: 14,
-                  height: 1.5),
-              children: const [
-                TextSpan(
-                    text:
-                        'I explicitly consent to the processing of my sensitive personal data '
-                        '(interests, preferences, religion, ethnicity) for the purpose of matchmaking. '
-                        'I understand this data is encrypted, never sold, and I can withdraw consent '
-                        'at any time from Settings.'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _consentTile(
-            value: _consentLocation,
-            onChanged: (v) => setState(() => _consentLocation = v),
-            richText: TextSpan(
-              style: TextStyle(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white70
-                      : Colors.black87,
-                  fontSize: 14,
-                  height: 1.5),
-              children: const [
-                TextSpan(
-                    text:
-                        'I consent to live location tracking for the Radar feature. '
-                        'Only an approximate grid position (~38m accuracy) is stored — '
-                        'never my exact coordinates. Location data auto-deletes after 2 hours of inactivity. '
-                        'I can disable Radar at any time from Settings.'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : Colors.black.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white12
-                      : Colors.black12),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.shield_outlined,
-                    color: Color(0xFFF4436C), size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Your data is stored securely, never sold to third parties, '
-                    'and can be exported or deleted at any time from Settings.',
-                    style: TextStyle(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white54
-                            : Colors.black54,
-                        fontSize: 13,
-                        height: 1.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          _continueButton(
-            enabled: _consentGiven,
-            onTap: completeRegistration,
-            label: 'Continue',
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _consentTile({
-    required bool value,
-    required ValueChanged<bool> onChanged,
-    required InlineSpan richText,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    const _brandRose = Color(0xFFF4436C);
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: value ? _brandRose : Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                  color: value
-                      ? _brandRose
-                      : (isDark ? Colors.white38 : Colors.black38),
-                  width: 2),
-            ),
-            child: value
-                ? const Icon(Icons.check, color: Colors.black, size: 16)
-                : null,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: RichText(text: richText),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ══════════════════════════════════════════════════════
   // COMPLETE REGISTRATION
@@ -2323,15 +1279,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final uid =
         currentUser?.uid ?? 'generated_id'; // Fallback only if somehow null
 
-    // Safety guard — consent page enforces all 4 checkboxes, but double-check
-    if (!_consentGiven) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Please accept all consent checkboxes to continue.',
-                style: GoogleFonts.instrumentSans())),
-      );
-      return;
-    }
     final photoUrls =
         _photos.where((p) => p != null).map((p) => p!.path).toList();
 
