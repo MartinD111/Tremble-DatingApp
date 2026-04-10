@@ -29,6 +29,9 @@ import 'widgets/registration_steps/religion_step.dart';
 import 'widgets/registration_steps/ethnicity_step.dart';
 import 'widgets/registration_steps/hair_color_step.dart';
 import 'widgets/registration_steps/political_affiliation_step.dart';
+import 'widgets/registration_steps/languages_step.dart';
+import 'widgets/registration_steps/dating_preferences_step.dart';
+import 'widgets/registration_steps/what_to_meet_step.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE INDICES (actual PageView order)
@@ -768,9 +771,46 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     ),
                     tr: tr,
                   ),
-                  _buildPageLanguages(),
-                  _buildPageDatingPreferences(),
-                  _buildPageWhatToMeet(),
+                  LanguagesStep(
+                    selectedLanguages: _selectedLanguages,
+                    showCustom: _showCustomLanguage,
+                    customLanguageController: _customLanguageController,
+                    onToggleLanguage: (lang) => setState(() {
+                      if (_selectedLanguages.contains(lang)) {
+                        _selectedLanguages.remove(lang);
+                      } else {
+                        _selectedLanguages.add(lang);
+                      }
+                    }),
+                    onToggleCustom: () => setState(
+                        () => _showCustomLanguage = !_showCustomLanguage),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onContinue: _nextPage,
+                    tr: tr,
+                  ),
+                  DatingPreferencesStep(
+                    datingPreference: _datingPreference,
+                    ageRangePref: _ageRangePref,
+                    onPreferenceChanged: (v) =>
+                        setState(() => _datingPreference = v),
+                    onAgeRangeChanged: (v) => setState(() => _ageRangePref = v),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onContinue: _nextPage,
+                    tr: tr,
+                  ),
+                  WhatToMeetStep(
+                    wantToMeet: _wantToMeet,
+                    onToggle: (k) => setState(() {
+                      if (_wantToMeet.contains(k)) {
+                        _wantToMeet.remove(k);
+                      } else {
+                        _wantToMeet.add(k);
+                      }
+                    }),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onContinue: _nextPage,
+                    tr: tr,
+                  ),
                   _buildPageHobbies(),
                   _buildPagePhotos(),
                   _buildPageConsent(),
@@ -2188,178 +2228,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     ),
                   )));
         },
-      ),
-    );
-  }
-
-  Widget _buildPageLanguages() {
-    final opts = [
-      'Angleščina 🇬🇧',
-      'Slovenščina 🇸🇮',
-      'Nemščina 🇩🇪',
-      'Italijanščina 🇮🇹',
-      'Hrvaščina 🇭🇷',
-      'Španščina 🇪🇸',
-      'Francoščina 🇫🇷',
-    ];
-    return SafeArea(
-      child: Column(children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _backButton(),
-            const SizedBox(height: 16),
-            _stepHeader(tr('how_many_languages')),
-            const SizedBox(height: 24),
-          ]),
-        ),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            children: [
-              ...opts.map((lang) {
-                final sel = _selectedLanguages.contains(lang);
-                return _optionPill(lang, sel, () {
-                  setState(() {
-                    if (sel) {
-                      _selectedLanguages.remove(lang);
-                    } else {
-                      _selectedLanguages.add(lang);
-                    }
-                  });
-                });
-              }),
-              _optionPill('Custom', _showCustomLanguage, () {
-                setState(() => _showCustomLanguage = !_showCustomLanguage);
-              }),
-              if (_showCustomLanguage)
-                Builder(builder: (context) {
-                  final isDark =
-                      Theme.of(context).brightness == Brightness.dark;
-                  return TextField(
-                    controller: _customLanguageController,
-                    style: GoogleFonts.instrumentSans(
-                        color: isDark ? Colors.white : Colors.black87),
-                    decoration: InputDecoration(
-                      hintText: tr('write_answer'),
-                      hintStyle: GoogleFonts.instrumentSans(
-                          color: isDark ? Colors.white30 : Colors.black38),
-                      enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(
-                              color: isDark ? Colors.white30 : Colors.black26)),
-                      focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(
-                              color: isDark ? Colors.white : Colors.black,
-                              width: 2)),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 16),
-                    ),
-                    onChanged: (v) => setState(() {}),
-                  );
-                }),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: _continueButton(
-              enabled: _selectedLanguages.isNotEmpty ||
-                  (_showCustomLanguage &&
-                      _customLanguageController.text.isNotEmpty),
-              onTap: _nextPage),
-        ),
-      ]),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 16 – DATING PREFERENCES (Updated)
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageDatingPreferences() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final opts = [
-      {'key': 'short_term_fun', 'label': tr('short_term_fun')},
-      {'key': 'long_term_partner', 'label': tr('long_term_partner')},
-      {'key': 'short_open_long', 'label': tr('short_open_long')},
-      {'key': 'long_open_short', 'label': tr('long_open_short')},
-      {'key': 'undecided', 'label': tr('undecided')},
-    ];
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _backButton(),
-          const SizedBox(height: 24),
-          _stepHeader(tr('who_looking_for')),
-          const SizedBox(height: 24),
-          ...opts.map((o) => _optionPill(
-              o['label']!,
-              _datingPreference == o['key'],
-              () => setState(() => _datingPreference = o['key']))),
-          const SizedBox(height: 32),
-          _stepHeader(tr('age_range')),
-          const SizedBox(height: 16),
-          RangeSlider(
-            values: _ageRangePref,
-            min: 18,
-            max: 65,
-            divisions: 47,
-            labels: RangeLabels('${_ageRangePref.start.round()}',
-                '${_ageRangePref.end.round()}'),
-            onChanged: (v) => setState(() => _ageRangePref = v),
-            activeColor: const Color(0xFFF4436C),
-            inactiveColor:
-                isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
-          ),
-          const SizedBox(height: 24),
-          _continueButton(enabled: _datingPreference != null, onTap: _nextPage),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 11 – WHAT TO MEET
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageWhatToMeet() {
-    final opts = [
-      {'key': 'male', 'label': tr('gender_male'), 'icon': Icons.male},
-      {'key': 'female', 'label': tr('gender_female'), 'icon': Icons.female},
-      {
-        'key': 'non_binary',
-        'label': tr('non_binary'),
-        'icon': LucideIcons.userX
-      },
-    ];
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _backButton(),
-          const SizedBox(height: 24),
-          _stepHeader(tr('what_to_meet_title')),
-          const SizedBox(height: 36),
-          ...opts.map((o) {
-            final k = o['key'] as String;
-            final sel = _wantToMeet.contains(k);
-            return _optionPill(o['label'] as String, sel, () {
-              setState(() {
-                if (sel) {
-                  _wantToMeet.remove(k);
-                } else {
-                  _wantToMeet.add(k);
-                }
-              });
-            }, icon: o['icon'] as IconData);
-          }),
-          const SizedBox(height: 24),
-          _continueButton(enabled: _wantToMeet.isNotEmpty, onTap: _nextPage),
-          const SizedBox(height: 16),
-        ],
       ),
     );
   }
