@@ -4,6 +4,111 @@ import 'package:google_fonts/google_fonts.dart';
 const Color kBrandRose = Color(0xFFF4436C);
 
 // ─────────────────────────────────────────────────────────────────────────────
+// DRUM PICKER
+// A scroll-wheel date/value picker used by BirthdayStep and HeightStep.
+// ─────────────────────────────────────────────────────────────────────────────
+class DrumPicker extends StatefulWidget {
+  const DrumPicker({
+    super.key,
+    required this.items,
+    required this.selectedIndex,
+    required this.onChanged,
+    this.looping = false,
+  });
+
+  final List<String> items;
+  final int selectedIndex;
+  final ValueChanged<int> onChanged;
+  final bool looping;
+
+  @override
+  State<DrumPicker> createState() => _DrumPickerState();
+}
+
+class _DrumPickerState extends State<DrumPicker> {
+  late FixedExtentScrollController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = FixedExtentScrollController(initialItem: widget.selectedIndex);
+  }
+
+  @override
+  void didUpdateWidget(DrumPicker old) {
+    super.didUpdateWidget(old);
+    if (old.selectedIndex != widget.selectedIndex && _ctrl.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_ctrl.hasClients) _ctrl.jumpToItem(widget.selectedIndex);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? Colors.white : Colors.black87;
+    final inactiveColor = isDark ? Colors.white38 : Colors.black26;
+
+    return ListWheelScrollView.useDelegate(
+      controller: _ctrl,
+      itemExtent: 44,
+      perspective: 0.004,
+      diameterRatio: 1.8,
+      physics: const FixedExtentScrollPhysics(),
+      onSelectedItemChanged: (i) {
+        widget.onChanged(
+          widget.looping ? i % widget.items.length : i,
+        );
+      },
+      childDelegate: widget.looping
+          ? ListWheelChildLoopingListDelegate(
+              children: List.generate(widget.items.length, (i) {
+                final selected =
+                    i == (widget.selectedIndex % widget.items.length);
+                return Center(
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: selected ? 20 : 16,
+                      fontWeight:
+                          selected ? FontWeight.bold : FontWeight.normal,
+                      color: selected ? activeColor : inactiveColor,
+                    ),
+                    child: Text(widget.items[i]),
+                  ),
+                );
+              }),
+            )
+          : ListWheelChildBuilderDelegate(
+              childCount: widget.items.length,
+              builder: (ctx, i) {
+                final selected = i == widget.selectedIndex;
+                return Center(
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: selected ? 20 : 16,
+                      fontWeight:
+                          selected ? FontWeight.bold : FontWeight.normal,
+                      color: selected ? activeColor : inactiveColor,
+                    ),
+                    child: Text(widget.items[i]),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CONTINUE BUTTON
 // ─────────────────────────────────────────────────────────────────────────────
 class ContinueButton extends StatelessWidget {

@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../data/auth_repository.dart';
@@ -29,6 +28,8 @@ import 'widgets/registration_steps/religion_step.dart';
 import 'widgets/registration_steps/ethnicity_step.dart';
 import 'widgets/registration_steps/hair_color_step.dart';
 import 'widgets/registration_steps/political_affiliation_step.dart';
+import 'widgets/registration_steps/birthday_step.dart';
+import 'widgets/registration_steps/height_step.dart';
 import 'widgets/registration_steps/languages_step.dart';
 import 'widgets/registration_steps/dating_preferences_step.dart';
 import 'widgets/registration_steps/what_to_meet_step.dart';
@@ -127,7 +128,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   int _pickerMonth = DateTime.now().month;
   int _pickerDay = DateTime.now().day;
   int _pickerYear = DateTime.now().year - 22;
-  bool _birthdayConfirmed = false;
   DateTime? _birthDate;
 
   // Height
@@ -327,26 +327,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   bool get _isPasswordValid =>
       _hasMinLength && _hasUppercase && _hasDigit && _hasSpecialChar;
-
-  // ────── ZODIAC ──────
-  String _zodiacSign(DateTime d) {
-    final m = d.month;
-    final day = d.day;
-    if ((m == 1 && day >= 20) || (m == 2 && day <= 18)) return '♒ Aquarius';
-    if ((m == 2 && day >= 19) || (m == 3 && day <= 20)) return '♓ Pisces';
-    if ((m == 3 && day >= 21) || (m == 4 && day <= 19)) return '♈ Aries';
-    if ((m == 4 && day >= 20) || (m == 5 && day <= 20)) return '♉ Taurus';
-    if ((m == 5 && day >= 21) || (m == 6 && day <= 20)) return '♊ Gemini';
-    if ((m == 6 && day >= 21) || (m == 7 && day <= 22)) return '♋ Cancer';
-    if ((m == 7 && day >= 23) || (m == 8 && day <= 22)) return '♌ Leo';
-    if ((m == 8 && day >= 23) || (m == 9 && day <= 22)) return '♍ Virgo';
-    if ((m == 9 && day >= 23) || (m == 10 && day <= 22)) return '♎ Libra';
-    if ((m == 10 && day >= 23) || (m == 11 && day <= 21)) return '♏ Scorpio';
-    if ((m == 11 && day >= 22) || (m == 12 && day <= 21)) {
-      return '♐ Sagittarius';
-    }
-    return '♑ Capricorn';
-  }
 
   int _calcAge(DateTime d) {
     final now = DateTime.now();
@@ -596,7 +576,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   IntroSlideStep(index: 3, onNext: _nextPage, tr: tr),
                   // GDPR / ZVOP-2: Age verification FIRST — must confirm 18+
                   // before any personal data is collected or consent is given.
-                  _buildPageBirthday(),
+                  BirthdayStep(
+                    pickerMonth: _pickerMonth,
+                    pickerDay: _pickerDay,
+                    pickerYear: _pickerYear,
+                    onMonthChanged: (v) => setState(() => _pickerMonth = v),
+                    onDayChanged: (v) => setState(() => _pickerDay = v),
+                    onYearChanged: (v) => setState(() => _pickerYear = v),
+                    onConfirm: (date) {
+                      setState(() => _birthDate = date);
+                      _nextPage();
+                    },
+                    onBack: () => _goToPage(_currentPage - 1),
+                    tr: tr,
+                  ),
                   _buildPageEmailPassword(),
                   NameStep(
                     nameController: _nameController,
@@ -627,7 +620,29 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     onNonBinaryTap: _showNonBinaryPopup,
                     tr: tr,
                   ),
-                  _buildPageHeight(),
+                  HeightStep(
+                    heightCm: _heightCm,
+                    isMetric: _isMetric,
+                    onHeightChanged: (v) => setState(() => _heightCm = v),
+                    onMetricToggle: (v) => setState(() => _isMetric = v),
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onContinueTap: () => _showPartnerRangeModal(
+                      title: tr('whats_your_height'),
+                      min: 130,
+                      max: 250,
+                      divisions: 120,
+                      labels: ['130 cm', '250 cm'],
+                      onSave: (val) {
+                        if (val == null) {
+                          setState(() => _partnerHeightRange = null);
+                        } else {
+                          setState(() => _partnerHeightRange =
+                              '${val.start.toInt()}-${val.end.toInt()}');
+                        }
+                      },
+                    ),
+                    tr: tr,
+                  ),
                   StatusStep(
                     status: _status,
                     onStatusSelect: (k) => setState(() => _status = k),
@@ -1338,480 +1353,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ),
           ]),
         ),
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 4 – BIRTHDAY
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageBirthday() {
-    final months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December'
-    ];
-    final now = DateTime.now();
-    final maxYear = now.year - 18;
-    final minYear = now.year - 100;
-    final maxDays = DateTime(_pickerYear, _pickerMonth + 1, 0).day;
-    final validDay = _pickerDay > maxDays ? maxDays : _pickerDay;
-    final d = DateTime(_pickerYear, _pickerMonth, validDay);
-    final age = _calcAge(d);
-    final zodiac = _zodiacSign(d);
-
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _backButton(),
-          const SizedBox(height: 24),
-          _stepHeader(tr('whats_your_birthday'),
-              subtitle: tr('birthday_subtitle')),
-          const SizedBox(height: 32),
-          SizedBox(
-            height: 200,
-            child: Row(children: [
-              Expanded(
-                  child: _drumPicker(
-                items: months,
-                selectedIndex: _pickerMonth - 1,
-                looping: true,
-                onChanged: (i) => setState(() => _pickerMonth = i + 1),
-              )),
-              SizedBox(
-                  width: 65,
-                  child: _drumPicker(
-                    items: List.generate(maxDays, (i) => '${i + 1}'),
-                    selectedIndex: validDay - 1,
-                    looping: true,
-                    onChanged: (i) => setState(
-                        () => _pickerDay = i + 1 > maxDays ? maxDays : i + 1),
-                  )),
-              SizedBox(
-                  width: 90,
-                  child: _drumPicker(
-                    items: List.generate(
-                        maxYear - minYear + 1, (i) => '${maxYear - i}'),
-                    selectedIndex: maxYear - _pickerYear,
-                    looping: false,
-                    onChanged: (i) => setState(() => _pickerYear = maxYear - i),
-                  )),
-            ]),
-          ),
-          const SizedBox(height: 20),
-          Row(children: [
-            _chip('🎂 $age'),
-            const SizedBox(width: 8),
-            _chip(zodiac),
-          ]),
-          const SizedBox(height: 24),
-          _continueButton(
-            enabled: true,
-            onTap: () => _showBirthdayConfirmation(),
-            label: _birthdayConfirmed ? tr('continue_btn') : tr('continue_btn'),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _drumPicker(
-      {required List<String> items,
-      required int selectedIndex,
-      required ValueChanged<int> onChanged,
-      bool looping = false}) {
-    final ctrl = FixedExtentScrollController(initialItem: selectedIndex);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeColor = isDark ? Colors.white : Colors.black87;
-    final inactiveColor = isDark ? Colors.white38 : Colors.black26;
-
-    return ListWheelScrollView.useDelegate(
-      controller: ctrl,
-      itemExtent: 44,
-      perspective: 0.004,
-      diameterRatio: 1.8,
-      physics: const FixedExtentScrollPhysics(),
-      onSelectedItemChanged: (i) {
-        if (looping) {
-          onChanged(i % items.length);
-        } else {
-          onChanged(i);
-        }
-      },
-      childDelegate: looping
-          ? ListWheelChildLoopingListDelegate(
-              children: List.generate(items.length, (i) {
-                final selected = i == (selectedIndex % items.length);
-                return Center(
-                    child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 200),
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: selected ? 20 : 16,
-                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                    color: selected ? activeColor : inactiveColor,
-                  ),
-                  child: Text(items[i]),
-                ));
-              }),
-            )
-          : ListWheelChildBuilderDelegate(
-              childCount: items.length,
-              builder: (ctx, i) {
-                final selected = i == selectedIndex;
-                return Center(
-                    child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 200),
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: selected ? 20 : 16,
-                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                    color: selected ? activeColor : inactiveColor,
-                  ),
-                  child: Text(items[i]),
-                ));
-              },
-            ),
-    );
-  }
-
-  Widget _chip(String label) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.16)
-              : Colors.black.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isDark ? Colors.white38 : Colors.black26)),
-      child: Text(label,
-          style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87, fontSize: 13)),
-    );
-  }
-
-  void _showBirthdayConfirmation() {
-    final maxDays = DateTime(_pickerYear, _pickerMonth + 1, 0).day;
-    final validDay = _pickerDay > maxDays ? maxDays : _pickerDay;
-    final d = DateTime(_pickerYear, _pickerMonth, validDay);
-    final age = _calcAge(d);
-    final dateStr = DateFormat('MMMM d, yyyy').format(d);
-    const _brandRose = Color(0xFFF4436C);
-    const red = Color(0xFFFF4C4C);
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final sheetBg = isDark ? const Color(0xFF1A1A2E) : Colors.white;
-    final titleColor = isDark ? Colors.white : Colors.black87;
-    final bodyColor = isDark ? Colors.white60 : Colors.black54;
-    final borderColor = isDark ? Colors.white12 : Colors.black12;
-    final handleColor = isDark ? Colors.white24 : Colors.black26;
-    final buttonBg =
-        isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
-
-    // ── ZVOP-2 čl. 14 / GDPR čl. 8 — HARD STOP FOR UNDER 18 ──────────
-    // App is strictly 18+. Registration is impossible for minors.
-    if (age < 18) {
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (ctx) => ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-              decoration: BoxDecoration(
-                color: sheetBg.withValues(alpha: 0.8),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(28)),
-                border: Border(top: BorderSide(color: borderColor)),
-              ),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: handleColor,
-                        borderRadius: BorderRadius.circular(2))),
-                const SizedBox(height: 28),
-                const Icon(Icons.block_rounded, color: red, size: 56),
-                const SizedBox(height: 20),
-                Text(
-                  'Tremble is 18+ only',
-                  style: GoogleFonts.instrumentSans(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: titleColor),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'You must be at least 18 years old to use Tremble. '
-                  'We are unable to create an account for you at this time.',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.instrumentSans(
-                      color: bodyColor, fontSize: 15, height: 1.5),
-                ),
-                const SizedBox(height: 28),
-                GestureDetector(
-                  onTap: () => Navigator.pop(ctx),
-                  child: Container(
-                    width: double.infinity,
-                    height: 54,
-                    decoration: BoxDecoration(
-                        color: buttonBg,
-                        borderRadius: BorderRadius.circular(30)),
-                    child: Center(
-                        child: Text('Go back',
-                            style: GoogleFonts.instrumentSans(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: isDark ? Colors.white70 : Colors.black87,
-                                letterSpacing: 1.2))),
-                  ),
-                ),
-              ]),
-            ),
-          ),
-        ),
-      );
-      return; // Stop — do not proceed to next page
-    }
-    // ──────────────────────────────────────────────────────────────────
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-            decoration: BoxDecoration(
-              color: sheetBg.withValues(alpha: 0.8),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border(top: BorderSide(color: borderColor)),
-            ),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: handleColor,
-                      borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 28),
-              Text(
-                tr('youre_age').replaceAll('{age}', '$age'),
-                style: GoogleFonts.instrumentSans(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: titleColor),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                tr('is_birthday_correct').replaceAll('{date}', dateStr),
-                textAlign: TextAlign.center,
-                style: GoogleFonts.instrumentSans(
-                    color: bodyColor, fontSize: 15, height: 1.5),
-              ),
-              const SizedBox(height: 28),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _birthDate = d;
-                    _birthdayConfirmed = true;
-                  });
-                  Navigator.pop(ctx);
-                  _nextPage();
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 54,
-                  decoration: BoxDecoration(
-                      color: _brandRose,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                            color: _brandRose.withValues(alpha: 0.4),
-                            blurRadius: 16)
-                      ]),
-                  child: Center(
-                      child: Text(tr('confirm_btn').toUpperCase(),
-                          style: GoogleFonts.instrumentSans(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: Colors.black,
-                              letterSpacing: 1.2))),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(tr('edit_btn').toUpperCase(),
-                    style: TextStyle(
-                        color: isDark ? Colors.white54 : Colors.black54,
-                        letterSpacing: 1.2,
-                        fontSize: 13)),
-              ),
-            ]),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // PAGE 5 – HEIGHT
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageHeight() {
-    // Generate height ranges
-    final cmItems = List.generate(121, (i) => '${130 + i}'); // 130 to 250 cm
-    final ftInItems = <String>[];
-    for (int f = 4; f <= 8; f++) {
-      for (int i = 0; i < 12; i++) {
-        if (f == 8 && i > 2) break; // max ~8'2"
-        ftInItems.add('$f\'$i"');
-      }
-    }
-
-    // Convert current cm to ft/in index
-    int ft = (_heightCm / 30.48).floor();
-    int inc = ((_heightCm / 2.54) - (ft * 12)).round();
-    if (inc == 12) {
-      ft++;
-      inc = 0;
-    }
-    int ftInIndex = ftInItems.indexOf('$ft\'$inc"');
-    if (ftInIndex == -1) ftInIndex = ftInItems.indexOf('5\'7"');
-
-    int cmIndex = cmItems.indexOf('$_heightCm');
-    if (cmIndex == -1) cmIndex = cmItems.indexOf('170');
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final toggleBgColor =
-        isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
-
-    return _buildScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _backButton(),
-          const SizedBox(height: 24),
-          _stepHeader(tr('whats_your_height')),
-          const SizedBox(height: 48),
-          Center(
-            child: Container(
-              decoration: BoxDecoration(
-                color: toggleBgColor,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _isMetric = true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: _isMetric
-                            ? const Color(0xFFF4436C)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Text(tr('height_cm'),
-                          style: TextStyle(
-                              color: _isMetric
-                                  ? Colors.black
-                                  : (isDark ? Colors.white70 : Colors.black54),
-                              fontWeight: _isMetric
-                                  ? FontWeight.bold
-                                  : FontWeight.w500)),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => setState(() => _isMetric = false),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: !_isMetric
-                            ? const Color(0xFFF4436C)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Text(tr('height_ft_in'),
-                          style: TextStyle(
-                              color: !_isMetric
-                                  ? Colors.black
-                                  : (isDark ? Colors.white70 : Colors.black54),
-                              fontWeight: !_isMetric
-                                  ? FontWeight.bold
-                                  : FontWeight.w500)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 40),
-          SizedBox(
-            height: 200,
-            child: Center(
-              child: _isMetric
-                  ? _drumPicker(
-                      items: cmItems,
-                      selectedIndex: cmIndex,
-                      onChanged: (i) {
-                        setState(() => _heightCm = int.parse(cmItems[i]));
-                      })
-                  : _drumPicker(
-                      items: ftInItems,
-                      selectedIndex: ftInIndex,
-                      onChanged: (i) {
-                        final str = ftInItems[i];
-                        final parts = str.split('\'');
-                        final feet = int.parse(parts[0]);
-                        final inches = int.parse(parts[1].replaceAll('"', ''));
-                        final cm = ((feet * 12 + inches) * 2.54).round();
-                        setState(() => _heightCm = cm);
-                      }),
-            ),
-          ),
-          _continueButton(
-              enabled: true,
-              onTap: () {
-                _showPartnerRangeModal(
-                  title: tr('whats_your_height'),
-                  min: 130,
-                  max: 250,
-                  divisions: 120,
-                  labels: ['130 cm', '250 cm'],
-                  onSave: (val) {
-                    if (val == null) {
-                      setState(() => _partnerHeightRange = null);
-                    } else {
-                      setState(() => _partnerHeightRange =
-                          '${val.start.toInt()}-${val.end.toInt()}');
-                    }
-                  },
-                );
-              }),
-          const SizedBox(height: 16),
-        ],
       ),
     );
   }
