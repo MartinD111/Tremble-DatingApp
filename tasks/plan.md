@@ -6,6 +6,7 @@
 - **Phase 3: Proximity Engine** — Real BLE + Geolocator implementation.
 - **Phase 4: Messaging** — Basic structure.
 - **Phase 5: Cloud & Infra** — Multi-Env, Auth, Bug Fixes.
+- **Phase 2D: UI Architecture** — Registration Monolith (27 pages) fully decoupled into individual widgets ✅ (2026-04-10)
 
 ---
 
