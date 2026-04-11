@@ -20,29 +20,46 @@ const googleClient = new OAuth2Client();
 
 /**
  * Firestore trigger — runs when a new user document is created.
- * NOTE: The client must create the initial /users/{uid} document upon sign-up.
- * This function then enriches it with server-side timestamps.
+ * NOTE: The client creates the initial /users/{uid} document upon sign-up.
+ * This function then enriches it with server-side timestamps and default fields.
  *
+ * Idempotency: Checks if isOnboarded is already set to avoid double-enrichment.
  * Alternative to beforeUserCreated (which requires GCIP / Identity Platform).
  */
 export const onUserDocCreated = onDocumentCreated(
     { document: "users/{uid}", region: "europe-west1" },
     async (event) => {
     const snap = event.data;
-    if (!snap) return;
+    const uid = event.params.uid;
 
-    await snap.ref.set(
-        {
-            isOnboarded: false,
-            isPremium: true, // Free premium until 10k users
-            isAdmin: false,
-            createdAt: FieldValue.serverTimestamp(),
-            updatedAt: FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-    );
+    if (!snap) {
+        console.warn(`[AUTH] onUserDocCreated: No data for ${uid}`);
+        return;
+    }
 
-    console.log(`[AUTH] User stub created: ${event.params.uid}`);
+    // Idempotency check: if createdAt already exists, trigger has already run
+    if (snap.get('createdAt')) {
+        console.log(`[AUTH] onUserDocCreated: Already enriched for ${uid}, skipping`);
+        return;
+    }
+
+    try {
+        await snap.ref.set(
+            {
+                isOnboarded: false,
+                isPremium: true, // Free premium until 10k users
+                isAdmin: false,
+                createdAt: FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+        );
+
+        console.log(`[AUTH] User doc enriched: ${uid}`);
+    } catch (error) {
+        console.error(`[AUTH] Failed to enrich user doc for ${uid}:`, error);
+        throw error; // Let Cloud Functions retry on error
+    }
 });
 
 /**

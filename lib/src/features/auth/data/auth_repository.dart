@@ -385,6 +385,26 @@ final currentUidProvider = Provider<String?>((ref) {
   return FirebaseAuth.instance.currentUser?.uid;
 });
 
+/// Profile existence provider — checks if user's Firestore doc has been created.
+/// Cached and invalidated only on auth state change.
+/// Used by router to prevent routing to protected screens before doc exists.
+final profileExistsProvider = FutureProvider<bool>((ref) async {
+  final authState = ref.watch(authStateProvider);
+
+  // Not logged in = no profile
+  if (authState == null) return false;
+
+  try {
+    final db = FirebaseFirestore.instance;
+    final doc = await db.collection('users').doc(authState.id).get();
+    return doc.exists;
+  } catch (e) {
+    debugPrint('[PROFILE] Failed to check profile existence: $e');
+    // On error, assume profile doesn't exist to avoid routing to profile screens
+    return false;
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // AuthRepository — wraps FirebaseAuth + Cloud Functions API
 // ─────────────────────────────────────────────────────────────────────────────
@@ -442,12 +462,31 @@ class AuthRepository {
       email: email.trim(),
       password: password,
     );
+    final uid = cred.user!.uid;
+
+    // Create initial user doc immediately to trigger onUserDocCreated Cloud Function.
+    // This eliminates the race condition where router checks auth state before Firestore doc exists.
+    try {
+      await _users.doc(uid).set(
+        {
+          'email': email.trim(),
+          'isOnboarded': false,
+          'isPremium': true,
+          'isAdmin': false,
+          // onUserDocCreated trigger will add createdAt/updatedAt server timestamps
+        },
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint("[AUTH] Failed to create initial user doc for $uid: $e");
+      // Don't fail the signup — the trigger may still create it
+    }
+
     // Send verification email
     await cred.user!.sendEmailVerification();
-    // The Cloud Function `onUserCreated` trigger automatically creates
-    // the Firestore user stub — no direct write needed here.
+
     return AuthUser(
-      id: cred.user!.uid,
+      id: uid,
       email: email.trim(),
       isOnboarded: false,
       isEmailVerified: false,

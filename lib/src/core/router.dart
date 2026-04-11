@@ -160,7 +160,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
     ],
-    redirect: (context, state) {
+    redirect: (context, state) async {
       if (!notifier.isInitialized) return null;
 
       final authState = notifier.authState;
@@ -177,6 +177,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!isLoggedIn) {
         if (isOnboardingRoute || isForgotPasswordRoute) return null;
         return isLoginRoute ? null : '/login';
+      }
+
+      // Race condition fix: Check if profile doc exists in Firestore.
+      // Even if isOnboarded is true, route to onboarding if profile hasn't been created yet.
+      if (isLoggedIn) {
+        final profileExists = notifier._ref.read(profileExistsProvider).value ?? false;
+        if (!profileExists) {
+          if (isOnboardingRoute || isForgotPasswordRoute) return null;
+          return '/onboarding';
+        }
       }
 
       if (!isOnboarded) {

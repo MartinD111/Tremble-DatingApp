@@ -51,6 +51,10 @@ export const updateProfile = onCall(
 
 /**
  * Get own profile — returns the authenticated user's full profile.
+ *
+ * Race condition fix: Returns explicit `status` field to distinguish between
+ * "doc doesn't exist yet" (status: 'not_created') vs "doc exists but is empty" (status: 'created').
+ * This allows the client router to make routing decisions based on profile existence.
  */
 export const getProfile = onCall(
     { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
@@ -60,10 +64,10 @@ export const getProfile = onCall(
         const doc = await db.collection("users").doc(uid).get();
 
         if (!doc.exists) {
-            return { profile: null };
+            return { profile: null, status: "not_created" };
         }
 
-        return { profile: { id: uid, ...doc.data() } };
+        return { profile: { id: uid, ...doc.data() }, status: "created" };
     }
 );
 

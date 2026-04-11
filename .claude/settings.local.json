@@ -37,7 +37,8 @@
       "Bash(firebase deploy:*)",
       "Bash(firebase:*)",
       "Bash(bash scripts/ci/secret_scan.sh)",
-      "Skill(gsd:autonomous)"
+      "Skill(gsd:autonomous)",
+      "Bash(flutter test:*)"
     ]
   }
 }
