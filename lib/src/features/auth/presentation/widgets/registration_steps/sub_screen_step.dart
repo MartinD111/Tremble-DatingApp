@@ -62,12 +62,16 @@ class SubScreenStep extends StatelessWidget {
             onTap: overrideContinue ??
                 () {
                   final savePartner = onSavePartner;
-                  if (savePartner != null && selected != null) {
+                  final currentSelected = selected;
+                  // Belt-and-suspenders: ContinueButton is already disabled when
+                  // selected is null, but guard again in case of rare race.
+                  if (currentSelected == null) return;
+                  if (savePartner != null) {
                     showPartnerPreferenceModal(
                       context,
                       title: title,
                       options: options,
-                      userSelection: selected!,
+                      userSelection: currentSelected,
                       showCustom: showCustomPartnerPref,
                       onSave: savePartner,
                       onNext: onNext,

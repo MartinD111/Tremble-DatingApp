@@ -119,7 +119,7 @@ void showPartnerPreferenceModal(
                               onNext();
                             } else if (tempSelection == 'custom') {
                               showCustomPartnerPreferenceModal(
-                                ctx,
+                                context,
                                 title: title,
                                 options: options,
                                 onSave: onSave,

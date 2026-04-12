@@ -6,11 +6,13 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/primary_button.dart';
-import '../../../shared/ui/premium_paywall.dart'; // Paywall Modal
+import '../../../shared/ui/premium_paywall.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/api_client.dart';
-import '../../../core/theme_provider.dart';
+import 'settings_controller.dart';
+import 'widgets/preference_pill_row.dart';
+import 'widgets/preference_range_slider.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
 
@@ -42,8 +44,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     return t(key, user?.appLanguage ?? 'en');
   }
 
+  /// Maps a 0–100 introvert value to one of 5 text positions.
+  String _introvertLabel(double v) {
+    if (v <= 12) return 'Introvert';
+    if (v <= 37) return 'Center-left';
+    if (v <= 62) return 'Ambivert';
+    if (v <= 87) return 'Center-right';
+    return 'Extrovert';
+  }
+
+  /// Converts a string to Title Case (e.g. "dog person" → "Dog Person").
+  String _toTitleCase(String s) => s
+      .split(' ')
+      .map((w) =>
+          w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}')
+      .join(' ');
+
+  SettingsController get _ctrl => ref.read(settingsControllerProvider);
+
+  /// Thin shim so all existing `_updateProfile(user.copyWith(...))` calls
+  /// route through the controller without a mass-rewrite.
   void _updateProfile(AuthUser updatedUser) {
-    ref.read(authStateProvider.notifier).updateProfile(updatedUser);
+    _ctrl.updateUser((_) => updatedUser);
   }
 
   @override
@@ -67,11 +89,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 60),
-          Text(_t('settings'),
-              style: GoogleFonts.instrumentSans(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: titleColor)),
+          Center(
+            child: Text(_t('settings'),
+                style: GoogleFonts.instrumentSans(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: titleColor)),
+          ),
           const SizedBox(height: 20),
           Expanded(
             child: SingleChildScrollView(
@@ -82,8 +106,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   _buildProfileSection(user),
                   const SizedBox(height: 20),
                   _buildPreferencesSection(user),
-                  const SizedBox(height: 20),
-                  _buildLifestyleSection(user),
                   const SizedBox(height: 20),
                   _buildAccountSection(user),
                   const SizedBox(height: 20),
@@ -581,7 +603,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 side: const BorderSide(color: Colors.white30),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(100)),
               ),
             ),
           ),
@@ -592,128 +614,91 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
   Widget _buildAppSettingsSection(AuthUser user) {
     final lang = user.appLanguage;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subColor = isDark ? Colors.white38 : Colors.black38;
 
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_t('app_appearance'),
-              style: const TextStyle(
-                  color: Colors.white70, fontWeight: FontWeight.bold)),
+          Center(
+            child: Text(_t('app_appearance'),
+                style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    fontWeight: FontWeight.bold)),
+          ),
           const SizedBox(height: 10),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(_t('dark_mode'),
-                style: const TextStyle(color: Colors.white)),
+            title: Text(_t('dark_mode'), style: TextStyle(color: textColor)),
             value: user.isDarkMode,
             activeThumbColor: const Color(0xFFF4436C),
-            activeTrackColor: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white24
-                : Colors.black12,
-            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
+            activeTrackColor: isDark ? Colors.white24 : Colors.black12,
+            inactiveTrackColor: isDark
                 ? Colors.white.withValues(alpha: 0.1)
                 : Colors.black.withValues(alpha: 0.05),
-            onChanged: (val) {
-              _updateProfile(user.copyWith(isDarkMode: val));
-              ref.read(themeModeProvider.notifier).setThemeMode(
-                    val ? ThemeMode.dark : ThemeMode.light,
-                  );
-            },
+            onChanged: (val) => _ctrl.toggleDarkMode(val),
           ),
           if (user.interestedIn == 'Oba' || user.interestedIn == 'Both')
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(_t('pride_mode'),
-                  style: const TextStyle(color: Colors.white)),
+              title: Text(_t('pride_mode'), style: TextStyle(color: textColor)),
               value: user.isPrideMode,
               activeThumbColor: Colors.white,
               activeTrackColor: Colors.purple.withValues(alpha: 0.5),
-              inactiveTrackColor:
-                  Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white24
-                      : Colors.black12,
-              onChanged: (val) {
-                _updateProfile(user.copyWith(isPrideMode: val));
-              },
+              inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+              onChanged: (val) => _ctrl.togglePrideMode(val),
             ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(_t('remove_ping'),
-                style: const TextStyle(color: Colors.white)),
-            subtitle: Text(_t('remove_ping_sub'),
-                style: const TextStyle(color: Colors.white38, fontSize: 12)),
-            value: !user.showPingAnimation,
-            activeThumbColor: Colors.white,
-            activeTrackColor: Theme.of(context).brightness == Brightness.dark
-                ? Colors.grey[800]
-                : Colors.grey[400],
-            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white24
-                : Colors.black12,
-            onChanged: (val) {
-              _updateProfile(user.copyWith(showPingAnimation: !val));
-            },
+            title: Text('Gender-based color', style: TextStyle(color: textColor)),
+            subtitle: Text('Adapt theme tones to match',
+                style: TextStyle(color: subColor, fontSize: 12)),
+            value: user.isGenderBasedColor,
+            activeThumbColor: const Color(0xFFF4436C),
+            activeTrackColor: isDark ? Colors.white24 : Colors.black12,
+            inactiveTrackColor: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.05),
+            onChanged: (val) => _ctrl.toggleGenderBasedColor(val),
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Hide Navigation bar',
-                style: TextStyle(color: Colors.white)),
-            subtitle: const Text('Auto-hide on scroll',
-                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            title: Text(_t('remove_ping'), style: TextStyle(color: textColor)),
+            subtitle: Text(_t('remove_ping_sub'),
+                style: TextStyle(color: subColor, fontSize: 12)),
+            value: !user.showPingAnimation,
+            activeThumbColor: Colors.white,
+            activeTrackColor: isDark ? Colors.grey[800] : Colors.grey[400],
+            inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+            onChanged: (val) => _ctrl.togglePingAnimation(val),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text('Hide Navigation bar', style: TextStyle(color: textColor)),
+            subtitle: Text('Auto-hide on scroll',
+                style: TextStyle(color: subColor, fontSize: 12)),
             value: ref.watch(hideNavBarPrefProvider),
             activeThumbColor: Colors.white,
-            activeTrackColor: Theme.of(context).brightness == Brightness.dark
-                ? Colors.grey[800]
-                : Colors.grey[400],
-            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white24
-                : Colors.black12,
+            activeTrackColor: isDark ? Colors.grey[800] : Colors.grey[400],
+            inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
             onChanged: (val) {
               ref.read(hideNavBarPrefProvider.notifier).state = val;
             },
           ),
-          Divider(color: Colors.white.withValues(alpha: 0.1)),
-          const SizedBox(height: 4),
-          Text(_t('app_language'),
-              style: const TextStyle(
-                  color: Colors.white70, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            runSpacing: 8,
-            children: availableLanguages.map((option) {
-              final code = option['code']!;
-              final label = option['label']!;
-              final isSelected = lang == code;
-              return ChoiceChip(
-                label: Text(label),
-                selected: isSelected,
-                onSelected: (s) {
-                  if (s) {
-                    _updateProfile(user.copyWith(appLanguage: code));
-                  }
-                },
-                selectedColor: const Color(0xFFF4436C),
-                backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.05),
-                labelStyle: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black87),
-                    fontWeight: FontWeight.bold),
-                shape: StadiumBorder(
-                    side: BorderSide(
-                        color: isSelected
-                            ? const Color(0xFFF4436C)
-                            : (Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white24
-                                : Colors.black12))),
-                showCheckmark: false,
-              );
-            }).toList(),
+          Divider(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black12),
+          const SizedBox(height: 8),
+          PreferencePillRow(
+            icon: LucideIcons.languages,
+            label: _t('app_language'),
+            values: [lang],
+            formatter: (code) =>
+                availableLanguages
+                    .where((l) => l['code'] == code)
+                    .map((l) => l['label']!)
+                    .firstOrNull ?? code,
+            onEdit: () => _ctrl.openLanguageModal(context),
           ),
         ],
       ),
@@ -721,636 +706,390 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }
 
   Widget _buildPreferencesSection(AuthUser user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_t('preferences'),
-              style: const TextStyle(
-                  color: Colors.white70, fontWeight: FontWeight.bold)),
+          Center(
+            child: Text(_t('preferences'),
+                style: GoogleFonts.instrumentSans(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
+          ),
           const SizedBox(height: 20),
 
-          // Age Range
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(_t('age_range'),
-                  style: const TextStyle(color: Colors.white)),
-              Text("${user.ageRangeStart} - ${user.ageRangeEnd}",
-                  style: const TextStyle(color: Colors.white70)),
-            ],
-          ),
-          RangeSlider(
-            values: RangeValues(
-                user.ageRangeStart.toDouble(), user.ageRangeEnd.toDouble()),
+          // ── Sliders group (first per spec) ──
+
+          PreferenceRangeSlider(
+            label: _t('age_range'),
+            valueLabel: '${user.ageRangeStart} – ${user.ageRangeEnd}',
             min: 18,
             max: 100,
             divisions: 82,
-            activeColor: const Color(0xFFF4436C),
-            inactiveColor: Colors.white24,
-            labels: RangeLabels(
-              user.ageRangeStart.toString(),
-              user.ageRangeEnd.toString(),
+            start: user.ageRangeStart.toDouble(),
+            end: user.ageRangeEnd.toDouble(),
+            onChanged: _ctrl.updateAgeRange,
+            onEdit: () => _ctrl.openSliderEditModal(
+              context: context,
+              title: _t('age_range'),
+              min: 18,
+              max: 100,
+              divisions: 82,
+              current: RangeValues(
+                  user.ageRangeStart.toDouble(), user.ageRangeEnd.toDouble()),
+              onUpdate: _ctrl.updateAgeRange,
             ),
-            onChanged: (RangeValues values) {
-              _updateProfile(user.copyWith(
-                ageRangeStart: values.start.round(),
-                ageRangeEnd: values.end.round(),
-              ));
-            },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // Height Range - PREMIUM
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Text("${_t('whats_your_height')} (cm)",
-                      style: const TextStyle(color: Colors.white)),
-                  if (!user.isPremium) ...[
-                    const SizedBox(width: 8),
-                    const Icon(LucideIcons.lock, size: 14, color: Colors.amber),
-                  ]
-                ],
-              ),
-              Text(
-                  "${user.heightRangeStart ?? 130} - ${user.heightRangeEnd ?? 250}",
-                  style: const TextStyle(color: Colors.white70)),
-            ],
-          ),
-          RangeSlider(
-            values: RangeValues((user.heightRangeStart ?? 130).toDouble(),
-                (user.heightRangeEnd ?? 250).toDouble()),
+          PreferenceRangeSlider(
+            label: _t('height'),
+            valueLabel:
+                '${user.heightRangeStart ?? 130} – ${user.heightRangeEnd ?? 250} cm',
             min: 130,
             max: 250,
             divisions: 120,
-            activeColor: const Color(0xFFF4436C),
-            inactiveColor: Colors.white24,
-            labels: RangeLabels(
-              (user.heightRangeStart ?? 130).toString(),
-              (user.heightRangeEnd ?? 250).toString(),
+            start: (user.heightRangeStart ?? 130).toDouble(),
+            end: (user.heightRangeEnd ?? 250).toDouble(),
+            isPremium: !user.isPremium,
+            onChanged: _ctrl.updateHeightRange,
+            onEdit: () => _ctrl.openSliderEditModal(
+              context: context,
+              title: _t('height'),
+              min: 130,
+              max: 250,
+              divisions: 120,
+              current: RangeValues(
+                (user.heightRangeStart ?? 130).toDouble(),
+                (user.heightRangeEnd ?? 250).toDouble(),
+              ),
+              isPremium: !user.isPremium,
+              onUpdate: _ctrl.updateHeightRange,
             ),
-            onChanged: (RangeValues values) {
-              if (user.isPremium) {
-                _updateProfile(user.copyWith(
-                  heightRangeStart: values.start.round(),
-                  heightRangeEnd: values.end.round(),
-                ));
-              }
-            },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // Interested In
-          Text(_t('who_looking_for'),
-              style: const TextStyle(color: Colors.white)),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            children: [
-              {'label': _t('male'), 'value': 'Moški', 'icon': Icons.male},
-              {'label': _t('female'), 'value': 'Ženska', 'icon': Icons.female},
-              {'label': _t('both'), 'value': 'Oba', 'icon': LucideIcons.users},
-            ].map((option) {
-              final label = option['label'] as String;
-              final value = option['value'] as String;
-              final icon = option['icon'] as IconData;
-              final isSelected = user.interestedIn == value;
-              return ChoiceChip(
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon,
-                        size: 16,
-                        color: isSelected ? Colors.black : Colors.white),
-                    const SizedBox(width: 5),
-                    Text(label),
-                  ],
-                ),
-                selected: isSelected,
-                onSelected: (s) {
-                  if (s) {
-                    _updateProfile(user.copyWith(interestedIn: value));
-                  }
-                },
-                selectedColor: const Color(0xFFF4436C),
-                backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.05),
-                labelStyle: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black87),
-                    fontWeight: FontWeight.bold),
-                shape: StadiumBorder(
-                    side: BorderSide(
-                        color: isSelected
-                            ? const Color(0xFFF4436C)
-                            : (Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white24
-                                : Colors.black12))),
-                showCheckmark: false,
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 20),
-
-          // Partner Smoking
-          Text(_t('partner_smokes'),
-              style: const TextStyle(color: Colors.white)),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            children: [
-              {'label': _t('no'), 'value': 'Ne'},
-              {'label': _t('dont_care'), 'value': 'Vseeno'},
-            ].map((option) {
-              final label = option['label']!;
-              final value = option['value']!;
-              final isSelected =
-                  (user.partnerSmokingPreference ?? 'Vseeno') == value;
-              return ChoiceChip(
-                label: Text(label),
-                selected: isSelected,
-                onSelected: (s) {
-                  if (s) {
-                    _updateProfile(
-                        user.copyWith(partnerSmokingPreference: value));
-                  }
-                },
-                selectedColor: const Color(0xFFF4436C),
-                backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.05),
-                labelStyle: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black87),
-                    fontWeight: FontWeight.bold),
-                shape: StadiumBorder(
-                    side: BorderSide(
-                        color: isSelected
-                            ? const Color(0xFFF4436C)
-                            : (Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white24
-                                : Colors.black12))),
-                showCheckmark: false,
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 20),
-
-          // --- Premium Locked Preferences ---
-          _buildPremiumPreferenceRow(
-              user: user,
-              title: _t('religion'),
-              currentValue: user.religionPreference,
-              options: [
-                {'label': _t('christianity'), 'value': 'christianity'},
-                {'label': _t('islam'), 'value': 'islam'},
-                {'label': _t('hinduism'), 'value': 'hinduism'},
-                {'label': _t('buddhism'), 'value': 'buddhism'},
-                {'label': _t('judaism'), 'value': 'judaism'},
-                {'label': _t('agnostic'), 'value': 'agnostic'},
-                {'label': _t('atheist'), 'value': 'atheist'},
-              ],
-              onUpdate: (val) =>
-                  _updateProfile(user.copyWith(religionPreference: val))),
-          const SizedBox(height: 20),
-
-          _buildPremiumPreferenceRow(
-              user: user,
-              title: _t('ethnicity'),
-              currentValue: user.ethnicityPreference,
-              options: [
-                {'label': _t('ethnicity_white'), 'value': 'white'},
-                {'label': _t('ethnicity_black'), 'value': 'black'},
-                {'label': _t('ethnicity_mixed'), 'value': 'mixed'},
-                {'label': _t('ethnicity_asian'), 'value': 'asian'},
-              ],
-              onUpdate: (val) =>
-                  _updateProfile(user.copyWith(ethnicityPreference: val))),
-          const SizedBox(height: 20),
-
-          _buildPremiumPreferenceRow(
-              user: user,
-              title: _t('hair_color'),
-              currentValue: user.hairColorPreference,
-              options: [
-                {'label': _t('hair_blonde'), 'value': 'blonde'},
-                {'label': _t('hair_brunette'), 'value': 'brunette'},
-                {'label': _t('hair_black'), 'value': 'black'},
-                {'label': _t('hair_red'), 'value': 'red'},
-                {'label': _t('hair_gray_white'), 'value': 'gray_white'},
-                {'label': _t('hair_other'), 'value': 'other'},
-              ],
-              onUpdate: (val) =>
-                  _updateProfile(user.copyWith(hairColorPreference: val))),
-          const SizedBox(height: 20),
-
-          _buildPremiumPreferenceRow(
-              user: user,
+          PreferenceRangeSlider(
+            label: _t('political_affiliation'),
+            valueLabel: user.partnerPoliticalMin != null
+                ? '${user.partnerPoliticalMin} – ${user.partnerPoliticalMax}'
+                : _t('no_preference'),
+            min: 1,
+            max: 5,
+            divisions: 4,
+            start: (user.partnerPoliticalMin ?? 1).toDouble(),
+            end: (user.partnerPoliticalMax ?? 5).toDouble(),
+            startLabel: _t('politics_left'),
+            endLabel: _t('politics_right'),
+            isPremium: !user.isPremium,
+            onChanged: user.isPremium ? _ctrl.updatePartnerPoliticalRange : (_) {},
+            onEdit: () => _ctrl.openSliderEditModal(
+              context: context,
               title: _t('political_affiliation'),
-              currentValue: user.politicalAffiliationPreference,
-              options: [
-                {'label': _t('politics_left'), 'value': 'politics_left'},
-                {
-                  'label': _t('politics_center_left'),
-                  'value': 'politics_center_left'
-                },
-                {'label': _t('politics_center'), 'value': 'politics_center'},
-                {
-                  'label': _t('politics_center_right'),
-                  'value': 'politics_center_right'
-                },
-                {'label': _t('politics_right'), 'value': 'politics_right'},
-                {
-                  'label': _t('politics_match_any'),
-                  'value': 'politics_match_any'
-                },
-                {
-                  'label': _t('politics_dont_care'),
-                  'value': 'politics_dont_care'
-                },
-                {
-                  'label': _t('politics_undisclosed'),
-                  'value': 'politics_undisclosed'
-                },
-              ],
-              onUpdate: (val) {
-                _updateProfile(
-                    user.copyWith(politicalAffiliationPreference: val));
-                if (val != 'politics_match_any' &&
-                    val != 'politics_dont_care' &&
-                    val != 'politics_undisclosed') {
-                  // Show info dialog
-                  showDialog(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      backgroundColor: const Color(0xFF1E1E2E),
-                      title: Text(_t('politics_popup_title'),
-                          style: const TextStyle(color: Colors.white)),
-                      content: Text(_t('politics_popup_body'),
-                          style: const TextStyle(color: Colors.white70)),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          child: const Text('OK',
-                              style: TextStyle(color: Color(0xFFF4436C))),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              }),
-          const SizedBox(height: 20),
+              min: 1,
+              max: 5,
+              divisions: 4,
+              current: RangeValues(
+                (user.partnerPoliticalMin ?? 1).toDouble(),
+                (user.partnerPoliticalMax ?? 5).toDouble(),
+              ),
+              startLabel: _t('politics_left'),
+              endLabel: _t('politics_right'),
+              isPremium: !user.isPremium,
+              onUpdate: _ctrl.updatePartnerPoliticalRange,
+            ),
+          ),
+          const SizedBox(height: 16),
 
-          // Introvert/Extrovert
-          Text(_t('personality_type'),
-              style: const TextStyle(color: Colors.white70, fontSize: 13)),
-          Builder(builder: (context) {
-            final raw = (user.introvertScale ?? 50).clamp(0, 100);
-            String label = _getIntrovertLabel(_mapIntrovertScaleToBucket(raw));
-            return Column(
-              children: [
-                Slider(
-                  value: raw.toDouble(),
-                  min: 0,
-                  max: 100,
-                  divisions: 100,
-                  activeColor: const Color(0xFFF4436C),
-                  inactiveColor: Colors.white24,
-                  label: label,
-                  onChanged: (val) {
-                    final v = val.round().clamp(0, 100);
-                    _updateProfile(user.copyWith(introvertScale: v));
-                  },
-                ),
-                Center(
-                  child: Text(
-                    label,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                ),
-              ],
-            );
-          }),
-        ],
-      ),
-    );
-  }
+          PreferenceRangeSlider(
+            label: _t('introvert_extrovert'),
+            valueLabel: user.partnerIntrovertMin != null
+                ? '${_introvertLabel((user.partnerIntrovertMin!).toDouble())} – '
+                  '${_introvertLabel((user.partnerIntrovertMax ?? 100).toDouble())}'
+                : _t('no_preference'),
+            min: 0,
+            max: 100,
+            divisions: 4,
+            start: (user.partnerIntrovertMin ?? 0).toDouble(),
+            end: (user.partnerIntrovertMax ?? 100).toDouble(),
+            startLabel: _t('full_introvert'),
+            endLabel: _t('full_extrovert'),
+            labelMapper: _introvertLabel,
+            onChanged: _ctrl.updatePartnerIntrovertRange,
+            onEdit: () => _ctrl.openSliderEditModal(
+              context: context,
+              title: _t('introvert_extrovert'),
+              min: 0,
+              max: 100,
+              divisions: 4,
+              current: RangeValues(
+                (user.partnerIntrovertMin ?? 0).toDouble(),
+                (user.partnerIntrovertMax ?? 100).toDouble(),
+              ),
+              startLabel: _t('full_introvert'),
+              endLabel: _t('full_extrovert'),
+              labelMapper: _introvertLabel,
+              onUpdate: _ctrl.updatePartnerIntrovertRange,
+            ),
+          ),
 
-  Widget _buildLifestyleSection(AuthUser user) {
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(_t('lifestyle'),
-              style: const TextStyle(
-                  color: Colors.white70, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
+          Divider(color: Colors.white.withValues(alpha: 0.1)),
+          const SizedBox(height: 8),
 
-          // Exercise
-          _buildLifestyleLabel(_t('exercise'), LucideIcons.dumbbell),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
+          // ── Interested In ──
+          _prefPillRow(
+            context: context,
+            label: _t('who_looking_for'),
+            icon: LucideIcons.users,
+            currentValue: user.interestedIn,
+            options: [
+              {'label': _t('male'), 'value': 'Moški'},
+              {'label': _t('female'), 'value': 'Ženska'},
+              {'label': _t('both'), 'value': 'Oba'},
+            ],
+            onUpdate: (val) => _ctrl.updateInterestedIn(val),
+          ),
+
+          Divider(color: Colors.white.withValues(alpha: 0.1)),
+          const SizedBox(height: 8),
+
+          // ── Lifestyle + enum prefs (pill rows) ──
+
+          _prefPillRow(
+            context: context,
+            label: _t('exercise'),
+            icon: LucideIcons.dumbbell,
+            currentValue: user.exerciseHabit,
+            options: [
               {'label': _t('exercise_no'), 'value': 'Ne'},
               {'label': _t('exercise_sometimes'), 'value': 'Včasih'},
               {'label': _t('exercise_regularly'), 'value': 'Redno'},
               {'label': _t('exercise_very_active'), 'value': 'Zelo aktiven'},
-            ].map((option) {
-              final label = option['label']!;
-              final value = option['value']!;
-              final isSelected = (user.exerciseHabit ?? 'Včasih') == value;
-              return _buildChoiceChip(
-                label: label,
-                isSelected: isSelected,
-                onSelected: (s) {
-                  if (s) {
-                    _updateProfile(user.copyWith(exerciseHabit: value));
-                  }
-                },
-              );
-            }).toList(),
+            ],
+            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(exerciseHabit: val)),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // Alcohol
-          _buildLifestyleLabel(_t('alcohol'), LucideIcons.wine),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
+          _prefPillRow(
+            context: context,
+            label: _t('alcohol'),
+            icon: LucideIcons.wine,
+            currentValue: user.drinkingHabit,
+            options: [
               {'label': _t('alcohol_never'), 'value': 'Nikoli'},
               {'label': _t('alcohol_socially'), 'value': 'Družabno'},
               {'label': _t('alcohol_occasionally'), 'value': 'Ob priliki'},
-            ].map((option) {
-              final label = option['label']!;
-              final value = option['value']!;
-              final isSelected = (user.drinkingHabit ?? 'Družabno') == value;
-              return _buildChoiceChip(
-                label: label,
-                isSelected: isSelected,
-                onSelected: (s) {
-                  if (s) {
-                    _updateProfile(user.copyWith(drinkingHabit: value));
-                  }
-                },
-              );
-            }).toList(),
+            ],
+            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(drinkingHabit: val)),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // Sleep Schedule
-          _buildLifestyleLabel(_t('sleep'), LucideIcons.moon),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            children: [
-              {
-                'label': _t('night_owl'),
-                'value': 'Nočna ptica',
-                'icon': LucideIcons.moon
-              },
-              {
-                'label': _t('early_bird'),
-                'value': 'Jutranja ptica',
-                'icon': LucideIcons.sun
-              },
-            ].map((option) {
-              final label = option['label'] as String;
-              final value = option['value'] as String;
-              final icon = option['icon'] as IconData;
-              final isSelected = (user.sleepSchedule ?? 'Nočna ptica') == value;
-              return ChoiceChip(
-                avatar: Icon(
-                  icon,
-                  size: 16,
-                  color: isSelected ? Colors.black : Colors.white,
-                ),
-                label: Text(label),
-                selected: isSelected,
-                onSelected: (s) {
-                  if (s) {
-                    _updateProfile(user.copyWith(sleepSchedule: value));
-                  }
-                },
-                selectedColor: const Color(0xFFF4436C),
-                backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.05),
-                labelStyle: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black87),
-                    fontWeight: FontWeight.bold),
-                shape: StadiumBorder(
-                    side: BorderSide(
-                        color: isSelected
-                            ? const Color(0xFFF4436C)
-                            : (Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white24
-                                : Colors.black12))),
-                showCheckmark: false,
-              );
-            }).toList(),
+          _prefPillRow(
+            context: context,
+            label: _t('smoking'),
+            icon: LucideIcons.cigarette,
+            currentValue: user.partnerSmokingPreference,
+            options: [
+              {'label': _t('no'), 'value': 'Ne'},
+              {'label': _t('dont_care'), 'value': 'Vseeno'},
+            ],
+            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(partnerSmokingPreference: val)),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // Pets
-          _buildLifestyleLabel(_t('pets'), LucideIcons.dog),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            children: [
-              {'label': _t('dog_person'), 'value': 'Dog person'},
-              {'label': _t('cat_person'), 'value': 'Cat person'},
-            ].map((option) {
-              final label = option['label']!;
-              final value = option['value']!;
-              final isSelected = (user.petPreference ?? 'Dog person') == value;
-              return _buildChoiceChip(
-                label: label,
-                isSelected: isSelected,
-                onSelected: (s) {
-                  if (s) {
-                    _updateProfile(user.copyWith(petPreference: value));
-                  }
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 20),
-
-          // Children - NEW
-          _buildLifestyleLabel(_t('children'), LucideIcons.baby),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
+          _prefPillRow(
+            context: context,
+            label: _t('children'),
+            icon: LucideIcons.baby,
+            currentValue: user.childrenPreference,
+            options: [
               {'label': _t('children_yes'), 'value': 'Da'},
               {'label': _t('children_no'), 'value': 'Ne'},
               {'label': _t('children_later'), 'value': 'Da, ampak kasneje'},
-            ].map((option) {
-              final label = option['label']!;
-              final value = option['value']!;
-              final isSelected = (user.childrenPreference ?? 'Ne') == value;
-              return _buildChoiceChip(
-                label: label,
-                isSelected: isSelected,
-                onSelected: (s) {
-                  if (s) {
-                    _updateProfile(user.copyWith(childrenPreference: value));
-                  }
-                },
-              );
-            }).toList(),
+            ],
+            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(childrenPreference: val)),
+          ),
+          const SizedBox(height: 16),
+
+          _prefPillRow(
+            context: context,
+            label: _t('sleep'),
+            icon: LucideIcons.moon,
+            currentValue: user.sleepSchedule,
+            options: [
+              {'label': _t('night_owl'), 'value': 'Nočna ptica'},
+              {'label': _t('early_bird'), 'value': 'Jutranja ptica'},
+            ],
+            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(sleepSchedule: val)),
+          ),
+          const SizedBox(height: 16),
+
+          _prefPillRow(
+            context: context,
+            label: _t('pets'),
+            icon: LucideIcons.dog,
+            currentValue: user.petPreference,
+            options: [
+              {'label': _t('dog_person'), 'value': 'Dog person'},
+              {'label': _t('cat_person'), 'value': 'Cat person'},
+            ],
+            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(petPreference: val)),
+          ),
+
+          Divider(color: Colors.white.withValues(alpha: 0.1)),
+          const SizedBox(height: 8),
+
+          // ── Premium partner preferences (unified pill rows) ──
+
+          _prefPillRow(
+            context: context,
+            label: _t('religion'),
+            icon: LucideIcons.heart,
+            currentValue: user.religionPreference,
+            isPremium: !user.isPremium,
+            options: [
+              {'label': _t('christianity'), 'value': 'christianity'},
+              {'label': _t('islam'), 'value': 'islam'},
+              {'label': _t('hinduism'), 'value': 'hinduism'},
+              {'label': _t('buddhism'), 'value': 'buddhism'},
+              {'label': _t('judaism'), 'value': 'judaism'},
+              {'label': _t('agnostic'), 'value': 'agnostic'},
+              {'label': _t('atheist'), 'value': 'atheist'},
+            ],
+            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(religionPreference: val)),
+          ),
+          const SizedBox(height: 16),
+
+          _prefPillRow(
+            context: context,
+            label: _t('ethnicity'),
+            icon: LucideIcons.users,
+            currentValue: user.ethnicityPreference,
+            isPremium: !user.isPremium,
+            options: [
+              {'label': _t('ethnicity_white'), 'value': 'white'},
+              {'label': _t('ethnicity_black'), 'value': 'black'},
+              {'label': _t('ethnicity_mixed'), 'value': 'mixed'},
+              {'label': _t('ethnicity_asian'), 'value': 'asian'},
+            ],
+            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(ethnicityPreference: val)),
+          ),
+          const SizedBox(height: 16),
+
+          _prefPillRow(
+            context: context,
+            label: _t('hair_color'),
+            icon: LucideIcons.scissors,
+            currentValue: user.hairColorPreference,
+            isPremium: !user.isPremium,
+            options: [
+              {'label': _t('hair_blonde'), 'value': 'blonde'},
+              {'label': _t('hair_brunette'), 'value': 'brunette'},
+              {'label': _t('hair_black'), 'value': 'black'},
+              {'label': _t('hair_red'), 'value': 'red'},
+              {'label': _t('hair_gray_white'), 'value': 'gray_white'},
+              {'label': _t('hair_other'), 'value': 'other'},
+            ],
+            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(hairColorPreference: val)),
+          ),
+
+          // ── Looking For (multi-select) ──
+          const SizedBox(height: 16),
+          PreferencePillRow(
+            icon: LucideIcons.search,
+            label: _t('looking_for'),
+            values: user.lookingFor.isNotEmpty
+                ? user.lookingFor.map((v) => v as String?).toList()
+                : [null],
+            formatter: (v) {
+              const opts = {
+                'Short-term fun': 'Short-Term Fun',
+                'Long-term relationship': 'Long-Term Relationship',
+                'Friendship': 'Friendship',
+                'Meeting': 'Meeting',
+              };
+              return _toTitleCase(opts[v] ?? v);
+            },
+            onTap: () => _ctrl.openMultiSelectModal(
+              context: context,
+              title: _t('looking_for'),
+              options: [
+                {'label': _t('short_term'), 'value': 'Short-term fun'},
+                {'label': _t('long_term'), 'value': 'Long-term relationship'},
+                {'label': _t('friendship'), 'value': 'Friendship'},
+                {'label': _t('meeting'), 'value': 'Meeting'},
+              ],
+              currentValues: user.lookingFor,
+              onUpdate: (vals) =>
+                  _ctrl.updateUser((u) => u.copyWith(lookingFor: vals)),
+            ),
+            onEdit: () => _ctrl.openMultiSelectModal(
+              context: context,
+              title: _t('looking_for'),
+              options: [
+                {'label': _t('short_term'), 'value': 'Short-term fun'},
+                {'label': _t('long_term'), 'value': 'Long-term relationship'},
+                {'label': _t('friendship'), 'value': 'Friendship'},
+                {'label': _t('meeting'), 'value': 'Meeting'},
+              ],
+              currentValues: user.lookingFor,
+              onUpdate: (vals) =>
+                  _ctrl.updateUser((u) => u.copyWith(lookingFor: vals)),
+            ),
           ),
         ],
       ),
     );
   }
 
-  /// Helper: lifestyle section label with icon
-  Widget _buildLifestyleLabel(String label, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: Colors.white70),
-        const SizedBox(width: 8),
-        Text(label, style: const TextStyle(color: Colors.white)),
-      ],
-    );
-  }
-
-  /// Helper: standard ChoiceChip with proper contrast
-  Widget _buildChoiceChip({
+  /// Builds a `PreferencePillRow` that opens the unified edit modal via controller.
+  Widget _prefPillRow({
+    required BuildContext context,
     required String label,
-    required bool isSelected,
-    required ValueChanged<bool> onSelected,
-  }) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: onSelected,
-      selectedColor: Colors.white,
-      backgroundColor: Colors.black54,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.black : Colors.white,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      shape: StadiumBorder(
-          side: BorderSide(
-              color: isSelected ? Colors.transparent : Colors.white24)),
-      showCheckmark: false,
-    );
-  }
-
-  String _getIntrovertLabel(int value) {
-    if (value == 1) return _t('full_introvert');
-    if (value == 2) return _t('more_introvert');
-    if (value == 3) return _t('somewhere_between');
-    if (value == 4) return _t('more_extrovert');
-    if (value == 5) return _t('full_extrovert');
-    return "";
-  }
-
-  int _mapIntrovertScaleToBucket(int raw) {
-    // raw is 0–100, map to 1–5 buckets
-    if (raw <= 20) return 1;
-    if (raw <= 40) return 2;
-    if (raw <= 60) return 3;
-    if (raw <= 80) return 4;
-    return 5;
-  }
-
-  Widget _buildPremiumPreferenceRow({
-    required AuthUser user,
-    required String title,
+    required IconData icon,
     required String? currentValue,
     required List<Map<String, String>> options,
-    required Function(String) onUpdate,
+    required void Function(String) onUpdate,
+    bool isPremium = false,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(title, style: const TextStyle(color: Colors.white)),
-            if (!user.isPremium) ...[
-              const SizedBox(width: 8),
-              const Icon(LucideIcons.lock, size: 14, color: Colors.amber),
-            ]
-          ],
-        ),
-        const SizedBox(height: 10),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: options.map((option) {
-              final label = option['label']!;
-              final value = option['value']!;
-              final isSelected = currentValue == value;
-
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: GestureDetector(
-                  onTap: () {
-                    if (!user.isPremium) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(_t('premium_account')),
-                          backgroundColor: Colors.amber[800],
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                      return;
-                    }
-                    if (!isSelected) {
-                      onUpdate(value);
-                    }
-                  },
-                  child: Chip(
-                    label: Text(label),
-                    backgroundColor: isSelected ? Colors.white : Colors.black54,
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.black : Colors.white,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    side: BorderSide(
-                        color:
-                            isSelected ? Colors.transparent : Colors.white24),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
+    final formatter = (String v) {
+      final raw = options.where((o) => o['value'] == v).map((o) => o['label']!).firstOrNull ?? v;
+      return _toTitleCase(raw);
+    };
+    return PreferencePillRow(
+      icon: icon,
+      label: label,
+      values: [currentValue],
+      formatter: formatter,
+      isPremium: isPremium,
+      onEdit: () => _ctrl.openPillEditModal(
+        context: context,
+        title: label,
+        options: options,
+        currentValue: currentValue,
+        onUpdate: onUpdate,
+        isPremium: isPremium,
+      ),
     );
   }
 
   Widget _buildAccountSection(AuthUser user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final dividerColor = isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black12;
+
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_t('account_settings'),
-              style: const TextStyle(
-                  color: Colors.white70, fontWeight: FontWeight.bold)),
+          Center(
+            child: Text(_t('account_settings'),
+                style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                    fontWeight: FontWeight.bold)),
+          ),
           const SizedBox(height: 10),
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -1364,7 +1103,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               user.isEmailVerified
                   ? _t('email_verified')
                   : _t('email_not_verified'),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: textColor),
             ),
             trailing: !user.isEmailVerified
                 ? TextButton(
@@ -1378,27 +1117,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   )
                 : null,
           ),
-          Divider(color: Colors.white.withValues(alpha: 0.1)),
+          Divider(color: dividerColor),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(_t('admin_mode'),
-                style: const TextStyle(color: Colors.white)),
+            title: Text(_t('admin_mode'), style: TextStyle(color: textColor)),
             value: user.isAdmin,
             activeThumbColor: Colors.red,
             activeTrackColor: Colors.red.withValues(alpha: 0.5),
-            inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white24
-                : Colors.black12,
+            inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
             onChanged: null, // Admin status is server-managed only
           ),
-          Divider(color: Colors.white.withValues(alpha: 0.1)),
+          Divider(color: dividerColor),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(LucideIcons.userX, color: Colors.white70),
-            title: Text(_t('blocked_users'),
-                style: const TextStyle(color: Colors.white)),
-            trailing:
-                const Icon(LucideIcons.chevronRight, color: Colors.white30),
+            leading: Icon(LucideIcons.userX,
+                color: isDark ? Colors.white70 : Colors.black45),
+            title: Text(_t('blocked_users'), style: TextStyle(color: textColor)),
+            trailing: Icon(LucideIcons.chevronRight,
+                color: isDark ? Colors.white30 : Colors.black26),
             onTap: () {
               context.push('/blocked-users');
             },

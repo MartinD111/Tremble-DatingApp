@@ -11,6 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/theme_provider.dart';
+import '../../../core/consent_service.dart';
 import 'widgets/registration_steps/intro_slide_step.dart';
 import 'widgets/registration_steps/name_step.dart';
 import 'widgets/registration_steps/gender_step.dart';
@@ -560,7 +561,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       title: tr('introversion'),
                       min: 0,
                       max: 1,
-                      divisions: 100,
+                      divisions: 4,
                       labels: [tr('introvert'), tr('extrovert')],
                       onSave: (val) {
                         if (val == null) {
@@ -587,20 +588,24 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     onSelect: (k) => setState(() => _petPreference = k),
                     customPetController: _customPetController,
                     onBack: () => _goToPage(_currentPage - 1),
-                    onContinueTap: () => _showPartnerPreferenceModal(
-                      title: tr('pets'),
-                      options: [
-                        {'key': 'dog', 'label': tr('dog_person')},
-                        {'key': 'cat', 'label': tr('cat_person')},
-                        {
-                          'key': 'something_else',
-                          'label': tr('something_else')
-                        },
-                        {'key': 'nothing', 'label': tr('nothing')},
-                      ],
-                      userSelection: _petPreference!,
-                      onSave: (v) => setState(() => _partnerPetPreference = v),
-                    ),
+                    onContinueTap: () {
+                      final pref = _petPreference;
+                      if (pref == null) return; // defensive — button should already be disabled
+                      _showPartnerPreferenceModal(
+                        title: tr('pets'),
+                        options: [
+                          {'key': 'dog', 'label': tr('dog_person')},
+                          {'key': 'cat', 'label': tr('cat_person')},
+                          {
+                            'key': 'something_else',
+                            'label': tr('something_else')
+                          },
+                          {'key': 'nothing', 'label': tr('nothing')},
+                        ],
+                        userSelection: pref,
+                        onSave: (v) => setState(() => _partnerPetPreference = v),
+                      );
+                    },
                     tr: tr,
                   ),
                   ReligionStep(
@@ -979,6 +984,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
+  /// Maps a 0.0–1.0 introvert value to one of 5 text positions.
+  String _introvertLabelReg(double v) {
+    if (v <= 0.12) return 'Introvert';
+    if (v <= 0.37) return 'Center-left';
+    if (v <= 0.62) return 'Ambivert';
+    if (v <= 0.87) return 'Center-right';
+    return 'Extrovert';
+  }
+
   void _showPartnerRangeModal({
     required String title,
     required double min,
@@ -1062,10 +1076,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               divisions: divisions > 0 ? divisions : null,
                               labels: RangeLabels(
                                 title == tr('introversion')
-                                    ? '${(tempRange.start * 100).toInt()}%'
+                                    ? _introvertLabelReg(tempRange.start)
                                     : '${tempRange.start.toInt()}',
                                 title == tr('introversion')
-                                    ? '${(tempRange.end * 100).toInt()}%'
+                                    ? _introvertLabelReg(tempRange.end)
                                     : '${tempRange.end.toInt()}',
                               ),
                               activeColor: const Color(0xFFF4436C),
@@ -1312,8 +1326,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       drinkingHabit: _drinkingHabit ?? 'never',
       introvertScale: (_introversionLevel * 100).toInt(),
       exerciseHabit: _exerciseHabit ?? 'sometimes',
-      sleepSchedule: 'Nočna ptica',
-      petPreference: 'Dog person',
+      sleepSchedule: _sleepHabit ?? 'night_owl',
+      petPreference: _petPreference ?? 'dog',
       childrenPreference: _childrenPreference ?? 'not_sure',
       religion: _religion,
       ethnicity: _ethnicity,
@@ -1371,6 +1385,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       // isOnboarded is still set to true locally.
       await ref.read(authStateProvider.notifier).completeOnboarding(user);
 
+      // Reset GDPR consent so the permission gate always shows after fresh registration.
+      await ref.read(gdprConsentProvider.notifier).resetConsent();
+
       if (mounted) context.go('/');
     } catch (e) {
       if (kDebugMode) {
@@ -1379,6 +1396,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         ref.read(authStateProvider.notifier).setUser(
               user.copyWith(isOnboarded: true),
             );
+        await ref.read(gdprConsentProvider.notifier).resetConsent();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

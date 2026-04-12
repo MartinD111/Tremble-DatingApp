@@ -38,7 +38,11 @@
       "Bash(firebase:*)",
       "Bash(bash scripts/ci/secret_scan.sh)",
       "Skill(gsd:autonomous)",
-      "Bash(flutter test:*)"
+      "Bash(flutter test:*)",
+      "Bash(flutter build:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(c.get\\('package_name','?'\\), '|', [s.get\\('sha1_cert_fingerprint','?'\\) for s in c.get\\('certificate_hash_set',[]\\)]\\) for c in d['client']]\")",
+      "Bash(python3 -c ':*)",
+      "Bash(keytool -list -v -keystore \"C:/Users/marti/.android/debug.keystore\" -alias androiddebugkey -storepass android -keypass android)"
     ]
   }
 }

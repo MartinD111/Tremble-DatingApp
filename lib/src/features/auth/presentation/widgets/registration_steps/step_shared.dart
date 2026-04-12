@@ -28,9 +28,16 @@ class DrumPicker extends StatefulWidget {
 class _DrumPickerState extends State<DrumPicker> {
   late FixedExtentScrollController _ctrl;
 
+  // Tracks the last index we reported via onChanged (from user scroll).
+  // didUpdateWidget uses this to distinguish user-initiated changes (skip
+  // jumpToItem — the scroll controller is already there) from programmatic
+  // external changes like a month switch resetting the day column (jump needed).
+  int _lastReported = 0;
+
   @override
   void initState() {
     super.initState();
+    _lastReported = widget.selectedIndex;
     _ctrl = FixedExtentScrollController(initialItem: widget.selectedIndex);
   }
 
@@ -38,9 +45,16 @@ class _DrumPickerState extends State<DrumPicker> {
   void didUpdateWidget(DrumPicker old) {
     super.didUpdateWidget(old);
     if (old.selectedIndex != widget.selectedIndex && _ctrl.hasClients) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_ctrl.hasClients) _ctrl.jumpToItem(widget.selectedIndex);
-      });
+      // Only jump when the change was NOT triggered by the user scrolling this
+      // column. If it was user-initiated, the scroll controller already sits at
+      // the correct position — jumping would cancel the in-flight fling and
+      // produce the step-by-step behaviour reported in the bug.
+      if (widget.selectedIndex != _lastReported) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_ctrl.hasClients) _ctrl.jumpToItem(widget.selectedIndex);
+        });
+      }
+      _lastReported = widget.selectedIndex;
     }
   }
 
@@ -63,9 +77,9 @@ class _DrumPickerState extends State<DrumPicker> {
       diameterRatio: 1.8,
       physics: const FixedExtentScrollPhysics(),
       onSelectedItemChanged: (i) {
-        widget.onChanged(
-          widget.looping ? i % widget.items.length : i,
-        );
+        final reported = widget.looping ? i % widget.items.length : i;
+        _lastReported = reported;
+        widget.onChanged(reported);
       },
       childDelegate: widget.looping
           ? ListWheelChildLoopingListDelegate(

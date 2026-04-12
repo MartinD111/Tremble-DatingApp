@@ -62,7 +62,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _sleepSchedule = user.sleepSchedule;
       _petPreference = user.petPreference;
       _childrenPreference = user.childrenPreference;
-      _introvertScale = user.introvertScale ?? 3;
+      // introvertScale is stored as 0-100 in Firestore by completeRegistration
+      // but the edit slider uses 1-5. Remap if value is outside slider range.
+      final rawIntrovert = user.introvertScale ?? 3;
+      _introvertScale = rawIntrovert > 5
+          ? (rawIntrovert / 20).round().clamp(1, 5)
+          : rawIntrovert.clamp(1, 5);
       _hobbies = List.from(user.hobbies);
       _lookingFor = List.from(user.lookingFor);
       _languages = List.from(user.languages);
@@ -157,34 +162,37 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
-            leading: const SizedBox.shrink(),
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: TrembleBackButton(
+                onPressed: () async {
+                  if (_hasChanges) {
+                    final shouldPop = await _onWillPop();
+                    if (shouldPop && context.mounted) context.pop();
+                  } else {
+                    context.pop();
+                  }
+                },
+                color: Colors.white70,
+              ),
+            ),
             title: Text(t('edit_profile', lang),
                 style: GoogleFonts.instrumentSans(
                     color: Colors.white, fontWeight: FontWeight.bold)),
+            centerTitle: true,
             elevation: 0,
             actions: [
               if (_hasChanges)
-                TextButton(
-                  onPressed: _saveChanges,
-                  child: Text(t('save', lang),
-                      style: const TextStyle(
-                          color: Color(0xFFF4436C),
-                          fontWeight: FontWeight.bold)),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: TextButton(
+                    onPressed: _saveChanges,
+                    child: Text(t('save', lang),
+                        style: const TextStyle(
+                            color: Color(0xFFF4436C),
+                            fontWeight: FontWeight.bold)),
+                  ),
                 ),
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: TrembleBackButton(
-                  onPressed: () async {
-                    if (_hasChanges) {
-                      final shouldPop = await _onWillPop();
-                      if (shouldPop && context.mounted) context.pop();
-                    } else {
-                      context.pop();
-                    }
-                  },
-                  color: Colors.white70,
-                ),
-              ),
             ],
           ),
           body: SingleChildScrollView(

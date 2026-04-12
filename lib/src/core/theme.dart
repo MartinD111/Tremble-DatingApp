@@ -50,17 +50,13 @@ class TrembleTheme {
       return prideGradient;
     }
 
-    if (gender == 'Moški' || gender == 'Male') {
-      if (isDarkMode) {
-        return [roseDark, rose.withValues(alpha: 0.8)];
-      }
-      return [rose, rose.withValues(alpha: 0.8)];
-    }
-
+    // Deep graphite gradient — consistent with onboarding and sign-in.
+    // Gender-based pink theming is only applied in the registration flow
+    // when the user explicitly selects non-classic appearance.
     if (isDarkMode) {
-      return [roseDark, rose.withValues(alpha: 0.8)];
+      return [const Color(0xFF1A1A18), const Color(0xFF2A2A2E)];
     }
-    return [rose, rose.withValues(alpha: 0.8)];
+    return [const Color(0xFFF0F4F8), const Color(0xFFD9E2EC)];
   }
 
   static TextTheme _buildTextTheme(Color baseTextColor) {

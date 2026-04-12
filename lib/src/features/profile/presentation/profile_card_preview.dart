@@ -48,22 +48,24 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             pinned: true,
-            leading: const SizedBox.shrink(),
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: TrembleBackButton(
+                onPressed: () => context.pop(),
+                color: Colors.white70,
+              ),
+            ),
             title: Text(t('my_card', user.appLanguage),
                 style: GoogleFonts.instrumentSans(
                     color: Colors.white, fontWeight: FontWeight.bold)),
             centerTitle: true,
             actions: [
-              IconButton(
-                icon: const Icon(LucideIcons.pencil, color: Colors.white),
-                tooltip: t('edit_profile', user.appLanguage),
-                onPressed: () => context.push('/edit-profile'),
-              ),
               Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: TrembleBackButton(
-                  onPressed: () => context.pop(),
-                  color: Colors.white70,
+                child: IconButton(
+                  icon: const Icon(LucideIcons.pencil, color: Colors.white),
+                  tooltip: t('edit_profile', user.appLanguage),
+                  onPressed: () => context.push('/edit-profile'),
                 ),
               ),
             ],
@@ -201,6 +203,40 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                     ),
                   ],
 
+                  // Looking for — directly under location
+                  if (user.lookingFor.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.center,
+                      children: (user.isPremium
+                              ? user.lookingFor
+                              : user.lookingFor
+                                  .where((item) =>
+                                      item == 'Dolgoročno razmerje' ||
+                                      item == 'Long-term relationship' ||
+                                      item == 'Prijateljstvo' ||
+                                      item == 'Friendship')
+                                  .toList())
+                          .map((item) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.15)),
+                                ),
+                                child: Text(item,
+                                    style: const TextStyle(
+                                        color: Colors.white60, fontSize: 12)),
+                              ))
+                          .toList(),
+                    ),
+                  ],
+
                   const SizedBox(height: 24),
 
                   // Info badges
@@ -208,55 +244,13 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
 
                   const SizedBox(height: 24),
 
-                  // Hobbies
-                  if (user.hobbies.isNotEmpty) ...[
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(t('hobbies', user.appLanguage),
-                          style: GoogleFonts.instrumentSans(
-                              color: Colors.white70,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600)),
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: user.hobbies.map((h) {
-                        return Chip(
-                          label: Text(h,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500)),
-                          backgroundColor: Colors.white.withValues(alpha: 0.1),
-                          side: const BorderSide(color: Colors.white24),
-                          shape: const StadiumBorder(),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
+                  // Hobbies — grouped by category
+                  if (user.hobbies.isNotEmpty) ..._buildGroupedHobbies(user),
 
                   // Lifestyle
                   _buildLifestyleSection(user),
 
                   const SizedBox(height: 24),
-
-                  // Looking for
-                  if (user.lookingFor.isNotEmpty) ...[
-                    _buildSection(
-                        t('looking_for', user.appLanguage),
-                        user.isPremium
-                            ? user.lookingFor
-                            : user.lookingFor
-                                .where((item) =>
-                                    item == 'Dolgoročno razmerje' ||
-                                    item == 'Long-term relationship' ||
-                                    item == 'Prijateljstvo' ||
-                                    item == 'Friendship')
-                                .toList()),
-                    const SizedBox(height: 24),
-                  ],
 
                   const SizedBox(height: 60),
                 ],
@@ -268,19 +262,113 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     );
   }
 
+  static const Map<String, List<String>> _hobbyCategories = {
+    'Active 🏋️': [
+      'Fitnes', 'Pilates', 'Sprehodi', 'Tek',
+      'Smučanje', 'Snowboarding', 'Plezanje', 'Plavanje',
+    ],
+    'Prosti čas ☕': [
+      'Branje', 'Kava', 'Čaj', 'Kuhanje',
+      'Filmi', 'Serije', 'Videoigre', 'Glasba',
+    ],
+    'Umetnost 🎨': [
+      'Slikanje', 'Fotografija', 'Pisanje', 'Muzeji', 'Gledališče',
+    ],
+    'Potovanja ✈️': [
+      'Roadtrips', 'Camping', 'City breaks', 'Backpacking',
+    ],
+  };
+
+  List<Widget> _buildGroupedHobbies(AuthUser user) {
+    final predefined = _hobbyCategories.values.expand((e) => e).toSet();
+    final customHobbies =
+        user.hobbies.where((h) => !predefined.contains(h)).toList();
+    final widgets = <Widget>[];
+
+    for (final entry in _hobbyCategories.entries) {
+      final matched =
+          entry.value.where((h) => user.hobbies.contains(h)).toList();
+      if (matched.isEmpty) continue;
+
+      widgets.add(Align(
+        alignment: Alignment.centerLeft,
+        child: Text(entry.key,
+            style: GoogleFonts.instrumentSans(
+                color: Colors.white70,
+                fontSize: 14,
+                fontWeight: FontWeight.w600)),
+      ));
+      widgets.add(const SizedBox(height: 8));
+      widgets.add(Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: matched
+            .map((h) => Chip(
+                  label: Text(h,
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w500)),
+                  backgroundColor: Colors.white.withValues(alpha: 0.1),
+                  side: const BorderSide(color: Colors.white24),
+                  shape: const StadiumBorder(),
+                ))
+            .toList(),
+      ));
+      widgets.add(const SizedBox(height: 12));
+    }
+
+    if (customHobbies.isNotEmpty) {
+      widgets.add(Align(
+        alignment: Alignment.centerLeft,
+        child: Text('Custom ✨',
+            style: GoogleFonts.instrumentSans(
+                color: Colors.white70,
+                fontSize: 14,
+                fontWeight: FontWeight.w600)),
+      ));
+      widgets.add(const SizedBox(height: 8));
+      widgets.add(Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: customHobbies
+            .map((h) => Chip(
+                  label: Text(h,
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w500)),
+                  backgroundColor: Colors.white.withValues(alpha: 0.1),
+                  side: const BorderSide(color: Colors.white24),
+                  shape: const StadiumBorder(),
+                ))
+            .toList(),
+      ));
+      widgets.add(const SizedBox(height: 12));
+    }
+
+    if (widgets.isNotEmpty) {
+      widgets.insert(
+        0,
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(t('hobbies', user.appLanguage),
+                style: GoogleFonts.instrumentSans(
+                    color: Colors.white70,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600)),
+          ),
+        ),
+      );
+      widgets.add(const SizedBox(height: 12));
+    }
+
+    return widgets;
+  }
+
   Widget _buildInfoBadges(AuthUser user) {
     final badges = <Widget>[];
 
-    if (user.height != null) {
-      badges.add(_badge(LucideIcons.ruler, '${user.height} cm'));
-    }
     if (user.gender != null) {
-      badges.add(_badge(
-          user.gender == 'Moški' ? LucideIcons.user : LucideIcons.user,
-          user.gender!));
-    }
-    if (user.occupation != null) {
-      badges.add(_badge(LucideIcons.briefcase, user.occupation!));
+      badges.add(_badge(LucideIcons.user, user.gender!));
     }
     if (user.isSmoker == true) {
       badges.add(_badge(LucideIcons.cigarette, t('smoker', user.appLanguage)));
@@ -339,28 +427,28 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     final items = <Widget>[];
 
     if (user.exerciseHabit != null) {
-      items.add(_lifestyleItem(
-          LucideIcons.dumbbell, 'Telovadba', user.exerciseHabit!));
+      items.add(_lifestyleItem(LucideIcons.dumbbell,
+          t('exercise', user.appLanguage), t(user.exerciseHabit!, user.appLanguage)));
     }
     if (user.drinkingHabit != null) {
-      items.add(
-          _lifestyleItem(LucideIcons.wine, 'Alkohol', user.drinkingHabit!));
+      items.add(_lifestyleItem(LucideIcons.wine,
+          t('drinking', user.appLanguage), t(user.drinkingHabit!, user.appLanguage)));
     }
     if (user.sleepSchedule != null) {
       items.add(_lifestyleItem(
           user.sleepSchedule == 'Nočna ptica'
               ? LucideIcons.moon
               : LucideIcons.sun,
-          'Spanje',
-          user.sleepSchedule!));
+          t('sleep', user.appLanguage),
+          t(user.sleepSchedule!, user.appLanguage)));
     }
     if (user.petPreference != null) {
-      items.add(_lifestyleItem(
-          LucideIcons.dog, t('pets', user.appLanguage), user.petPreference!));
+      items.add(_lifestyleItem(LucideIcons.dog,
+          t('pets', user.appLanguage), t(user.petPreference!, user.appLanguage)));
     }
     if (user.childrenPreference != null) {
       items.add(_lifestyleItem(LucideIcons.baby,
-          t('children', user.appLanguage), user.childrenPreference!));
+          t('children', user.appLanguage), t(user.childrenPreference!, user.appLanguage)));
     }
 
     if (items.isEmpty) return const SizedBox.shrink();
@@ -405,32 +493,4 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     );
   }
 
-  Widget _buildSection(String title, List<String> items) {
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: GoogleFonts.instrumentSans(
-                  color: Colors.white70,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600)),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: items
-                .map((item) => Chip(
-                      label: Text(item,
-                          style: const TextStyle(color: Colors.white)),
-                      backgroundColor: Colors.white.withValues(alpha: 0.1),
-                      side: const BorderSide(color: Colors.white24),
-                      shape: const StadiumBorder(),
-                    ))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
 }

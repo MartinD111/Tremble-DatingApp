@@ -426,6 +426,11 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
     final hasPassword =
         currentUser?.providerData.any((p) => p.providerId == 'password') ??
             false;
+    // A user with a password provider but an unverified email is mid-registration
+    // (stale partial session). They must enter a new password — treat them the
+    // same as a brand-new user for the purposes of this step.
+    final isVerifiedPasswordUser =
+        hasPassword && (currentUser?.emailVerified ?? false);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -439,7 +444,7 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
             StepHeader(widget.tr('basic_info')),
             const SizedBox(height: 32),
             if (isAlreadyLoggedIn &&
-                (isSocialUser || hasPassword) &&
+                (isSocialUser || isVerifiedPasswordUser) &&
                 widget.emailController.text.isNotEmpty)
               _inputField(widget.tr('email'), widget.emailController,
                   icon: LucideIcons.mail,
@@ -452,7 +457,7 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
                   readOnly: false),
             const SizedBox(height: 20),
             _locationAutocomplete(),
-            if (!hasPassword && !isSocialUser) ...[
+            if (!isVerifiedPasswordUser && !isSocialUser) ...[
               const SizedBox(height: 20),
               _passwordInputField(),
               const SizedBox(height: 20),
@@ -480,7 +485,8 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
                     child: CircularProgressIndicator(color: Color(0xFFF4436C)))
                 : ContinueButton(
                     enabled: widget.emailController.text.isNotEmpty &&
-                        ((isAlreadyLoggedIn && (isSocialUser || hasPassword)) ||
+                        ((isAlreadyLoggedIn &&
+                                (isSocialUser || isVerifiedPasswordUser)) ||
                             (_isPasswordValid &&
                                 widget.passwordController.text ==
                                     _confirmPasswordController.text)),

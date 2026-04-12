@@ -15,6 +15,8 @@ import '../../matches/presentation/matches_screen.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
+import '../../../core/ble_service.dart'; // BLE must run in main isolate
+import '../../../core/consent_service.dart'; // gdprConsentProvider
 import 'package:flutter_animate/flutter_animate.dart'; // Animations
 import '../../../core/theme.dart'; // TrembleTheme — telemetryTextStyle
 import '../../../core/translations.dart';
@@ -272,14 +274,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Center(
                     child: _PulsingRadarButton(
                       isScanning: isScanning,
-                      onTap: () {
+                      onTap: () async {
                         final newState = !isScanning;
                         ref.read(isScanningProvider.notifier).state = newState;
 
                         if (newState) {
                           debugPrint(
                               "📍 Location Captured: mock_lat: 46.05, mock_lng: 14.50 [Ljubljana]");
+                          // Start background service (GeoService lives here).
                           FlutterBackgroundService().startService();
+                          // BleService must run in the main isolate — flutter_blue_plus
+                          // requires an Android Activity which the background isolate
+                          // does not have. Gate on GDPR consent before starting.
+                          final hasConsent =
+                              ref.read(gdprConsentProvider).valueOrNull ?? false;
+                          if (hasConsent) {
+                            await BleService().start();
+                          }
+                        } else {
+                          // Stop BLE in main isolate and signal background service.
+                          BleService().stop();
+                          FlutterBackgroundService().invoke('stopService', null);
                         }
                       },
                     )

@@ -21,6 +21,13 @@ class GdprConsentNotifier extends AsyncNotifier<bool> {
     await prefs.setBool(gdprConsentKey, true);
     state = const AsyncValue.data(true);
   }
+
+  /// Called after fresh registration so the permission gate always shows.
+  Future<void> resetConsent() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(gdprConsentKey, false);
+    state = const AsyncValue.data(false);
+  }
 }
 
 final gdprConsentProvider =

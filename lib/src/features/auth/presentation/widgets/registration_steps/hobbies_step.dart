@@ -114,18 +114,18 @@ class _HobbiesStepState extends State<HobbiesStep> {
     return SafeArea(
       child: Column(children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            TrembleBackButton(
-                label: widget.tr('back'), onPressed: widget.onBack),
-            const SizedBox(height: 16),
-            StepHeader(
-              widget.tr('hobbies'),
-              subtitle:
-                  '${widget.selectedHobbies.length} ${widget.tr('hobbies_selected').replaceAll('{count}', '')}',
-            ),
-          ]),
+          padding: const EdgeInsets.only(top: 16, left: 4),
+          child: TrembleBackButton(
+              label: widget.tr('back'), onPressed: widget.onBack),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: StepHeader(
+            widget.tr('hobbies'),
+            subtitle:
+                '${widget.selectedHobbies.length} ${widget.tr('hobbies_selected').replaceAll('{count}', '')}',
+          ),
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -202,7 +202,10 @@ class _HobbiesStepState extends State<HobbiesStep> {
                               color: isDark ? Colors.white : Colors.black87,
                               fontWeight: FontWeight.bold)),
                       children: [
-                        Wrap(
+                        SizedBox(
+                          width: double.infinity,
+                          child: Wrap(
+                          alignment: WrapAlignment.start,
                           spacing: 8,
                           runSpacing: 8,
                           children: [
@@ -253,6 +256,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
                               onPressed: _showAddHobbyDialog,
                             ),
                           ],
+                          ),
                         ),
                         const SizedBox(height: 16),
                       ],

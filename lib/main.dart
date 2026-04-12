@@ -5,6 +5,12 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'src/app.dart';
+// This import is intentionally kept even though initializeBackgroundService()
+// is temporarily commented out below. Removing it would exclude the file from
+// the kernel snapshot, causing Dart_LookupLibrary to fail at runtime when
+// Android's foreground-service restart mechanism tries to invoke the
+// @pragma('vm:entry-point') onStart function by library name.
+// ignore: unused_import
 import 'src/core/background_service.dart';
 import 'src/core/firebase_options_dev.dart';
 import 'src/core/firebase_options_prod.dart';
@@ -46,7 +52,11 @@ void main() async {
   // the app is fully running, in a top-level context.
   NotificationService.registerBackgroundHandler();
 
-  await initializeBackgroundService();
+  // DIAGNOSTIC: background service temporarily disabled to isolate startup hang.
+  // DartPluginRegistrant in onStart registers flutter_blue_plus in the background
+  // isolate, which throws "This class should only be used in the main isolate".
+  // Re-enable once the SHA-1 / DEVELOPER_ERROR is confirmed resolved.
+  // await initializeBackgroundService();
 
   // Pre-load theme before first frame to prevent Dark Mode flash on navigation
   final prefs = await SharedPreferences.getInstance();

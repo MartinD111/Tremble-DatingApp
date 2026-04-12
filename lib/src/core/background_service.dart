@@ -9,7 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options_dev.dart';
 import 'firebase_options_prod.dart';
 
-import 'ble_service.dart';
+// BleService intentionally NOT imported here.
+// flutter_blue_plus requires an Android Activity and must only be used
+// from the main isolate. The background isolate spawned by
+// flutter_background_service has no Activity, which causes:
+//   NullPointerException: ActivityPluginBinding.getActivity() on null
+// BleService is started/stopped from home_screen.dart in the main isolate.
 import 'geo_service.dart';
 
 /// Configure and register the background service.
@@ -62,8 +67,12 @@ Future<bool> onIosBackground(ServiceInstance service) async {
 
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
+  // DartPluginRegistrant registers non-UI plugins (Firebase, GeoService, etc.)
+  // in this background isolate.
+  // WidgetsFlutterBinding must NOT be called here — it is the main-isolate UI
+  // binding. Calling it in a background isolate triggers:
+  //   "Exception: This class should only be used in the main isolate (UI App)"
   DartPluginRegistrant.ensureInitialized();
-  WidgetsFlutterBinding.ensureInitialized();
 
   // Re-initialize Firebase in the background isolate
   const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
@@ -74,7 +83,7 @@ void onStart(ServiceInstance service) async {
   // NotificationService.initialize() is called in the main isolate (home_screen).
   // The background isolate handles its own local notifications directly.
 
-  final bleService = BleService();
+  // BleService is NOT started here — see import comment above.
   final geoService = GeoService();
   final battery = Battery();
 
@@ -82,23 +91,21 @@ void onStart(ServiceInstance service) async {
   // and for the idle notification timer below.
   final prefs = await SharedPreferences.getInstance();
 
-  // GDPR consent gate — do not start BLE or Geo without explicit user consent.
+  // GDPR consent gate — do not start Geo without explicit user consent.
   final hasConsent = prefs.getBool('gdpr_ble_location_consent') ?? false;
 
   if (hasConsent) {
     await geoService.start();
-    await bleService.start();
   }
 
-  // Listen for radar mode commands from UI
+  // Listen for radar mode commands from UI.
+  // BleService start/stop is handled by home_screen.dart in the main isolate.
   service.on('stopService').listen((_) async {
-    bleService.stop();
     geoService.stop();
     service.stopSelf();
   });
 
   service.on('pauseRadar').listen((_) async {
-    bleService.stop();
     geoService.stop();
   });
 
@@ -107,7 +114,6 @@ void onStart(ServiceInstance service) async {
     final consentAtResume = prefs.getBool('gdpr_ble_location_consent') ?? false;
     if (consentAtResume) {
       await geoService.start();
-      await bleService.start();
     }
   });
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -62,6 +63,12 @@ class AuthUser {
   final int ageRangeEnd;
   final bool showPingAnimation;
   final int maxDistance;
+  // Partner preference range sliders (new numeric fields replacing legacy strings)
+  final int? partnerPoliticalMin; // 1..5 spectrum left→right
+  final int? partnerPoliticalMax;
+  final int? partnerIntrovertMin; // 0..100 introvert→extrovert
+  final int? partnerIntrovertMax;
+  final bool isGenderBasedColor;
 
   const AuthUser({
     required this.id,
@@ -116,6 +123,11 @@ class AuthUser {
     this.ageRangeEnd = 100,
     this.showPingAnimation = true,
     this.maxDistance = 50,
+    this.partnerPoliticalMin,
+    this.partnerPoliticalMax,
+    this.partnerIntrovertMin,
+    this.partnerIntrovertMax,
+    this.isGenderBasedColor = false,
   });
 
   // ── Serialization for Cloud Functions API ─────────────────────────────────
@@ -181,7 +193,22 @@ class AuthUser {
       'ageRangeEnd': ageRangeEnd,
       'showPingAnimation': showPingAnimation,
       'maxDistance': maxDistance,
+      if (partnerPoliticalMin != null) 'partnerPoliticalMin': partnerPoliticalMin,
+      if (partnerPoliticalMax != null) 'partnerPoliticalMax': partnerPoliticalMax,
+      if (partnerIntrovertMin != null) 'partnerIntrovertMin': partnerIntrovertMin,
+      if (partnerIntrovertMax != null) 'partnerIntrovertMax': partnerIntrovertMax,
+      'isGenderBasedColor': isGenderBasedColor,
     };
+  }
+
+  /// Safely parses a Firestore field that may be a [Timestamp], an ISO-8601
+  /// [String], or null. Documents written by older app versions or admin tools
+  /// may store dates as strings, so a hard cast would throw.
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
+    if (value is String) return DateTime.tryParse(value);
+    return null;
   }
 
   factory AuthUser.fromFirestore(String uid, Map<String, dynamic> data,
@@ -191,7 +218,7 @@ class AuthUser {
       name: data['name'] as String?,
       age: data['age'] as int?,
       isOnboarded: data['isOnboarded'] as bool? ?? false,
-      birthDate: (data['birthDate'] as Timestamp?)?.toDate(),
+      birthDate: _parseDateTime(data['birthDate']),
       photoUrls: List<String>.from(data['photoUrls'] ?? []),
       gender: data['gender'] as String?,
       interestedIn: data['interestedIn'] as String?,
@@ -239,6 +266,11 @@ class AuthUser {
       ageRangeEnd: data['ageRangeEnd'] as int? ?? 100,
       showPingAnimation: data['showPingAnimation'] as bool? ?? true,
       maxDistance: data['maxDistance'] as int? ?? 50,
+      partnerPoliticalMin: data['partnerPoliticalMin'] as int?,
+      partnerPoliticalMax: data['partnerPoliticalMax'] as int?,
+      partnerIntrovertMin: data['partnerIntrovertMin'] as int?,
+      partnerIntrovertMax: data['partnerIntrovertMax'] as int?,
+      isGenderBasedColor: data['isGenderBasedColor'] as bool? ?? false,
       isEmailVerified: emailVerified,
     );
   }
@@ -296,6 +328,11 @@ class AuthUser {
     int? ageRangeEnd,
     bool? showPingAnimation,
     int? maxDistance,
+    int? partnerPoliticalMin,
+    int? partnerPoliticalMax,
+    int? partnerIntrovertMin,
+    int? partnerIntrovertMax,
+    bool? isGenderBasedColor,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -355,6 +392,11 @@ class AuthUser {
       ageRangeEnd: ageRangeEnd ?? this.ageRangeEnd,
       showPingAnimation: showPingAnimation ?? this.showPingAnimation,
       maxDistance: maxDistance ?? this.maxDistance,
+      partnerPoliticalMin: partnerPoliticalMin ?? this.partnerPoliticalMin,
+      partnerPoliticalMax: partnerPoliticalMax ?? this.partnerPoliticalMax,
+      partnerIntrovertMin: partnerIntrovertMin ?? this.partnerIntrovertMin,
+      partnerIntrovertMax: partnerIntrovertMax ?? this.partnerIntrovertMax,
+      isGenderBasedColor: isGenderBasedColor ?? this.isGenderBasedColor,
     );
   }
 }
@@ -385,22 +427,132 @@ final currentUidProvider = Provider<String?>((ref) {
   return FirebaseAuth.instance.currentUser?.uid;
 });
 
-/// Profile existence provider — checks if user's Firestore doc has been created.
-/// Cached and invalidated only on auth state change.
-/// Used by router to prevent routing to protected screens before doc exists.
-final profileExistsProvider = FutureProvider<bool>((ref) async {
+// ─────────────────────────────────────────────────────────────────────────────
+// ProfileStatus — sealed class for the router's profile existence + onboarding
+// state machine.
+//
+// loading   → Firestore snapshot not yet received (show full-screen splash)
+// notFound  → doc does not exist or user is signed out → route to /onboarding
+// ready     → doc exists; isOnboarded drives the final routing decision
+// ─────────────────────────────────────────────────────────────────────────────
+sealed class ProfileStatus {
+  const ProfileStatus();
+
+  const factory ProfileStatus.loading() = ProfileStatusLoading;
+  const factory ProfileStatus.notFound() = ProfileStatusNotFound;
+  const factory ProfileStatus.ready({required bool isOnboarded}) =
+      ProfileStatusReady;
+
+  T map<T>({
+    required T Function(ProfileStatusLoading) loading,
+    required T Function(ProfileStatusNotFound) notFound,
+    required T Function(ProfileStatusReady) ready,
+  }) {
+    if (this is ProfileStatusLoading) return loading(this as ProfileStatusLoading);
+    if (this is ProfileStatusNotFound) return notFound(this as ProfileStatusNotFound);
+    return ready(this as ProfileStatusReady);
+  }
+}
+
+final class ProfileStatusLoading extends ProfileStatus {
+  const ProfileStatusLoading();
+
+  @override
+  bool operator ==(Object other) => other is ProfileStatusLoading;
+
+  @override
+  int get hashCode => (ProfileStatusLoading).hashCode;
+}
+
+final class ProfileStatusNotFound extends ProfileStatus {
+  const ProfileStatusNotFound();
+
+  @override
+  bool operator ==(Object other) => other is ProfileStatusNotFound;
+
+  @override
+  int get hashCode => (ProfileStatusNotFound).hashCode;
+}
+
+final class ProfileStatusReady extends ProfileStatus {
+  final bool isOnboarded;
+  const ProfileStatusReady({required this.isOnboarded});
+
+  @override
+  bool operator ==(Object other) =>
+      other is ProfileStatusReady && other.isOnboarded == isOnboarded;
+
+  @override
+  int get hashCode => Object.hash(ProfileStatusReady, isOnboarded);
+}
+
+/// Real-time stream of the authenticated user's Firestore profile status.
+///
+/// Emits:
+///   - [ProfileStatusNotFound] immediately if auth is null (signed out)
+///   - A Firestore [snapshots()] stream mapped to [ProfileStatusReady]
+///     (isOnboarded derived from the doc field)
+///   - [ProfileStatusNotFound] if the doc is absent in Firestore
+///
+/// The router listens to this provider to drive the Auth→Home state machine.
+/// Because this is a StreamProvider, it stays [AsyncLoading] until the first
+/// snapshot arrives — the router returns null during that window, keeping the
+/// user on a full-screen loading indicator rather than routing prematurely.
+final profileStatusProvider = StreamProvider<ProfileStatus>((ref) {
   final authState = ref.watch(authStateProvider);
 
-  // Not logged in = no profile
-  if (authState == null) return false;
+  if (authState == null) {
+    return Stream.value(const ProfileStatus.notFound());
+  }
 
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(authState.id)
+      .snapshots()
+      .map((snap) {
+    if (!snap.exists) return const ProfileStatus.notFound();
+    final data = snap.data()!;
+    final isOnboarded = data['isOnboarded'] as bool? ?? false;
+    return ProfileStatus.ready(isOnboarded: isOnboarded);
+  }).handleError((Object e) {
+    debugPrint('[PROFILE] Firestore snapshot error: $e');
+    // On error fail-safe to notFound so router sends user to /onboarding
+    // rather than showing the Home screen with a broken profile.
+    return const ProfileStatus.notFound();
+  });
+});
+
+/// @deprecated Use [profileStatusProvider] instead.
+/// Kept for any remaining callsites during migration; will be removed.
+final profileExistsProvider = FutureProvider<bool>((ref) async {
+  final status = await ref.watch(profileStatusProvider.future);
+  return status is ProfileStatusReady;
+});
+
+/// Resolves as soon as Firebase Auth has emitted its first auth state event.
+/// Returns true if a session exists, false if no user is logged in.
+///
+/// This is a raw Firebase stream listener — it does NOT go through asyncMap
+/// or the Firestore fetch in [authStateChanges]. Its sole purpose is to
+/// signal [_RouterNotifier] that Firebase has settled, so the router can
+/// unblock the signed-out cold-start case where [authStateProvider] stays
+/// null→null and Riverpod's listener never fires (no state change).
+final authInitializedProvider = FutureProvider<bool>((ref) async {
+  // Guard against Firebase/Google Play Services failures (e.g. DEVELOPER_ERROR)
+  // that prevent authStateChanges() from ever emitting. Without this timeout
+  // the router's _initialized flag stays false forever and the app hangs on
+  // the loading screen indefinitely.
   try {
-    final db = FirebaseFirestore.instance;
-    final doc = await db.collection('users').doc(authState.id).get();
-    return doc.exists;
-  } catch (e) {
-    debugPrint('[PROFILE] Failed to check profile existence: $e');
-    // On error, assume profile doesn't exist to avoid routing to profile screens
+    final user = await ref
+        .read(firebaseAuthProvider)
+        .authStateChanges()
+        .first
+        .timeout(const Duration(seconds: 5));
+    return user != null;
+  } on TimeoutException {
+    debugPrint(
+        '[AUTH] authStateChanges() timed out after 5 s — '
+        'forcing no-session state. Check SHA-1 / google-services.json.');
     return false;
   }
 });
@@ -498,24 +650,15 @@ class AuthRepository {
     final doc = await _users.doc(firebaseUser.uid).get();
     if (doc.exists && doc.data() != null) {
       final data = doc.data()!;
-      bool isOnboarded = data['isOnboarded'] as bool? ?? false;
-
-      // Self-healing: If they were bugged in yesterday's flow where API call was
-      // skipped due to email-already-in-use, they might have data but isOnboarded == false.
-      // E.g., if we see a 'name', they obviously did at least part of the profile.
-      if (!isOnboarded &&
-          data['name'] != null &&
-          data['name'].toString().isNotEmpty) {
-        isOnboarded = true;
-        // Fix it in Firestore quietly
-        _users
-            .doc(firebaseUser.uid)
-            .update({'isOnboarded': true}).catchError((_) {});
-      }
-
+      // isOnboarded is the authoritative source of truth — read it directly.
+      // The self-healing heuristic that overrode this based on profile field
+      // presence has been removed: profileStatusProvider's real-time stream
+      // now handles the isOnboarded=false case reactively, so the heuristic
+      // only introduced false positives (e.g. partially-filled profiles
+      // incorrectly treated as complete).
       return AuthUser.fromFirestore(
         firebaseUser.uid,
-        {...data, 'isOnboarded': isOnboarded},
+        data,
         emailVerified: firebaseUser.emailVerified,
       );
     }
@@ -534,6 +677,21 @@ class AuthRepository {
     final payload = user.toApiPayload();
     payload['consentGiven'] = true; // GDPR consent
     await _api.call('completeOnboarding', data: payload);
+  }
+
+  // ── Dev-mode fallback: write isOnboarded + full profile to Firestore ────────
+  // Called only when completeOnboarding Cloud Function fails in debug mode.
+  // Writes the full payload so the ghost-onboarded safety net in computeRedirect
+  // (name==null && photoUrls.isEmpty → /onboarding) does not re-trigger on the
+  // next cold start.
+  Future<void> markOnboardedDirectly(AuthUser user) async {
+    final payload = user.toApiPayload()..['isOnboarded'] = true;
+    await _users
+        .doc(user.id)
+        .set(payload, SetOptions(merge: true))
+        .catchError((e) {
+      debugPrint('[AUTH] markOnboardedDirectly failed for ${user.id}: $e');
+    });
   }
 
   // ── Update profile (via Cloud Functions) ─────────────────────────────────
@@ -623,6 +781,11 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[DEV] completeOnboarding API error (bypassed): $e');
+        // Dev fallback: write isOnboarded directly to Firestore so that the
+        // next cold-start reads the correct value. Without this, the Cloud
+        // Function failure leaves isOnboarded=false in Firestore, causing the
+        // router to route back to /onboarding on every subsequent app open.
+        await _repository.markOnboardedDirectly(user);
       } else {
         rethrow;
       }

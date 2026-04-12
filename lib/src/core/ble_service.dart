@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:battery_plus/battery_plus.dart';
 
@@ -70,32 +72,60 @@ class BleService {
     final interval =
         _isLowPowerMode ? _lowPowerScanInterval : _normalScanInterval;
 
-    // Run a scan immediately, then schedule periodic scans
-    _runScan();
+    // Delay the first scan by 3 s so the Android FlutterActivity has finished
+    // binding all plugin channels before FlutterBluePlus.startScan() is called.
+    // Calling startScan() before the Activity is attached causes a
+    // NullPointerException in FlutterBluePlusPlugin.onMethodCall():526.
+    Future.delayed(const Duration(seconds: 3), _runScan);
     _scanTimer = Timer.periodic(interval, (_) {
       if (!_isLowPowerMode) _runScan();
     });
   }
 
   Future<void> _runScan() async {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return;
 
-    final isOn =
-        await FlutterBluePlus.adapterState.first == BluetoothAdapterState.on;
-    if (!isOn) return;
-
-    await FlutterBluePlus.startScan(
-      withServices: [Guid(trembleServiceUuid)],
-      timeout: _scanDuration,
-    );
-
-    _scanSub?.cancel();
-    _scanSub = FlutterBluePlus.scanResults.listen((results) {
-      for (final result in results) {
-        _onDeviceDetected(uid, result);
+      // Guard: not all Android devices support BLE.
+      final supported = await FlutterBluePlus.isSupported;
+      if (!supported) {
+        debugPrint('[BleService] BLE not supported on this device — skipping scan');
+        return;
       }
-    });
+
+      // Brief settle delay so the Android Activity binding is fully established
+      // before the platform channel call. This is a secondary guard; the primary
+      // guarantee is that BleService only runs in the main isolate (home_screen.dart).
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Re-check running state — stop() may have been called during the delay.
+      if (!_isRunning) return;
+
+      final isOn =
+          await FlutterBluePlus.adapterState.first == BluetoothAdapterState.on;
+      if (!isOn) return;
+
+      await FlutterBluePlus.startScan(
+        withServices: [Guid(trembleServiceUuid)],
+        timeout: _scanDuration,
+      );
+
+      _scanSub?.cancel();
+      _scanSub = FlutterBluePlus.scanResults.listen((results) {
+        for (final result in results) {
+          _onDeviceDetected(uid, result);
+        }
+      });
+    } on PlatformException catch (e) {
+      // Activity not yet bound or BLE hardware unavailable — skip this cycle.
+      // The periodic timer will retry on the next interval.
+      debugPrint('[BleService] scan skipped (${e.code}): ${e.message}');
+    } catch (e) {
+      // Catch-all so no BLE error can propagate as an unhandled exception and
+      // stall the router's auth stream.
+      debugPrint('[BleService] scan error: $e');
+    }
   }
 
   Future<void> _onDeviceDetected(String myUid, ScanResult result) async {
