@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../shared/ui/tremble_logo.dart';
+import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
 class IntroSlideStep extends StatelessWidget {
@@ -9,11 +10,13 @@ class IntroSlideStep extends StatelessWidget {
     super.key,
     required this.index,
     required this.onNext,
+    required this.onBack,
     required this.tr,
   });
 
   final int index;
   final VoidCallback onNext;
+  final VoidCallback onBack;
   final String Function(String) tr;
 
   @override
@@ -47,6 +50,17 @@ class IntroSlideStep extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if (index > 0) ...[
+              Align(
+                alignment: Alignment.topLeft,
+                child: TrembleBackButton(
+                  label: tr('back'),
+                  onPressed: onBack,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ] else
+              const SizedBox(height: 60),
             const TrembleLogo(size: 56),
             const SizedBox(height: 40),
             Container(
@@ -54,16 +68,16 @@ class IntroSlideStep extends StatelessWidget {
               height: 96,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: kBrandRose.withValues(alpha: 0.12),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                 boxShadow: [
                   BoxShadow(
-                    color: kBrandRose.withValues(alpha: 0.22),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.22),
                     blurRadius: 32,
                     spreadRadius: 4,
                   ),
                 ],
               ),
-              child: Icon(icons[index], size: 44, color: kBrandRose),
+              child: Icon(icons[index], size: 44, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(height: 40),
             Text(
@@ -98,7 +112,7 @@ class IntroSlideStep extends StatelessWidget {
                   height: 8,
                   decoration: BoxDecoration(
                     color: isActive
-                        ? kBrandRose
+                        ? Theme.of(context).colorScheme.primary
                         : (isDark ? Colors.white30 : Colors.black26),
                     borderRadius: BorderRadius.circular(100),
                   ),

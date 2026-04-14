@@ -36,6 +36,7 @@ import 'widgets/registration_steps/email_location_step.dart';
 import 'widgets/registration_steps/hobbies_step.dart';
 import 'widgets/registration_steps/photos_step.dart';
 import 'widgets/registration_steps/consent_step.dart';
+import '../../../core/upload_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE INDICES (actual PageView order)
@@ -202,8 +203,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Future<void> _registerUser() async {
     final currentUser = FirebaseAuth.instance.currentUser;
 
+    if (kDebugMode) {
+      debugPrint(
+        '[TREMBLE_AUTH_FLOW] _registerUser() called. currentUser=${currentUser?.email}, currentPage=$_currentPage',
+      );
+    }
+
     if (currentUser != null) {
       // Already logged in (via Social or incomplete Email registration), just move to next page
+      if (kDebugMode) {
+        debugPrint('[TREMBLE_AUTH_FLOW] currentUser already exists, advancing page');
+      }
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -216,12 +226,26 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     setState(() => _isRegistering = true);
 
     try {
+      if (kDebugMode) {
+        debugPrint('[TREMBLE_AUTH_FLOW] Calling authStateProvider.notifier.register()');
+      }
+
       await ref.read(authStateProvider.notifier).register(
             _emailController.text.trim(),
             _passwordController.text,
           );
 
+      if (kDebugMode) {
+        debugPrint(
+          '[TREMBLE_AUTH_FLOW] Register succeeded. Firebase currentUser=${FirebaseAuth.instance.currentUser?.email}',
+        );
+      }
+
       _showVerificationNotification();
+
+      if (kDebugMode) {
+        debugPrint('[TREMBLE_AUTH_FLOW] Advancing page from $_currentPage to ${_currentPage + 1}');
+      }
 
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
@@ -231,11 +255,19 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         _currentPage++;
         _isRegistering = false;
       });
+
+      if (kDebugMode) {
+        debugPrint('[TREMBLE_AUTH_FLOW] Page advanced. currentPage=$_currentPage');
+      }
     } catch (e) {
       setState(() => _isRegistering = false);
       String errorMsg = e.toString().contains('email-already-in-use')
           ? tr('email_in_use')
           : tr('registration_error');
+
+      if (kDebugMode) {
+        debugPrint('[TREMBLE_AUTH_FLOW] Register failed: $e');
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMsg, style: GoogleFonts.instrumentSans())),
@@ -262,7 +294,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ────── CONTINUE PILL ──────
   Widget _continueButton(
       {required bool enabled, required VoidCallback onTap, String? label}) {
-    const _brandRose = Color(0xFFF4436C);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
@@ -273,7 +304,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         height: 56,
         decoration: BoxDecoration(
           color: enabled
-              ? _brandRose
+              ? Theme.of(context).colorScheme.primary
               : (isDark
                   ? Colors.white.withValues(alpha: 0.15)
                   : Colors.black.withValues(alpha: 0.08)),
@@ -281,7 +312,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           boxShadow: [
             if (enabled)
               BoxShadow(
-                color: _brandRose.withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -318,7 +349,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         value: val,
         backgroundColor:
             isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.08),
-        valueColor: const AlwaysStoppedAnimation(Color(0xFFF4436C)),
+        valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
         minHeight: 3,
       ),
     );
@@ -326,7 +357,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   Widget _optionPill(String label, bool selected, VoidCallback onTap,
       {IconData? icon}) {
-    const _brandRose = Color(0xFFF4436C);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
@@ -337,14 +367,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: selected
-              ? _brandRose.withValues(alpha: 0.22)
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.22)
               : (isDark
                   ? Colors.white.withValues(alpha: 0.12)
                   : Colors.black.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
               color: selected
-                  ? _brandRose
+                  ? Theme.of(context).colorScheme.primary
                   : (isDark ? Colors.white38 : Colors.black26),
               width: selected ? 2 : 1),
         ),
@@ -353,7 +383,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             if (icon != null) ...[
               Icon(icon,
                   color: selected
-                      ? _brandRose
+                      ? Theme.of(context).colorScheme.primary
                       : (isDark ? Colors.white70 : Colors.black54),
                   size: 20),
               const SizedBox(width: 12)
@@ -366,7 +396,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     fontSize: 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.w500)),
             const Spacer(),
-            if (selected) Icon(Icons.check_circle, color: _brandRose, size: 20),
+            if (selected) Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 20),
           ],
         ),
       ),
@@ -377,7 +407,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(tr('verification_email')),
-        backgroundColor: const Color(0xFFF4436C),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -428,10 +458,30 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  IntroSlideStep(index: 0, onNext: _nextPage, tr: tr),
-                  IntroSlideStep(index: 1, onNext: _nextPage, tr: tr),
-                  IntroSlideStep(index: 2, onNext: _nextPage, tr: tr),
-                  IntroSlideStep(index: 3, onNext: _nextPage, tr: tr),
+                  IntroSlideStep(
+                    index: 0,
+                    onNext: _nextPage,
+                    onBack: () => _goToPage(_currentPage - 1),
+                    tr: tr,
+                  ),
+                  IntroSlideStep(
+                    index: 1,
+                    onNext: _nextPage,
+                    onBack: () => _goToPage(_currentPage - 1),
+                    tr: tr,
+                  ),
+                  IntroSlideStep(
+                    index: 2,
+                    onNext: _nextPage,
+                    onBack: () => _goToPage(_currentPage - 1),
+                    tr: tr,
+                  ),
+                  IntroSlideStep(
+                    index: 3,
+                    onNext: _nextPage,
+                    onBack: () => _goToPage(_currentPage - 1),
+                    tr: tr,
+                  ),
                   // GDPR / ZVOP-2: Age verification FIRST — must confirm 18+
                   // before any personal data is collected or consent is given.
                   BirthdayStep(
@@ -743,15 +793,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF4436C).withValues(alpha: 0.15),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
         border:
-            Border.all(color: const Color(0xFFF4436C).withValues(alpha: 0.4)),
+            Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.mark_email_unread_outlined,
-              color: Color(0xFFF4436C), size: 20),
+          Icon(Icons.mark_email_unread_outlined,
+              color: Theme.of(context).colorScheme.primary, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -783,7 +833,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(tr('verification_email')),
-                      backgroundColor: const Color(0xFFF4436C),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
@@ -796,7 +846,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 padding: EdgeInsets.zero, minimumSize: Size.zero),
             child: Text(
               tr('resend'),
-              style: const TextStyle(color: Color(0xFFF4436C), fontSize: 12),
+              style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12),
             ),
           ),
         ],
@@ -816,12 +866,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E1E2E),
+            color: Theme.of(context).scaffoldBackgroundColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white24),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(LucideIcons.info, color: Color(0xFFF4436C), size: 40),
+            Icon(LucideIcons.info, color: Theme.of(context).colorScheme.primary, size: 40),
             const SizedBox(height: 16),
             Text(tr('gender_nonbinary_popup_title'),
                 style: GoogleFonts.instrumentSans(
@@ -840,7 +890,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                    color: const Color(0xFFF4436C),
+                    color: Theme.of(context).colorScheme.primary,
                     borderRadius: BorderRadius.circular(30)),
                 child: Center(
                     child: Text('OK',
@@ -945,7 +995,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: tempSelection != null
-                            ? const Color(0xFFF4436C)
+                            ? Theme.of(context).colorScheme.primary
                             : (isDark ? Colors.white12 : Colors.black12),
                         foregroundColor: tempSelection != null
                             ? Colors.black
@@ -1082,7 +1132,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                     ? _introvertLabelReg(tempRange.end)
                                     : '${tempRange.end.toInt()}',
                               ),
-                              activeColor: const Color(0xFFF4436C),
+                              activeColor: Theme.of(context).colorScheme.primary,
                               inactiveColor:
                                   isDark ? Colors.white12 : Colors.black12,
                               onChanged: (v) =>
@@ -1123,7 +1173,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               Expanded(
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFF4436C),
+                                    backgroundColor: Theme.of(context).colorScheme.primary,
                                     foregroundColor: Colors.black,
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 16),
@@ -1293,89 +1343,103 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final uid =
         currentUser?.uid ?? 'generated_id'; // Fallback only if somehow null
 
-    final photoUrls =
-        _photos.where((p) => p != null).map((p) => p!.path).toList();
-
-    final datingMap = {
-      'short_term_fun': 'Kratkoročna zabava',
-      'long_term_partner': 'Dolgoročni partner',
-      'short_open_long': 'Kratkoročno, odprto za dolgo',
-      'long_open_short': 'Dolgoročno, odprto za kratko',
-      'undecided': 'Neodločen',
-    };
-
-    final user = AuthUser(
-      id: uid,
-      name: _nameController.text,
-      email: _emailController.text,
-      // password removed — never stored in app state
-      photoUrls: photoUrls,
-      age: _birthDate != null ? _calcAge(_birthDate!) : 20,
-      birthDate: _birthDate,
-      height: _heightCm, // Included height in cm
-      gender: _selectedGender ?? 'male',
-      location:
-          _locationController.text.isNotEmpty ? _locationController.text : null,
-      interestedIn: _wantToMeet.join(', '),
-      isSmoker: _smokingHabit == 'yes',
-      occupation: _status != null
-          ? (_customOccupationController.text.isNotEmpty
-              ? _customOccupationController.text
-              : (_status == 'student' ? 'Študent' : 'Zaposlen'))
-          : 'Študent', // Fallback
-      drinkingHabit: _drinkingHabit ?? 'never',
-      introvertScale: (_introversionLevel * 100).toInt(),
-      exerciseHabit: _exerciseHabit ?? 'sometimes',
-      sleepSchedule: _sleepHabit ?? 'night_owl',
-      petPreference: _petPreference ?? 'dog',
-      childrenPreference: _childrenPreference ?? 'not_sure',
-      religion: _religion,
-      ethnicity: _ethnicity,
-      hairColor: _hairColor,
-      politicalAffiliation: _politicalAffiliationValue == 0
-          ? 'politics_dont_care'
-          : _politicalAffiliationValue == -1
-              ? 'politics_undisclosed'
-              : [
-                  'politics_left',
-                  'politics_center_left',
-                  'politics_center',
-                  'politics_center_right',
-                  'politics_right'
-                ][_politicalAffiliationValue.toInt() - 1],
-      religionPreference: _partnerReligion?.join(', '),
-      ethnicityPreference: _partnerEthnicity?.join(', '),
-      hairColorPreference: _partnerHairColor?.join(', '),
-      partnerExerciseHabit: _partnerExerciseHabit?.join(', '),
-      partnerDrinkingHabit: _partnerDrinkingHabit?.join(', '),
-      partnerSleepSchedule: _partnerSleepHabit?.join(', '),
-      partnerPetPreference: _partnerPetPreference?.join(', '),
-      partnerChildrenPreference: _partnerChildrenPreference?.join(', '),
-      partnerSmokingPreference: _partnerSmokingHabit?.join(', '),
-      politicalAffiliationPreference: _partnerPoliticalAffiliationPreference,
-      partnerIntrovertPreference: _partnerIntroversionRange,
-      partnerHeightPreference: _partnerHeightRange,
-      lookingFor: _datingPreference != null
-          ? [datingMap[_datingPreference!] ?? _datingPreference!]
-          : [],
-      languages: [
-        ..._selectedLanguages,
-        if (_showCustomLanguage && _customLanguageController.text.isNotEmpty)
-          _customLanguageController.text
-      ],
-      hobbies: _selectedHobbies,
-      prompts: const {},
-      isOnboarded: true,
-      isEmailVerified: false,
-      ageRangeStart: 18,
-      ageRangeEnd: 45,
-      appLanguage: _selectedLanguage,
-      isPremium: true, // Auto-premium in development mode as per request
-      isClassicAppearance: _isClassicAppearance,
-    );
-
+    AuthUser? user;
     try {
       setState(() => _isRegistering = true);
+
+      // Step 0: Upload photos in parallel to Cloudflare R2
+      final validPhotos = _photos.whereType<File>().toList();
+      
+      if (kDebugMode) {
+        debugPrint('[RegistrationFlow] Starting upload of ${validPhotos.length} photos...');
+      }
+
+      final photoUrls = await Future.wait(
+        validPhotos.map((file) =>
+            ref.read(uploadServiceProvider).uploadPhotoFromPath(file.path)),
+      );
+
+      if (kDebugMode) {
+        debugPrint('[RegistrationFlow] Uploads complete. URLs: $photoUrls');
+      }
+
+      final datingMap = {
+        'short_term_fun': 'Kratkoročna zabava',
+        'long_term_partner': 'Dolgoročni partner',
+        'short_open_long': 'Kratkoročno, odprto za dolgo',
+        'long_open_short': 'Dolgoročno, odprto za kratko',
+        'undecided': 'Neodločen',
+      };
+
+      user = AuthUser(
+        id: uid,
+        name: _nameController.text,
+        email: _emailController.text,
+        // password removed — never stored in app state
+        photoUrls: photoUrls,
+        age: _birthDate != null ? _calcAge(_birthDate!) : 20,
+        birthDate: _birthDate,
+        height: _heightCm, // Included height in cm
+        gender: _selectedGender ?? 'male',
+        location:
+            _locationController.text.isNotEmpty ? _locationController.text : null,
+        interestedIn: _wantToMeet.join(', '),
+        isSmoker: _smokingHabit == 'yes',
+        jobStatus: _status ?? 'student',
+        occupation: _customOccupationController.text.isNotEmpty
+            ? _customOccupationController.text
+            : null,
+        drinkingHabit: _drinkingHabit ?? 'never',
+        introvertScale: (_introversionLevel * 100).toInt(),
+        exerciseHabit: _exerciseHabit ?? 'sometimes',
+        sleepSchedule: _sleepHabit ?? 'night_owl',
+        petPreference: _petPreference ?? 'dog',
+        childrenPreference: _childrenPreference ?? 'not_sure',
+        religion: _religion,
+        ethnicity: _ethnicity,
+        hairColor: _hairColor,
+        politicalAffiliation: _politicalAffiliationValue == 0
+            ? 'politics_dont_care'
+            : _politicalAffiliationValue == -1
+                ? 'politics_undisclosed'
+                : [
+                    'politics_left',
+                    'politics_center_left',
+                    'politics_center',
+                    'politics_center_right',
+                    'politics_right'
+                  ][_politicalAffiliationValue.toInt() - 1],
+        religionPreference: _partnerReligion?.join(', '),
+        ethnicityPreference: _partnerEthnicity?.join(', '),
+        hairColorPreference: _partnerHairColor?.join(', '),
+        partnerExerciseHabit: _partnerExerciseHabit?.join(', '),
+        partnerDrinkingHabit: _partnerDrinkingHabit?.join(', '),
+        partnerSleepSchedule: _partnerSleepHabit?.join(', '),
+        partnerPetPreference: _partnerPetPreference?.join(', '),
+        partnerChildrenPreference: _partnerChildrenPreference?.join(', '),
+        partnerSmokingPreference: _partnerSmokingHabit?.join(', '),
+        politicalAffiliationPreference: _partnerPoliticalAffiliationPreference,
+        partnerIntrovertPreference: _partnerIntroversionRange,
+        partnerHeightPreference: _partnerHeightRange,
+        lookingFor: _datingPreference != null
+            ? [datingMap[_datingPreference!] ?? _datingPreference!]
+            : [],
+        languages: [
+          ..._selectedLanguages,
+          if (_showCustomLanguage && _customLanguageController.text.isNotEmpty)
+            _customLanguageController.text
+        ],
+        hobbies: _selectedHobbies,
+        prompts: const {},
+        isOnboarded: true,
+        isEmailVerified: false,
+        ageRangeStart: 18,
+        ageRangeEnd: 45,
+        appLanguage: _selectedLanguage,
+        isPremium: true, // Auto-premium in development mode as per request
+        isClassicAppearance: _isClassicAppearance,
+        isGenderBasedColor: !_isClassicAppearance,
+      );
 
       // Step 1: Firebase Auth user is ALREADY created on page 5 (_registerUser)
       // We skip register() here to avoid 'email-already-in-use' exception.
@@ -1390,7 +1454,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
       if (mounted) context.go('/');
     } catch (e) {
-      if (kDebugMode) {
+      if (kDebugMode && user != null) {
         // Dev mode: show error but force local state and navigate through.
         debugPrint('[DEV] Registration error (bypassed): $e');
         ref.read(authStateProvider.notifier).setUser(
@@ -1409,6 +1473,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           context.go('/');
         }
       } else {
+        setState(() => _isRegistering = false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Registration failed: $e')),

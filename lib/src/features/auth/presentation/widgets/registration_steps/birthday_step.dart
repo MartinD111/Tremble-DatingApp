@@ -94,7 +94,7 @@ class BirthdayStep extends StatelessWidget {
     final d = _currentDate();
     final age = calcAge(d);
     final dateStr = DateFormat('MMMM d, yyyy').format(d);
-    const brandRose = Color(0xFFF4436C);
+    final brandRose = Theme.of(context).colorScheme.primary;
     const red = Color(0xFFFF4C4C);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -284,10 +284,26 @@ class BirthdayStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TrembleBackButton(label: tr('back'), onPressed: onBack),
-          const SizedBox(height: 24),
-          StepHeader(tr('whats_your_birthday'),
-              subtitle: tr('birthday_subtitle')),
+          SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                StepHeader(
+                  tr('whats_your_birthday'),
+                  subtitle: tr('birthday_subtitle'),
+                ),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: TrembleBackButton(
+                    onPressed: onBack,
+                    label: tr('back'),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 32),
           SizedBox(
             height: 200,

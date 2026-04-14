@@ -37,11 +37,11 @@ void main() async {
   // prod: Play Integrity (Android) / Device Check (iOS), dev: Debug provider for testing.
   await FirebaseAppCheck.instance.activate(
     providerAndroid: flavor == 'prod'
-        ? const AndroidPlayIntegrityProvider()
-        : const AndroidDebugProvider(),
+        ? AndroidPlayIntegrityProvider()
+        : AndroidDebugProvider(),
     providerApple: flavor == 'prod'
-        ? const AppleDeviceCheckProvider()
-        : const AppleDebugProvider(),
+        ? AppleDeviceCheckProvider()
+        : AppleDebugProvider(),
   );
 
   // Pass all uncaught Flutter errors to Crashlytics
@@ -52,11 +52,8 @@ void main() async {
   // the app is fully running, in a top-level context.
   NotificationService.registerBackgroundHandler();
 
-  // DIAGNOSTIC: background service temporarily disabled to isolate startup hang.
-  // DartPluginRegistrant in onStart registers flutter_blue_plus in the background
-  // isolate, which throws "This class should only be used in the main isolate".
-  // Re-enable once the SHA-1 / DEVELOPER_ERROR is confirmed resolved.
-  // await initializeBackgroundService();
+  // Initialize background service for Radar scanning.
+  await initializeBackgroundService();
 
   // Pre-load theme before first frame to prevent Dark Mode flash on navigation
   final prefs = await SharedPreferences.getInstance();

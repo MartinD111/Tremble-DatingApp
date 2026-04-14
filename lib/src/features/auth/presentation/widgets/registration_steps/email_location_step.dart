@@ -344,8 +344,8 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(LucideIcons.diamond,
-                      color: Color(0xFFF4436C), size: 40),
+                  Icon(LucideIcons.diamond,
+                      color: Theme.of(context).colorScheme.primary, size: 40),
                   const SizedBox(height: 16),
                   Text(
                     widget.tr('premium_free_notice'),
@@ -360,8 +360,8 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
                     widget
                         .tr('current_users_count')
                         .replaceAll('{count}', '4.832'),
-                    style: const TextStyle(
-                        color: Color(0xFFF4436C),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold),
                   ),
@@ -370,7 +370,7 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF4436C),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -391,21 +391,21 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFFF4436C).withValues(alpha: 0.15),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-                color: const Color(0xFFF4436C).withValues(alpha: 0.5)),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(LucideIcons.diamond,
-                  color: Color(0xFFF4436C), size: 16),
+              Icon(LucideIcons.diamond,
+                  color: Theme.of(context).colorScheme.primary, size: 16),
               const SizedBox(width: 8),
               Text(
                 widget.tr('premium_account_activated'),
-                style: const TextStyle(
-                    color: Color(0xFFF4436C),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
                     fontSize: 14,
                     fontWeight: FontWeight.bold),
               ),
@@ -438,10 +438,23 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TrembleBackButton(
-                label: widget.tr('back'), onPressed: widget.onBack),
-            const SizedBox(height: 16),
-            StepHeader(widget.tr('basic_info')),
+            SizedBox(
+              width: double.infinity,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  StepHeader(widget.tr('basic_info')),
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    child: TrembleBackButton(
+                      label: widget.tr('back'),
+                      onPressed: widget.onBack,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 32),
             if (isAlreadyLoggedIn &&
                 (isSocialUser || isVerifiedPasswordUser) &&
@@ -481,8 +494,8 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
             _buildPremiumPill(),
             const SizedBox(height: 32),
             widget.isRegistering
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFF4436C)))
+                ? Center(
+                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
                 : ContinueButton(
                     enabled: widget.emailController.text.isNotEmpty &&
                         ((isAlreadyLoggedIn &&

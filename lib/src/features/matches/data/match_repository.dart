@@ -18,7 +18,8 @@ class MatchProfile {
   final String? politicalAffiliation;
   final String? religion;
   final String? ethnicity;
-  final String? jobTitle;
+  final String? jobStatus;
+  final String? occupation;
   final String? company;
   final String? school;
   final bool? isSmoker;
@@ -46,7 +47,8 @@ class MatchProfile {
     this.politicalAffiliation,
     this.religion,
     this.ethnicity,
-    this.jobTitle,
+    this.jobStatus,
+    this.occupation,
     this.company,
     this.school,
     this.isSmoker,
@@ -78,7 +80,8 @@ class MatchProfile {
       politicalAffiliation: data['politicalAffiliation'] as String?,
       religion: data['religion'] as String?,
       ethnicity: data['ethnicity'] as String?,
-      jobTitle: data['occupation'] as String?,
+      jobStatus: data['jobStatus'] as String?,
+      occupation: data['occupation'] as String?,
       isSmoker: data['isSmoker'] as bool?,
       drinkingHabit: data['drinkingHabit'] as String?,
       introvertLevel: data['introvertScale'] as int?,

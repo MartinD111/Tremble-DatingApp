@@ -12,6 +12,7 @@ import '../../safety/presentation/widgets/ugc_action_sheet.dart';
 import '../../../core/translations.dart';
 import '../../../shared/ui/tremble_back_button.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../core/utils/icon_utils.dart';
 
 class ProfileDetailScreen extends ConsumerWidget {
   final MatchProfile match;
@@ -32,7 +33,7 @@ class ProfileDetailScreen extends ConsumerWidget {
             children: [
               CustomScrollView(
                 slivers: [
-                  _buildSliverAppBar(context),
+                  _buildSliverAppBar(context, lang),
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
@@ -45,7 +46,7 @@ class ProfileDetailScreen extends ConsumerWidget {
 
                           // What they're looking for
                           if (match.lookingFor.isNotEmpty) ...[
-                            _buildLookingForSection(lang),
+                            _buildLookingFor(context, match, lang),
                             const SizedBox(height: 20),
                           ],
 
@@ -55,7 +56,7 @@ class ProfileDetailScreen extends ConsumerWidget {
 
                           // Prompts
                           if (match.prompts.isNotEmpty) ...[
-                            _buildPromptsSection(),
+                            _buildPromptsSection(context),
                             const SizedBox(height: 20),
                           ],
 
@@ -105,37 +106,38 @@ class ProfileDetailScreen extends ConsumerWidget {
 
   void _showExitWarning(BuildContext context, WidgetRef ref) {
     final lang = ref.read(appLanguageProvider);
+    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = Theme.of(context).primaryColor;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.grey[900],
+        backgroundColor: colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(t('warning', lang),
             style: GoogleFonts.instrumentSans(
-                color: Colors.white, fontWeight: FontWeight.bold)),
+                color: colorScheme.onSurface, fontWeight: FontWeight.bold)),
         content: Text(t('ignore_warning_body', lang),
-            style: const TextStyle(color: Colors.white70)),
+            style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.7))),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(ctx).pop(); // Close dialog
+              Navigator.of(ctx).pop();
               ref.read(matchControllerProvider.notifier).dismiss();
-              if (context.canPop()) {
-                context.pop(); // Pop from profile screen
-              }
+              if (context.canPop()) context.pop();
             },
-            child: Text(t('ignore', lang),
-                style: const TextStyle(color: Colors.redAccent)),
+            child: const Text('Ignore',
+                style: TextStyle(color: Colors.redAccent)),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(ctx).pop(); // Close dialog
+              Navigator.of(ctx).pop();
               ref.read(matchControllerProvider.notifier).dismiss();
-              if (context.canPop()) {
-                context.pop(); // Pop from profile screen
-              }
+              if (context.canPop()) context.pop();
             },
             child: Text(t('match_again_future', lang),
-                style: const TextStyle(color: Color(0xFFF4436C))),
+                style: TextStyle(color: primaryColor)),
           ),
         ],
       ),
@@ -179,7 +181,7 @@ class ProfileDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSliverAppBar(BuildContext context) {
+  Widget _buildSliverAppBar(BuildContext context, String lang) {
     return SliverAppBar(
       expandedHeight: 450,
       backgroundColor: Colors.transparent,
@@ -237,26 +239,53 @@ class ProfileDetailScreen extends ConsumerWidget {
                       height: 1.1,
                     ),
                   ),
-                  if (match.jobTitle != null || match.school != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(LucideIcons.briefcase,
-                            color: Colors.white70, size: 16),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            [match.jobTitle, match.company]
-                                .where((e) => e != null)
-                                .join(' @ '),
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 16),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  Builder(
+                    builder: (context) {
+                      String displayOccupation = '';
+                      if (match.jobStatus != null) {
+                        final statusLabel = t(match.jobStatus!, lang);
+                        if (match.occupation != null &&
+                            match.occupation!.isNotEmpty) {
+                          displayOccupation =
+                              '$statusLabel, ${match.occupation}';
+                        } else {
+                          displayOccupation = statusLabel;
+                        }
+                      } else if (match.occupation?.isNotEmpty ?? false) {
+                        displayOccupation = match.occupation!;
+                      }
+
+                      if (displayOccupation.isEmpty && match.school == null) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (displayOccupation.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(LucideIcons.briefcase,
+                                    color: Colors.white70, size: 16),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    [displayOccupation, match.company]
+                                        .where((e) => e != null)
+                                        .join(' @ '),
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 16),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      );
+                    },
+                  ),
                   if (match.height != null) ...[
                     const SizedBox(height: 4),
                     Row(
@@ -315,7 +344,7 @@ class ProfileDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLookingForSection(String lang) {
+  Widget _buildLookingFor(BuildContext context, MatchProfile match, String lang) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -325,34 +354,38 @@ class ProfileDetailScreen extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
                 color: Colors.white)),
         const SizedBox(height: 10),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: match.lookingFor
-              .map((item) => Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF4436C).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color:
-                              const Color(0xFFF4436C).withValues(alpha: 0.5)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(LucideIcons.heart,
-                            size: 14, color: const Color(0xFFF4436C)),
-                        const SizedBox(width: 6),
-                        Text(item,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500)),
-                      ],
-                    ),
-                  ))
-              .toList(),
+        Center(
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            alignment: WrapAlignment.center,
+            children: match.lookingFor
+                .where((item) => item != 'undecided' && item != 'friendship' && item != 'spontaneous_meeting')
+                .map((item) => Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: Theme.of(context).primaryColor
+                                .withValues(alpha: 0.5)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(IconUtils.getLookingForIcon(item),
+                              size: 14, color: Theme.of(context).primaryColor),
+                          const SizedBox(width: 6),
+                          Text(t(item, lang),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    ))
+                .toList(),
+          ),
         ),
       ],
     );
@@ -389,8 +422,21 @@ class ProfileDetailScreen extends ConsumerWidget {
     if (match.height != null) {
       addBadge(LucideIcons.ruler, '${match.height} cm');
     }
-    if (match.jobTitle != null) {
-      addBadge(LucideIcons.briefcase, match.jobTitle!);
+    if (match.jobStatus != null || match.occupation != null) {
+      String displayOccupation = '';
+      if (match.jobStatus != null) {
+        final statusLabel = t(match.jobStatus!, lang);
+        if (match.occupation != null && match.occupation!.isNotEmpty) {
+          displayOccupation = '$statusLabel, ${match.occupation}';
+        } else {
+          displayOccupation = statusLabel;
+        }
+      } else if (match.occupation?.isNotEmpty ?? false) {
+        displayOccupation = match.occupation!;
+      }
+      if (displayOccupation.isNotEmpty) {
+        addBadge(LucideIcons.briefcase, displayOccupation);
+      }
     }
     if (match.school != null) {
       addBadge(LucideIcons.graduationCap, match.school!);
@@ -401,20 +447,23 @@ class ProfileDetailScreen extends ConsumerWidget {
       addBadge(LucideIcons.flag, t(match.politicalAffiliation!, lang));
     }
     if (match.hairColor != null) {
-      addBadge(LucideIcons.scissors, t(match.hairColor!, lang));
+      addBadge(Icons.circle, t(match.hairColor!, lang), IconUtils.getHairColor(match.hairColor!));
     }
     if (match.ethnicity != null) {
       addBadge(LucideIcons.users, t('ethnicity_${match.ethnicity}', lang));
     }
 
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: items,
+    return Center(
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        alignment: WrapAlignment.center,
+        children: items,
+      ),
     );
   }
 
-  Widget _buildPromptsSection() {
+  Widget _buildPromptsSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: match.prompts.map((prompt) {
@@ -427,7 +476,7 @@ class ProfileDetailScreen extends ConsumerWidget {
               children: [
                 Text(prompt['question']!,
                     style: GoogleFonts.instrumentSans(
-                        fontSize: 14, color: const Color(0xFFF4436C))),
+                        fontSize: 14, color: Theme.of(context).primaryColor)),
                 const SizedBox(height: 8),
                 Text(prompt['answer']!,
                     style: GoogleFonts.instrumentSans(
@@ -504,7 +553,7 @@ class ProfileDetailScreen extends ConsumerWidget {
     }
     if (match.religion != null) {
       habits.add(buildHabitItem(
-          LucideIcons.heart, t('religion', lang), t(match.religion!, lang)));
+          IconUtils.getReligionIcon(match.religion!), t('religion', lang), t(match.religion!, lang)));
     }
     if (match.ethnicity != null) {
       habits.add(buildHabitItem(
@@ -588,11 +637,11 @@ class ProfileDetailScreen extends ConsumerWidget {
               ),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: const Color(0xFFF4436C),
+                  activeTrackColor: Theme.of(context).primaryColor,
                   inactiveTrackColor: Colors.white24,
                   thumbColor: Colors.white,
                   disabledThumbColor: Colors.white,
-                  disabledActiveTrackColor: const Color(0xFFF4436C),
+                  disabledActiveTrackColor: Theme.of(context).primaryColor,
                   disabledInactiveTrackColor: Colors.white24,
                 ),
                 child: Slider(
@@ -607,8 +656,8 @@ class ProfileDetailScreen extends ConsumerWidget {
                 intLevel <= 50
                     ? '${100 - intLevel}% introvert'
                     : '$intLevel% ekstrovert',
-                style: const TextStyle(
-                    color: const Color(0xFFF4436C),
+                style: TextStyle(
+                    color: Theme.of(context).primaryColor,
                     fontSize: 16,
                     fontWeight: FontWeight.bold),
               ),

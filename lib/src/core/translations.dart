@@ -94,8 +94,8 @@ const Map<String, Map<String, String>> _translations = {
     'profile_card_view': 'View profile card',
     'my_card': 'My card',
     'edit_profile': 'Edit profile',
-    'preferences': 'Preferences',
-    'lifestyle': 'Lifestyle',
+    'preferences': 'Basic Preferences',
+    'lifestyle': 'Lifestyle preferences',
     'app_appearance': 'App appearance',
     'app_language': 'App language',
     'account_settings': 'Account settings',
@@ -120,6 +120,7 @@ const Map<String, Map<String, String>> _translations = {
 
     // --- Preferences ---
     'age_range': 'Age range',
+    'height_label': 'Height',
     'who_looking_for': 'Who am I looking for?',
     'male': 'Male',
     'female': 'Female',
@@ -209,6 +210,8 @@ const Map<String, Map<String, String>> _translations = {
     'status': 'Status',
     'student': 'Student',
     'employed': 'Employed',
+    'course_of_study': 'Course of Study (Optional)',
+    'job_title': 'Job Title (Optional)',
     'introvert_extrovert': 'Introvert / Extrovert',
     'introvert': 'Introvert',
     'extrovert': 'Extrovert',
@@ -432,6 +435,12 @@ const Map<String, Map<String, String>> _translations = {
     'forgot_password': 'Forgot password?',
     'login': 'Login',
     'premium_account_activated': 'Premium account activated',
+
+    // --- Edit profile ---
+    'distance_help': 'Maximum distance in km for discovering nearby people. Larger radius uses more battery.',
+    'unsaved_changes': 'Unsaved changes',
+    'discard_changes_q': 'Discard unsaved changes?',
+    'discard': 'Discard',
   },
 
   // ═══════════════════════════════════════════
@@ -476,6 +485,7 @@ const Map<String, Map<String, String>> _translations = {
     'report_success': 'Hvala. Uporabnik {name} je bil prijavljen.',
 
     'age_range': 'Starostni razpon',
+    'height_label': 'Višina',
     'who_looking_for': 'Koga iščem?',
     'male': 'Moški',
     'female': 'Ženska',
@@ -553,6 +563,8 @@ const Map<String, Map<String, String>> _translations = {
     'status': 'Status',
     'student': 'Študent/-ka',
     'employed': 'Zaposlen/-a',
+    'course_of_study': 'Smer študija (Opcijsko)',
+    'job_title': 'Naziv delovnega mesta (Opcijsko)',
     'introvert_extrovert': 'Introvert / Ekstrovert',
     'introvert': 'Introvert',
     'extrovert': 'Ekstrovert',
@@ -768,6 +780,12 @@ const Map<String, Map<String, String>> _translations = {
     'forgot_password': 'Pozabljeno geslo',
     'login': 'Prijava',
     'premium_account_activated': 'Premium račun aktiviran',
+
+    // --- Edit profile ---
+    'distance_help': 'Največja razdalja v km za odkrivanje bližnjih oseb. Večji radij porabi več baterije.',
+    'unsaved_changes': 'Neshranjene spremembe',
+    'discard_changes_q': 'Zavrži neshranjene spremembe?',
+    'discard': 'Zavrži',
   },
 
   // ═══════════════════════════════════════════
@@ -792,6 +810,7 @@ const Map<String, Map<String, String>> _translations = {
     'account_settings': 'Kontoeinstellungen',
     'premium_account': 'Premium-Konto',
     'age_range': 'Altersbereich',
+    'height_label': 'Größe',
     'who_looking_for': 'Wen suche ich?',
     'male': 'Männlich',
     'female': 'Weiblich',
@@ -1032,6 +1051,7 @@ const Map<String, Map<String, String>> _translations = {
     'account_settings': 'Impostazioni account',
     'premium_account': 'Account Premium',
     'age_range': 'Fascia d\'età',
+    'height_label': 'Altezza',
     'who_looking_for': 'Chi cerco?',
     'male': 'Maschio',
     'female': 'Femmina',
@@ -1212,6 +1232,7 @@ const Map<String, Map<String, String>> _translations = {
     'account_settings': 'Paramètres du compte',
     'premium_account': 'Compte Premium',
     'age_range': 'Tranche d\'âge',
+    'height_label': 'Taille',
     'who_looking_for': 'Qui je cherche?',
     'male': 'Homme',
     'female': 'Femme',
@@ -1369,6 +1390,7 @@ const Map<String, Map<String, String>> _translations = {
     'account_settings': 'Postavke računa',
     'premium_account': 'Premium račun',
     'age_range': 'Dobni raspon',
+    'height_label': 'Visina',
     'who_looking_for': 'Koga tražim?',
     'male': 'Muškarac',
     'female': 'Žena',
@@ -1521,6 +1543,7 @@ const Map<String, Map<String, String>> _translations = {
     'account_settings': 'Podešavanja naloga',
     'premium_account': 'Premium nalog',
     'age_range': 'Starosni raspon',
+    'height_label': 'Visina',
     'who_looking_for': 'Koga tražim?',
     'male': 'Muškarac',
     'female': 'Žena',
@@ -1669,6 +1692,7 @@ const Map<String, Map<String, String>> _translations = {
     'account_settings': 'Fiókbeállítások',
     'premium_account': 'Prémium fiók',
     'age_range': 'Korcsoport',
+    'height_label': 'Magasság',
     'who_looking_for': 'Kit keresek?',
     'male': 'Férfi',
     'female': 'Nő',

@@ -52,7 +52,7 @@ class PreferencePillRow extends StatelessWidget {
     } else if (nonNull.length == 1) {
       displayLabel = formatter(nonNull.first);
     } else {
-      displayLabel = '${nonNull.length} selections';
+      displayLabel = 'Selected ${nonNull.length}';
     }
 
     return Row(
@@ -68,20 +68,25 @@ class PreferencePillRow extends StatelessWidget {
           const Icon(LucideIcons.lock, size: 13, color: Colors.amber),
         ],
         const Spacer(),
-        // Value pill
+        // Value pill — max 140px wide, ellipsis on overflow
         GestureDetector(
           onTap: onTap,
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: pillBg,
-              borderRadius: BorderRadius.circular(100),
-              border: Border.all(color: pillBorder),
-            ),
-            child: Text(
-              displayLabel,
-              style: TextStyle(color: subColor, fontSize: 12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 140),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: pillBg,
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(color: pillBorder),
+              ),
+              child: Text(
+                displayLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: subColor, fontSize: 12),
+              ),
             ),
           ),
         ),

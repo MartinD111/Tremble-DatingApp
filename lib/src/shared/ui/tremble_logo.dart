@@ -20,10 +20,13 @@ class TrembleLogo extends StatelessWidget {
             height: size,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(size * 0.22),
-              gradient: const RadialGradient(
-                center: Alignment(0, -0.3),
+              gradient: RadialGradient(
+                center: const Alignment(0, -0.3),
                 radius: 0.8,
-                colors: [Color(0xFFF95B82), Color(0xFFE12F58)],
+                colors: [
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.9),
+                  Theme.of(context).colorScheme.primary,
+                ],
               ),
               boxShadow: [
                 BoxShadow(

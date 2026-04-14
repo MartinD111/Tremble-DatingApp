@@ -67,7 +67,7 @@ class PoliticalAffiliationStep extends StatelessWidget {
               max: 5,
               divisions: 4,
               onChanged: isSpecial ? null : (v) => onChanged(v),
-              activeColor: kBrandRose,
+              activeColor: Theme.of(context).colorScheme.primary,
               inactiveColor: isDark ? Colors.white12 : Colors.black12,
             ),
           ),
@@ -75,7 +75,7 @@ class PoliticalAffiliationStep extends StatelessWidget {
           Text(
             displayLabel,
             style: GoogleFonts.instrumentSans(
-              color: kBrandRose,
+              color: Theme.of(context).colorScheme.primary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),

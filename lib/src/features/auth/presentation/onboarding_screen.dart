@@ -18,20 +18,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String get _lang => ref.read(authStateProvider)?.appLanguage ?? 'en';
   String tr(String key) => t(key, _lang);
 
-  final List<_OnboardingData> _slides = const [
+  List<_OnboardingData> _getSlides(BuildContext context) => [
     _OnboardingData(
       titleKey: 'onb1_title',
       bodyKey: 'onb1_body',
       emoji: '👋',
-      accentColor: Color(0xFFF4436C),
+      accentColor: Theme.of(context).colorScheme.primary,
     ),
-    _OnboardingData(
+    const _OnboardingData(
       titleKey: 'onb2_title',
       bodyKey: 'onb2_body',
       emoji: '🚫',
       accentColor: Color(0xFF64B5F6),
     ),
-    _OnboardingData(
+    const _OnboardingData(
       titleKey: 'onb3_title',
       bodyKey: 'onb3_body',
       emoji: '🗺️',
@@ -40,7 +40,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   ];
 
   void _next() {
-    if (_currentPage < _slides.length - 1) {
+    final slidesCount = _getSlides(context).length;
+    if (_currentPage < slidesCount - 1) {
       _pageController.nextPage(
           duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
       setState(() => _currentPage++);
@@ -51,8 +52,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final slide = _slides[_currentPage];
-    final isLast = _currentPage == _slides.length - 1;
+    final slides = _getSlides(context);
+    final slide = slides[_currentPage];
+    final isLast = _currentPage == slides.length - 1;
 
     return Scaffold(
       body: AnimatedContainer(
@@ -83,9 +85,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 child: PageView.builder(
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _slides.length,
+                  itemCount: slides.length,
                   onPageChanged: (i) => setState(() => _currentPage = i),
-                  itemBuilder: (ctx, i) => _buildSlide(_slides[i]),
+                  itemBuilder: (ctx, i) => _buildSlide(slides[i]),
                 ),
               ),
               // Dots + button
@@ -96,7 +98,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     // Dots
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(_slides.length, (i) {
+                      children: List.generate(slides.length, (i) {
                         final active = i == _currentPage;
                         return AnimatedContainer(
                           duration: const Duration(milliseconds: 300),

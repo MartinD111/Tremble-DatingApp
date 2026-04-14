@@ -69,9 +69,6 @@ Future<bool> onIosBackground(ServiceInstance service) async {
 void onStart(ServiceInstance service) async {
   // DartPluginRegistrant registers non-UI plugins (Firebase, GeoService, etc.)
   // in this background isolate.
-  // WidgetsFlutterBinding must NOT be called here — it is the main-isolate UI
-  // binding. Calling it in a background isolate triggers:
-  //   "Exception: This class should only be used in the main isolate (UI App)"
   DartPluginRegistrant.ensureInitialized();
 
   // Re-initialize Firebase in the background isolate
@@ -80,26 +77,39 @@ void onStart(ServiceInstance service) async {
       ? ProdFirebaseOptions.currentPlatform
       : DevFirebaseOptions.currentPlatform;
   await Firebase.initializeApp(options: firebaseOptions);
-  // NotificationService.initialize() is called in the main isolate (home_screen).
-  // The background isolate handles its own local notifications directly.
 
-  // BleService is NOT started here — see import comment above.
+  // Initialize notifications for background isolate
+  final notificationsPlugin = FlutterLocalNotificationsPlugin();
+  const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const iosSettings = DarwinInitializationSettings();
+  await notificationsPlugin.initialize(
+    const InitializationSettings(android: androidSettings, iOS: iosSettings),
+  );
+
   final geoService = GeoService();
   final battery = Battery();
-
-  // Fetch shared preferences within background — needed for consent check
-  // and for the idle notification timer below.
   final prefs = await SharedPreferences.getInstance();
 
-  // GDPR consent gate — do not start Geo without explicit user consent.
-  final hasConsent = prefs.getBool('gdpr_ble_location_consent') ?? false;
+  // Update foreground notification IMMEDIATELY to prevent double-initialization sync issues on Android
+  if (service is AndroidServiceInstance) {
+    if (await service.isForegroundService()) {
+      final level = await battery.batteryLevel;
+      service.setForegroundNotificationInfo(
+        title: 'Tremble Radar',
+        content: geoService.isLowPowerMode
+            ? 'Power-saving mode — Geo matching active ($level%)'
+            : 'Scanning for nearby matches... ($level%)',
+      );
+    }
+  }
 
+  // GDPR consent gate
+  final hasConsent = prefs.getBool('gdpr_ble_location_consent') ?? false;
   if (hasConsent) {
     await geoService.start();
   }
 
   // Listen for radar mode commands from UI.
-  // BleService start/stop is handled by home_screen.dart in the main isolate.
   service.on('stopService').listen((_) async {
     geoService.stop();
     service.stopSelf();
@@ -110,7 +120,6 @@ void onStart(ServiceInstance service) async {
   });
 
   service.on('resumeRadar').listen((_) async {
-    // Re-check consent at resume time — user may have granted it since start.
     final consentAtResume = prefs.getBool('gdpr_ble_location_consent') ?? false;
     if (consentAtResume) {
       await geoService.start();
@@ -124,23 +133,20 @@ void onStart(ServiceInstance service) async {
 
     // Check for "Idle" status (no BLE proximity seen recently)
     final int lastProximity = prefs.getInt('last_ble_encounter_time') ??
-        DateTime.now().millisecondsSinceEpoch; // default to now if unset
+        DateTime.now().millisecondsSinceEpoch;
     final timeSinceEncounter = DateTime.now()
         .difference(DateTime.fromMillisecondsSinceEpoch(lastProximity));
 
     if (timeSinceEncounter.inHours >= 6) {
       final hour = DateTime.now().hour;
-      // Only show during daytime (08:00 - 22:00)
       if (hour >= 8 && hour < 22) {
-        // Show a subtle idle nudge via local notification directly
-        // (background isolate cannot use the main NotificationService instance).
-        final idlePlugin = FlutterLocalNotificationsPlugin();
         const messages = [
           'Mogoče se kaj dogaja v bližini.',
           'Radar je aktiven. Pojdi vživo.',
         ];
         final body = (messages.toList()..shuffle()).first;
-        await idlePlugin.show(
+        
+        await notificationsPlugin.show(
           1,
           'Tremble',
           body,
@@ -154,7 +160,6 @@ void onStart(ServiceInstance service) async {
           ),
           payload: 'idle',
         );
-        // Reset the clock to avoid spamming
         await prefs.setInt(
             'last_ble_encounter_time', DateTime.now().millisecondsSinceEpoch);
       }
@@ -172,7 +177,7 @@ void onStart(ServiceInstance service) async {
       }
     }
 
-    // Emit radar state to UI so it can show the amber battery pill
+    // Emit radar state to UI
     service.invoke('radarState', {
       'mode': isLowPower ? 'degraded' : 'full',
       'batteryLevel': level,

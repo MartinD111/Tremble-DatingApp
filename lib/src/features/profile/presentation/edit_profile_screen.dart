@@ -5,11 +5,19 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
+import '../../../shared/ui/tremble_back_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
-import '../../../shared/ui/tremble_back_button.dart';
+import '../../settings/presentation/widgets/preference_edit_modal.dart';
+import '../../settings/presentation/widgets/preference_pill_row.dart';
+import '../../auth/presentation/widgets/registration_steps/hobbies_step.dart';
+import '../../../shared/ui/top_notification.dart';
+import '../../../shared/ui/discard_changes_modal.dart';
+import '../../../core/upload_service.dart';
+import '../../../core/theme.dart';
+
+import '../../../shared/ui/tremble_circle_button.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -23,22 +31,29 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _locationController = TextEditingController();
   final _imagePicker = ImagePicker();
 
-  // State flags
   bool _hasChanges = false;
   double _distancePreference = 50.0;
   bool _isPremium = false;
+  bool _isUploading = false;
 
-  // Profile fields
   List<String> _photoUrls = [];
+  final ValueNotifier<bool> _isHeaderVisible = ValueNotifier(true);
   String? _gender;
+  String? _interestedIn;
+  String? _jobStatus;
+  String? _religion;
+  String? _hairColor;
+  String? _ethnicity;
   String? _occupation;
+  final _occupationController = TextEditingController();
   bool? _isSmoker;
   String? _drinkingHabit;
   String? _exerciseHabit;
   String? _sleepSchedule;
   String? _petPreference;
   String? _childrenPreference;
-  int _introvertScale = 3;
+  // 0.0 = full introvert, 1.0 = full extrovert (matches registration)
+  double _introversionLevel = 0.5;
   List<String> _hobbies = [];
   List<String> _lookingFor = [];
   List<String> _languages = [];
@@ -54,30 +69,89 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _nameController.text = user.name ?? '';
       _locationController.text = user.location ?? '';
       _photoUrls = List.from(user.photoUrls);
-      _gender = user.gender;
-      _occupation = user.occupation;
+      _gender = _normalizeLegacyValue(user.gender, {
+        'Moški': 'male',
+        'Ženska': 'female',
+      });
+      _interestedIn = _normalizeLegacyValue(user.interestedIn, {
+        'Moške': 'male',
+        'Ženske': 'female',
+        'Vse': 'both',
+      });
+      _jobStatus = _normalizeLegacyValue(user.jobStatus, {
+        'Študent': 'student',
+        'Študent/-ka': 'student',
+        'Zaposlen': 'employed',
+        'Zaposlen/-a': 'employed',
+      });
+      _religion = user.religion;
+      _hairColor = user.hairColor;
+      _ethnicity = user.ethnicity;
       _isSmoker = user.isSmoker;
-      _drinkingHabit = user.drinkingHabit;
-      _exerciseHabit = user.exerciseHabit;
-      _sleepSchedule = user.sleepSchedule;
-      _petPreference = user.petPreference;
-      _childrenPreference = user.childrenPreference;
-      // introvertScale is stored as 0-100 in Firestore by completeRegistration
-      // but the edit slider uses 1-5. Remap if value is outside slider range.
-      final rawIntrovert = user.introvertScale ?? 3;
-      _introvertScale = rawIntrovert > 5
-          ? (rawIntrovert / 20).round().clamp(1, 5)
-          : rawIntrovert.clamp(1, 5);
+      _occupation = user.occupation;
+      _occupationController.text = user.occupation ?? '';
+
+      // Backward compatibility: if jobStatus is missing, infer it from occupation
+      if (_jobStatus == null && _occupation != null) {
+        if (_occupation == 'Študent' || _occupation == 'Student') {
+          _jobStatus = 'student';
+          _occupation = null;
+          _occupationController.text = '';
+        } else if (_occupation == 'Zaposlen' || _occupation == 'Employed') {
+          _jobStatus = 'employed';
+          _occupation = null;
+          _occupationController.text = '';
+        }
+      }
+
+      _drinkingHabit = _normalizeLegacyValue(user.drinkingHabit, {
+        'Nikoli': 'never',
+        'Družabno': 'socially',
+        'Ob priliki': 'occasionally',
+      });
+      _exerciseHabit = _normalizeLegacyValue(user.exerciseHabit, {
+        'Aktivno': 'active',
+        'Včasih': 'sometimes',
+        'Skoraj nikoli': 'almost_never',
+      });
+      _sleepSchedule = _normalizeLegacyValue(user.sleepSchedule, {
+        'Nočna ptica': 'night_owl',
+        'Jutranja ptica': 'early_bird',
+      });
+      _petPreference = _normalizeLegacyValue(user.petPreference, {
+        'Pes dog person 🐶': 'dog',
+        'Mačka cat person 🐱': 'cat',
+        'Nekaj drugega': 'something_else',
+        'Nič': 'nothing',
+      });
+      _childrenPreference = _normalizeLegacyValue(user.childrenPreference, {
+        'Nekoč ja': 'want_someday',
+        'Ne želim': 'dont_want',
+        'Imam in bi rad/-a še': 'have_and_want_more',
+        'Imam, ne bi več': 'have_and_dont_want_more',
+        'Še nisem odločen/-a': 'not_sure',
+      });
+      _lookingFor = user.lookingFor.map((e) => _normalizeLegacyValue(e, {
+            'Kratkoročna zabava': 'short_term_fun',
+            'Dolgoročni partner': 'long_term_partner',
+            'Kratkotrajno, odprto za dolgo': 'short_open_long',
+            'Dolgoročno, odprto za kratko': 'long_open_short',
+            'Neodločen/-a': 'undecided',
+          })).whereType<String>().toList();
+
+      // Registration saves 0-100 (int); legacy edit profile saved 1-5.
+      final rawIntrovert = user.introvertScale ?? 50;
+      _introversionLevel = rawIntrovert > 5
+          ? (rawIntrovert / 100.0).clamp(0.0, 1.0)
+          : ((rawIntrovert - 1) / 4.0).clamp(0.0, 1.0);
       _hobbies = List.from(user.hobbies);
-      _lookingFor = List.from(user.lookingFor);
       _languages = List.from(user.languages);
       _distancePreference = user.maxDistance.toDouble();
       _isPremium = user.isPremium;
     }
-
-    // Listen for changes
     _nameController.addListener(_markChanged);
     _locationController.addListener(_markChanged);
+    _occupationController.addListener(_markChanged);
   }
 
   void _markChanged() {
@@ -88,31 +162,94 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _locationController.dispose();
+    _occupationController.dispose();
+    _isHeaderVisible.dispose();
     super.dispose();
+  }
+
+  bool _onScroll(ScrollNotification notification) {
+    if (notification.metrics.pixels <= 0) {
+      if (!_isHeaderVisible.value) _isHeaderVisible.value = true;
+      return false;
+    }
+    if (notification is ScrollUpdateNotification) {
+      if (notification.scrollDelta! > 1.0) {
+        if (_isHeaderVisible.value) _isHeaderVisible.value = false;
+      } else if (notification.scrollDelta! < -1.0) {
+        if (!_isHeaderVisible.value) _isHeaderVisible.value = true;
+      }
+    }
+    return false;
+  }
+
+  String _formatValue(String? raw, String lang) {
+    if (raw == null) return '';
+    // Check if the raw value is a legacy Slovenian string
+    final normalized = _normalizeLegacyValue(raw, {
+      'Moški': 'male',
+      'Ženska': 'female',
+      'Nikoli': 'never',
+      'Družabno': 'socially',
+      'Ob priliki': 'occasionally',
+      'Aktivno': 'active',
+      'Včasih': 'sometimes',
+      'Skoraj nikoli': 'almost_never',
+      'Nočna ptica': 'night_owl',
+      'Jutranja ptica': 'early_bird',
+      'Kratkotrajna zabava': 'short_term_fun',
+      'Dolgoročni partner': 'long_term_partner',
+      'Kratkotrajno, odprto za dolgo': 'short_open_long',
+      'Dolgoročno, odprto za kratko': 'long_open_short',
+      'Neodločen/-a': 'undecided',
+      'Pes dog person 🐶': 'dog',
+      'Mačka cat person 🐱': 'cat',
+      'Nekoč ja': 'want_someday',
+      'Ne želim': 'dont_want',
+      'Imam in bi rad/-a še': 'have_and_want_more',
+      'Imam, ne bi več': 'have_and_dont_want_more',
+      'Še nisem odločen/-a': 'not_sure',
+    });
+
+    if (normalized == null) return '';
+    final translated = t(normalized, lang);
+    if (translated != normalized) return _titleCase(translated);
+    return _titleCase(normalized.replaceAll('_', ' '));
+  }
+
+  String? _normalizeLegacyValue(String? value, Map<String, String> mapping) {
+    if (value == null || value.isEmpty) return null;
+    return mapping[value] ?? value;
+  }
+
+  String _titleCase(String s) {
+    if (s.isEmpty) return s;
+    return s.split(' ').map((w) {
+      if (w.isEmpty) return w;
+      return '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}';
+    }).join(' ');
   }
 
   Future<bool> _onWillPop() async {
     if (!_hasChanges) return true;
-    final res = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E2E),
-        title: Text(t('unsaved_changes', _lang),
-            style: const TextStyle(color: Colors.white)),
-        content: Text(t('discard_changes_q', _lang),
-            style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(t('cancel', _lang))),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(t('discard', _lang),
-                  style: const TextStyle(color: Colors.red))),
-        ],
-      ),
-    );
-    return res ?? false;
+    String saveText = t('save_changes', _lang);
+    
+    // Default translation value fallback
+    String discardTitle = t('discard_unsaved_changes', _lang);
+    if (discardTitle.isEmpty || discardTitle == 'discard_unsaved_changes') discardTitle = 'Discard unsaved changes';
+    
+    if (saveText.isEmpty || saveText == 'save_changes') {
+      saveText = 'Save changes';
+    }
+
+    final res = await showDiscardChangesModal(context, ref);
+    
+    if (res == 'save') {
+      _saveChanges();
+      return false; // _saveChanges will pop the screen
+    } else if (res == 'discard') {
+      return true;
+    }
+    return false;
   }
 
   void _saveChanges() {
@@ -123,249 +260,798 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           location: _locationController.text,
           photoUrls: _photoUrls,
           gender: _gender,
-          occupation: _occupation,
+          interestedIn: _interestedIn,
+          jobStatus: _jobStatus,
+          religion: _religion,
+          hairColor: _hairColor,
+          ethnicity: _ethnicity,
+          occupation: _occupationController.text.isNotEmpty 
+              ? _occupationController.text 
+              : null,
           isSmoker: _isSmoker,
           drinkingHabit: _drinkingHabit,
           exerciseHabit: _exerciseHabit,
           sleepSchedule: _sleepSchedule,
           petPreference: _petPreference,
           childrenPreference: _childrenPreference,
-          introvertScale: _introvertScale,
+          introvertScale: (_introversionLevel * 100).round(),
           hobbies: _hobbies,
           lookingFor: _lookingFor,
           languages: _languages,
           maxDistance: _distancePreference.round(),
         ));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(t('profile_updated', _lang))),
+    TopNotification.show(
+      context: context,
+      message: t('profile_updated', _lang),
+      icon: LucideIcons.checkCircle,
     );
     setState(() => _hasChanges = false);
     context.pop();
   }
 
+  Future<void> _pickImage() async {
+    if (_isUploading) return;
+
+    final picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery, imageQuality: 85);
+    if (picked != null) {
+      setState(() => _isUploading = true);
+
+      try {
+        final publicUrl =
+            await ref.read(uploadServiceProvider).uploadPhotoFromPath(picked.path);
+        setState(() {
+          _photoUrls.add(publicUrl);
+          _isUploading = false;
+          _hasChanges = true;
+        });
+      } catch (e) {
+        setState(() => _isUploading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Upload failed: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _removePhoto(int index) {
+    setState(() {
+      _photoUrls.removeAt(index);
+      _hasChanges = true;
+    });
+  }
+
+  /// Opens the full hobbies selector as a bottom sheet — identical to the
+  /// registration flow. Changes are committed only when the user taps Continue.
+  void _showHobbiesModal() {
+    final tempHobbies = List<String>.from(_hobbies);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) => SizedBox(
+            height: MediaQuery.of(ctx).size.height * 0.92,
+            child: HobbiesStep(
+              isModal: true,
+              selectedHobbies: tempHobbies,
+              onAddHobby: (h) => setModalState(() => tempHobbies.add(h)),
+              onRemoveHobby: (h) => setModalState(() => tempHobbies.remove(h)),
+              onBack: () => Navigator.pop(ctx),
+              onContinue: () {
+                setState(() {
+                  _hobbies = List.from(tempHobbies);
+                  _hasChanges = true;
+                });
+                Navigator.pop(ctx);
+              },
+              tr: (key) => t(key, _lang),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDistanceHelp(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = Theme.of(context).primaryColor;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            Icon(LucideIcons.mapPin, color: primaryColor, size: 20),
+            const SizedBox(width: 10),
+            Text(t('distance', _lang),
+                style: GoogleFonts.instrumentSans(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18)),
+          ],
+        ),
+        content: Text(
+          t('distance_help', _lang),
+          style: GoogleFonts.lora(
+              color: colorScheme.onSurface.withValues(alpha: 0.7), height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('OK',
+                style: GoogleFonts.instrumentSans(
+                    color: primaryColor, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subColor = isDark ? Colors.white70 : Colors.black54;
+    final iconColor = isDark ? Colors.white70 : Colors.black45;
+    final borderColor = isDark ? Colors.white24 : Colors.black12;
+    final fillColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.04);
+    final brandRose = Theme.of(context).primaryColor;
     final lang = _lang;
-    const brandRose = Color(0xFFF4436C);
 
     return PopScope(
       canPop: !_hasChanges,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         final shouldPop = await _onWillPop();
-        if (shouldPop && context.mounted) {
-          context.pop();
-        }
+        if (shouldPop && context.mounted) context.pop();
       },
-      child: GradientScaffold(
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: TrembleBackButton(
-                onPressed: () async {
-                  if (_hasChanges) {
-                    final shouldPop = await _onWillPop();
-                    if (shouldPop && context.mounted) context.pop();
-                  } else {
-                    context.pop();
-                  }
-                },
-                color: Colors.white70,
-              ),
-            ),
-            title: Text(t('edit_profile', lang),
-                style: GoogleFonts.instrumentSans(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
-            centerTitle: true,
-            elevation: 0,
-            actions: [
-              if (_hasChanges)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: TextButton(
-                    onPressed: _saveChanges,
-                    child: Text(t('save', lang),
-                        style: const TextStyle(
-                            color: Color(0xFFF4436C),
-                            fontWeight: FontWeight.bold)),
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: GradientScaffold(
+          child: Stack(
+            children: [
+              NotificationListener<ScrollNotification>(
+                onNotification: _onScroll,
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                            24,
+                            MediaQuery.of(context).padding.top + 12,
+                            24,
+                            48),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header title only
+                      SizedBox(
+                        height: 50,
+                        child: Center(
+                          child: Text(
+                            t('edit_profile', lang),
+                            style: TrembleTheme.displayFont(
+                              color: textColor,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // ── Photos ────────────────────────────────────────────
+                      _sectionLabel(t('photos', lang), LucideIcons.camera,
+                          textColor, iconColor),
+                      const SizedBox(height: 10),
+                      _buildPhotoGrid(isDark, textColor, borderColor),
+                      const SizedBox(height: 24),
+
+                      // ── Name ──────────────────────────────────────────────
+                      _sectionLabel(
+                          t('name', lang), LucideIcons.user, textColor, iconColor),
+                      const SizedBox(height: 8),
+                      _buildTextField(_nameController, t('name', lang),
+                          textColor, fillColor),
+                      const SizedBox(height: 24),
+
+                      // ── Location ──────────────────────────────────────────
+                      _sectionLabel(t('location', lang), LucideIcons.mapPin,
+                          textColor, iconColor),
+                      const SizedBox(height: 8),
+                      _buildLocationField(lang, textColor, fillColor, iconColor,
+                          isDark),
+                      const SizedBox(height: 24),
+
+                      // ── Gender ────────────────────────────────────────────
+                      _sectionLabel(t('gender', lang), LucideIcons.users,
+                          textColor, iconColor),
+                      const SizedBox(height: 8),
+                      _buildGenderChips(lang, isDark, textColor),
+                      const SizedBox(height: 24),
+
+                      // ── Interested In ──────────────────────────────────────
+                      _sectionLabel(t('want_to_meet', lang), LucideIcons.heart,
+                          textColor, iconColor),
+                      const SizedBox(height: 8),
+                      _buildInterestChips(lang, isDark, textColor),
+                      const SizedBox(height: 24),
+
+                      // ── Status ────────────────────────────────────────────
+                      _sectionLabel(t('status', lang), LucideIcons.briefcase,
+                          textColor, iconColor),
+                      const SizedBox(height: 8),
+                      _buildOccupationChips(lang, isDark, textColor),
+                      const SizedBox(height: 16),
+                      // ── Religion ──────────────────────────────────────────
+                      _sectionLabel(t('religion', lang), LucideIcons.book,
+                          textColor, iconColor),
+                      const SizedBox(height: 8),
+                      _buildPreferencePillRow(
+                        options: [
+                          {'key': 'christianity', 'label': t('christianity', lang)},
+                          {'key': 'islam', 'label': t('islam', lang)},
+                          {'key': 'hinduism', 'label': t('hinduism', lang)},
+                          {'key': 'buddhism', 'label': t('buddhism', lang)},
+                          {'key': 'judaism', 'label': t('judaism', lang)},
+                          {'key': 'agnostic', 'label': t('agnostic', lang)},
+                          {'key': 'atheist', 'label': t('atheist', lang)},
+                        ],
+                        currentValue: _religion,
+                        onChanged: (v) => setState(() => _religion = v),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 16),
+                      // ── Ethnicity ─────────────────────────────────────────
+                      _sectionLabel(t('ethnicity', lang), LucideIcons.user,
+                          textColor, iconColor),
+                      const SizedBox(height: 8),
+                      _buildPreferencePillRow(
+                        options: [
+                          {'key': 'ethnicity_white', 'label': t('ethnicity_white', lang)},
+                          {'key': 'ethnicity_black', 'label': t('ethnicity_black', lang)},
+                          {'key': 'ethnicity_mixed', 'label': t('ethnicity_mixed', lang)},
+                          {'key': 'ethnicity_asian', 'label': t('ethnicity_asian', lang)},
+                        ],
+                        currentValue: _ethnicity,
+                        onChanged: (v) => setState(() => _ethnicity = v),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 16),
+                      // ── Hair Color ────────────────────────────────────────
+                      _sectionLabel(t('hair_color', lang), LucideIcons.scissors,
+                          textColor, iconColor),
+                      const SizedBox(height: 8),
+                      _buildPreferencePillRow(
+                        options: [
+                          {'key': 'hair_blonde', 'label': t('hair_blonde', lang)},
+                          {'key': 'hair_brunette', 'label': t('hair_brunette', lang)},
+                          {'key': 'hair_black', 'label': t('hair_black', lang)},
+                          {'key': 'hair_red', 'label': t('hair_red', lang)},
+                          {'key': 'hair_gray_white', 'label': t('hair_gray_white', lang)},
+                          {'key': 'hair_other', 'label': t('hair_other', lang)},
+                        ],
+                        currentValue: _hairColor,
+                        onChanged: (v) => setState(() => _hairColor = v),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 24),
+                      if (_jobStatus != null) ...[
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          _occupationController,
+                          t(_jobStatus == 'student' ? 'course_of_study' : 'job_title', lang),
+                          textColor,
+                          fillColor,
+                        ),
+                      ],
+                      const SizedBox(height: 20),
+
+                      // ── Smoker ────────────────────────────────────────────
+                      _buildSmokerSwitch(lang, isDark, textColor),
+
+                      Divider(color: borderColor, height: 24),
+
+                      // ── Lifestyle Header (Centered, no icon) ──────────────
+                      Center(
+                        child: Text(
+                          t('lifestyle', lang),
+                          style: GoogleFonts.instrumentSans(
+                            color: textColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // ── Lifestyle: pill rows + modals ─────────────────────
+                      PreferencePillRow(
+                        icon: LucideIcons.zap,
+                        label: t('exercise', lang),
+                        values: [_exerciseHabit],
+                        formatter: (v) => _formatValue(v, lang),
+                        onEdit: () => showPreferenceEditModal(
+                          context: context,
+                          title: t('exercise', lang),
+                          rowIcon: LucideIcons.zap,
+                          options: [
+                            {
+                              'label': t('exercise_active', lang),
+                              'value': 'active',
+                              'icon': LucideIcons.zap,
+                            },
+                            {
+                              'label': t('exercise_sometimes', lang),
+                              'value': 'sometimes',
+                              'icon': LucideIcons.activity,
+                            },
+                            {
+                              'label': t('almost_never', lang),
+                              'value': 'almost_never',
+                              'icon': LucideIcons.moon,
+                            },
+                          ],
+                          currentValue: _exerciseHabit,
+                          onUpdate: (val) => setState(() {
+                            _exerciseHabit = val;
+                            _hasChanges = true;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      PreferencePillRow(
+                        icon: LucideIcons.wine,
+                        label: t('alcohol', lang),
+                        values: [_drinkingHabit],
+                        formatter: (v) => _formatValue(v, lang),
+                        onEdit: () => showPreferenceEditModal(
+                          context: context,
+                          title: t('alcohol', lang),
+                          rowIcon: LucideIcons.wine,
+                          options: [
+                            {
+                              'label': t('drink_never', lang),
+                              'value': 'never',
+                              'icon': LucideIcons.ban,
+                            },
+                            {
+                              'label': t('drink_socially', lang),
+                              'value': 'socially',
+                              'icon': LucideIcons.users,
+                            },
+                            {
+                              'label': t('drink_frequently', lang),
+                              'value': 'frequently',
+                              'icon': LucideIcons.trendingUp,
+                            },
+                          ],
+                          currentValue: _drinkingHabit,
+                          onUpdate: (val) => setState(() {
+                            _drinkingHabit = val;
+                            _hasChanges = true;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      PreferencePillRow(
+                        icon: LucideIcons.moon,
+                        label: t('sleep', lang),
+                        values: [_sleepSchedule],
+                        formatter: (v) => _formatValue(v, lang),
+                        onEdit: () => showPreferenceEditModal(
+                          context: context,
+                          title: t('sleep', lang),
+                          rowIcon: LucideIcons.moon,
+                          options: [
+                            {
+                              'label': t('night_owl', lang),
+                              'value': 'night_owl',
+                              'icon': LucideIcons.moon,
+                            },
+                            {
+                              'label': t('early_bird', lang),
+                              'value': 'early_bird',
+                              'icon': LucideIcons.sun,
+                            },
+                          ],
+                          currentValue: _sleepSchedule,
+                          onUpdate: (val) => setState(() {
+                            _sleepSchedule = val;
+                            _hasChanges = true;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      PreferencePillRow(
+                        icon: LucideIcons.dog,
+                        label: t('pets', lang),
+                        values: [_petPreference],
+                        formatter: (v) => _formatValue(v, lang),
+                        onEdit: () => showPreferenceEditModal(
+                          context: context,
+                          title: t('pets', lang),
+                          rowIcon: LucideIcons.dog,
+                          options: [
+                            {
+                              'label': t('dog_person', lang),
+                              'value': 'dog'
+                            },
+                            {
+                              'label': t('cat_person', lang),
+                              'value': 'cat'
+                            },
+                          ],
+                          currentValue: _petPreference,
+                          onUpdate: (val) => setState(() {
+                            _petPreference = val;
+                            _hasChanges = true;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      PreferencePillRow(
+                        icon: LucideIcons.baby,
+                        label: t('children', lang),
+                        values: [_childrenPreference],
+                        formatter: (v) => _formatValue(v, lang),
+                        onEdit: () => showPreferenceEditModal(
+                          context: context,
+                          title: t('children', lang),
+                          rowIcon: LucideIcons.baby,
+                          options: [
+                            {
+                              'label': t('children_want_someday', lang),
+                              'value': 'want_someday',
+                              'icon': LucideIcons.heart,
+                            },
+                            {
+                              'label': t('children_dont_want', lang),
+                              'value': 'dont_want',
+                              'icon': LucideIcons.ban,
+                            },
+                            {
+                              'label': t('children_have_and_want_more', lang),
+                              'value': 'have_and_want_more',
+                              'icon': LucideIcons.users,
+                            },
+                            {
+                              'label': t('children_have_and_dont_want_more', lang),
+                              'value': 'have_and_dont_want_more',
+                              'icon': LucideIcons.userCheck,
+                            },
+                            {
+                              'label': t('children_not_sure', lang),
+                              'value': 'not_sure',
+                              'icon': LucideIcons.helpCircle,
+                            },
+                          ],
+                          currentValue: _childrenPreference,
+                          onUpdate: (val) => setState(() {
+                            _childrenPreference = val;
+                            _hasChanges = true;
+                          }),
+                        ),
+                      ),
+
+                      Divider(color: borderColor, height: 28),
+
+                      // ── Introvert / Extrovert ─────────────────────────────
+                      Center(
+                        child: _sectionLabel(t('introvert_extrovert', lang),
+                            LucideIcons.brain, textColor, iconColor,
+                            centered: true),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildIntrovertSlider(lang, isDark, subColor),
+
+                      const SizedBox(height: 32),
+
+                      // ── Distance ──────────────────────────────────────────
+                      Center(
+                        child: _sectionLabel(t('distance', lang), LucideIcons.map,
+                            textColor, iconColor,
+                            centered: true, 
+                            onHelp: () => _showDistanceHelp(context)),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDistanceSlider(lang, isDark, subColor),
+
+                      Divider(color: borderColor, height: 28),
+
+                      // ── Looking for ───────────────────────────────────────
+                      Row(
+                        children: [
+                          Icon(LucideIcons.heart, size: 18, color: iconColor),
+                          const SizedBox(width: 10),
+                          Text(t('looking_for', lang),
+                              style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600)),
+                          const Spacer(),
+                          _multiPill(_lookingFor, lang, isDark, subColor),
+                          const SizedBox(width: 8),
+                          _editCircle(isDark, borderColor, fillColor,
+                              onTap: () => showMultiSelectModal(
+                                context: context,
+                                title: t('looking_for', lang),
+                                options: [
+                                  {
+                                    'label': t('short_term_fun', lang),
+                                    'value': 'short_term_fun'
+                                  },
+                                  {
+                                    'label': t('long_term_partner', lang),
+                                    'value': 'long_term_partner'
+                                  },
+                                  {
+                                    'label': t('short_open_long', lang),
+                                    'value': 'short_open_long'
+                                  },
+                                  {
+                                    'label': t('long_open_short', lang),
+                                    'value': 'long_open_short'
+                                  },
+                                  {
+                                    'label': t('undecided', lang),
+                                    'value': 'undecided'
+                                  },
+                                ],
+                                currentValues: _lookingFor,
+                                onSave: (vals) => setState(() {
+                                  _lookingFor = vals;
+                                  _hasChanges = true;
+                                }),
+                              )),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── Languages ─────────────────────────────────────────
+                      Row(
+                        children: [
+                          Icon(LucideIcons.languages, size: 18, color: iconColor),
+                          const SizedBox(width: 10),
+                          Text(t('i_speak', lang),
+                              style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600)),
+                          const Spacer(),
+                          _multiPill(_languages, lang, isDark, subColor),
+                          const SizedBox(width: 8),
+                          _editCircle(isDark, borderColor, fillColor,
+                              onTap: () => showMultiSelectModal(
+                                context: context,
+                                title: t('i_speak', lang),
+                                options: [
+                                  {
+                                    'label': t('lang_slovenian', lang),
+                                    'value': 'Slovenščina'
+                                  },
+                                  {
+                                    'label': t('lang_english', lang),
+                                    'value': 'Angleščina'
+                                  },
+                                  {
+                                    'label': t('lang_german', lang),
+                                    'value': 'Nemščina'
+                                  },
+                                  {
+                                    'label': t('lang_italian', lang),
+                                    'value': 'Italijanščina'
+                                  },
+                                  {
+                                    'label': t('lang_french', lang),
+                                    'value': 'Francoščina'
+                                  },
+                                  {
+                                    'label': t('lang_spanish', lang),
+                                    'value': 'Španščina'
+                                  },
+                                  {
+                                    'label': t('lang_croatian', lang),
+                                    'value': 'Hrvaščina'
+                                  },
+                                  {
+                                    'label': t('lang_serbian', lang),
+                                    'value': 'Srbščina'
+                                  },
+                                  {
+                                    'label': t('lang_hungarian', lang),
+                                    'value': 'Madžarščina'
+                                  },
+                                ],
+                                currentValues: _languages,
+                                onSave: (vals) => setState(() {
+                                  _languages =
+                                      vals.length <= 5 ? vals : vals.sublist(0, 5);
+                                  _hasChanges = true;
+                                }),
+                              )),
+                        ],
+                      ),
+
+                      Divider(color: borderColor, height: 28),
+
+                      // ── Hobbies ───────────────────────────────────────────
+                      Row(
+                        children: [
+                          Icon(LucideIcons.sparkles, size: 18, color: iconColor),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${t('hobbies', lang)} (${_hobbies.length})',
+                            style: GoogleFonts.instrumentSans(
+                                color: textColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600),
+                          ),
+                          const Spacer(),
+                          _editCircle(isDark, borderColor, fillColor,
+                              onTap: _showHobbiesModal),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      if (_hobbies.isNotEmpty)
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _hobbies
+                              .map((hobby) => Chip(
+                                    label: Text(hobby,
+                                        style: TextStyle(
+                                            color: textColor,
+                                            fontWeight: FontWeight.w500)),
+                                    backgroundColor: fillColor,
+                                    side: BorderSide(color: borderColor),
+                                    shape: const StadiumBorder(),
+                                    deleteIconColor: isDark
+                                        ? Colors.white54
+                                        : Colors.black38,
+                                    onDeleted: () => setState(() {
+                                      _hobbies.remove(hobby);
+                                      _hasChanges = true;
+                                    }),
+                                  ))
+                              .toList(),
+                        ),
+
+
+                      const SizedBox(height: 30),
+
+                      // ── Save button ───────────────────────────────────────
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _hasChanges ? _saveChanges : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _hasChanges ? brandRose : fillColor,
+                            foregroundColor:
+                                _hasChanges ? Colors.white : subColor,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30)),
+                          ),
+                          child: Text(t('save_changes', lang),
+                              style: GoogleFonts.instrumentSans(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
                   ),
                 ),
+              ),
             ],
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionLabel(t('photos', lang), LucideIcons.camera),
-                const SizedBox(height: 10),
-                _buildPhotoGrid(),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('name', lang), LucideIcons.user),
-                const SizedBox(height: 8),
-                _buildTextField(_nameController, t('name', lang)),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('location', lang), LucideIcons.mapPin),
-                const SizedBox(height: 8),
-                _buildLocationField(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('gender', lang), LucideIcons.users),
-                const SizedBox(height: 8),
-                _buildGenderChips(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('status', lang), LucideIcons.briefcase),
-                const SizedBox(height: 8),
-                _buildOccupationChips(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('smoking', lang), LucideIcons.cigarette),
-                const SizedBox(height: 8),
-                _buildSmokerSwitch(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('alcohol', lang), LucideIcons.wine),
-                const SizedBox(height: 8),
-                _buildDrinkingChips(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('exercise', lang), LucideIcons.dumbbell),
-                const SizedBox(height: 8),
-                _buildExerciseChips(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('sleep', lang), LucideIcons.moon),
-                const SizedBox(height: 8),
-                _buildSleepChips(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('pets', lang), LucideIcons.dog),
-                const SizedBox(height: 8),
-                _buildPetChips(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('children', lang), LucideIcons.baby),
-                const SizedBox(height: 8),
-                _buildChildrenChips(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(
-                    t('introvert_extrovert', lang), LucideIcons.brain),
-                const SizedBox(height: 8),
-                _buildIntrovertSlider(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('distance', lang), LucideIcons.map),
-                const SizedBox(height: 8),
-                _buildDistanceSlider(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('looking_for', lang), LucideIcons.heart),
-                const SizedBox(height: 8),
-                _buildLookingForChips(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel(t('i_speak', lang), LucideIcons.languages),
-                const SizedBox(height: 8),
-                _buildLanguageChips(lang),
-                const SizedBox(height: 24),
-                _buildSectionLabel('${t('hobbies', lang)} (${_hobbies.length})',
-                    LucideIcons.sparkles),
-                const SizedBox(height: 8),
-                _buildHobbiesSection(lang),
-                const SizedBox(height: 30),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _hasChanges ? _saveChanges : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _hasChanges ? brandRose : Colors.white12,
-                      foregroundColor:
-                          _hasChanges ? Colors.black : Colors.white24,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
+        ),
+          // --- Floating Header Content ---
+          ValueListenableBuilder<bool>(
+            valueListenable: _isHeaderVisible,
+            builder: (context, isVisible, child) {
+              return AnimatedOpacity(
+                duration: const Duration(milliseconds: 250),
+                opacity: isVisible ? 1.0 : 0.0,
+                child: IgnorePointer(
+                  ignoring: !isVisible,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                        24, MediaQuery.of(context).padding.top + 12, 24, 0),
+                    child: SizedBox(
+                      height: 50,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TrembleBackButton(
+                            onPressed: () async {
+                              if (_hasChanges) {
+                                final should = await _onWillPop();
+                                if (should && context.mounted) context.pop();
+                              } else {
+                                context.pop();
+                              }
+                            },
+                          ),
+                          if (_hasChanges)
+                            TrembleCircleButton(
+                              icon: LucideIcons.check,
+                              color: brandRose,
+                              onPressed: _saveChanges,
+                            )
+                          else
+                            // Empty placeholder to keep the space
+                            const SizedBox(width: 40),
+                        ],
+                      ),
                     ),
-                    child: Text(t('save_changes', lang),
-                        style: GoogleFonts.instrumentSans(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                 ),
-                const SizedBox(height: 40),
-              ],
-            ),
+              );
+            },
           ),
-        ),
+        ],
       ),
-    );
+    ),
+  ),
+);
   }
 
-  Widget _buildDistanceSlider(String lang) {
-    const brandRose = Color(0xFFF4436C);
-    final maxDist = _isPremium ? 100.0 : 50.0;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('10m',
-                style: TextStyle(color: Colors.white38, fontSize: 12)),
-            Text('${_distancePreference.round()}m',
-                style: const TextStyle(
-                    color: brandRose,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16)),
-            Text('${maxDist.round()}m',
-                style: const TextStyle(color: Colors.white38, fontSize: 12)),
-          ],
-        ),
-        Slider(
-          value: _distancePreference.clamp(10, maxDist),
-          min: 10,
-          max: maxDist,
-          divisions: (maxDist - 10).round(),
-          activeColor: brandRose,
-          onChanged: (v) {
-            setState(() {
-              _distancePreference = v;
-              _hasChanges = true;
-            });
-          },
-        ),
-        if (_distancePreference > 50)
-          Padding(
-            padding: const EdgeInsets.only(top: 4, left: 16),
-            child: Text(
-              t('battery_warning', lang).replaceFirst('{percent}', '25'),
-              style: const TextStyle(color: Colors.orangeAccent, fontSize: 12),
-            ),
-          ),
-      ],
-    );
-  }
+  // ── UI helpers ─────────────────────────────────────────────────────────────
 
-  // ─────────────────────────────────────
-  // SECTION BUILDERS
-  // ─────────────────────────────────────
-
-  Widget _buildSectionLabel(String label, IconData icon) {
+  Widget _sectionLabel(String label, IconData icon, Color textColor, Color iconColor,
+      {bool centered = false, VoidCallback? onHelp}) {
     return Row(
+      mainAxisAlignment: centered ? MainAxisAlignment.center : MainAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: Colors.white70),
+        Icon(icon, size: 18, color: iconColor),
         const SizedBox(width: 8),
-        Text(label,
-            style: GoogleFonts.instrumentSans(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: GoogleFonts.instrumentSans(
+            color: textColor,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (onHelp != null) ...[
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: onHelp,
+            child: Icon(LucideIcons.helpCircle, size: 16, color: iconColor),
+          ),
+        ],
       ],
     );
   }
 
   Widget _buildTextField(TextEditingController ctrl, String hint,
-      {int maxLines = 1}) {
+      Color textColor, Color fillColor) {
     return TextField(
       controller: ctrl,
-      maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: textColor),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.white30),
+        hintStyle: TextStyle(color: textColor.withValues(alpha: 0.3)),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.08),
+        fillColor: fillColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -376,7 +1062,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _buildPhotoGrid() {
+  Widget _buildPhotoGrid(bool isDark, Color textColor, Color borderColor) {
+    final addBg = isDark
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.black.withValues(alpha: 0.04);
     return SizedBox(
       height: 110,
       child: ListView(
@@ -405,7 +1094,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   Container(color: Colors.grey[800])),
                     ),
                   ),
-                  // Main badge
                   if (index == 0)
                     Positioned(
                       bottom: 4,
@@ -414,7 +1102,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF4436C),
+                          color: Theme.of(context).primaryColor,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(t('main', _lang),
@@ -422,7 +1110,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 color: Colors.white, fontSize: 10)),
                       ),
                     ),
-                  // Remove button
                   Positioned(
                     top: 4,
                     right: 4,
@@ -445,18 +1132,26 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           }),
           if (_photoUrls.length < 4)
             GestureDetector(
-              onTap: _pickImage,
+              onTap: _isUploading ? null : _pickImage,
               child: Container(
                 width: 90,
                 height: 110,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white24),
-                  color: Colors.white.withValues(alpha: 0.05),
+                  border: Border.all(color: borderColor),
+                  color: addBg,
                 ),
-                child: const Center(
-                  child:
-                      Icon(LucideIcons.plus, size: 30, color: Colors.white38),
+                child: Center(
+                  child: _isUploading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white38),
+                        )
+                      : Icon(LucideIcons.plus,
+                          size: 30,
+                          color: isDark ? Colors.white38 : Colors.black26),
                 ),
               ),
             ),
@@ -465,7 +1160,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _buildLocationField(String lang) {
+  Widget _buildLocationField(String lang, Color textColor, Color fillColor,
+      Color iconColor, bool isDark) {
     return Autocomplete<String>(
       initialValue: TextEditingValue(text: _locationController.text),
       optionsBuilder: (textEditingValue) {
@@ -482,15 +1178,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         return TextField(
           controller: controller,
           focusNode: focusNode,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: textColor),
           onChanged: (val) => _locationController.text = val,
           decoration: InputDecoration(
             hintText: t('location_hint', lang),
-            hintStyle: const TextStyle(color: Colors.white30),
+            hintStyle: TextStyle(color: textColor.withValues(alpha: 0.3)),
             filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.08),
-            prefixIcon:
-                const Icon(LucideIcons.mapPin, size: 18, color: Colors.white38),
+            fillColor: fillColor,
+            prefixIcon: Icon(LucideIcons.mapPin, size: 18, color: iconColor),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide.none,
@@ -505,7 +1200,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           alignment: Alignment.topLeft,
           child: Material(
             elevation: 8,
-            color: const Color(0xFF1E1E2E),
+            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
             borderRadius: BorderRadius.circular(12),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 200, maxWidth: 340),
@@ -517,10 +1212,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   final option = options.elementAt(index);
                   return ListTile(
                     dense: true,
-                    leading: const Icon(LucideIcons.mapPin,
-                        size: 16, color: Colors.white54),
+                    leading: Icon(LucideIcons.mapPin,
+                        size: 16,
+                        color: isDark ? Colors.white54 : Colors.black45),
                     title: Text(option,
-                        style: const TextStyle(color: Colors.white)),
+                        style: TextStyle(
+                            color: isDark ? Colors.white : Colors.black87)),
                     onTap: () => onSelected(option),
                   );
                 },
@@ -532,13 +1229,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _buildGenderChips(String lang) {
+  Widget _buildGenderChips(String lang, bool isDark, Color textColor) {
     final options = [
-      {'label': t('gender_male', lang), 'value': 'Moški', 'icon': Icons.male},
+      {'label': t('gender_male', lang), 'value': 'male', 'icon': Icons.male},
       {
         'label': t('gender_female', lang),
-        'value': 'Ženska',
+        'value': 'female',
         'icon': Icons.female
+      },
+      {
+        'label': t('gender_other', lang),
+        'value': 'non_binary',
+        'icon': Icons.transgender
       },
     ];
     return Wrap(
@@ -549,410 +1251,308 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         final icon = opt['icon'] as IconData;
         final sel = _gender == value;
         return ChoiceChip(
-          avatar:
-              Icon(icon, size: 16, color: sel ? Colors.black : Colors.white),
+          avatar: Icon(icon,
+              size: 16,
+              color: sel
+                  ? Colors.black
+                  : (isDark ? Colors.white70 : Colors.black54)),
           label: Text(label),
           selected: sel,
           onSelected: (s) {
-            if (s) setState(() => _gender = value);
+            if (s) {
+              setState(() => _gender = value);
+              _markChanged();
+            }
           },
-          selectedColor: const Color(0xFFF4436C),
-          backgroundColor: Colors.white.withValues(alpha: 0.1),
-          labelStyle:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          selectedColor: Theme.of(context).primaryColor,
+          backgroundColor: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.06),
+          labelStyle: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold),
           shape: StadiumBorder(
               side: BorderSide(
-                  color: sel ? const Color(0xFFF4436C) : Colors.white24)),
+                  color: sel
+                      ? Theme.of(context).primaryColor
+                      : (isDark ? Colors.white24 : Colors.black12))),
           showCheckmark: false,
         );
       }).toList(),
     );
   }
 
-  Widget _buildOccupationChips(String lang) {
+  Widget _buildInterestChips(String lang, bool isDark, Color textColor) {
     final options = [
-      {'label': t('student', lang), 'value': 'Študent'},
-      {'label': t('employed', lang), 'value': 'Zaposlen'},
+      {'label': t('male', lang), 'value': 'male', 'icon': Icons.male},
+      {'label': t('female', lang), 'value': 'female', 'icon': Icons.female},
+      {'label': t('both', lang), 'value': 'both', 'icon': Icons.people},
+    ];
+    return Wrap(
+      spacing: 10,
+      children: options.map((opt) {
+        final label = opt['label'] as String;
+        final value = opt['value'] as String;
+        final icon = opt['icon'] as IconData;
+        final sel = _interestedIn == value;
+        return ChoiceChip(
+          avatar: Icon(icon,
+              size: 16,
+              color: sel
+                  ? Colors.black
+                  : (isDark ? Colors.white70 : Colors.black54)),
+          label: Text(label),
+          selected: sel,
+          onSelected: (s) {
+            if (s) {
+              setState(() => _interestedIn = value);
+              _markChanged();
+            }
+          },
+          selectedColor: Theme.of(context).primaryColor,
+          backgroundColor: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.06),
+          labelStyle: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold),
+          shape: StadiumBorder(
+              side: BorderSide(
+                  color: sel
+                      ? Theme.of(context).primaryColor
+                      : (isDark ? Colors.white24 : Colors.black12))),
+          showCheckmark: false,
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildOccupationChips(String lang, bool isDark, Color textColor) {
+    final options = [
+      {'label': t('student', lang), 'value': 'student'},
+      {'label': t('employed', lang), 'value': 'employed'},
     ];
     return Wrap(
       spacing: 10,
       children: options.map((opt) {
         final label = opt['label']!;
         final value = opt['value']!;
-        final sel = _occupation == value;
-        return _chip(label, sel, (s) {
-          if (s) setState(() => _occupation = value);
-        });
+        final sel = _jobStatus == value;
+        return ChoiceChip(
+          label: Text(label),
+          selected: sel,
+          onSelected: (s) {
+            setState(() {
+              _jobStatus = s ? value : null;
+              _hasChanges = true;
+            });
+          },
+          selectedColor: Theme.of(context).primaryColor,
+          backgroundColor: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.06),
+          labelStyle: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold),
+          shape: StadiumBorder(
+              side: BorderSide(
+                  color: sel
+                      ? Theme.of(context).primaryColor
+                      : (isDark ? Colors.white24 : Colors.black12))),
+          showCheckmark: false,
+        );
       }).toList(),
     );
   }
 
-  Widget _buildSmokerSwitch(String lang) {
+  Widget _buildSmokerSwitch(String lang, bool isDark, Color textColor) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      title:
-          Text(t('smoking', lang), style: const TextStyle(color: Colors.white)),
+      title: Text(t('smoking', lang), style: TextStyle(color: textColor)),
       value: _isSmoker ?? false,
-      activeThumbColor: const Color(0xFFF4436C),
-      activeTrackColor: const Color(0xFFF4436C).withValues(alpha: 0.3),
-      inactiveTrackColor: Colors.white24,
-      onChanged: (val) => setState(() => _isSmoker = val),
+      activeThumbColor: Theme.of(context).primaryColor,
+      activeTrackColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+      inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+      onChanged: (val) => setState(() {
+        _isSmoker = val;
+        _hasChanges = true;
+      }),
     );
   }
 
-  Widget _buildDrinkingChips(String lang) {
-    return _lifestyleWrap([
-      {'label': t('alcohol_never', lang), 'value': 'Never'},
-      {'label': t('alcohol_socially', lang), 'value': 'Socially'},
-      {'label': t('alcohol_occasionally', lang), 'value': 'Occasionally'},
-    ], _drinkingHabit ?? 'Socially', (val) {
-      setState(() {
-        _drinkingHabit = val;
-        _hasChanges = true;
-      });
-    });
-  }
-
-  Widget _buildExerciseChips(String lang) {
-    return _lifestyleWrap([
-      {'label': t('exercise_no', lang), 'value': 'No'},
-      {'label': t('exercise_sometimes', lang), 'value': 'Sometimes'},
-      {'label': t('exercise_regularly', lang), 'value': 'Regularly'},
-      {'label': t('exercise_very_active', lang), 'value': 'Very active'},
-    ], _exerciseHabit ?? 'Sometimes', (val) {
-      setState(() {
-        _exerciseHabit = val;
-        _hasChanges = true;
-      });
-    });
-  }
-
-  Widget _buildSleepChips(String lang) {
-    return _lifestyleWrap([
-      {'label': t('night_owl', lang), 'value': 'Night owl'},
-      {'label': t('early_bird', lang), 'value': 'Early bird'},
-    ], _sleepSchedule ?? 'Night owl', (val) {
-      setState(() {
-        _sleepSchedule = val;
-        _hasChanges = true;
-      });
-    });
-  }
-
-  Widget _buildPetChips(String lang) {
-    return _lifestyleWrap([
-      {'label': t('dog_person', lang), 'value': 'Dog person'},
-      {'label': t('cat_person', lang), 'value': 'Cat person'},
-    ], _petPreference ?? 'Dog person', (val) {
-      setState(() {
-        _petPreference = val;
-        _hasChanges = true;
-      });
-    });
-  }
-
-  Widget _buildChildrenChips(String lang) {
-    return _lifestyleWrap([
-      {'label': t('children_yes', lang), 'value': 'Yes'},
-      {'label': t('children_no', lang), 'value': 'No'},
-      {'label': t('children_later', lang), 'value': 'Want someday'},
-    ], _childrenPreference ?? 'No', (val) {
-      setState(() {
-        _childrenPreference = val;
-        _hasChanges = true;
-      });
-    });
-  }
-
-  Widget _buildIntrovertSlider(String lang) {
-    String label;
-    if (_introvertScale == 1) {
-      label = t('full_introvert', lang);
-    } else if (_introvertScale == 2) {
-      label = t('more_introvert', lang);
-    } else if (_introvertScale == 3) {
-      label = t('somewhere_between', lang);
-    } else if (_introvertScale == 4) {
-      label = t('more_extrovert', lang);
-    } else {
-      label = t('full_extrovert', lang);
-    }
+  Widget _buildIntrovertSlider(String lang, bool isDark, Color subColor) {
+    final percentLabel = _introversionLevel <= 0.5
+        ? '${((1.0 - _introversionLevel) * 100).toInt()}% ${t('introvert', lang).toLowerCase()}'
+        : '${(_introversionLevel * 100).toInt()}% ${t('extrovert', lang).toLowerCase()}';
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Slider(
-          value: _introvertScale.toDouble(),
-          min: 1,
-          max: 5,
-          divisions: 4,
-          activeColor: const Color(0xFFF4436C),
-          inactiveColor: Colors.white24,
-          label: label,
-          onChanged: (val) => setState(() => _introvertScale = val.round()),
-        ),
-        Text(label,
-            style: const TextStyle(color: Colors.white70, fontSize: 12)),
-      ],
-    );
-  }
-
-  Widget _buildLookingForChips(String lang) {
-    final options = [
-      {'label': t('short_term', lang), 'value': 'Short-term fun'},
-      {'label': t('long_term', lang), 'value': 'Long-term relationship'},
-      {'label': t('friendship', lang), 'value': 'Friendship'},
-      {'label': t('meeting', lang), 'value': 'Meeting'},
-      // 'Chat' removed — Tremble connects people in real life, not via text.
-    ];
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: options.map((opt) {
-        final label = opt['label']!;
-        final value = opt['value']!;
-        final sel = _lookingFor.contains(value);
-        return FilterChip(
-          label: Text(label),
-          selected: sel,
-          onSelected: (s) {
-            setState(() {
-              if (s) {
-                _lookingFor.add(value);
-              } else {
-                _lookingFor.remove(value);
-              }
-            });
-          },
-          selectedColor: const Color(0xFFF4436C),
-          backgroundColor: Colors.white.withValues(alpha: 0.1),
-          labelStyle:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          shape: StadiumBorder(
-              side: BorderSide(
-                  color: sel ? const Color(0xFFF4436C) : Colors.white24)),
-          showCheckmark: false,
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildLanguageChips(String lang) {
-    final options = [
-      {'label': t('lang_slovenian', lang), 'value': 'Slovenščina'},
-      {'label': t('lang_english', lang), 'value': 'Angleščina'},
-      {'label': t('lang_german', lang), 'value': 'Nemščina'},
-      {'label': t('lang_italian', lang), 'value': 'Italijanščina'},
-      {'label': t('lang_french', lang), 'value': 'Francoščina'},
-      {'label': t('lang_spanish', lang), 'value': 'Španščina'},
-      {'label': t('lang_croatian', lang), 'value': 'Hrvaščina'},
-      {'label': t('lang_serbian', lang), 'value': 'Srbščina'},
-      {'label': t('lang_hungarian', lang), 'value': 'Madžarščina'},
-    ];
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: options.map((opt) {
-        final label = opt['label']!;
-        final value = opt['value']!;
-        final sel = _languages.contains(value);
-        return FilterChip(
-          label: Text(label),
-          selected: sel,
-          onSelected: (s) {
-            setState(() {
-              if (s && _languages.length < 5) {
-                _languages.add(value);
-              } else {
-                _languages.remove(value);
-              }
-            });
-          },
-          selectedColor: const Color(0xFFF4436C),
-          backgroundColor: Colors.white.withValues(alpha: 0.1),
-          labelStyle:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          shape: StadiumBorder(
-              side: BorderSide(
-                  color: sel ? const Color(0xFFF4436C) : Colors.white24)),
-          showCheckmark: false,
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildHobbiesSection(String lang) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_hobbies.isEmpty)
-          GlassCard(
-            child: Center(
-              child: Text(t('no_hobbies_yet', lang),
-                  style: const TextStyle(color: Colors.white38)),
-            ),
-          ),
-        if (_hobbies.isNotEmpty)
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _hobbies.map((hobby) {
-              final parts = hobby.split(' ');
-              final emoji = parts.length > 1 ? parts[0] : '🎯';
-              final name =
-                  parts.length > 1 ? parts.sublist(1).join(' ') : hobby;
-              return Chip(
-                avatar: Text(emoji, style: const TextStyle(fontSize: 16)),
-                label: Text(name, style: const TextStyle(color: Colors.white)),
-                backgroundColor: Colors.black54,
-                side: const BorderSide(color: Colors.white24),
-                deleteIconColor: Colors.white54,
-                onDeleted: () {
-                  setState(() => _hobbies.remove(hobby));
-                },
-              );
-            }).toList(),
-          ),
-        const SizedBox(height: 10),
-        OutlinedButton.icon(
-          onPressed: _showAddHobbyDialog,
-          icon: const Icon(LucideIcons.plus, size: 16, color: Colors.white70),
-          label: Text(t('add_hobby', lang),
-              style: const TextStyle(color: Colors.white70)),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Colors.white24),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showAddHobbyDialog() {
-    final nameCtrl = TextEditingController();
-    final emojiCtrl = TextEditingController(text: '🎯');
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A2E),
-        title: Text(t('add_hobby', _lang),
-            style: const TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            TextField(
-              controller: nameCtrl,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: t('hobby_name', _lang),
-                hintStyle: const TextStyle(color: Colors.white30),
-                filled: true,
-                fillColor: Colors.white10,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: emojiCtrl,
-              style: const TextStyle(color: Colors.white, fontSize: 24),
-              textAlign: TextAlign.center,
-              decoration: InputDecoration(
-                hintText: t('icon_emoji', _lang),
-                hintStyle: const TextStyle(color: Colors.white30),
-                filled: true,
-                fillColor: Colors.white10,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(t('use_emoji_keyboard', _lang),
-                style: const TextStyle(color: Colors.white38, fontSize: 11)),
+            Text(t('introvert', lang),
+                style: TextStyle(color: subColor, fontSize: 12)),
+            Text(t('extrovert', lang),
+                style: TextStyle(color: subColor, fontSize: 12)),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(t('cancel', _lang),
-                style: const TextStyle(color: Colors.white54)),
+        Slider(
+          value: _introversionLevel,
+          min: 0.0,
+          max: 1.0,
+          divisions: 10,
+          activeColor: Theme.of(context).primaryColor,
+          inactiveColor: isDark ? Colors.white24 : Colors.black12,
+          onChanged: (val) => setState(() {
+            _introversionLevel = val;
+            _hasChanges = true;
+          }),
+        ),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            percentLabel,
+            style: TextStyle(
+              color: Theme.of(context).primaryColor,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              if (nameCtrl.text.isNotEmpty) {
-                setState(() {
-                  _hobbies
-                      .add('${emojiCtrl.text.trim()} ${nameCtrl.text.trim()}');
-                });
-                Navigator.pop(ctx);
-              }
-            },
-            child: Text(t('add', _lang),
-                style: const TextStyle(color: const Color(0xFFF4436C))),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDistanceSlider(String lang, bool isDark, Color subColor) {
+    final maxDist = _isPremium ? 100.0 : 50.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('10m', style: TextStyle(color: subColor, fontSize: 12)),
+            Text('${_distancePreference.round()}m',
+                style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16)),
+            Text('${maxDist.round()}m',
+                style: TextStyle(color: subColor, fontSize: 12)),
+          ],
+        ),
+        Slider(
+          value: _distancePreference.clamp(10, maxDist),
+          min: 10,
+          max: maxDist,
+          divisions: (maxDist - 10).round(),
+          activeColor: Theme.of(context).primaryColor,
+          inactiveColor: isDark ? Colors.white24 : Colors.black12,
+          onChanged: (v) => setState(() {
+            _distancePreference = v;
+            _hasChanges = true;
+          }),
+        ),
+        if (_distancePreference > 50)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              t('battery_warning', lang).replaceFirst('{percent}', '25'),
+              style: const TextStyle(color: Colors.orangeAccent, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
           ),
-        ],
+      ],
+    );
+  }
+
+  /// Pill showing count/value for multi-select rows.
+  Widget _multiPill(
+      List<String> values, String lang, bool isDark, Color subColor) {
+    final String display;
+    if (values.isEmpty) {
+      display = '—';
+    } else if (values.length == 1) {
+      display = _formatValue(values.first, lang);
+    } else {
+      display = 'Selected ${values.length}';
+    }
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 130),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+        ),
+        child: Text(
+          display,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: subColor, fontSize: 12),
+        ),
       ),
     );
   }
 
-  // ─────────────────────────────────────
-  // HELPERS
-  // ─────────────────────────────────────
-
-  Future<void> _pickImage() async {
-    final picked = await _imagePicker.pickImage(
-        source: ImageSource.gallery, imageQuality: 85);
-    if (picked != null) {
-      setState(() {
-        _photoUrls.add(picked.path);
-        _hasChanges = true;
-      });
-    }
-  }
-
-  void _removePhoto(int index) {
-    setState(() {
-      _photoUrls.removeAt(index);
-      _hasChanges = true;
-    });
-  }
-
-  Widget _lifestyleWrap(
-    List<Map<String, String>> options,
-    String currentValue,
-    ValueChanged<String> onSelected,
-  ) {
+  Widget _buildPreferencePillRow({
+    required List<Map<String, String>> options,
+    required String? currentValue,
+    required ValueChanged<String?> onChanged,
+    required bool isDark,
+  }) {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 10,
+      runSpacing: 10,
       children: options.map((opt) {
         final label = opt['label']!;
-        final value = opt['value']!;
+        final value = opt['value'] ?? opt['key']!;
         final sel = currentValue == value;
-        return _chip(label, sel, (s) {
-          if (s) onSelected(value);
-        });
+        return ChoiceChip(
+          label: Text(label),
+          selected: sel,
+          onSelected: (s) {
+            onChanged(s ? value : null);
+            _hasChanges = true;
+          },
+          selectedColor: Theme.of(context).primaryColor,
+          backgroundColor: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.06),
+          labelStyle: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold),
+          shape: StadiumBorder(
+              side: BorderSide(
+                  color: sel
+                      ? Theme.of(context).primaryColor
+                      : (isDark ? Colors.white24 : Colors.black12))),
+          showCheckmark: false,
+        );
       }).toList(),
     );
   }
 
-  Widget _chip(String label, bool sel, ValueChanged<bool> onSelected) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: sel,
-      onSelected: onSelected,
-      selectedColor: const Color(0xFFF4436C),
-      backgroundColor: Colors.white.withValues(alpha: 0.1),
-      labelStyle: const TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-        fontSize: 13,
+  /// Circular edit pencil button.
+  Widget _editCircle(bool isDark, Color borderColor, Color fillColor,
+      {required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: fillColor,
+          border: Border.all(color: borderColor),
+        ),
+        child: Icon(LucideIcons.pencil,
+            size: 14,
+            color: isDark ? Colors.white54 : Colors.black38),
       ),
-      shape: StadiumBorder(
-          side: BorderSide(
-              color: sel ? const Color(0xFFF4436C) : Colors.white12)),
-      showCheckmark: false,
     );
   }
 }

@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../shared/ui/glass_card.dart';
+import '../../../shared/ui/tremble_circle_button.dart';
 import '../../matches/data/match_repository.dart';
 import '../../safety/presentation/widgets/ugc_action_sheet.dart';
+import '../../../core/theme.dart';
 
 class MatchesScreen extends ConsumerStatefulWidget {
   const MatchesScreen({super.key});
@@ -32,8 +34,58 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
         duration: const Duration(seconds: 3),
         action: SnackBarAction(
           label: 'Razveljavi',
-          textColor: const Color(0xFFF4436C),
+          textColor: Theme.of(context).primaryColor,
           onPressed: () => setState(() => _removedIds.remove(matchId)),
+        ),
+      ),
+    );
+  }
+
+  void _showHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: GlassCard(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.helpCircle,
+                  color: Theme.of(context).primaryColor, size: 40),
+              const SizedBox(height: 16),
+              Text(
+                'O strani Ljudje',
+                style: GoogleFonts.instrumentSans(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Tukaj vidiš vse ljudi, ki si jih srečal/-a v resničnem življenju (preko radarja) in s katerimi sta si oba pomahala oz. si bila všeč.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Razumem',
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -42,6 +94,10 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
   @override
   Widget build(BuildContext context) {
     final matchesAsync = ref.watch(matchesStreamProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
+    final dimColor = isDark ? Colors.white24 : Colors.black26;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
@@ -49,88 +105,55 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Header ────────────────────────────────────────────
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Text('Ljudje',
-                    style: GoogleFonts.instrumentSans(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white)),
-              ),
-              GestureDetector(
-                onTap: () => setState(() => _isEditMode = !_isEditMode),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: _isEditMode
-                        ? const Color(0xFFF4436C).withValues(alpha: 0.3)
-                        : Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: _isEditMode
-                          ? const Color(0xFFF4436C)
-                          : Colors.white24,
-                    ),
+          SizedBox(
+            height: 50,
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Centered Title
+                Text(
+                  'Ljudje',
+                  style: TrembleTheme.displayFont(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
                   ),
+                ),
+                // Action Buttons (Right Aligned)
+                Positioned(
+                  right: 0,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        _isEditMode ? LucideIcons.check : LucideIcons.pencil,
-                        size: 14,
-                        color: _isEditMode
-                            ? const Color(0xFFF4436C)
-                            : Colors.white70,
+                      TrembleCircleButton(
+                        icon: LucideIcons.helpCircle,
+                        onPressed: _showHelpDialog,
+                        size: 40,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _isEditMode ? 'Končaj' : 'Uredi',
-                        style: TextStyle(
-                          color: _isEditMode
-                              ? const Color(0xFFF4436C)
-                              : Colors.white70,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      const SizedBox(width: 8),
+                      TrembleCircleButton(
+                        icon:
+                            _isEditMode ? LucideIcons.check : LucideIcons.pencil,
+                        onPressed: () =>
+                            setState(() => _isEditMode = !_isEditMode),
+                        color: _isEditMode ? Theme.of(context).primaryColor : null,
+                        size: 40,
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 10),
-
-          Text('Upravljaj svoje pretekle stike',
-              style: GoogleFonts.instrumentSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white)),
-          const SizedBox(height: 5),
-          Text(
-            _isEditMode
-                ? 'Klikni X za odstranitev osebe'
-                : 'Ali želiš še kdaj jih srečati ali ne',
-            style: TextStyle(
-                color: _isEditMode
-                    ? Colors.redAccent
-                    : (Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white70
-                        : Colors.black87),
-                fontWeight: _isEditMode ? FontWeight.w600 : FontWeight.normal,
-                fontSize: 14),
-          ),
-          const SizedBox(height: 20),
 
           // ── List ─────────────────────────────────────────────
           Expanded(
             child: matchesAsync.when(
-              loading: () => const Center(
+              loading: () => Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xFFF4436C),
+                  color: Theme.of(context).primaryColor,
                   strokeWidth: 2,
                 ),
               ),
@@ -138,17 +161,17 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(LucideIcons.wifiOff,
-                        size: 48, color: Colors.white24),
+                    Icon(LucideIcons.wifiOff,
+                        size: 48, color: dimColor),
                     const SizedBox(height: 12),
                     Text('Napaka pri nalaganju',
                         style: GoogleFonts.instrumentSans(
-                            color: Colors.white38, fontSize: 16)),
+                            color: subtextColor, fontSize: 16)),
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: () => ref.invalidate(matchesStreamProvider),
-                      child: const Text('Poskusi znova',
-                          style: TextStyle(color: Color(0xFFF4436C))),
+                      child: Text('Poskusi znova',
+                          style: TextStyle(color: Theme.of(context).primaryColor)),
                     ),
                   ],
                 ),
@@ -164,17 +187,17 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(LucideIcons.users,
-                            size: 48, color: Colors.white24),
+                        Icon(LucideIcons.users,
+                            size: 48, color: dimColor),
                         const SizedBox(height: 12),
                         Text('Ni matchev',
                             style: GoogleFonts.instrumentSans(
-                                color: Colors.white38, fontSize: 16)),
+                                color: subtextColor, fontSize: 16)),
                         const SizedBox(height: 6),
-                        const Text(
+                        Text(
                           'Ko srečaš nekoga v bližini in si oba pošljete pozdrav,\npridejo tukaj.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white24, fontSize: 13),
+                          style: TextStyle(color: dimColor, fontSize: 13),
                         ),
                       ],
                     ),
@@ -209,7 +232,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                 child: Text('${match.name}, ${match.age}',
                                     style: GoogleFonts.instrumentSans(
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                        color: textColor,
                                         fontSize: 18)),
                               ),
 
@@ -236,8 +259,8 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon: const Icon(LucideIcons.moreVertical,
-                                          color: Colors.white54),
+                                      icon: Icon(LucideIcons.moreVertical,
+                                          color: subtextColor),
                                       onPressed: () {
                                         UgcActionSheet.show(
                                           context,
@@ -246,8 +269,8 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                         );
                                       },
                                     ),
-                                    const Icon(LucideIcons.chevronRight,
-                                        color: Colors.white30, size: 20),
+                                    Icon(LucideIcons.chevronRight,
+                                        color: dimColor, size: 20),
                                   ],
                                 ),
                               const SizedBox(width: 5),

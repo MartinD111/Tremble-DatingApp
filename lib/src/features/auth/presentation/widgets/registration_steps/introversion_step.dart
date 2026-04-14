@@ -28,9 +28,23 @@ class IntroversionStep extends StatelessWidget {
     return ScrollableFormPage(
       child: Column(
         children: [
-          TrembleBackButton(label: tr('back'), onPressed: onBack),
-          const SizedBox(height: 40),
-          StepHeader(tr('introversion')),
+          SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                StepHeader(tr('introversion')),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: TrembleBackButton(
+                    onPressed: onBack,
+                    label: tr('back'),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 48),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -50,7 +64,8 @@ class IntroversionStep extends StatelessWidget {
           Slider(
             value: value,
             onChanged: onChanged,
-            activeColor: kBrandRose,
+            divisions: 10,
+            activeColor: Theme.of(context).colorScheme.primary,
             inactiveColor:
                 isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),
@@ -61,8 +76,8 @@ class IntroversionStep extends StatelessWidget {
               value <= 0.5
                   ? '${((1.0 - value) * 100).toInt()}% ${tr('introvert').toLowerCase()}'
                   : '${(value * 100).toInt()}% ${tr('extrovert').toLowerCase()}',
-              style: const TextStyle(
-                color: kBrandRose,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),

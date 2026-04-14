@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../shared/ui/discard_changes_modal.dart';
+import '../../../../shared/ui/top_notification.dart';
+import '../../../auth/data/auth_repository.dart';
+import '../../../../core/translations.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // showPreferenceEditModal — unified bottom-sheet modal for single-select
-// preferences. Matches onboarding pill style (pill-shaped options, rose accent,
-// checkmark on selected, brand typography).
+// preferences. Stateful: tap highlights pending selection, explicit Save/Cancel
+// buttons confirm or discard. Includes "Vseeno mi je" (clear to null) and
+// optional "Po meri" (custom multi-select) rows.
 // ─────────────────────────────────────────────────────────────────────────────
 
 Future<void> showPreferenceEditModal({
   required BuildContext context,
   required String title,
-  required List<Map<String, String>> options,
+  required List<Map<String, dynamic>> options,
   required String? currentValue,
-  required ValueChanged<String> onUpdate,
+  required ValueChanged<String?> onUpdate,
+  // Optional icon shown on every option pill (fallback if per-option icon is missing).
+  IconData? rowIcon,
+  // When provided, a "Po meri →" row appears and opens a multi-select modal.
+  List<Map<String, dynamic>>? allOptions,
+  ValueChanged<String>? onCustom,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -23,33 +34,184 @@ Future<void> showPreferenceEditModal({
       title: title,
       options: options,
       currentValue: currentValue,
-      onUpdate: (val) {
-        onUpdate(val);
-        Navigator.pop(ctx);
-      },
+      outerContext: context,
+      rowIcon: rowIcon,
+      allOptions: allOptions,
+      onUpdate: onUpdate,
+      onCustom: onCustom,
     ),
   );
 }
 
-class _PreferenceEditSheet extends StatelessWidget {
+class _PreferenceEditSheet extends ConsumerStatefulWidget {
   final String title;
-  final List<Map<String, String>> options;
+  final List<Map<String, dynamic>> options;
   final String? currentValue;
-  final ValueChanged<String> onUpdate;
+  final BuildContext outerContext;
+  final IconData? rowIcon;
+  final List<Map<String, dynamic>>? allOptions;
+  final ValueChanged<String?> onUpdate;
+  final ValueChanged<String>? onCustom;
 
   const _PreferenceEditSheet({
     required this.title,
     required this.options,
     required this.currentValue,
+    required this.outerContext,
     required this.onUpdate,
+    this.rowIcon,
+    this.allOptions,
+    this.onCustom,
   });
+
+  @override
+  ConsumerState<_PreferenceEditSheet> createState() => _PreferenceEditSheetState();
+}
+
+class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
+  static const _none = '__none__';
+  String? _pending;
+
+  @override
+  void initState() {
+    super.initState();
+    _pending = widget.currentValue;
+  }
+
+  /// Splits a comma-joined custom value back into a list for multi-select.
+  List<String> get _currentAsMulti {
+    final v = widget.currentValue;
+    if (v == null || v.isEmpty) return [];
+    return v.split(',');
+  }
+
+  void _openCustom() {
+    final outer = widget.outerContext;
+    Navigator.pop(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (outer.mounted) {
+        showMultiSelectModal(
+          context: outer,
+          title: widget.title,
+          options: widget.allOptions!,
+          currentValues: _currentAsMulti,
+          onSave: (vals) => widget.onCustom?.call(vals.join(',')),
+        );
+      }
+    });
+  }
+
+  Widget _optionPill({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    bool isMuted = false,
+    bool showArrow = false,
+    bool isRoseLabel = false,
+    required bool isDark,
+    required Color textColor,
+    IconData? icon,
+  }) {
+    final brandRose = Theme.of(context).colorScheme.primary;
+    final labelColor = isRoseLabel
+        ? brandRose
+        : isSelected
+            ? textColor
+            : isMuted
+                ? (isDark ? Colors.white54 : Colors.black45)
+                : textColor;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? brandRose.withValues(alpha: 0.15)
+              : isMuted
+                  ? (isDark
+                      ? Colors.white.withValues(alpha: 0.04)
+                      : Colors.black.withValues(alpha: 0.02))
+                  : (isDark
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.black.withValues(alpha: 0.04)),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: isSelected
+                ? brandRose
+                : isMuted
+                    ? (isDark
+                        ? Colors.white12
+                        : Colors.black.withValues(alpha: 0.06))
+                    : (isDark ? Colors.white24 : Colors.black12),
+          ),
+        ),
+        child: Row(
+          children: [
+            // Icon — shown when provided (rowIcon from the row, or per-option)
+            if (icon != null) ...[
+              Icon(icon,
+                  size: 18,
+                  color: isSelected
+                      ? brandRose
+                      : (isDark ? Colors.white54 : Colors.black45)),
+              const SizedBox(width: 10),
+            ],
+            Text(
+              label,
+              style: GoogleFonts.instrumentSans(
+                color: labelColor,
+                fontWeight: isSelected || isRoseLabel
+                    ? FontWeight.bold
+                    : isMuted
+                        ? FontWeight.w400
+                        : FontWeight.w500,
+                // Never italic — removed per design spec
+                fontStyle: FontStyle.normal,
+              ),
+            ),
+            const Spacer(),
+            if (isSelected)
+              Icon(LucideIcons.checkCircle, color: brandRose, size: 20),
+            if (showArrow)
+              Icon(LucideIcons.chevronRight,
+                  color: isDark ? Colors.white38 : Colors.black26, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+    bool _hasChanges() => _pending != widget.currentValue;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
+    final brandRose = Theme.of(context).colorScheme.primary;
 
-    return Container(
+        final hasChanges = _hasChanges();
+    return PopScope(
+      canPop: !hasChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final res = await showDiscardChangesModal(context, ref);
+        if (res == 'save') {
+          final changedValue = _pending == '__none__' ? null : _pending;
+          widget.onUpdate(changedValue);
+          final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
+          TopNotification.show(
+            context: context,
+            message: t('profile_updated', lang),
+            icon: LucideIcons.checkCircle,
+          );
+          if (context.mounted) Navigator.pop(context);
+            } else if (res == 'discard') {
+          if (context.mounted) Navigator.pop(context);
+        }
+      },
+      child: Container(
       padding: EdgeInsets.fromLTRB(
           24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
       decoration: BoxDecoration(
@@ -71,7 +233,7 @@ class _PreferenceEditSheet extends StatelessWidget {
           const SizedBox(height: 20),
           // Title
           Text(
-            title,
+            widget.title,
             style: GoogleFonts.instrumentSans(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -79,54 +241,79 @@ class _PreferenceEditSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // Options
-          ...options.map((opt) {
-            final isSelected = opt['value'] == currentValue;
-            return GestureDetector(
-              onTap: () => onUpdate(opt['value']!),
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFFF4436C).withValues(alpha: 0.15)
-                      : (isDark
-                          ? Colors.white.withValues(alpha: 0.07)
-                          : Colors.black.withValues(alpha: 0.04)),
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFFF4436C)
-                        : (isDark ? Colors.white24 : Colors.black12),
+          // Regular options — show rowIcon if provided, or per-option icon
+          ...widget.options.map((opt) => _optionPill(
+                label: opt['label'] as String,
+                isSelected: opt['value'] == _pending,
+                onTap: () => setState(() => _pending = opt['value'] as String?),
+                isDark: isDark,
+                textColor: textColor,
+                icon: opt['icon'] as IconData? ?? widget.rowIcon,
+              )),
+          // "Vseeno mi je" — clears the preference (no icon, no italic)
+          _optionPill(
+            label: 'Vseeno mi je',
+            isSelected: _pending == _none,
+            onTap: () => setState(() => _pending = _none),
+            isMuted: true,
+            isDark: isDark,
+            textColor: textColor,
+          ),
+          // "Po meri" — opens multi-select (only when allOptions provided)
+          if (widget.allOptions != null)
+            _optionPill(
+              label: 'Po meri',
+              isSelected: false,
+              onTap: _openCustom,
+              isMuted: true,
+              showArrow: true,
+              isRoseLabel: true,
+              isDark: isDark,
+              textColor: textColor,
+            ),
+          const SizedBox(height: 8),
+          // Save / Cancel
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                        color: isDark ? Colors.white38 : Colors.black26),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: const StadiumBorder(),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black54,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Text(
-                      opt['label']!,
-                      style: GoogleFonts.instrumentSans(
-                        color: textColor,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.w500,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (isSelected)
-                      const Icon(
-                        LucideIcons.checkCircle,
-                        color: Color(0xFFF4436C),
-                        size: 20,
-                      ),
-                  ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: brandRose,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28)),
+                  ),
+                  onPressed: () {
+                    widget.onUpdate(_pending == _none ? null : _pending);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Save',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
-            );
-          }),
+            ],
+          ),
         ],
-      ),
+      )    ),
     );
   }
 }
@@ -169,7 +356,7 @@ Future<void> showSliderEditModal({
   );
 }
 
-class _SliderEditSheet extends StatefulWidget {
+class _SliderEditSheet extends ConsumerStatefulWidget {
   final String title;
   final double min;
   final double max;
@@ -193,10 +380,10 @@ class _SliderEditSheet extends StatefulWidget {
   });
 
   @override
-  State<_SliderEditSheet> createState() => _SliderEditSheetState();
+  ConsumerState<_SliderEditSheet> createState() => _SliderEditSheetState();
 }
 
-class _SliderEditSheetState extends State<_SliderEditSheet> {
+class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
   late RangeValues _values;
 
   @override
@@ -208,13 +395,34 @@ class _SliderEditSheetState extends State<_SliderEditSheet> {
   String _label(double v) =>
       widget.labelMapper != null ? widget.labelMapper!(v) : v.round().toString();
 
+    bool _hasChanges() => _values != widget.current;
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
-    const brandRose = Color(0xFFF4436C);
+    final brandRose = Theme.of(context).colorScheme.primary;
 
-    return Container(
+        final hasChanges = _hasChanges();
+    return PopScope(
+      canPop: !hasChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final res = await showDiscardChangesModal(context, ref);
+        if (res == 'save') {
+          widget.onSave(_values);
+          final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
+          TopNotification.show(
+            context: context,
+            message: t('profile_updated', lang),
+            icon: LucideIcons.checkCircle,
+          );
+          if (context.mounted) Navigator.pop(context);
+            } else if (res == 'discard') {
+          if (context.mounted) Navigator.pop(context);
+        }
+      },
+      child: Container(
       padding: EdgeInsets.fromLTRB(
           24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
       decoration: BoxDecoration(
@@ -242,7 +450,17 @@ class _SliderEditSheetState extends State<_SliderEditSheet> {
               color: textColor,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
+          // Live range display
+          Text(
+            '${_label(_values.start)} – ${_label(_values.end)}',
+            style: GoogleFonts.instrumentSans(
+              fontSize: 16,
+              color: brandRose,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
           if (widget.startLabel != null || widget.endLabel != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -308,7 +526,7 @@ class _SliderEditSheetState extends State<_SliderEditSheet> {
             ],
           ),
         ],
-      ),
+      )    ),
     );
   }
 }
@@ -322,7 +540,7 @@ class _SliderEditSheetState extends State<_SliderEditSheet> {
 Future<void> showMultiSelectModal({
   required BuildContext context,
   required String title,
-  required List<Map<String, String>> options,
+  required List<Map<String, dynamic>> options,
   required List<String> currentValues,
   required ValueChanged<List<String>> onSave,
 }) async {
@@ -342,9 +560,9 @@ Future<void> showMultiSelectModal({
   );
 }
 
-class _MultiSelectSheet extends StatefulWidget {
+class _MultiSelectSheet extends ConsumerStatefulWidget {
   final String title;
-  final List<Map<String, String>> options;
+  final List<Map<String, dynamic>> options;
   final List<String> currentValues;
   final ValueChanged<List<String>> onSave;
 
@@ -356,10 +574,10 @@ class _MultiSelectSheet extends StatefulWidget {
   });
 
   @override
-  State<_MultiSelectSheet> createState() => _MultiSelectSheetState();
+  ConsumerState<_MultiSelectSheet> createState() => _MultiSelectSheetState();
 }
 
-class _MultiSelectSheetState extends State<_MultiSelectSheet> {
+class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
   late List<String> _selected;
 
   @override
@@ -372,7 +590,7 @@ class _MultiSelectSheetState extends State<_MultiSelectSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
-    const brandRose = Color(0xFFF4436C);
+    final brandRose = Theme.of(context).colorScheme.primary;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -465,8 +683,8 @@ class _MultiSelectSheetState extends State<_MultiSelectSheet> {
                     ),
                     const Spacer(),
                     if (isSelected)
-                      const Icon(LucideIcons.checkCircle,
-                          color: Color(0xFFF4436C), size: 20),
+                      Icon(LucideIcons.checkCircle,
+                          color: Theme.of(context).colorScheme.primary, size: 20),
                   ],
                 ),
               ),
@@ -474,6 +692,206 @@ class _MultiSelectSheetState extends State<_MultiSelectSheet> {
           }),
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// showLanguageEditModal — single-select bottom-sheet with explicit Save/Cancel.
+// Language is NOT applied until the user taps Save. Cancel dismisses with no
+// side effects. This matches the spec requirement for an explicit confirm step.
+// ─────────────────────────────────────────────────────────────────────────────
+
+Future<void> showLanguageEditModal({
+  required BuildContext context,
+  required String title,
+  required List<Map<String, String>> options,
+  required String? currentValue,
+  required ValueChanged<String> onSave,
+}) async {
+  await showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (ctx) => _LanguageEditSheet(
+      title: title,
+      options: options,
+      currentValue: currentValue,
+      onSave: (val) {
+        onSave(val);
+        Navigator.pop(ctx);
+      },
+      onCancel: () => Navigator.pop(ctx),
+    ),
+  );
+}
+
+class _LanguageEditSheet extends ConsumerStatefulWidget {
+  final String title;
+  final List<Map<String, String>> options;
+  final String? currentValue;
+  final ValueChanged<String> onSave;
+  final VoidCallback onCancel;
+
+  const _LanguageEditSheet({
+    required this.title,
+    required this.options,
+    required this.currentValue,
+    required this.onSave,
+    required this.onCancel,
+  });
+
+  @override
+  ConsumerState<_LanguageEditSheet> createState() => _LanguageEditSheetState();
+}
+
+class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
+  late String? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.currentValue;
+  }
+
+    bool _hasChanges() => _selected != widget.currentValue && _selected != null;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final brandRose = Theme.of(context).colorScheme.primary;
+
+        final hasChanges = _hasChanges();
+    return PopScope(
+      canPop: !hasChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final res = await showDiscardChangesModal(context, ref);
+        if (res == 'save') {
+          widget.onSave(_selected!);
+          final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
+          TopNotification.show(
+            context: context,
+            message: t('profile_updated', lang),
+            icon: LucideIcons.checkCircle,
+          );
+          if (context.mounted) Navigator.pop(context);
+            } else if (res == 'discard') {
+          if (context.mounted) Navigator.pop(context);
+        }
+      },
+      child: Container(
+      padding: EdgeInsets.fromLTRB(
+          24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white24 : Colors.black26,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            widget.title,
+            style: GoogleFonts.instrumentSans(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Options — tap selects as pending; does NOT apply until Save
+          ...widget.options.map((opt) {
+            final isSelected = opt['value'] == _selected;
+            return GestureDetector(
+              onTap: () => setState(() => _selected = opt['value']),
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? brandRose.withValues(alpha: 0.15)
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.07)
+                          : Colors.black.withValues(alpha: 0.04)),
+                  borderRadius: BorderRadius.circular(100),
+                  border: Border.all(
+                    color: isSelected
+                        ? brandRose
+                        : (isDark ? Colors.white24 : Colors.black12),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      opt['label']!,
+                      style: GoogleFonts.instrumentSans(
+                        color: textColor,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.w500,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (isSelected)
+                      Icon(LucideIcons.checkCircle,
+                          color: brandRose, size: 20),
+                  ],
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                        color: isDark ? Colors.white38 : Colors.black26),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: const StadiumBorder(),
+                  ),
+                  onPressed: widget.onCancel,
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black54,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: brandRose,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28)),
+                  ),
+                  onPressed: _selected != null
+                      ? () => widget.onSave(_selected!)
+                      : null,
+                  child: const Text('Save',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      )    ),
     );
   }
 }

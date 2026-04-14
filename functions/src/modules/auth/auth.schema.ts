@@ -54,6 +54,7 @@ export const completeOnboardingSchema = z.object({
     ageRangeStart: z.number().int().min(18).max(100).default(18),
     ageRangeEnd: z.number().int().min(18).max(100).default(100),
     maxDistance: z.number().int().min(1).max(500).default(50),
+    jobStatus: z.string().max(50).optional(),
     consentGiven: z.boolean().refine((val) => val === true, {
         message: "GDPR consent is required",
     }),

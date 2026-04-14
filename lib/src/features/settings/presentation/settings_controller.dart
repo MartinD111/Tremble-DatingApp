@@ -54,7 +54,10 @@ class SettingsController {
   // ── Toggle: gender-based color theming ────────────────────────────────────
 
   void toggleGenderBasedColor(bool enabled) {
-    updateUser((u) => u.copyWith(isGenderBasedColor: enabled));
+    updateUser((u) => u.copyWith(
+          isGenderBasedColor: enabled,
+          isClassicAppearance: !enabled,
+        ));
   }
 
   // ── Language (dual-write: Firestore + appLanguageProvider) ────────────────
@@ -110,16 +113,37 @@ class SettingsController {
     updateUser((u) => u.copyWith(interestedIn: value));
   }
 
+  // ── Clear partner political/introvert preferences ─────────────────────────
+
+  void clearPartnerPolitical() {
+    updateUser((u) => u.copyWith(
+          partnerPoliticalMin: null,
+          partnerPoliticalMax: null,
+        ));
+  }
+
+  void clearPartnerIntrovert() {
+    updateUser((u) => u.copyWith(
+          partnerIntrovertMin: null,
+          partnerIntrovertMax: null,
+        ));
+  }
+
   // ── Open pill edit modal ───────────────────────────────────────────────────
-  // Opens a bottom-sheet and returns after user selects or dismisses.
+  // Opens a bottom-sheet and returns after user confirms with Save/Cancel.
+  // onUpdate receives null when the user selects "Vseeno mi je".
+  // allOptions/onCustom enable the "Po meri" multi-select sub-modal.
 
   Future<void> openPillEditModal({
     required BuildContext context,
     required String title,
-    required List<Map<String, String>> options,
+    required List<Map<String, dynamic>> options,
     required String? currentValue,
-    required ValueChanged<String> onUpdate,
+    required ValueChanged<String?> onUpdate,
     bool isPremium = false,
+    IconData? rowIcon,
+    List<Map<String, dynamic>>? allOptions,
+    ValueChanged<String>? onCustom,
   }) async {
     final user = _user;
     if (user == null) return;
@@ -139,6 +163,9 @@ class SettingsController {
       options: options,
       currentValue: currentValue,
       onUpdate: onUpdate,
+      rowIcon: rowIcon,
+      allOptions: allOptions,
+      onCustom: onCustom,
     );
   }
 
@@ -188,7 +215,7 @@ class SettingsController {
   Future<void> openMultiSelectModal({
     required BuildContext context,
     required String title,
-    required List<Map<String, String>> options,
+    required List<Map<String, dynamic>> options,
     required List<String> currentValues,
     required ValueChanged<List<String>> onUpdate,
   }) async {
@@ -207,12 +234,14 @@ class SettingsController {
     final options = availableLanguages
         .map((l) => {'label': l['label']!, 'value': l['code']!})
         .toList();
-    await showPreferenceEditModal(
+    // Use showLanguageEditModal so the user must explicitly tap Save before
+    // the language is applied — immediate-save gave no confirmation step.
+    await showLanguageEditModal(
       context: context,
       title: t('app_language', _lang),
       options: options,
       currentValue: _lang,
-      onUpdate: setLanguage,
+      onSave: setLanguage,
     );
   }
 }

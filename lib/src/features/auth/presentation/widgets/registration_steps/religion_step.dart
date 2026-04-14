@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/utils/icon_utils.dart';
 import 'sub_screen_step.dart';
 
 class ReligionStep extends StatelessWidget {
@@ -24,13 +25,13 @@ class ReligionStep extends StatelessWidget {
     return SubScreenStep(
       title: tr('religion'),
       options: [
-        {'key': 'christianity', 'label': tr('christianity')},
-        {'key': 'islam', 'label': tr('islam')},
-        {'key': 'hinduism', 'label': tr('hinduism')},
-        {'key': 'buddhism', 'label': tr('buddhism')},
-        {'key': 'judaism', 'label': tr('judaism')},
-        {'key': 'agnostic', 'label': tr('agnostic')},
-        {'key': 'atheist', 'label': tr('atheist')},
+        {'key': 'christianity', 'label': tr('christianity'), 'icon': IconUtils.getReligionIcon('christianity')},
+        {'key': 'islam', 'label': tr('islam'), 'icon': IconUtils.getReligionIcon('islam')},
+        {'key': 'hinduism', 'label': tr('hinduism'), 'icon': IconUtils.getReligionIcon('hinduism')},
+        {'key': 'buddhism', 'label': tr('buddhism'), 'icon': IconUtils.getReligionIcon('buddhism')},
+        {'key': 'judaism', 'label': tr('judaism'), 'icon': IconUtils.getReligionIcon('judaism')},
+        {'key': 'agnostic', 'label': tr('agnostic'), 'icon': IconUtils.getReligionIcon('agnostic')},
+        {'key': 'atheist', 'label': tr('atheist'), 'icon': IconUtils.getReligionIcon('atheist')},
       ],
       selected: selected,
       onSelect: onSelect,

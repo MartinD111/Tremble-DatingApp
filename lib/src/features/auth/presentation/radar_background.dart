@@ -83,6 +83,7 @@ class _RadarBackgroundState extends State<RadarBackground>
                 pulseAnimation: _pulseController,
                 dots: _dots,
                 accentColor: primaryColor,
+                secondaryColor: Theme.of(context).colorScheme.secondary,
               ),
               size: Size.infinite,
             );
@@ -112,13 +113,15 @@ class RadarPainter extends CustomPainter {
   final double rotation;
   final Animation<double> pulseAnimation;
   final List<PulsingDot> dots;
-  final Color? accentColor;
+  final Color accentColor;
+  final Color secondaryColor;
 
   RadarPainter({
     required this.rotation,
     required this.pulseAnimation,
     required this.dots,
-    this.accentColor,
+    required this.accentColor,
+    required this.secondaryColor,
   }) : super(repaint: pulseAnimation);
 
   @override
@@ -126,11 +129,8 @@ class RadarPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = math.min(size.width, size.height) * 0.8;
 
-    final primaryColor =
-        accentColor ?? const Color(0xFFF4436C); // Fallback to rose if null
-    final secondaryColor = accentColor != null
-        ? accentColor!.withValues(alpha: 0.5)
-        : const Color(0xFFC2185B);
+    final primaryColor = accentColor;
+    final secondaryColor = this.secondaryColor;
 
     // Draw 4 concentric circles with alternating colors
     for (int i = 0; i < 4; i++) {

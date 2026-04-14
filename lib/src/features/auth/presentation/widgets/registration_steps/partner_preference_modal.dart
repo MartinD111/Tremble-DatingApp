@@ -45,12 +45,15 @@ void showPartnerPreferenceModal(
               ),
             ),
             const SizedBox(height: 28),
-            Text(
-              'Ali želiš, da ima tvoj partner enake preference?',
-              style: GoogleFonts.instrumentSans(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF1E1E2E),
+            Center(
+              child: Text(
+                'Ali želiš, da ima tvoj partner enake preference?',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.instrumentSans(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF1E1E2E),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -97,7 +100,7 @@ void showPartnerPreferenceModal(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: tempSelection != null
-                          ? kBrandRose
+                          ? Theme.of(context).colorScheme.primary
                           : (isDark ? Colors.white12 : Colors.black12),
                       foregroundColor: tempSelection != null
                           ? Colors.black

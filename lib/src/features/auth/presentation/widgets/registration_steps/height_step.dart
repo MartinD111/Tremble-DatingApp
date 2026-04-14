@@ -73,9 +73,23 @@ class HeightStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TrembleBackButton(label: tr('back'), onPressed: onBack),
-          const SizedBox(height: 24),
-          StepHeader(tr('whats_your_height')),
+          SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                StepHeader(tr('whats_your_height')),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: TrembleBackButton(
+                    onPressed: onBack,
+                    label: tr('back'),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 48),
 
           // ── cm / ft toggle ─────────────────────────────────────────────
@@ -164,7 +178,7 @@ class _ToggleButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
         decoration: BoxDecoration(
-          color: active ? kBrandRose : Colors.transparent,
+          color: active ? Theme.of(context).colorScheme.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Text(

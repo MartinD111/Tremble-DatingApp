@@ -16,6 +16,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 
 class PreferenceRangeSlider extends StatelessWidget {
+  final IconData? icon;
   final String label;
   final String valueLabel;
   final double min;
@@ -26,19 +27,20 @@ class PreferenceRangeSlider extends StatelessWidget {
   final String? startLabel;
   final String? endLabel;
   final String Function(double)? labelMapper;
-  final ValueChanged<RangeValues> onChanged;
+  final ValueChanged<RangeValues>? onChanged;
   final VoidCallback? onEdit;
   final bool isPremium;
 
   const PreferenceRangeSlider({
     super.key,
+    this.icon,
     required this.label,
     required this.valueLabel,
     required this.min,
     required this.max,
     required this.start,
     required this.end,
-    required this.onChanged,
+    this.onChanged,
     this.divisions,
     this.startLabel,
     this.endLabel,
@@ -49,7 +51,14 @@ class PreferenceRangeSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const brandRose = Color(0xFFF4436C);
+    final brandRose = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final labelColor = isDark ? Colors.white : Colors.black87;
+    final valueColor = isDark ? Colors.white70 : Colors.black54;
+    final editBg = isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.06);
+    final editIcon = isDark ? Colors.white54 : Colors.black38;
+    final endLabelColor = isDark ? Colors.white38 : Colors.black38;
+    final sliderInactive = isDark ? Colors.white24 : Colors.black12;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,21 +70,21 @@ class PreferenceRangeSlider extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(label,
-                    style: const TextStyle(color: Colors.white)),
+                if (icon != null) ...[
+                  Icon(icon, size: 18, color: labelColor.withValues(alpha: 0.7)),
+                  const SizedBox(width: 10),
+                ],
+                Text(label, style: TextStyle(color: labelColor)),
                 if (isPremium) ...[
                   const SizedBox(width: 8),
-                  const Icon(LucideIcons.lock,
-                      size: 14, color: Colors.amber),
+                  const Icon(LucideIcons.lock, size: 14, color: Colors.amber),
                 ],
               ],
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(valueLabel,
-                    style:
-                        const TextStyle(color: Colors.white70)),
+                Text(valueLabel, style: TextStyle(color: valueColor)),
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: onEdit,
@@ -84,32 +93,30 @@ class PreferenceRangeSlider extends StatelessWidget {
                     height: 28,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: editBg,
                     ),
-                    child: const Icon(LucideIcons.pencil,
-                        size: 14, color: Colors.white54),
+                    child: Icon(LucideIcons.pencil, size: 14, color: editIcon),
                   ),
                 ),
               ],
             ),
           ],
         ),
-        RangeSlider(
-          values: RangeValues(start, end),
-          min: min,
-          max: max,
-          divisions: divisions,
-          activeColor: brandRose,
-          inactiveColor: Colors.white24,
-          labels: RangeLabels(
-            labelMapper != null
-                ? labelMapper!(start)
-                : start.round().toString(),
-            labelMapper != null
-                ? labelMapper!(end)
-                : end.round().toString(),
+        AbsorbPointer(
+          absorbing: onChanged == null,
+          child: RangeSlider(
+            values: RangeValues(start, end),
+            min: min,
+            max: max,
+            divisions: divisions,
+            activeColor: brandRose,
+            inactiveColor: sliderInactive,
+            labels: RangeLabels(
+              labelMapper != null ? labelMapper!(start) : start.round().toString(),
+              labelMapper != null ? labelMapper!(end) : end.round().toString(),
+            ),
+            onChanged: onChanged ?? (_) {},
           ),
-          onChanged: onChanged,
         ),
         if (startLabel != null || endLabel != null)
           Padding(
@@ -117,16 +124,10 @@ class PreferenceRangeSlider extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  startLabel ?? '',
-                  style: const TextStyle(
-                      color: Colors.white38, fontSize: 11),
-                ),
-                Text(
-                  endLabel ?? '',
-                  style: const TextStyle(
-                      color: Colors.white38, fontSize: 11),
-                ),
+                Text(startLabel ?? '',
+                    style: TextStyle(color: endLabelColor, fontSize: 11)),
+                Text(endLabel ?? '',
+                    style: TextStyle(color: endLabelColor, fontSize: 11)),
               ],
             ),
           ),

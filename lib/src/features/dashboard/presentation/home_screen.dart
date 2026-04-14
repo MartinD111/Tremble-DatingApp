@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,7 @@ import '../../matches/data/match_repository.dart';
 import '../../matches/presentation/match_dialog.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../map/presentation/pulse_map_screen.dart';
+import '../../../core/theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../matches/presentation/matches_screen.dart';
 import '../../../shared/ui/primary_button.dart';
@@ -18,7 +20,6 @@ import '../../../core/notification_service.dart'; // FCM Notifications
 import '../../../core/ble_service.dart'; // BLE must run in main isolate
 import '../../../core/consent_service.dart'; // gdprConsentProvider
 import 'package:flutter_animate/flutter_animate.dart'; // Animations
-import '../../../core/theme.dart'; // TrembleTheme — telemetryTextStyle
 import '../../../core/translations.dart';
 import '../../match/application/match_service.dart';
 import '../../match/data/wave_repository.dart';
@@ -153,8 +154,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final pingAngle = ref.watch(pingAngleProvider);
     final radarMode = ref.watch(radarModeProvider);
     final batteryLevel = ref.watch(radarBatteryLevelProvider);
-    final bool canAccessRadar =
-        user?.isEmailVerified == true || user?.isAdmin == true;
+    final bool bypassRadar = ref.watch(bypassRadarProvider);
+    final bool localAdmin =
+        kDebugMode && ref.watch(localAdminModeProvider);
+    final bool canAccessRadar = user?.isEmailVerified == true ||
+        user?.isAdmin == true ||
+        bypassRadar ||
+        localAdmin;
     final bool isPremium = user?.isPremium == true;
 
     // Define Screens and Nav Items
@@ -172,7 +178,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       navItems = [
         LiquidNavItem(icon: LucideIcons.radar, label: 'Radar'),
         LiquidNavItem(icon: LucideIcons.map, label: 'Map'),
-        LiquidNavItem(icon: LucideIcons.users, label: 'Matches'),
+        LiquidNavItem(icon: LucideIcons.users, label: 'Ljudje'),
         LiquidNavItem(icon: LucideIcons.settings, label: 'Settings'),
       ];
     } else {
@@ -184,7 +190,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ];
       navItems = [
         LiquidNavItem(icon: LucideIcons.radar, label: 'Radar'),
-        LiquidNavItem(icon: LucideIcons.users, label: 'Matches'),
+        LiquidNavItem(icon: LucideIcons.users, label: 'Ljudje'),
         LiquidNavItem(icon: LucideIcons.settings, label: 'Settings'),
       ];
     }
@@ -218,9 +224,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               }
               return false;
             },
-            child: IndexedStack(
-              index: navIndex,
-              children: screens,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.98, end: 1.0).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
+                    child: child,
+                  ),
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey<int>(navIndex),
+                child: screens[navIndex],
+              ),
             ),
           ),
         ),
@@ -259,16 +284,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final lang = ref.watch(appLanguageProvider);
     return Stack(
       children: [
+        // ── Radar Header ─────────────────────────────────────────
+        Positioned(
+          top: 40,
+          left: 0,
+          right: 0,
+          child: SizedBox(
+            height: 50,
+            child: Center(
+              child: Text(
+                'Radar',
+                style: TrembleTheme.displayFont(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+
         // Radar View (Conditional)
         canAccessRadar
             ? Stack(
                 children: [
                   Positioned.fill(
-                      child: RadarAnimation(
-                    isScanning: isScanning,
-                    pingDistance: pingDistance,
-                    pingAngle: pingAngle,
-                  )),
+                    child: RadarAnimation(
+                      isScanning: isScanning,
+                      pingDistance: pingDistance,
+                      pingAngle: pingAngle,
+                      brandColor: Theme.of(context).primaryColor,
+                    ),
+                  ),
 
                   // ── Pulsing Primary Action ────────────────────────
                   Center(

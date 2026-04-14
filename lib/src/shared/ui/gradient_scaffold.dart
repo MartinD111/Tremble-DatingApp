@@ -39,6 +39,7 @@ class GradientScaffold extends ConsumerWidget {
           isDarkMode: isDark,
           isPrideMode: user?.isPrideMode ?? false,
           gender: user?.gender,
+          isGenderBasedColor: user?.isGenderBasedColor ?? false,
         );
 
     return Scaffold(
@@ -62,12 +63,13 @@ class GradientScaffold extends ConsumerWidget {
             _SubtlePingOverlay(
               accentColor: bgColors.isNotEmpty
                   ? bgColors.first
-                  : const Color(0xFFF4436C),
+                  : Theme.of(context).colorScheme.primary,
             ),
           SafeArea(
             child: DefaultTextStyle(
               style: GoogleFonts.instrumentSans(
-                color: Colors.white,
+                // Theme-aware: dark mode → white text; light mode → near-black text
+                color: isDark ? Colors.white : const Color(0xFF1A1A18),
                 fontSize: 14,
               ),
               child: child,
@@ -140,6 +142,7 @@ class _SubtlePingOverlayState extends State<_SubtlePingOverlay>
             pulseAnimation: _pulseController,
             dots: _dots,
             accentColor: widget.accentColor,
+            secondaryColor: widget.accentColor.withValues(alpha: 0.5),
           ),
           size: Size.infinite,
         );

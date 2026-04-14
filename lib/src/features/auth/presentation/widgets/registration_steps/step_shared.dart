@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-const Color kBrandRose = Color(0xFFF4436C);
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DRUM PICKER
@@ -148,7 +148,7 @@ class ContinueButton extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           color: enabled
-              ? kBrandRose
+              ? Theme.of(context).colorScheme.primary
               : (isDark
                   ? Colors.white.withValues(alpha: 0.15)
                   : Colors.black.withValues(alpha: 0.08)),
@@ -156,7 +156,7 @@ class ContinueButton extends StatelessWidget {
           boxShadow: [
             if (enabled)
               BoxShadow(
-                color: kBrandRose.withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -191,12 +191,14 @@ class OptionPill extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.icon,
+    this.iconColor,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
   final IconData? icon;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -210,14 +212,14 @@ class OptionPill extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: selected
-              ? kBrandRose.withValues(alpha: 0.22)
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.22)
               : (isDark
                   ? Colors.white.withValues(alpha: 0.12)
                   : Colors.black.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: selected
-                ? kBrandRose
+                ? Theme.of(context).colorScheme.primary
                 : (isDark ? Colors.white38 : Colors.black26),
             width: selected ? 2 : 1,
           ),
@@ -227,9 +229,9 @@ class OptionPill extends StatelessWidget {
             if (icon != null) ...[
               Icon(
                 icon,
-                color: selected
-                    ? kBrandRose
-                    : (isDark ? Colors.white70 : Colors.black54),
+                color: iconColor ?? (selected
+                    ? Theme.of(context).colorScheme.primary
+                    : (isDark ? Colors.white70 : Colors.black54)),
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -246,7 +248,7 @@ class OptionPill extends StatelessWidget {
             ),
             const Spacer(),
             if (selected)
-              const Icon(Icons.check_circle, color: kBrandRose, size: 20),
+              Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 20),
           ],
         ),
       ),
@@ -266,16 +268,23 @@ class StepHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Responsive font size: smaller on mobile, larger on tablet
+    final titleFontSize = screenWidth < 400 ? 28.0 : 32.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           title,
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black,
-              ),
+          style: GoogleFonts.instrumentSans(
+            fontSize: titleFontSize,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black,
+            height: 1.2,
+          ),
         ),
         if (subtitle != null) ...[
           const SizedBox(height: 8),

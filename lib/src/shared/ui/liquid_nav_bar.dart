@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class LiquidNavBar extends StatelessWidget {
   final int currentIndex;
@@ -18,97 +17,101 @@ class LiquidNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const double itemWidth = 64.0;
+    const double navHeight = 72.0;
+    const double paddingHorizontal = 16.0;
+
     return Center(
       heightFactor: 1,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(40),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
           child: Container(
-            height: 70, // Fixed height for the dock
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            height: navHeight,
+            padding: const EdgeInsets.symmetric(horizontal: paddingHorizontal),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.4),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black.withValues(alpha: 0.35)
+                  : Colors.white.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(40),
-              border: Border.all(
-                color: isPremium
-                    ? Colors.amber.withValues(alpha: 0.3)
-                    : Colors.white.withValues(alpha: 0.15),
-                width: 1.5,
-              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  spreadRadius: 0,
-                  offset: const Offset(0, 10),
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 40,
+                  spreadRadius: -5,
+                  offset: const Offset(0, 15),
                 ),
               ],
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min, // Shrink to fit items
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: items.asMap().entries.map((entry) {
-                final index = entry.key;
-                final item = entry.value;
-                final isSelected = currentIndex == index;
-
-                return GestureDetector(
-                  onTap: () => onTap(index),
-                  behavior: HitTestBehavior.opaque,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Bubbly Background Indicator
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.elasticOut,
+                  left: (currentIndex * itemWidth),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeOutQuint,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    width: itemWidth,
+                    height: 48,
                     decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.white.withValues(alpha: 0.15)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          item.icon,
-                          color: isSelected
-                              ? (isPremium
-                                  ? Colors.amber
-                                  : const Color(0xFFF4436C))
-                              : Colors.white.withValues(alpha: 0.6),
-                          size: 24,
-                        ),
-
-                        // Animated Label Reveal
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOut,
-                          child: SizedBox(
-                            width: isSelected ? null : 0,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 8.0),
-                              child: Text(
-                                item.label,
-                                style: GoogleFonts.instrumentSans(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.clip,
-                                softWrap: false,
-                              ),
-                            ),
-                          ),
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          spreadRadius: 2,
                         ),
                       ],
                     ),
                   ),
-                );
-              }).toList(),
+                ),
+
+                // Navigation Items
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: items.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final item = entry.value;
+                    final isSelected = currentIndex == index;
+
+                    return GestureDetector(
+                      onTap: () => onTap(index),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        width: itemWidth,
+                        height: navHeight,
+                        alignment: Alignment.center,
+                        child: AnimatedScale(
+                          duration: const Duration(milliseconds: 400),
+                          scale: isSelected ? 1.15 : 1.0,
+                          curve: Curves.elasticOut,
+                          child: Icon(
+                            item.icon,
+                            color: isSelected
+                                ? (isPremium
+                                    ? Colors.amber
+                                    : (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withValues(alpha: 1.0)))
+                                : Colors.white.withValues(alpha: 0.4),
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
           ),
         ),

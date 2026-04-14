@@ -25,7 +25,8 @@ class AuthUser {
   final int? heightRangeEnd;
   final bool? isSmoker;
   final String? partnerSmokingPreference;
-  final String? occupation;
+  final String? jobStatus; // 'student' or 'employed'
+  final String? occupation; // Specific title (e.g. 'Computer Science')
   final String? drinkingHabit;
   final int? introvertScale;
   final String? partnerIntrovertPreference;
@@ -84,6 +85,7 @@ class AuthUser {
     this.interestedIn,
     this.isSmoker,
     this.partnerSmokingPreference,
+    this.jobStatus,
     this.occupation,
     this.drinkingHabit,
     this.introvertScale,
@@ -141,40 +143,32 @@ class AuthUser {
       if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
       if (gender != null) 'gender': gender,
       if (interestedIn != null) 'interestedIn': interestedIn,
-      if (height != null) 'height': height,
-      if (heightRangeStart != null) 'heightRangeStart': heightRangeStart,
-      if (heightRangeEnd != null) 'heightRangeEnd': heightRangeEnd,
-      if (isSmoker != null) 'isSmoker': isSmoker,
-      if (partnerSmokingPreference != null)
-        'partnerSmokingPreference': partnerSmokingPreference,
-      if (occupation != null) 'occupation': occupation,
-      if (drinkingHabit != null) 'drinkingHabit': drinkingHabit,
-      if (introvertScale != null) 'introvertScale': introvertScale,
-      if (partnerIntrovertPreference != null)
-        'partnerIntrovertPreference': partnerIntrovertPreference,
-      if (exerciseHabit != null) 'exerciseHabit': exerciseHabit,
-      if (sleepSchedule != null) 'sleepSchedule': sleepSchedule,
-      if (petPreference != null) 'petPreference': petPreference,
-      if (childrenPreference != null) 'childrenPreference': childrenPreference,
-      if (location != null) 'location': location,
-      if (religion != null) 'religion': religion,
-      if (religionPreference != null) 'religionPreference': religionPreference,
-      if (ethnicity != null) 'ethnicity': ethnicity,
-      if (ethnicityPreference != null)
-        'ethnicityPreference': ethnicityPreference,
-      if (hairColor != null) 'hairColor': hairColor,
-      if (hairColorPreference != null)
-        'hairColorPreference': hairColorPreference,
-      if (politicalAffiliation != null)
-        'politicalAffiliation': politicalAffiliation,
-      if (politicalAffiliationPreference != null)
-        'politicalAffiliationPreference': politicalAffiliationPreference,
-      if (partnerExerciseHabit != null)
-        'partnerExerciseHabit': partnerExerciseHabit,
-      if (partnerDrinkingHabit != null)
-        'partnerDrinkingHabit': partnerDrinkingHabit,
-      if (partnerSleepSchedule != null)
-        'partnerSleepSchedule': partnerSleepSchedule,
+      'height': height,
+      'heightRangeStart': heightRangeStart,
+      'heightRangeEnd': heightRangeEnd,
+      'isSmoker': isSmoker,
+      'partnerSmokingPreference': partnerSmokingPreference,
+      'jobStatus': jobStatus,
+      'occupation': occupation,
+      'drinkingHabit': drinkingHabit,
+      'introvertScale': introvertScale,
+      'partnerIntrovertPreference': partnerIntrovertPreference,
+      'exerciseHabit': exerciseHabit,
+      'sleepSchedule': sleepSchedule,
+      'petPreference': petPreference,
+      'childrenPreference': childrenPreference,
+      'location': location,
+      'religion': religion,
+      'religionPreference': religionPreference,
+      'ethnicity': ethnicity,
+      'ethnicityPreference': ethnicityPreference,
+      'hairColor': hairColor,
+      'hairColorPreference': hairColorPreference,
+      'politicalAffiliation': politicalAffiliation,
+      'politicalAffiliationPreference': politicalAffiliationPreference,
+      'partnerExerciseHabit': partnerExerciseHabit,
+      'partnerDrinkingHabit': partnerDrinkingHabit,
+      'partnerSleepSchedule': partnerSleepSchedule,
       if (partnerPetPreference != null)
         'partnerPetPreference': partnerPetPreference,
       if (partnerChildrenPreference != null)
@@ -228,6 +222,7 @@ class AuthUser {
       heightRangeEnd: data['heightRangeEnd'] as int?,
       isSmoker: data['isSmoker'] as bool?,
       partnerSmokingPreference: data['partnerSmokingPreference'] as String?,
+      jobStatus: data['jobStatus'] as String?,
       occupation: data['occupation'] as String?,
       drinkingHabit: data['drinkingHabit'] as String?,
       introvertScale: data['introvertScale'] as int?,
@@ -289,6 +284,7 @@ class AuthUser {
     String? interestedIn,
     bool? isSmoker,
     String? partnerSmokingPreference,
+    String? jobStatus,
     String? occupation,
     String? drinkingHabit,
     int? introvertScale,
@@ -349,6 +345,7 @@ class AuthUser {
       isSmoker: isSmoker ?? this.isSmoker,
       partnerSmokingPreference:
           partnerSmokingPreference ?? this.partnerSmokingPreference,
+      jobStatus: jobStatus ?? this.jobStatus,
       occupation: occupation ?? this.occupation,
       drinkingHabit: drinkingHabit ?? this.drinkingHabit,
       introvertScale: introvertScale ?? this.introvertScale,
@@ -727,7 +724,22 @@ class AuthRepository {
   Stream<AuthUser?> authStateChanges() {
     return _auth.authStateChanges().asyncMap((firebaseUser) async {
       if (firebaseUser == null) return null;
-      return _fetchUser(firebaseUser);
+      // Timeout + fallback: if Firestore is slow or the read is denied
+      // (e.g. App Check token rejected), emit a minimal signed-in stub so
+      // the router can make progress instead of hanging on the splash.
+      try {
+        return await _fetchUser(firebaseUser)
+            .timeout(const Duration(seconds: 6));
+      } catch (e) {
+        debugPrint(
+            '[AUTH] _fetchUser failed ($e) — emitting minimal stub so router unblocks');
+        return AuthUser(
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          isOnboarded: false,
+          isEmailVerified: firebaseUser.emailVerified,
+        );
+      }
     });
   }
 
@@ -747,10 +759,20 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
   final AuthRepository _repository;
 
   AuthNotifier(this._repository) : super(null) {
-    // Listen to Firebase auth stream on startup
-    _repository.authStateChanges().listen((user) {
-      state = user;
-    });
+    // Listen to Firebase auth stream on startup.
+    // onError guard: if the upstream stream errors (should no longer happen
+    // now that authStateChanges() catches internally, but defend in depth),
+    // fall back to signed-out state so the router unblocks the splash.
+    _repository.authStateChanges().listen(
+      (user) {
+        debugPrint('[AUTH] authStateChanges emitted: ${user?.id ?? 'null'}');
+        state = user;
+      },
+      onError: (Object e, StackTrace st) {
+        debugPrint('[AUTH] authStateChanges stream error: $e — forcing null');
+        state = null;
+      },
+    );
   }
 
   Future<void> login(String email, String password) async {
@@ -771,8 +793,15 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
   }
 
   Future<void> updateProfile(AuthUser user) async {
-    await _repository.updateProfile(user);
+    // Optimistic update: apply locally first so the UI reflects changes
+    // immediately regardless of API latency or transient failures.
     state = user;
+    try {
+      await _repository.updateProfile(user);
+    } catch (e) {
+      debugPrint('[AUTH] updateProfile API error (state already applied): $e');
+      // Keep optimistic state — next cold start will reconcile from Firestore.
+    }
   }
 
   Future<void> completeOnboarding(AuthUser user) async {

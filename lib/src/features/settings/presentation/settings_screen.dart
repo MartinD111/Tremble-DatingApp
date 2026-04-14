@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,11 +11,20 @@ import '../../../shared/ui/premium_paywall.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/api_client.dart';
+import '../../../core/theme_provider.dart';
 import 'settings_controller.dart';
 import 'widgets/preference_pill_row.dart';
 import 'widgets/preference_range_slider.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
+
+/// Admin-only local toggle for bypassing radar proximity requirements (testing).
+/// Not persisted to Firestore — resets on app restart.
+final bypassRadarProvider = StateProvider<bool>((ref) => false);
+
+/// Debug-only local admin override. Simulates admin role without a Firestore write.
+/// Never persisted — resets on app restart. Only active in kDebugMode.
+final localAdminModeProvider = StateProvider<bool>((ref) => false);
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -28,6 +38,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   final ScrollController _scrollController = ScrollController();
   final PageController _photoPageController = PageController();
   int _currentPhotoPage = 0;
+  String? _expandedSection;
+
+  /// Keys for each expandable section to enable auto-scrolling when opened.
+  final Map<String, GlobalKey> _sectionKeys = {
+    'preferences': GlobalKey(),
+    'lifestyle': GlobalKey(),
+    'appearance': GlobalKey(),
+    'account': GlobalKey(),
+  };
+
+  void _onToggleSection(String sectionKey) {
+    setState(() {
+      if (_expandedSection == sectionKey) {
+        _expandedSection = null;
+      } else {
+        _expandedSection = sectionKey;
+
+        // Auto-scroll to the section after it starts expanding.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          // A short delay ensures AnimatedSize has begun its expansion,
+          // resulting in a more accurate final scroll position.
+          Future.delayed(const Duration(milliseconds: 50), () {
+            if (!mounted) return;
+            final key = _sectionKeys[sectionKey];
+            if (key?.currentContext != null) {
+              Scrollable.ensureVisible(
+                key!.currentContext!,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutCubic,
+                alignment: 0.0, // Scroll exactly to the top for maximum visibility
+              );
+            }
+          });
+        });
+      }
+    });
+  }
 
   @override
   bool get wantKeepAlive => true;
@@ -44,21 +91,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     return t(key, user?.appLanguage ?? 'en');
   }
 
-  /// Maps a 0–100 introvert value to one of 5 text positions.
-  String _introvertLabel(double v) {
-    if (v <= 12) return 'Introvert';
-    if (v <= 37) return 'Center-left';
-    if (v <= 62) return 'Ambivert';
-    if (v <= 87) return 'Center-right';
-    return 'Extrovert';
+  /// Converts a string to Title Case (e.g. "night_owl" → "Night Owl").
+  String _toTitleCase(String s) {
+    if (s.isEmpty) return s;
+    return s.replaceAll('_', ' ').split(' ').map((w) {
+      if (w.isEmpty) return w;
+      return '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}';
+    }).join(' ');
   }
 
-  /// Converts a string to Title Case (e.g. "dog person" → "Dog Person").
-  String _toTitleCase(String s) => s
-      .split(' ')
-      .map((w) =>
-          w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}')
-      .join(' ');
+  /// Maps political scale value 1–5 to a readable label.
+  String _politicalLabel(double v) {
+    switch (v.round()) {
+      case 1: return _t('politics_left');
+      case 2: return _t('politics_center_left');
+      case 3: return _t('politics_center');
+      case 4: return _t('politics_center_right');
+      case 5: return _t('politics_right');
+      default: return v.round().toString();
+    }
+  }
+
+  /// Formats the political range display label.
+  String _politicalRangeLabel(int? min, int? max) {
+    if (min == null || max == null) return _t('politics_left') + ' – ' + _t('politics_right');
+    if (min == max) return _politicalLabel(min.toDouble());
+    return '${_politicalLabel(min.toDouble())} – ${_politicalLabel(max.toDouble())}';
+  }
+
+  /// Formats the introvert/extrovert range display label.
+  String _introvertRangeLabel(int? min, int? max) {
+    final lo = min ?? 0;
+    final hi = max ?? 100;
+    return '$lo% – $hi%';
+  }
 
   SettingsController get _ctrl => ref.read(settingsControllerProvider);
 
@@ -88,48 +154,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 60),
-          Center(
-            child: Text(_t('settings'),
-                style: GoogleFonts.instrumentSans(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: titleColor)),
-          ),
-          const SizedBox(height: 20),
           Expanded(
             child: SingleChildScrollView(
               controller: _scrollController,
               padding: const EdgeInsets.only(bottom: 100),
               child: Column(
                 children: [
+                  const SizedBox(height: 40),
+                  Center(
+                    child: Text(_t('settings'),
+                        style: GoogleFonts.playfairDisplay(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: titleColor)),
+                  ),
+                  const SizedBox(height: 20),
                   _buildProfileSection(user),
                   const SizedBox(height: 20),
-                  _buildPreferencesSection(user),
+                  _buildExpandableSection(
+                    title: _t('preferences'),
+                    sectionKey: 'preferences',
+                    icon: LucideIcons.sliders,
+                    content: _buildPreferencesContent(user),
+                  ),
                   const SizedBox(height: 20),
-                  _buildAccountSection(user),
+                  _buildExpandableSection(
+                    title: _t('lifestyle'),
+                    sectionKey: 'lifestyle',
+                    icon: LucideIcons.heart,
+                    content: _buildLifestyleContent(user),
+                  ),
                   const SizedBox(height: 20),
-                  _buildPremiumSection(user),
+                  _buildExpandableSection(
+                    title: _t('app_appearance'),
+                    sectionKey: 'appearance',
+                    icon: LucideIcons.palette,
+                    content: _buildAppSettingsContent(user),
+                  ),
                   const SizedBox(height: 20),
-                  _buildAppSettingsSection(user),
-                  const SizedBox(height: 30),
-                  PrimaryButton(
-                      text: _t('change_password'),
-                      isSecondary: true,
-                      onPressed: _showChangePasswordDialog),
-                  const SizedBox(height: 15),
-                  PrimaryButton(
-                      text: _t('logout'),
-                      isSecondary: true,
-                      onPressed: () {
-                        ref.read(authStateProvider.notifier).logout();
-                      }),
-                  const SizedBox(height: 15),
-                  // GDPR: Right to Erasure (Article 17)
-                  PrimaryButton(
-                      text: '🗑️  Delete Account',
-                      isSecondary: true,
-                      onPressed: _showDeleteAccountDialog),
+                  _buildExpandableSection(
+                    title: _t('account_settings'),
+                    sectionKey: 'account',
+                    icon: LucideIcons.user,
+                    content: _buildAccountContent(user),
+                  ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -192,9 +261,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           ),
                           enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(color: iconColor)),
-                          focusedBorder: const UnderlineInputBorder(
+                          focusedBorder: UnderlineInputBorder(
                               borderSide:
-                                  BorderSide(color: const Color(0xFFF4436C))),
+                                  BorderSide(color: Theme.of(context).colorScheme.primary)),
                         ),
                       ),
                       const SizedBox(height: 15),
@@ -216,9 +285,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           ),
                           enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(color: iconColor)),
-                          focusedBorder: const UnderlineInputBorder(
+                          focusedBorder: UnderlineInputBorder(
                               borderSide:
-                                  BorderSide(color: const Color(0xFFF4436C))),
+                                  BorderSide(color: Theme.of(context).colorScheme.primary)),
                         ),
                       ),
                       const SizedBox(height: 15),
@@ -240,9 +309,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           ),
                           enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(color: iconColor)),
-                          focusedBorder: const UnderlineInputBorder(
+                          focusedBorder: UnderlineInputBorder(
                               borderSide:
-                                  BorderSide(color: const Color(0xFFF4436C))),
+                                  BorderSide(color: Theme.of(context).colorScheme.primary)),
                         ),
                       ),
                       const SizedBox(height: 30),
@@ -321,8 +390,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final textColor = isDark ? Colors.white : Colors.black87;
+            final subTextColor = isDark ? Colors.white70 : Colors.black54;
+            final checkBorderColor = confirmed
+                ? Colors.redAccent
+                : (isDark ? Colors.white38 : Colors.black26);
             return AlertDialog(
-              backgroundColor: const Color(0xFF1E1E2E),
+              backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
               title: Row(children: [
@@ -331,23 +406,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 const SizedBox(width: 10),
                 Text('Delete Account',
                     style: GoogleFonts.instrumentSans(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black87,
+                        color: textColor,
                         fontWeight: FontWeight.bold)),
               ]),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'This action is permanent and cannot be undone.\n\n'
                     'All your data will be permanently deleted:\n'
                     '• Your profile and photos\n'
                     '• Your matches and conversations\n'
                     '• Your location history\n'
                     '• Your account credentials',
-                    style: TextStyle(color: Colors.white70, height: 1.5),
+                    style: TextStyle(color: subTextColor, height: 1.5),
                   ),
                   const SizedBox(height: 20),
                   GestureDetector(
@@ -362,8 +435,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               confirmed ? Colors.redAccent : Colors.transparent,
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                              color:
-                                  confirmed ? Colors.redAccent : Colors.white38,
+                              color: checkBorderColor,
                               width: 2),
                         ),
                         child: confirmed
@@ -372,10 +444,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             : null,
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'I understand that this action is permanent.',
-                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                          style: TextStyle(color: subTextColor, fontSize: 13),
                         ),
                       )
                     ]),
@@ -385,8 +457,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               actions: [
                 TextButton(
                   onPressed: isLoading ? null : () => Navigator.pop(context),
-                  child: const Text('Cancel',
-                      style: TextStyle(color: Colors.white54)),
+                  child: Text('Cancel',
+                      style: TextStyle(color: isDark ? Colors.white54 : Colors.black45)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -439,6 +511,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }
 
   Widget _buildProfileSection(AuthUser user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subColor = isDark ? Colors.white70 : Colors.black54;
     final hasPhotos = user.photoUrls.isNotEmpty;
     final photoCount = user.photoUrls.length;
 
@@ -522,15 +596,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              const Icon(LucideIcons.mapPin,
-                                  size: 14, color: Colors.white70),
+                              Icon(LucideIcons.mapPin,
+                                  size: 14, color: subColor),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(user.location!,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                        color: Colors.white70, fontSize: 14)),
+                                    style: TextStyle(
+                                        color: subColor, fontSize: 14)),
                               ),
                             ],
                           ),
@@ -541,7 +615,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           style: GoogleFonts.instrumentSans(
                             color: user.isPremium
                                 ? const Color(0xFFFFD700)
-                                : Colors.white70,
+                                : subColor,
                             fontWeight: user.isPremium
                                 ? FontWeight.w600
                                 : FontWeight.normal,
@@ -590,21 +664,101 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           ),
           const SizedBox(height: 16),
-          // Profile preview button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => context.push('/profile-preview'),
-              icon: const Icon(LucideIcons.eye, size: 18, color: Colors.white),
-              label: Text(_t('profile_card_view'),
-                  style: GoogleFonts.instrumentSans(
-                      color: Colors.white, fontWeight: FontWeight.w600)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.white30),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(100)),
+          // Profile preview button — theme-aware colors
+          Builder(builder: (context) {
+            final isDarkBtn = Theme.of(context).brightness == Brightness.dark;
+            final btnColor = isDarkBtn ? Colors.white : Colors.black87;
+            return SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => context.push('/profile-preview'),
+                icon: Icon(LucideIcons.eye, size: 18, color: btnColor),
+                label: Text(_t('profile_card_view'),
+                    style: GoogleFonts.instrumentSans(
+                        color: btnColor, fontWeight: FontWeight.w600)),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                      color: btnColor.withValues(alpha: 0.3)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100)),
+                ),
               ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandableSection({
+    required String title,
+    required String sectionKey,
+    required Widget content,
+    required IconData icon,
+  }) {
+    final isExpanded = _expandedSection == sectionKey;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
+    return GlassCard(
+      key: _sectionKeys[sectionKey],
+      padding: EdgeInsets.zero, // Padding handled by internal slots
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: () => _onToggleSection(sectionKey),
+            borderRadius: BorderRadius.circular(28),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                children: [
+                  Icon(icon, size: 20, color: textColor.withValues(alpha: 0.7)),
+                  const SizedBox(width: 12),
+                  Text(
+                    title,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  const Spacer(),
+                  AnimatedRotation(
+                    duration: const Duration(milliseconds: 200),
+                    turns: isExpanded ? 0.25 : 0,
+                    child: Icon(
+                      LucideIcons.chevronRight,
+                      size: 20,
+                      color: textColor.withValues(alpha: 0.3),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ClipRRect(
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: isExpanded
+                  ? Column(
+                      children: [
+                        Divider(
+                          height: 1,
+                          color: textColor.withValues(alpha: 0.1),
+                          indent: 20,
+                          endIndent: 20,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              left: 20, right: 20, bottom: 20, top: 20),
+                          child: content,
+                        ),
+                      ],
+                    )
+                  : const SizedBox(width: double.infinity, height: 0),
             ),
           ),
         ],
@@ -612,35 +766,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     );
   }
 
-  Widget _buildAppSettingsSection(AuthUser user) {
+  Widget _buildAppSettingsContent(AuthUser user) {
     final lang = user.appLanguage;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subColor = isDark ? Colors.white38 : Colors.black38;
 
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(_t('app_appearance'),
-                style: TextStyle(
-                    color: isDark ? Colors.white70 : Colors.black54,
-                    fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(height: 10),
-          SwitchListTile(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(_t('dark_mode'), style: TextStyle(color: textColor)),
-            value: user.isDarkMode,
-            activeThumbColor: const Color(0xFFF4436C),
+            // Bind to themeModeProvider (SharedPrefs-backed) — not user.isDarkMode
+            // (Firestore-backed) — so the toggle always reflects the actual live
+            // theme state and the two sources can never visually diverge.
+            value: ref.watch(themeModeProvider) == ThemeMode.dark,
+            activeThumbColor: Theme.of(context).colorScheme.primary,
             activeTrackColor: isDark ? Colors.white24 : Colors.black12,
             inactiveTrackColor: isDark
                 ? Colors.white.withValues(alpha: 0.1)
                 : Colors.black.withValues(alpha: 0.05),
             onChanged: (val) => _ctrl.toggleDarkMode(val),
           ),
-          if (user.interestedIn == 'Oba' || user.interestedIn == 'Both')
+          if (user.interestedIn == 'both')
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(_t('pride_mode'), style: TextStyle(color: textColor)),
@@ -656,7 +805,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             subtitle: Text('Adapt theme tones to match',
                 style: TextStyle(color: subColor, fontSize: 12)),
             value: user.isGenderBasedColor,
-            activeThumbColor: const Color(0xFFF4436C),
+            activeThumbColor: Theme.of(context).colorScheme.primary,
             activeTrackColor: isDark ? Colors.white24 : Colors.black12,
             inactiveTrackColor: isDark
                 ? Colors.white.withValues(alpha: 0.1)
@@ -669,9 +818,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             subtitle: Text(_t('remove_ping_sub'),
                 style: TextStyle(color: subColor, fontSize: 12)),
             value: !user.showPingAnimation,
-            activeThumbColor: Colors.white,
-            activeTrackColor: isDark ? Colors.grey[800] : Colors.grey[400],
-            inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+            activeThumbColor: Theme.of(context).colorScheme.primary,
+            activeTrackColor: isDark ? Colors.white24 : Colors.black12,
+            inactiveTrackColor: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.05),
             onChanged: (val) => _ctrl.togglePingAnimation(val),
           ),
           SwitchListTile(
@@ -701,28 +852,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             onEdit: () => _ctrl.openLanguageModal(context),
           ),
         ],
-      ),
-    );
+      );
   }
 
-  Widget _buildPreferencesSection(AuthUser user) {
+  Widget _buildPreferencesContent(AuthUser user) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(_t('preferences'),
-                style: GoogleFonts.instrumentSans(
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(height: 20),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
 
           // ── Sliders group (first per spec) ──
 
           PreferenceRangeSlider(
+            icon: LucideIcons.calendar,
             label: _t('age_range'),
             valueLabel: '${user.ageRangeStart} – ${user.ageRangeEnd}',
             min: 18,
@@ -730,7 +872,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             divisions: 82,
             start: user.ageRangeStart.toDouble(),
             end: user.ageRangeEnd.toDouble(),
-            onChanged: _ctrl.updateAgeRange,
             onEdit: () => _ctrl.openSliderEditModal(
               context: context,
               title: _t('age_range'),
@@ -745,7 +886,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           const SizedBox(height: 16),
 
           PreferenceRangeSlider(
-            label: _t('height'),
+            icon: LucideIcons.ruler,
+            label: _t('height_label'),
             valueLabel:
                 '${user.heightRangeStart ?? 130} – ${user.heightRangeEnd ?? 250} cm',
             min: 130,
@@ -754,7 +896,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             start: (user.heightRangeStart ?? 130).toDouble(),
             end: (user.heightRangeEnd ?? 250).toDouble(),
             isPremium: !user.isPremium,
-            onChanged: _ctrl.updateHeightRange,
             onEdit: () => _ctrl.openSliderEditModal(
               context: context,
               title: _t('height'),
@@ -772,10 +913,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           const SizedBox(height: 16),
 
           PreferenceRangeSlider(
+            icon: LucideIcons.landmark,
             label: _t('political_affiliation'),
-            valueLabel: user.partnerPoliticalMin != null
-                ? '${user.partnerPoliticalMin} – ${user.partnerPoliticalMax}'
-                : _t('no_preference'),
+            valueLabel: _politicalRangeLabel(
+                user.partnerPoliticalMin, user.partnerPoliticalMax),
             min: 1,
             max: 5,
             divisions: 4,
@@ -783,8 +924,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             end: (user.partnerPoliticalMax ?? 5).toDouble(),
             startLabel: _t('politics_left'),
             endLabel: _t('politics_right'),
-            isPremium: !user.isPremium,
-            onChanged: user.isPremium ? _ctrl.updatePartnerPoliticalRange : (_) {},
+            labelMapper: _politicalLabel,
             onEdit: () => _ctrl.openSliderEditModal(
               context: context,
               title: _t('political_affiliation'),
@@ -797,148 +937,74 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               ),
               startLabel: _t('politics_left'),
               endLabel: _t('politics_right'),
-              isPremium: !user.isPremium,
+              labelMapper: _politicalLabel,
               onUpdate: _ctrl.updatePartnerPoliticalRange,
             ),
           ),
           const SizedBox(height: 16),
 
           PreferenceRangeSlider(
+            icon: LucideIcons.smile,
             label: _t('introvert_extrovert'),
-            valueLabel: user.partnerIntrovertMin != null
-                ? '${_introvertLabel((user.partnerIntrovertMin!).toDouble())} – '
-                  '${_introvertLabel((user.partnerIntrovertMax ?? 100).toDouble())}'
-                : _t('no_preference'),
+            valueLabel: _introvertRangeLabel(
+                user.partnerIntrovertMin, user.partnerIntrovertMax),
             min: 0,
             max: 100,
-            divisions: 4,
+            divisions: 10,
             start: (user.partnerIntrovertMin ?? 0).toDouble(),
             end: (user.partnerIntrovertMax ?? 100).toDouble(),
             startLabel: _t('full_introvert'),
             endLabel: _t('full_extrovert'),
-            labelMapper: _introvertLabel,
-            onChanged: _ctrl.updatePartnerIntrovertRange,
+            labelMapper: (v) => '${v.round()}%',
             onEdit: () => _ctrl.openSliderEditModal(
               context: context,
               title: _t('introvert_extrovert'),
               min: 0,
               max: 100,
-              divisions: 4,
+              divisions: 10,
               current: RangeValues(
                 (user.partnerIntrovertMin ?? 0).toDouble(),
                 (user.partnerIntrovertMax ?? 100).toDouble(),
               ),
               startLabel: _t('full_introvert'),
               endLabel: _t('full_extrovert'),
-              labelMapper: _introvertLabel,
+              labelMapper: (v) => '${v.round()}%',
               onUpdate: _ctrl.updatePartnerIntrovertRange,
             ),
           ),
 
-          Divider(color: Colors.white.withValues(alpha: 0.1)),
+          Divider(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black12),
           const SizedBox(height: 8),
 
           // ── Interested In ──
           _prefPillRow(
             context: context,
-            label: _t('who_looking_for'),
+            label: _t('gender'),
             icon: LucideIcons.users,
             currentValue: user.interestedIn,
             options: [
-              {'label': _t('male'), 'value': 'Moški'},
-              {'label': _t('female'), 'value': 'Ženska'},
-              {'label': _t('both'), 'value': 'Oba'},
+              {
+                'label': _t('male'),
+                'value': 'male',
+                'icon': Icons.male,
+              },
+              {
+                'label': _t('female'),
+                'value': 'female',
+                'icon': Icons.female,
+              },
+              {
+                'label': _t('both'),
+                'value': 'both',
+                'icon': Icons.wc,
+              },
             ],
-            onUpdate: (val) => _ctrl.updateInterestedIn(val),
+            onUpdate: (val) {
+              if (val != null) _ctrl.updateInterestedIn(val);
+            },
           ),
 
-          Divider(color: Colors.white.withValues(alpha: 0.1)),
-          const SizedBox(height: 8),
-
-          // ── Lifestyle + enum prefs (pill rows) ──
-
-          _prefPillRow(
-            context: context,
-            label: _t('exercise'),
-            icon: LucideIcons.dumbbell,
-            currentValue: user.exerciseHabit,
-            options: [
-              {'label': _t('exercise_no'), 'value': 'Ne'},
-              {'label': _t('exercise_sometimes'), 'value': 'Včasih'},
-              {'label': _t('exercise_regularly'), 'value': 'Redno'},
-              {'label': _t('exercise_very_active'), 'value': 'Zelo aktiven'},
-            ],
-            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(exerciseHabit: val)),
-          ),
-          const SizedBox(height: 16),
-
-          _prefPillRow(
-            context: context,
-            label: _t('alcohol'),
-            icon: LucideIcons.wine,
-            currentValue: user.drinkingHabit,
-            options: [
-              {'label': _t('alcohol_never'), 'value': 'Nikoli'},
-              {'label': _t('alcohol_socially'), 'value': 'Družabno'},
-              {'label': _t('alcohol_occasionally'), 'value': 'Ob priliki'},
-            ],
-            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(drinkingHabit: val)),
-          ),
-          const SizedBox(height: 16),
-
-          _prefPillRow(
-            context: context,
-            label: _t('smoking'),
-            icon: LucideIcons.cigarette,
-            currentValue: user.partnerSmokingPreference,
-            options: [
-              {'label': _t('no'), 'value': 'Ne'},
-              {'label': _t('dont_care'), 'value': 'Vseeno'},
-            ],
-            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(partnerSmokingPreference: val)),
-          ),
-          const SizedBox(height: 16),
-
-          _prefPillRow(
-            context: context,
-            label: _t('children'),
-            icon: LucideIcons.baby,
-            currentValue: user.childrenPreference,
-            options: [
-              {'label': _t('children_yes'), 'value': 'Da'},
-              {'label': _t('children_no'), 'value': 'Ne'},
-              {'label': _t('children_later'), 'value': 'Da, ampak kasneje'},
-            ],
-            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(childrenPreference: val)),
-          ),
-          const SizedBox(height: 16),
-
-          _prefPillRow(
-            context: context,
-            label: _t('sleep'),
-            icon: LucideIcons.moon,
-            currentValue: user.sleepSchedule,
-            options: [
-              {'label': _t('night_owl'), 'value': 'Nočna ptica'},
-              {'label': _t('early_bird'), 'value': 'Jutranja ptica'},
-            ],
-            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(sleepSchedule: val)),
-          ),
-          const SizedBox(height: 16),
-
-          _prefPillRow(
-            context: context,
-            label: _t('pets'),
-            icon: LucideIcons.dog,
-            currentValue: user.petPreference,
-            options: [
-              {'label': _t('dog_person'), 'value': 'Dog person'},
-              {'label': _t('cat_person'), 'value': 'Cat person'},
-            ],
-            onUpdate: (val) => _ctrl.updateUser((u) => u.copyWith(petPreference: val)),
-          ),
-
-          Divider(color: Colors.white.withValues(alpha: 0.1)),
+          Divider(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black12),
           const SizedBox(height: 8),
 
           // ── Premium partner preferences (unified pill rows) ──
@@ -996,6 +1062,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
 
           // ── Looking For (multi-select) ──
+          // Options use the same keys as the registration DatingPreferencesStep
+          // so values round-trip correctly. Legacy stored values ('Short-term fun',
+          // Slovenian text, etc.) fall through _t() unchanged and display as-is.
           const SizedBox(height: 16),
           PreferencePillRow(
             icon: LucideIcons.search,
@@ -1003,45 +1072,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             values: user.lookingFor.isNotEmpty
                 ? user.lookingFor.map((v) => v as String?).toList()
                 : [null],
-            formatter: (v) {
-              const opts = {
-                'Short-term fun': 'Short-Term Fun',
-                'Long-term relationship': 'Long-Term Relationship',
-                'Friendship': 'Friendship',
-                'Meeting': 'Meeting',
-              };
-              return _toTitleCase(opts[v] ?? v);
-            },
-            onTap: () => _ctrl.openMultiSelectModal(
-              context: context,
-              title: _t('looking_for'),
-              options: [
-                {'label': _t('short_term'), 'value': 'Short-term fun'},
-                {'label': _t('long_term'), 'value': 'Long-term relationship'},
-                {'label': _t('friendship'), 'value': 'Friendship'},
-                {'label': _t('meeting'), 'value': 'Meeting'},
-              ],
-              currentValues: user.lookingFor,
-              onUpdate: (vals) =>
-                  _ctrl.updateUser((u) => u.copyWith(lookingFor: vals)),
-            ),
-            onEdit: () => _ctrl.openMultiSelectModal(
-              context: context,
-              title: _t('looking_for'),
-              options: [
-                {'label': _t('short_term'), 'value': 'Short-term fun'},
-                {'label': _t('long_term'), 'value': 'Long-term relationship'},
-                {'label': _t('friendship'), 'value': 'Friendship'},
-                {'label': _t('meeting'), 'value': 'Meeting'},
-              ],
-              currentValues: user.lookingFor,
-              onUpdate: (vals) =>
-                  _ctrl.updateUser((u) => u.copyWith(lookingFor: vals)),
-            ),
+            formatter: _t, // _t(v) translates known keys; unknown values return v
+            onTap: () => _openLookingForModal(user),
+            onEdit: () => _openLookingForModal(user),
           ),
         ],
-      ),
-    );
+      );
   }
 
   /// Builds a `PreferencePillRow` that opens the unified edit modal via controller.
@@ -1050,11 +1086,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     required String label,
     required IconData icon,
     required String? currentValue,
-    required List<Map<String, String>> options,
-    required void Function(String) onUpdate,
+    required List<Map<String, dynamic>> options,
+    required void Function(String?) onUpdate,
     bool isPremium = false,
   }) {
+    // Formatter: handles comma-joined multi-values ("Po meri") and single values.
     final formatter = (String v) {
+      if (v.contains(',')) {
+        final count = v.split(',').length;
+        return 'Izbrano: $count';
+      }
       final raw = options.where((o) => o['value'] == v).map((o) => o['label']!).firstOrNull ?? v;
       return _toTitleCase(raw);
     };
@@ -1071,27 +1112,64 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         currentValue: currentValue,
         onUpdate: onUpdate,
         isPremium: isPremium,
+        rowIcon: icon,
+        allOptions: options,
+        onCustom: (val) => onUpdate(val),
       ),
     );
   }
 
-  Widget _buildAccountSection(AuthUser user) {
+  /// Opens the Looking For multi-select modal.
+  /// Options match the registration DatingPreferencesStep keys exactly.
+  /// Legacy stored values (old English / Slovenian text) remain selectable
+  /// because the multi-select checks by value equality — they simply won't
+  /// match any option pill and will still display via the backward-compat
+  /// formatter on the pill row.
+  void _openLookingForModal(AuthUser user) {
+    _ctrl.openMultiSelectModal(
+      context: context,
+      title: _t('looking_for'),
+      options: [
+        {'label': _t('short_term_fun'), 'value': 'short_term_fun'},
+        {'label': _t('long_term_partner'), 'value': 'long_term_partner'},
+        {'label': _t('short_open_long'), 'value': 'short_open_long'},
+        {'label': _t('long_open_short'), 'value': 'long_open_short'},
+      ],
+      currentValues: user.lookingFor,
+      onUpdate: (vals) =>
+          _ctrl.updateUser((u) => u.copyWith(lookingFor: vals)),
+    );
+  }
+
+  Widget _buildAccountContent(AuthUser user) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final dividerColor = isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black12;
+    final dividerColor =
+        isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black12;
 
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(_t('account_settings'),
-                style: TextStyle(
-                    color: isDark ? Colors.white70 : Colors.black54,
-                    fontWeight: FontWeight.bold)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Row(
+            children: [
+              const Icon(LucideIcons.crown, color: Colors.amber, size: 20),
+              const SizedBox(width: 10),
+              Text(_t('premium_account'),
+                  style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.bold)),
+            ],
           ),
-          const SizedBox(height: 10),
-          ListTile(
+          value: user.isPremium,
+          activeThumbColor: Colors.amber,
+          activeTrackColor: Colors.amber.withValues(alpha: 0.5),
+          inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+          onChanged: null,
+        ),
+        Divider(color: dividerColor),
+        ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(
               user.isEmailVerified
@@ -1118,15 +1196,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 : null,
           ),
           Divider(color: dividerColor),
+          // Admin mode — in debug builds toggleable as local override; in prod read-only.
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(_t('admin_mode'), style: TextStyle(color: textColor)),
-            value: user.isAdmin,
-            activeThumbColor: Colors.red,
-            activeTrackColor: Colors.red.withValues(alpha: 0.5),
+            subtitle: kDebugMode
+                ? Text(
+                    'Debug override – local only',
+                    style: TextStyle(
+                        color: Colors.orange.withValues(alpha: 0.7),
+                        fontSize: 11),
+                  )
+                : null,
+            value: user.isAdmin ||
+                (kDebugMode && ref.watch(localAdminModeProvider)),
+            activeThumbColor: kDebugMode ? Colors.orange : Colors.red,
+            activeTrackColor: kDebugMode
+                ? Colors.orange.withValues(alpha: 0.5)
+                : Colors.red.withValues(alpha: 0.5),
             inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
-            onChanged: null, // Admin status is server-managed only
+            onChanged: kDebugMode
+                ? (val) =>
+                    ref.read(localAdminModeProvider.notifier).state = val
+                : null,
           ),
+          // Bypass Radar — visible for admins (real or local-debug) and in debug builds
+          if (user.isAdmin ||
+              (kDebugMode && ref.watch(localAdminModeProvider)) ||
+              kDebugMode)
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('Bypass Radar',
+                  style: TextStyle(color: textColor)),
+              subtitle: Text('Skip proximity for testing',
+                  style: TextStyle(
+                      color: isDark ? Colors.white38 : Colors.black45,
+                      fontSize: 12)),
+              value: ref.watch(bypassRadarProvider),
+              activeThumbColor: Colors.orange,
+              activeTrackColor: Colors.orange.withValues(alpha: 0.5),
+              inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+              onChanged: (val) =>
+                  ref.read(bypassRadarProvider.notifier).state = val,
+            ),
           Divider(color: dividerColor),
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -1139,36 +1251,183 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               context.push('/blocked-users');
             },
           ),
+          const SizedBox(height: 24),
+          PrimaryButton(
+              text: _t('change_password'),
+              isSecondary: true,
+              onPressed: _showChangePasswordDialog),
+          const SizedBox(height: 12),
+          PrimaryButton(
+              text: _t('logout'),
+              isSecondary: true,
+              onPressed: () {
+                ref.read(authStateProvider.notifier).logout();
+              }),
+          const SizedBox(height: 12),
+          // GDPR: Right to Erasure (Article 17)
+          PrimaryButton(
+              text: '🗑️  Delete Account',
+              isSecondary: true,
+              onPressed: _showDeleteAccountDialog),
         ],
-      ),
-    );
+      );
   }
 
-  Widget _buildPremiumSection(AuthUser user) {
-    return GlassCard(
-      borderColor: Colors.amber,
-      child: SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Row(
-          children: [
-            const Icon(LucideIcons.crown, color: Colors.amber, size: 20),
-            const SizedBox(width: 10),
-            Text(_t('premium_account'),
-                style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Colors.black87,
-                    fontWeight: FontWeight.bold)),
+  Widget _buildLifestyleContent(AuthUser user) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _prefPillRow(
+          context: context,
+          label: _t('exercise'),
+          icon: LucideIcons.zap,
+          currentValue: user.exerciseHabit,
+          options: [
+            {
+              'label': _t('exercise_active'),
+              'value': 'active',
+              'icon': LucideIcons.zap,
+            },
+            {
+              'label': _t('exercise_sometimes'),
+              'value': 'sometimes',
+              'icon': LucideIcons.activity,
+            },
+            {
+              'label': _t('almost_never'),
+              'value': 'almost_never',
+              'icon': LucideIcons.moon,
+            },
           ],
+          onUpdate: (val) =>
+              _ctrl.updateUser((u) => u.copyWith(exerciseHabit: val)),
         ),
-        value: user.isPremium,
-        activeThumbColor: Colors.amber,
-        activeTrackColor: Colors.amber.withValues(alpha: 0.5),
-        inactiveTrackColor: Theme.of(context).brightness == Brightness.dark
-            ? Colors.white24
-            : Colors.black12,
-        onChanged: null, // Premium status is server-managed only
-      ),
+        const SizedBox(height: 16),
+        _prefPillRow(
+          context: context,
+          label: _t('alcohol'),
+          icon: LucideIcons.wine,
+          currentValue: user.drinkingHabit,
+          options: [
+            {
+              'label': _t('alcohol_never'),
+              'value': 'never',
+              'icon': LucideIcons.ban,
+            },
+            {
+              'label': _t('alcohol_socially'),
+              'value': 'socially',
+              'icon': LucideIcons.users,
+            },
+            {
+              'label': _t('alcohol_occasionally'),
+              'value': 'frequently',
+              'icon': LucideIcons.trendingUp,
+            },
+          ],
+          onUpdate: (val) =>
+              _ctrl.updateUser((u) => u.copyWith(drinkingHabit: val)),
+        ),
+        const SizedBox(height: 16),
+        _prefPillRow(
+          context: context,
+          label: _t('smoking'),
+          icon: LucideIcons.cigarette,
+          currentValue: user.partnerSmokingPreference,
+          options: [
+            {
+              'label': _t('smoke_no'),
+              'value': 'no',
+              'icon': LucideIcons.ban,
+            },
+            {
+              'label': _t('smoke_yes'),
+              'value': 'yes',
+              'icon': LucideIcons.cigarette,
+            },
+          ],
+          onUpdate: (val) => _ctrl.updateUser(
+              (u) => u.copyWith(partnerSmokingPreference: val)),
+        ),
+        const SizedBox(height: 16),
+        _prefPillRow(
+          context: context,
+          label: _t('children'),
+          icon: LucideIcons.baby,
+          currentValue: user.childrenPreference,
+          options: [
+            {
+              'label': _t('children_want_someday'),
+              'value': 'want_someday',
+              'icon': LucideIcons.heart,
+            },
+            {
+              'label': _t('children_dont_want'),
+              'value': 'dont_want',
+              'icon': LucideIcons.ban,
+            },
+            {
+              'label': _t('children_have_and_want_more'),
+              'value': 'have_and_want_more',
+              'icon': LucideIcons.users,
+            },
+            {
+              'label': _t('children_have_and_dont_want_more'),
+              'value': 'have_and_dont_want_more',
+              'icon': LucideIcons.userCheck,
+            },
+            {
+              'label': _t('children_not_sure'),
+              'value': 'not_sure',
+              'icon': LucideIcons.helpCircle,
+            },
+          ],
+          onUpdate: (val) =>
+              _ctrl.updateUser((u) => u.copyWith(childrenPreference: val)),
+        ),
+        const SizedBox(height: 16),
+        _prefPillRow(
+          context: context,
+          label: _t('sleep'),
+          icon: LucideIcons.moon,
+          currentValue: user.sleepSchedule,
+          options: [
+            {
+              'label': _t('night_owl'),
+              'value': 'night_owl', // Unified key
+              'icon': LucideIcons.moon,
+            },
+            {
+              'label': _t('early_bird'),
+              'value': 'early_bird', // Unified key
+              'icon': LucideIcons.sun,
+            },
+          ],
+          onUpdate: (val) =>
+              _ctrl.updateUser((u) => u.copyWith(sleepSchedule: val)),
+        ),
+        const SizedBox(height: 16),
+        _prefPillRow(
+          context: context,
+          label: _t('pets'),
+          icon: LucideIcons.dog,
+          currentValue: user.petPreference,
+          options: [
+            {
+              'label': _t('dog_person'),
+              'value': 'dog',
+              'icon': LucideIcons.dog,
+            },
+            {
+              'label': _t('cat_person'),
+              'value': 'cat',
+              'icon': LucideIcons.cat,
+            },
+          ],
+          onUpdate: (val) =>
+              _ctrl.updateUser((u) => u.copyWith(petPreference: val)),
+        ),
+      ],
     );
   }
 }

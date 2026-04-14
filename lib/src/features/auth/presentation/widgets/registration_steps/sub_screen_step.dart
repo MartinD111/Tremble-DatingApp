@@ -37,21 +37,29 @@ class SubScreenStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: TrembleBackButton(
-              onPressed: onBack,
-              label: tr('back'),
+          SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                StepHeader(title),
+                Positioned(
+                  left: 0,
+                  child: TrembleBackButton(
+                    onPressed: onBack,
+                    label: tr('back'),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
-          StepHeader(title),
           const SizedBox(height: 40),
           ...options.map(
             (o) => OptionPill(
               label: o['label'] as String,
               selected: selected == o['key'],
               icon: o['icon'] as IconData?,
+              iconColor: o['iconColor'] as Color?,
               onTap: () => onSelect(o['key'] as String),
             ),
           ),

@@ -45,19 +45,35 @@ String? computeRedirect({
   // (Google / Apple). Social users skip the email-verified check below.
   bool isSocialUser = false,
 }) {
+  if (kDebugMode) {
+    debugPrint(
+      '[TREMBLE_ROUTER] computeRedirect() called: currentPath=$currentPath, '
+      'isInitialized=$isInitialized, authUser=${authUser?.email}, '
+      'profileLoading=${profileStatus.isLoading}, hasConsent=$hasConsent',
+    );
+  }
+
   // Auth stream not yet settled — hold, show splash
-  if (!isInitialized) return null;
+  if (!isInitialized) {
+    if (kDebugMode) debugPrint('[TREMBLE_ROUTER] Not initialized, holding...');
+    return null;
+  }
 
   // 1. Not logged in
   if (authUser == null) {
     if (currentPath == '/onboarding' || currentPath == '/forgot-password') {
       return null;
     }
-    return currentPath == '/login' ? null : '/login';
+    final redirect = currentPath == '/login' ? null : '/login';
+    if (kDebugMode) debugPrint('[TREMBLE_ROUTER] No authUser, redirecting to: $redirect');
+    return redirect;
   }
 
   // 2. Profile check in-flight — hold (router shows splash via '/' builder)
-  if (profileStatus.isLoading) return null;
+  if (profileStatus.isLoading) {
+    if (kDebugMode) debugPrint('[TREMBLE_ROUTER] Profile loading, holding...');
+    return null;
+  }
 
   final status = profileStatus.value;
 
@@ -65,6 +81,12 @@ String? computeRedirect({
   final needsOnboarding = status == null ||
       status is ProfileStatusNotFound ||
       (status is ProfileStatusReady && !status.isOnboarded);
+
+  if (kDebugMode) {
+    debugPrint(
+      '[TREMBLE_ROUTER] Profile status: $status, needsOnboarding=$needsOnboarding',
+    );
+  }
 
   if (needsOnboarding) {
     if (currentPath == '/onboarding' || currentPath == '/forgot-password') {
@@ -75,9 +97,17 @@ String? computeRedirect({
     // user can choose to sign in or register fresh — NOT silently resume an
     // orphaned registration flow that they may not remember starting.
     if (!isSocialUser && !isEmailVerified) {
-      return currentPath == '/login' ? null : '/login';
+      final redirect = currentPath == '/login' ? null : '/login';
+      if (kDebugMode) {
+        debugPrint(
+          '[TREMBLE_ROUTER] Stale email session (not verified, no profile), redirecting to: $redirect',
+        );
+      }
+      return redirect;
     }
-    return '/onboarding';
+    final redirect = '/onboarding';
+    if (kDebugMode) debugPrint('[TREMBLE_ROUTER] Needs onboarding, redirecting to: $redirect');
+    return redirect;
   }
 
   // 3b. Ghost-onboarded safety net: Firestore says isOnboarded=true but the
@@ -285,21 +315,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/',
-        builder: (context, state) {
-          // By the time the user reaches '/', computeRedirect has verified:
-          // - isInitialized = true (auth stream settled)
-          // - authUser != null (user is logged in)
-          // - profileStatus is ProfileStatusReady (profile exists and is loaded)
-          // - hasConsent = true (GDPR consent granted)
-          // The only time a user sees a brief splash on first render is before
-          // the redirect fire on the initial frame; the redirect will move them
-          // to the correct route on the next frame. So we can safely return
-          // HomeScreen here without re-reading the (async) profileStatusProvider.
-          final container = ProviderScope.containerOf(context);
-          final authUser = container.read(authStateProvider);
-          if (authUser == null) return const _SplashLoadingScreen();
-          return const GradientScaffold(child: HomeScreen());
-        },
+        // Consumer (not container.read) so the builder rebuilds when
+        // authStateProvider emits. Without this, the initial cold-start build
+        // captures authUser=null and renders the splash permanently — even
+        // after the auth stream resolves, because redirect returning "stay"
+        // does not trigger a route rebuild.
+        builder: (context, state) => Consumer(
+          builder: (context, ref, _) {
+            final authUser = ref.watch(authStateProvider);
+            if (authUser == null) return const _SplashLoadingScreen();
+            return const GradientScaffold(child: HomeScreen());
+          },
+        ),
       ),
       GoRoute(
         path: '/profile',

@@ -34,9 +34,23 @@ class PhotosStep extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          TrembleBackButton(label: tr('back'), onPressed: onBack),
-          const SizedBox(height: 24),
-          StepHeader(tr('select_photo_title')),
+          SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                StepHeader(tr('select_photo_title')),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: TrembleBackButton(
+                    onPressed: onBack,
+                    label: tr('back'),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 8),
           Text(tr('photos_hint'),
               style: GoogleFonts.instrumentSans(
@@ -59,7 +73,7 @@ class PhotosStep extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                           color: photos[i] != null
-                              ? const Color(0xFFF4436C)
+                              ? Theme.of(context).colorScheme.primary
                               : (isDark ? Colors.white24 : Colors.black12)),
                       image: photos[i] != null
                           ? DecorationImage(

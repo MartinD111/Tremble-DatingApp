@@ -71,7 +71,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
               Text(t('wave_sent_to', lang)
                   .replaceAll('{name}', widget.match.name)),
             ]),
-            backgroundColor: const Color(0xFFF4436C).withValues(alpha: 0.9),
+            backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.9),
             behavior: SnackBarBehavior.floating,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -109,7 +109,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
                   style: GoogleFonts.instrumentSans(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFFF4436C),
+                    color: Theme.of(context).primaryColor,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -122,7 +122,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF4436C),
+                    backgroundColor: Theme.of(context).primaryColor,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                     padding: const EdgeInsets.symmetric(
@@ -261,13 +261,13 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
                       height: 80,
                       decoration: BoxDecoration(
                         color: _isGreeting
-                            ? const Color(0xFFF4436C).withValues(alpha: 0.5)
-                            : const Color(0xFFF4436C),
+                            ? Theme.of(context).primaryColor.withValues(alpha: 0.5)
+                            : Theme.of(context).primaryColor,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
                             color:
-                                const Color(0xFFF4436C).withValues(alpha: 0.4),
+                                Theme.of(context).primaryColor.withValues(alpha: 0.4),
                             blurRadius: 20,
                             spreadRadius: 2,
                           ),

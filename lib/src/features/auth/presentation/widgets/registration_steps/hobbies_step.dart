@@ -9,17 +9,19 @@ class HobbiesStep extends StatefulWidget {
     required this.selectedHobbies,
     required this.onAddHobby,
     required this.onRemoveHobby,
-    required this.onBack,
+    this.onBack,
     required this.onContinue,
     required this.tr,
+    this.isModal = false,
   });
 
   final List<String> selectedHobbies;
   final void Function(String hobby) onAddHobby;
   final void Function(String hobby) onRemoveHobby;
-  final VoidCallback onBack;
+  final VoidCallback? onBack;
   final VoidCallback onContinue;
   final String Function(String) tr;
+  final bool isModal;
 
   @override
   State<HobbiesStep> createState() => _HobbiesStepState();
@@ -96,7 +98,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
               },
               child: Text(widget.tr('add'),
                   style: GoogleFonts.instrumentSans(
-                      color: const Color(0xFFF4436C)))),
+                      color: Theme.of(context).colorScheme.primary))),
         ],
       ),
     );
@@ -111,171 +113,206 @@ class _HobbiesStepState extends State<HobbiesStep> {
         .where((h) => !predefinedHobbies.contains(h))
         .toList();
 
-    return SafeArea(
-      child: Column(children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 16, left: 4),
-          child: TrembleBackButton(
-              label: widget.tr('back'), onPressed: widget.onBack),
-        ),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: StepHeader(
-            widget.tr('hobbies'),
-            subtitle:
-                '${widget.selectedHobbies.length} ${widget.tr('hobbies_selected').replaceAll('{count}', '')}',
-          ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (customHobbies.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(widget.tr('my_hobbies_custom'),
-                        style: GoogleFonts.instrumentSans(
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontWeight: FontWeight.bold)),
+    return Container(
+      decoration: widget.isModal
+          ? BoxDecoration(
+              color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(28)),
+            )
+          : null,
+      child: SafeArea(
+        child: Column(
+          children: [
+            if (widget.isModal) ...[
+              const SizedBox(height: 12),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black26,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: customHobbies.map((hobby) {
-                      return FilterChip(
-                        label: Text(
-                          hobby,
-                          style: GoogleFonts.instrumentSans(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ] else
+                    SizedBox(
+                      width: double.infinity,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          StepHeader(
+                            widget.tr('hobbies'),
+                            subtitle:
+                                '${widget.selectedHobbies.length} ${widget.tr('hobbies_selected').replaceAll('{count}', '')}',
                           ),
-                        ),
-                        selected: true,
-                        onSelected: (_) => widget.onRemoveHobby(hobby),
-                        selectedColor: const Color(0xFFF4436C),
-                        backgroundColor: isDark
-                            ? Colors.white12
-                            : Colors.black.withValues(alpha: 0.05),
-                        shape: StadiumBorder(
-                          side: BorderSide(
-                              color: isDark
-                                  ? Colors.white12
-                                  : Colors.black.withValues(alpha: 0.1)),
-                        ),
-                        checkmarkColor: Colors.black,
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                ..._cats.entries.map((e) {
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                      dividerColor: Colors.transparent,
-                      expansionTileTheme: ExpansionTileThemeData(
-                        iconColor: const Color(0xFFF4436C),
-                        collapsedIconColor:
-                            isDark ? Colors.white : Colors.black54,
-                      ),
-                    ),
-                    child: ExpansionTile(
-                      controller: _tileController(e.key),
-                      expansionAnimationStyle: AnimationStyle(
-                        duration: const Duration(milliseconds: 350),
-                        curve: Curves.easeInOut,
-                      ),
-                      onExpansionChanged: (expanded) {
-                        if (expanded) {
-                          for (final key in _cats.keys) {
-                            if (key != e.key) {
-                              _tileController(key).collapse();
-                            }
-                          }
-                        }
-                      },
-                      title: Text(
-                          '${e.key} (${e.value.where((h) => widget.selectedHobbies.contains(h)).length})',
-                          style: GoogleFonts.instrumentSans(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.bold)),
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: Wrap(
-                          alignment: WrapAlignment.start,
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            ...e.value.map((hobby) {
-                              final sel =
-                                  widget.selectedHobbies.contains(hobby);
-                              return FilterChip(
-                                label: Text(
-                                  hobby,
-                                  style: GoogleFonts.instrumentSans(
-                                    color: sel
-                                        ? Colors.black
-                                        : (isDark
-                                            ? Colors.white
-                                            : Colors.black87),
-                                    fontWeight:
-                                        sel ? FontWeight.bold : FontWeight.w500,
-                                  ),
-                                ),
-                                selected: sel,
-                                onSelected: (s) => s
-                                    ? widget.onAddHobby(hobby)
-                                    : widget.onRemoveHobby(hobby),
-                                selectedColor: const Color(0xFFF4436C),
-                                backgroundColor: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white12
-                                    : Colors.black12,
-                                shape: StadiumBorder(
-                                  side: BorderSide(
-                                    color: sel
-                                        ? const Color(0xFFF4436C)
-                                        : (Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? Colors.white24
-                                            : Colors.black26),
-                                  ),
-                                ),
-                                checkmarkColor: Colors.black,
-                              );
-                            }),
-                            ActionChip(
-                              label: Text(widget.tr('add_own'),
-                                  style: GoogleFonts.instrumentSans(
-                                      color: Colors.black)),
-                              backgroundColor: const Color(0xFFF4436C),
-                              shape: const StadiumBorder(),
-                              onPressed: _showAddHobbyDialog,
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            child: TrembleBackButton(
+                              label: widget.tr('back'),
+                              onPressed: widget.onBack ??
+                                  () => Navigator.maybePop(context),
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                    ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (customHobbies.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Text(widget.tr('my_hobbies_custom'),
+                            style: GoogleFonts.instrumentSans(
+                                color: isDark ? Colors.white : Colors.black87,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: customHobbies.map((hobby) {
+                          return FilterChip(
+                            label: Text(
+                              hobby,
+                              style: GoogleFonts.instrumentSans(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            selected: true,
+                            onSelected: (_) => widget.onRemoveHobby(hobby),
+                            selectedColor: Theme.of(context).colorScheme.primary,
+                            backgroundColor: isDark
+                                ? Colors.white12
+                                : Colors.black.withValues(alpha: 0.05),
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                  color: isDark
+                                      ? Colors.white12
+                                      : Colors.black.withValues(alpha: 0.1)),
+                            ),
+                            checkmarkColor: Colors.black,
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    ..._cats.entries.map((e) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          dividerColor: Colors.transparent,
+                          expansionTileTheme: ExpansionTileThemeData(
+                            iconColor: Theme.of(context).colorScheme.primary,
+                            collapsedIconColor:
+                                isDark ? Colors.white : Colors.black54,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  );
-                }),
-              ],
+                        child: ExpansionTile(
+                          controller: _tileController(e.key),
+                          expansionAnimationStyle: AnimationStyle(
+                            duration: const Duration(milliseconds: 350),
+                            curve: Curves.easeInOut,
+                          ),
+                          onExpansionChanged: (expanded) {
+                            if (expanded) {
+                              for (final key in _cats.keys) {
+                                if (key != e.key) {
+                                  _tileController(key).collapse();
+                                }
+                              }
+                            }
+                          },
+                          title: Text(
+                              '${e.key} (${e.value.where((h) => widget.selectedHobbies.contains(h)).length})',
+                              style: GoogleFonts.instrumentSans(
+                                  color: isDark ? Colors.white : Colors.black87,
+                                  fontWeight: FontWeight.bold)),
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              child: Wrap(
+                                alignment: WrapAlignment.start,
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  ...e.value.map((hobby) {
+                                    final sel =
+                                        widget.selectedHobbies.contains(hobby);
+                                    return FilterChip(
+                                      label: Text(
+                                        hobby,
+                                        style: GoogleFonts.instrumentSans(
+                                          color: sel
+                                              ? Colors.black
+                                              : (isDark
+                                                  ? Colors.white
+                                                  : Colors.black87),
+                                          fontWeight: sel
+                                              ? FontWeight.bold
+                                              : FontWeight.w500,
+                                        ),
+                                      ),
+                                      selected: sel,
+                                      onSelected: (s) => s
+                                          ? widget.onAddHobby(hobby)
+                                          : widget.onRemoveHobby(hobby),
+                                      selectedColor: Theme.of(context).colorScheme.primary,
+                                      backgroundColor:
+                                          Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white12
+                                              : Colors.black12,
+                                      shape: StadiumBorder(
+                                        side: BorderSide(
+                                          color: sel
+                                          ? Theme.of(context).colorScheme.primary
+                                              : (Theme.of(context).brightness ==
+                                                      Brightness.dark
+                                                  ? Colors.white24
+                                                  : Colors.black26),
+                                        ),
+                                      ),
+                                      checkmarkColor: Colors.black,
+                                    );
+                                  }),
+                                  ActionChip(
+                                    label: Text(widget.tr('add_own'),
+                                        style: GoogleFonts.instrumentSans(
+                                            color: Colors.black)),
+                                    backgroundColor: Theme.of(context).colorScheme.primary,
+                                    shape: const StadiumBorder(),
+                                    onPressed: _showAddHobbyDialog,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: ContinueButton(
+                enabled: true,
+                onTap: widget.onContinue,
+                label: widget.tr(widget.isModal ? 'save' : 'continue_btn'),
+              ),
+            ),
+          ],
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: ContinueButton(
-            enabled: true,
-            onTap: widget.onContinue,
-            label: widget.tr('continue_btn'),
-          ),
-        ),
-      ]),
+      ),
     );
   }
 }

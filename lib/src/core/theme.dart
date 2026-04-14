@@ -11,6 +11,8 @@ class TrembleTheme {
   static const rose = Color(0xFFF4436C); // Tremble Rose — primary
   static const roseLight = Color(0xFFF9839E); // Rose Light
   static const roseDark = Color(0xFFC02048); // Rose Dark
+  static const azure = Color(0xFF007AFF); // Tremble Blue — primary for male
+  static const azureDark = Color(0xFF005BB5); // Azure Dark
   static const accentYellow =
       Color(0xFFF5C842); // Signal Yellow — accents, live indicators
   static const successGreen =
@@ -18,7 +20,7 @@ class TrembleTheme {
   static const warmGray = Color(0xFF6B6B63); // Warm Gray — secondary text
   static const border = Color(0xFFE2E2DC); // Border color
 
-  // Removed Gendered Colors — Brand Identity v1.0 standardizes Tremble Rose as primary.
+  // Removed Gendered Colors — Brand Identity v1.0 standardizes Tremble Rose as primary, unless Gender-Based Color is enabled.
 
   // Pride Colors (Soft Pastel Ambient)
   static const List<Color> prideGradient = [
@@ -42,6 +44,7 @@ class TrembleTheme {
     required bool isDarkMode,
     required bool isPrideMode,
     required String? gender,
+    bool isGenderBasedColor = false,
   }) {
     if (isPrideMode) {
       if (isDarkMode) {
@@ -50,9 +53,20 @@ class TrembleTheme {
       return prideGradient;
     }
 
-    // Deep graphite gradient — consistent with onboarding and sign-in.
-    // Gender-based pink theming is only applied in the registration flow
-    // when the user explicitly selects non-classic appearance.
+    if (isGenderBasedColor) {
+      // Male → deep navy/blue tones
+      if (gender == 'male') {
+        return isDarkMode
+            ? [const Color(0xFF001B36), const Color(0xFF003366)]
+            : [const Color(0xFFF0F7FF), const Color(0xFFD6E9FF)];
+      }
+      // Female / non-binary / unset → warm rose tones
+      return isDarkMode
+          ? [const Color(0xFF2A0A12), const Color(0xFF3D1520)]
+          : [const Color(0xFFFFF0F3), const Color(0xFFFFD6DF)];
+    }
+
+    // Default: deep graphite gradient — consistent with onboarding and sign-in.
     if (isDarkMode) {
       return [const Color(0xFF1A1A18), const Color(0xFF2A2A2E)];
     }
@@ -224,6 +238,9 @@ class TrembleTheme {
 
   static ThemeData lightTheme(AuthUser? user) {
     Color primary = rose;
+    if (user != null && user.isGenderBasedColor && user.gender == 'male') {
+      primary = azure;
+    }
 
     return _buildThemeData(
       brightness: Brightness.light,
@@ -244,6 +261,9 @@ class TrembleTheme {
 
   static ThemeData darkTheme(AuthUser? user) {
     Color primary = roseDark;
+    if (user != null && user.isGenderBasedColor && user.gender == 'male') {
+      primary = azureDark;
+    }
 
     const darkOnSurface = Color(0xFFE0E0E0);
     return _buildThemeData(

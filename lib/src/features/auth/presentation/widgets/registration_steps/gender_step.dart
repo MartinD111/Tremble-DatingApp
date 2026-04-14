@@ -35,9 +35,23 @@ class GenderStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TrembleBackButton(label: tr('back'), onPressed: onBack),
-          const SizedBox(height: 40),
-          StepHeader(tr('whats_your_gender')),
+          SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                StepHeader(tr('whats_your_gender')),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: TrembleBackButton(
+                    label: tr('back'),
+                    onPressed: onBack,
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 40),
           OptionPill(
             label: tr('gender_male'),
@@ -113,7 +127,7 @@ class GenderStep extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: kBrandRose,
+            activeThumbColor: Theme.of(context).colorScheme.primary,
           ),
         ],
       ),

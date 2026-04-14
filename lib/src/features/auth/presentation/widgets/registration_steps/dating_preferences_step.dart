@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
+import '../../../../../core/utils/icon_utils.dart';
 import 'step_shared.dart';
 
 class DatingPreferencesStep extends StatelessWidget {
@@ -27,25 +28,39 @@ class DatingPreferencesStep extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final opts = [
-      {'key': 'short_term_fun', 'label': tr('short_term_fun')},
-      {'key': 'long_term_partner', 'label': tr('long_term_partner')},
-      {'key': 'short_open_long', 'label': tr('short_open_long')},
-      {'key': 'long_open_short', 'label': tr('long_open_short')},
-      {'key': 'undecided', 'label': tr('undecided')},
+      {'key': 'short_term_fun', 'label': tr('short_term_fun'), 'icon': IconUtils.getLookingForIcon('short_term_fun')},
+      {'key': 'long_term_partner', 'label': tr('long_term_partner'), 'icon': IconUtils.getLookingForIcon('long_term_partner')},
+      {'key': 'short_open_long', 'label': tr('short_open_long'), 'icon': IconUtils.getLookingForIcon('short_open_long')},
+      {'key': 'long_open_short', 'label': tr('long_open_short'), 'icon': IconUtils.getLookingForIcon('long_open_short')},
     ];
 
     return ScrollableFormPage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TrembleBackButton(label: tr('back'), onPressed: onBack),
-          const SizedBox(height: 24),
-          StepHeader(tr('who_looking_for')),
+          SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                StepHeader(tr('who_looking_for')),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: TrembleBackButton(
+                    onPressed: onBack,
+                    label: tr('back'),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 24),
           ...opts.map((o) => OptionPill(
-                label: o['label']!,
+                label: o['label'] as String,
+                icon: o['icon'] as IconData?,
                 selected: datingPreference == o['key'],
-                onTap: () => onPreferenceChanged(o['key']),
+                onTap: () => onPreferenceChanged(o['key'] as String),
               )),
           const SizedBox(height: 32),
           StepHeader(tr('age_range')),
@@ -60,7 +75,7 @@ class DatingPreferencesStep extends StatelessWidget {
               '${ageRangePref.end.round()}',
             ),
             onChanged: onAgeRangeChanged,
-            activeColor: kBrandRose,
+            activeColor: Theme.of(context).colorScheme.primary,
             inactiveColor:
                 isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),

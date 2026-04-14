@@ -57,11 +57,11 @@ class _ConsentStepState extends State<ConsentStep> {
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: value ? kBrandRose : Colors.transparent,
+              color: value ? Theme.of(context).colorScheme.primary : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                   color: value
-                      ? kBrandRose
+                      ? Theme.of(context).colorScheme.primary
                       : (isDark ? Colors.white38 : Colors.black38),
                   width: 2),
             ),
@@ -89,31 +89,75 @@ class _ConsentStepState extends State<ConsentStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TrembleBackButton(label: widget.tr('back'), onPressed: widget.onBack),
-          const SizedBox(height: 24),
-          StepHeader(
-            'Privacy and GDPR',
-            subtitle: widget.tr('consent_subtitle'),
-          ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: _toggleAll,
-              icon: Icon(
-                _consentGiven ? Icons.check_box : Icons.check_box_outline_blank,
-                color: kBrandRose,
-              ),
-              label: Text(
-                'Izberi Vse',
-                style: GoogleFonts.instrumentSans(
-                  color: kBrandRose,
-                  fontWeight: FontWeight.bold,
+          SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                StepHeader(
+                  'Privacy and GDPR',
+                  subtitle: widget.tr('consent_subtitle'),
                 ),
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  child: TrembleBackButton(
+                    label: widget.tr('back'),
+                    onPressed: widget.onBack,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          GestureDetector(
+            onTap: _toggleAll,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: _consentGiven
+                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.22)
+                    : (isDark
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : Colors.black.withValues(alpha: 0.05)),
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(
+                  color: _consentGiven
+                      ? Theme.of(context).colorScheme.primary
+                      : (isDark ? Colors.white38 : Colors.black26),
+                  width: _consentGiven ? 2 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _consentGiven ? Icons.check_box : Icons.check_box_outline_blank,
+                    color: _consentGiven
+                        ? Theme.of(context).colorScheme.primary
+                        : (isDark ? Colors.white70 : Colors.black54),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Izberi Vse',
+                    style: GoogleFonts.instrumentSans(
+                      color: _consentGiven
+                          ? (isDark ? Colors.white : Colors.black)
+                          : (isDark ? const Color(0xDDFFFFFF) : Colors.black87),
+                      fontSize: 16,
+                      fontWeight: _consentGiven ? FontWeight.bold : FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_consentGiven)
+                    Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 20),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
           _consentTile(
             value: _consentTerms,
             onChanged: (v) => setState(() => _consentTerms = v),
@@ -124,9 +168,9 @@ class _ConsentStepState extends State<ConsentStep> {
                 WidgetSpan(
                   child: GestureDetector(
                     onTap: () {},
-                    child: const Text('Terms of Service',
+                    child: Text('Terms of Service',
                         style: TextStyle(
-                            color: kBrandRose,
+                            color: Theme.of(context).colorScheme.primary,
                             fontSize: 14,
                             decoration: TextDecoration.underline)),
                   ),
@@ -146,9 +190,9 @@ class _ConsentStepState extends State<ConsentStep> {
                 WidgetSpan(
                   child: GestureDetector(
                     onTap: () {},
-                    child: const Text('Privacy Policy',
+                    child: Text('Privacy Policy',
                         style: TextStyle(
-                            color: kBrandRose,
+                            color: Theme.of(context).colorScheme.primary,
                             fontSize: 14,
                             decoration: TextDecoration.underline)),
                   ),
@@ -203,7 +247,7 @@ class _ConsentStepState extends State<ConsentStep> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.shield_outlined, color: kBrandRose, size: 20),
+                Icon(Icons.shield_outlined, color: Theme.of(context).colorScheme.primary, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
