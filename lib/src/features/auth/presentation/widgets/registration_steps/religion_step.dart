@@ -25,13 +25,41 @@ class ReligionStep extends StatelessWidget {
     return SubScreenStep(
       title: tr('religion'),
       options: [
-        {'key': 'christianity', 'label': tr('christianity'), 'icon': IconUtils.getReligionIcon('christianity')},
-        {'key': 'islam', 'label': tr('islam'), 'icon': IconUtils.getReligionIcon('islam')},
-        {'key': 'hinduism', 'label': tr('hinduism'), 'icon': IconUtils.getReligionIcon('hinduism')},
-        {'key': 'buddhism', 'label': tr('buddhism'), 'icon': IconUtils.getReligionIcon('buddhism')},
-        {'key': 'judaism', 'label': tr('judaism'), 'icon': IconUtils.getReligionIcon('judaism')},
-        {'key': 'agnostic', 'label': tr('agnostic'), 'icon': IconUtils.getReligionIcon('agnostic')},
-        {'key': 'atheist', 'label': tr('atheist'), 'icon': IconUtils.getReligionIcon('atheist')},
+        {
+          'key': 'christianity',
+          'label': tr('christianity'),
+          'icon': IconUtils.getReligionIcon('christianity')
+        },
+        {
+          'key': 'islam',
+          'label': tr('islam'),
+          'icon': IconUtils.getReligionIcon('islam')
+        },
+        {
+          'key': 'hinduism',
+          'label': tr('hinduism'),
+          'icon': IconUtils.getReligionIcon('hinduism')
+        },
+        {
+          'key': 'buddhism',
+          'label': tr('buddhism'),
+          'icon': IconUtils.getReligionIcon('buddhism')
+        },
+        {
+          'key': 'judaism',
+          'label': tr('judaism'),
+          'icon': IconUtils.getReligionIcon('judaism')
+        },
+        {
+          'key': 'agnostic',
+          'label': tr('agnostic'),
+          'icon': IconUtils.getReligionIcon('agnostic')
+        },
+        {
+          'key': 'atheist',
+          'label': tr('atheist'),
+          'icon': IconUtils.getReligionIcon('atheist')
+        },
       ],
       selected: selected,
       onSelect: onSelect,

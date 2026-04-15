@@ -106,7 +106,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
 ''';
 
   void _showEventsSheet() {
-    final isDark = ref.read(authStateProvider)?.isDarkMode ?? true;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
@@ -114,9 +114,9 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.85, // Rise almost to top
-        minChildSize: 0.5,
-        maxChildSize: 0.95, // Max height
+        initialChildSize: 0.42, // Adjusted to show exactly the events list
+        minChildSize: 0.42,
+        maxChildSize: 0.6, // Allow some expansion but not full screen
         expand: false,
         builder: (_, scrollController) => Container(
           decoration: BoxDecoration(
@@ -145,7 +145,8 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
                   controller: scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
-                    _SheetSectionHeader(title: 'Aktivni eventi', isDark: isDark),
+                    _SheetSectionHeader(
+                        title: 'Aktivni eventi', isDark: isDark),
                     const SizedBox(height: 8),
                     ..._events.where((e) => e.isActive).map(
                           (e) => _EventTile(
@@ -158,7 +159,8 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
                           ),
                         ),
                     const SizedBox(height: 4),
-                    _SheetSectionHeader(title: 'Prihajajoči eventi', isDark: isDark),
+                    _SheetSectionHeader(
+                        title: 'Prihajajoči eventi', isDark: isDark),
                     const SizedBox(height: 8),
                     ..._events.where((e) => !e.isActive).map(
                           (e) => _EventTile(
@@ -210,7 +212,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider);
-    final isDark = user?.isDarkMode ?? (Theme.of(context).brightness == Brightness.dark);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isPride = user?.isPrideMode ?? false;
     final isGenderBased = user?.isGenderBasedColor ?? false;
     final gender = user?.gender;
@@ -239,7 +241,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
                   "Tremble Map",
                   textAlign: TextAlign.center,
                   style: TrembleTheme.displayFont(
-                    fontSize: 28,
+                    fontSize: 32, // Standardized to 32px
                     fontWeight: FontWeight.w700,
                     color: isDark ? Colors.white : TrembleTheme.textColor,
                   ),
@@ -294,7 +296,9 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 120), // clears the floating nav bar (80h + 30pos) with minimal damping
+              const SizedBox(
+                  height:
+                      120), // clears the floating nav bar (80h + 30pos) with minimal damping
             ],
           ),
         ),
@@ -383,8 +387,9 @@ class _EventTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor =
-        event.isActive ? Theme.of(context).primaryColor : TrembleTheme.accentYellow;
+    final statusColor = event.isActive
+        ? Theme.of(context).primaryColor
+        : TrembleTheme.accentYellow;
     final statusText =
         event.isActive ? 'Aktiven zdaj' : 'Prihaja ob ${event.startsAt}';
 

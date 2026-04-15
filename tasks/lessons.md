@@ -65,3 +65,7 @@ Source: UI audit, April 2026.
 **Rule #11 — Use Node.js 22 for all Cloud Functions.**
 [2026-04-10] Firebase Cloud Functions must use Node.js 22 to ensure compliance with the latest runtime requirements and to leverage modern JS/TS features. Update `engines` in `package.json` and run `npm install` to refresh metadata before deployment.
 Source: Technical audit, April 2026.
+
+**Rule #12 — Always use `Theme.of(context).brightness` as the source of truth for dark mode detection in UI.**
+[2026-04-15] The `AuthUser.isDarkMode` field can diverge from the application's actual theme state (e.g. while syncing, in guest mode, or when using local overrides). Relying on `user.isDarkMode ?? default` in the UI can cause "light mode leakage" on specific screens. Always use `Theme.of(context).brightness == Brightness.dark` to determine the current visual mode for widgets, map styles, and gradients.
+Source: Map Dark Mode fix, April 2026.

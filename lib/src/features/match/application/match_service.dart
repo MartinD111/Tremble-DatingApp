@@ -17,3 +17,17 @@ Stream<List<Match>> activeMatchesStream(ActiveMatchesStreamRef ref) {
       .map((snapshot) =>
           snapshot.docs.map((doc) => Match.fromFirestore(doc)).toList());
 }
+
+@riverpod
+Stream<Match?> currentSearch(CurrentSearchRef ref) {
+  return ref.watch(activeMatchesStreamProvider.stream).map((matches) {
+    if (matches.isEmpty) return null;
+
+    final now = DateTime.now();
+    // Only one active search at a time per requirements
+    return matches.where((m) => m.status == 'pending').where((m) {
+      final expiry = m.createdAt.add(const Duration(minutes: 30));
+      return expiry.isAfter(now);
+    }).firstOrNull;
+  });
+}

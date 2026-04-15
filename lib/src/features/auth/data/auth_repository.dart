@@ -69,7 +69,12 @@ class AuthUser {
   final int? partnerPoliticalMax;
   final int? partnerIntrovertMin; // 0..100 introvert→extrovert
   final int? partnerIntrovertMax;
+  final String? school;
+  final String? company;
+  final bool? hasChildren;
+  final bool isPingVibrationEnabled;
   final bool isGenderBasedColor;
+  final DateTime? lastWaveFoundAt;
 
   const AuthUser({
     required this.id,
@@ -129,7 +134,12 @@ class AuthUser {
     this.partnerPoliticalMax,
     this.partnerIntrovertMin,
     this.partnerIntrovertMax,
+    this.school,
+    this.company,
+    this.hasChildren,
+    this.isPingVibrationEnabled = true,
     this.isGenderBasedColor = false,
+    this.lastWaveFoundAt,
   });
 
   // ── Serialization for Cloud Functions API ─────────────────────────────────
@@ -187,11 +197,21 @@ class AuthUser {
       'ageRangeEnd': ageRangeEnd,
       'showPingAnimation': showPingAnimation,
       'maxDistance': maxDistance,
-      if (partnerPoliticalMin != null) 'partnerPoliticalMin': partnerPoliticalMin,
-      if (partnerPoliticalMax != null) 'partnerPoliticalMax': partnerPoliticalMax,
-      if (partnerIntrovertMin != null) 'partnerIntrovertMin': partnerIntrovertMin,
-      if (partnerIntrovertMax != null) 'partnerIntrovertMax': partnerIntrovertMax,
+      if (partnerPoliticalMin != null)
+        'partnerPoliticalMin': partnerPoliticalMin,
+      if (partnerPoliticalMax != null)
+        'partnerPoliticalMax': partnerPoliticalMax,
+      if (partnerIntrovertMin != null)
+        'partnerIntrovertMin': partnerIntrovertMin,
+      if (partnerIntrovertMax != null)
+        'partnerIntrovertMax': partnerIntrovertMax,
       'isGenderBasedColor': isGenderBasedColor,
+      'school': school,
+      'company': company,
+      'isPingVibrationEnabled': isPingVibrationEnabled,
+      'hasChildren': hasChildren,
+      if (lastWaveFoundAt != null)
+        'lastWaveFoundAt': lastWaveFoundAt!.toIso8601String(),
     };
   }
 
@@ -266,6 +286,11 @@ class AuthUser {
       partnerIntrovertMin: data['partnerIntrovertMin'] as int?,
       partnerIntrovertMax: data['partnerIntrovertMax'] as int?,
       isGenderBasedColor: data['isGenderBasedColor'] as bool? ?? false,
+      school: data['school'] as String?,
+      company: data['company'] as String?,
+      isPingVibrationEnabled: data['isPingVibrationEnabled'] as bool? ?? true,
+      hasChildren: data['hasChildren'] as bool?,
+      lastWaveFoundAt: _parseDateTime(data['lastWaveFoundAt']),
       isEmailVerified: emailVerified,
     );
   }
@@ -329,6 +354,11 @@ class AuthUser {
     int? partnerIntrovertMin,
     int? partnerIntrovertMax,
     bool? isGenderBasedColor,
+    String? school,
+    String? company,
+    bool? isPingVibrationEnabled,
+    bool? hasChildren,
+    DateTime? lastWaveFoundAt,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -394,6 +424,12 @@ class AuthUser {
       partnerIntrovertMin: partnerIntrovertMin ?? this.partnerIntrovertMin,
       partnerIntrovertMax: partnerIntrovertMax ?? this.partnerIntrovertMax,
       isGenderBasedColor: isGenderBasedColor ?? this.isGenderBasedColor,
+      school: school ?? this.school,
+      company: company ?? this.company,
+      isPingVibrationEnabled:
+          isPingVibrationEnabled ?? this.isPingVibrationEnabled,
+      hasChildren: hasChildren ?? this.hasChildren,
+      lastWaveFoundAt: lastWaveFoundAt ?? this.lastWaveFoundAt,
     );
   }
 }
@@ -445,8 +481,10 @@ sealed class ProfileStatus {
     required T Function(ProfileStatusNotFound) notFound,
     required T Function(ProfileStatusReady) ready,
   }) {
-    if (this is ProfileStatusLoading) return loading(this as ProfileStatusLoading);
-    if (this is ProfileStatusNotFound) return notFound(this as ProfileStatusNotFound);
+    if (this is ProfileStatusLoading)
+      return loading(this as ProfileStatusLoading);
+    if (this is ProfileStatusNotFound)
+      return notFound(this as ProfileStatusNotFound);
     return ready(this as ProfileStatusReady);
   }
 }
@@ -547,8 +585,7 @@ final authInitializedProvider = FutureProvider<bool>((ref) async {
         .timeout(const Duration(seconds: 5));
     return user != null;
   } on TimeoutException {
-    debugPrint(
-        '[AUTH] authStateChanges() timed out after 5 s — '
+    debugPrint('[AUTH] authStateChanges() timed out after 5 s — '
         'forcing no-session state. Check SHA-1 / google-services.json.');
     return false;
   }

@@ -18,7 +18,7 @@ class TrembleCircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // One UI 8.5 glass look
     final glassColor = isDark
         ? Colors.white.withValues(alpha: 0.15)

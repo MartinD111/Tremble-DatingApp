@@ -31,6 +31,31 @@ class WaveRepository {
       'seenBy': FieldValue.arrayUnion([currentUser.uid]),
     });
   }
+
+  /// Označi, da sta se osebi našli.
+  Future<void> markMatchAsFound(String matchId) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    // 1. Update match status
+    await _firestore.collection('matches').doc(matchId).update({
+      'status': 'found',
+      'isFound': true,
+      'foundAt': FieldValue.serverTimestamp(),
+    });
+
+    // 2. Update user last found timestamp to enforce 30m cooldown for free users
+    await _firestore.collection('users').doc(currentUser.uid).update({
+      'lastWaveFoundAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Označi, da je čas za iskanje potekel.
+  Future<void> markMatchAsExpired(String matchId) async {
+    await _firestore.collection('matches').doc(matchId).update({
+      'status': 'expired',
+    });
+  }
 }
 
 @Riverpod(keepAlive: true)

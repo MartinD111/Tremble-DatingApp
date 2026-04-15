@@ -12,7 +12,8 @@ const _onboardedUser = AuthUser(
   id: 'uid-123',
   email: 'test@test.com',
   isOnboarded: true,
-  name: 'Test User', // needed so ghost-onboarded guard (name==null) does not fire
+  name:
+      'Test User', // needed so ghost-onboarded guard (name==null) does not fire
 );
 
 // ---------------------------------------------------------------------------
@@ -91,7 +92,9 @@ void main() {
       );
     });
 
-    test('no user, stale profileStatus=ready(onboarded=true), at /settings → /login', () {
+    test(
+        'no user, stale profileStatus=ready(onboarded=true), at /settings → /login',
+        () {
       expect(
         computeRedirect(
           isInitialized: true,
@@ -128,8 +131,7 @@ void main() {
         computeRedirect(
           isInitialized: true,
           authUser: _testUser,
-          profileStatus:
-              const AsyncData(ProfileStatus.notFound()),
+          profileStatus: const AsyncData(ProfileStatus.notFound()),
           hasConsent: false,
           currentPath: '/',
           isSocialUser: true,
@@ -138,13 +140,13 @@ void main() {
       );
     });
 
-    test('doc not found, stale unverified email session → redirect to /login', () {
+    test('doc not found, stale unverified email session → redirect to /login',
+        () {
       expect(
         computeRedirect(
           isInitialized: true,
           authUser: _testUser,
-          profileStatus:
-              const AsyncData(ProfileStatus.notFound()),
+          profileStatus: const AsyncData(ProfileStatus.notFound()),
           hasConsent: false,
           currentPath: '/',
           isSocialUser: false,
@@ -159,8 +161,7 @@ void main() {
         computeRedirect(
           isInitialized: true,
           authUser: _testUser,
-          profileStatus:
-              const AsyncData(ProfileStatus.notFound()),
+          profileStatus: const AsyncData(ProfileStatus.notFound()),
           hasConsent: false,
           currentPath: '/onboarding',
         ),
@@ -170,7 +171,9 @@ void main() {
   });
 
   group('computeRedirect — authenticated, isOnboarded=false', () {
-    test('doc exists, isOnboarded=false → redirect to /onboarding (verified user)', () {
+    test(
+        'doc exists, isOnboarded=false → redirect to /onboarding (verified user)',
+        () {
       expect(
         computeRedirect(
           isInitialized: true,
@@ -186,7 +189,9 @@ void main() {
       );
     });
 
-    test('doc exists, isOnboarded=false, at /settings → /onboarding (verified user)', () {
+    test(
+        'doc exists, isOnboarded=false, at /settings → /onboarding (verified user)',
+        () {
       expect(
         computeRedirect(
           isInitialized: true,
@@ -202,7 +207,8 @@ void main() {
       );
     });
 
-    test('doc exists, isOnboarded=false, stale unverified session → /login', () {
+    test('doc exists, isOnboarded=false, stale unverified session → /login',
+        () {
       expect(
         computeRedirect(
           isInitialized: true,
@@ -341,7 +347,8 @@ void main() {
       // name is null, photoUrls is [] — matches the safety-net condition
     );
 
-    test('isOnboarded=true but no name and no photos → /login (landing page)', () {
+    test('isOnboarded=true but no name and no photos → /login (landing page)',
+        () {
       expect(
         computeRedirect(
           isInitialized: true,
@@ -371,7 +378,9 @@ void main() {
       );
     });
 
-    test('isOnboarded=true, has name but no photos → null (stay — valid profile)', () {
+    test(
+        'isOnboarded=true, has name but no photos → null (stay — valid profile)',
+        () {
       const userWithName = AuthUser(
         id: 'uid-ghost',
         email: 'ghost@test.com',

@@ -33,7 +33,7 @@ class LiquidNavBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.black.withValues(alpha: 0.35)
-                  : Colors.white.withValues(alpha: 0.25),
+                  : Colors.black.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(40),
               boxShadow: [
                 BoxShadow(
@@ -49,8 +49,8 @@ class LiquidNavBar extends StatelessWidget {
               children: [
                 // Bubbly Background Indicator
                 AnimatedPositioned(
-                  duration: const Duration(milliseconds: 600),
-                  curve: Curves.elasticOut,
+                  duration: const Duration(milliseconds: 900),
+                  curve: Curves.easeOutQuart,
                   left: (currentIndex * itemWidth),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
@@ -58,11 +58,18 @@ class LiquidNavBar extends StatelessWidget {
                     width: itemWidth,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.15)
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.02),
                           blurRadius: 10,
                           spreadRadius: 2,
                         ),
@@ -88,9 +95,9 @@ class LiquidNavBar extends StatelessWidget {
                         height: navHeight,
                         alignment: Alignment.center,
                         child: AnimatedScale(
-                          duration: const Duration(milliseconds: 400),
+                          duration: const Duration(milliseconds: 600),
                           scale: isSelected ? 1.15 : 1.0,
-                          curve: Curves.elasticOut,
+                          curve: Curves.easeOutQuart,
                           child: Icon(
                             item.icon,
                             color: isSelected
@@ -103,7 +110,13 @@ class LiquidNavBar extends StatelessWidget {
                                             .colorScheme
                                             .primary
                                             .withValues(alpha: 1.0)))
-                                : Colors.white.withValues(alpha: 0.4),
+                                : (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white.withValues(alpha: 0.4)
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.4)),
                             size: 28,
                           ),
                         ),

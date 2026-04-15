@@ -65,7 +65,8 @@ String? computeRedirect({
       return null;
     }
     final redirect = currentPath == '/login' ? null : '/login';
-    if (kDebugMode) debugPrint('[TREMBLE_ROUTER] No authUser, redirecting to: $redirect');
+    if (kDebugMode)
+      debugPrint('[TREMBLE_ROUTER] No authUser, redirecting to: $redirect');
     return redirect;
   }
 
@@ -106,7 +107,9 @@ String? computeRedirect({
       return redirect;
     }
     final redirect = '/onboarding';
-    if (kDebugMode) debugPrint('[TREMBLE_ROUTER] Needs onboarding, redirecting to: $redirect');
+    if (kDebugMode)
+      debugPrint(
+          '[TREMBLE_ROUTER] Needs onboarding, redirecting to: $redirect');
     return redirect;
   }
 
@@ -234,7 +237,8 @@ class _RouterNotifier extends ChangeNotifier {
     // - When authState is null AND !_authStreamFired: the null is transient
     //   (Firebase hasn't restored the session yet). Ignore — hold the router.
     _ref.listen<AsyncValue<ProfileStatus>>(profileStatusProvider, (_, next) {
-      debugPrint('[ROUTER] profileStatusProvider → $next  authStreamFired=$_authStreamFired');
+      debugPrint(
+          '[ROUTER] profileStatusProvider → $next  authStreamFired=$_authStreamFired');
       if (!next.isLoading && _authStreamFired) _initialized = true;
       notifyListeners();
     });
@@ -254,7 +258,8 @@ class _RouterNotifier extends ChangeNotifier {
     _ref.listen<AsyncValue<bool>>(authInitializedProvider, (_, next) {
       debugPrint('[ROUTER] authInitializedProvider → $next');
       if (next.hasValue && !next.value! && !_initialized) {
-        debugPrint('[ROUTER] no session — unblocking router (was timeout or clean signout)');
+        debugPrint(
+            '[ROUTER] no session — unblocking router (was timeout or clean signout)');
         _authStreamFired = true;
         _initialized = true;
         notifyListeners();
@@ -281,8 +286,8 @@ class _RouterNotifier extends ChangeNotifier {
   bool get isSocialUser {
     final providers =
         _ref.read(firebaseAuthProvider).currentUser?.providerData ?? [];
-    return providers
-        .any((p) => p.providerId == 'google.com' || p.providerId == 'apple.com');
+    return providers.any(
+        (p) => p.providerId == 'google.com' || p.providerId == 'apple.com');
   }
 }
 

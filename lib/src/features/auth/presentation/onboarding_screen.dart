@@ -19,25 +19,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String tr(String key) => t(key, _lang);
 
   List<_OnboardingData> _getSlides(BuildContext context) => [
-    _OnboardingData(
-      titleKey: 'onb1_title',
-      bodyKey: 'onb1_body',
-      emoji: '👋',
-      accentColor: Theme.of(context).colorScheme.primary,
-    ),
-    const _OnboardingData(
-      titleKey: 'onb2_title',
-      bodyKey: 'onb2_body',
-      emoji: '🚫',
-      accentColor: Color(0xFF64B5F6),
-    ),
-    const _OnboardingData(
-      titleKey: 'onb3_title',
-      bodyKey: 'onb3_body',
-      emoji: '🗺️',
-      accentColor: Color(0xFFFFD54F),
-    ),
-  ];
+        _OnboardingData(
+          titleKey: 'onb1_title',
+          bodyKey: 'onb1_body',
+          emoji: '👋',
+          accentColor: Theme.of(context).colorScheme.primary,
+        ),
+        const _OnboardingData(
+          titleKey: 'onb2_title',
+          bodyKey: 'onb2_body',
+          emoji: '🚫',
+          accentColor: Color(0xFF64B5F6),
+        ),
+        const _OnboardingData(
+          titleKey: 'onb3_title',
+          bodyKey: 'onb3_body',
+          emoji: '🗺️',
+          accentColor: Color(0xFFFFD54F),
+        ),
+      ];
 
   void _next() {
     final slidesCount = _getSlides(context).length;

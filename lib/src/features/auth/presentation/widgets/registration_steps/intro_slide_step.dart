@@ -68,16 +68,23 @@ class IntroSlideStep extends StatelessWidget {
               height: 96,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.12),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.22),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.22),
                     blurRadius: 32,
                     spreadRadius: 4,
                   ),
                 ],
               ),
-              child: Icon(icons[index], size: 44, color: Theme.of(context).colorScheme.primary),
+              child: Icon(icons[index],
+                  size: 44, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(height: 40),
             Text(

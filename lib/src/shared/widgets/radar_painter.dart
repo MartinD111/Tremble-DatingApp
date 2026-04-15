@@ -7,6 +7,7 @@ class RadarPainter extends CustomPainter {
   final double? pingDistance;
   final double pingAngle;
   final Color brandColor;
+  final Color gridColor;
 
   RadarPainter({
     required this.radarProgress,
@@ -14,6 +15,7 @@ class RadarPainter extends CustomPainter {
     this.pingDistance,
     this.pingAngle = 0,
     this.brandColor = const Color(0xFFF4436C),
+    this.gridColor = Colors.white,
   });
 
   @override
@@ -23,7 +25,7 @@ class RadarPainter extends CustomPainter {
 
     // Draw concentric circles
     final circlePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.1)
+      ..color = gridColor.withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -33,7 +35,7 @@ class RadarPainter extends CustomPainter {
 
     // Draw crosshairs
     final crosshairPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.05)
+      ..color = gridColor.withValues(alpha: 0.05)
       ..strokeWidth = 1;
     canvas.drawLine(Offset(center.dx - maxRadius, center.dy),
         Offset(center.dx + maxRadius, center.dy), crosshairPaint);
@@ -77,7 +79,7 @@ class RadarPainter extends CustomPainter {
 
     // Center dot
     final centerDotPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.6)
+      ..color = gridColor.withValues(alpha: 0.6)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, 4, centerDotPaint);
 

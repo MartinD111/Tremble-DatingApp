@@ -62,7 +62,8 @@ void main() {
       expect(true, true); // Placeholder
     });
 
-    test('Slider range normalization handles both 0-1 and 0-100 scales', () async {
+    test('Slider range normalization handles both 0-1 and 0-100 scales',
+        () async {
       // SETUP: Existing profile has introvertScale = 0.5 (old 0-1 format)
       // AND: New profiles should use 0-100 format
       //

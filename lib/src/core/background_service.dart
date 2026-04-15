@@ -145,7 +145,7 @@ void onStart(ServiceInstance service) async {
           'Radar je aktiven. Pojdi vživo.',
         ];
         final body = (messages.toList()..shuffle()).first;
-        
+
         await notificationsPlugin.show(
           1,
           'Tremble',

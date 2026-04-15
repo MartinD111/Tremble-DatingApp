@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // DRUM PICKER
 // A scroll-wheel date/value picker used by BirthdayStep and HeightStep.
@@ -156,7 +154,10 @@ class ContinueButton extends StatelessWidget {
           boxShadow: [
             if (enabled)
               BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -229,9 +230,10 @@ class OptionPill extends StatelessWidget {
             if (icon != null) ...[
               Icon(
                 icon,
-                color: iconColor ?? (selected
-                    ? Theme.of(context).colorScheme.primary
-                    : (isDark ? Colors.white70 : Colors.black54)),
+                color: iconColor ??
+                    (selected
+                        ? Theme.of(context).colorScheme.primary
+                        : (isDark ? Colors.white70 : Colors.black54)),
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -248,7 +250,8 @@ class OptionPill extends StatelessWidget {
             ),
             const Spacer(),
             if (selected)
-              Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 20),
+              Icon(Icons.check_circle,
+                  color: Theme.of(context).colorScheme.primary, size: 20),
           ],
         ),
       ),

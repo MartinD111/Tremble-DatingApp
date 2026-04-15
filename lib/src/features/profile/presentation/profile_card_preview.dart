@@ -6,13 +6,12 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
-import '../../../shared/ui/tremble_back_button.dart';
+import '../../../shared/ui/tremble_header.dart';
 import '../../../shared/ui/tremble_circle_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../settings/presentation/settings_controller.dart';
 import '../../../core/translations.dart';
 import '../../../core/utils/icon_utils.dart';
-import '../../../core/theme.dart';
 
 class ProfileCardPreview extends ConsumerStatefulWidget {
   const ProfileCardPreview({super.key});
@@ -24,26 +23,20 @@ class ProfileCardPreview extends ConsumerStatefulWidget {
 class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
   final PageController _photoPageController = PageController();
   int _currentPhotoPage = 0;
-  final ValueNotifier<bool> _isHeaderVisible = ValueNotifier(true);
+  final ValueNotifier<double> _titleOpacity = ValueNotifier(1.0);
 
   @override
   void dispose() {
     _photoPageController.dispose();
-    _isHeaderVisible.dispose();
+    _titleOpacity.dispose();
     super.dispose();
   }
 
   bool _onScroll(ScrollNotification notification) {
-    if (notification.metrics.pixels <= 0) {
-      if (!_isHeaderVisible.value) _isHeaderVisible.value = true;
-      return false;
-    }
-    if (notification is ScrollUpdateNotification) {
-      if (notification.scrollDelta! > 1.0) {
-        if (_isHeaderVisible.value) _isHeaderVisible.value = false;
-      } else if (notification.scrollDelta! < -1.0) {
-        if (!_isHeaderVisible.value) _isHeaderVisible.value = true;
-      }
+    final offset = notification.metrics.pixels;
+    final newOpacity = (1.0 - (offset / 60)).clamp(0.0, 1.0);
+    if (_titleOpacity.value != newOpacity) {
+      _titleOpacity.value = newOpacity;
     }
     return false;
   }
@@ -100,270 +93,274 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Header title scrolling away naturally
-                        SizedBox(
-                          height: 50,
-                          child: Center(
-                            child: Text(
-                              'My Profile',
-                              style: TrembleTheme.displayFont(
+                        const SizedBox(height: 20),
+                        const SizedBox(height: 20),
+
+                        // ── Photo gallery ──────────────────────────────────────────
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: SizedBox(
+                            height: 360,
+                            width: double.infinity,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                if (hasPhotos)
+                                  PageView.builder(
+                                    controller: _photoPageController,
+                                    itemCount: photoCount,
+                                    onPageChanged: (i) =>
+                                        setState(() => _currentPhotoPage = i),
+                                    itemBuilder: (context, index) {
+                                      final url = user.photoUrls[index];
+                                      return url.startsWith('http')
+                                          ? Image.network(url,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  Container(
+                                                      color: Colors.grey[900]))
+                                          : Image.file(File(url),
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  Container(
+                                                      color: Colors.grey[900]));
+                                    },
+                                  )
+                                else
+                                  Container(
+                                    color: Colors.white10,
+                                    child: const Center(
+                                      child: Icon(Icons.person,
+                                          size: 80, color: Colors.white24),
+                                    ),
+                                  ),
+                                // Dot indicators
+                                if (photoCount > 1)
+                                  Positioned(
+                                    top: 12,
+                                    left: 0,
+                                    right: 0,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: List.generate(photoCount, (i) {
+                                        return AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 250),
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 3),
+                                          width:
+                                              _currentPhotoPage == i ? 20 : 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            color: _currentPhotoPage == i
+                                                ? Colors.white
+                                                : Colors.white
+                                                    .withValues(alpha: 0.4),
+                                          ),
+                                        );
+                                      }),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // ── Name + Age ─────────────────────────────────────────────
+                        Center(
+                          child: RichText(
+                            text: TextSpan(
+                              style: GoogleFonts.instrumentSans(
                                 color: textColor,
-                                fontSize: 32,
+                                fontSize: 28,
                                 fontWeight: FontWeight.bold,
                               ),
+                              children: [
+                                TextSpan(
+                                    text:
+                                        '${user.name ?? 'Guest'}, ${user.age ?? '?'}'),
+                                if (ZodiacUtils.getZodiacEmoji(
+                                        user.birthDate) !=
+                                    null)
+                                  TextSpan(
+                                    text:
+                                        '  ${ZodiacUtils.getZodiacEmoji(user.birthDate)}',
+                                    style: const TextStyle(fontSize: 22),
+                                  ),
+                              ],
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        const SizedBox(height: 20),
 
-                  // ── Photo gallery ──────────────────────────────────────────
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: SizedBox(
-                      height: 360,
-                      width: double.infinity,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          if (hasPhotos)
-                            PageView.builder(
-                              controller: _photoPageController,
-                              itemCount: photoCount,
-                              onPageChanged: (i) =>
-                                  setState(() => _currentPhotoPage = i),
-                              itemBuilder: (context, index) {
-                                final url = user.photoUrls[index];
-                                return url.startsWith('http')
-                                    ? Image.network(url,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
-                                            Container(color: Colors.grey[900]))
-                                    : Image.file(File(url),
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
-                                            Container(color: Colors.grey[900]));
-                              },
-                            )
-                          else
-                            Container(
-                              color: Colors.white10,
-                              child: const Center(
-                                child: Icon(Icons.person,
-                                    size: 80, color: Colors.white24),
-                              ),
-                            ),
-                          // Dot indicators
-                          if (photoCount > 1)
-                            Positioned(
-                              top: 12,
-                              left: 0,
-                              right: 0,
+                        // Job / Occupation
+                        Builder(
+                          builder: (context) {
+                            String displayOccupation = '';
+                            if (user.jobStatus != null) {
+                              final statusLabel = t(user.jobStatus!, lang);
+                              if (user.occupation != null &&
+                                  user.occupation!.isNotEmpty) {
+                                displayOccupation =
+                                    '$statusLabel, ${user.occupation}';
+                              } else {
+                                displayOccupation = statusLabel;
+                              }
+                            } else if (user.occupation?.isNotEmpty ?? false) {
+                              displayOccupation = user.occupation!;
+                            }
+
+                            if (displayOccupation.isEmpty)
+                              return const SizedBox.shrink();
+
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 6),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: List.generate(photoCount, (i) {
-                                  return AnimatedContainer(
-                                    duration: const Duration(milliseconds: 250),
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 3),
-                                    width: _currentPhotoPage == i ? 20 : 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(4),
-                                      color: _currentPhotoPage == i
-                                          ? Colors.white
-                                          : Colors.white.withValues(alpha: 0.4),
-                                    ),
-                                  );
-                                }),
+                                children: [
+                                  Icon(LucideIcons.briefcase,
+                                      size: 16, color: iconColor),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    displayOccupation,
+                                    style: TextStyle(
+                                        color: subColor, fontSize: 15),
+                                  ),
+                                ],
                               ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // ── Name + Age ─────────────────────────────────────────────
-                  Center(
-                    child: Text(
-                      '${user.name ?? 'Guest'}, ${user.age ?? '?'}',
-                      style: GoogleFonts.instrumentSans(
-                        color: textColor,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  // Job / Occupation
-                  Builder(
-                    builder: (context) {
-                      String displayOccupation = '';
-                      if (user.jobStatus != null) {
-                        final statusLabel = t(user.jobStatus!, lang);
-                        if (user.occupation != null &&
-                            user.occupation!.isNotEmpty) {
-                          displayOccupation =
-                              '$statusLabel, ${user.occupation}';
-                        } else {
-                          displayOccupation = statusLabel;
-                        }
-                      } else if (user.occupation?.isNotEmpty ?? false) {
-                        displayOccupation = user.occupation!;
-                      }
-
-                      if (displayOccupation.isEmpty)
-                        return const SizedBox.shrink();
-
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(LucideIcons.briefcase,
-                                size: 16, color: iconColor),
-                            const SizedBox(width: 4),
-                            Text(
-                              displayOccupation,
-                              style: TextStyle(color: subColor, fontSize: 15),
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
 
-                  // Height
-                  if (user.height != null) ...[
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(LucideIcons.ruler, size: 16, color: iconColor),
-                        const SizedBox(width: 4),
-                        Text('${user.height} cm',
-                            style: TextStyle(color: subColor, fontSize: 15)),
-                      ],
-                    ),
-                  ],
-
-                  // Location
-                  if (user.location?.isNotEmpty ?? false) ...[
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(LucideIcons.mapPin, size: 16, color: iconColor),
-                        const SizedBox(width: 4),
-                        Text(user.location ?? '',
-                            style: TextStyle(color: subColor, fontSize: 15)),
-                      ],
-                    ),
-                  ],
-
-                  // Looking for
-                  if (user.lookingFor.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Center(
-                      child: Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        alignment: WrapAlignment.center,
-                        children: (user.isPremium
-                                ? user.lookingFor
-                                : user.lookingFor
-                                    .where((item) =>
-                                        item != 'undecided' &&
-                                        item != 'friendship' &&
-                                        item != 'meeting' &&
-                                        item != 'spontaneous_meeting')
-                                    .toList())
-                            .map((item) => Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        (isDark ? Colors.white : Colors.black)
-                                            .withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                        color: (isDark
-                                                ? Colors.white
-                                                : Colors.black)
-                                            .withValues(alpha: 0.15)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(IconUtils.getLookingForIcon(item), size: 12, color: iconColor),
-                                      const SizedBox(width: 4),
-                                      Text(t(item, lang),
-                                          style: TextStyle(
-                                              color: subColor, fontSize: 12)),
-                                    ],
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 24),
-
-                  // ── Info badges ────────────────────────────────────────────
-                  Center(child: _buildInfoBadges(user, isDark, subColor, iconColor)),
-
-                  const SizedBox(height: 24),
-
-                  // ── Hobbies ────────────────────────────────────────────────
-                  if (user.hobbies.isNotEmpty)
-                    ..._buildGroupedHobbies(user, isDark, textColor, subColor),
-
-                  // ── Lifestyle (editable pill rows) ─────────────────────────
-                  _buildLifestyleSection(user, isDark, textColor, subColor),
-
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-    // --- Floating Header Content ---
-          ValueListenableBuilder<bool>(
-            valueListenable: _isHeaderVisible,
-            builder: (context, isVisible, child) {
-              return AnimatedOpacity(
-                duration: const Duration(milliseconds: 250),
-                opacity: isVisible ? 1.0 : 0.0,
-                child: IgnorePointer(
-                  ignoring: !isVisible,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                        24, MediaQuery.of(context).padding.top + 12, 24, 0),
-                    child: SizedBox(
-                      height: 50,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TrembleBackButton(onPressed: () {
-                            if (context.canPop()) {
-                              context.pop();
-                            } else {
-                              context.go('/');
-                            }
-                          }),
-                          TrembleCircleButton(
-                            icon: LucideIcons.pencil,
-                            onPressed: () => context.push('/edit-profile'),
+                        // Height
+                        if (user.height != null) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(LucideIcons.ruler,
+                                  size: 16, color: iconColor),
+                              const SizedBox(width: 4),
+                              Text('${user.height} cm',
+                                  style:
+                                      TextStyle(color: subColor, fontSize: 15)),
+                            ],
                           ),
                         ],
-                      ),
+
+                        // Location
+                        if (user.location?.isNotEmpty ?? false) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(LucideIcons.mapPin,
+                                  size: 16, color: iconColor),
+                              const SizedBox(width: 4),
+                              Text(user.location ?? '',
+                                  style:
+                                      TextStyle(color: subColor, fontSize: 15)),
+                            ],
+                          ),
+                        ],
+
+                        // Looking for
+                        if (user.lookingFor.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Center(
+                            child: Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              alignment: WrapAlignment.center,
+                              children: (user.isPremium
+                                      ? user.lookingFor
+                                      : user.lookingFor
+                                          .where((item) =>
+                                              item != 'undecided' &&
+                                              item != 'friendship' &&
+                                              item != 'meeting' &&
+                                              item != 'spontaneous_meeting')
+                                          .toList())
+                                  .map((item) => Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: (isDark
+                                                  ? Colors.white
+                                                  : Colors.black)
+                                              .withValues(alpha: 0.08),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          border: Border.all(
+                                              color: (isDark
+                                                      ? Colors.white
+                                                      : Colors.black)
+                                                  .withValues(alpha: 0.15)),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                                IconUtils.getLookingForIcon(
+                                                    item),
+                                                size: 12,
+                                                color: iconColor),
+                                            const SizedBox(width: 4),
+                                            Text(t(item, lang),
+                                                style: TextStyle(
+                                                    color: subColor,
+                                                    fontSize: 12)),
+                                          ],
+                                        ),
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                        ],
+
+                        const SizedBox(height: 24),
+
+                        // ── Info badges ────────────────────────────────────────────
+                        Center(
+                            child: _buildInfoBadges(
+                                user, isDark, subColor, iconColor)),
+
+                        const SizedBox(height: 24),
+
+                        // ── Hobbies ────────────────────────────────────────────────
+                        if (user.hobbies.isNotEmpty)
+                          ..._buildGroupedHobbies(
+                              user, isDark, textColor, subColor),
+
+                        // ── Lifestyle (editable pill rows) ─────────────────────────
+                        _buildLifestyleSection(
+                            user, isDark, textColor, subColor),
+
+                        const SizedBox(height: 24),
+                      ],
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
+          // --- Floating Header Content ---
+          ValueListenableBuilder<double>(
+            valueListenable: _titleOpacity,
+            builder: (context, opacity, child) {
+              return TrembleHeader(
+                title: 'My Profile',
+                titleOpacity: opacity,
+                actions: [
+                  TrembleCircleButton(
+                    icon: LucideIcons.pencil,
+                    onPressed: () => context.push('/edit-profile'),
+                  ),
+                ],
               );
             },
           ),
@@ -516,8 +513,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
           isDark, subColor, iconColor));
     }
     if (user.religion != null) {
-      badges.add(_badge(IconUtils.getReligionIcon(user.religion!), t(user.religion!, lang), isDark,
-          subColor, iconColor));
+      badges.add(_badge(IconUtils.getReligionIcon(user.religion!),
+          t(user.religion!, lang), isDark, subColor, iconColor));
     }
     if (user.hairColor != null) {
       badges.add(_badge(Icons.circle, t(user.hairColor!, lang), isDark,

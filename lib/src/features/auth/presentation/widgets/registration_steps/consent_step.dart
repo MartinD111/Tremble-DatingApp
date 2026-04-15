@@ -57,7 +57,9 @@ class _ConsentStepState extends State<ConsentStep> {
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: value ? Theme.of(context).colorScheme.primary : Colors.transparent,
+              color: value
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                   color: value
@@ -118,7 +120,10 @@ class _ConsentStepState extends State<ConsentStep> {
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: _consentGiven
-                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.22)
+                    ? Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.22)
                     : (isDark
                         ? Colors.white.withValues(alpha: 0.12)
                         : Colors.black.withValues(alpha: 0.05)),
@@ -133,7 +138,9 @@ class _ConsentStepState extends State<ConsentStep> {
               child: Row(
                 children: [
                   Icon(
-                    _consentGiven ? Icons.check_box : Icons.check_box_outline_blank,
+                    _consentGiven
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
                     color: _consentGiven
                         ? Theme.of(context).colorScheme.primary
                         : (isDark ? Colors.white70 : Colors.black54),
@@ -147,12 +154,14 @@ class _ConsentStepState extends State<ConsentStep> {
                           ? (isDark ? Colors.white : Colors.black)
                           : (isDark ? const Color(0xDDFFFFFF) : Colors.black87),
                       fontSize: 16,
-                      fontWeight: _consentGiven ? FontWeight.bold : FontWeight.w500,
+                      fontWeight:
+                          _consentGiven ? FontWeight.bold : FontWeight.w500,
                     ),
                   ),
                   const Spacer(),
                   if (_consentGiven)
-                    Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 20),
+                    Icon(Icons.check_circle,
+                        color: Theme.of(context).colorScheme.primary, size: 20),
                 ],
               ),
             ),
@@ -247,7 +256,8 @@ class _ConsentStepState extends State<ConsentStep> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.shield_outlined, color: Theme.of(context).colorScheme.primary, size: 20),
+                Icon(Icons.shield_outlined,
+                    color: Theme.of(context).colorScheme.primary, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(

@@ -25,12 +25,42 @@ class HairColorStep extends StatelessWidget {
     return SubScreenStep(
       title: tr('hair_color'),
       options: [
-        {'key': 'blonde', 'label': tr('hair_blonde'), 'icon': Icons.circle, 'iconColor': IconUtils.getHairColor('blonde')},
-        {'key': 'brunette', 'label': tr('hair_brunette'), 'icon': Icons.circle, 'iconColor': IconUtils.getHairColor('brunette')},
-        {'key': 'black', 'label': tr('hair_black'), 'icon': Icons.circle, 'iconColor': IconUtils.getHairColor('black')},
-        {'key': 'red', 'label': tr('hair_red'), 'icon': Icons.circle, 'iconColor': IconUtils.getHairColor('red')},
-        {'key': 'gray_white', 'label': tr('hair_gray_white'), 'icon': Icons.circle, 'iconColor': IconUtils.getHairColor('gray_white')},
-        {'key': 'other', 'label': tr('hair_other'), 'icon': Icons.circle, 'iconColor': IconUtils.getHairColor('other')},
+        {
+          'key': 'blonde',
+          'label': tr('hair_blonde'),
+          'icon': Icons.circle,
+          'iconColor': IconUtils.getHairColor('blonde')
+        },
+        {
+          'key': 'brunette',
+          'label': tr('hair_brunette'),
+          'icon': Icons.circle,
+          'iconColor': IconUtils.getHairColor('brunette')
+        },
+        {
+          'key': 'black',
+          'label': tr('hair_black'),
+          'icon': Icons.circle,
+          'iconColor': IconUtils.getHairColor('black')
+        },
+        {
+          'key': 'red',
+          'label': tr('hair_red'),
+          'icon': Icons.circle,
+          'iconColor': IconUtils.getHairColor('red')
+        },
+        {
+          'key': 'gray_white',
+          'label': tr('hair_gray_white'),
+          'icon': Icons.circle,
+          'iconColor': IconUtils.getHairColor('gray_white')
+        },
+        {
+          'key': 'other',
+          'label': tr('hair_other'),
+          'icon': Icons.circle,
+          'iconColor': IconUtils.getHairColor('other')
+        },
       ],
       selected: selected,
       onSelect: onSelect,

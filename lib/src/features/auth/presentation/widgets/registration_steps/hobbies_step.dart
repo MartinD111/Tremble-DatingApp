@@ -138,28 +138,28 @@ class _HobbiesStepState extends State<HobbiesStep> {
               ),
               const SizedBox(height: 12),
             ] else
-                    SizedBox(
-                      width: double.infinity,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          StepHeader(
-                            widget.tr('hobbies'),
-                            subtitle:
-                                '${widget.selectedHobbies.length} ${widget.tr('hobbies_selected').replaceAll('{count}', '')}',
-                          ),
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            child: TrembleBackButton(
-                              label: widget.tr('back'),
-                              onPressed: widget.onBack ??
-                                  () => Navigator.maybePop(context),
-                            ),
-                          ),
-                        ],
+              SizedBox(
+                width: double.infinity,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    StepHeader(
+                      widget.tr('hobbies'),
+                      subtitle:
+                          '${widget.selectedHobbies.length} ${widget.tr('hobbies_selected').replaceAll('{count}', '')}',
+                    ),
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      child: TrembleBackButton(
+                        label: widget.tr('back'),
+                        onPressed:
+                            widget.onBack ?? () => Navigator.maybePop(context),
                       ),
                     ),
+                  ],
+                ),
+              ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -188,7 +188,8 @@ class _HobbiesStepState extends State<HobbiesStep> {
                             ),
                             selected: true,
                             onSelected: (_) => widget.onRemoveHobby(hobby),
-                            selectedColor: Theme.of(context).colorScheme.primary,
+                            selectedColor:
+                                Theme.of(context).colorScheme.primary,
                             backgroundColor: isDark
                                 ? Colors.white12
                                 : Colors.black.withValues(alpha: 0.05),
@@ -263,7 +264,8 @@ class _HobbiesStepState extends State<HobbiesStep> {
                                       onSelected: (s) => s
                                           ? widget.onAddHobby(hobby)
                                           : widget.onRemoveHobby(hobby),
-                                      selectedColor: Theme.of(context).colorScheme.primary,
+                                      selectedColor:
+                                          Theme.of(context).colorScheme.primary,
                                       backgroundColor:
                                           Theme.of(context).brightness ==
                                                   Brightness.dark
@@ -272,7 +274,9 @@ class _HobbiesStepState extends State<HobbiesStep> {
                                       shape: StadiumBorder(
                                         side: BorderSide(
                                           color: sel
-                                          ? Theme.of(context).colorScheme.primary
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
                                               : (Theme.of(context).brightness ==
                                                       Brightness.dark
                                                   ? Colors.white24
@@ -286,7 +290,8 @@ class _HobbiesStepState extends State<HobbiesStep> {
                                     label: Text(widget.tr('add_own'),
                                         style: GoogleFonts.instrumentSans(
                                             color: Colors.black)),
-                                    backgroundColor: Theme.of(context).colorScheme.primary,
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.primary,
                                     shape: const StadiumBorder(),
                                     onPressed: _showAddHobbyDialog,
                                   ),

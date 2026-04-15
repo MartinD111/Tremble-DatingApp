@@ -5,16 +5,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/translations.dart';
 import '../../features/auth/data/auth_repository.dart';
 
-Future<String?> showDiscardChangesModal(BuildContext context, WidgetRef ref) async {
+Future<String?> showDiscardChangesModal(
+    BuildContext context, WidgetRef ref) async {
   final colorScheme = Theme.of(context).colorScheme;
   final user = ref.read(authStateProvider);
   final lang = user?.appLanguage ?? 'en';
-  
+
   String discardTitle = t('discard_unsaved_changes', lang);
   if (discardTitle.isEmpty || discardTitle == 'discard_unsaved_changes') {
     discardTitle = 'Discard unsaved changes';
   }
-  
+
   String saveText = t('save', lang);
   if (saveText.isEmpty || saveText == 'save') saveText = 'Save';
 
@@ -28,8 +29,7 @@ Future<String?> showDiscardChangesModal(BuildContext context, WidgetRef ref) asy
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 10),
-          Icon(LucideIcons.alertTriangle,
-              color: colorScheme.primary, size: 48),
+          Icon(LucideIcons.alertTriangle, color: colorScheme.primary, size: 48),
           const SizedBox(height: 20),
           Text(
             'Discard changes?',

@@ -71,7 +71,8 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
               Text(t('wave_sent_to', lang)
                   .replaceAll('{name}', widget.match.name)),
             ]),
-            backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.9),
+            backgroundColor:
+                Theme.of(context).primaryColor.withValues(alpha: 0.9),
             behavior: SnackBarBehavior.floating,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -261,13 +262,16 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
                       height: 80,
                       decoration: BoxDecoration(
                         color: _isGreeting
-                            ? Theme.of(context).primaryColor.withValues(alpha: 0.5)
+                            ? Theme.of(context)
+                                .primaryColor
+                                .withValues(alpha: 0.5)
                             : Theme.of(context).primaryColor,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                Theme.of(context).primaryColor.withValues(alpha: 0.4),
+                            color: Theme.of(context)
+                                .primaryColor
+                                .withValues(alpha: 0.4),
                             blurRadius: 20,
                             spreadRadius: 2,
                           ),

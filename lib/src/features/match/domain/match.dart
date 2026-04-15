@@ -5,14 +5,16 @@ class Match {
   final List<String> userIds;
   final DateTime createdAt;
   final List<String> seenBy;
-  // lastMessage removed — Tremble has no in-app chat.
-  // After mutual wave, users find each other in the real world.
+  final String status; // 'pending', 'found', 'expired'
+  final bool isFound;
 
   Match({
     required this.id,
     required this.userIds,
     required this.createdAt,
     required this.seenBy,
+    this.status = 'pending',
+    this.isFound = false,
   });
 
   factory Match.fromFirestore(DocumentSnapshot doc) {
@@ -22,6 +24,8 @@ class Match {
       userIds: List<String>.from(data['userIds'] ?? []),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       seenBy: List<String>.from(data['seenBy'] ?? []),
+      status: data['status'] ?? 'pending',
+      isFound: data['isFound'] ?? false,
     );
   }
 

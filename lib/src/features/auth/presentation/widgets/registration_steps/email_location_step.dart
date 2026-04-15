@@ -391,10 +391,14 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+            color:
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.5)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -495,7 +499,8 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
             const SizedBox(height: 32),
             widget.isRegistering
                 ? Center(
-                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
+                    child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary))
                 : ContinueButton(
                     enabled: widget.emailController.text.isNotEmpty &&
                         ((isAlreadyLoggedIn &&

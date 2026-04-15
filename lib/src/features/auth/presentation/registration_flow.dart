@@ -212,7 +212,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     if (currentUser != null) {
       // Already logged in (via Social or incomplete Email registration), just move to next page
       if (kDebugMode) {
-        debugPrint('[TREMBLE_AUTH_FLOW] currentUser already exists, advancing page');
+        debugPrint(
+            '[TREMBLE_AUTH_FLOW] currentUser already exists, advancing page');
       }
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
@@ -227,7 +228,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
     try {
       if (kDebugMode) {
-        debugPrint('[TREMBLE_AUTH_FLOW] Calling authStateProvider.notifier.register()');
+        debugPrint(
+            '[TREMBLE_AUTH_FLOW] Calling authStateProvider.notifier.register()');
       }
 
       await ref.read(authStateProvider.notifier).register(
@@ -244,7 +246,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       _showVerificationNotification();
 
       if (kDebugMode) {
-        debugPrint('[TREMBLE_AUTH_FLOW] Advancing page from $_currentPage to ${_currentPage + 1}');
+        debugPrint(
+            '[TREMBLE_AUTH_FLOW] Advancing page from $_currentPage to ${_currentPage + 1}');
       }
 
       _pageController.nextPage(
@@ -257,7 +260,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       });
 
       if (kDebugMode) {
-        debugPrint('[TREMBLE_AUTH_FLOW] Page advanced. currentPage=$_currentPage');
+        debugPrint(
+            '[TREMBLE_AUTH_FLOW] Page advanced. currentPage=$_currentPage');
       }
     } catch (e) {
       setState(() => _isRegistering = false);
@@ -312,7 +316,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           boxShadow: [
             if (enabled)
               BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -349,7 +356,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         value: val,
         backgroundColor:
             isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.08),
-        valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
+        valueColor:
+            AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
         minHeight: 3,
       ),
     );
@@ -396,7 +404,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     fontSize: 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.w500)),
             const Spacer(),
-            if (selected) Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 20),
+            if (selected)
+              Icon(Icons.check_circle,
+                  color: Theme.of(context).colorScheme.primary, size: 20),
           ],
         ),
       ),
@@ -640,7 +650,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     onBack: () => _goToPage(_currentPage - 1),
                     onContinueTap: () {
                       final pref = _petPreference;
-                      if (pref == null) return; // defensive — button should already be disabled
+                      if (pref == null)
+                        return; // defensive — button should already be disabled
                       _showPartnerPreferenceModal(
                         title: tr('pets'),
                         options: [
@@ -653,7 +664,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                           {'key': 'nothing', 'label': tr('nothing')},
                         ],
                         userSelection: pref,
-                        onSave: (v) => setState(() => _partnerPetPreference = v),
+                        onSave: (v) =>
+                            setState(() => _partnerPetPreference = v),
                       );
                     },
                     tr: tr,
@@ -795,8 +807,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
-        border:
-            Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4)),
+        border: Border.all(
+            color:
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
@@ -846,7 +859,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 padding: EdgeInsets.zero, minimumSize: Size.zero),
             child: Text(
               tr('resend'),
-              style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 12),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary, fontSize: 12),
             ),
           ),
         ],
@@ -871,7 +885,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(LucideIcons.info, color: Theme.of(context).colorScheme.primary, size: 40),
+            Icon(LucideIcons.info,
+                color: Theme.of(context).colorScheme.primary, size: 40),
             const SizedBox(height: 16),
             Text(tr('gender_nonbinary_popup_title'),
                 style: GoogleFonts.instrumentSans(
@@ -1132,7 +1147,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                     ? _introvertLabelReg(tempRange.end)
                                     : '${tempRange.end.toInt()}',
                               ),
-                              activeColor: Theme.of(context).colorScheme.primary,
+                              activeColor:
+                                  Theme.of(context).colorScheme.primary,
                               inactiveColor:
                                   isDark ? Colors.white12 : Colors.black12,
                               onChanged: (v) =>
@@ -1173,7 +1189,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               Expanded(
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.primary,
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.primary,
                                     foregroundColor: Colors.black,
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 16),
@@ -1349,9 +1366,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
       // Step 0: Upload photos in parallel to Cloudflare R2
       final validPhotos = _photos.whereType<File>().toList();
-      
+
       if (kDebugMode) {
-        debugPrint('[RegistrationFlow] Starting upload of ${validPhotos.length} photos...');
+        debugPrint(
+            '[RegistrationFlow] Starting upload of ${validPhotos.length} photos...');
       }
 
       final photoUrls = await Future.wait(
@@ -1381,8 +1399,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         birthDate: _birthDate,
         height: _heightCm, // Included height in cm
         gender: _selectedGender ?? 'male',
-        location:
-            _locationController.text.isNotEmpty ? _locationController.text : null,
+        location: _locationController.text.isNotEmpty
+            ? _locationController.text
+            : null,
         interestedIn: _wantToMeet.join(', '),
         isSmoker: _smokingHabit == 'yes',
         jobStatus: _status ?? 'student',

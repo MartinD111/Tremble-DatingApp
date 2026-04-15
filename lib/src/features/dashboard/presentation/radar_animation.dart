@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:flutter/services.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import '../../../shared/widgets/radar_painter.dart';
 
 class RadarAnimation extends StatefulWidget {
   final bool isScanning;
+  final bool isVibrationEnabled;
   final double? pingDistance; // 0.0 = center, 1.0 = edge, null = no ping
   final double? pingAngle; // angle in radians for ping position
   final Color? brandColor;
@@ -12,6 +14,7 @@ class RadarAnimation extends StatefulWidget {
   const RadarAnimation({
     super.key,
     this.isScanning = true,
+    this.isVibrationEnabled = true,
     this.pingDistance,
     this.pingAngle,
     this.brandColor,
@@ -25,6 +28,7 @@ class _RadarAnimationState extends State<RadarAnimation>
     with TickerProviderStateMixin {
   late final AnimationController _radarController;
   late final AnimationController _pingController;
+  double _lastPingValue = 0.0;
 
   @override
   void initState() {
@@ -36,8 +40,8 @@ class _RadarAnimationState extends State<RadarAnimation>
 
     _pingController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
+      duration: _calculatePingDuration(widget.pingDistance),
+    )..addListener(_handlePingAnimation);
 
     if (widget.isScanning) {
       _radarController.repeat();
@@ -48,6 +52,25 @@ class _RadarAnimationState extends State<RadarAnimation>
     }
 
     _initBackgroundService();
+  }
+
+  void _handlePingAnimation() {
+    if (_pingController.value < _lastPingValue) {
+      // Trigger haptic feedback when the ping animation restarts
+      if (widget.isVibrationEnabled) {
+        HapticFeedback.lightImpact();
+      }
+    }
+    _lastPingValue = _pingController.value;
+  }
+
+  Duration _calculatePingDuration(double? distance) {
+    if (distance == null) return const Duration(milliseconds: 1500);
+    // Exponential-like feel: closer is much faster
+    // 0.0 distance -> 250ms
+    // 1.0 distance -> 2000ms
+    final ms = (250 + (pow(distance, 1.5) * 1750)).toInt();
+    return Duration(milliseconds: ms);
   }
 
   void _initBackgroundService() async {
@@ -64,8 +87,12 @@ class _RadarAnimationState extends State<RadarAnimation>
       _radarController.stop();
     }
 
-    if (widget.pingDistance != null && !_pingController.isAnimating) {
-      _pingController.repeat();
+    if (widget.pingDistance != null) {
+      // Update duration based on new distance
+      _pingController.duration = _calculatePingDuration(widget.pingDistance);
+      if (!_pingController.isAnimating) {
+        _pingController.repeat();
+      }
     } else if (widget.pingDistance == null && _pingController.isAnimating) {
       _pingController.stop();
     }
@@ -90,6 +117,7 @@ class _RadarAnimationState extends State<RadarAnimation>
             pingDistance: widget.pingDistance,
             pingAngle: widget.pingAngle ?? pi / 4,
             brandColor: widget.brandColor ?? Theme.of(context).primaryColor,
+            gridColor: Theme.of(context).colorScheme.onSurface,
           ),
           size: Size.infinite,
         );

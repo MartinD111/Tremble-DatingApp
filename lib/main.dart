@@ -39,9 +39,8 @@ void main() async {
     providerAndroid: flavor == 'prod'
         ? AndroidPlayIntegrityProvider()
         : AndroidDebugProvider(),
-    providerApple: flavor == 'prod'
-        ? AppleDeviceCheckProvider()
-        : AppleDebugProvider(),
+    providerApple:
+        flavor == 'prod' ? AppleDeviceCheckProvider() : AppleDebugProvider(),
   );
 
   // Pass all uncaught Flutter errors to Crashlytics

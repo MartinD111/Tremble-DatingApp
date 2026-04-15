@@ -28,10 +28,26 @@ class DatingPreferencesStep extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final opts = [
-      {'key': 'short_term_fun', 'label': tr('short_term_fun'), 'icon': IconUtils.getLookingForIcon('short_term_fun')},
-      {'key': 'long_term_partner', 'label': tr('long_term_partner'), 'icon': IconUtils.getLookingForIcon('long_term_partner')},
-      {'key': 'short_open_long', 'label': tr('short_open_long'), 'icon': IconUtils.getLookingForIcon('short_open_long')},
-      {'key': 'long_open_short', 'label': tr('long_open_short'), 'icon': IconUtils.getLookingForIcon('long_open_short')},
+      {
+        'key': 'short_term_fun',
+        'label': tr('short_term_fun'),
+        'icon': IconUtils.getLookingForIcon('short_term_fun')
+      },
+      {
+        'key': 'long_term_partner',
+        'label': tr('long_term_partner'),
+        'icon': IconUtils.getLookingForIcon('long_term_partner')
+      },
+      {
+        'key': 'short_open_long',
+        'label': tr('short_open_long'),
+        'icon': IconUtils.getLookingForIcon('short_open_long')
+      },
+      {
+        'key': 'long_open_short',
+        'label': tr('long_open_short'),
+        'icon': IconUtils.getLookingForIcon('long_open_short')
+      },
     ];
 
     return ScrollableFormPage(

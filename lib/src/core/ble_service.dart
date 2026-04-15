@@ -90,7 +90,8 @@ class BleService {
       // Guard: not all Android devices support BLE.
       final supported = await FlutterBluePlus.isSupported;
       if (!supported) {
-        debugPrint('[BleService] BLE not supported on this device — skipping scan');
+        debugPrint(
+            '[BleService] BLE not supported on this device — skipping scan');
         return;
       }
 

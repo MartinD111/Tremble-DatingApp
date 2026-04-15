@@ -24,6 +24,9 @@ import '../../../core/translations.dart';
 import '../../match/application/match_service.dart';
 import '../../match/data/wave_repository.dart';
 import '../../match/domain/match.dart' as wave_match;
+import '../../../core/dev_mock_users.dart'; // Dev-only mock nearby users
+import 'widgets/radar_search_overlay.dart';
+import '../../profile/data/profile_repository.dart';
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State
@@ -155,13 +158,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final radarMode = ref.watch(radarModeProvider);
     final batteryLevel = ref.watch(radarBatteryLevelProvider);
     final bool bypassRadar = ref.watch(bypassRadarProvider);
-    final bool localAdmin =
-        kDebugMode && ref.watch(localAdminModeProvider);
+    final bool localAdmin = kDebugMode && ref.watch(localAdminModeProvider);
     final bool canAccessRadar = user?.isEmailVerified == true ||
         user?.isAdmin == true ||
         bypassRadar ||
         localAdmin;
     final bool isPremium = user?.isPremium == true;
+
+    // ── Active Search State ──────────────────────────────────────────────
+    final activeMatch = ref.watch(currentSearchProvider).valueOrNull;
 
     // Define Screens and Nav Items
     final List<Widget> screens;
@@ -169,8 +174,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (isPremium) {
       screens = [
-        _buildRadarView(ref, context, canAccessRadar, isScanning, isPremium,
-            pingDistance, pingAngle, radarMode, batteryLevel),
+        _buildRadarView(ref, context, user, canAccessRadar, isScanning,
+            isPremium, pingDistance, pingAngle, radarMode, batteryLevel, activeMatch),
         const PulseMapScreen(),
         const MatchesScreen(),
         const SettingsScreen(),
@@ -183,8 +188,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ];
     } else {
       screens = [
-        _buildRadarView(ref, context, canAccessRadar, isScanning, isPremium,
-            pingDistance, pingAngle, radarMode, batteryLevel),
+        _buildRadarView(ref, context, user, canAccessRadar, isScanning,
+            isPremium, pingDistance, pingAngle, radarMode, batteryLevel, activeMatch),
         const MatchesScreen(),
         const SettingsScreen(),
       ];
@@ -273,20 +278,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildRadarView(
       WidgetRef ref,
       BuildContext context,
+      AuthUser? user,
       bool canAccessRadar,
       bool isScanning,
       bool isPremium,
       double? pingDistance,
       double? pingAngle,
       String radarMode,
-      int batteryLevel) {
+      int batteryLevel,
+      wave_match.Match? activeMatch) {
     final isDegraded = radarMode == 'degraded';
     final lang = ref.watch(appLanguageProvider);
+    final bool isSearchActive = activeMatch != null;
     return Stack(
       children: [
         // ── Radar Header ─────────────────────────────────────────
         Positioned(
-          top: 40,
+          top: MediaQuery.of(context).padding.top + 20,
           left: 0,
           right: 0,
           child: SizedBox(
@@ -297,7 +305,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 style: TrembleTheme.displayFont(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
@@ -310,18 +318,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Positioned.fill(
                     child: RadarAnimation(
-                      isScanning: isScanning,
-                      pingDistance: pingDistance,
-                      pingAngle: pingAngle,
+                      isScanning: isScanning && !isSearchActive, // stop visual pulse if searching
+                      isVibrationEnabled: user?.isPingVibrationEnabled ?? true,
+                      pingDistance: isSearchActive ? null : pingDistance,
+                      pingAngle: isSearchActive ? null : pingAngle,
                       brandColor: Theme.of(context).primaryColor,
                     ),
                   ),
 
-                  // ── Pulsing Primary Action ────────────────────────
-                  Center(
-                    child: _PulsingRadarButton(
-                      isScanning: isScanning,
-                      onTap: () async {
+                  if (isSearchActive)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.2), // Dim radar during search
+                        child: Center(
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              final partnerId = activeMatch.getPartnerId(user?.id ?? '');
+                              final profile = ref.watch(publicProfileProvider(partnerId));
+                              return profile.when(
+                                data: (p) => RadarSearchOverlay(
+                                  match: activeMatch,
+                                  partnerName: p.name,
+                                ),
+                                loading: () => const CircularProgressIndicator(),
+                                error: (_, __) => RadarSearchOverlay(
+                                  match: activeMatch,
+                                  partnerName: 'Nekdo v bližini',
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ).animate().fade(),
+                    )
+                  else ...[
+                    // ── Pulsing Primary Action ────────────────────────
+                    Center(
+                      child: _PulsingRadarButton(
+                        isScanning: isScanning,
+                        onTap: () async {
                         final newState = !isScanning;
                         ref.read(isScanningProvider.notifier).state = newState;
 
@@ -334,14 +369,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           // requires an Android Activity which the background isolate
                           // does not have. Gate on GDPR consent before starting.
                           final hasConsent =
-                              ref.read(gdprConsentProvider).valueOrNull ?? false;
+                              ref.read(gdprConsentProvider).valueOrNull ??
+                                  false;
                           if (hasConsent) {
                             await BleService().start();
+                          }
+
+                          // ── Admin Mode demo: inject mock nearby users ──────
+                          // Only fires in kDebugMode when Admin Mode (Bypass Radar)
+                          // is active — never touches real Firebase.
+                          if (kDebugMode &&
+                              ref.read(bypassRadarProvider)) {
+                            _injectMockRadarPings(ref);
                           }
                         } else {
                           // Stop BLE in main isolate and signal background service.
                           BleService().stop();
-                          FlutterBackgroundService().invoke('stopService', null);
+                          FlutterBackgroundService()
+                              .invoke('stopService', null);
                         }
                       },
                     )
@@ -361,7 +406,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               : t('scanning', lang),
                           style: TrembleTheme.telemetryTextStyle(
                             context,
-                            color: Colors.white.withValues(alpha: 0.7),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7),
                           ).copyWith(letterSpacing: 2),
                         ).animate().fade().slideY(begin: 0.5),
                       ),
@@ -369,7 +417,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     // ── Power-Save Pill ────────────────────────
                     if (isDegraded)
                       Positioned(
-                        top: 56,
+                        top: MediaQuery.of(context).padding.top + 36,
                         left: 0,
                         child: Center(
                           child: _PowerSavePill(batteryLevel: batteryLevel)
@@ -380,25 +428,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                   ]
                 ],
-              )
+              ],
+            )
             : Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(LucideIcons.lock,
-                        size: 60, color: Colors.white54),
+                        size: 60, color: Colors.black26),
                     const SizedBox(height: 20),
                     Text(
                       "Radar je zaklenjen.",
                       style: GoogleFonts.instrumentSans(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 24,
                           fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
+                    Text(
                       "Prosim preveri svoj email za dostop.",
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.7)),
                     ),
                     const SizedBox(height: 20),
                     PrimaryButton(
@@ -414,6 +467,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
       ],
     );
+  }
+}
+
+/// Sequentially fires mock radar pings so the dev can experience every
+/// notification + profile card UI state without any real BLE scanning.
+///
+/// Schedule:
+///   t+2s  → Nika (22F)   — first ping
+///   t+6s  → Luka (26M)   — second ping
+///   t+11s → Sara (24F)   — third ping
+///
+/// Each ping:
+///   1. Sets a random visual angle/distance on the radar canvas.
+///   2. After 1.5s sweep, shows the MatchDialog (same as a real BLE match).
+void _injectMockRadarPings(WidgetRef ref) {
+  if (!kDebugMode) return; // Hard guard — never runs in prod
+
+  // We simulate a single user approaching to demonstrate the dynamic feedback
+  final user = kMockNearbyUsers[0];
+
+  for (var i = 0; i <= 8; i++) {
+    final delay = Duration(seconds: 2 + (i * 2));
+    final distance = 0.9 - (i * 0.1); // 0.9 -> 0.8 -> ... -> 0.1
+
+    Future.delayed(delay, () {
+      // Set visual ping on radar canvas
+      const angle = 0.8; // Fixed angle for tracking feel
+      ref.read(pingAngleProvider.notifier).state = angle;
+      ref.read(pingDistanceProvider.notifier).state = distance;
+
+      // When very close, finalize with the MatchDialog after a short delay
+      if (i == 8) {
+        Future.delayed(const Duration(milliseconds: 2000), () {
+          ref.read(pingAngleProvider.notifier).state = null;
+          ref.read(pingDistanceProvider.notifier).state = null;
+          ref.read(matchControllerProvider.notifier).setMatch(user);
+        });
+      }
+    });
   }
 }
 
@@ -564,7 +656,10 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 1.0 - progress),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 1.0 - progress),
                           width: 1.5,
                         ),
                       ),
@@ -585,8 +680,11 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
                   key: ValueKey(widget.isScanning),
                   size: 60,
                   color: widget.isScanning
-                      ? Colors.white
-                      : Colors.white.withValues(alpha: 0.7),
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.7),
                 ),
               ),
             ),

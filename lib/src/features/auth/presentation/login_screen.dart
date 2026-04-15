@@ -483,7 +483,9 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                                   horizontal: 16, vertical: 16),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Theme.of(context).colorScheme.primary
+                                    ? Theme.of(context)
+                                        .colorScheme
+                                        .primary
                                         .withValues(alpha: 0.2)
                                     : Colors.white.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(16),
@@ -510,7 +512,10 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                                   const Spacer(),
                                   if (isSelected)
                                     Icon(Icons.check_circle,
-                                        color: Theme.of(context).colorScheme.primary, size: 20),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        size: 20),
                                 ],
                               ),
                             ),

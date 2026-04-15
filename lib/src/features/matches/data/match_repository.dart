@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api_client.dart';
 
@@ -25,6 +26,7 @@ class MatchProfile {
   final bool? isSmoker;
   final String? drinkingHabit;
   final int? introvertLevel;
+  final List<String> photoUrls;
   final List<Map<String, String>> prompts;
   final String gender;
 
@@ -34,7 +36,11 @@ class MatchProfile {
   final String? petPreference;
   final String? childrenPreference;
   final String? hairColor;
+  final List<String> languages;
+  final String? location;
+  final bool? hasChildren;
   final List<String> lookingFor;
+  final DateTime? birthDate;
 
   const MatchProfile({
     required this.id,
@@ -43,6 +49,7 @@ class MatchProfile {
     required this.imageUrl,
     required this.hobbies,
     required this.bio,
+    this.photoUrls = const [],
     this.height,
     this.politicalAffiliation,
     this.religion,
@@ -61,19 +68,22 @@ class MatchProfile {
     this.petPreference,
     this.childrenPreference,
     this.hairColor,
+    this.languages = const [],
+    this.location,
+    this.hasChildren,
     this.lookingFor = const [],
+    this.birthDate,
   });
 
   /// Create a MatchProfile from Cloud Functions response data.
   factory MatchProfile.fromApi(Map<String, dynamic> data) {
-    final photoUrls = List<String>.from(data['photoUrls'] ?? []);
+    final urls = List<String>.from(data['photoUrls'] ?? []);
     return MatchProfile(
       id: data['id'] as String? ?? '',
       name: data['name'] as String? ?? 'Unknown',
       age: data['age'] as int? ?? 0,
-      imageUrl: photoUrls.isNotEmpty
-          ? photoUrls.first
-          : 'https://via.placeholder.com/150',
+      imageUrl: urls.isNotEmpty ? urls.first : 'https://via.placeholder.com/150',
+      photoUrls: urls,
       hobbies: List<String>.from(data['hobbies'] ?? []),
       bio: '', // Bio not stored server-side; derived from prompts
       height: data['height'] as int?,
@@ -91,8 +101,23 @@ class MatchProfile {
       petPreference: data['petPreference'] as String?,
       childrenPreference: data['childrenPreference'] as String?,
       hairColor: data['hairColor'] as String?,
+      languages: List<String>.from(data['languages'] ?? []),
+      location: data['location'] as String?,
+      hasChildren: data['hasChildren'] as bool?,
+      company: data['company'] as String?,
+      school: data['school'] as String?,
       lookingFor: List<String>.from(data['lookingFor'] ?? []),
+      birthDate: _parseDateTime(data['birthDate']),
     );
+  }
+
+  /// Safely parses a Firestore field that may be a [Timestamp], an ISO-8601
+  /// [String], or null.
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
+    if (value is String) return DateTime.tryParse(value);
+    return null;
   }
 }
 

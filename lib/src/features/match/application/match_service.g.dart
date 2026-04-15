@@ -25,5 +25,22 @@ final activeMatchesStreamProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ActiveMatchesStreamRef = AutoDisposeStreamProviderRef<List<Match>>;
+String _$currentSearchHash() => r'8bc8d4063514faaacf79945d13ec58d6e654ae50';
+
+/// See also [currentSearch].
+@ProviderFor(currentSearch)
+final currentSearchProvider = AutoDisposeStreamProvider<Match?>.internal(
+  currentSearch,
+  name: r'currentSearchProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$currentSearchHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CurrentSearchRef = AutoDisposeStreamProviderRef<Match?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

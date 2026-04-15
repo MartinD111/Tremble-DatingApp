@@ -55,7 +55,9 @@ class PreferenceRangeSlider extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final labelColor = isDark ? Colors.white : Colors.black87;
     final valueColor = isDark ? Colors.white70 : Colors.black54;
-    final editBg = isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.06);
+    final editBg = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.06);
     final editIcon = isDark ? Colors.white54 : Colors.black38;
     final endLabelColor = isDark ? Colors.white38 : Colors.black38;
     final sliderInactive = isDark ? Colors.white24 : Colors.black12;
@@ -71,7 +73,8 @@ class PreferenceRangeSlider extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (icon != null) ...[
-                  Icon(icon, size: 18, color: labelColor.withValues(alpha: 0.7)),
+                  Icon(icon,
+                      size: 18, color: labelColor.withValues(alpha: 0.7)),
                   const SizedBox(width: 10),
                 ],
                 Text(label, style: TextStyle(color: labelColor)),
@@ -112,7 +115,9 @@ class PreferenceRangeSlider extends StatelessWidget {
             activeColor: brandRose,
             inactiveColor: sliderInactive,
             labels: RangeLabels(
-              labelMapper != null ? labelMapper!(start) : start.round().toString(),
+              labelMapper != null
+                  ? labelMapper!(start)
+                  : start.round().toString(),
               labelMapper != null ? labelMapper!(end) : end.round().toString(),
             ),
             onChanged: onChanged ?? (_) {},

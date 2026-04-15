@@ -6,16 +6,20 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
-import '../../../shared/ui/tremble_back_button.dart';
+import '../../../shared/ui/tremble_header.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../settings/presentation/widgets/preference_edit_modal.dart';
 import '../../settings/presentation/widgets/preference_pill_row.dart';
 import '../../auth/presentation/widgets/registration_steps/hobbies_step.dart';
+import '../../auth/presentation/widgets/registration_steps/birthday_step.dart'
+    show calcAge, zodiacSign;
+import '../../auth/presentation/widgets/registration_steps/step_shared.dart'
+    show DrumPicker;
 import '../../../shared/ui/top_notification.dart';
 import '../../../shared/ui/discard_changes_modal.dart';
 import '../../../core/upload_service.dart';
-import '../../../core/theme.dart';
+import '../../../core/utils/icon_utils.dart';
 
 import '../../../shared/ui/tremble_circle_button.dart';
 
@@ -37,7 +41,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _isUploading = false;
 
   List<String> _photoUrls = [];
-  final ValueNotifier<bool> _isHeaderVisible = ValueNotifier(true);
+  final ValueNotifier<double> _titleOpacity = ValueNotifier(1.0);
   String? _gender;
   String? _interestedIn;
   String? _jobStatus;
@@ -52,11 +56,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   String? _sleepSchedule;
   String? _petPreference;
   String? _childrenPreference;
-  // 0.0 = full introvert, 1.0 = full extrovert (matches registration)
   double _introversionLevel = 0.5;
+  final _schoolController = TextEditingController();
+  final _companyController = TextEditingController();
+  bool? _hasChildren;
   List<String> _hobbies = [];
   List<String> _lookingFor = [];
   List<String> _languages = [];
+  double _politicalAffiliationValue = 3.0; // 1-5 spectrum left→right
+  DateTime? _birthDate;
+  final ValueNotifier<bool> _isHeaderVisible = ValueNotifier(true);
+  double _lastScrollOffset = 0;
 
   String _lang = 'en';
 
@@ -90,6 +100,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _isSmoker = user.isSmoker;
       _occupation = user.occupation;
       _occupationController.text = user.occupation ?? '';
+      _schoolController.text = user.school ?? '';
+      _companyController.text = user.company ?? '';
+      _hasChildren = user.hasChildren;
 
       // Backward compatibility: if jobStatus is missing, infer it from occupation
       if (_jobStatus == null && _occupation != null) {
@@ -131,13 +144,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         'Imam, ne bi več': 'have_and_dont_want_more',
         'Še nisem odločen/-a': 'not_sure',
       });
-      _lookingFor = user.lookingFor.map((e) => _normalizeLegacyValue(e, {
-            'Kratkoročna zabava': 'short_term_fun',
-            'Dolgoročni partner': 'long_term_partner',
-            'Kratkotrajno, odprto za dolgo': 'short_open_long',
-            'Dolgoročno, odprto za kratko': 'long_open_short',
-            'Neodločen/-a': 'undecided',
-          })).whereType<String>().toList();
+      _lookingFor = user.lookingFor
+          .map((e) => _normalizeLegacyValue(e, {
+                'Kratkoročna zabava': 'short_term_fun',
+                'Dolgoročni partner': 'long_term_partner',
+                'Kratkotrajno, odprto za dolgo': 'short_open_long',
+                'Dolgoročno, odprto za kratko': 'long_open_short',
+                'Neodločen/-a': 'undecided',
+              }))
+          .whereType<String>()
+          .toList();
 
       // Registration saves 0-100 (int); legacy edit profile saved 1-5.
       final rawIntrovert = user.introvertScale ?? 50;
@@ -148,10 +164,32 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _languages = List.from(user.languages);
       _distancePreference = user.maxDistance.toDouble();
       _isPremium = user.isPremium;
+      _birthDate = user.birthDate;
+
+      // Political affiliation mapping: String -> Double
+      final polString = user.politicalAffiliation;
+      if (polString == 'politics_left')
+        _politicalAffiliationValue = 1.0;
+      else if (polString == 'politics_center_left')
+        _politicalAffiliationValue = 2.0;
+      else if (polString == 'politics_center')
+        _politicalAffiliationValue = 3.0;
+      else if (polString == 'politics_center_right')
+        _politicalAffiliationValue = 4.0;
+      else if (polString == 'politics_right')
+        _politicalAffiliationValue = 5.0;
+      else if (polString == 'politics_dont_care')
+        _politicalAffiliationValue = 0.0;
+      else if (polString == 'politics_undisclosed')
+        _politicalAffiliationValue = -1.0;
+      else
+        _politicalAffiliationValue = 3.0; // Default to center
     }
     _nameController.addListener(_markChanged);
     _locationController.addListener(_markChanged);
     _occupationController.addListener(_markChanged);
+    _schoolController.addListener(_markChanged);
+    _companyController.addListener(_markChanged);
   }
 
   void _markChanged() {
@@ -163,22 +201,33 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _nameController.dispose();
     _locationController.dispose();
     _occupationController.dispose();
-    _isHeaderVisible.dispose();
+    _schoolController.dispose();
+    _companyController.dispose();
+    _titleOpacity.dispose();
     super.dispose();
   }
 
   bool _onScroll(ScrollNotification notification) {
-    if (notification.metrics.pixels <= 0) {
-      if (!_isHeaderVisible.value) _isHeaderVisible.value = true;
-      return false;
+    final offset = notification.metrics.pixels;
+
+    // 1. Title opacity based on position (fades early)
+    final newOpacity = (1.0 - (offset / 60)).clamp(0.0, 1.0);
+    if (_titleOpacity.value != newOpacity) {
+      _titleOpacity.value = newOpacity;
     }
-    if (notification is ScrollUpdateNotification) {
-      if (notification.scrollDelta! > 1.0) {
+
+    // 2. Smart header visibility based on direction
+    if (offset > 100) {
+      if (offset > _lastScrollOffset + 10) {
         if (_isHeaderVisible.value) _isHeaderVisible.value = false;
-      } else if (notification.scrollDelta! < -1.0) {
+      } else if (offset < _lastScrollOffset - 10) {
         if (!_isHeaderVisible.value) _isHeaderVisible.value = true;
       }
+    } else {
+      if (!_isHeaderVisible.value) _isHeaderVisible.value = true;
     }
+
+    _lastScrollOffset = offset;
     return false;
   }
 
@@ -232,17 +281,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Future<bool> _onWillPop() async {
     if (!_hasChanges) return true;
     String saveText = t('save_changes', _lang);
-    
+
     // Default translation value fallback
     String discardTitle = t('discard_unsaved_changes', _lang);
-    if (discardTitle.isEmpty || discardTitle == 'discard_unsaved_changes') discardTitle = 'Discard unsaved changes';
-    
+    if (discardTitle.isEmpty || discardTitle == 'discard_unsaved_changes')
+      discardTitle = 'Discard unsaved changes';
+
     if (saveText.isEmpty || saveText == 'save_changes') {
       saveText = 'Save changes';
     }
 
     final res = await showDiscardChangesModal(context, ref);
-    
+
     if (res == 'save') {
       _saveChanges();
       return false; // _saveChanges will pop the screen
@@ -265,9 +315,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           religion: _religion,
           hairColor: _hairColor,
           ethnicity: _ethnicity,
-          occupation: _occupationController.text.isNotEmpty 
-              ? _occupationController.text 
+          occupation: _occupationController.text.isNotEmpty
+              ? _occupationController.text
               : null,
+          school: _schoolController.text.isNotEmpty
+              ? _schoolController.text
+              : null,
+          company: _companyController.text.isNotEmpty
+              ? _companyController.text
+              : null,
+          hasChildren: _hasChildren,
           isSmoker: _isSmoker,
           drinkingHabit: _drinkingHabit,
           exerciseHabit: _exerciseHabit,
@@ -278,6 +335,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           hobbies: _hobbies,
           lookingFor: _lookingFor,
           languages: _languages,
+          birthDate: _birthDate,
+          age: _birthDate != null ? _calcAge(_birthDate!) : user.age,
+          politicalAffiliation: _politicalAffiliationValue == 0
+              ? 'politics_dont_care'
+              : _politicalAffiliationValue == -1
+                  ? 'politics_undisclosed'
+                  : [
+                      'politics_left',
+                      'politics_center_left',
+                      'politics_center',
+                      'politics_center_right',
+                      'politics_right'
+                    ][_politicalAffiliationValue.toInt() - 1],
           maxDistance: _distancePreference.round(),
         ));
     TopNotification.show(
@@ -298,8 +368,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       setState(() => _isUploading = true);
 
       try {
-        final publicUrl =
-            await ref.read(uploadServiceProvider).uploadPhotoFromPath(picked.path);
+        final publicUrl = await ref
+            .read(uploadServiceProvider)
+            .uploadPhotoFromPath(picked.path);
         setState(() {
           _photoUrls.add(publicUrl);
           _isUploading = false;
@@ -337,9 +408,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         return StatefulBuilder(
-          builder: (ctx, setModalState) => SizedBox(
-            height: MediaQuery.of(ctx).size.height * 0.92,
-            child: HobbiesStep(
+          builder: (ctx, setModalState) => DraggableScrollableSheet(
+            initialChildSize: 0.5,
+            minChildSize: 0.4,
+            maxChildSize: 0.92,
+            builder: (context, scrollController) => HobbiesStep(
               isModal: true,
               selectedHobbies: tempHobbies,
               onAddHobby: (h) => setModalState(() => tempHobbies.add(h)),
@@ -429,597 +502,749 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                            24,
-                            MediaQuery.of(context).padding.top + 12,
-                            24,
-                            48),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header title only
-                      SizedBox(
-                        height: 50,
-                        child: Center(
-                          child: Text(
-                            t('edit_profile', lang),
-                            style: TrembleTheme.displayFont(
-                              color: textColor,
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
+                        padding: EdgeInsets.fromLTRB(24,
+                            MediaQuery.of(context).padding.top + 20, 24, 48),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 24),
+
+                            // ── Photos ────────────────────────────────────────────
+                            _sectionLabel(t('photos', lang), LucideIcons.camera,
+                                textColor, iconColor),
+                            const SizedBox(height: 10),
+                            _buildPhotoGrid(isDark, textColor, borderColor),
+                            const SizedBox(height: 24),
+
+                            // ── Name ──────────────────────────────────────────────
+                            _sectionLabel(t('name', lang), LucideIcons.user,
+                                textColor, iconColor),
+                            const SizedBox(height: 8),
+                            _buildTextField(_nameController, t('name', lang),
+                                textColor, fillColor),
+                            const SizedBox(height: 24),
+
+                            // ── Location ──────────────────────────────────────────
+                            _sectionLabel(t('location', lang),
+                                LucideIcons.mapPin, textColor, iconColor),
+                            const SizedBox(height: 8),
+                            _buildLocationField(
+                                lang, textColor, fillColor, iconColor, isDark),
+                            const SizedBox(height: 12),
+                            // ── Age / Birth Date ───────────────────────────────────
+                            GestureDetector(
+                              onTap: _showAgePickerModal,
+                              child: Row(
+                                children: [
+                                  if (_birthDate != null) ...[
+                                    _AgePill(
+                                      '🎂 ${calcAge(_birthDate!)}',
+                                      isDark: isDark,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _AgePill(
+                                      zodiacSign(_birthDate!),
+                                      isDark: isDark,
+                                    ),
+                                  ] else
+                                    _AgePill(
+                                      t('set_birthday', lang).isNotEmpty &&
+                                              t('set_birthday', lang) !=
+                                                  'set_birthday'
+                                          ? t('set_birthday', lang)
+                                          : '🎂 Set birthday',
+                                      isDark: isDark,
+                                    ),
+                                  const SizedBox(width: 8),
+                                  Icon(LucideIcons.pencil,
+                                      color: iconColor, size: 14),
+                                ],
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                            const SizedBox(height: 24),
 
-                      // ── Photos ────────────────────────────────────────────
-                      _sectionLabel(t('photos', lang), LucideIcons.camera,
-                          textColor, iconColor),
-                      const SizedBox(height: 10),
-                      _buildPhotoGrid(isDark, textColor, borderColor),
-                      const SizedBox(height: 24),
+                            // ── Gender ────────────────────────────────────────────
+                            _sectionLabel(t('gender', lang), LucideIcons.users,
+                                textColor, iconColor),
+                            const SizedBox(height: 8),
+                            _buildGenderChips(lang, isDark, textColor),
+                            const SizedBox(height: 24),
 
-                      // ── Name ──────────────────────────────────────────────
-                      _sectionLabel(
-                          t('name', lang), LucideIcons.user, textColor, iconColor),
-                      const SizedBox(height: 8),
-                      _buildTextField(_nameController, t('name', lang),
-                          textColor, fillColor),
-                      const SizedBox(height: 24),
+                            // ── Interested In ──────────────────────────────────────
+                            _sectionLabel(t('want_to_meet', lang),
+                                LucideIcons.heart, textColor, iconColor),
+                            const SizedBox(height: 8),
+                            _buildInterestChips(lang, isDark, textColor),
+                            const SizedBox(height: 24),
 
-                      // ── Location ──────────────────────────────────────────
-                      _sectionLabel(t('location', lang), LucideIcons.mapPin,
-                          textColor, iconColor),
-                      const SizedBox(height: 8),
-                      _buildLocationField(lang, textColor, fillColor, iconColor,
-                          isDark),
-                      const SizedBox(height: 24),
-
-                      // ── Gender ────────────────────────────────────────────
-                      _sectionLabel(t('gender', lang), LucideIcons.users,
-                          textColor, iconColor),
-                      const SizedBox(height: 8),
-                      _buildGenderChips(lang, isDark, textColor),
-                      const SizedBox(height: 24),
-
-                      // ── Interested In ──────────────────────────────────────
-                      _sectionLabel(t('want_to_meet', lang), LucideIcons.heart,
-                          textColor, iconColor),
-                      const SizedBox(height: 8),
-                      _buildInterestChips(lang, isDark, textColor),
-                      const SizedBox(height: 24),
-
-                      // ── Status ────────────────────────────────────────────
-                      _sectionLabel(t('status', lang), LucideIcons.briefcase,
-                          textColor, iconColor),
-                      const SizedBox(height: 8),
-                      _buildOccupationChips(lang, isDark, textColor),
-                      const SizedBox(height: 16),
-                      // ── Religion ──────────────────────────────────────────
-                      _sectionLabel(t('religion', lang), LucideIcons.book,
-                          textColor, iconColor),
-                      const SizedBox(height: 8),
-                      _buildPreferencePillRow(
-                        options: [
-                          {'key': 'christianity', 'label': t('christianity', lang)},
-                          {'key': 'islam', 'label': t('islam', lang)},
-                          {'key': 'hinduism', 'label': t('hinduism', lang)},
-                          {'key': 'buddhism', 'label': t('buddhism', lang)},
-                          {'key': 'judaism', 'label': t('judaism', lang)},
-                          {'key': 'agnostic', 'label': t('agnostic', lang)},
-                          {'key': 'atheist', 'label': t('atheist', lang)},
-                        ],
-                        currentValue: _religion,
-                        onChanged: (v) => setState(() => _religion = v),
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 16),
-                      // ── Ethnicity ─────────────────────────────────────────
-                      _sectionLabel(t('ethnicity', lang), LucideIcons.user,
-                          textColor, iconColor),
-                      const SizedBox(height: 8),
-                      _buildPreferencePillRow(
-                        options: [
-                          {'key': 'ethnicity_white', 'label': t('ethnicity_white', lang)},
-                          {'key': 'ethnicity_black', 'label': t('ethnicity_black', lang)},
-                          {'key': 'ethnicity_mixed', 'label': t('ethnicity_mixed', lang)},
-                          {'key': 'ethnicity_asian', 'label': t('ethnicity_asian', lang)},
-                        ],
-                        currentValue: _ethnicity,
-                        onChanged: (v) => setState(() => _ethnicity = v),
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 16),
-                      // ── Hair Color ────────────────────────────────────────
-                      _sectionLabel(t('hair_color', lang), LucideIcons.scissors,
-                          textColor, iconColor),
-                      const SizedBox(height: 8),
-                      _buildPreferencePillRow(
-                        options: [
-                          {'key': 'hair_blonde', 'label': t('hair_blonde', lang)},
-                          {'key': 'hair_brunette', 'label': t('hair_brunette', lang)},
-                          {'key': 'hair_black', 'label': t('hair_black', lang)},
-                          {'key': 'hair_red', 'label': t('hair_red', lang)},
-                          {'key': 'hair_gray_white', 'label': t('hair_gray_white', lang)},
-                          {'key': 'hair_other', 'label': t('hair_other', lang)},
-                        ],
-                        currentValue: _hairColor,
-                        onChanged: (v) => setState(() => _hairColor = v),
-                        isDark: isDark,
-                      ),
-                      const SizedBox(height: 24),
-                      if (_jobStatus != null) ...[
-                        const SizedBox(height: 12),
-                        _buildTextField(
-                          _occupationController,
-                          t(_jobStatus == 'student' ? 'course_of_study' : 'job_title', lang),
-                          textColor,
-                          fillColor,
-                        ),
-                      ],
-                      const SizedBox(height: 20),
-
-                      // ── Smoker ────────────────────────────────────────────
-                      _buildSmokerSwitch(lang, isDark, textColor),
-
-                      Divider(color: borderColor, height: 24),
-
-                      // ── Lifestyle Header (Centered, no icon) ──────────────
-                      Center(
-                        child: Text(
-                          t('lifestyle', lang),
-                          style: GoogleFonts.instrumentSans(
-                            color: textColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // ── Lifestyle: pill rows + modals ─────────────────────
-                      PreferencePillRow(
-                        icon: LucideIcons.zap,
-                        label: t('exercise', lang),
-                        values: [_exerciseHabit],
-                        formatter: (v) => _formatValue(v, lang),
-                        onEdit: () => showPreferenceEditModal(
-                          context: context,
-                          title: t('exercise', lang),
-                          rowIcon: LucideIcons.zap,
-                          options: [
-                            {
-                              'label': t('exercise_active', lang),
-                              'value': 'active',
-                              'icon': LucideIcons.zap,
-                            },
-                            {
-                              'label': t('exercise_sometimes', lang),
-                              'value': 'sometimes',
-                              'icon': LucideIcons.activity,
-                            },
-                            {
-                              'label': t('almost_never', lang),
-                              'value': 'almost_never',
-                              'icon': LucideIcons.moon,
-                            },
-                          ],
-                          currentValue: _exerciseHabit,
-                          onUpdate: (val) => setState(() {
-                            _exerciseHabit = val;
-                            _hasChanges = true;
-                          }),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      PreferencePillRow(
-                        icon: LucideIcons.wine,
-                        label: t('alcohol', lang),
-                        values: [_drinkingHabit],
-                        formatter: (v) => _formatValue(v, lang),
-                        onEdit: () => showPreferenceEditModal(
-                          context: context,
-                          title: t('alcohol', lang),
-                          rowIcon: LucideIcons.wine,
-                          options: [
-                            {
-                              'label': t('drink_never', lang),
-                              'value': 'never',
-                              'icon': LucideIcons.ban,
-                            },
-                            {
-                              'label': t('drink_socially', lang),
-                              'value': 'socially',
-                              'icon': LucideIcons.users,
-                            },
-                            {
-                              'label': t('drink_frequently', lang),
-                              'value': 'frequently',
-                              'icon': LucideIcons.trendingUp,
-                            },
-                          ],
-                          currentValue: _drinkingHabit,
-                          onUpdate: (val) => setState(() {
-                            _drinkingHabit = val;
-                            _hasChanges = true;
-                          }),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      PreferencePillRow(
-                        icon: LucideIcons.moon,
-                        label: t('sleep', lang),
-                        values: [_sleepSchedule],
-                        formatter: (v) => _formatValue(v, lang),
-                        onEdit: () => showPreferenceEditModal(
-                          context: context,
-                          title: t('sleep', lang),
-                          rowIcon: LucideIcons.moon,
-                          options: [
-                            {
-                              'label': t('night_owl', lang),
-                              'value': 'night_owl',
-                              'icon': LucideIcons.moon,
-                            },
-                            {
-                              'label': t('early_bird', lang),
-                              'value': 'early_bird',
-                              'icon': LucideIcons.sun,
-                            },
-                          ],
-                          currentValue: _sleepSchedule,
-                          onUpdate: (val) => setState(() {
-                            _sleepSchedule = val;
-                            _hasChanges = true;
-                          }),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      PreferencePillRow(
-                        icon: LucideIcons.dog,
-                        label: t('pets', lang),
-                        values: [_petPreference],
-                        formatter: (v) => _formatValue(v, lang),
-                        onEdit: () => showPreferenceEditModal(
-                          context: context,
-                          title: t('pets', lang),
-                          rowIcon: LucideIcons.dog,
-                          options: [
-                            {
-                              'label': t('dog_person', lang),
-                              'value': 'dog'
-                            },
-                            {
-                              'label': t('cat_person', lang),
-                              'value': 'cat'
-                            },
-                          ],
-                          currentValue: _petPreference,
-                          onUpdate: (val) => setState(() {
-                            _petPreference = val;
-                            _hasChanges = true;
-                          }),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      PreferencePillRow(
-                        icon: LucideIcons.baby,
-                        label: t('children', lang),
-                        values: [_childrenPreference],
-                        formatter: (v) => _formatValue(v, lang),
-                        onEdit: () => showPreferenceEditModal(
-                          context: context,
-                          title: t('children', lang),
-                          rowIcon: LucideIcons.baby,
-                          options: [
-                            {
-                              'label': t('children_want_someday', lang),
-                              'value': 'want_someday',
-                              'icon': LucideIcons.heart,
-                            },
-                            {
-                              'label': t('children_dont_want', lang),
-                              'value': 'dont_want',
-                              'icon': LucideIcons.ban,
-                            },
-                            {
-                              'label': t('children_have_and_want_more', lang),
-                              'value': 'have_and_want_more',
-                              'icon': LucideIcons.users,
-                            },
-                            {
-                              'label': t('children_have_and_dont_want_more', lang),
-                              'value': 'have_and_dont_want_more',
-                              'icon': LucideIcons.userCheck,
-                            },
-                            {
-                              'label': t('children_not_sure', lang),
-                              'value': 'not_sure',
-                              'icon': LucideIcons.helpCircle,
-                            },
-                          ],
-                          currentValue: _childrenPreference,
-                          onUpdate: (val) => setState(() {
-                            _childrenPreference = val;
-                            _hasChanges = true;
-                          }),
-                        ),
-                      ),
-
-                      Divider(color: borderColor, height: 28),
-
-                      // ── Introvert / Extrovert ─────────────────────────────
-                      Center(
-                        child: _sectionLabel(t('introvert_extrovert', lang),
-                            LucideIcons.brain, textColor, iconColor,
-                            centered: true),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildIntrovertSlider(lang, isDark, subColor),
-
-                      const SizedBox(height: 32),
-
-                      // ── Distance ──────────────────────────────────────────
-                      Center(
-                        child: _sectionLabel(t('distance', lang), LucideIcons.map,
-                            textColor, iconColor,
-                            centered: true, 
-                            onHelp: () => _showDistanceHelp(context)),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildDistanceSlider(lang, isDark, subColor),
-
-                      Divider(color: borderColor, height: 28),
-
-                      // ── Looking for ───────────────────────────────────────
-                      Row(
-                        children: [
-                          Icon(LucideIcons.heart, size: 18, color: iconColor),
-                          const SizedBox(width: 10),
-                          Text(t('looking_for', lang),
-                              style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600)),
-                          const Spacer(),
-                          _multiPill(_lookingFor, lang, isDark, subColor),
-                          const SizedBox(width: 8),
-                          _editCircle(isDark, borderColor, fillColor,
-                              onTap: () => showMultiSelectModal(
+                            // ── Status ────────────────────────────────────────────
+                            _sectionLabel(t('status', lang),
+                                LucideIcons.briefcase, textColor, iconColor),
+                            const SizedBox(height: 8),
+                            _buildOccupationChips(lang, isDark, textColor),
+                            if (_jobStatus != null) ...[
+                              const SizedBox(height: 12),
+                              _buildTextField(
+                                _occupationController,
+                                t(
+                                    _jobStatus == 'student'
+                                        ? 'course_of_study'
+                                        : 'job_title',
+                                    lang),
+                                textColor,
+                                fillColor,
+                              ),
+                            ],
+                            const SizedBox(height: 16),
+                            // ── Details ───────────────────────────────────────────
+                            PreferencePillRow(
+                              icon: LucideIcons.book,
+                              label: t('religion', lang),
+                              values: [_religion],
+                              formatter: (v) => _formatValue(v, lang),
+                              onEdit: () => showPreferenceEditModal(
                                 context: context,
-                                title: t('looking_for', lang),
+                                title: t('religion', lang),
+                                rowIcon: LucideIcons.book,
                                 options: [
                                   {
-                                    'label': t('short_term_fun', lang),
-                                    'value': 'short_term_fun'
+                                    'label': t('christianity', lang),
+                                    'value': 'christianity',
+                                    'icon': IconUtils.getReligionIcon(
+                                        'christianity')
                                   },
                                   {
-                                    'label': t('long_term_partner', lang),
-                                    'value': 'long_term_partner'
+                                    'label': t('islam', lang),
+                                    'value': 'islam',
+                                    'icon': IconUtils.getReligionIcon('islam')
                                   },
                                   {
-                                    'label': t('short_open_long', lang),
-                                    'value': 'short_open_long'
+                                    'label': t('hinduism', lang),
+                                    'value': 'hinduism',
+                                    'icon':
+                                        IconUtils.getReligionIcon('hinduism')
                                   },
                                   {
-                                    'label': t('long_open_short', lang),
-                                    'value': 'long_open_short'
+                                    'label': t('buddhism', lang),
+                                    'value': 'buddhism',
+                                    'icon':
+                                        IconUtils.getReligionIcon('buddhism')
                                   },
                                   {
-                                    'label': t('undecided', lang),
-                                    'value': 'undecided'
+                                    'label': t('judaism', lang),
+                                    'value': 'judaism',
+                                    'icon': IconUtils.getReligionIcon('judaism')
+                                  },
+                                  {
+                                    'label': t('agnostic', lang),
+                                    'value': 'agnostic',
+                                    'icon':
+                                        IconUtils.getReligionIcon('agnostic')
+                                  },
+                                  {
+                                    'label': t('atheist', lang),
+                                    'value': 'atheist',
+                                    'icon': IconUtils.getReligionIcon('atheist')
                                   },
                                 ],
-                                currentValues: _lookingFor,
-                                onSave: (vals) => setState(() {
-                                  _lookingFor = vals;
+                                currentValue: _religion,
+                                onUpdate: (v) => setState(() {
+                                  _religion = v;
                                   _hasChanges = true;
                                 }),
-                              )),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
 
-                      // ── Languages ─────────────────────────────────────────
-                      Row(
-                        children: [
-                          Icon(LucideIcons.languages, size: 18, color: iconColor),
-                          const SizedBox(width: 10),
-                          Text(t('i_speak', lang),
-                              style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600)),
-                          const Spacer(),
-                          _multiPill(_languages, lang, isDark, subColor),
-                          const SizedBox(width: 8),
-                          _editCircle(isDark, borderColor, fillColor,
-                              onTap: () => showMultiSelectModal(
+                            PreferencePillRow(
+                              icon: LucideIcons.user,
+                              label: t('ethnicity', lang),
+                              values: [_ethnicity],
+                              formatter: (v) => _formatValue(v, lang),
+                              onEdit: () => showPreferenceEditModal(
                                 context: context,
-                                title: t('i_speak', lang),
+                                title: t('ethnicity', lang),
+                                rowIcon: LucideIcons.user,
                                 options: [
                                   {
-                                    'label': t('lang_slovenian', lang),
-                                    'value': 'Slovenščina'
+                                    'label': t('ethnicity_white', lang),
+                                    'value': 'ethnicity_white'
                                   },
                                   {
-                                    'label': t('lang_english', lang),
-                                    'value': 'Angleščina'
+                                    'label': t('ethnicity_black', lang),
+                                    'value': 'ethnicity_black'
                                   },
                                   {
-                                    'label': t('lang_german', lang),
-                                    'value': 'Nemščina'
+                                    'label': t('ethnicity_mixed', lang),
+                                    'value': 'ethnicity_mixed'
                                   },
                                   {
-                                    'label': t('lang_italian', lang),
-                                    'value': 'Italijanščina'
-                                  },
-                                  {
-                                    'label': t('lang_french', lang),
-                                    'value': 'Francoščina'
-                                  },
-                                  {
-                                    'label': t('lang_spanish', lang),
-                                    'value': 'Španščina'
-                                  },
-                                  {
-                                    'label': t('lang_croatian', lang),
-                                    'value': 'Hrvaščina'
-                                  },
-                                  {
-                                    'label': t('lang_serbian', lang),
-                                    'value': 'Srbščina'
-                                  },
-                                  {
-                                    'label': t('lang_hungarian', lang),
-                                    'value': 'Madžarščina'
+                                    'label': t('ethnicity_asian', lang),
+                                    'value': 'ethnicity_asian'
                                   },
                                 ],
-                                currentValues: _languages,
-                                onSave: (vals) => setState(() {
-                                  _languages =
-                                      vals.length <= 5 ? vals : vals.sublist(0, 5);
+                                currentValue: _ethnicity,
+                                onUpdate: (v) => setState(() {
+                                  _ethnicity = v;
                                   _hasChanges = true;
                                 }),
-                              )),
-                        ],
-                      ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
 
-                      Divider(color: borderColor, height: 28),
+                            PreferencePillRow(
+                              icon: LucideIcons.scissors,
+                              label: t('hair_color', lang),
+                              values: [_hairColor],
+                              formatter: (v) => _formatValue(v, lang),
+                              onEdit: () => showPreferenceEditModal(
+                                context: context,
+                                title: t('hair_color', lang),
+                                rowIcon: LucideIcons.scissors,
+                                options: [
+                                  {
+                                    'label': t('hair_blonde', lang),
+                                    'value': 'hair_blonde',
+                                    'icon': Icons.circle,
+                                    'iconColor':
+                                        IconUtils.getHairColor('hair_blonde')
+                                  },
+                                  {
+                                    'label': t('hair_brunette', lang),
+                                    'value': 'hair_brunette',
+                                    'icon': Icons.circle,
+                                    'iconColor':
+                                        IconUtils.getHairColor('hair_brunette')
+                                  },
+                                  {
+                                    'label': t('hair_black', lang),
+                                    'value': 'hair_black',
+                                    'icon': Icons.circle,
+                                    'iconColor':
+                                        IconUtils.getHairColor('hair_black')
+                                  },
+                                  {
+                                    'label': t('hair_red', lang),
+                                    'value': 'hair_red',
+                                    'icon': Icons.circle,
+                                    'iconColor':
+                                        IconUtils.getHairColor('hair_red')
+                                  },
+                                  {
+                                    'label': t('hair_gray_white', lang),
+                                    'value': 'hair_gray_white',
+                                    'icon': Icons.circle,
+                                    'iconColor': IconUtils.getHairColor(
+                                        'hair_gray_white')
+                                  },
+                                  {
+                                    'label': t('hair_other', lang),
+                                    'value': 'hair_other',
+                                    'icon': Icons.circle,
+                                    'iconColor':
+                                        IconUtils.getHairColor('hair_other')
+                                  },
+                                ],
+                                currentValue: _hairColor,
+                                onUpdate: (v) => setState(() {
+                                  _hairColor = v;
+                                  _hasChanges = true;
+                                }),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
 
-                      // ── Hobbies ───────────────────────────────────────────
-                      Row(
-                        children: [
-                          Icon(LucideIcons.sparkles, size: 18, color: iconColor),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${t('hobbies', lang)} (${_hobbies.length})',
-                            style: GoogleFonts.instrumentSans(
-                                color: textColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600),
-                          ),
-                          const Spacer(),
-                          _editCircle(isDark, borderColor, fillColor,
-                              onTap: _showHobbiesModal),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      if (_hobbies.isNotEmpty)
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _hobbies
-                              .map((hobby) => Chip(
-                                    label: Text(hobby,
-                                        style: TextStyle(
-                                            color: textColor,
-                                            fontWeight: FontWeight.w500)),
-                                    backgroundColor: fillColor,
-                                    side: BorderSide(color: borderColor),
-                                    shape: const StadiumBorder(),
-                                    deleteIconColor: isDark
-                                        ? Colors.white54
-                                        : Colors.black38,
-                                    onDeleted: () => setState(() {
-                                      _hobbies.remove(hobby);
-                                      _hasChanges = true;
-                                    }),
-                                  ))
-                              .toList(),
+                            // ── Smoker & Children ─────────────────────────────────
+                            _buildSmokerSwitch(lang, isDark, textColor),
+                            _buildChildrenSwitch(lang, isDark, textColor),
+
+                            Divider(color: borderColor, height: 24),
+
+                            // ── Lifestyle Header (Centered, no icon) ──────────────
+                            Center(
+                              child: Text(
+                                t('lifestyle', lang),
+                                style: GoogleFonts.instrumentSans(
+                                  color: textColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            // ── Lifestyle: pill rows + modals ─────────────────────
+                            PreferencePillRow(
+                              icon: LucideIcons.zap,
+                              label: t('exercise', lang),
+                              values: [_exerciseHabit],
+                              formatter: (v) => _formatValue(v, lang),
+                              onEdit: () => showPreferenceEditModal(
+                                context: context,
+                                title: t('exercise', lang),
+                                rowIcon: LucideIcons.zap,
+                                options: [
+                                  {
+                                    'label': t('exercise_active', lang),
+                                    'value': 'active',
+                                    'icon': LucideIcons.zap,
+                                  },
+                                  {
+                                    'label': t('exercise_sometimes', lang),
+                                    'value': 'sometimes',
+                                    'icon': LucideIcons.activity,
+                                  },
+                                  {
+                                    'label': t('almost_never', lang),
+                                    'value': 'almost_never',
+                                    'icon': LucideIcons.moon,
+                                  },
+                                ],
+                                currentValue: _exerciseHabit,
+                                onUpdate: (val) => setState(() {
+                                  _exerciseHabit = val;
+                                  _hasChanges = true;
+                                }),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            PreferencePillRow(
+                              icon: LucideIcons.wine,
+                              label: t('alcohol', lang),
+                              values: [_drinkingHabit],
+                              formatter: (v) => _formatValue(v, lang),
+                              onEdit: () => showPreferenceEditModal(
+                                context: context,
+                                title: t('alcohol', lang),
+                                rowIcon: LucideIcons.wine,
+                                options: [
+                                  {
+                                    'label': t('drink_never', lang),
+                                    'value': 'never',
+                                    'icon': LucideIcons.ban,
+                                  },
+                                  {
+                                    'label': t('drink_socially', lang),
+                                    'value': 'socially',
+                                    'icon': LucideIcons.users,
+                                  },
+                                  {
+                                    'label': t('drink_frequently', lang),
+                                    'value': 'frequently',
+                                    'icon': LucideIcons.trendingUp,
+                                  },
+                                ],
+                                currentValue: _drinkingHabit,
+                                onUpdate: (val) => setState(() {
+                                  _drinkingHabit = val;
+                                  _hasChanges = true;
+                                }),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            PreferencePillRow(
+                              icon: LucideIcons.moon,
+                              label: t('sleep', lang),
+                              values: [_sleepSchedule],
+                              formatter: (v) => _formatValue(v, lang),
+                              onEdit: () => showPreferenceEditModal(
+                                context: context,
+                                title: t('sleep', lang),
+                                rowIcon: LucideIcons.moon,
+                                options: [
+                                  {
+                                    'label': t('night_owl', lang),
+                                    'value': 'night_owl',
+                                    'icon': LucideIcons.moon,
+                                  },
+                                  {
+                                    'label': t('early_bird', lang),
+                                    'value': 'early_bird',
+                                    'icon': LucideIcons.sun,
+                                  },
+                                ],
+                                currentValue: _sleepSchedule,
+                                onUpdate: (val) => setState(() {
+                                  _sleepSchedule = val;
+                                  _hasChanges = true;
+                                }),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            PreferencePillRow(
+                              icon: _petPreference == 'cat'
+                                  ? LucideIcons.cat
+                                  : LucideIcons.dog,
+                              label: t('pets', lang),
+                              values: [_petPreference],
+                              formatter: (v) => _formatValue(v, lang),
+                              onEdit: () => showPreferenceEditModal(
+                                context: context,
+                                title: t('pets', lang),
+                                rowIcon: LucideIcons.dog,
+                                options: [
+                                  {
+                                    'label': t('dog_person', lang),
+                                    'value': 'dog',
+                                    'icon': LucideIcons.dog
+                                  },
+                                  {
+                                    'label': t('cat_person', lang),
+                                    'value': 'cat',
+                                    'icon': LucideIcons.cat
+                                  },
+                                ],
+                                currentValue: _petPreference,
+                                onUpdate: (val) => setState(() {
+                                  _petPreference = val;
+                                  _hasChanges = true;
+                                }),
+                                allowOther: true,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            PreferencePillRow(
+                              icon: LucideIcons.baby,
+                              label: t('children', lang),
+                              values: [_childrenPreference],
+                              formatter: (v) => _formatValue(v, lang),
+                              onEdit: () => showPreferenceEditModal(
+                                context: context,
+                                title: t('children', lang),
+                                rowIcon: LucideIcons.baby,
+                                options: [
+                                  {
+                                    'label': t('children_want_someday', lang),
+                                    'value': 'want_someday',
+                                    'icon': LucideIcons.heart,
+                                  },
+                                  {
+                                    'label': t('children_dont_want', lang),
+                                    'value': 'dont_want',
+                                    'icon': LucideIcons.ban,
+                                  },
+                                  {
+                                    'label':
+                                        t('children_have_and_want_more', lang),
+                                    'value': 'have_and_want_more',
+                                    'icon': LucideIcons.users,
+                                  },
+                                  {
+                                    'label': t(
+                                        'children_have_and_dont_want_more',
+                                        lang),
+                                    'value': 'have_and_dont_want_more',
+                                    'icon': LucideIcons.userCheck,
+                                  },
+                                  {
+                                    'label': t('children_not_sure', lang),
+                                    'value': 'not_sure',
+                                    'icon': LucideIcons.helpCircle,
+                                  },
+                                ],
+                                currentValue: _childrenPreference,
+                                onUpdate: (val) => setState(() {
+                                  _childrenPreference = val;
+                                  _hasChanges = true;
+                                }),
+                              ),
+                            ),
+
+                            Divider(color: borderColor, height: 28),
+
+                            // ── Introvert / Extrovert ─────────────────────────────
+                            Center(
+                              child: _sectionLabel(
+                                  t('introvert_extrovert', lang),
+                                  LucideIcons.brain,
+                                  textColor,
+                                  iconColor,
+                                  centered: true),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildIntrovertSlider(lang, isDark, subColor),
+                            const SizedBox(height: 20),
+                            _sectionLabel(t('political_affiliation', lang),
+                                LucideIcons.flag, textColor, iconColor,
+                                centered: true),
+                            const SizedBox(height: 8),
+                            _buildPoliticalSlider(lang, isDark, subColor),
+                            const SizedBox(height: 32),
+
+                            // ── Distance ──────────────────────────────────────────
+                            Center(
+                              child: _sectionLabel(t('distance', lang),
+                                  LucideIcons.map, textColor, iconColor,
+                                  centered: true,
+                                  onHelp: () => _showDistanceHelp(context)),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildDistanceSlider(lang, isDark, subColor),
+
+                            Divider(color: borderColor, height: 28),
+
+                            // ── Looking for ───────────────────────────────────────
+                            Row(
+                              children: [
+                                Icon(LucideIcons.heart,
+                                    size: 18, color: iconColor),
+                                const SizedBox(width: 10),
+                                Text(t('looking_for', lang),
+                                    style: TextStyle(
+                                        color: textColor,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600)),
+                                const Spacer(),
+                                _multiPill(_lookingFor, lang, isDark, subColor),
+                                const SizedBox(width: 8),
+                                _editCircle(isDark, borderColor, fillColor,
+                                    onTap: () => showMultiSelectModal(
+                                          context: context,
+                                          title: t('looking_for', lang),
+                                          options: [
+                                            {
+                                              'label':
+                                                  t('short_term_fun', lang),
+                                              'value': 'short_term_fun'
+                                            },
+                                            {
+                                              'label':
+                                                  t('long_term_partner', lang),
+                                              'value': 'long_term_partner'
+                                            },
+                                            {
+                                              'label':
+                                                  t('short_open_long', lang),
+                                              'value': 'short_open_long'
+                                            },
+                                            {
+                                              'label':
+                                                  t('long_open_short', lang),
+                                              'value': 'long_open_short'
+                                            },
+                                            {
+                                              'label': t('undecided', lang),
+                                              'value': 'undecided'
+                                            },
+                                          ],
+                                          currentValues: _lookingFor,
+                                          onSave: (vals) => setState(() {
+                                            _lookingFor = vals;
+                                            _hasChanges = true;
+                                          }),
+                                        )),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+
+                            // ── Languages ─────────────────────────────────────────
+                            Row(
+                              children: [
+                                Icon(LucideIcons.languages,
+                                    size: 18, color: iconColor),
+                                const SizedBox(width: 10),
+                                Text(t('i_speak', lang),
+                                    style: TextStyle(
+                                        color: textColor,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600)),
+                                const Spacer(),
+                                _multiPill(_languages, lang, isDark, subColor),
+                                const SizedBox(width: 8),
+                                _editCircle(isDark, borderColor, fillColor,
+                                    onTap: () => showMultiSelectModal(
+                                          context: context,
+                                          title: t('i_speak', lang),
+                                          options: [
+                                            {
+                                              'label':
+                                                  t('lang_slovenian', lang),
+                                              'value': 'Slovenščina'
+                                            },
+                                            {
+                                              'label': t('lang_english', lang),
+                                              'value': 'Angleščina'
+                                            },
+                                            {
+                                              'label': t('lang_german', lang),
+                                              'value': 'Nemščina'
+                                            },
+                                            {
+                                              'label': t('lang_italian', lang),
+                                              'value': 'Italijanščina'
+                                            },
+                                            {
+                                              'label': t('lang_french', lang),
+                                              'value': 'Francoščina'
+                                            },
+                                            {
+                                              'label': t('lang_spanish', lang),
+                                              'value': 'Španščina'
+                                            },
+                                            {
+                                              'label': t('lang_croatian', lang),
+                                              'value': 'Hrvaščina'
+                                            },
+                                            {
+                                              'label': t('lang_serbian', lang),
+                                              'value': 'Srbščina'
+                                            },
+                                            {
+                                              'label':
+                                                  t('lang_hungarian', lang),
+                                              'value': 'Madžarščina'
+                                            },
+                                          ],
+                                          currentValues: _languages,
+                                          onSave: (vals) => setState(() {
+                                            _languages = vals.length <= 5
+                                                ? vals
+                                                : vals.sublist(0, 5);
+                                            _hasChanges = true;
+                                          }),
+                                        )),
+                              ],
+                            ),
+
+                            Divider(color: borderColor, height: 28),
+
+                            // ── Hobbies ───────────────────────────────────────────
+                            Row(
+                              children: [
+                                Icon(LucideIcons.sparkles,
+                                    size: 18, color: iconColor),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${t('hobbies', lang)} (${_hobbies.length})',
+                                  style: GoogleFonts.instrumentSans(
+                                      color: textColor,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                const Spacer(),
+                                _editCircle(isDark, borderColor, fillColor,
+                                    onTap: _showHobbiesModal),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            if (_hobbies.isNotEmpty)
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _hobbies
+                                    .map((hobby) => Chip(
+                                          label: Text(hobby,
+                                              style: TextStyle(
+                                                  color: textColor,
+                                                  fontWeight: FontWeight.w500)),
+                                          backgroundColor: fillColor,
+                                          side: BorderSide(color: borderColor),
+                                          shape: const StadiumBorder(),
+                                          deleteIconColor: isDark
+                                              ? Colors.white54
+                                              : Colors.black38,
+                                          onDeleted: () => setState(() {
+                                            _hobbies.remove(hobby);
+                                            _hasChanges = true;
+                                          }),
+                                        ))
+                                    .toList(),
+                              ),
+
+                            const SizedBox(height: 30),
+
+                            // ── Save button ───────────────────────────────────────
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _hasChanges ? _saveChanges : null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      _hasChanges ? brandRose : fillColor,
+                                  foregroundColor:
+                                      _hasChanges ? Colors.white : subColor,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30)),
+                                ),
+                                child: Text(t('save_changes', lang),
+                                    style: GoogleFonts.instrumentSans(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
+                              ),
+                            ),
+                            const SizedBox(height: 40),
+                          ],
                         ),
-
-
-                      const SizedBox(height: 30),
-
-                      // ── Save button ───────────────────────────────────────
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _hasChanges ? _saveChanges : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _hasChanges ? brandRose : fillColor,
-                            foregroundColor:
-                                _hasChanges ? Colors.white : subColor,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30)),
-                          ),
-                          child: Text(t('save_changes', lang),
-                              style: GoogleFonts.instrumentSans(
-                                  fontWeight: FontWeight.bold, fontSize: 16)),
-                        ),
                       ),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
+              // --- Floating Header Content ---
+              ValueListenableBuilder<bool>(
+                valueListenable: _isHeaderVisible,
+                builder: (context, isVisible, _) {
+                  final topPadding = MediaQuery.of(context).padding.top;
+                  final headerHeight = topPadding + 62;
+
+                  return AnimatedPositioned(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    top: isVisible ? 0 : -headerHeight,
+                    left: 0,
+                    right: 0,
+                    height: headerHeight,
+                    child: ValueListenableBuilder<double>(
+                      valueListenable: _titleOpacity,
+                      builder: (context, opacity, child) {
+                        return TrembleHeader(
+                          title: t('edit_profile', _lang),
+                          titleOpacity: opacity,
+                          onBack: () async {
+                            if (_hasChanges) {
+                              final should = await _onWillPop();
+                              if (should && context.mounted) context.pop();
+                            } else {
+                              context.pop();
+                            }
+                          },
+                          actions: [
+                            if (_hasChanges)
+                              TrembleCircleButton(
+                                icon: LucideIcons.check,
+                                color: brandRose,
+                                onPressed: _saveChanges,
+                              )
+                            else
+                              const SizedBox(width: 48),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             ],
           ),
         ),
-          // --- Floating Header Content ---
-          ValueListenableBuilder<bool>(
-            valueListenable: _isHeaderVisible,
-            builder: (context, isVisible, child) {
-              return AnimatedOpacity(
-                duration: const Duration(milliseconds: 250),
-                opacity: isVisible ? 1.0 : 0.0,
-                child: IgnorePointer(
-                  ignoring: !isVisible,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                        24, MediaQuery.of(context).padding.top + 12, 24, 0),
-                    child: SizedBox(
-                      height: 50,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TrembleBackButton(
-                            onPressed: () async {
-                              if (_hasChanges) {
-                                final should = await _onWillPop();
-                                if (should && context.mounted) context.pop();
-                              } else {
-                                context.pop();
-                              }
-                            },
-                          ),
-                          if (_hasChanges)
-                            TrembleCircleButton(
-                              icon: LucideIcons.check,
-                              color: brandRose,
-                              onPressed: _saveChanges,
-                            )
-                          else
-                            // Empty placeholder to keep the space
-                            const SizedBox(width: 40),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
       ),
-    ),
-  ),
-);
+    );
   }
 
   // ── UI helpers ─────────────────────────────────────────────────────────────
 
-  Widget _sectionLabel(String label, IconData icon, Color textColor, Color iconColor,
+  Widget _sectionLabel(
+      String label, IconData icon, Color textColor, Color iconColor,
       {bool centered = false, VoidCallback? onHelp}) {
     return Row(
-      mainAxisAlignment: centered ? MainAxisAlignment.center : MainAxisAlignment.start,
+      mainAxisAlignment:
+          centered ? MainAxisAlignment.center : MainAxisAlignment.start,
       children: [
         Icon(icon, size: 18, color: iconColor),
         const SizedBox(width: 8),
@@ -1238,47 +1463,62 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         'icon': Icons.female
       },
       {
-        'label': t('gender_other', lang),
+        'label': t('non_binary', lang),
         'value': 'non_binary',
         'icon': Icons.transgender
       },
     ];
-    return Wrap(
-      spacing: 10,
-      children: options.map((opt) {
-        final label = opt['label'] as String;
-        final value = opt['value'] as String;
-        final icon = opt['icon'] as IconData;
-        final sel = _gender == value;
-        return ChoiceChip(
-          avatar: Icon(icon,
-              size: 16,
-              color: sel
-                  ? Colors.black
-                  : (isDark ? Colors.white70 : Colors.black54)),
-          label: Text(label),
-          selected: sel,
-          onSelected: (s) {
-            if (s) {
-              setState(() => _gender = value);
-              _markChanged();
-            }
-          },
-          selectedColor: Theme.of(context).primaryColor,
-          backgroundColor: isDark
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.black.withValues(alpha: 0.06),
-          labelStyle: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.bold),
-          shape: StadiumBorder(
-              side: BorderSide(
-                  color: sel
-                      ? Theme.of(context).primaryColor
-                      : (isDark ? Colors.white24 : Colors.black12))),
-          showCheckmark: false,
-        );
-      }).toList(),
+    return Row(
+      children: [
+        for (int i = 0; i < options.length; i++) ...[
+          ChoiceChip(
+            avatar: Icon(options[i]['icon'] as IconData,
+                size: 16,
+                color: _gender == options[i]['value']
+                    ? Colors.black
+                    : (isDark ? Colors.white70 : Colors.black54)),
+            label: Text(options[i]['label'] as String),
+            selected: _gender == options[i]['value'],
+            onSelected: (s) {
+              if (s) {
+                final value = options[i]['value'] as String;
+                setState(() => _gender = value);
+                _markChanged();
+
+                if (value == 'non_binary') {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(t('gender_nonbinary_popup_title', lang)),
+                      content: Text(t('gender_nonbinary_popup_body', lang)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(t('ok', lang)),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              }
+            },
+            selectedColor: Theme.of(context).primaryColor,
+            backgroundColor: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.06),
+            labelStyle: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.bold),
+            shape: StadiumBorder(
+                side: BorderSide(
+                    color: _gender == options[i]['value']
+                        ? Theme.of(context).primaryColor
+                        : (isDark ? Colors.white24 : Colors.black12))),
+            showCheckmark: false,
+          ),
+          if (i < options.length - 1) const SizedBox(width: 8),
+        ],
+      ],
     );
   }
 
@@ -1380,6 +1620,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
+  Widget _buildChildrenSwitch(String lang, bool isDark, Color textColor) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(t('has_children', lang), style: TextStyle(color: textColor)),
+      value: _hasChildren ?? false,
+      activeThumbColor: Theme.of(context).primaryColor,
+      activeTrackColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+      inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+      onChanged: (val) => setState(() {
+        _hasChildren = val;
+        _hasChanges = true;
+      }),
+    );
+  }
+
   Widget _buildIntrovertSlider(String lang, bool isDark, Color subColor) {
     final percentLabel = _introversionLevel <= 0.5
         ? '${((1.0 - _introversionLevel) * 100).toInt()}% ${t('introvert', lang).toLowerCase()}'
@@ -1445,7 +1700,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           value: _distancePreference.clamp(10, maxDist),
           min: 10,
           max: maxDist,
-          divisions: (maxDist - 10).round(),
+          divisions: (maxDist - 10) ~/ 10,
           activeColor: Theme.of(context).primaryColor,
           inactiveColor: isDark ? Colors.white24 : Colors.black12,
           onChanged: (v) => setState(() {
@@ -1498,45 +1753,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _buildPreferencePillRow({
-    required List<Map<String, String>> options,
-    required String? currentValue,
-    required ValueChanged<String?> onChanged,
-    required bool isDark,
-  }) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: options.map((opt) {
-        final label = opt['label']!;
-        final value = opt['value'] ?? opt['key']!;
-        final sel = currentValue == value;
-        return ChoiceChip(
-          label: Text(label),
-          selected: sel,
-          onSelected: (s) {
-            onChanged(s ? value : null);
-            _hasChanges = true;
-          },
-          selectedColor: Theme.of(context).primaryColor,
-          backgroundColor: isDark
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.black.withValues(alpha: 0.06),
-          labelStyle: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.bold),
-          shape: StadiumBorder(
-              side: BorderSide(
-                  color: sel
-                      ? Theme.of(context).primaryColor
-                      : (isDark ? Colors.white24 : Colors.black12))),
-          showCheckmark: false,
-        );
-      }).toList(),
-    );
-  }
-
-  /// Circular edit pencil button.
   Widget _editCircle(bool isDark, Color borderColor, Color fillColor,
       {required VoidCallback onTap}) {
     return GestureDetector(
@@ -1550,8 +1766,286 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           border: Border.all(color: borderColor),
         ),
         child: Icon(LucideIcons.pencil,
-            size: 14,
-            color: isDark ? Colors.white54 : Colors.black38),
+            size: 14, color: isDark ? Colors.white54 : Colors.black38),
+      ),
+    );
+  }
+
+  Widget _buildPoliticalSlider(String lang, bool isDark, Color subColor) {
+    final labels = [
+      '',
+      t('politics_left', lang),
+      t('politics_center_left', lang),
+      t('politics_center', lang),
+      t('politics_center_right', lang),
+      t('politics_right', lang),
+    ];
+
+    // Scale for display: 1.0 to 5.0
+    // If 0 (Don't care) or -1 (Undisclosed), we show it as Center (3) on slider for now
+    // or we could handle it better. For edit profile, we'll keep it simple.
+    double displayValue = _politicalAffiliationValue;
+    if (displayValue <= 0) displayValue = 3.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(t('politics_left', lang),
+                style: TextStyle(color: subColor, fontSize: 12)),
+            Text(t('politics_right', lang),
+                style: TextStyle(color: subColor, fontSize: 12)),
+          ],
+        ),
+        Slider(
+          value: displayValue,
+          min: 1.0,
+          max: 5.0,
+          divisions: 4,
+          activeColor: Theme.of(context).primaryColor,
+          inactiveColor: isDark ? Colors.white24 : Colors.black12,
+          onChanged: (val) => setState(() {
+            _politicalAffiliationValue = val;
+            _hasChanges = true;
+          }),
+        ),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            labels[displayValue.round()],
+            style: TextStyle(
+              color: Theme.of(context).primaryColor,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  int _calcAge(DateTime birthDate) {
+    final today = DateTime.now();
+    int age = today.year - birthDate.year;
+    if (today.month < birthDate.month ||
+        (today.month == birthDate.month && today.day < birthDate.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  // ── DOB drum-picker — identical UX to registration BirthdayStep ──────────
+  void _showAgePickerModal() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final now = DateTime.now();
+    final maxYear = now.year - 18;
+    final minYear = now.year - 100;
+
+    final initial = _birthDate ?? DateTime(2000, 1, 1);
+    int month = initial.month;
+    int day = initial.day;
+    int year = initial.year.clamp(minYear, maxYear).toInt();
+
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    final sheetBg = isDark ? const Color(0xFF1A1A2E) : Colors.white;
+    final titleColor = isDark ? Colors.white : Colors.black87;
+    final handleColor = isDark ? Colors.white24 : Colors.black26;
+    final brandRose = Theme.of(context).primaryColor;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheet) {
+            final maxDays = DateTime(year, month + 1, 0).day;
+            final validDay = day > maxDays ? maxDays : day;
+
+
+            // ── Main picker sheet ──────────────────────────────────────────────
+            return Container(
+              decoration: BoxDecoration(
+                color: sheetBg,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // drag handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: handleColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    t('date_of_birth', _lang).isNotEmpty &&
+                            t('date_of_birth', _lang) != 'date_of_birth'
+                        ? t('date_of_birth', _lang)
+                        : 'Date of Birth',
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: titleColor,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // ── Drum pickers (Month / Day / Year) ─────────────────────
+                  SizedBox(
+                    height: 200,
+                    child: Row(
+                      children: [
+                        // Month
+                        Expanded(
+                          child: DrumPicker(
+                            items: months,
+                            selectedIndex: month - 1,
+                            looping: true,
+                            onChanged: (i) => setSheet(() => month = i + 1),
+                          ),
+                        ),
+                        // Day
+                        SizedBox(
+                          width: 65,
+                          child: DrumPicker(
+                            items: List.generate(maxDays, (i) => '${i + 1}'),
+                            selectedIndex: (validDay - 1).clamp(0, maxDays - 1),
+                            looping: true,
+                            onChanged: (i) {
+                              final d2 = i + 1;
+                              setSheet(() => day = d2 > maxDays ? maxDays : d2);
+                            },
+                          ),
+                        ),
+                        // Year
+                        SizedBox(
+                          width: 90,
+                          child: DrumPicker(
+                            items: List.generate(
+                                maxYear - minYear + 1, (i) => '${maxYear - i}'),
+                            selectedIndex: maxYear - year,
+                            looping: false,
+                            onChanged: (i) => setSheet(() => year = maxYear - i),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // ── Age + Zodiac chips ─────────────────────────────────────
+                  Row(
+                    children: [
+                      _AgePill(
+                        '🎂 ${calcAge(DateTime(year, month, validDay))}',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 8),
+                      _AgePill(
+                        zodiacSign(DateTime(year, month, validDay)),
+                        isDark: isDark,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  // ── Save / Cancel buttons at bottom ───────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final d = DateTime(year, month, validDay);
+                        final age = calcAge(d);
+                        if (age < 18) return;
+                        setState(() {
+                          _birthDate = d;
+                          _hasChanges = true;
+                        });
+                        Navigator.pop(ctx);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: brandRose,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: Text(
+                        t('save', _lang).isNotEmpty &&
+                                t('save', _lang) != 'save'
+                            ? t('save', _lang).toUpperCase()
+                            : 'SAVE',
+                        style: GoogleFonts.instrumentSans(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      t('cancel', _lang).isNotEmpty &&
+                              t('cancel', _lang) != 'cancel'
+                          ? t('cancel', _lang).toUpperCase()
+                          : 'CANCEL',
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black54,
+                        letterSpacing: 1.2,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                      height: MediaQuery.of(ctx).padding.bottom + 8),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+// ── Small age/zodiac pill ─────────────────────────────────────────────────────
+class _AgePill extends StatelessWidget {
+  const _AgePill(this.label, {required this.isDark});
+  final String label;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.12)
+            : Colors.black.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+            color: isDark ? Colors.white30 : Colors.black.withValues(alpha: 0.12)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }

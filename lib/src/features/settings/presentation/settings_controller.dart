@@ -51,6 +51,10 @@ class SettingsController {
     updateUser((u) => u.copyWith(showPingAnimation: !removePing));
   }
 
+  void togglePingVibration(bool enabled) {
+    updateUser((u) => u.copyWith(isPingVibrationEnabled: enabled));
+  }
+
   // ── Toggle: gender-based color theming ────────────────────────────────────
 
   void toggleGenderBasedColor(bool enabled) {
