@@ -38,10 +38,11 @@ class PreferencePillRow extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subColor = isDark ? Colors.white70 : Colors.black54;
-    final pillBg = isDark
-        ? Colors.white.withValues(alpha: 0.1)
-        : Colors.black.withValues(alpha: 0.06);
-    final pillBorder = isDark ? Colors.white24 : Colors.black12;
+    final pillBg =
+        isDark ? const Color(0xFF2A2A28) : Colors.black.withValues(alpha: 0.06);
+    final pillBorder = isDark
+        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.25)
+        : Colors.black12;
     final iconColor = isDark ? Colors.white70 : Colors.black45;
     final editIconColor = isDark ? Colors.white54 : Colors.black38;
 

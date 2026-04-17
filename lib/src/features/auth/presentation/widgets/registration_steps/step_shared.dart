@@ -213,15 +213,20 @@ class OptionPill extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: selected
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.22)
+              ? Theme.of(context).colorScheme.primary
               : (isDark
-                  ? Colors.white.withValues(alpha: 0.12)
+                  ? const Color(0xFF2A2A28)
                   : Colors.black.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: selected
                 ? Theme.of(context).colorScheme.primary
-                : (isDark ? Colors.white38 : Colors.black26),
+                : (isDark
+                    ? Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.25)
+                    : Colors.black26),
             width: selected ? 2 : 1,
           ),
         ),
@@ -242,7 +247,7 @@ class OptionPill extends StatelessWidget {
               label,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: selected
-                        ? (isDark ? Colors.white : Colors.black)
+                        ? Colors.white
                         : (isDark ? const Color(0xDDFFFFFF) : Colors.black87),
                     fontSize: 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.w500,
