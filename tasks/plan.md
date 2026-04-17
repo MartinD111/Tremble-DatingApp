@@ -1,17 +1,17 @@
-# Plan ID: 20260417-bugfix-wave-profile
+# Plan ID: 20260418-security-ui-polish
 Risk Level: MEDIUM
-Founder Approval Required: NO
-Branch: feature/bugfix-wave-profile
+Founder Approval Required: YES (for Security Rules)
+Branch: feature/security-ui-polish
 
-1. OBJECTIVE — Fix broken greeting logic (BUG-001) and enable profile saving (BUG-002).
-2. SCOPE — `lib/src/features/matches/data/match_repository.dart`, `functions/src/modules/users/users.schema.ts`
+1. OBJECTIVE — Enforce Firebase App Check for production hardening and polish the Match/Map UX.
+2. SCOPE — `functions/`, `lib/src/features/match/`, `lib/src/features/map/`, `main.dart`
 3. STEPS —
-    - **MatchRepository**: Replace `sendGreeting` Cloud Function call (legacy) with direct write to `waves` collection via `WaveRepository.sendWave()`.
-    - **Cloud Functions**: Update `updateProfileSchema` in `users.schema.ts` to include missing fields (`gender`, `introvertScale`, `hasChildren`, etc.) and ensure compatibility with current mobile app payload.
-    - **Verification**: Run `npm run build` in functions and `flutter analyze` in mobile app.
-4. RISKS & TRADEOFFS — Backend changes require deployment. Strict schema is maintained for security.
+    - **Security**: Activate App Check in Flutter and enable enforcement in Cloud Functions middlware.
+    - **Match UI**: Redesign the MatchDialog to use branded Glassmorphism and high-fidelity typography.
+    - **Map UI**: Implement the 3-state zoom logic for city-level and country-level pulse data.
+    - **Verification**: Zero analysis issues and manual verification of App Check token status on physical device.
+4. RISKS & TRADEOFFS — App Check may block old clients. We must register all dev devices first.
 5. VERIFICATION —
     - `npm run build` (functions)
     - `flutter analyze`
-    - Manual test of profile save.
-
+    - Manual App Check bypass test on unregistered emulator.

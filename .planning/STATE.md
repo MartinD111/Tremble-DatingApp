@@ -38,7 +38,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-18 after v1.1)
 | 5 | Auth & Routing | ✅ Complete |
 | 6 | Brand Alignment | ✅ Complete |
 | 7 | Wave Mechanic + Push Notifications | ✅ Complete |
-| 8 | Paywall / Tremble Pro | ⏳ Not started |
+| 8 | Paywall / Tremble Pro | ⛔ SKIPPED — legal reasons (RevenueCat deferred) |
 | 9 | Security Hardening & GDPR | 🟡 In progress (10-01 GDPR fix deployed to tremble-dev) |
 | 10 | Launch Polish & Store Deploy | ⏳ Not started |
 
@@ -55,7 +55,10 @@ D-25: 40+ hardcoded Slovenian strings | D-26: ugc_action_sheet white bg | D-27: 
 
 ## Next Action
 
-Start v1.2 milestone — kickoff Phase 8 (Paywall / Tremble Pro). Both founders required at kickoff. Use `/gsd:new-milestone` or `/gsd:plan-phase 8`.
+Phase 8 (Paywall) SKIPPED — legal reasons. Start Phase 9 (Security Hardening):
+1. `mkdir -p .planning/phases/09-security-hardening-gdpr`
+2. `/gsd:plan-phase 9 --skip-research` — 6 req IDs: SEC-01…SEC-06
+3. Then Phase C tasks (TASK-003, TASK-007, TASK-008) + D-27 cleanup
 
 ---
 *Last updated: 2026-04-18 — v1.1 milestone archived. Starting v1.2.*

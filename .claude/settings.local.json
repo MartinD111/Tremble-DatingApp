@@ -44,7 +44,8 @@
       "Bash(python3 -c ':*)",
       "Bash(keytool -list -v -keystore \"C:/Users/marti/.android/debug.keystore\" -alias androiddebugkey -storepass android -keypass android)",
       "Skill(gsd:audit-milestone)",
-      "Skill(gsd:complete-milestone)"
+      "Skill(gsd:complete-milestone)",
+      "Bash(git tag -a v1.1 -m ':*)"
     ]
   }
 }
