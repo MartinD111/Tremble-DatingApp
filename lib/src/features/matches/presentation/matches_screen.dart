@@ -11,6 +11,7 @@ import 'package:tremble/src/features/match/application/match_service.dart';
 import 'package:tremble/src/features/match/domain/match.dart' as wave_match;
 import 'package:tremble/src/features/safety/presentation/widgets/ugc_action_sheet.dart';
 import 'package:tremble/src/core/theme.dart';
+import 'package:tremble/src/core/translations.dart';
 
 class MatchesScreen extends ConsumerStatefulWidget {
   const MatchesScreen({super.key});
@@ -45,6 +46,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
   }
 
   void _showHelpDialog() {
+    final lang = ref.read(appLanguageProvider);
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -59,7 +61,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                   color: Theme.of(context).primaryColor, size: 40),
               const SizedBox(height: 16),
               Text(
-                'O strani Ljudje',
+                t('matches_help_title', lang),
                 style: GoogleFonts.instrumentSans(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -67,10 +69,10 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Tukaj vidiš vse ljudi, ki si jih srečal/-a v resničnem življenju (preko radarja) in s katerimi sta si oba pomahala oz. si bila všeč.',
+              Text(
+                t('matches_help_body', lang),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 15,
                   height: 1.5,
@@ -80,7 +82,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
-                  'Razumem',
+                  t('ok', lang),
                   style: TextStyle(
                     color: Theme.of(context).primaryColor,
                     fontWeight: FontWeight.bold,
@@ -100,6 +102,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
     final activeMatchesAsync = ref.watch(activeMatchesStreamProvider);
     final user = ref.watch(authStateProvider);
     final isPremium = user?.isPremium == true;
+    final lang = ref.watch(appLanguageProvider);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
@@ -120,7 +123,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                 alignment: Alignment.center,
                 children: [
                   Text(
-                    'Ljudje',
+                    t('matches_title', lang),
                     style: TrembleTheme.displayFont(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -228,14 +231,11 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                         children: [
                           Icon(LucideIcons.users, size: 48, color: dimColor),
                           const SizedBox(height: 12),
-                          Text('Ni matchev',
-                              style: GoogleFonts.instrumentSans(
-                                  color: subtextColor, fontSize: 16)),
-                          const SizedBox(height: 6),
                           Text(
-                            'Ko srečaš nekoga v bližini in si oba pošljete pozdrav,\npridejo tukaj.',
+                            t('no_matches', lang),
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: dimColor, fontSize: 13),
+                            style: GoogleFonts.instrumentSans(
+                                color: subtextColor, fontSize: 16),
                           ),
                         ],
                       ),
