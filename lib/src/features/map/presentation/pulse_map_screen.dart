@@ -114,9 +114,9 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.42, // Adjusted to show exactly the events list
-        minChildSize: 0.42,
-        maxChildSize: 0.6, // Allow some expansion but not full screen
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
         expand: false,
         builder: (_, scrollController) => Container(
           decoration: BoxDecoration(
