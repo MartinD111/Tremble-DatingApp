@@ -7,6 +7,7 @@ class Match {
   final List<String> seenBy;
   final String status; // 'pending', 'found', 'expired'
   final bool isFound;
+  final Map<String, bool> gestures;
 
   Match({
     required this.id,
@@ -15,7 +16,11 @@ class Match {
     required this.seenBy,
     this.status = 'pending',
     this.isFound = false,
+    this.gestures = const {},
   });
+
+  bool get isMutual => gestures.length >= 2;
+  bool hasWaved(String uid) => gestures.containsKey(uid);
 
   factory Match.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -26,6 +31,7 @@ class Match {
       seenBy: List<String>.from(data['seenBy'] ?? []),
       status: data['status'] ?? 'pending',
       isFound: data['isFound'] ?? false,
+      gestures: Map<String, bool>.from(data['gestures'] ?? {}),
     );
   }
 

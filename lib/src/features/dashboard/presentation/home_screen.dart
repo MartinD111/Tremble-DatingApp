@@ -166,7 +166,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final bool isPremium = user?.isPremium == true;
 
     // ── Active Search State ──────────────────────────────────────────────
-    final activeMatch = ref.watch(currentSearchProvider).valueOrNull;
+    final activeMatch = ref.watch(currentSearchProvider);
+
 
     // Define Screens and Nav Items
     final List<Widget> screens;

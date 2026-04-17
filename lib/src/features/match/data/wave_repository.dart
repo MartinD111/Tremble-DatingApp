@@ -21,6 +21,17 @@ class WaveRepository {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+  
+  /// Performs a gesture (Greet/Accept) on a match document.
+  Future<void> sendGesture(String matchId) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    await _firestore.collection('matches').doc(matchId).update({
+      'gestures.${currentUser.uid}': true,
+      'lastUpdatedAt': FieldValue.serverTimestamp(),
+    });
+  }
 
   /// Označi match kot viden s strani trenutnega uporabnika.
   Future<void> markMatchAsSeen(String matchId) async {

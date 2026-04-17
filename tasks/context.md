@@ -1,17 +1,21 @@
-## Session State — 2026-04-15 18:15
-- Active Task: ADR-001 (BLE background service integration)
-- Environment: Dev (tremble-dev)
-- Modified Files: `background_service.dart`, `radar_search_overlay.dart`, `home_screen.dart`, `matches_screen.dart`, `match_service.dart`
-- Open Problems: SEC-001 (App Check enforcement)
-- System Status: Build passing. Zero analyze errors.
+## Session State — 2026-04-15 23:00
+- Active Task: Handoff Preparation for Aleksandar
+- Environment: Dev
+- Modified Files:
+    - tasks/context.md
+    - tasks/blockers.md
+- Open Problems: Critical Data Persistence & UI Alignment (See BLOCKER-002)
+- System Status: Functional issues detected in matching logic and Firebase integration.
 
 ## Session Handoff
-- Completed:
-    - **ADR-001 Resolved**: Successfully integrated `flutter_blue_plus` into `BackgroundService` for real PROXIMITY scanning and advertising.
-    - **Found Button Logic**: Implemented "Found!" primary action in `RadarSearchOverlay` to mark matches as discovered.
-    - **Stabilization**: Fixed several regression errors (missing brackets, variable shadowing, type mismatches) introduced during ADR-001 cleanup.
-    - **Quality**: Successfully ran `build_runner` and reached a clean state in `flutter analyze`.
-- In Progress: None.
-- Blocked: None (ADR-001 resolved).
-- Next Action: Resolve SEC-001 (Enforce Firebase App Check in Cloud Functions).
-
+- Completed: 
+    - Documented critical functional blockers for handoff.
+    - Identified matching logic discrepancies and Firebase persistence failures.
+- In Progress:
+    - Transitioning task to Aleksandar for manual UI overhaul and backend debugging.
+- Next Action: 
+    1. Fix match logic and timer.
+    2. Manually position "My Profile" and "Edit Profile" (stop using AI for layout here).
+    3. Debug image/hobby saving (Firestore).
+    4. Fix "Pozdrav" Firebase error and "Ljudje" saving.
+    5. Restore Map visibility and replace Radar with Logo.

@@ -8,7 +8,8 @@ class TrembleHeader extends StatelessWidget {
   final String title;
   final VoidCallback? onBack;
   final List<Widget>? actions;
-  final double titleOpacity; // Applied to title and buttons for scroll-aware fading
+  final double titleOpacity; // Applied to title
+  final double buttonsOpacity; // Applied to buttons for scroll-aware fading
   final bool showBackButton;
 
   const TrembleHeader({
@@ -17,6 +18,7 @@ class TrembleHeader extends StatelessWidget {
     this.onBack,
     this.actions,
     this.titleOpacity = 1.0, // Default to fully visible
+    this.buttonsOpacity = 1.0, // Default to fully visible
     this.showBackButton = true,
   });
 
@@ -36,8 +38,10 @@ class TrembleHeader extends StatelessWidget {
           // Centers the title relative to the entire screen width
           Positioned.fill(
             child: Center(
-              child: Opacity(
+              child: AnimatedOpacity(
                 opacity: titleOpacity,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOut,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 56), // Prevent button overlap
@@ -60,8 +64,10 @@ class TrembleHeader extends StatelessWidget {
           if (showBackButton)
             Align(
               alignment: Alignment.centerLeft,
-              child: Opacity(
-                opacity: titleOpacity,
+              child: AnimatedOpacity(
+                opacity: buttonsOpacity,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOut,
                 child: TrembleBackButton(
                     onPressed: onBack ??
                         () {
@@ -77,8 +83,10 @@ class TrembleHeader extends StatelessWidget {
           if (actions != null)
             Align(
               alignment: Alignment.centerRight,
-              child: Opacity(
-                opacity: titleOpacity,
+              child: AnimatedOpacity(
+                opacity: buttonsOpacity,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOut,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: actions!,

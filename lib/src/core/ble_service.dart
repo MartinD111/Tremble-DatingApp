@@ -2,17 +2,19 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+
 import 'package:battery_plus/battery_plus.dart';
+import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Tremble BLE Service — advertises presence and scans for other Tremble users.
 ///
-/// Protocol:
-///   - Advertises a fixed Tremble Service UUID so other devices can find us.
-///   - Scans for devices advertising the same UUID.
-///   - On detection: writes a `proximity_event` to Firestore.
-///   - Degrades gracefully on Low Power Mode / Battery Saver.
+/// Interaction System v3.0:
+///   - Advertises current User UID so matched partners can find us in real-time.
+///   - Scans for proximity events (background housekeeping).
+///   - High-Frequency mode for active Search Sessions (30m radar games).
+///   - Exposes real-time RSSI stream for distance-based feedback.
 class BleService {
   static final BleService _instance = BleService._internal();
   factory BleService() => _instance;
@@ -24,6 +26,7 @@ class BleService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final Battery _battery = Battery();
+  final FlutterBlePeripheral _peripheral = FlutterBlePeripheral();
 
   StreamSubscription<List<ScanResult>>? _scanSub;
   StreamSubscription<BatteryState>? _batterySub;
@@ -31,11 +34,16 @@ class BleService {
 
   bool _isLowPowerMode = false;
   bool _isRunning = false;
+  bool _isHighFrequency = false;
 
-  // Normal mode: 30s scan every 5 min. Low power: 30s scan every 15 min.
+  // Normal mode: 15s scan every 5 min. Search mode: Continuous 10s scan.
   static const Duration _normalScanInterval = Duration(minutes: 5);
-  static const Duration _lowPowerScanInterval = Duration(minutes: 15);
-  static const Duration _scanDuration = Duration(seconds: 30);
+  static const Duration _highFreqScanInterval = Duration(seconds: 15);
+  static const Duration _scanDuration = Duration(seconds: 15);
+
+  // Proximity tracking
+  final _rssiController = StreamController<Map<String, int>>.broadcast();
+  Stream<Map<String, int>> get proximityStream => _rssiController.stream;
 
   /// Returns current radar mode for UI feedback.
   bool get isLowPowerMode => _isLowPowerMode;
@@ -49,36 +57,69 @@ class BleService {
 
     await _checkBatteryState();
     _listenBatteryChanges();
+    _startAdvertising();
 
-    if (!_isLowPowerMode) {
-      _scheduleScanCycle();
-    } else {
-      // In low power mode: only use Geo (see GeoService), skip BLE
-      // UI will show "Radar in power-saving mode"
-    }
+    _scheduleScanCycle();
   }
 
   void stop() {
     _isRunning = false;
+    _isHighFrequency = false;
     _scanTimer?.cancel();
     _scanSub?.cancel();
     _batterySub?.cancel();
+    _stopAdvertising();
     FlutterBluePlus.stopScan();
+  }
+
+  /// Enables or disables high-frequency scanning during a search session.
+  void setHighFrequencyMode(bool enabled) {
+    if (_isHighFrequency == enabled) return;
+    _isHighFrequency = enabled;
+    
+    // Restart scan cycle with new intervals
+    _scanTimer?.cancel();
+    _scheduleScanCycle();
+  }
+
+  // ─── BLE Advertising (Peripheral) ──────────────────────
+
+  Future<void> _startAdvertising() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    final AdvertiseData advertiseData = AdvertiseData(
+      serviceUuid: trembleServiceUuid,
+      localName: 'Tremble',
+      // Store UID in manufacturer data or service data if supported.
+      // For Tremble, we use the first 16 bytes of UID as a custom ID.
+      manufacturerId: 0xFFFF,
+      manufacturerData: Uint8List.fromList(uid.codeUnits.take(20).toList()),
+    );
+
+    if (await _peripheral.isSupported) {
+      await _peripheral.start(advertiseData: advertiseData);
+      debugPrint('[BleService] Advertising started for UID: $uid');
+    }
+  }
+
+  Future<void> _stopAdvertising() async {
+    await _peripheral.stop();
+    debugPrint('[BleService] Advertising stopped');
   }
 
   // ─── BLE Scanning ─────────────────────────────────────
 
   void _scheduleScanCycle() {
-    final interval =
-        _isLowPowerMode ? _lowPowerScanInterval : _normalScanInterval;
+    final interval = _isHighFrequency 
+        ? _highFreqScanInterval 
+        : (_isLowPowerMode ? Duration(minutes: 15) : _normalScanInterval);
 
-    // Delay the first scan by 3 s so the Android FlutterActivity has finished
-    // binding all plugin channels before FlutterBluePlus.startScan() is called.
-    // Calling startScan() before the Activity is attached causes a
-    // NullPointerException in FlutterBluePlusPlugin.onMethodCall():526.
-    Future.delayed(const Duration(seconds: 3), _runScan);
+    // Immediate first scan
+    _runScan();
+    
     _scanTimer = Timer.periodic(interval, (_) {
-      if (!_isLowPowerMode) _runScan();
+      _runScan();
     });
   }
 
@@ -87,56 +128,46 @@ class BleService {
       final uid = _auth.currentUser?.uid;
       if (uid == null) return;
 
-      // Guard: not all Android devices support BLE.
       final supported = await FlutterBluePlus.isSupported;
-      if (!supported) {
-        debugPrint(
-            '[BleService] BLE not supported on this device — skipping scan');
-        return;
-      }
-
-      // Brief settle delay so the Android Activity binding is fully established
-      // before the platform channel call. This is a secondary guard; the primary
-      // guarantee is that BleService only runs in the main isolate (home_screen.dart).
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Re-check running state — stop() may have been called during the delay.
-      if (!_isRunning) return;
+      if (!supported) return;
 
       final isOn =
           await FlutterBluePlus.adapterState.first == BluetoothAdapterState.on;
       if (!isOn) return;
 
+      // Start scan
       await FlutterBluePlus.startScan(
         withServices: [Guid(trembleServiceUuid)],
-        timeout: _scanDuration,
+        timeout: _isHighFrequency ? Duration(seconds: 12) : _scanDuration,
+        androidUsesFineLocation: true,
       );
 
       _scanSub?.cancel();
       _scanSub = FlutterBluePlus.scanResults.listen((results) {
+        final rssiMap = <String, int>{};
         for (final result in results) {
+          // Identify partner UID from manufacturer data
+          final manufacturerData = result.advertisementData.manufacturerData;
+          if (manufacturerData.isNotEmpty) {
+            final partnerUid = String.fromCharCodes(manufacturerData.values.first);
+            rssiMap[partnerUid] = result.rssi;
+          }
           _onDeviceDetected(uid, result);
         }
+        if (rssiMap.isNotEmpty) {
+          _rssiController.add(rssiMap);
+        }
       });
-    } on PlatformException catch (e) {
-      // Activity not yet bound or BLE hardware unavailable — skip this cycle.
-      // The periodic timer will retry on the next interval.
-      debugPrint('[BleService] scan skipped (${e.code}): ${e.message}');
     } catch (e) {
-      // Catch-all so no BLE error can propagate as an unhandled exception and
-      // stall the router's auth stream.
       debugPrint('[BleService] scan error: $e');
     }
   }
 
   Future<void> _onDeviceDetected(String myUid, ScanResult result) async {
-    // The remote device ID is used as a proxy for the Tremble user ID.
-    // In production: device advertises its Tremble UID in the manufacturer data.
+    if (_isHighFrequency) return; // Skip Firestore logging during high-freq lock session
+    
     final remoteDeviceId = result.device.remoteId.str;
-
     try {
-      // Write proximity event — Cloud Function validates mutual detection
-      // and creates match candidate. TTL policy auto-deletes after 10 minutes.
       await _firestore.collection('proximity_events').add({
         'from': myUid,
         'toDeviceId': remoteDeviceId,
@@ -146,9 +177,7 @@ class BleService {
           DateTime.now().add(const Duration(minutes: 10)),
         ),
       });
-    } catch (_) {
-      // Silently fail — proximity event is best-effort
-    }
+    } catch (_) {}
   }
 
   // ─── Battery Handling ─────────────────────────────────
@@ -168,16 +197,14 @@ class BleService {
       final wasLow = _isLowPowerMode;
       await _checkBatteryState();
 
-      if (wasLow && !_isLowPowerMode) {
-        // Restored from low power → resume BLE scanning
+      if (wasLow != _isLowPowerMode) {
         _scanTimer?.cancel();
         _scheduleScanCycle();
-      } else if (!wasLow && _isLowPowerMode) {
-        // Entered low power → stop BLE scanning, Geo-only continues
-        _scanTimer?.cancel();
-        _scanSub?.cancel();
-        FlutterBluePlus.stopScan();
       }
     });
   }
 }
+
+final bleServiceProvider = Provider<BleService>((ref) {
+  return BleService();
+});

@@ -63,4 +63,35 @@ Despite the previous assessment (Blocker-001), a final review of the codebase an
 - Resolved all static analysis errors in `HomeScreen`, `MatchesScreen`, and `MatchService` caused by the integration.
 - Codebase is now stable and ready for physical device testing.
 
-**Status:** ✅ FULLY RESOLVED (CODE MERGED)
+
+---
+
+## BLOCKER-002 — Critical Functional Failures (Handoff to Aleksandar)
+
+**Date:** 2026-04-15
+**Raised by:** Founder (User)
+**Status:** OPEN
+
+### Reported Issues
+
+1.  **Matching Logic Broken:** Logic for matching needs correction. The timer mechanism (or lack thereof) is not functioning as intended. Physical testing is required to observe current behavior.
+2.  **Profile UI (Manual Alignment Required):** "My Profile" and "Edit Profile" screens require manual layout adjustments. AI-generated layouts (Gemini) are currently failing to meet the visual specification requirements.
+3.  **Hobbies Placement:** Specific hobby placement within "My Profile" needs to be manually corrected.
+4.  **Data Persistence Failure (CRITICAL):**
+    *   User profile images are not saving.
+    *   Hobbies selection is not saving.
+5.  **Firebase API Error — "Pozdrav" (Greet):**
+    *   The "Pozdrav" function is failing due to a Firebase API error.
+    *   Consequently, greeted persons are not being saved to the "Ljudje" (People) list/collection.
+6.  **Map Visibility:** The Tremble Map is currently not visible/rendering.
+7.  **Visual Asset Update:** The Radar icon/animation needs to be replaced with the Tremble logo asset.
+
+### Next Steps for Aleksandar
+
+-   [ ] Verify the matching logic flow and restore the 30-minute timer/session constraint.
+-   [ ] Manually overhaul `lib/src/features/profile/presentation/profile_detail_screen.dart` and `edit_profile_screen.dart` for pixel-perfect positioning.
+-   [ ] Debug Firestore write operations for images and hobbies in `ProfileRepository` or equivalent.
+-   [ ] Investigate and fix the Firebase function/API call for the "Pozdrav" feature.
+-   [ ] Verify map initialization and key configuration.
+-   [ ] Swap Radar pulsing assets with the provided logo asset.
+

@@ -20,6 +20,7 @@ import '../../../shared/ui/top_notification.dart';
 import '../../../shared/ui/discard_changes_modal.dart';
 import '../../../core/upload_service.dart';
 import '../../../core/utils/icon_utils.dart';
+import '../../../core/theme.dart';
 
 import '../../../shared/ui/tremble_circle_button.dart';
 
@@ -41,7 +42,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _isUploading = false;
 
   List<String> _photoUrls = [];
-  final ValueNotifier<double> _titleOpacity = ValueNotifier(1.0);
+  final ValueNotifier<double> _buttonsOpacity = ValueNotifier(1.0);
   String? _gender;
   String? _interestedIn;
   String? _jobStatus;
@@ -65,7 +66,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   List<String> _languages = [];
   double _politicalAffiliationValue = 3.0; // 1-5 spectrum left→right
   DateTime? _birthDate;
-  final ValueNotifier<bool> _isHeaderVisible = ValueNotifier(true);
   double _lastScrollOffset = 0;
 
   String _lang = 'en';
@@ -203,28 +203,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _occupationController.dispose();
     _schoolController.dispose();
     _companyController.dispose();
-    _titleOpacity.dispose();
+    _buttonsOpacity.dispose();
     super.dispose();
   }
 
   bool _onScroll(ScrollNotification notification) {
+    if (notification is! ScrollUpdateNotification) return false;
     final offset = notification.metrics.pixels;
+    final delta = offset - _lastScrollOffset;
 
-    // 1. Title opacity based on position (fades early)
-    final newOpacity = (1.0 - (offset / 60)).clamp(0.0, 1.0);
-    if (_titleOpacity.value != newOpacity) {
-      _titleOpacity.value = newOpacity;
-    }
-
-    // 2. Smart header visibility based on direction
-    if (offset > 100) {
-      if (offset > _lastScrollOffset + 10) {
-        if (_isHeaderVisible.value) _isHeaderVisible.value = false;
-      } else if (offset < _lastScrollOffset - 10) {
-        if (!_isHeaderVisible.value) _isHeaderVisible.value = true;
-      }
-    } else {
-      if (!_isHeaderVisible.value) _isHeaderVisible.value = true;
+    if (offset <= 0) {
+      _buttonsOpacity.value = 1.0;
+    } else if (delta > 2) {
+      // Scrolling down -> fade out
+      _buttonsOpacity.value = 0.0;
+    } else if (delta < -2) {
+      // Scrolling up -> fade in
+      _buttonsOpacity.value = 1.0;
     }
 
     _lastScrollOffset = offset;
@@ -503,11 +498,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(24,
-                            MediaQuery.of(context).padding.top + 20, 24, 48),
+                            MediaQuery.of(context).padding.top + 25, 24, 48),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 24),
+                            Center(
+                              child: Text(
+                                t('edit_profile', lang),
+                                style: TrembleTheme.displayFont(
+                                  color: textColor,
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
 
                             // ── Photos ────────────────────────────────────────────
                             _sectionLabel(t('photos', lang), LucideIcons.camera,
@@ -1113,47 +1118,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             Divider(color: borderColor, height: 28),
 
                             // ── Hobbies ───────────────────────────────────────────
-                            Row(
-                              children: [
-                                Icon(LucideIcons.sparkles,
-                                    size: 18, color: iconColor),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '${t('hobbies', lang)} (${_hobbies.length})',
-                                  style: GoogleFonts.instrumentSans(
-                                      color: textColor,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                                const Spacer(),
-                                _editCircle(isDark, borderColor, fillColor,
-                                    onTap: _showHobbiesModal),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            if (_hobbies.isNotEmpty)
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: _hobbies
-                                    .map((hobby) => Chip(
-                                          label: Text(hobby,
-                                              style: TextStyle(
-                                                  color: textColor,
-                                                  fontWeight: FontWeight.w500)),
-                                          backgroundColor: fillColor,
-                                          side: BorderSide(color: borderColor),
-                                          shape: const StadiumBorder(),
-                                          deleteIconColor: isDark
-                                              ? Colors.white54
-                                              : Colors.black38,
-                                          onDeleted: () => setState(() {
-                                            _hobbies.remove(hobby);
-                                            _hasChanges = true;
-                                          }),
-                                        ))
-                                    .toList(),
+                            Center(
+                              child: Text(
+                                t('hobbies', lang),
+                                style: GoogleFonts.instrumentSans(
+                                    color: textColor,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold),
                               ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildCategorizedHobbies(lang, isDark, textColor, fillColor, borderColor),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: _editCircle(isDark, borderColor, fillColor,
+                                  onTap: _showHobbiesModal),
+                            ),
 
                             const SizedBox(height: 30),
 
@@ -1186,47 +1166,31 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ],
                 ),
               ),
-              // --- Floating Header Content ---
-              ValueListenableBuilder<bool>(
-                valueListenable: _isHeaderVisible,
-                builder: (context, isVisible, _) {
-                  final topPadding = MediaQuery.of(context).padding.top;
-                  final headerHeight = topPadding + 62;
-
-                  return AnimatedPositioned(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    top: isVisible ? 0 : -headerHeight,
-                    left: 0,
-                    right: 0,
-                    height: headerHeight,
-                    child: ValueListenableBuilder<double>(
-                      valueListenable: _titleOpacity,
-                      builder: (context, opacity, child) {
-                        return TrembleHeader(
-                          title: t('edit_profile', _lang),
-                          titleOpacity: opacity,
-                          onBack: () async {
-                            if (_hasChanges) {
-                              final should = await _onWillPop();
-                              if (should && context.mounted) context.pop();
-                            } else {
-                              context.pop();
-                            }
-                          },
-                          actions: [
-                            if (_hasChanges)
-                              TrembleCircleButton(
-                                icon: LucideIcons.check,
-                                color: brandRose,
-                                onPressed: _saveChanges,
-                              )
-                            else
-                              const SizedBox(width: 48),
-                          ],
-                        );
-                      },
-                    ),
+              ValueListenableBuilder<double>(
+                valueListenable: _buttonsOpacity,
+                builder: (context, opacity, child) {
+                  return TrembleHeader(
+                    title: '', // Title is in scrollable content
+                    titleOpacity: 0.0,
+                    buttonsOpacity: opacity,
+                    onBack: () async {
+                      if (_hasChanges) {
+                        final should = await _onWillPop();
+                        if (should && context.mounted) context.pop();
+                      } else {
+                        context.pop();
+                      }
+                    },
+                    actions: [
+                      if (_hasChanges)
+                        TrembleCircleButton(
+                          icon: LucideIcons.check,
+                          color: brandRose,
+                          onPressed: _saveChanges,
+                        )
+                      else
+                        const SizedBox(width: 48),
+                    ],
                   );
                 },
               ),
@@ -2017,6 +1981,141 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           },
         );
       },
+    );
+  }
+
+  static const Map<String, List<String>> _hobbyCategories = {
+    'Active 🏋️': [
+      'Fitnes', 'Pilates', 'Sprehodi', 'Tek', 'Smučanje', 'Snowboarding', 'Plezanje', 'Plavanje'
+    ],
+    'Prosti čas ☕': [
+      'Branje', 'Kava', 'Čaj', 'Kuhanje', 'Filmi', 'Serije', 'Videoigre', 'Glasba'
+    ],
+    'Umetnost 🎨': ['Slikanje', 'Fotografija', 'Pisanje', 'Muzeji', 'Gledališče'],
+    'Potovanja ✈️': [
+      'Izleti', 'Narava', 'Gore', 'Morje', 'Mestna potepanja', 'Kampiranje'
+    ],
+  };
+
+  Widget _buildCategorizedHobbies(String lang, bool isDark, Color textColor,
+      Color fillColor, Color borderColor) {
+    if (_hobbies.isEmpty) return const SizedBox.shrink();
+
+    final categorizedHobbies = <String>{};
+    for (var group in _hobbyCategories.values) {
+      categorizedHobbies.addAll(group);
+    }
+
+    final customHobbies =
+        _hobbies.where((h) => !categorizedHobbies.contains(h)).toList();
+
+    final categoryTabs = <Widget>[];
+
+    for (final entry in _hobbyCategories.entries) {
+      final matched = _hobbies.where((h) => entry.value.contains(h)).toList();
+      if (matched.isEmpty) continue;
+
+      categoryTabs.add(
+        Container(
+          width: 140,
+          margin: const EdgeInsets.only(right: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                entry.key,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.instrumentSans(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                alignment: WrapAlignment.center,
+                children: matched.map((h) => _smallHobbyChip(h, isDark, textColor, fillColor, borderColor)).toList(),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (customHobbies.isNotEmpty) {
+      categoryTabs.add(
+        Container(
+          width: 140,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                t('hobby_other', lang),
+                textAlign: TextAlign.center,
+                style: GoogleFonts.instrumentSans(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                alignment: WrapAlignment.center,
+                children: customHobbies.map((h) => _smallHobbyChip(h, isDark, textColor, fillColor, borderColor)).toList(),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: categoryTabs,
+      ),
+    );
+  }
+
+  Widget _smallHobbyChip(String hobby, bool isDark, Color textColor,
+      Color fillColor, Color borderColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: fillColor,
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            hobby,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () => setState(() {
+              _hobbies.remove(hobby);
+              _hasChanges = true;
+            }),
+            child: Icon(LucideIcons.x, size: 10, color: textColor.withValues(alpha: 0.5)),
+          ),
+        ],
+      ),
     );
   }
 }

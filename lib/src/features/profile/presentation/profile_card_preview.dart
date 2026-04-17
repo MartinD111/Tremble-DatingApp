@@ -1,17 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:go_router/go_router.dart';
-import '../../../shared/ui/glass_card.dart';
+import '../../../core/translations.dart';
+import '../../../core/utils/icon_utils.dart';
+import '../../../core/theme.dart';
+import '../../auth/data/auth_repository.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/tremble_header.dart';
 import '../../../shared/ui/tremble_circle_button.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../settings/presentation/settings_controller.dart';
-import '../../../core/translations.dart';
-import '../../../core/utils/icon_utils.dart';
+
 
 class ProfileCardPreview extends ConsumerStatefulWidget {
   const ProfileCardPreview({super.key});
@@ -23,43 +23,33 @@ class ProfileCardPreview extends ConsumerStatefulWidget {
 class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
   final PageController _photoPageController = PageController();
   int _currentPhotoPage = 0;
-  final ValueNotifier<double> _titleOpacity = ValueNotifier(1.0);
+  final ValueNotifier<double> _buttonsOpacity = ValueNotifier(1.0);
+  double _lastScrollOffset = 0;
 
   @override
   void dispose() {
     _photoPageController.dispose();
-    _titleOpacity.dispose();
+    _buttonsOpacity.dispose();
     super.dispose();
   }
 
   bool _onScroll(ScrollNotification notification) {
+    if (notification is! ScrollUpdateNotification) return false;
     final offset = notification.metrics.pixels;
-    final newOpacity = (1.0 - (offset / 60)).clamp(0.0, 1.0);
-    if (_titleOpacity.value != newOpacity) {
-      _titleOpacity.value = newOpacity;
+    final delta = offset - _lastScrollOffset;
+
+    if (offset <= 0) {
+      _buttonsOpacity.value = 1.0;
+    } else if (delta > 2) {
+      // Scrolling down -> fade out
+      _buttonsOpacity.value = 0.0;
+    } else if (delta < -2) {
+      // Scrolling up -> fade in
+      _buttonsOpacity.value = 1.0;
     }
+
+    _lastScrollOffset = offset;
     return false;
-  }
-
-  SettingsController get _ctrl => ref.read(settingsControllerProvider);
-
-  /// Converts raw stored values to proper display format.
-  /// "want_someday" → "Want someday", "active" → "Active"
-  String _formatValue(String raw, String lang) {
-    // Try translation first
-    final translated = t(raw, lang);
-    // If translation returned a different value, use it (title-cased)
-    if (translated != raw) return _titleCase(translated);
-    // Otherwise clean up the raw value: underscores → spaces, title case
-    return _titleCase(raw.replaceAll('_', ' '));
-  }
-
-  String _titleCase(String s) {
-    if (s.isEmpty) return s;
-    return s.split(' ').map((w) {
-      if (w.isEmpty) return w;
-      return '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}';
-    }).join(' ');
   }
 
   @override
@@ -88,13 +78,21 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
-                        24, MediaQuery.of(context).padding.top + 12, 24, 60),
+                        24, MediaQuery.of(context).padding.top + 25, 24, 60),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Header title scrolling away naturally
-                        const SizedBox(height: 20),
-                        const SizedBox(height: 20),
+                        Center(
+                          child: Text(
+                            t('my_profile', lang),
+                            style: TrembleTheme.displayFont(
+                              color: textColor,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
 
                         // ── Photo gallery ──────────────────────────────────────────
                         ClipRRect(
@@ -331,14 +329,15 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
 
                         const SizedBox(height: 24),
 
+                        // ── Lifestyle Preferences ─────────────────────────
+                        _buildLifestylePreferences(
+                            user, isDark, textColor, subColor, lang),
+
+                        const SizedBox(height: 24),
+
                         // ── Hobbies ────────────────────────────────────────────────
                         if (user.hobbies.isNotEmpty)
-                          ..._buildGroupedHobbies(
-                              user, isDark, textColor, subColor),
-
-                        // ── Lifestyle (editable pill rows) ─────────────────────────
-                        _buildLifestyleSection(
-                            user, isDark, textColor, subColor),
+                          _buildHobbySection(user, isDark, textColor, subColor),
 
                         const SizedBox(height: 24),
                       ],
@@ -350,11 +349,12 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
           ),
           // --- Floating Header Content ---
           ValueListenableBuilder<double>(
-            valueListenable: _titleOpacity,
+            valueListenable: _buttonsOpacity,
             builder: (context, opacity, child) {
               return TrembleHeader(
-                title: 'My Profile',
-                titleOpacity: opacity,
+                title: '', // Title is in content
+                titleOpacity: 0.0,
+                buttonsOpacity: opacity,
                 actions: [
                   TrembleCircleButton(
                     icon: LucideIcons.pencil,
@@ -378,7 +378,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       'Smučanje',
       'Snowboarding',
       'Plezanje',
-      'Plavanje',
+      'Plavanje'
     ],
     'Prosti čas ☕': [
       'Branje',
@@ -388,7 +388,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       'Filmi',
       'Serije',
       'Videoigre',
-      'Glasba',
+      'Glasba'
     ],
     'Umetnost 🎨': [
       'Slikanje',
@@ -398,100 +398,329 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       'Gledališče',
     ],
     'Potovanja ✈️': [
-      'Roadtrips',
-      'Camping',
-      'City breaks',
-      'Backpacking',
+      'Izleti',
+      'Narava',
+      'Gore',
+      'Morje',
+      'Mestna potepanja',
+      'Kampiranje'
     ],
   };
 
-  List<Widget> _buildGroupedHobbies(
-      AuthUser user, bool isDark, Color textColor, Color subColor) {
-    final predefined = _hobbyCategories.values.expand((e) => e).toSet();
-    final customHobbies =
-        user.hobbies.where((h) => !predefined.contains(h)).toList();
-    final widgets = <Widget>[];
+  String _formatChipText(String text) {
+    if (text.isEmpty) return text;
+    // Replace underscores with spaces
+    String processed = text.replaceAll('_', ' ');
+    // Title Case: capitalize every word
+    return processed.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
 
-    for (final entry in _hobbyCategories.entries) {
-      final matched =
-          entry.value.where((h) => user.hobbies.contains(h)).toList();
-      if (matched.isEmpty) continue;
+  Widget _buildLifestylePreferences(
+      AuthUser user, bool isDark, Color textColor, Color subColor, String lang) {
+    final pills = <Widget>[];
 
-      widgets.add(Align(
-        alignment: Alignment.centerLeft,
-        child: Text(entry.key,
-            style: GoogleFonts.instrumentSans(
-                color: subColor, fontSize: 14, fontWeight: FontWeight.w600)),
+    // 1. Basic Lifestyle Traits (Pills)
+    if (user.exerciseHabit != null) {
+      pills.add(_PreferencePill(
+        icon: LucideIcons.zap,
+        label: _formatChipText(t(user.exerciseHabit!, lang)),
       ));
-      widgets.add(const SizedBox(height: 8));
-      widgets.add(Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: matched
-            .map((h) => Chip(
-                  label: Text(h,
-                      style: TextStyle(
-                          color: textColor, fontWeight: FontWeight.w500)),
-                  backgroundColor: (isDark ? Colors.white : Colors.black)
-                      .withValues(alpha: 0.1),
-                  side: BorderSide(
-                      color: (isDark ? Colors.white : Colors.black)
-                          .withValues(alpha: 0.2)),
-                  shape: const StadiumBorder(),
-                ))
-            .toList(),
+    }
+    if (user.drinkingHabit != null) {
+      pills.add(_PreferencePill(
+        icon: LucideIcons.wine,
+        label: _formatChipText(t(user.drinkingHabit!, lang)),
       ));
-      widgets.add(const SizedBox(height: 12));
+    }
+    if (user.isSmoker != null) {
+      pills.add(_PreferencePill(
+        icon: LucideIcons.cigarette,
+        label: _formatChipText(user.isSmoker! ? t('smoker', lang) : t('smoke_no', lang)),
+      ));
+    }
+    if (user.sleepSchedule != null) {
+      pills.add(_PreferencePill(
+        icon: LucideIcons.moon,
+        label: _formatChipText(t(user.sleepSchedule!, lang)),
+      ));
+    }
+    if (user.petPreference != null) {
+      pills.add(_PreferencePill(
+        icon: LucideIcons.dog,
+        label: _formatChipText(t(user.petPreference!, lang)),
+      ));
+    }
+    if (user.childrenPreference != null) {
+      pills.add(_PreferencePill(
+        icon: LucideIcons.baby,
+        label: _formatChipText(t(user.childrenPreference!, lang)),
+      ));
+    }
+    if (user.religion != null) {
+      pills.add(_PreferencePill(
+        icon: IconUtils.getReligionIcon(user.religion!),
+        label: _formatChipText(t(user.religion!, lang)),
+      ));
     }
 
-    if (customHobbies.isNotEmpty) {
-      widgets.add(Align(
-        alignment: Alignment.centerLeft,
-        child: Text('Custom ✨',
-            style: GoogleFonts.instrumentSans(
-                color: subColor, fontSize: 14, fontWeight: FontWeight.w600)),
-      ));
-      widgets.add(const SizedBox(height: 8));
-      widgets.add(Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: customHobbies
-            .map((h) => Chip(
-                  label: Text(h,
-                      style: TextStyle(
-                          color: textColor, fontWeight: FontWeight.w500)),
-                  backgroundColor: (isDark ? Colors.white : Colors.black)
-                      .withValues(alpha: 0.1),
-                  side: BorderSide(
-                      color: (isDark ? Colors.white : Colors.black)
-                          .withValues(alpha: 0.2)),
-                  shape: const StadiumBorder(),
-                ))
-            .toList(),
-      ));
-      widgets.add(const SizedBox(height: 12));
-    }
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(t('lifestyle', lang),
+              style: GoogleFonts.instrumentSans(
+                  color: subColor, fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: pills,
+        ),
+        const SizedBox(height: 24),
 
-    if (widgets.isNotEmpty) {
-      widgets.insert(
-        0,
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Text(t('hobbies', user.appLanguage),
-                style: GoogleFonts.instrumentSans(
-                    color: subColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600)),
+        // 2. Spectrum Indicators (Sliders)
+        _buildSpectrumIndicator(
+          icon: LucideIcons.brain,
+          label: t('personality_type', lang),
+          value: user.introvertScale?.toDouble() ?? 50.0,
+          min: 0,
+          max: 100,
+          leftLabel: t('introvert', lang),
+          rightLabel: t('extrovert', lang),
+          currentText: user.introvertScale != null
+              ? (user.introvertScale! <= 50
+                  ? '${100 - user.introvertScale!}% ${t('introvert', lang)}'
+                  : '${user.introvertScale!}% ${t('extrovert', lang)}')
+              : '',
+          isDark: isDark,
+        ),
+        const SizedBox(height: 32),
+        if (user.politicalAffiliation != null)
+          _buildSpectrumIndicator(
+            icon: LucideIcons.flag,
+            label: t('political_affiliation', lang),
+            value: _getPoliticsValue(user.politicalAffiliation!),
+            min: 1,
+            max: 5,
+            leftLabel: t('politics_left', lang),
+            rightLabel: t('politics_right', lang),
+            currentText: t(user.politicalAffiliation!, lang),
+            isDark: isDark,
+          ),
+      ],
+    ),
+  );
+}
+
+  double _getPoliticsValue(String key) {
+    switch (key) {
+      case 'politics_left':
+        return 1.0;
+      case 'politics_center_left':
+        return 2.0;
+      case 'politics_center':
+        return 3.0;
+      case 'politics_center_right':
+        return 4.0;
+      case 'politics_right':
+        return 5.0;
+      default:
+        return 3.0;
+    }
+  }
+
+  Widget _buildSpectrumIndicator({
+    required IconData icon,
+    required String label,
+    required double value,
+    required double min,
+    required double max,
+    required String leftLabel,
+    required String rightLabel,
+    required String currentText,
+    required bool isDark,
+  }) {
+    final trackColor = isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
+    final accentColor = Theme.of(context).primaryColor;
+    final textColor = isDark ? Colors.white70 : Colors.black54;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Centered Header (Match Edit Profile style)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: accentColor.withValues(alpha: 0.7)),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.instrumentSans(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Range Labels
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(leftLabel, style: TextStyle(color: textColor, fontSize: 12)),
+            Text(rightLabel, style: TextStyle(color: textColor, fontSize: 12)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Progress Track
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              height: 4,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: trackColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            LayoutBuilder(builder: (context, constraints) {
+              final percent = (value - min) / (max - min);
+              final thumbSize = 12.0;
+              final leftOffset = (constraints.maxWidth - thumbSize) * percent;
+              return Container(
+                margin: EdgeInsets.only(left: leftOffset),
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: thumbSize,
+                  height: thumbSize,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withValues(alpha: 0.4),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Selected Value Text (Bold)
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            currentText,
+            style: GoogleFonts.instrumentSans(
+              color: accentColor,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-      );
-      widgets.add(const SizedBox(height: 12));
-    }
-
-    return widgets;
+      ],
+    );
   }
+
+  Widget _buildHobbySection(
+      AuthUser user, bool isDark, Color textColor, Color subColor) {
+    final lang = user.appLanguage;
+    final userHobbies = user.hobbies.toList();
+    final categorizedHobbies = _hobbyCategories.values.expand((e) => e).toSet();
+    final customHobbies = userHobbies.where((h) => !categorizedHobbies.contains(h)).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(t('hobbies', lang),
+            style: GoogleFonts.instrumentSans(
+                color: subColor, fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final entry in _hobbyCategories.entries) ...[
+                if (userHobbies.any((h) => entry.value.contains(h)))
+                  Container(
+                    width: 140,
+                    margin: const EdgeInsets.only(right: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          entry.key,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.instrumentSans(
+                            color: subColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.center,
+                          children: entry.value
+                              .where((h) => userHobbies.contains(h))
+                              .map((h) => _PreferencePill(label: _formatChipText(h)))
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+              if (customHobbies.isNotEmpty)
+                Container(
+                  width: 140,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        t('hobby_other', lang),
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.instrumentSans(
+                          color: subColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: customHobbies
+                            .map((h) => _PreferencePill(label: _formatChipText(h)))
+                            .toList(),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
 
   Widget _buildInfoBadges(
       AuthUser user, bool isDark, Color subColor, Color iconColor) {
@@ -501,20 +730,6 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     if (user.gender != null) {
       badges.add(
           _badge(LucideIcons.user, user.gender!, isDark, subColor, iconColor));
-    }
-    if (user.isSmoker == true) {
-      badges.add(_badge(LucideIcons.cigarette, t('smoker', lang), isDark,
-          subColor, iconColor));
-    }
-    if (user.politicalAffiliation != null &&
-        user.politicalAffiliation != 'politics_dont_care' &&
-        user.politicalAffiliation != 'politics_undisclosed') {
-      badges.add(_badge(LucideIcons.flag, t(user.politicalAffiliation!, lang),
-          isDark, subColor, iconColor));
-    }
-    if (user.religion != null) {
-      badges.add(_badge(IconUtils.getReligionIcon(user.religion!),
-          t(user.religion!, lang), isDark, subColor, iconColor));
     }
     if (user.hairColor != null) {
       badges.add(_badge(Icons.circle, t(user.hairColor!, lang), isDark,
@@ -558,265 +773,40 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       ),
     );
   }
+}
 
-  // ── Lifestyle section — editable PreferencePillRow items ──────────────────
+class _PreferencePill extends StatelessWidget {
+  final IconData? icon;
+  final String label;
 
-  Widget _buildLifestyleSection(
-      AuthUser user, bool isDark, Color textColor, Color subColor) {
-    final lang = user.appLanguage;
-    final items = <Widget>[];
+  const _PreferencePill({this.icon, required this.label});
 
-    if (user.exerciseHabit != null) {
-      items.add(_lifestylePillRow(
-        icon: LucideIcons.zap,
-        label: t('exercise', lang),
-        value: _formatValue(user.exerciseHabit!, lang),
-        isDark: isDark,
-        textColor: textColor,
-        subColor: subColor,
-        onEdit: () => _ctrl.openPillEditModal(
-          context: context,
-          title: t('exercise', lang),
-          rowIcon: LucideIcons.zap,
-          options: [
-            {
-              'label': t('exercise_active', lang),
-              'value': 'active',
-              'icon': LucideIcons.zap,
-            },
-            {
-              'label': t('exercise_sometimes', lang),
-              'value': 'sometimes',
-              'icon': LucideIcons.activity,
-            },
-            {
-              'label': t('almost_never', lang),
-              'value': 'almost_never',
-              'icon': LucideIcons.moon,
-            },
-          ],
-          currentValue: user.exerciseHabit,
-          onUpdate: (val) =>
-              _ctrl.updateUser((u) => u.copyWith(exerciseHabit: val)),
-        ),
-      ));
-    }
-
-    if (user.drinkingHabit != null) {
-      items.add(_lifestylePillRow(
-        icon: LucideIcons.wine,
-        label: t('alcohol', lang),
-        value: _formatValue(user.drinkingHabit!, lang),
-        isDark: isDark,
-        textColor: textColor,
-        subColor: subColor,
-        onEdit: () => _ctrl.openPillEditModal(
-          context: context,
-          title: t('alcohol', lang),
-          rowIcon: LucideIcons.wine,
-          options: [
-            {
-              'label': t('alcohol_never', lang),
-              'value': 'Nikoli',
-              'icon': LucideIcons.ban,
-            },
-            {
-              'label': t('alcohol_socially', lang),
-              'value': 'Družabno',
-              'icon': LucideIcons.users,
-            },
-            {
-              'label': t('alcohol_occasionally', lang),
-              'value': 'Ob priliki',
-              'icon': LucideIcons.trendingUp,
-            },
-          ],
-          currentValue: user.drinkingHabit,
-          onUpdate: (val) =>
-              _ctrl.updateUser((u) => u.copyWith(drinkingHabit: val)),
-        ),
-      ));
-    }
-
-    if (user.sleepSchedule != null) {
-      items.add(_lifestylePillRow(
-        icon: LucideIcons.moon,
-        label: t('sleep', lang),
-        value: _formatValue(user.sleepSchedule!, lang),
-        isDark: isDark,
-        textColor: textColor,
-        subColor: subColor,
-        onEdit: () => _ctrl.openPillEditModal(
-          context: context,
-          title: t('sleep', lang),
-          rowIcon: LucideIcons.moon,
-          options: [
-            {
-              'label': t('night_owl', lang),
-              'value': 'Nočna ptica',
-              'icon': LucideIcons.moon,
-            },
-            {
-              'label': t('early_bird', lang),
-              'value': 'Jutranja ptica',
-              'icon': LucideIcons.sun,
-            },
-          ],
-          currentValue: user.sleepSchedule,
-          onUpdate: (val) =>
-              _ctrl.updateUser((u) => u.copyWith(sleepSchedule: val)),
-        ),
-      ));
-    }
-
-    if (user.petPreference != null) {
-      items.add(_lifestylePillRow(
-        icon: LucideIcons.dog,
-        label: t('pets', lang),
-        value: _formatValue(user.petPreference!, lang),
-        isDark: isDark,
-        textColor: textColor,
-        subColor: subColor,
-        onEdit: () => _ctrl.openPillEditModal(
-          rowIcon: LucideIcons.dog,
-          context: context,
-          title: t('pets', lang),
-          options: [
-            {'label': t('dog_person', lang), 'value': 'Dog person'},
-            {'label': t('cat_person', lang), 'value': 'Cat person'},
-          ],
-          currentValue: user.petPreference,
-          onUpdate: (val) =>
-              _ctrl.updateUser((u) => u.copyWith(petPreference: val)),
-        ),
-      ));
-    }
-
-    if (user.childrenPreference != null) {
-      items.add(_lifestylePillRow(
-        icon: LucideIcons.baby,
-        label: t('children', lang),
-        value: _formatValue(user.childrenPreference!, lang),
-        isDark: isDark,
-        textColor: textColor,
-        subColor: subColor,
-        onEdit: () => _ctrl.openPillEditModal(
-          context: context,
-          title: t('children', lang),
-          rowIcon: LucideIcons.baby,
-          options: [
-            {
-              'label': t('children_want_someday', lang),
-              'value': 'want_someday',
-              'icon': LucideIcons.heart,
-            },
-            {
-              'label': t('children_dont_want', lang),
-              'value': 'dont_want',
-              'icon': LucideIcons.ban,
-            },
-            {
-              'label': t('children_have_and_want_more', lang),
-              'value': 'have_and_want_more',
-              'icon': LucideIcons.users,
-            },
-            {
-              'label': t('children_have_and_dont_want_more', lang),
-              'value': 'have_and_dont_want_more',
-              'icon': LucideIcons.userCheck,
-            },
-            {
-              'label': t('children_not_sure', lang),
-              'value': 'not_sure',
-              'icon': LucideIcons.helpCircle,
-            },
-          ],
-          currentValue: user.childrenPreference,
-          onUpdate: (val) =>
-              _ctrl.updateUser((u) => u.copyWith(childrenPreference: val)),
-        ),
-      ));
-    }
-
-    if (items.isEmpty) return const SizedBox.shrink();
-
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(t('lifestyle', user.appLanguage),
-                style: GoogleFonts.instrumentSans(
-                    color: subColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600)),
-          ),
-          const SizedBox(height: 12),
-          ...items,
-        ],
-      ),
-    );
-  }
-
-  /// A single lifestyle row: icon + label + value pill + edit circle.
-  /// Matches the PreferencePillRow visual style from settings.
-  Widget _lifestylePillRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required bool isDark,
-    required Color textColor,
-    required Color subColor,
-    required VoidCallback onEdit,
-  }) {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final pillBg = isDark
         ? Colors.white.withValues(alpha: 0.1)
         : Colors.black.withValues(alpha: 0.06);
     final pillBorder = isDark ? Colors.white24 : Colors.black12;
-    final iconColor = isDark ? Colors.white70 : Colors.black45;
-    final editIconColor = isDark ? Colors.white54 : Colors.black38;
+    final textColor = isDark ? Colors.white70 : Colors.black87;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: pillBg,
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(color: pillBorder),
+      ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: iconColor),
-          const SizedBox(width: 10),
-          Text(label, style: TextStyle(color: subColor, fontSize: 13)),
-          const Spacer(),
-          // Value pill
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 140),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: pillBg,
-                borderRadius: BorderRadius.circular(100),
-                border: Border.all(color: pillBorder),
-              ),
-              child: Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: textColor, fontSize: 12),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Edit circle
-          GestureDetector(
-            onTap: onEdit,
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: pillBg,
-                border: Border.all(color: pillBorder),
-              ),
-              child: Icon(LucideIcons.pencil, size: 14, color: editIconColor),
-            ),
-          ),
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: textColor.withValues(alpha: 0.7)),
+            const SizedBox(width: 6),
+          ],
+          Text(label,
+              style: TextStyle(
+                  color: textColor, fontSize: 13, fontWeight: FontWeight.w600)),
         ],
       ),
     );
