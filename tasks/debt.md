@@ -32,3 +32,6 @@
 | D-28 | `functions/.env` was mixing dev and prod credentials in a single file (last block wins) | High | Resolved | ✅ RESOLVED — 2026-04-09: split into functions/.env.dev and functions/.env.prod, old file deleted, .gitignore updated |
 | D-29 | `lib/firebase_options.dart` and `lib/firebase_options_dev.dart` at lib/ root were tracked by git and contained Firebase API keys | High | Resolved | ✅ RESOLVED — 2026-04-09: already untracked (a456f88), now explicitly gitignored (99b300f) |
 | D-30 | `scripts/ci/secret_scan.sh` was a stub (always passed, never actually scanned) — CI had zero secrets protection | High | Resolved | ✅ RESOLVED — 2026-04-09: implemented with gitleaks + pattern scan + blocked-filename check (70dfc9b) |
+| D-31 | `MatchRepository` calls legacy `sendGreeting` Cloud Function (removed in Phase 6 upgrade) | High | Immediate | ✅ RESOLVED — 2026-04-18: MatchController now uses WaveRepository.sendWave() (direct Firestore write). Match detection is server-side via matchesStreamProvider. |
+| D-32 | `updateProfile` Cloud Function uses `.strict()` Zod schema but misses modern mobile app fields (gender, introvertScale, hairColor, etc.) | High | Immediate | ✅ RESOLVED — 2026-04-18: Added 21 missing fields to updateProfileSchema (gender, age, birthDate, height, hasChildren, company, school, partner preferences, UI settings). npm run build clean. |
+

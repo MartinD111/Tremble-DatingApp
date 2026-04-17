@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api_client.dart';
+import '../../match/data/wave_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MatchProfile — data model for matched users
@@ -127,25 +128,6 @@ class MatchProfile {
 class MatchRepository {
   final TrembleApiClient _api = TrembleApiClient();
 
-  /// Send a greeting to another user.
-  /// Returns true if it resulted in an instant match (mutual interest).
-  /// No message parameter — Tremble waves are silent signals, not text.
-  Future<bool> sendGreeting(String toUserId) async {
-    final result = await _api.call('sendGreeting', data: {
-      'toUserId': toUserId,
-    });
-    return result['matched'] as bool? ?? false;
-  }
-
-  /// Respond to a greeting (accept or decline).
-  Future<void> respondToGreeting(String greetingId,
-      {required bool accept}) async {
-    await _api.call('respondToGreeting', data: {
-      'greetingId': greetingId,
-      'accept': accept,
-    });
-  }
-
   /// Get all accepted matches for the current user.
   Future<List<MatchProfile>> getMatches() async {
     final result = await _api.call('getMatches');
@@ -153,22 +135,6 @@ class MatchRepository {
     return matchesList
         .map((m) => MatchProfile.fromApi(Map<String, dynamic>.from(m)))
         .toList();
-  }
-
-  /// Get pending greetings (received and sent).
-  Future<Map<String, List<Map<String, dynamic>>>> getPendingGreetings() async {
-    final result = await _api.call('getPendingGreetings');
-    return {
-      'received': List<Map<String, dynamic>>.from(
-          (result['received'] as List<dynamic>?)
-                  ?.map((e) => Map<String, dynamic>.from(e))
-                  .toList() ??
-              []),
-      'sent': List<Map<String, dynamic>>.from((result['sent'] as List<dynamic>?)
-              ?.map((e) => Map<String, dynamic>.from(e))
-              .toList() ??
-          []),
-    };
   }
 
   /// Stream that polls for new matches periodically.
@@ -236,24 +202,24 @@ final matchesStreamProvider = StreamProvider<List<MatchProfile>>((ref) {
 
 /// Controller to handle user actions (Like/Pass/Greet)
 class MatchController extends StateNotifier<MatchProfile?> {
-  final MatchRepository _repo;
+  final WaveRepository _waveRepo;
 
-  MatchController(this._repo) : super(null);
+  MatchController(this._waveRepo) : super(null);
 
   void setMatch(MatchProfile? match) => state = match;
   void dismiss() => state = null;
 
-  /// Send a greeting to the currently displayed match.
-  /// Silent — no text, no message. One tap. That's it.
+  /// Send a wave to the currently displayed match.
+  /// Writes directly to the waves collection — mutual match detection is server-side.
   Future<bool> greet() async {
     if (state == null) return false;
-    final matched = await _repo.sendGreeting(state!.id);
+    await _waveRepo.sendWave(state!.id);
     state = null;
-    return matched;
+    return false;
   }
 }
 
 final matchControllerProvider =
     StateNotifierProvider<MatchController, MatchProfile?>((ref) {
-  return MatchController(ref.watch(matchRepositoryProvider));
+  return MatchController(ref.watch(waveRepositoryProvider));
 });

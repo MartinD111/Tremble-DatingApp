@@ -77,6 +77,8 @@ export const onWaveCreated = onDocumentCreated(
                 userB: uids[1],
                 userIds: uids,
                 createdAt: FieldValue.serverTimestamp(),
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes from now
+                status: 'pending',
                 seenBy: [fromUid],
                 // No lastMessage — Tremble has no in-app chat.
             });

@@ -151,8 +151,8 @@ class AuthUser {
       if (age != null) 'age': age,
       if (birthDate != null) 'birthDate': birthDate!.toIso8601String(),
       if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
-      if (gender != null) 'gender': gender,
-      if (interestedIn != null) 'interestedIn': interestedIn,
+      if (gender != null) 'gender': gender!.toLowerCase(),
+      if (interestedIn != null) 'interestedIn': interestedIn!.toLowerCase(),
       'height': height,
       'heightRangeStart': heightRangeStart,
       'heightRangeEnd': heightRangeEnd,
@@ -210,8 +210,6 @@ class AuthUser {
       'company': company,
       'isPingVibrationEnabled': isPingVibrationEnabled,
       'hasChildren': hasChildren,
-      if (lastWaveFoundAt != null)
-        'lastWaveFoundAt': lastWaveFoundAt!.toIso8601String(),
     };
   }
 

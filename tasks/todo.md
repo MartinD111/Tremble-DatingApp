@@ -1,17 +1,18 @@
 # Tremble - Project TODOs
 
-## Active Focus: Phase 8 & 9 🚀
+## Active Focus: Bug Fixes (Wave & Profile Persistence) 🚀
 
-### 1. Phase 9: Security Hardening (Current)
+### 1. Fix Wave Logic (BUG-001)
+- [ ] Replace `sendGreeting` call in `match_repository.dart` with `WaveRepository.sendWave()`.
+- [ ] Verify Firestore write for `waves` collection.
+
+### 2. Fix Profile Persistence (BUG-002)
+- [ ] Update `updateProfileSchema` in `functions/src/modules/users/users.schema.ts`.
+- [ ] Verify image and hobby saving logic.
+
+### 3. Continue Background Service Hardening
 - [ ] **Step 3:** Enforce Firebase App Check (`enforceAppCheck: true`) on all 21 Cloud Functions.
-- [ ] **Step 4:** Security audit of Firestore rules for `proximity_events` collection.
-- [ ] **Step 5:** Final GDPR deletion pipeline verification with production-like data sets.
 
-### 2. Phase 8: Paywall & RevenueCat
-- [ ] Initialize RevenueCat SDK in `subscription_service.dart`.
-- [ ] Implement `isProProvider` and sync with Firestore `isPremium` field.
-- [ ] Build Glassmorphic `PaywallScreen`.
-- [ ] Implement Wave limits (5/day) for free users in `WaveRepository`.
 
 ---
 

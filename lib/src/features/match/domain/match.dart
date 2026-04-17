@@ -8,6 +8,7 @@ class Match {
   final String status; // 'pending', 'found', 'expired'
   final bool isFound;
   final Map<String, bool> gestures;
+  final DateTime? expiresAt;
 
   Match({
     required this.id,
@@ -17,6 +18,7 @@ class Match {
     this.status = 'pending',
     this.isFound = false,
     this.gestures = const {},
+    this.expiresAt,
   });
 
   bool get isMutual => gestures.length >= 2;
@@ -32,6 +34,9 @@ class Match {
       status: data['status'] ?? 'pending',
       isFound: data['isFound'] ?? false,
       gestures: Map<String, bool>.from(data['gestures'] ?? {}),
+      expiresAt: data['expiresAt'] != null
+          ? (data['expiresAt'] as Timestamp).toDate()
+          : (data['createdAt'] as Timestamp).toDate().add(const Duration(minutes: 30)),
     );
   }
 

@@ -35,7 +35,7 @@ class UgcActionSheet extends ConsumerWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF1A1A2E),
+        color: Color(0xFF1A1A18),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
@@ -99,6 +99,7 @@ class UgcActionSheet extends ConsumerWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
+              // Calls WaveRepository.sendWave() → local write, mutual match detection is server-side
               Navigator.pop(ctx);
               try {
                 await ref.read(safetyRepositoryProvider).blockUser(targetUid);

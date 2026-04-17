@@ -53,7 +53,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
     if (_isGreeting) return;
     setState(() => _isGreeting = true);
     try {
-      // Calls sendGreeting CF → returns true if both users greeted (mutual match)
+      // Calls WaveRepository.sendWave() through MatchController
       final matched = await ref.read(matchControllerProvider.notifier).greet();
 
       if (!mounted) return;

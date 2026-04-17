@@ -8,7 +8,6 @@ import 'package:tremble/src/features/match/data/wave_repository.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/tremble_header.dart';
 import '../../matches/data/match_repository.dart';
-import '../../dashboard/presentation/home_screen.dart'; // For tracking ping/radar
 import '../../safety/presentation/widgets/ugc_action_sheet.dart';
 import '../../../core/translations.dart';
 import '../../../core/utils/icon_utils.dart';

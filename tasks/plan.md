@@ -1,15 +1,17 @@
-# Plan ID: 20260414-navigation-fixes
-Risk Level: LOW
+# Plan ID: 20260417-bugfix-wave-profile
+Risk Level: MEDIUM
 Founder Approval Required: NO
-Branch: fix/navigation-stack
+Branch: feature/bugfix-wave-profile
 
-1. OBJECTIVE — Fix the back button in My Profile and ensure navigation stack is preserved after editing profile.
-2. SCOPE — `lib/src/features/profile/presentation/edit_profile_screen.dart`, `lib/src/features/profile/presentation/profile_card_preview.dart`
+1. OBJECTIVE — Fix broken greeting logic (BUG-001) and enable profile saving (BUG-002).
+2. SCOPE — `lib/src/features/matches/data/match_repository.dart`, `functions/src/modules/users/users.schema.ts`
 3. STEPS —
-    - **EditProfileScreen**: Change `context.go('/profile-preview')` to `context.pop()` in `_saveChanges` to prevent clearing the navigation stack.
-    - **ProfileCardPreview**: Ensure the back button correctly pops the screen (already has `context.pop()`).
-    - **Verification**: Ensure the navigation flow `Settings -> My Profile -> Edit -> Save -> My Profile -> Settings` works without getting stuck.
-4. RISKS & TRADEOFFS — Minimal risk. Using `pop()` instead of `go()` ensures the user's previous screen (Settings) remains in history.
+    - **MatchRepository**: Replace `sendGreeting` Cloud Function call (legacy) with direct write to `waves` collection via `WaveRepository.sendWave()`.
+    - **Cloud Functions**: Update `updateProfileSchema` in `users.schema.ts` to include missing fields (`gender`, `introvertScale`, `hasChildren`, etc.) and ensure compatibility with current mobile app payload.
+    - **Verification**: Run `npm run build` in functions and `flutter analyze` in mobile app.
+4. RISKS & TRADEOFFS — Backend changes require deployment. Strict schema is maintained for security.
 5. VERIFICATION —
+    - `npm run build` (functions)
     - `flutter analyze`
-    - Manual review of navigation logic.
+    - Manual test of profile save.
+
