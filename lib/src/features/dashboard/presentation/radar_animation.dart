@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import '../../../shared/widgets/radar_painter.dart';
+import '../../../shared/ui/tremble_logo.dart';
 
 class RadarAnimation extends StatefulWidget {
   final bool isScanning;
@@ -28,6 +29,8 @@ class _RadarAnimationState extends State<RadarAnimation>
     with TickerProviderStateMixin {
   late final AnimationController _radarController;
   late final AnimationController _pingController;
+  late final AnimationController _logoController;
+  late final Animation<double> _logoOpacity;
   double _lastPingValue = 0.0;
 
   @override
@@ -43,8 +46,17 @@ class _RadarAnimationState extends State<RadarAnimation>
       duration: _calculatePingDuration(widget.pingDistance),
     )..addListener(_handlePingAnimation);
 
+    _logoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _logoOpacity = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
+    );
+
     if (widget.isScanning) {
       _radarController.repeat();
+      _logoController.repeat(reverse: true);
     }
 
     if (widget.pingDistance != null) {
@@ -83,8 +95,12 @@ class _RadarAnimationState extends State<RadarAnimation>
     super.didUpdateWidget(oldWidget);
     if (widget.isScanning && !_radarController.isAnimating) {
       _radarController.repeat();
+      _logoController.repeat(reverse: true);
     } else if (!widget.isScanning && _radarController.isAnimating) {
       _radarController.stop();
+      _logoController
+        ..stop()
+        ..value = 0.0; // reset to 0.4 opacity (tween begin)
     }
 
     if (widget.pingDistance != null) {
@@ -102,24 +118,37 @@ class _RadarAnimationState extends State<RadarAnimation>
   void dispose() {
     _radarController.dispose();
     _pingController.dispose();
+    _logoController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_radarController, _pingController]),
+      animation: Listenable.merge(
+          [_radarController, _pingController, _logoController]),
       builder: (context, child) {
-        return CustomPaint(
-          painter: RadarPainter(
-            radarProgress: _radarController.value,
-            pingProgress: _pingController.value,
-            pingDistance: widget.pingDistance,
-            pingAngle: widget.pingAngle ?? pi / 4,
-            brandColor: widget.brandColor ?? Theme.of(context).primaryColor,
-            gridColor: Theme.of(context).colorScheme.onSurface,
-          ),
-          size: Size.infinite,
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            CustomPaint(
+              painter: RadarPainter(
+                radarProgress: _radarController.value,
+                pingProgress: _pingController.value,
+                pingDistance: widget.pingDistance,
+                pingAngle: widget.pingAngle ?? pi / 4,
+                brandColor: widget.brandColor ?? Theme.of(context).primaryColor,
+                gridColor: Theme.of(context).colorScheme.onSurface,
+              ),
+              size: Size.infinite,
+            ),
+            IgnorePointer(
+              child: Opacity(
+                opacity: _logoOpacity.value,
+                child: const TrembleLogo(size: 52),
+              ),
+            ),
+          ],
         );
       },
     );
