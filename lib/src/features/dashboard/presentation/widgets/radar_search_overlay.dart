@@ -220,14 +220,19 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(LucideIcons.clock,
-                              size: 16, color: Colors.white),
+                          Icon(LucideIcons.clock,
+                              size: 16,
+                              color: _remaining.inMinutes < 5
+                                  ? colorScheme.primary
+                                  : const Color(0xFFF5C842)),
                           const SizedBox(width: 8),
                           Text(
                             _formatDuration(_remaining),
                             style: GoogleFonts.jetBrainsMono(
-                              color: Colors.white,
-                              fontSize: 20,
+                              color: _remaining.inMinutes < 5
+                                  ? colorScheme.primary
+                                  : const Color(0xFFF5C842),
+                              fontSize: 48,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -254,7 +259,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      'USTAVI', // "Stop"
+                      t('cancel_search', lang).toUpperCase(),
                       style: GoogleFonts.instrumentSans(
                         color: Colors.white70,
                         fontSize: 16,

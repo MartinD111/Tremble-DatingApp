@@ -463,6 +463,18 @@ const Map<String, Map<String, String>> _translations = {
     'unsaved_changes': 'Unsaved changes',
     'discard_changes_q': 'Discard unsaved changes?',
     'discard': 'Discard',
+
+    // --- Matches screen ---
+    'matches_title': 'Your people',
+    'no_matches': 'No matches yet — go outside and turn on the radar!',
+    'matches_help_title': 'About People',
+    'matches_help_body':
+        'Everyone who waved at you (one-way or mutual) appears here.',
+
+    // --- Radar search overlay ---
+    'time_remaining': 'Time remaining',
+    'cancel_search': 'Cancel search',
+    'search_expired': 'Search expired',
   },
 
   // ═══════════════════════════════════════════
@@ -826,6 +838,18 @@ const Map<String, Map<String, String>> _translations = {
     'unsaved_changes': 'Neshranjene spremembe',
     'discard_changes_q': 'Zavrži neshranjene spremembe?',
     'discard': 'Zavrži',
+
+    // --- Matches screen ---
+    'matches_title': 'Tvoji ljudje',
+    'no_matches': 'Še nimaš matchev — pojdi ven in vklopi radar!',
+    'matches_help_title': 'O strani Ljudje',
+    'matches_help_body':
+        'Tukaj se pojavijo vsi, ki so ti pomahali (enosmerno ali vzajemno).',
+
+    // --- Radar search overlay ---
+    'time_remaining': 'Preostali čas',
+    'cancel_search': 'Prekini iskanje',
+    'search_expired': 'Iskanje je poteklo',
   },
 
   // ═══════════════════════════════════════════
