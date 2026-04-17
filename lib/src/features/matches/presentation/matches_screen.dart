@@ -259,34 +259,59 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                             opacity: isLocked ? 0.6 : 1.0,
                             child: GlassCard(
                               opacity: 0.15,
-                              borderRadius: isLocked ? 20 : 50,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isLocked ? 16 : 8,
-                                vertical: isLocked ? 12 : 8,
-                              ),
+                              borderRadius: 20,
+                              padding: const EdgeInsets.all(14),
                               child: Row(
                                 children: [
                                   if (!isLocked)
                                     CircleAvatar(
-                                      radius: 24,
+                                      radius: 32,
                                       backgroundImage:
                                           NetworkImage(profile.imageUrl),
                                       backgroundColor: Colors.white12,
                                     )
                                   else
-                                    const Icon(LucideIcons.user,
-                                        color: Colors.white24, size: 24),
-                                  const SizedBox(width: 15),
-                                  Expanded(
-                                    child: Text(
-                                      isLocked
-                                          ? 'Skrita oseba'
-                                          : '${profile.name}, ${profile.age}',
-                                      style: GoogleFonts.instrumentSans(
-                                        fontWeight: FontWeight.bold,
-                                        color: textColor,
-                                        fontSize: isLocked ? 16 : 18,
+                                    Container(
+                                      width: 64,
+                                      height: 64,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.06),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.12)),
                                       ),
+                                      child: const Icon(LucideIcons.user,
+                                          color: Colors.white24, size: 28),
+                                    ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          isLocked
+                                              ? 'Skrita oseba'
+                                              : profile.name,
+                                          style: TrembleTheme.displayFont(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w900,
+                                            color: textColor,
+                                          ),
+                                        ),
+                                        if (!isLocked) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            '${profile.age} let',
+                                            style: GoogleFonts.instrumentSans(
+                                              fontSize: 13,
+                                              color: subtextColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
                                   if (isLocked)

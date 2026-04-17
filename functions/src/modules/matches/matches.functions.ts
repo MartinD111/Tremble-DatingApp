@@ -70,6 +70,14 @@ export const onWaveCreated = onDocumentCreated(
 
             const uids = [fromUid, toUid].sort();
             const matchId = `${uids[0]}_${uids[1]}`;
+
+            // Dedup guard: if match already exists this trigger fired twice — skip
+            const existingMatch = await db.collection("matches").doc(matchId).get();
+            if (existingMatch.exists) {
+                console.log(`[WAVE] Match ${matchId} already exists — skipping duplicate trigger`);
+                return;
+            }
+
             const batch = db.batch();
 
             batch.set(db.collection("matches").doc(matchId), {

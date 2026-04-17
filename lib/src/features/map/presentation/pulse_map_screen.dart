@@ -28,11 +28,32 @@ class PulseMapScreen extends ConsumerStatefulWidget {
   ConsumerState<PulseMapScreen> createState() => _PulseMapScreenState();
 }
 
+enum _MapZoom { city, nearby, national }
+
 class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
+  _MapZoom _zoom = _MapZoom.city;
 
   static const int _activePeople = 47;
+
+  static const _zoomLevels = {
+    _MapZoom.city: 13.5,
+    _MapZoom.nearby: 16.0,
+    _MapZoom.national: 7.5,
+  };
+
+  void _setZoom(_MapZoom zoom) {
+    setState(() => _zoom = zoom);
+    _mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: const LatLng(46.0569, 14.5058),
+          zoom: _zoomLevels[zoom]!,
+        ),
+      ),
+    );
+  }
 
   static final List<_TrembleEvent> _events = [
     _TrembleEvent(
@@ -263,6 +284,13 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              // ── Zoom toggle ───────────────────────────────────────
+              _MapZoomToggle(
+                current: _zoom,
+                isDark: isDark,
+                onChanged: _setZoom,
+              ),
               const SizedBox(height: 16),
               Expanded(
                 child: Container(
@@ -302,6 +330,74 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MapZoomToggle extends StatelessWidget {
+  final _MapZoom current;
+  final bool isDark;
+  final ValueChanged<_MapZoom> onChanged;
+
+  const _MapZoomToggle({
+    required this.current,
+    required this.isDark,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.10)
+              : Colors.black.withValues(alpha: 0.08),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: _MapZoom.values.map((zoom) {
+          final isActive = zoom == current;
+          final label = {
+            _MapZoom.city: 'Mesto',
+            _MapZoom.nearby: '1 km',
+            _MapZoom.national: 'Slovenija',
+          }[zoom]!;
+
+          return GestureDetector(
+            onTap: () => onChanged(zoom),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? Theme.of(context).primaryColor
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Text(
+                label,
+                style: TrembleTheme.uiFont(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isActive
+                      ? Colors.white
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.6)
+                          : TrembleTheme.warmGray),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
