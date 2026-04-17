@@ -313,9 +313,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           occupation: _occupationController.text.isNotEmpty
               ? _occupationController.text
               : null,
-          school: _schoolController.text.isNotEmpty
-              ? _schoolController.text
-              : null,
+          school:
+              _schoolController.text.isNotEmpty ? _schoolController.text : null,
           company: _companyController.text.isNotEmpty
               ? _companyController.text
               : null,
@@ -1128,7 +1127,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            _buildCategorizedHobbies(lang, isDark, textColor, fillColor, borderColor),
+                            _buildCategorizedHobbies(lang, isDark, textColor,
+                                fillColor, borderColor),
                             const SizedBox(height: 16),
                             Center(
                               child: _editCircle(isDark, borderColor, fillColor,
@@ -1813,8 +1813,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     int year = initial.year.clamp(minYear, maxYear).toInt();
 
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
 
     final sheetBg = isDark ? const Color(0xFF1A1A2E) : Colors.white;
@@ -1831,7 +1841,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           builder: (ctx, setSheet) {
             final maxDays = DateTime(year, month + 1, 0).day;
             final validDay = day > maxDays ? maxDays : day;
-
 
             // ── Main picker sheet ──────────────────────────────────────────────
             return Container(
@@ -1901,7 +1910,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 maxYear - minYear + 1, (i) => '${maxYear - i}'),
                             selectedIndex: maxYear - year,
                             looping: false,
-                            onChanged: (i) => setSheet(() => year = maxYear - i),
+                            onChanged: (i) =>
+                                setSheet(() => year = maxYear - i),
                           ),
                         ),
                       ],
@@ -1973,8 +1983,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(
-                      height: MediaQuery.of(ctx).padding.bottom + 8),
+                  SizedBox(height: MediaQuery.of(ctx).padding.bottom + 8),
                 ],
               ),
             );
@@ -1986,14 +1995,39 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   static const Map<String, List<String>> _hobbyCategories = {
     'Active 🏋️': [
-      'Fitnes', 'Pilates', 'Sprehodi', 'Tek', 'Smučanje', 'Snowboarding', 'Plezanje', 'Plavanje'
+      'Fitnes',
+      'Pilates',
+      'Sprehodi',
+      'Tek',
+      'Smučanje',
+      'Snowboarding',
+      'Plezanje',
+      'Plavanje'
     ],
     'Prosti čas ☕': [
-      'Branje', 'Kava', 'Čaj', 'Kuhanje', 'Filmi', 'Serije', 'Videoigre', 'Glasba'
+      'Branje',
+      'Kava',
+      'Čaj',
+      'Kuhanje',
+      'Filmi',
+      'Serije',
+      'Videoigre',
+      'Glasba'
     ],
-    'Umetnost 🎨': ['Slikanje', 'Fotografija', 'Pisanje', 'Muzeji', 'Gledališče'],
+    'Umetnost 🎨': [
+      'Slikanje',
+      'Fotografija',
+      'Pisanje',
+      'Muzeji',
+      'Gledališče'
+    ],
     'Potovanja ✈️': [
-      'Izleti', 'Narava', 'Gore', 'Morje', 'Mestna potepanja', 'Kampiranje'
+      'Izleti',
+      'Narava',
+      'Gore',
+      'Morje',
+      'Mestna potepanja',
+      'Kampiranje'
     ],
   };
 
@@ -2037,7 +2071,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 spacing: 6,
                 runSpacing: 6,
                 alignment: WrapAlignment.center,
-                children: matched.map((h) => _smallHobbyChip(h, isDark, textColor, fillColor, borderColor)).toList(),
+                children: matched
+                    .map((h) => _smallHobbyChip(
+                        h, isDark, textColor, fillColor, borderColor))
+                    .toList(),
               ),
             ],
           ),
@@ -2067,7 +2104,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 spacing: 6,
                 runSpacing: 6,
                 alignment: WrapAlignment.center,
-                children: customHobbies.map((h) => _smallHobbyChip(h, isDark, textColor, fillColor, borderColor)).toList(),
+                children: customHobbies
+                    .map((h) => _smallHobbyChip(
+                        h, isDark, textColor, fillColor, borderColor))
+                    .toList(),
               ),
             ],
           ),
@@ -2112,7 +2152,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               _hobbies.remove(hobby);
               _hasChanges = true;
             }),
-            child: Icon(LucideIcons.x, size: 10, color: textColor.withValues(alpha: 0.5)),
+            child: Icon(LucideIcons.x,
+                size: 10, color: textColor.withValues(alpha: 0.5)),
           ),
         ],
       ),
@@ -2136,7 +2177,8 @@ class _AgePill extends StatelessWidget {
             : Colors.black.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-            color: isDark ? Colors.white30 : Colors.black.withValues(alpha: 0.12)),
+            color:
+                isDark ? Colors.white30 : Colors.black.withValues(alpha: 0.12)),
       ),
       child: Text(
         label,

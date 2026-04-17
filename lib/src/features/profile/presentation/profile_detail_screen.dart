@@ -15,7 +15,6 @@ import '../../../shared/ui/tremble_circle_button.dart';
 import '../../../core/theme.dart';
 import '../../auth/data/auth_repository.dart';
 
-
 class ProfileDetailScreen extends ConsumerStatefulWidget {
   final MatchProfile match;
 
@@ -81,7 +80,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       gender: gender,
       isGenderBasedColor: isGenderBasedColor,
     );
-    final bottomBgColor = bgColors.isNotEmpty ? bgColors.last : Theme.of(context).scaffoldBackgroundColor;
+    final bottomBgColor = bgColors.isNotEmpty
+        ? bgColors.last
+        : Theme.of(context).scaffoldBackgroundColor;
 
     return GradientScaffold(
       child: Stack(
@@ -119,8 +120,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                       return Image.network(
                                         url,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(
-                                            color: Colors.grey[900]),
+                                        errorBuilder: (_, __, ___) =>
+                                            Container(color: Colors.grey[900]),
                                       );
                                     },
                                   )
@@ -128,8 +129,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                   Image.network(
                                     match.imageUrl,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
-                                        color: Colors.grey[900]),
+                                    errorBuilder: (_, __, ___) =>
+                                        Container(color: Colors.grey[900]),
                                   ),
                                 // Dot indicators
                                 if (photoCount > 1)
@@ -178,8 +179,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                               children: [
-                                TextSpan(
-                                    text: '${match.name}, ${match.age}'),
+                                TextSpan(text: '${match.name}, ${match.age}'),
                                 if (ZodiacUtils.getZodiacEmoji(
                                         match.birthDate) !=
                                     null)
@@ -317,11 +317,13 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
                         // ── Hobbies ────────────────────────────────────────────────
                         if (match.hobbies.isNotEmpty)
-                          _buildHobbySection(match, isDark, textColor, subColor),
+                          _buildHobbySection(
+                              match, isDark, textColor, subColor),
 
                         const SizedBox(height: 24),
 
-                        const SizedBox(height: 80), // Space for floating buttons
+                        const SizedBox(
+                            height: 80), // Space for floating buttons
                       ],
                     ),
                   ),
@@ -364,8 +366,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
             left: 0,
             right: 0,
             child: Container(
-              padding: EdgeInsets.fromLTRB(24, 20, 24,
-                  MediaQuery.of(context).padding.bottom + 20),
+              padding: EdgeInsets.fromLTRB(
+                  24, 20, 24, MediaQuery.of(context).padding.bottom + 20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -385,18 +387,19 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, WidgetRef ref, MatchProfile match) {
+  Widget _buildActionButtons(
+      BuildContext context, WidgetRef ref, MatchProfile match) {
     final primaryColor = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final lang = ref.watch(appLanguageProvider);
     final myUid = ref.watch(firebaseAuthProvider).currentUser?.uid ?? '';
-    
+
     // Find active match document for this user
     final matchDoc = ref.watch(getMatchByUserIdProvider(match.id));
 
     // Dynamic brand-coordinated ignore color
-    final ignoreColor = isDark 
-        ? TrembleTheme.rose.withValues(alpha: 0.7) 
+    final ignoreColor = isDark
+        ? TrembleTheme.rose.withValues(alpha: 0.7)
         : TrembleTheme.rose.withValues(alpha: 0.6);
 
     // Default state: No gesture sent
@@ -409,10 +412,11 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
         // Fallback or initial creation if no match doc yet (unlikely in this view)
         await ref.read(matchControllerProvider.notifier).greet();
       }
-      
+
       if (context.mounted) {
         final sentMsg = "${t('greet', lang)} ${t('sent', lang)} ${match.name}!";
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(sentMsg)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(sentMsg)));
       }
     };
 
@@ -421,13 +425,14 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       final theyWaved = matchDoc.hasWaved(match.id);
 
       if (iWaved && !theyWaved) {
-        greetText = "${t('sent', lang).substring(0, 1).toUpperCase()}${t('sent', lang).substring(1)}"; // "Poslan"
+        greetText =
+            "${t('sent', lang).substring(0, 1).toUpperCase()}${t('sent', lang).substring(1)}"; // "Poslan"
         isSent = true;
       } else if (theyWaved && !iWaved) {
         greetText = t('accept', lang); // "Sprejmi"
       } else if (matchDoc.isMutual) {
         greetText = t('radar_lock_active', lang);
-        isSent = true; 
+        isSent = true;
       }
     }
 
@@ -526,7 +531,13 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       'Videoigre',
       'Glasba'
     ],
-    'Umetnost 🎨': ['Slikanje', 'Fotografija', 'Pisanje', 'Muzeji', 'Gledališče'],
+    'Umetnost 🎨': [
+      'Slikanje',
+      'Fotografija',
+      'Pisanje',
+      'Muzeji',
+      'Gledališče'
+    ],
     'Potovanja ✈️': [
       'Izleti',
       'Narava',
@@ -542,8 +553,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     final lang = ref.watch(appLanguageProvider);
     final userHobbies = match.hobbies.toList();
     final categorizedHobbies = _hobbyCategories.values.expand((e) => e).toSet();
-    final customHobbies = userHobbies.where((h) => !categorizedHobbies.contains(h)).toList();
- 
+    final customHobbies =
+        userHobbies.where((h) => !categorizedHobbies.contains(h)).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -583,7 +595,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                           alignment: WrapAlignment.center,
                           children: entry.value
                               .where((h) => userHobbies.contains(h))
-                              .map((h) => _PreferencePill(label: _formatChipText(h)))
+                              .map((h) =>
+                                  _PreferencePill(label: _formatChipText(h)))
                               .toList(),
                         ),
                       ],
@@ -612,7 +625,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                         runSpacing: 8,
                         alignment: WrapAlignment.center,
                         children: customHobbies
-                            .map((h) => _PreferencePill(label: _formatChipText(h)))
+                            .map((h) =>
+                                _PreferencePill(label: _formatChipText(h)))
                             .toList(),
                       ),
                     ],
@@ -630,7 +644,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     // Replace underscores with spaces
     String processed = text.replaceAll('_', ' ');
     // Handle the specific typo mentioned ("_v" or similar) if needed, but replaceAll covers it broadly
-    
+
     // Title Case: capitalize every word
     return processed.split(' ').map((word) {
       if (word.isEmpty) return word;
@@ -638,8 +652,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     }).join(' ');
   }
 
-  Widget _buildLifestylePreferences(
-      MatchProfile match, bool isDark, Color textColor, Color subColor, String lang) {
+  Widget _buildLifestylePreferences(MatchProfile match, bool isDark,
+      Color textColor, Color subColor, String lang) {
     final pills = <Widget>[];
 
     // 1. Basic Lifestyle Traits (Pills)
@@ -658,7 +672,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     if (match.isSmoker != null) {
       pills.add(_PreferencePill(
         icon: LucideIcons.cigarette,
-        label: _formatChipText(match.isSmoker! ? t('smoker', lang) : t('smoke_no', lang)),
+        label: _formatChipText(
+            match.isSmoker! ? t('smoker', lang) : t('smoke_no', lang)),
       ));
     }
     if (match.sleepSchedule != null) {
@@ -694,48 +709,48 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
           Text(t('lifestyle', lang),
               style: GoogleFonts.instrumentSans(
                   color: subColor, fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          alignment: WrapAlignment.center,
-          children: pills,
-        ),
-        const SizedBox(height: 24),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: pills,
+          ),
+          const SizedBox(height: 24),
 
-        // 2. Spectrum Indicators (Sliders)
-        _buildSpectrumIndicator(
-          icon: LucideIcons.brain,
-          label: t('personality_type', lang),
-          value: match.introvertLevel?.toDouble() ?? 50.0,
-          min: 0,
-          max: 100,
-          leftLabel: t('introvert', lang),
-          rightLabel: t('extrovert', lang),
-          currentText: match.introvertLevel != null
-              ? (match.introvertLevel! <= 50
-                  ? '${100 - match.introvertLevel!}% ${t('introvert', lang)}'
-                  : '${match.introvertLevel!}% ${t('extrovert', lang)}')
-              : '',
-          isDark: isDark,
-        ),
-        const SizedBox(height: 32),
-        if (match.politicalAffiliation != null)
+          // 2. Spectrum Indicators (Sliders)
           _buildSpectrumIndicator(
-            icon: LucideIcons.flag,
-            label: t('political_affiliation', lang),
-            value: _getPoliticsValue(match.politicalAffiliation!),
-            min: 1,
-            max: 5,
-            leftLabel: t('politics_left', lang),
-            rightLabel: t('politics_right', lang),
-            currentText: t(match.politicalAffiliation!, lang),
+            icon: LucideIcons.brain,
+            label: t('personality_type', lang),
+            value: match.introvertLevel?.toDouble() ?? 50.0,
+            min: 0,
+            max: 100,
+            leftLabel: t('introvert', lang),
+            rightLabel: t('extrovert', lang),
+            currentText: match.introvertLevel != null
+                ? (match.introvertLevel! <= 50
+                    ? '${100 - match.introvertLevel!}% ${t('introvert', lang)}'
+                    : '${match.introvertLevel!}% ${t('extrovert', lang)}')
+                : '',
             isDark: isDark,
           ),
-      ],
-    ),
-  );
-}
+          const SizedBox(height: 32),
+          if (match.politicalAffiliation != null)
+            _buildSpectrumIndicator(
+              icon: LucideIcons.flag,
+              label: t('political_affiliation', lang),
+              value: _getPoliticsValue(match.politicalAffiliation!),
+              min: 1,
+              max: 5,
+              leftLabel: t('politics_left', lang),
+              rightLabel: t('politics_right', lang),
+              currentText: t(match.politicalAffiliation!, lang),
+              isDark: isDark,
+            ),
+        ],
+      ),
+    );
+  }
 
   double _getPoliticsValue(String key) {
     switch (key) {
@@ -765,7 +780,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     required String currentText,
     required bool isDark,
   }) {
-    final trackColor = isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
+    final trackColor =
+        isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
     final accentColor = Theme.of(context).primaryColor;
     final textColor = isDark ? Colors.white70 : Colors.black54;
 
@@ -852,7 +868,6 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       ],
     );
   }
-
 }
 
 class _PreferencePill extends StatelessWidget {

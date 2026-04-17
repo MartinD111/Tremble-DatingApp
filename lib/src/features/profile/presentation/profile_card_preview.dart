@@ -12,7 +12,6 @@ import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/tremble_header.dart';
 import '../../../shared/ui/tremble_circle_button.dart';
 
-
 class ProfileCardPreview extends ConsumerStatefulWidget {
   const ProfileCardPreview({super.key});
 
@@ -418,8 +417,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     }).join(' ');
   }
 
-  Widget _buildLifestylePreferences(
-      AuthUser user, bool isDark, Color textColor, Color subColor, String lang) {
+  Widget _buildLifestylePreferences(AuthUser user, bool isDark, Color textColor,
+      Color subColor, String lang) {
     final pills = <Widget>[];
 
     // 1. Basic Lifestyle Traits (Pills)
@@ -438,7 +437,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     if (user.isSmoker != null) {
       pills.add(_PreferencePill(
         icon: LucideIcons.cigarette,
-        label: _formatChipText(user.isSmoker! ? t('smoker', lang) : t('smoke_no', lang)),
+        label: _formatChipText(
+            user.isSmoker! ? t('smoker', lang) : t('smoke_no', lang)),
       ));
     }
     if (user.sleepSchedule != null) {
@@ -474,48 +474,48 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
           Text(t('lifestyle', lang),
               style: GoogleFonts.instrumentSans(
                   color: subColor, fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          alignment: WrapAlignment.center,
-          children: pills,
-        ),
-        const SizedBox(height: 24),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: pills,
+          ),
+          const SizedBox(height: 24),
 
-        // 2. Spectrum Indicators (Sliders)
-        _buildSpectrumIndicator(
-          icon: LucideIcons.brain,
-          label: t('personality_type', lang),
-          value: user.introvertScale?.toDouble() ?? 50.0,
-          min: 0,
-          max: 100,
-          leftLabel: t('introvert', lang),
-          rightLabel: t('extrovert', lang),
-          currentText: user.introvertScale != null
-              ? (user.introvertScale! <= 50
-                  ? '${100 - user.introvertScale!}% ${t('introvert', lang)}'
-                  : '${user.introvertScale!}% ${t('extrovert', lang)}')
-              : '',
-          isDark: isDark,
-        ),
-        const SizedBox(height: 32),
-        if (user.politicalAffiliation != null)
+          // 2. Spectrum Indicators (Sliders)
           _buildSpectrumIndicator(
-            icon: LucideIcons.flag,
-            label: t('political_affiliation', lang),
-            value: _getPoliticsValue(user.politicalAffiliation!),
-            min: 1,
-            max: 5,
-            leftLabel: t('politics_left', lang),
-            rightLabel: t('politics_right', lang),
-            currentText: t(user.politicalAffiliation!, lang),
+            icon: LucideIcons.brain,
+            label: t('personality_type', lang),
+            value: user.introvertScale?.toDouble() ?? 50.0,
+            min: 0,
+            max: 100,
+            leftLabel: t('introvert', lang),
+            rightLabel: t('extrovert', lang),
+            currentText: user.introvertScale != null
+                ? (user.introvertScale! <= 50
+                    ? '${100 - user.introvertScale!}% ${t('introvert', lang)}'
+                    : '${user.introvertScale!}% ${t('extrovert', lang)}')
+                : '',
             isDark: isDark,
           ),
-      ],
-    ),
-  );
-}
+          const SizedBox(height: 32),
+          if (user.politicalAffiliation != null)
+            _buildSpectrumIndicator(
+              icon: LucideIcons.flag,
+              label: t('political_affiliation', lang),
+              value: _getPoliticsValue(user.politicalAffiliation!),
+              min: 1,
+              max: 5,
+              leftLabel: t('politics_left', lang),
+              rightLabel: t('politics_right', lang),
+              currentText: t(user.politicalAffiliation!, lang),
+              isDark: isDark,
+            ),
+        ],
+      ),
+    );
+  }
 
   double _getPoliticsValue(String key) {
     switch (key) {
@@ -545,7 +545,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     required String currentText,
     required bool isDark,
   }) {
-    final trackColor = isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
+    final trackColor =
+        isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
     final accentColor = Theme.of(context).primaryColor;
     final textColor = isDark ? Colors.white70 : Colors.black54;
 
@@ -638,7 +639,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     final lang = user.appLanguage;
     final userHobbies = user.hobbies.toList();
     final categorizedHobbies = _hobbyCategories.values.expand((e) => e).toSet();
-    final customHobbies = userHobbies.where((h) => !categorizedHobbies.contains(h)).toList();
+    final customHobbies =
+        userHobbies.where((h) => !categorizedHobbies.contains(h)).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -679,7 +681,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                           alignment: WrapAlignment.center,
                           children: entry.value
                               .where((h) => userHobbies.contains(h))
-                              .map((h) => _PreferencePill(label: _formatChipText(h)))
+                              .map((h) =>
+                                  _PreferencePill(label: _formatChipText(h)))
                               .toList(),
                         ),
                       ],
@@ -708,7 +711,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                         runSpacing: 8,
                         alignment: WrapAlignment.center,
                         children: customHobbies
-                            .map((h) => _PreferencePill(label: _formatChipText(h)))
+                            .map((h) =>
+                                _PreferencePill(label: _formatChipText(h)))
                             .toList(),
                       ),
                     ],
@@ -720,7 +724,6 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       ],
     );
   }
-
 
   Widget _buildInfoBadges(
       AuthUser user, bool isDark, Color subColor, Color iconColor) {

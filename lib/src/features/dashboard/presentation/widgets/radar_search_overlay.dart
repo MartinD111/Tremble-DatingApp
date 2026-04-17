@@ -24,7 +24,8 @@ class RadarSearchOverlay extends ConsumerStatefulWidget {
   ConsumerState<RadarSearchOverlay> createState() => _RadarSearchOverlayState();
 }
 
-class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> with TickerProviderStateMixin {
+class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
+    with TickerProviderStateMixin {
   late Timer _timer;
   late Duration _remaining;
   late AnimationController _pulseController;
@@ -92,7 +93,9 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> with Ti
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ref.read(waveRepositoryProvider).markMatchAsExpired(widget.match.id);
+              ref
+                  .read(waveRepositoryProvider)
+                  .markMatchAsExpired(widget.match.id);
             },
             child: Text(
               'NISMO SE NAŠLI', // "Couldn't find"
@@ -102,11 +105,14 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> with Ti
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              ref.read(waveRepositoryProvider).markMatchAsFound(widget.match.id);
+              ref
+                  .read(waveRepositoryProvider)
+                  .markMatchAsFound(widget.match.id);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: colorScheme.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: Text(
               'NAŠLI SMO SE!', // "Found each other"
@@ -125,7 +131,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> with Ti
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final lang = ref.watch(appLanguageProvider);
-    
+
     // Listen to pings for visual feedback
     ref.listen(proximityPingControllerProvider, (_, __) {
       if (mounted && widget.match.isMutual) {
@@ -156,7 +162,8 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> with Ti
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
                           color: colorScheme.primary.withValues(
-                            alpha: (1.0 - _pulseController.value).clamp(0.0, 1.0),
+                            alpha:
+                                (1.0 - _pulseController.value).clamp(0.0, 1.0),
                           ),
                           width: 2,
                         ),
@@ -173,15 +180,18 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> with Ti
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(isMutual ? LucideIcons.search : LucideIcons.clock, 
-                             size: 20, color: Colors.white70)
+                        Icon(isMutual ? LucideIcons.search : LucideIcons.clock,
+                                size: 20, color: Colors.white70)
                             .animate(onPlay: (c) => c.repeat())
                             .shimmer(duration: 2.seconds),
                         const SizedBox(width: 8),
                         Text(
-                          isMutual ? t('radar_lock_active', lang) : t('waiting_for_acceptance', lang),
+                          isMutual
+                              ? t('radar_lock_active', lang)
+                              : t('waiting_for_acceptance', lang),
                           style: GoogleFonts.instrumentSans(
-                            color: isMutual ? colorScheme.primary : Colors.white70,
+                            color:
+                                isMutual ? colorScheme.primary : Colors.white70,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 2,
@@ -200,7 +210,8 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> with Ti
                     ),
                     const SizedBox(height: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
@@ -209,7 +220,8 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> with Ti
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(LucideIcons.clock, size: 16, color: Colors.white),
+                          const Icon(LucideIcons.clock,
+                              size: 16, color: Colors.white),
                           const SizedBox(width: 8),
                           Text(
                             _formatDuration(_remaining),
@@ -257,7 +269,9 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> with Ti
                 flex: 2,
                 child: GestureDetector(
                   onTap: () {
-                    ref.read(waveRepositoryProvider).markMatchAsFound(widget.match.id);
+                    ref
+                        .read(waveRepositoryProvider)
+                        .markMatchAsFound(widget.match.id);
                   },
                   child: Container(
                     height: 56,
@@ -275,7 +289,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> with Ti
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      'NAŠLI SMO SE!', 
+                      'NAŠLI SMO SE!',
                       style: GoogleFonts.instrumentSans(
                         color: Colors.white,
                         fontSize: 16,

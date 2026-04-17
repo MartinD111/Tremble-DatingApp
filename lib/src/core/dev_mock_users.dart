@@ -17,7 +17,8 @@ const List<MatchProfile> kMockNearbyUsers = [
     imageUrl:
         'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&q=80',
     hobbies: ['Potovanja', 'Glasba', 'Fitnes'],
-    bio: 'Rada potavam in spoznavam nove ljudi. Iščem nekoga, ki ceni fine pogovore in dobre kave.',
+    bio:
+        'Rada potavam in spoznavam nove ljudi. Iščem nekoga, ki ceni fine pogovore in dobre kave.',
     height: 168,
     jobStatus: 'student',
     school: 'Univerza v Ljubljani — Ekonomska fakulteta',
@@ -53,7 +54,8 @@ const List<MatchProfile> kMockNearbyUsers = [
     imageUrl:
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
     hobbies: ['Branje', 'Videoigre', 'Filmi'],
-    bio: 'Software engineer po dnevu, gamer po noči. Ljubim kavo, minimalizem in knjige, ki te nehote premislijo.',
+    bio:
+        'Software engineer po dnevu, gamer po noči. Ljubim kavo, minimalizem in knjige, ki te nehote premislijo.',
     height: 182,
     jobStatus: 'employed',
     occupation: 'Software Engineer',
@@ -89,7 +91,8 @@ const List<MatchProfile> kMockNearbyUsers = [
     imageUrl:
         'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&q=80',
     hobbies: ['Umetnost', 'Šport', 'Potovanja'],
-    bio: 'UX designerka, ki verjame, da so detajli tisto, kar loči povprečno od izjemnega — v dizajnu in v življenju.',
+    bio:
+        'UX designerka, ki verjame, da so detajli tisto, kar loči povprečno od izjemnega — v dizajnu in v življenju.',
     height: 165,
     jobStatus: 'employed',
     occupation: 'UX Designer',
@@ -107,7 +110,8 @@ const List<MatchProfile> kMockNearbyUsers = [
     prompts: [
       {
         'question': 'Kar mi je pri sebi najbolj všeč ...',
-        'answer': 'Da znam prisluhniti — res prisluhniti, ne samo čakati na vrsto.',
+        'answer':
+            'Da znam prisluhniti — res prisluhniti, ne samo čakati na vrsto.',
       },
       {
         'question': 'Moj deal-breaker je ...',

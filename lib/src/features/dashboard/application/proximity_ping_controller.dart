@@ -11,7 +11,7 @@ part 'proximity_ping_controller.g.dart';
 class ProximityPingController extends _$ProximityPingController {
   bool _isLooping = false;
   double? _smoothedRssi;
-  
+
   // Smoothing factor (0.0 to 1.0, lower = smoother but slower to react)
   static const double _smoothingAlpha = 0.3;
 
@@ -19,7 +19,7 @@ class ProximityPingController extends _$ProximityPingController {
   bool build() {
     final search = ref.watch(currentSearchProvider);
     final ble = ref.watch(bleServiceProvider);
-    
+
     if (search == null) {
       _stopPingLoop();
       ble.setHighFrequencyMode(false);
@@ -30,19 +30,21 @@ class ProximityPingController extends _$ProximityPingController {
     ble.setHighFrequencyMode(true);
 
     // Listen to RSSI updates for the partner
-    final partnerId = search.getPartnerId(ref.read(authStateProvider)?.id ?? '');
-    
+    final partnerId =
+        search.getPartnerId(ref.read(authStateProvider)?.id ?? '');
+
     final sub = ble.proximityStream.listen((rssiMap) {
       if (rssiMap.containsKey(partnerId)) {
         final newRssi = rssiMap[partnerId]!.toDouble();
-        
+
         // Apply EMA smoothing to RSSI to prevent frequency jitter
         if (_smoothedRssi == null) {
           _smoothedRssi = newRssi;
         } else {
-          _smoothedRssi = (_smoothedRssi! * (1 - _smoothingAlpha)) + (newRssi * _smoothingAlpha);
+          _smoothedRssi = (_smoothedRssi! * (1 - _smoothingAlpha)) +
+              (newRssi * _smoothingAlpha);
         }
-        
+
         // ONLY start the vibration loop if both users have accepted (isMutual)
         if (search.isMutual) {
           _startPingLoop();
@@ -81,11 +83,11 @@ class ProximityPingController extends _$ProximityPingController {
     final rssi = _smoothedRssi!;
     // factor: 0.0 (at -100dBm, far) to 1.0 (at -40dBm, very close)
     final factor = (rssi.clamp(-100.0, -40.0) + 100.0) / 60.0;
-    
+
     // Interval: 4000ms (far) down to 200ms (close)
     final intervalMs = (4000 - (factor * 3800)).toInt();
     final interval = Duration(milliseconds: intervalMs);
-    
+
     // Intensity (Android): 60 to 255
     final intensity = (60 + (factor * 195)).toInt();
     // Sharpness (iOS): 0.2 to 1.0
@@ -99,14 +101,15 @@ class ProximityPingController extends _$ProximityPingController {
 
     // Wait for the calculated interval before next step
     await Future.delayed(interval);
-    
+
     // Recursive call for next ping
     if (_isLooping) {
       _pingStep();
     }
   }
 
-  Future<void> _triggerPing({required int intensity, required double sharpness}) async {
+  Future<void> _triggerPing(
+      {required int intensity, required double sharpness}) async {
     final hasVibrator = await Vibration.hasVibrator();
     if (!hasVibrator) return;
 

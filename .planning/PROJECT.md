@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Tremble is a Flutter mobile app (iOS + Android) for proximity-based dating. It uses Bluetooth Low Energy to passively detect when two users are physically near each other, then lets each send a "wave." A mutual wave unlocks the profile and enables chat. The app runs in the background — users live their lives, Tremble works quietly. It is the anti-Tinder: zero swiping, zero scrolling, one tap to act.
+Tremble is a Flutter mobile app (iOS + Android) for proximity-based dating. It uses Bluetooth Low Energy to passively detect when two users are physically near each other, then lets each send a "wave." A mutual wave creates a match — both users have 30 minutes to find each other in the real world. **There is no in-app chat, ever.** The match reveal screen is the final in-app step. The app runs in the background — users live their lives, Tremble works quietly. It is the anti-Tinder: zero swiping, zero scrolling, one tap to act.
 
 ## Core Value
 
@@ -24,60 +24,70 @@ The proximity event — the moment two Tremble users are physically near each ot
 - ✓ CI/CD via GitHub Actions (Base64 secret injection, flutter stable) — Phase 5
 - ✓ Cloudflare R2 media storage (tremble-avatars / tremble-avatars-dev) — Phase 5
 - ✓ 21 deployed Cloud Functions (europe-west1) — Phase 5
-- ✓ Auth redirect loop fixed (login → onboarding routing) — Bug fix 2026-04-08
-- ✓ Google Maps API key injection mechanism (Android + iOS) — Bug fix 2026-04-08
-- ✓ Email verification banner in registration flow — Bug fix 2026-04-08
+- ✓ Auth redirect loop fixed (login → onboarding routing) — Phase 5
+- ✓ Google Maps API key injection mechanism (Android + iOS) — Phase 5
+- ✓ Email verification banner in registration flow — Phase 5
+- ✓ Brand color tokens — Tremble Rose (#F4436C), Signal Yellow, Deep Graphite, Warm Cream — Phase 6 (v1.1)
+- ✓ Font system — Playfair Display 900, Lora, Instrument Sans, JetBrains Mono — Phase 6 (v1.1)
+- ✓ Brand-voice onboarding copy in 8 languages — Phase 6 (v1.1)
+- ✓ Maps API key via CI secret injection on all platforms — Phase 6 (v1.1)
+- ✓ Wave mechanic — one-tap send, unidirectional hidden, server-side mutual detection — Phase 7 (v1.1)
+- ✓ Match created in Firestore on mutual wave — Phase 7 (v1.1)
+- ✓ Profile unlock after mutual wave (name, photo, bio) — Phase 7 (v1.1)
+- ✓ Match reveal screen with brand-aligned glassmorphic animation — Phase 7 (v1.1)
+- ✓ 30-minute match session constraint — Phase 7 (v1.1)
+- ✓ Push notifications: CROSSING_PATHS (anonymous), INCOMING_WAVE, MUTUAL_WAVE — Phase 7 (v1.1)
+- ✓ WAVE_BACK_ACTION — send wave-back from notification without opening app — Phase 7 (v1.1)
+- ✓ FCM (Android) + APNs (iOS) configured — Phase 7 (v1.1)
 
 ### Active
 
-#### Brand Alignment (Phase 6)
-- [ ] Color token swap: teal (#00D9A6) → Tremble Rose (#F4436C) across all UI
-- [ ] Font system: Playfair Display 900 (display), Lora 400/500 (body), Instrument Sans 500–700 (UI), JetBrains Mono (telemetry)
-- [ ] Onboarding copy: brand voice — short, direct, confident. No generic AI output.
-- [ ] Registration CTA copy fix
-
-#### Wave & Match Mechanic (Phase 6)
-- [ ] Wave mechanic: one-tap send, unidirectional hidden (no visibility of one-sided interest)
-- [ ] Mutual wave → profile unlock → chat entry
-- [ ] Match resolution screen with brand-aligned reveal animation
-
-#### Messaging (Phase 7)
-- [ ] Real-time chat after mutual wave (Firestore or Firebase Realtime DB)
-- [ ] Push notifications: 3 types only — proximity event, mutual wave, 24h inactivity reminder
-- [ ] No marketing push, no gamification notifications
-
 #### Paywall / Tremble Pro (Phase 8)
-- [ ] Freemium: 5 outgoing waves/month free
-- [ ] Tremble Pro (~€9.99/month): unlimited waves + priority match visibility
-- [ ] Paywall triggers after first proximity event (value proven before ask)
-- [ ] RevenueCat integration for iOS/Android subscription management
+- [ ] **WAVE-07**: Freemium limit: 5 outgoing waves/month on free tier
+- [ ] **PAY-01**: Free tier allows 5 outgoing waves/month
+- [ ] **PAY-02**: Paywall appears after first proximity event (value proven before ask)
+- [ ] **PAY-03**: Tremble Pro (~€9.99/month): unlimited waves + priority match visibility
+- [ ] **PAY-04**: RevenueCat integration for cross-platform subscription management
+- [ ] **PAY-05**: Subscription state synced to Firestore user record
+- [ ] **PAY-06**: Graceful downgrade when Pro subscription lapses
 
 #### Security & Compliance (Phase 9)
-- [ ] Firebase App Check enforced in Cloud Functions (SEC-001)
-- [ ] Firestore Security Rules audit and hardening
-- [ ] GDPR deletion pipeline validation (72h SLA, cascading delete across Firestore + R2 + Auth)
-- [ ] PII encryption at rest verification
+- [ ] **SEC-01**: Firebase App Check enforced in all Cloud Functions (currently configured but not enforced)
+- [ ] **SEC-02**: Firestore Security Rules audit — deny-by-default, user-specific read/write per document
+- [ ] **SEC-03**: GDPR deletion pipeline validated end-to-end (cascading delete: Firestore + R2 + Auth)
+- [ ] **SEC-04**: 72h deletion SLA documented and tested
+- [ ] **SEC-05**: PII encryption at rest verified (email, date of birth)
+- [ ] **SEC-06**: Proximity data confirmed never written to persistent storage (RAM-only verified)
 
 #### Launch (Phase 10)
-- [ ] App Store Connect metadata, screenshots, preview video
-- [ ] Google Play Console listing
-- [ ] TestFlight distribution (internal → external beta)
-- [ ] trembledating.com landing page (minimal: hero, demo animation, waitlist/store redirect)
+- [ ] **LAUNCH-01**: App Store Connect listing — metadata, keywords, screenshots, preview video
+- [ ] **LAUNCH-02**: Google Play Console listing
+- [ ] **LAUNCH-03**: TestFlight internal beta distribution
+- [ ] **LAUNCH-04**: Google Play Internal Testing track
+- [ ] **LAUNCH-05**: trembledating.com landing page — hero + proximity demo animation + waitlist/store redirect
+- [ ] **LAUNCH-06**: App Store Review submission (iOS)
+- [ ] **LAUNCH-07**: Play Store Review submission (Android)
 
 ### Out of Scope
 
-- Video profiles or audio notes — complexity vs signal ratio; profile must be fast to read
-- In-app social feed or content layer — this is a coordination tool, not a platform
-- Web app — mobile-only by design (BLE requires native)
-- B2B Events API — documented as future phase in strategic doc; not v1
-- Aggregated proximity analytics (data layer) — requires user base first; deferred post-launch
-- Swipe mechanic — explicitly anti-Tinder by design
+- **In-app chat** — explicitly removed. Tremble has no chat. After match, users have 30 min to meet IRL. Rule #3.
+- **Swipe mechanic** — explicitly anti-Tinder by design; not a feature regression, a product decision
+- **Video profiles or audio notes** — complexity vs signal ratio; profile must be fast to read
+- **In-app social feed** — coordination tool, not engagement platform
+- **Web app** — BLE requires native; web cannot do background proximity scanning
+- **Matching algorithm / ML scoring** — proximity is the algorithm; preference-based ranking deferred post-launch
+- **"See who liked you"** — violates unidirectional hidden interest design principle
+- **Marketing push notifications** — explicitly excluded; PUSH-04 enforces this
+- **Audio/video calling** — post-match IRL meeting is the goal; in-app calling reduces motivation to meet
+- **PUSH-03 (24h inactivity reminder)** — closed N/A; references "no chat started" which is always true
 
 ## Context
 
-### Technical Environment
+### Current State (after v1.1)
 
-- **Stack:** Flutter 3 + Riverpod 2 + GoRouter | Firebase (Auth, Firestore, Functions, europe-west1) | Cloudflare R2 | Upstash Redis | Resend (info@trembledating.com)
+- **Shipped milestones:** v1.0 Foundation (2026-04-08) + v1.1 Core Product (2026-04-09)
+- **Codebase:** ~25,000 Dart LOC + TypeScript Cloud Functions
+- **Stack:** Flutter 3 + Riverpod 2 + GoRouter | Firebase (Auth, Firestore, Functions, europe-west1) | Cloudflare R2 | Upstash Redis | Resend
 - **Environments:** `tremble-dev` (dev) | `am---dating-app` (prod) — strict separation enforced
 - **Bundle IDs:** `com.pulse` (dev) | `tremble.dating.app` (prod)
 - **Run command always:** `--flavor dev --dart-define=FLAVOR=dev`
@@ -95,14 +105,19 @@ The proximity event — the moment two Tremble users are physically near each ot
 
 | ID | Issue | Impact |
 |----|-------|--------|
-| SEC-001 | App Check not enforced in Cloud Functions | Prod security gap |
-| URGENT | Real Google Maps API key not yet filled in | Maps broken on both platforms |
+| SEC-001 | Firebase App Check configured but not enforced in Cloud Functions | Prod security gap — Phase 9 |
+| FUNCTIONS-DEPLOY | Cloud Functions build not deployed to tremble-dev since 2026-04-18 | Dev environment stale |
 
-### Known Debt
+### Known Tech Debt
 
-- ADR-003: Color token swap (teal → rose) — documented, not executed
-- Font system not installed in Flutter project
-- `.agent/skills/flutter-ble/SKILL.md` contains wrong content (firebase-security) — mislabeled
+| ID | Debt | Severity |
+|----|------|----------|
+| D-25 | 40+ hardcoded Slovenian strings bypassing i18n system (home_screen, matches_screen, etc.) | Medium |
+| D-26 | `ugc_action_sheet.dart` white background on dark gradient app | Medium |
+| D-27 | Forgot password spinner doesn't stop after email sent | Medium |
+| D-28 | 17-item registration UI fix plan (2026-04-13) — pending founder approval | Medium |
+| D-29 | Map screen tile render test on physical device deferred (from 06-03) | Low |
+| D-30 | Phase 7 executed outside GSD framework — no PLAN files, SUMMARY reconstructed retroactively | Low |
 
 ## Constraints
 
@@ -122,9 +137,12 @@ The proximity event — the moment two Tremble users are physically near each ot
 | RSSI → distance with exponential smoothing | Filters signal noise, prevents false proximity triggers | ✓ Good |
 | Cloudflare R2 for media | Reduces Firebase Storage cost, global CDN via media.trembledating.com | ✓ Good |
 | Upstash Redis for rate limiting | Serverless Redis — no infrastructure to manage | ✓ Good |
-| Paywall after first proximity event | Value proven before monetization ask — higher conversion intent | — Pending |
-| RevenueCat for subscriptions | Cross-platform subscription management; avoids StoreKit/Play Billing complexity | — Pending |
-| Wave: unidirectional hidden | No visibility of one-sided interest — reduces rejection anxiety, aligns with brand values | — Pending |
+| No in-app chat — ever | Post-match IRL meeting is the product. Chat reduces motivation to actually meet. Rule #3. | ✓ Good — v1.1 |
+| `TrembleTheme.telemetryTextStyle()` pattern | Canonical entry point for all JetBrains Mono telemetry text — prevents drift | ✓ Good — v1.1 |
+| `{name}` removed from wave_sent toast | Privacy: unidirectional mechanic — sender should not know recipient identity | ✓ Good — v1.1 |
+| PUSH-03 closed N/A | "No chat started" condition always true; requirement is vestigial post chat removal | ✓ Good — v1.1 |
+| Paywall after first proximity event | Value proven before monetization ask — higher conversion intent | — Pending v1.2 |
+| RevenueCat for subscriptions | Cross-platform subscription management; avoids StoreKit/Play Billing complexity | — Pending v1.2 |
 
 ## Evolution
 
@@ -144,4 +162,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-08 after initial GSD project initialization — brownfield, all prior phases inferred from codebase and session history*
+*Last updated: 2026-04-18 after v1.1 milestone — Core Product shipped. Wave mechanic live. No chat, ever.*

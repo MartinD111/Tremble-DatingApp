@@ -76,7 +76,7 @@ class BleService {
   void setHighFrequencyMode(bool enabled) {
     if (_isHighFrequency == enabled) return;
     _isHighFrequency = enabled;
-    
+
     // Restart scan cycle with new intervals
     _scanTimer?.cancel();
     _scheduleScanCycle();
@@ -111,13 +111,13 @@ class BleService {
   // ─── BLE Scanning ─────────────────────────────────────
 
   void _scheduleScanCycle() {
-    final interval = _isHighFrequency 
-        ? _highFreqScanInterval 
+    final interval = _isHighFrequency
+        ? _highFreqScanInterval
         : (_isLowPowerMode ? Duration(minutes: 15) : _normalScanInterval);
 
     // Immediate first scan
     _runScan();
-    
+
     _scanTimer = Timer.periodic(interval, (_) {
       _runScan();
     });
@@ -149,7 +149,8 @@ class BleService {
           // Identify partner UID from manufacturer data
           final manufacturerData = result.advertisementData.manufacturerData;
           if (manufacturerData.isNotEmpty) {
-            final partnerUid = String.fromCharCodes(manufacturerData.values.first);
+            final partnerUid =
+                String.fromCharCodes(manufacturerData.values.first);
             rssiMap[partnerUid] = result.rssi;
           }
           _onDeviceDetected(uid, result);
@@ -164,8 +165,9 @@ class BleService {
   }
 
   Future<void> _onDeviceDetected(String myUid, ScanResult result) async {
-    if (_isHighFrequency) return; // Skip Firestore logging during high-freq lock session
-    
+    if (_isHighFrequency)
+      return; // Skip Firestore logging during high-freq lock session
+
     final remoteDeviceId = result.device.remoteId.str;
     try {
       await _firestore.collection('proximity_events').add({

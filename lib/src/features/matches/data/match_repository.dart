@@ -83,7 +83,8 @@ class MatchProfile {
       id: data['id'] as String? ?? '',
       name: data['name'] as String? ?? 'Unknown',
       age: data['age'] as int? ?? 0,
-      imageUrl: urls.isNotEmpty ? urls.first : 'https://via.placeholder.com/150',
+      imageUrl:
+          urls.isNotEmpty ? urls.first : 'https://via.placeholder.com/150',
       photoUrls: urls,
       hobbies: List<String>.from(data['hobbies'] ?? []),
       bio: '', // Bio not stored server-side; derived from prompts

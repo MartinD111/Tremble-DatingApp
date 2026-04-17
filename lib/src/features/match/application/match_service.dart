@@ -36,4 +36,3 @@ Match? getMatchByUserId(GetMatchByUserIdRef ref, String userId) {
   final matches = ref.watch(activeMatchesStreamProvider).value ?? [];
   return matches.where((m) => m.userIds.contains(userId)).firstOrNull;
 }
-

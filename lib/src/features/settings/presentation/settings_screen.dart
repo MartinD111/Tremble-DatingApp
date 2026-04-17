@@ -177,43 +177,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         children: [
           SingleChildScrollView(
             controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(24, 80, 24, 120),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  _buildProfileSection(user),
-                  const SizedBox(height: 20),
-                  _buildExpandableSection(
-                    title: _t('preferences'),
-                    sectionKey: 'preferences',
-                    icon: LucideIcons.sliders,
-                    content: _buildPreferencesContent(user),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildExpandableSection(
-                    title: _t('lifestyle'),
-                    sectionKey: 'lifestyle',
-                    icon: LucideIcons.heart,
-                    content: _buildLifestyleContent(user),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildExpandableSection(
-                    title: _t('app_appearance'),
-                    sectionKey: 'appearance',
-                    icon: LucideIcons.palette,
-                    content: _buildAppSettingsContent(user),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildExpandableSection(
-                    title: _t('account_settings'),
-                    sectionKey: 'account',
-                    icon: LucideIcons.user,
-                    content: _buildAccountContent(user),
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              ),
+            padding: const EdgeInsets.fromLTRB(24, 80, 24, 120),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                _buildProfileSection(user),
+                const SizedBox(height: 20),
+                _buildExpandableSection(
+                  title: _t('preferences'),
+                  sectionKey: 'preferences',
+                  icon: LucideIcons.sliders,
+                  content: _buildPreferencesContent(user),
+                ),
+                const SizedBox(height: 20),
+                _buildExpandableSection(
+                  title: _t('lifestyle'),
+                  sectionKey: 'lifestyle',
+                  icon: LucideIcons.heart,
+                  content: _buildLifestyleContent(user),
+                ),
+                const SizedBox(height: 20),
+                _buildExpandableSection(
+                  title: _t('app_appearance'),
+                  sectionKey: 'appearance',
+                  icon: LucideIcons.palette,
+                  content: _buildAppSettingsContent(user),
+                ),
+                const SizedBox(height: 20),
+                _buildExpandableSection(
+                  title: _t('account_settings'),
+                  sectionKey: 'account',
+                  icon: LucideIcons.user,
+                  content: _buildAccountContent(user),
+                ),
+                const SizedBox(height: 40),
+              ],
             ),
+          ),
           ValueListenableBuilder<double>(
             valueListenable: _titleOpacity,
             builder: (context, opacity, child) {
@@ -848,8 +848,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title:
-              Text(_t('proximity_vibration'), style: TextStyle(color: textColor)),
+          title: Text(_t('proximity_vibration'),
+              style: TextStyle(color: textColor)),
           subtitle: Text(_t('proximity_vibration_sub'),
               style: TextStyle(color: subColor, fontSize: 12)),
           value: user.isPingVibrationEnabled,
@@ -1328,7 +1328,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 }
               : null,
         ),
-
 
         Divider(color: dividerColor),
         ListTile(

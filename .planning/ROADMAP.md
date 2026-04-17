@@ -6,10 +6,10 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 
 ## Milestones
 
-- [x] **v1.0 Foundation** - Phases 1–5 (shipped 2026-04-08)
-- [x] **v1.1 Core Product** - Phases 6–7 (brand alignment + wave mechanic + push notifications, shipped 2026-04-09)
-- [ ] **v1.2 Monetization & Security** - Phases 8–9 (paywall + hardening)
-- [ ] **v1.3 Launch** - Phase 10 (store submission + landing page)
+- ✅ **v1.0 Foundation** — Phases 1–5 (shipped 2026-04-08) — [archive](milestones/v1.1-ROADMAP.md)
+- ✅ **v1.1 Core Product** — Phases 6–7 (brand alignment + wave mechanic + push notifications, shipped 2026-04-09) — [archive](milestones/v1.1-ROADMAP.md)
+- [ ] **v1.2 Monetization & Security** — Phases 8–9 (paywall + hardening)
+- [ ] **v1.3 Launch** — Phase 10 (store submission + landing page)
 
 ## Phases
 
@@ -19,93 +19,44 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 ### Phase 1: Foundation
 **Goal**: Flutter 3 + Riverpod 2 + GoRouter architecture is live with Firebase Auth, multi-environment config, and CI/CD
 **Requirements**: FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05, FOUND-06
-**Success Criteria** (what must be TRUE):
-  1. App runs on dev flavor without un-flavored builds
-  2. Firebase Auth (email + Google Sign-In) works in dev environment
-  3. Auth routing sends new users to onboarding, returning users to dashboard
-  4. GlassCard dark-first UI renders without overflow errors
-  5. GitHub Actions CI passes on every push
 **Plans**: Complete
 
 ### Phase 2: Core UX
 **Goal**: Users can create profiles, see the radar dashboard, and the matching UI is in place
 **Requirements**: PROF-01, PROF-02, PROF-03, BLE-05
-**Success Criteria** (what must be TRUE):
-  1. User can complete the full registration flow (email → name → age → gender → interests → photos)
-  2. Radar dashboard renders with pulse animation at ≥60 FPS
-  3. Profile bio (max 160 chars) and interests list are saved and displayed
-  4. Email verification banner shows for unverified users
 **Plans**: Complete
 
 ### Phase 3: Proximity Engine
 **Goal**: BLE scanning detects nearby Tremble users in the background and logs proximity events to Firestore
 **Requirements**: BLE-01, BLE-02, BLE-03, BLE-04
-**Success Criteria** (what must be TRUE):
-  1. BLE scanning runs in background on both iOS and Android with foreground notification
-  2. Session UUID (not user ID) is broadcast — privacy by architecture enforced
-  3. RSSI → distance mapped with exponential smoothing; false triggers filtered
-  4. Proximity events are written to Firestore when threshold is crossed
 **Plans**: Complete
 
 ### Phase 4: Infrastructure
 **Goal**: Cloud infrastructure is production-ready — R2 media storage, 21 Cloud Functions, Redis rate limiting, and multi-env separation enforced
 **Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04
-**Success Criteria** (what must be TRUE):
-  1. Cloudflare R2 serves media via media.trembledating.com in both environments
-  2. 21 Cloud Functions deployed to europe-west1 with no cross-environment contamination
-  3. Upstash Redis rate limiting active on all write endpoints
-  4. Google Maps API key injection mechanism works on both platforms
 **Plans**: Complete
 
 ### Phase 5: Auth & Routing
 **Goal**: Auth redirect loop is resolved, email verification UI is live, and Maps API key injection is wired
 **Requirements**: FOUND-04 (routing fix), INFRA-04 (Maps key mechanism), PROF-02 (email verification banner)
-**Success Criteria** (what must be TRUE):
-  1. New users land on onboarding after login — no redirect loop
-  2. Returning users land on dashboard without intermediate screens
-  3. Email verification banner appears on registration for unverified email users
-  4. Maps API key placeholder exists in both Android local.properties and iOS Debug.xcconfig
 **Plans**: Complete
 
 </details>
 
----
-
-### ✅ v1.1 Core Product — SHIPPED 2026-04-09
-
 <details>
 <summary>✅ v1.1 Core Product (Phases 6–7) — SHIPPED 2026-04-09</summary>
 
-#### Phase 6: Brand Alignment ✅
+### Phase 6: Brand Alignment ✅
 **Goal**: The app looks and feels like Tremble — correct colors, fonts, copy, and Maps API key wired
 **Depends on**: Phase 5
 **Requirements**: BRAND-01, BRAND-02, BRAND-03, BRAND-04, BRAND-05
-**Success Criteria** (what must be TRUE):
-  1. No teal (#00D9A6) exists anywhere in the UI — Tremble Rose (#F4436C) is the primary CTA color throughout
-  2. All four fonts render correctly: Playfair Display 900 on display/H1, Lora on body, Instrument Sans on UI elements, JetBrains Mono on telemetry readouts
-  3. Onboarding and registration copy is updated to brand voice — short, direct, confident
-  4. Real Google Maps API key is wired on both platforms (Android + iOS)
-  5. flutter analyze runs clean — zero new warnings
 **Plans**: 3/3 complete
-Plans:
-- [x] 06-01-PLAN.md — Color token audit + JetBrains Mono on radar telemetry text (BRAND-01, BRAND-02)
-- [x] 06-02-PLAN.md — Onboarding copy rewrite + greeting_sent → wave_sent rename in all 8 languages (BRAND-03, BRAND-04)
-- [x] 06-03-PLAN.md — Maps API key wired to iOS Release.xcconfig + human verification checkpoint (BRAND-05)
 
-#### Phase 7: Wave Mechanic + Push Notifications ✅
-**Goal**: Users can send waves, mutual waves create matches, match reveal works, and the three push notification types fire correctly
+### Phase 7: Wave Mechanic + Push Notifications ✅
+**Goal**: Users can send waves, mutual waves create matches, match reveal works, and push notifications fire correctly
 **Depends on**: Phase 6
-**Requirements**: WAVE-01, WAVE-02, WAVE-03, WAVE-04, WAVE-05, WAVE-06, PUSH-01, PUSH-02, PUSH-03, PUSH-04, PUSH-05
-**Success Criteria** (what must be TRUE):
-  1. User can send a wave from the dashboard with one tap — no confirmation dialog
-  2. One-sided waves are never visible to the recipient until mutual interest is confirmed
-  3. A mutual wave creates a match in Firestore and triggers the match reveal screen with brand animation
-  4. After match, both users can see each other's full profile (name, photo, bio, interests)
-  5. Wave state is persisted correctly — no duplicate waves, no race conditions
-  6. Proximity event notification fires anonymously — no names, no photos
-  7. Wave notification fires with sender name + photo (rich push, iOS Extension + Android)
-  8. Mutual wave notification fires with deep link to /radar
-**Note**: **Tremble has no in-app chat.** After match, users have 30 minutes to find each other in the real world. The match reveal screen is the final in-app step.
+**Requirements**: WAVE-01–06, PUSH-01–02, PUSH-04–05
+**Note**: PUSH-03 closed N/A (chat mechanic removed per Rule #3). Tremble has no in-app chat.
 **Plans**: Complete (Interaction System v2.1 + iOS Notification Service Extension)
 
 </details>
@@ -182,52 +133,6 @@ Plans:
 
 ---
 
-## Coverage
-
-**v1 requirements mapped:** 33/33
-*(MSG-01–MSG-04 removed — Tremble has no in-app chat. See lessons.md Rule #3.)*
-
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| BRAND-01 | Phase 6 | ✅ Complete |
-| BRAND-02 | Phase 6 | ✅ Complete |
-| BRAND-03 | Phase 6 | ✅ Complete |
-| BRAND-04 | Phase 6 | ✅ Complete |
-| BRAND-05 | Phase 6 | ✅ Complete |
-| WAVE-01 | Phase 7 | ✅ Complete |
-| WAVE-02 | Phase 7 | ✅ Complete |
-| WAVE-03 | Phase 7 | ✅ Complete |
-| WAVE-04 | Phase 7 | ✅ Complete |
-| WAVE-05 | Phase 7 | ✅ Complete |
-| WAVE-06 | Phase 7 | ✅ Complete |
-| PUSH-01 | Phase 7 | ✅ Complete |
-| PUSH-02 | Phase 7 | ✅ Complete |
-| PUSH-03 | Phase 7 | ✅ Complete |
-| PUSH-04 | Phase 7 | ✅ Complete |
-| PUSH-05 | Phase 7 | ✅ Complete |
-| WAVE-07 | Phase 8 | Pending |
-| PAY-01 | Phase 8 | Pending |
-| PAY-02 | Phase 8 | Pending |
-| PAY-03 | Phase 8 | Pending |
-| PAY-04 | Phase 8 | Pending |
-| PAY-05 | Phase 8 | Pending |
-| PAY-06 | Phase 8 | Pending |
-| SEC-01 | Phase 9 | 🟡 In progress (tremble-dev) |
-| SEC-02 | Phase 9 | Pending |
-| SEC-03 | Phase 9 | Pending |
-| SEC-04 | Phase 9 | Pending |
-| SEC-05 | Phase 9 | Pending |
-| SEC-06 | Phase 9 | Pending |
-| LAUNCH-01 | Phase 10 | Pending |
-| LAUNCH-02 | Phase 10 | Pending |
-| LAUNCH-03 | Phase 10 | Pending |
-| LAUNCH-04 | Phase 10 | Pending |
-| LAUNCH-05 | Phase 10 | Pending |
-| LAUNCH-06 | Phase 10 | Pending |
-| LAUNCH-07 | Phase 10 | Pending |
-
----
-
 *Roadmap created: 2026-04-08*
-*Updated: 2026-04-09 — Removed messaging (Rule #3: no in-app chat), renumbered phases 8→10, marked v1.1 complete*
+*Updated: 2026-04-18 — v1.1 archived. Both completed milestones collapsed into details blocks.*
 *Brownfield project — Phases 1–5 inferred from codebase, session history, and context.md*

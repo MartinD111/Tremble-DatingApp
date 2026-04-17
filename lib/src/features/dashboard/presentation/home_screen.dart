@@ -168,15 +168,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // ── Active Search State ──────────────────────────────────────────────
     final activeMatch = ref.watch(currentSearchProvider);
 
-
     // Define Screens and Nav Items
     final List<Widget> screens;
     final List<LiquidNavItem> navItems;
 
     if (isPremium) {
       screens = [
-        _buildRadarView(ref, context, user, canAccessRadar, isScanning,
-            isPremium, pingDistance, pingAngle, radarMode, batteryLevel, activeMatch),
+        _buildRadarView(
+            ref,
+            context,
+            user,
+            canAccessRadar,
+            isScanning,
+            isPremium,
+            pingDistance,
+            pingAngle,
+            radarMode,
+            batteryLevel,
+            activeMatch),
         const PulseMapScreen(),
         const MatchesScreen(),
         const SettingsScreen(),
@@ -189,8 +198,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ];
     } else {
       screens = [
-        _buildRadarView(ref, context, user, canAccessRadar, isScanning,
-            isPremium, pingDistance, pingAngle, radarMode, batteryLevel, activeMatch),
+        _buildRadarView(
+            ref,
+            context,
+            user,
+            canAccessRadar,
+            isScanning,
+            isPremium,
+            pingDistance,
+            pingAngle,
+            radarMode,
+            batteryLevel,
+            activeMatch),
         const MatchesScreen(),
         const SettingsScreen(),
       ];
@@ -319,29 +338,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Positioned.fill(
                     child: RadarAnimation(
-                      isScanning: isScanning && !isSearchActive, // stop visual pulse if searching
+                      isScanning: isScanning &&
+                          !isSearchActive, // stop visual pulse if searching
                       isVibrationEnabled: user?.isPingVibrationEnabled ?? true,
                       pingDistance: isSearchActive ? null : pingDistance,
                       pingAngle: isSearchActive ? null : pingAngle,
                       brandColor: Theme.of(context).primaryColor,
                     ),
                   ),
-
                   if (isSearchActive)
                     Positioned.fill(
                       child: Container(
-                        color: Colors.black.withValues(alpha: 0.2), // Dim radar during search
+                        color: Colors.black
+                            .withValues(alpha: 0.2), // Dim radar during search
                         child: Center(
                           child: Consumer(
                             builder: (context, ref, child) {
-                              final partnerId = activeMatch.getPartnerId(user?.id ?? '');
-                              final profile = ref.watch(publicProfileProvider(partnerId));
+                              final partnerId =
+                                  activeMatch.getPartnerId(user?.id ?? '');
+                              final profile =
+                                  ref.watch(publicProfileProvider(partnerId));
                               return profile.when(
                                 data: (p) => RadarSearchOverlay(
                                   match: activeMatch,
                                   partnerName: p.name,
                                 ),
-                                loading: () => const CircularProgressIndicator(),
+                                loading: () =>
+                                    const CircularProgressIndicator(),
                                 error: (_, __) => RadarSearchOverlay(
                                   match: activeMatch,
                                   partnerName: 'Nekdo v bližini',
@@ -358,79 +381,79 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: _PulsingRadarButton(
                         isScanning: isScanning,
                         onTap: () async {
-                        final newState = !isScanning;
-                        ref.read(isScanningProvider.notifier).state = newState;
+                          final newState = !isScanning;
+                          ref.read(isScanningProvider.notifier).state =
+                              newState;
 
-                        if (newState) {
-                          debugPrint(
-                              "📍 Location Captured: mock_lat: 46.05, mock_lng: 14.50 [Ljubljana]");
-                          // Start background service (GeoService lives here).
-                          FlutterBackgroundService().startService();
-                          // BleService must run in the main isolate — flutter_blue_plus
-                          // requires an Android Activity which the background isolate
-                          // does not have. Gate on GDPR consent before starting.
-                          final hasConsent =
-                              ref.read(gdprConsentProvider).valueOrNull ??
-                                  false;
-                          if (hasConsent) {
-                            await BleService().start();
+                          if (newState) {
+                            debugPrint(
+                                "📍 Location Captured: mock_lat: 46.05, mock_lng: 14.50 [Ljubljana]");
+                            // Start background service (GeoService lives here).
+                            FlutterBackgroundService().startService();
+                            // BleService must run in the main isolate — flutter_blue_plus
+                            // requires an Android Activity which the background isolate
+                            // does not have. Gate on GDPR consent before starting.
+                            final hasConsent =
+                                ref.read(gdprConsentProvider).valueOrNull ??
+                                    false;
+                            if (hasConsent) {
+                              await BleService().start();
+                            }
+
+                            // ── Admin Mode demo: inject mock nearby users ──────
+                            // Only fires in kDebugMode when Admin Mode (Bypass Radar)
+                            // is active — never touches real Firebase.
+                            if (kDebugMode && ref.read(bypassRadarProvider)) {
+                              _injectMockRadarPings(ref);
+                            }
+                          } else {
+                            // Stop BLE in main isolate and signal background service.
+                            BleService().stop();
+                            FlutterBackgroundService()
+                                .invoke('stopService', null);
                           }
-
-                          // ── Admin Mode demo: inject mock nearby users ──────
-                          // Only fires in kDebugMode when Admin Mode (Bypass Radar)
-                          // is active — never touches real Firebase.
-                          if (kDebugMode &&
-                              ref.read(bypassRadarProvider)) {
-                            _injectMockRadarPings(ref);
-                          }
-                        } else {
-                          // Stop BLE in main isolate and signal background service.
-                          BleService().stop();
-                          FlutterBackgroundService()
-                              .invoke('stopService', null);
-                        }
-                      },
-                    )
-                        .animate()
-                        .scale(duration: 600.ms, curve: Curves.easeOutBack),
-                  ),
-
-                  if (isScanning) ...[
-                    Positioned(
-                      bottom: 140,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Text(
-                          isDegraded
-                              ? t('geo_matching_paused', lang)
-                              : t('scanning', lang),
-                          style: TrembleTheme.telemetryTextStyle(
-                            context,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.7),
-                          ).copyWith(letterSpacing: 2),
-                        ).animate().fade().slideY(begin: 0.5),
-                      ),
+                        },
+                      )
+                          .animate()
+                          .scale(duration: 600.ms, curve: Curves.easeOutBack),
                     ),
-                    // ── Power-Save Pill ────────────────────────
-                    if (isDegraded)
+
+                    if (isScanning) ...[
                       Positioned(
-                        top: MediaQuery.of(context).padding.top + 36,
+                        bottom: 140,
                         left: 0,
+                        right: 0,
                         child: Center(
-                          child: _PowerSavePill(batteryLevel: batteryLevel)
-                              .animate()
-                              .fade()
-                              .slideY(begin: -1.0, curve: Curves.easeOutBack),
+                          child: Text(
+                            isDegraded
+                                ? t('geo_matching_paused', lang)
+                                : t('scanning', lang),
+                            style: TrembleTheme.telemetryTextStyle(
+                              context,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.7),
+                            ).copyWith(letterSpacing: 2),
+                          ).animate().fade().slideY(begin: 0.5),
                         ),
                       ),
-                  ]
+                      // ── Power-Save Pill ────────────────────────
+                      if (isDegraded)
+                        Positioned(
+                          top: MediaQuery.of(context).padding.top + 36,
+                          left: 0,
+                          child: Center(
+                            child: _PowerSavePill(batteryLevel: batteryLevel)
+                                .animate()
+                                .fade()
+                                .slideY(begin: -1.0, curve: Curves.easeOutBack),
+                          ),
+                        ),
+                    ]
+                  ],
                 ],
-              ],
-            )
+              )
             : Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

@@ -276,12 +276,12 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                   else
                                     const Icon(LucideIcons.user,
                                         color: Colors.white24, size: 24),
-
                                   const SizedBox(width: 15),
-
                                   Expanded(
                                     child: Text(
-                                      isLocked ? 'Skrita oseba' : '${profile.name}, ${profile.age}',
+                                      isLocked
+                                          ? 'Skrita oseba'
+                                          : '${profile.name}, ${profile.age}',
                                       style: GoogleFonts.instrumentSans(
                                         fontWeight: FontWeight.bold,
                                         color: textColor,
@@ -289,7 +289,6 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                       ),
                                     ),
                                   ),
-
                                   if (isLocked)
                                     const Icon(LucideIcons.lock,
                                         color: Colors.white24, size: 16)
@@ -304,8 +303,8 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                               Colors.red.withValues(alpha: 0.2),
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                              color: Colors.red.withValues(
-                                                  alpha: 0.4)),
+                                              color: Colors.red
+                                                  .withValues(alpha: 0.4)),
                                         ),
                                         child: const Icon(LucideIcons.x,
                                             color: Colors.red, size: 18),

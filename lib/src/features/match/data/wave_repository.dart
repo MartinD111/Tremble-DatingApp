@@ -21,7 +21,7 @@ class WaveRepository {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
-  
+
   /// Performs a gesture (Greet/Accept) on a match document.
   Future<void> sendGesture(String matchId) async {
     final currentUser = _auth.currentUser;

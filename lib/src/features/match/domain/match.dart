@@ -36,7 +36,9 @@ class Match {
       gestures: Map<String, bool>.from(data['gestures'] ?? {}),
       expiresAt: data['expiresAt'] != null
           ? (data['expiresAt'] as Timestamp).toDate()
-          : (data['createdAt'] as Timestamp).toDate().add(const Duration(minutes: 30)),
+          : (data['createdAt'] as Timestamp)
+              .toDate()
+              .add(const Duration(minutes: 30)),
     );
   }
 
