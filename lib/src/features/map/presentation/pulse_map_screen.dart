@@ -175,7 +175,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
                             isDark: isDark,
                             onTap: () {
                               Navigator.pop(context);
-                              _centerToEvent(e);
+                              Future.delayed(const Duration(milliseconds: 300), () => _centerToEvent(e));
                             },
                           ),
                         ),
@@ -189,7 +189,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
                             isDark: isDark,
                             onTap: () {
                               Navigator.pop(context);
-                              _centerToEvent(e);
+                              Future.delayed(const Duration(milliseconds: 300), () => _centerToEvent(e));
                             },
                           ),
                         ),

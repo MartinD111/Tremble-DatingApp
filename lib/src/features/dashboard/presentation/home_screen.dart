@@ -18,6 +18,7 @@ import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
 import '../../../core/ble_service.dart'; // BLE must run in main isolate
+import '../../../shared/ui/tremble_logo.dart';
 import '../../../core/consent_service.dart'; // gdprConsentProvider
 import 'package:flutter_animate/flutter_animate.dart'; // Animations
 import '../../../core/translations.dart';
@@ -696,20 +697,20 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
             GlassCard(
               opacity: 0.15,
               borderRadius: 100,
-              padding: const EdgeInsets.all(35),
+              padding: const EdgeInsets.all(20),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
-                child: Icon(
-                  widget.isScanning ? LucideIcons.radio : LucideIcons.play,
-                  key: ValueKey(widget.isScanning),
-                  size: 60,
-                  color: widget.isScanning
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.7),
-                ),
+                child: widget.isScanning
+                    ? TrembleLogo(key: const ValueKey('logo'), size: 90)
+                    : Icon(
+                        LucideIcons.play,
+                        key: const ValueKey('play'),
+                        size: 60,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.7),
+                      ),
               ),
             ),
           ],
