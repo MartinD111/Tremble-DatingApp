@@ -45,7 +45,16 @@
       "Bash(keytool -list -v -keystore \"C:/Users/marti/.android/debug.keystore\" -alias androiddebugkey -storepass android -keypass android)",
       "Skill(gsd:audit-milestone)",
       "Skill(gsd:complete-milestone)",
-      "Bash(git tag -a v1.1 -m ':*)"
+      "Bash(git tag -a v1.1 -m ':*)",
+      "Skill(gsd-autonomous)",
+      "Skill(gsd-autonomous:*)",
+      "Bash(cat ios/Runner/AppDelegate.swift)",
+      "Bash(cat ios/Runner/AppDelegate.m)",
+      "Bash(ls ios/Flutter/)",
+      "Bash(cat ios/Flutter/Release.xcconfig)",
+      "Bash(xargs cat *)",
+      "Bash(cat android/app/src/dev/AndroidManifest.xml)",
+      "Bash(cat android/app/src/prod/AndroidManifest.xml)"
     ]
   }
 }
