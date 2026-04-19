@@ -1190,9 +1190,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                   child: Text(
                                     '${_introvertLabelReg(tempRange.start)} – ${_introvertLabelReg(tempRange.end)}',
                                     style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -1206,9 +1205,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                   child: Text(
                                     '${_politicsLabelReg(tempRange.start)} – ${_politicsLabelReg(tempRange.end)}',
                                     style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                     ),

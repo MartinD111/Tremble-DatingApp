@@ -56,8 +56,7 @@ class PoliticalAffiliationStep extends StatelessWidget {
                         ? Theme.of(context).colorScheme.primary
                         : labelColor,
                     fontSize: 11,
-                    fontWeight:
-                        isActive ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               );
