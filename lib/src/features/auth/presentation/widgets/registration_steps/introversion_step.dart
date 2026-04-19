@@ -73,9 +73,12 @@ class IntroversionStep extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              value <= 0.5
-                  ? '${((1.0 - value) * 100).toInt()}% ${tr('introvert').toLowerCase()}'
-                  : '${(value * 100).toInt()}% ${tr('extrovert').toLowerCase()}',
+              () {
+                final pct = (value * 100).toInt();
+                if (pct <= 30) return '$pct% ${tr('introvert')}';
+                if (pct >= 70) return '$pct% ${tr('extrovert')}';
+                return '$pct% Ambivert';
+              }(),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,
                 fontSize: 18,

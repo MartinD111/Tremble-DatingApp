@@ -3,6 +3,11 @@
 This guide explains how to get the Tremble application running on a completely fresh machine. 
 The repository is completely portable and OS-agnostic. 
 
+> [!IMPORTANT]
+> This project is governed by the **MPC (Master Project Controller)** system. 
+> All development is tracked in the `/tasks` directory. 
+> NEVER code without reading `tasks/context.md` and `tasks/blockers.md` first.
+
 ## 1. Prerequisites
 Ensure you have the following installed on your machine (macOS, Windows, or Linux):
 - **Flutter SDK** (`>=3.2.0 <4.0.0`)
@@ -37,6 +42,8 @@ Edit the `functions/.env` file to include the correct Cloudflare R2 and Resend k
 The Firebase config files are excluded from Git for security. You must acquire and place them manually:
 - `google-services.json` ➔ Place in `android/app/`
 - `GoogleService-Info.plist` ➔ Place in `ios/Runner/`
+- `android/local.properties` ➔ Contains `MAPS_API_KEY` for Android.
+- `ios/Flutter/Debug.xcconfig` ➔ Contains `MAPS_API_KEY` for iOS.
 - `firebase_options.dart` ➔ Place in `lib/src/core/` (generated via `flutterfire configure`)
 
 ## 4. Run the Application

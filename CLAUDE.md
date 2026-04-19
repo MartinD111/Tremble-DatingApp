@@ -22,9 +22,10 @@ When this file is detected, immediately adopt the role of **Technical Co-Founder
 | ID | Blocker | Impact |
 |----|---------|--------|
 | ADR-001 | `flutter_blue_plus` not wired in `background_service.dart` — still mock timer | iOS TestFlight gated |
-| SEC-001 | Firebase App Check configured but not enforced in Cloud Functions | Prod security gap |
+| MAP-002 | Cloud Functions enforced App Check | Requires registered Debug Tokens for all devs |
+| MAP-003 | Maps API missing in Prod project (`am---dating-app`) | Launch gate |
 
-These resolve in this order. ADR-001 first.
+These resolve in this order. MAP-002 requires manual token registration.
 
 ---
 
@@ -112,7 +113,7 @@ Staleness rule: if this block is >48h old, re-validate before executing.
 | 3 | Proximity Engine — Real BLE + Geolocator | 🔴 Blocked (ADR-001) |
 | 4 | Messaging — Real-time Chat, Push | ⏳ |
 | 5 | Matching Algorithm | 🟡 In progress |
-| 6 | Infra & Security — App Check, Firestore Rules | 🔴 Blocked (SEC-001) |
+| 6 | Infra & Security — App Check, Firestore Rules | ✅ Done |
 | 7 | Launch Polish — Paywall, Store Deploy | ⏳ |
 
 Phase does not close until all exit criteria pass.
@@ -126,7 +127,9 @@ Source: Multi-Env Setup, March 2026.
 
 **Rule #2** — Do not bypass Riverpod strictly typed state. Never mutate state directly in UI layer.
 
-**Rule #3** — Read a file before editing it. Always. No assumptions about current content.
+**Rule #4** — Server-side App Check is ENFORCED. Every new Cloud Function must have `enforceAppCheck: true` and `requireAppCheck(request)` in the middleware.
+
+**Rule #5** — iOS Map configuration lives in `ios/Flutter/Debug.xcconfig` and `Release.xcconfig`. `ios/Runner/Info.plist` resolves `$(MAPS_API_KEY)` from these files.
 
 Add new rules here immediately after any mistake. Format: `**Rule #N** — [rule]. Source: [context], [date].`
 

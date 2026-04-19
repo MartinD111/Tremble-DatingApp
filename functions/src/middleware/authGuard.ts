@@ -43,6 +43,20 @@ export function requireVerifiedEmail(request: CallableRequest): string {
 }
 
 /**
+ * Ensures the request has a valid App Check token.
+ * Defense-in-depth check alongside enforceAppCheck: true at the function level.
+ * Throws FAILED_PRECONDITION if App Check token is absent.
+ */
+export function requireAppCheck(request: CallableRequest): void {
+    if (!request.app) {
+        throw new HttpsError(
+            "failed-precondition",
+            "The function must be called from an App Check verified client."
+        );
+    }
+}
+
+/**
  * Ensures the caller has admin role.
  * Admin role is determined by custom claims set server-side.
  *

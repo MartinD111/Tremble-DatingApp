@@ -134,7 +134,7 @@ function twoYearsFromNow(): Timestamp {
  * Rate limited to prevent abuse.
  */
 export const exportUserData = onCall(
-    { maxInstances: 10, enforceAppCheck: false, region: "europe-west1" },
+    { maxInstances: 10, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -214,7 +214,7 @@ export const exportUserData = onCall(
  * A GDPR audit log entry is kept in gdprRequests for 2 years (Firestore TTL).
  */
 export const deleteUserAccount = onCall(
-    { maxInstances: 10, enforceAppCheck: false, region: "europe-west1" },
+    { maxInstances: 10, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 

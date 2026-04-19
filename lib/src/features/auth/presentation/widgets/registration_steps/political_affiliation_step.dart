@@ -35,8 +35,6 @@ class PoliticalAffiliationStep extends StatelessWidget {
       tr('politics_right'),
     ];
     final idx = value.toInt();
-    final displayLabel =
-        (idx >= 1 && idx <= labels.length && value > 0) ? labels[idx - 1] : '';
     final isSpecial = value == 0 || value == -1;
 
     return ScrollableFormPage(
@@ -47,13 +45,23 @@ class PoliticalAffiliationStep extends StatelessWidget {
           StepHeader(tr('political_affiliation')),
           const SizedBox(height: 48),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(tr('politics_left'),
-                  style: GoogleFonts.instrumentSans(color: labelColor)),
-              Text(tr('politics_right'),
-                  style: GoogleFonts.instrumentSans(color: labelColor)),
-            ],
+            children: List.generate(labels.length, (i) {
+              final isActive = !isSpecial && idx - 1 == i;
+              return Expanded(
+                child: Text(
+                  labels[i],
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.instrumentSans(
+                    color: isActive
+                        ? Theme.of(context).colorScheme.primary
+                        : labelColor,
+                    fontSize: 11,
+                    fontWeight:
+                        isActive ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              );
+            }),
           ),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -69,15 +77,6 @@ class PoliticalAffiliationStep extends StatelessWidget {
               onChanged: isSpecial ? null : (v) => onChanged(v),
               activeColor: Theme.of(context).colorScheme.primary,
               inactiveColor: isDark ? Colors.white12 : Colors.black12,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            displayLabel,
-            style: GoogleFonts.instrumentSans(
-              color: Theme.of(context).colorScheme.primary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 32),

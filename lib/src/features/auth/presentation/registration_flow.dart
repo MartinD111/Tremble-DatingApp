@@ -229,13 +229,26 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     try {
       if (kDebugMode) {
         debugPrint(
-            '[TREMBLE_AUTH_FLOW] Calling authStateProvider.notifier.register()');
+            '[TREMBLE_AUTH_FLOW] Registering via repository (bypasses premature authStateProvider update)');
       }
 
-      await ref.read(authStateProvider.notifier).register(
+      // Call registerWithEmail() directly instead of authStateProvider.notifier.register().
+      //
+      // Why: notifier.register() updates Riverpod state (authStateProvider) synchronously
+      // before this await returns, which immediately triggers _RouterNotifier.notifyListeners()
+      // and a GoRouter redirect re-evaluation. On some GoRouter/Riverpod timing paths this
+      // can cause RegistrationFlow to be rebuilt or replaced before _pageController.nextPage()
+      // is called, resetting the PageController to page 0.
+      //
+      // By calling the repository directly, the page advances first. The Firebase auth stream
+      // listener in AuthNotifier will update authStateProvider asynchronously (after the
+      // frame has rendered page 6), which is the correct ordering.
+      await ref.read(authRepositoryProvider).registerWithEmail(
             _emailController.text.trim(),
             _passwordController.text,
           );
+
+      if (!mounted) return;
 
       if (kDebugMode) {
         debugPrint(
@@ -264,6 +277,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             '[TREMBLE_AUTH_FLOW] Page advanced. currentPage=$_currentPage');
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isRegistering = false);
       String errorMsg = e.toString().contains('email-already-in-use')
           ? tr('email_in_use')
@@ -1049,13 +1063,24 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
-  /// Maps a 0.0–1.0 introvert value to one of 5 text positions.
+  /// Maps a 1–5 political value to its labeled descriptor.
+  String _politicsLabelReg(double v) {
+    final idx = v.round().clamp(1, 5) - 1;
+    return [
+      tr('politics_left'),
+      tr('politics_center_left'),
+      tr('politics_center'),
+      tr('politics_center_right'),
+      tr('politics_right'),
+    ][idx];
+  }
+
+  /// Maps a 0.0–1.0 introvert value to a percentage label with personality descriptor.
   String _introvertLabelReg(double v) {
-    if (v <= 0.12) return 'Introvert';
-    if (v <= 0.37) return 'Center-left';
-    if (v <= 0.62) return 'Ambivert';
-    if (v <= 0.87) return 'Center-right';
-    return 'Extrovert';
+    final pct = (v * 100).toInt();
+    if (pct <= 30) return '$pct% ${tr('introvert')}';
+    if (pct >= 70) return '$pct% ${tr('extrovert')}';
+    return '$pct% Ambivert';
   }
 
   void _showPartnerRangeModal({
@@ -1142,10 +1167,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               labels: RangeLabels(
                                 title == tr('introversion')
                                     ? _introvertLabelReg(tempRange.start)
-                                    : '${tempRange.start.toInt()}',
+                                    : title == tr('political_affiliation')
+                                        ? _politicsLabelReg(tempRange.start)
+                                        : '${tempRange.start.toInt()}',
                                 title == tr('introversion')
                                     ? _introvertLabelReg(tempRange.end)
-                                    : '${tempRange.end.toInt()}',
+                                    : title == tr('political_affiliation')
+                                        ? _politicsLabelReg(tempRange.end)
+                                        : '${tempRange.end.toInt()}',
                               ),
                               activeColor:
                                   Theme.of(context).colorScheme.primary,
@@ -1154,6 +1183,38 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               onChanged: (v) =>
                                   setModalState(() => tempRange = v),
                             ),
+                            if (title == tr('introversion'))
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    '${_introvertLabelReg(tempRange.start)} – ${_introvertLabelReg(tempRange.end)}',
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (title == tr('political_affiliation'))
+                              Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    '${_politicsLabelReg(tempRange.start)} – ${_politicsLabelReg(tempRange.end)}',
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                           const SizedBox(height: 16),
                           _optionPill('Vseeno mi je', dontCare, () {

@@ -26,3 +26,9 @@ All critical items reported by the founder have been addressed:
 **Status:** 🔴 OPEN
 **Impact:** Phase 8 (Paywall) is on hold until company registration and legal entities are established.
 **Action:** Move to Phase 9 (Security Hardening) and Phase C (UI Polish) instead.
+
+## BLOCKER-004 — Missing Maps API in Production
+**Date:** 2026-04-20
+**Status:** 🔴 OPEN
+**Impact:** `am---dating-app` (Prod) has no Maps API enabled. App will fail to render maps in production flavor.
+**Action:** Founder must enable Maps SDK for Android/iOS in Google Cloud Console for the prod project.

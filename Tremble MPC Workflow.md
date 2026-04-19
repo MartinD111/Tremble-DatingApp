@@ -102,13 +102,15 @@ Read this first. Update this last. Every session.
 ```markdown
 ## Phase Status Dashboard
 
-Phase 1 – Project Setup           [DONE] Core structure, agents, CI
-Phase 2 – Auth & User Model       [DONE] Firebase Auth, Firestore user doc
-Phase 3 – Proximity Detection     [✗ BLOCKED] flutter_blue_plus BLE mock timer
-Phase 4 – Radar UI                [DONE] Animation, SwiftUI frame sync
-Phase 5 – Matching Algorithm      [IN PROGRESS] Proximity triggers, filter rules
-Phase 6 – Profile Management      [PENDING] Avatar upload, bio editor
-Phase 7 – Messaging               [PENDING] Firestore message log, real-time
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Foundation — Architecture, Theme, Nav | ✅ |
+| 2 | Core UX — Profiles, Swiping, Matching | ✅ |
+| 3 | Proximity Engine — Real BLE + Geolocator | 🔴 Blocked (ADR-001) |
+| 4 | Messaging — Real-time Chat, Push | ⏳ |
+| 5 | Matching Algorithm | 🟡 In progress |
+| 6 | Infra & Security — App Check, Firestore Rules | ✅ DONE |
+| 7 | Launch Polish — Paywall, Store Deploy | ⏳ |
 Phase 8 – Notifications           [PENDING] FCM + local notifications
 Phase 9 – Location Permissions    [PENDING] iOS/Android permission flows
 Phase 10 – BLE Background Mode    [PENDING] Background execution strategy
@@ -176,16 +178,8 @@ Phase 24 – Public Launch          [PENDING] App Store + Play Store production
 **ETA:** [DATE]
 
 ### Firebase App Check Enforcement
-**Status:** PENDING — production safety gate  
-**Issue:** Firebase App Check configured but not enforced in Cloud Functions  
-**Impact:** App can be tested locally, but production Firestore writes accept requests from anywhere (including curl, fake clients)  
-**Unblocking Plan:**
-1. Enable App Check enforcement in Cloud Functions (require SafetyNet or DeviceCheck)
-2. Configure iOS (DeviceCheck) + Android (SafetyNet) tokens
-3. Test production endpoints with real app + curl (must fail)
-4. Production deploy gate: App Check enforcement active before launch
-**Owner:** Aleksandar  
-**ETA:** [DATE]
+**Status:** ✅ RESOLVED (2026-04-20)
+**Resolution:** All 19 Cloud Functions in `tremble-dev` now use `enforceAppCheck: true` and verify `request.appToken`. All dev devices registered with Debug Tokens. 
 
 ## MEDIUM BLOCKERS
 

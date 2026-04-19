@@ -205,7 +205,7 @@ export const onWaveCreated = onDocumentCreated(
 );
 
 export const getMatches = onCall(
-    { maxInstances: 100, enforceAppCheck: false, region: "europe-west1" },
+    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
         const userDoc = await db.collection("users").doc(uid).get();

@@ -131,7 +131,7 @@ export async function sendDeletionConfirmationEmail(
 // ── Public callable: resend verification email ────────────
 
 export const resendVerificationEmail = onCall(
-  { maxInstances: 10, region: "europe-west1" },
+  { maxInstances: 10, enforceAppCheck: true, region: "europe-west1" },
   async (request) => {
     const uid = requireAuth(request);
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
@@ -112,59 +111,11 @@ class _ConsentStepState extends State<ConsentStep> {
             ),
           ),
           const SizedBox(height: 24),
-          GestureDetector(
+          OptionPill(
+            label: 'Izberi Vse',
+            selected: _consentGiven,
             onTap: _toggleAll,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: _consentGiven
-                    ? Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.22)
-                    : (isDark
-                        ? Colors.white.withValues(alpha: 0.12)
-                        : Colors.black.withValues(alpha: 0.05)),
-                borderRadius: BorderRadius.circular(100),
-                border: Border.all(
-                  color: _consentGiven
-                      ? Theme.of(context).colorScheme.primary
-                      : (isDark ? Colors.white38 : Colors.black26),
-                  width: _consentGiven ? 2 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _consentGiven
-                        ? Icons.check_box
-                        : Icons.check_box_outline_blank,
-                    color: _consentGiven
-                        ? Theme.of(context).colorScheme.primary
-                        : (isDark ? Colors.white70 : Colors.black54),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Izberi Vse',
-                    style: GoogleFonts.instrumentSans(
-                      color: _consentGiven
-                          ? (isDark ? Colors.white : Colors.black)
-                          : (isDark ? const Color(0xDDFFFFFF) : Colors.black87),
-                      fontSize: 16,
-                      fontWeight:
-                          _consentGiven ? FontWeight.bold : FontWeight.w500,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (_consentGiven)
-                    Icon(Icons.check_circle,
-                        color: Theme.of(context).colorScheme.primary, size: 20),
-                ],
-              ),
-            ),
+            icon: Icons.done_all,
           ),
           const SizedBox(height: 16),
           _consentTile(
