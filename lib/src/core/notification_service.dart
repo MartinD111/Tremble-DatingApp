@@ -113,14 +113,23 @@ class NotificationService {
         ?.requestPermissions(alert: true, badge: true, sound: true);
 
     // ── Foreground FCM messages ───────────────────────────
+    // Haptic throttle: suppress duplicate vibrations within 2 seconds.
+    // Protects against BLE + FCM race conditions arriving near-simultaneously.
+    DateTime? _lastHapticAt;
+
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final type = message.data['type'];
       final notification = message.notification;
 
-      // Haptic feedback on wave received
+      // Haptic feedback on wave received — throttled to once per 2 seconds
       if (type == TrembleNotificationType.incomingWave ||
           type == TrembleNotificationType.mutualWave) {
-        HapticFeedback.heavyImpact();
+        final now = DateTime.now();
+        if (_lastHapticAt == null ||
+            now.difference(_lastHapticAt!) > const Duration(seconds: 2)) {
+          _lastHapticAt = now;
+          HapticFeedback.heavyImpact();
+        }
       }
 
       if (notification != null) {

@@ -12,7 +12,7 @@
 - [x] **TASK-003:** Match Card Redesign (Glassmorphism, Playfair Display 900).
 - [x] **TASK-002:** Pills Transparency Fix (Opaque color: `0xFF2A2A28`).
 - [x] **TASK-011:** Systematic cleanup of 40+ hardcoded Slovenian strings (D-25) — **COMPLETE**.
-- [ ] **TASK-007:** Notification Dedup & Logic Improvements (🔴 P1).
+- [x] **TASK-007:** Notification Dedup & Logic Improvements (🔴 P1) — **COMPLETE**.
 - [ ] **TASK-004:** Profile Card Hobbies + Political Slider (🔴 P2).
 
 ### 3. Technical Debt

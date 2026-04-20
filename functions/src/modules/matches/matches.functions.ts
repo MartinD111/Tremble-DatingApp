@@ -13,6 +13,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth } from "../../middleware/authGuard";
 import { sendMatchNotificationEmail } from "../email/email.functions";
+import { getRedis, waveDedupKey, WAVE_DEDUP_SECS } from "../../core/redis";
 
 const db = getFirestore();
 
@@ -41,6 +42,21 @@ export const onWaveCreated = onDocumentCreated(
         const toUid = waveData.toUid as string;
 
         if (!fromUid || !toUid) return;
+
+        // ── Wave deduplication (Redis, 5-min TTL) ─────────────────
+        //    Prevents INCOMING_WAVE spam from rapid double-taps or
+        //    duplicate Firestore trigger retries.
+        const redis = getRedis();
+        const dedupKey = waveDedupKey(fromUid, toUid);
+        const dedupSet = await redis.set(dedupKey, "1", {
+            ex: WAVE_DEDUP_SECS,
+            nx: true, // Only set if key doesn't exist
+        });
+
+        if (dedupSet === null) {
+            console.log(`[WAVE] Dedup: wave ${fromUid}→${toUid} already processed — skipping`);
+            return;
+        }
 
         // Fetch both user profiles upfront (needed for both branches)
         const [senderDoc, receiverDoc] = await Promise.all([

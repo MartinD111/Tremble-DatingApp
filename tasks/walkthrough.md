@@ -32,5 +32,15 @@ We have stabilized the Tremble platform by resolving core authentication and inf
 - Automated cleanup of `translations.dart` to ensure unique keys in constant maps.
 - Verified with `flutter analyze` and `dart format`.
 
+## 6. Scalable Notification Deduplication (TASK-007)
+**Problem**: Proximity notifications and wave alerts were prone to "spamming" (redundant pings) in high-density areas, causing notification fatigue and hitting Firestore read/write limits.
+**Solution**:
+- **Redis Infrastructure**: Integrated **Upstash Redis** (REST-based) for high-performance, low-latency state checks.
+- **Improved Cooldowns**: Increased proximity alert cooldown from 15 → 30 minutes (aligning with radar lock heartbeat).
+- **Global Throttling**: Implemented a global guard preventing any recipient from receiving >3 proximity pings per 10-minute window across all nearby users.
+- **Wave Dedup**: Added a 5-minute Redis-backed deduplication for "Waves" to prevent accidental double-tap notifications.
+- **Haptic Polish**: Added client-side throttling to ensure vibrates don't "machine-gun" if messages arrive near-simultaneously.
+- **Security**: Verified App Check enforcement on all related Cloud Functions.
+
 ---
-*Aesthetics reminder: The new banner uses the Tremble Rose color (#F4436C) for brand consistency.*
+*Aesthetics reminder: The new notification logic preserves the "Stoic/Solid" brand identity by staying silent in over-crowded environments.*

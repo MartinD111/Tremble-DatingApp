@@ -18,6 +18,7 @@ Tremble App Structure
 Infrastructure:
 - Platforms: iOS (Swift base + ImageNotification extension), Android (Kotlin base)
 - Backend:   Firebase (Auth, Firestore, Cloud Functions - Node 22 runtime)
+- Redis:     Upstash Redis (Deduplication, Global Rate Limiting, Cooldowns)
 - Storage:   Cloudflare R2 (for media) / Firebase Storage
 - Flavors:   Dev (com.pulse) | Prod (tremble.dating.app)
 

@@ -1,9 +1,9 @@
-## Session State — 2026-04-20 10:55 (TASK-011 Cleaned)
-- Active Task: Completed Systematic i18n Cleanup & UI Bug Fixes
+## Session State — 2026-04-20 11:50 (TASK-007 Complete)
+- Active Task: Completed Scalable Notification Deduplication (TASK-007)
 - Environment: Dev (tremble-dev)
-- Modified Files: translations.dart, home_screen.dart, matches_screen.dart, edit_profile_screen.dart, profile_detail_screen.dart
-- Open Problems: None from current task.
-- System Status: Build passing. Zero analysis issues. All strings localized. 
+- Modified Files: proximity.functions.ts, matches.functions.ts, redis.ts, notification_service.dart, package.json, system_map.md
+- Open Problems: None. 
+- System Status: Build passing. Zero analysis issues. Redis integration verified.
 
 ---
 
@@ -13,19 +13,16 @@
 |------|--------|-------------|
 | **Checkpoint** | ✅ | Implemented `onboardingCheckpoint` in Firestore. |
 | **Auth Loop**  | ✅ | `router.dart` now allows drafts to resume `/onboarding`. |
-| **Ranges** | ✅ | `selfIntrovertMin/Max` added to model. UI uses `RangeSlider`. |
-| **Consent UX** | ✅ | Verified Left-align "Select All" matches `OptionPill`. |
-| **Headers** | ✅ | Verified `StepHeader` scaling to 28pt on small devices. |
 | **Calibration** | ✅ | Hardware Rebrand: intro slides, technical icons, zero-writing policy. |
 | **Signal Lock** | ✅ | 2.5s "Hard-Lock" animation overlay implemented in finish flow. |
+| **Dedup (007)** | ✅ | Upstash Redis integration for scalable cooldowns & rate-limiting. |
 
 ---
 
 ## Session Handoff
-- Completed: TASK-011 (i18n Cleanup & Finalization).
+- Completed: TASK-007 (Scalable Notification Deduplication & Redis Integration).
 - In Progress: None.
 - Blocked: None.
-- **Next Action**: Execute **TASK-007 (Notification Deduplication & Logic)**.
-- **Core Governance**: Zero hardcoded strings system enforced via `analyze`. All files formatted.
-
-
+- **Next Action**: Execute **TASK-004 (Profile Card Hobbies + Political Slider)**.
+- **Core Governance**: Production-grade notification logic enforced. No spam possible via Redis-backed throttling.
+- **Key Change**: Added `@upstash/redis` to Cloud Functions. Required secrets added to `.env.example`.

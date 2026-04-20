@@ -6,7 +6,7 @@
  *
  * Interaction System v2.1:
  * - onBleProximity sends a fully anonymous CROSSING_PATHS notification.
- * - Anti-spam: 15-minute cooldown between notifications per user pair.
+ * - Anti-spam: Redis-backed 30-min pair cooldown + global 10-min throttle.
  * - No name, no photo revealed at this stage.
  */
 
@@ -18,6 +18,14 @@ import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { z } from "zod";
 import { validateRequest } from "../../middleware/validate";
+import {
+    getRedis,
+    proximityCooldownKey,
+    globalThrottleKey,
+    PROXIMITY_COOLDOWN_SECS,
+    GLOBAL_THROTTLE_SECS,
+    GLOBAL_THROTTLE_MAX,
+} from "../../core/redis";
 
 const db = getFirestore();
 
@@ -242,19 +250,24 @@ export const setInactive = onCall(
     }
 );
 
-// ── BLE Proximity Trigger ─────────────────────────────────
+// ── BLE Proximity Trigger ─────────────────────────────────────────
 
 /**
  * onBleProximity — Interaction System v2.1: CROSSING_PATHS
  *
- * Sends a fully anonymous push notification to the target user.
- * No name, no photo, no identity is revealed at this stage.
+ * Sends a fully anonymous CROSSING_PATHS notification.
+ * No name, no photo, no identity revealed at this stage.
  *
- * Anti-spam: 15-minute cooldown per user pair enforced via
- * proximity_notifications/{uid_uid} documents.
+ * Anti-spam (Redis-backed, production-grade):
+ *   1. Pair cooldown:    30 min per user pair (prox_cooldown:{a_b}).
+ *      Uses SET NX EX — atomic, O(1), no Firestore reads.
+ *   2. Global throttle:  max 3 CROSSING_PATHS per recipient per 10 min.
+ *      Enforces "Stoic/Solid" brand — stays silent in dense crowds.
  *
- * Privacy: proximity_events has a 10-minute TTL via Firestore TTL
- * policy on the `ttl` field (must be set in Firebase Console).
+ * Security: onDocumentCreated receives data written by authenticated,
+ * App-Check-verified clients. Input is trusted.
+ *
+ * Privacy: proximity_events TTL = 10 min (Firestore TTL policy on `ttl`).
  */
 export const onBleProximity = onDocumentCreated(
     { document: "proximity_events/{eventId}", region: "europe-west1" },
@@ -285,35 +298,63 @@ export const onBleProximity = onDocumentCreated(
         const toUid = toUidSnapshot.docs[0].id;
         if (fromUid === toUid) return;
 
-        // ── 15-minute anti-spam cooldown ──────────────────
-        const spamKey = [fromUid, toUid].sort().join("_");
-        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-
-        const recentNotif = await db
-            .collection("proximity_notifications")
-            .doc(spamKey)
-            .get();
-
-        if (recentNotif.exists) {
-            const sentAt = recentNotif.data()?.sentAt?.toDate() as Date | undefined;
-            if (sentAt && sentAt > fifteenMinutesAgo) {
-                console.log(`[BLE] Anti-spam: cooldown active for ${spamKey}`);
-                return;
-            }
-        }
-
-        // ── Skip if already matched ───────────────────────
-        const matchId1 = [fromUid, toUid].sort().join("_");
-        const existingMatch = await db.collection("matches").doc(matchId1).get();
+        // ── Skip if already matched ───────────────────────────────
+        const matchId = [fromUid, toUid].sort().join("_");
+        const existingMatch = await db.collection("matches").doc(matchId).get();
         if (existingMatch.exists) {
-            console.log(`[BLE] Match already exists for ${spamKey} — skipping`);
+            console.log(`[BLE] Match already exists (${matchId}) — skipping`);
             return;
         }
 
-        // ── Send anonymous CROSSING_PATHS notification ────
-        const targetUserDoc = await db.collection("users").doc(toUid).get();
-        const fcmToken = targetUserDoc.data()?.fcmToken as string | undefined;
+        // ── Fetch target user (needed for FCM token + block list) ─
+        const toUserDoc = await db.collection("users").doc(toUid).get();
+        const fcmToken = toUserDoc.data()?.fcmToken as string | undefined;
+        const blockedIds: string[] = toUserDoc.data()?.blockedUserIds ?? [];
 
+        // ── Skip if sender is blocked by recipient ────────────────
+        if (blockedIds.includes(fromUid)) {
+            console.log(`[BLE] ${fromUid} blocked by ${toUid} — skipping`);
+            return;
+        }
+
+        const redis = getRedis();
+
+        // ── 1. Pair cooldown (Redis, 30-min TTL) ──────────────────
+        //    Atomic SET NX EX — only sets if key doesn't already exist.
+        //    If key exists → cooldown active → skip without extra reads.
+        const pairKey = proximityCooldownKey(fromUid, toUid);
+        const pairSet = await redis.set(pairKey, "1", {
+            ex: PROXIMITY_COOLDOWN_SECS,
+            nx: true,
+        });
+
+        if (pairSet === null) {
+            // nx failed — key already exists, cooldown active
+            console.log(`[BLE] Pair cooldown active: ${pairKey}`);
+            return;
+        }
+
+        // ── 2. Global throttle (Redis INCR + EXPIRE) ──────────────
+        //    Sliding counter: max GLOBAL_THROTTLE_MAX pings per 10 min.
+        //    Ensures Tremble stays "Stoic" even at events or busy places.
+        const throttleKey = globalThrottleKey(toUid);
+        const currentCount = await redis.incr(throttleKey);
+
+        if (currentCount === 1) {
+            // First notification this window — attach the TTL now
+            await redis.expire(throttleKey, GLOBAL_THROTTLE_SECS);
+        }
+
+        if (currentCount > GLOBAL_THROTTLE_MAX) {
+            console.log(
+                `[BLE] Global throttle: ${toUid} at ${currentCount}/${GLOBAL_THROTTLE_MAX} — suppressing`
+            );
+            // Roll back pair cooldown so a later attempt in a quieter window succeeds
+            await redis.del(pairKey);
+            return;
+        }
+
+        // ── Send anonymous CROSSING_PATHS notification ────────────
         if (!fcmToken) {
             console.log(`[BLE] No FCM token for ${toUid}`);
             return;
@@ -323,7 +364,7 @@ export const onBleProximity = onDocumentCreated(
             token: fcmToken,
             notification: {
                 title: "Tremble",
-                // ANONYMOUS — no name, no image, no identity at this stage.
+                // ANONYMOUS — no name, no photo, no identity at this stage.
                 body: "Nekdo je blizu. Boš pomahal-a?",
             },
             data: {
@@ -339,12 +380,8 @@ export const onBleProximity = onDocumentCreated(
             },
         });
 
-        // Record send to enforce cooldown
-        await db.collection("proximity_notifications").doc(spamKey).set({
-            sentAt: FieldValue.serverTimestamp(),
-            users: [fromUid, toUid],
-        });
-
-        console.log(`[BLE] CROSSING_PATHS sent anonymously to ${toUid}`);
+        console.log(
+            `[BLE] CROSSING_PATHS → ${toUid} (throttle ${currentCount}/${GLOBAL_THROTTLE_MAX})`
+        );
     }
 );
