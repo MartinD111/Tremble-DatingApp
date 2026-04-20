@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Monetization & Security
-status: planning
-last_updated: "2026-04-20T11:50:39.963Z"
+status: in_progress
+last_updated: "2026-04-20T14:00:00.000Z"
 progress:
   total_phases: 2
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State: Tremble
@@ -41,6 +41,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-18 after v1.1)
 | 8 | Paywall / Tremble Pro | ⛔ SKIPPED — legal reasons (RevenueCat deferred) |
 | 9 | Security Hardening & GDPR | 🟡 In progress (10-01 GDPR fix deployed to tremble-dev) |
 | 10 | Launch Polish & Store Deploy | ⏳ Not started |
+| 11 | Technical Security Audit & Hardening | ✅ Complete (2026-04-20) |
 
 ## Open Blockers
 
@@ -65,11 +66,11 @@ D-25: 40+ hardcoded Slovenian strings | D-26: ugc_action_sheet white bg | D-27: 
 
 ## Next Action
 
-Phase 8 (Paywall) SKIPPED — legal reasons. Start Phase 9 (Security Hardening):
+Phase 11 complete. Cloud Functions need to be deployed to tremble-dev to activate the security changes. Then continue Phase 9 or move to Phase 10 (Launch Polish).
 
-1. `mkdir -p .planning/phases/09-security-hardening-gdpr`
-2. `/gsd:plan-phase 9 --skip-research` — 6 req IDs: SEC-01…SEC-06
-3. Then Phase C tasks (TASK-003, TASK-007, TASK-008) + D-27 cleanup
+```bash
+cd functions && npm run deploy:dev
+```
 
 ---
-*Last updated: 2026-04-20 — 11-PLAN-01 complete. PII log masking deployed across 7 Cloud Function files.*
+*Last updated: 2026-04-20 — Phase 11 complete. All 3 plans shipped: PII log masking, Firestore rule hardening, Zod schema migration.*
