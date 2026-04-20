@@ -17,3 +17,8 @@ Source: Phase 9 Security Hardening, April 2026.
 **Rule #16 — iOS Map xcconfig files live at `ios/Flutter/`, not `ios/Runner/`.**
 [2026-04-20] `ios/Runner/Info.plist` resolves `$(MAPS_API_KEY)` from `ios/Flutter/Debug.xcconfig` and `ios/Flutter/Release.xcconfig` (not `ios/Runner/*.xcconfig`). The Xcode project (`project.pbxproj`) points `baseConfigurationReference` to `Flutter/Debug.xcconfig`. If the map renders as a grey screen on iOS, confirm these two files exist and contain a real key (not placeholder). Android Maps key lives separately in `android/local.properties`.
 Source: Map Troubleshooting, April 2026.
+
+**Rule #17 — Zero Writing Policy in Onboarding.**
+[2026-04-20] The registration flow must contain zero custom text input fields (excluding Name). The brand identity ("Stoic, Solid") demands binary/enum-based selection only to maintain a technical "Signal Calibration" theme. Any request for "Custom" free-text fields (eg: custom pet, custom job) must be rejected to ensure zero verbal friction.
+Source: Registration Phase 2 (Signal Calibration), April 2026.
+

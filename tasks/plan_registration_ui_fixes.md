@@ -202,15 +202,15 @@ Fix 17 critical bugs across registration flow, app UI, and settings to ensure:
 ## 5. VERIFICATION
 
 ### Exit Criteria
-- [ ] `flutter analyze` → 0 issues
-- [ ] `flutter test` → All 23 tests passing (20 existing + 3 new)
-- [ ] Auth flow: Email entry → password → age selection NOT skipped → name entered → profile created ✅
-- [ ] Settings light mode: Profile image text readable
-- [ ] Settings edit slider: Live display works, Save persists to Firestore
-- [ ] Multiple selection: "Selected 3" pill shown, click opens modal with Edit button
-- [ ] Language change: Cancel reverts, Save persists
-- [ ] Small screen (400px width): No overflow errors, text readable
-- [ ] Device test: Fresh install → login → onboarding → match screen → settings → edits work
+- [x] `flutter analyze` → 0 issues
+- [x] `flutter test` → All 23 tests passing (20 existing + 3 new)
+- [x] Auth flow: Email entry → password → age selection NOT skipped → name entered → profile created ✅
+- [x] Settings light mode: Profile image text readable
+- [x] Settings edit slider: Live display works, Save persists to Firestore
+- [x] Multiple selection: "Selected 3" pill shown, click opens modal with Edit button
+- [x] Language change: Cancel reverts, Save persists
+- [x] Small screen (400px width): No overflow errors, text readable
+- [x] Device test: Fresh install → login → onboarding → match screen → settings → edits work
 
 ### Coverage Target
 - Auth loop fix: 1 unit test (cover both scenarios: loop vs. normal)

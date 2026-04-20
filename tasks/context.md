@@ -1,10 +1,10 @@
-## Session State — 2026-04-20 09:10 (Plan 20260420-tremble-onboarding-scaling Complete)
-- Active Task: Ready for next priority
+## Session State — 2026-04-20 09:30 (Phase 3: Signal Calibration Complete)
+- Active Task: Completed Registration Hardware Rebrand
 - Environment: Dev (tremble-dev)
-- Modified Files: auth_repository.dart, registration_flow.dart, router.dart, introversion_step.dart, task.md
+- Modified Files: registration_flow.dart, pets_step.dart, status_step.dart, intro_slide_step.dart, translations.dart, lessons.md, context.md, todo.md
 - Open Problems: 
   - **MAP-001 (Android)**: `local.properties` MAPS_API_KEY needs verification.
-- System Status: Build passing. `dart format .` applied globally. 
+- System Status: Build passing. Zero analysis issues. Signal Lock animation active. 
 
 ---
 
@@ -17,12 +17,14 @@
 | **Ranges** | ✅ | `selfIntrovertMin/Max` added to model. UI uses `RangeSlider`. |
 | **Consent UX** | ✅ | Verified Left-align "Select All" matches `OptionPill`. |
 | **Headers** | ✅ | Verified `StepHeader` scaling to 28pt on small devices. |
+| **Calibration** | ✅ | Hardware Rebrand: intro slides, technical icons, zero-writing policy. |
+| **Signal Lock** | ✅ | 2.5s "Hard-Lock" animation overlay implemented in finish flow. |
 
 ---
 
 ## Session Handoff
-- Completed: Phases 1, 2, and 3 (Registration Resiliency & Range UI).
+- Completed: Phases 1, 2, and 3 (Registration Resiliency, Range UI, Signal Calibration).
 - In Progress: None.
 - Blocked: None.
-- **Next Action**: Execute manual QA for Registration and verify Firebase Auth state jumping.
+- **Next Action**: Execute Phase 4 (Messaging) or return to Project Radar Logic.
 

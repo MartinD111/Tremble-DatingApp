@@ -1,22 +1,20 @@
 # Session Handoff — Aleksandar to Martin
-**Date:** 2026-04-18 01:40
+**Date:** 2026-04-20 09:30
 **Target Phase:** Milestone v1.2 — Security & UI Polish
 
 ---
 
 ## 🛰 Status Summary
-We have just completed a major stabilization sprint. The core loop (**Wave → Proximity → Match Reveal**) and **Profile Persistence** are now high-fidelity and fully backed by deployed Cloud Functions on `tremble-dev`.
+We have just completed the **Registration Phase 2: Signal Calibration** sprint. The onboarding flow has been transformed into a technical "Hardware Hardware Setup" experience, adhering to the Zero-Writing policy.
 
 ### 🚀 Key Accomplishments
-1. **Cloud Functions Deployed**: All 21 functions are live on `europe-west1` (Node 22). No more "NOT_FOUND" errors!
-2. **Profile Persistence FIXED**: BUG-002 is resolved. The Zod `.strict()` schema now correctly accepts all 21 mobile fields (gender, hobbies, images, etc.).
-3. **Match Flow RESTORED**: BUG-001 is resolved. Legacy/broken greeting logic replaced with direct `WaveRepository.sendWave()` writes.
-4. **UX Polish (Phase B)**:
-   - Radar timer is now **48px JetBrains Mono**.
-   - **Tremble Logo** pulse animation integrated into the radar center.
-   - Map has a **3-state zoom toggle** (City / 1km / Country).
-   - All pills are opaque (`0xFF2A2A28`) to reduce visual noise from the radar.
-5. **Milestone v1.1 CLOSED**: Formally archived in GSD.
+1. **Signal Calibration Rebrand**: Intro slides overhauled with technical hardware copy and `LucideIcons`.
+2. **Zero-Writing Policy**: Removed all custom text input fields (Occupation, Pets, etc.) to ensure a high-energy, friction-free selection flow.
+3. **Signal Lock Animation**: Implemented a 2.5s "Hard-Lock" transition overlay with the Tremble Logo to signal completion.
+4. **App Check Hardening**: Server-side enforcement successfully implemented in `authGuard.ts` for all Cloud Functions.
+5. **Clean Analysis**: Resolved all unused variable warnings and incorrect import paths in the auth module.
+6. **MPC Sync**: All Control Plane files (`lessons.md`, `context.md`, `debt.md`) fully updated.
+
 
 ---
 

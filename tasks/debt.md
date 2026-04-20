@@ -29,7 +29,7 @@
 | D-25 | 40+ hardcoded Slovenian strings across home_screen, matches_screen, match_reveal_screen, profile_detail_screen, login_screen bypassing the translation system | Medium | Phase 2C | ❌ PENDING |
 | D-26 | `ugc_action_sheet.dart` uses system default white background (no `backgroundColor` override) — white sheet on dark gradient app | Medium | Phase 2C | ✅ RESOLVED — 2026-04-18 |
 | D-27 | Forgot password screen shows indefinitely spinning `CircularProgressIndicator` after email is sent — nothing is loading, misleading UX | Medium | Phase 2C | ✅ RESOLVED — 2026-04-18 |
-| D-28 | `functions/.env` was mixing dev and prod credentials in a single file (last block wins) | High | Resolved | ✅ RESOLVED — 2026-04-09 |
+| D-28 | `registration_flow.dart` 17-item UI fix plan (Phase 1, 2, 3) | High | Resolved | ✅ RESOLVED — 2026-04-20: Completed Signal Calibration, Hardware Rebrand, Zero-Writing Policy, and Signal Lock transition. |
 | D-29 | `lib/firebase_options.dart` and `lib/firebase_options_dev.dart` at lib/ root were tracked by git and contained Firebase API keys | High | Resolved | ✅ RESOLVED — 2026-04-09 |
 | D-30 | `scripts/ci/secret_scan.sh` was a stub (always passed, never actually scanned) — CI had zero secrets protection | High | Resolved | ✅ RESOLVED — 2026-04-09 |
 | D-31 | `MatchRepository` calls legacy `sendGreeting` Cloud Function (removed in Phase 6 upgrade) | High | Immediate | ✅ RESOLVED — 2026-04-18 |

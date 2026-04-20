@@ -9,7 +9,7 @@
 
 ### 2. UI & UX Refinement (Phase C)
 - [x] **TASK-008:** Map 3-state Zoom Toggle (City / Nearby / Country).
-- [/] **D-28:** Execute 17-item registration UI fix plan (Phase 1 & 2 complete).
+- [x] **D-28:** Execute 17-item registration UI fix plan (Phase 1, 2, & 3 complete).
 - [ ] **TASK-003:** Match Card Redesign (Glassmorphism, Playfair Display 900).
 - [ ] **TASK-007:** Notification Dedup & Logic Improvements.
 - [ ] **TASK-004:** Profile Card Hobbies + Political Slider.
