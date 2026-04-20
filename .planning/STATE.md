@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Monetization & Security
 status: planning
-last_updated: "2026-04-18T00:00:00.000Z"
+last_updated: "2026-04-20T11:50:39.963Z"
 progress:
   total_phases: 2
   completed_phases: 0
@@ -56,14 +56,20 @@ D-25: 40+ hardcoded Slovenian strings | D-26: ugc_action_sheet white bg | D-27: 
 ## Accumulated Context
 
 ### Roadmap Evolution
+
 - Phase 11 added: SECURITY-01: Technical Security Audit & Hardening
+
+### Decisions
+
+- **11-PLAN-01**: Mask UIDs to 8-char prefix in all Cloud Function logs; remove email addresses from log statements entirely. Extended masking to fromUid/toUid in proximity BLE logs (Rule 2 — missing PII coverage). Commit: 6e03f0c.
 
 ## Next Action
 
 Phase 8 (Paywall) SKIPPED — legal reasons. Start Phase 9 (Security Hardening):
+
 1. `mkdir -p .planning/phases/09-security-hardening-gdpr`
 2. `/gsd:plan-phase 9 --skip-research` — 6 req IDs: SEC-01…SEC-06
 3. Then Phase C tasks (TASK-003, TASK-007, TASK-008) + D-27 cleanup
 
 ---
-*Last updated: 2026-04-18 — v1.1 milestone archived. Starting v1.2.*
+*Last updated: 2026-04-20 — 11-PLAN-01 complete. PII log masking deployed across 7 Cloud Function files.*
