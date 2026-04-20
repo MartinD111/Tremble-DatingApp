@@ -2,6 +2,8 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
+import { validateRequest } from "../../middleware/validate";
+import { blockUserSchema, unblockUserSchema, reportUserSchema } from "./safety.schema";
 
 const db = getFirestore();
 
@@ -16,10 +18,7 @@ export const blockUser = onCall(
         const uid = requireAuth(request);
         await checkRateLimit(request.rawRequest.ip || uid, "blockUser", { maxRequests: 10, windowMs: 60000 });
 
-        const { targetUid } = request.data;
-        if (!targetUid || typeof targetUid !== "string") {
-            throw new HttpsError("invalid-argument", "Missing or invalid targetUid");
-        }
+        const { targetUid } = validateRequest(blockUserSchema, request.data);
         if (uid === targetUid) {
             throw new HttpsError("invalid-argument", "Cannot block yourself");
         }
@@ -60,7 +59,7 @@ export const blockUser = onCall(
 
         await batch.commit();
 
-        console.log(`[SAFETY] User ${uid} blocked user ${targetUid}`);
+        console.log(`[SAFETY] User ${uid.substring(0, 8)}... blocked user ${targetUid.substring(0, 8)}...`);
         return { success: true };
     }
 );
@@ -75,10 +74,7 @@ export const unblockUser = onCall(
         const uid = requireAuth(request);
         await checkRateLimit(request.rawRequest.ip || uid, "unblockUser", { maxRequests: 10, windowMs: 60000 });
 
-        const { targetUid } = request.data;
-        if (!targetUid || typeof targetUid !== "string") {
-            throw new HttpsError("invalid-argument", "Missing or invalid targetUid");
-        }
+        const { targetUid } = validateRequest(unblockUserSchema, request.data);
 
         const batch = db.batch();
 
@@ -94,7 +90,7 @@ export const unblockUser = onCall(
 
         await batch.commit();
 
-        console.log(`[SAFETY] User ${uid} unblocked user ${targetUid}`);
+        console.log(`[SAFETY] User ${uid.substring(0, 8)}... unblocked user ${targetUid.substring(0, 8)}...`);
         return { success: true };
     }
 );
@@ -110,13 +106,7 @@ export const reportUser = onCall(
         const uid = requireAuth(request);
         await checkRateLimit(request.rawRequest.ip || uid, "reportUser", { maxRequests: 5, windowMs: 60000 });
 
-        const { reportedUid, reasons, explanation } = request.data;
-        if (!reportedUid || typeof reportedUid !== "string") {
-            throw new HttpsError("invalid-argument", "Missing or invalid reportedUid");
-        }
-        if (!Array.isArray(reasons) || reasons.length === 0) {
-            throw new HttpsError("invalid-argument", "Must provide at least one reason for reporting");
-        }
+        const { reportedUid, reasons, explanation } = validateRequest(reportUserSchema, request.data);
 
         // 1. Create the report document
         const reportRef = db.collection("reports").doc();
@@ -148,7 +138,7 @@ export const reportUser = onCall(
 
         await batch.commit();
 
-        console.log(`[SAFETY] User ${uid} reported ${reportedUid} for ${reasons.join(", ")}`);
+        console.log(`[SAFETY] User ${uid.substring(0, 8)}... reported ${reportedUid.substring(0, 8)}... for ${reasons.join(", ")}`);
         return { success: true, reportId: reportRef.id };
     }
 );
