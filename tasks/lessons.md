@@ -33,3 +33,6 @@ Source: i18n Cleanup TASK-011, April 2026.
 **Rule #20 — "App as a Tool" Profile UI Logic.**
 [2026-04-20] Favor vertical `Wrap` over horizontal scrolling `Row` for data-dense sections (e.g., Hobbies). This improves transparency (everything visible at once) and reduces interaction friction. Additionally, always maintain 1:1 logic parity between `ProfileCardPreview` (self-view) and `ProfileDetailScreen` (match-view) to ensure the technical brand experience is consistent across all surfaces. Simplify complex visualizations (e.g., spectrum sliders) into direct data points (pills) for non-personality traits (e.g., politics) to avoid "designer-y" distractions.
 Source: Profile UI Refinement TASK-004, April 2026.
+**Rule #21 — Always verify Firebase aliases in `.firebaserc` before deployment.**
+[2026-04-20] Never assume project aliases like `development` or `staging` point to the correct project. A misconfigured `.firebaserc` (e.g., `development` pointing to a production project ID) can lead to catastrophic data loss or policy violations. Always cross-reference the project ID in `firebase.json` or `.firebaserc` with the official project list (`firebase projects:list`) before executing any deployment command.
+Source: Phase 11 Security Audit, April 2026.

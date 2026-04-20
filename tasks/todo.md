@@ -14,6 +14,7 @@
 - [x] **TASK-011:** Systematic cleanup of 40+ hardcoded Slovenian strings (D-25) — **COMPLETE**.
 - [x] **TASK-007:** Notification Dedup & Logic Improvements (🔴 P1) — **COMPLETE**.
 - [x] **TASK-004:** Profile Card Hobbies + Political Slider (🔴 P2) — **COMPLETE**.
+- [x] **Phase 11:** Technical Security Audit & Hardening (App Check, Zod, Firestore Rules) — **COMPLETE**.
 
 ### 3. Technical Debt
 - [x] **D-28:** Execute 17-item registration UI fix plan.
