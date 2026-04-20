@@ -977,3 +977,107 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// showSelectedItemsModal — "View only" summary for multi-select fields (Item 13)
+// ─────────────────────────────────────────────────────────────────────────────
+Future<void> showSelectedItemsModal({
+  required BuildContext context,
+  required String title,
+  required List<String> items,
+  required String Function(String) formatter,
+  required VoidCallback onEdit,
+}) async {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final textColor = isDark ? Colors.white : Colors.black87;
+  final brandRose = Theme.of(context).colorScheme.primary;
+
+  await showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (ctx) => Container(
+      padding: EdgeInsets.fromLTRB(24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white24 : Colors.black26,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.instrumentSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  onEdit();
+                },
+                child: Text(
+                  'Edit',
+                  style: GoogleFonts.instrumentSans(
+                    color: brandRose,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Flexible(
+            child: items.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      'No items selected.',
+                      style: GoogleFonts.instrumentSans(color: isDark ? Colors.white54 : Colors.black45),
+                    ),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                        ),
+                        child: Text(
+                          formatter(items[index]),
+                          style: GoogleFonts.instrumentSans(
+                            color: textColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
