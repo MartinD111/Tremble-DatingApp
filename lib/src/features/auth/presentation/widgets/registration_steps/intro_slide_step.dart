@@ -22,22 +22,22 @@ class IntroSlideStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final titles = [
-      tr('onb1_title'),
-      tr('onb2_title'),
-      tr('onb3_title'),
-      tr('onb4_title'),
+      '',
+      tr('calib1_title'),
+      tr('calib2_title'),
+      tr('calib3_title'),
     ];
     final bodies = [
-      tr('onb1_body'),
-      tr('onb2_body'),
-      tr('onb3_body'),
-      tr('onb4_body'),
+      '',
+      tr('calib1_body'),
+      tr('calib2_body'),
+      tr('calib3_body'),
     ];
     final icons = [
-      LucideIcons.heartPulse,
       LucideIcons.activity,
-      LucideIcons.map,
-      LucideIcons.user,
+      LucideIcons.radio,
+      LucideIcons.shieldCheck,
+      LucideIcons.radar,
     ];
 
     final isDark = Theme.of(context).brightness == Brightness.dark;

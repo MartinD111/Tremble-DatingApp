@@ -5,16 +5,16 @@ import 'step_shared.dart';
 class IntroversionStep extends StatelessWidget {
   const IntroversionStep({
     super.key,
-    required this.value,
+    required this.values,
     required this.onChanged,
     required this.onBack,
     required this.onContinueTap,
     required this.tr,
   });
 
-  /// 0.0 = full introvert, 1.0 = full extrovert.
-  final double value;
-  final ValueChanged<double> onChanged;
+  /// Range from 0.0 (full introvert) to 1.0 (full extrovert).
+  final RangeValues values;
+  final ValueChanged<RangeValues> onChanged;
   final VoidCallback onBack;
 
   /// Called when Continue is tapped. Parent is responsible for showing
@@ -61,10 +61,10 @@ class IntroversionStep extends StatelessWidget {
               ),
             ],
           ),
-          Slider(
-            value: value,
+          RangeSlider(
+            values: values,
             onChanged: onChanged,
-            divisions: 10,
+            divisions: 20,
             activeColor: Theme.of(context).colorScheme.primary,
             inactiveColor:
                 isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
@@ -74,10 +74,13 @@ class IntroversionStep extends StatelessWidget {
             fit: BoxFit.scaleDown,
             child: Text(
               () {
-                final pct = (value * 100).toInt();
-                if (pct <= 30) return '$pct% ${tr('introvert')}';
-                if (pct >= 70) return '$pct% ${tr('extrovert')}';
-                return '$pct% Ambivert';
+                final startPct = (values.start * 100).toInt();
+                final endPct = (values.end * 100).toInt();
+                final avg = (startPct + endPct) / 2;
+                String label = 'Ambivert';
+                if (avg <= 40) label = tr('introvert');
+                if (avg >= 60) label = tr('extrovert');
+                return '$startPct% – $endPct% $label';
               }(),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,

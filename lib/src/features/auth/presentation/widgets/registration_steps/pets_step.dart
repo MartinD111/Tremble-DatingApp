@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
@@ -8,7 +7,6 @@ class PetsStep extends StatelessWidget {
     super.key,
     required this.selected,
     required this.onSelect,
-    required this.customPetController,
     required this.onBack,
     required this.onContinueTap,
     required this.tr,
@@ -16,7 +14,6 @@ class PetsStep extends StatelessWidget {
 
   final String? selected;
   final ValueChanged<String> onSelect;
-  final TextEditingController customPetController;
   final VoidCallback onBack;
 
   /// Called when Continue is tapped. Parent is responsible for showing
@@ -26,7 +23,6 @@ class PetsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ScrollableFormPage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,37 +55,6 @@ class PetsStep extends StatelessWidget {
             selected: selected == 'cat',
             onTap: () => onSelect('cat'),
           ),
-          OptionPill(
-            label: tr('something_else'),
-            selected: selected == 'something_else',
-            onTap: () => onSelect('something_else'),
-          ),
-          if (selected == 'something_else')
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: TextField(
-                controller: customPetController,
-                style: GoogleFonts.instrumentSans(
-                    color: isDark ? Colors.white : Colors.black87),
-                decoration: InputDecoration(
-                  hintText: tr('write_answer'),
-                  hintStyle: GoogleFonts.instrumentSans(
-                      color: isDark ? Colors.white30 : Colors.black38),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(100),
-                    borderSide: BorderSide(
-                        color: isDark ? Colors.white30 : Colors.black26),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(100),
-                    borderSide: BorderSide(
-                        color: isDark ? Colors.white : Colors.black, width: 2),
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                ),
-              ),
-            ),
           OptionPill(
             label: tr('nothing'),
             selected: selected == 'nothing',

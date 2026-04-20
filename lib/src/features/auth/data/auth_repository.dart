@@ -14,6 +14,7 @@ class AuthUser {
   final String? name;
   final int? age;
   final bool isOnboarded;
+  final int onboardingCheckpoint;
   final DateTime? birthDate;
   final List<String> photoUrls;
   final String? gender;
@@ -29,6 +30,8 @@ class AuthUser {
   final String? occupation; // Specific title (e.g. 'Computer Science')
   final String? drinkingHabit;
   final int? introvertScale;
+  final int? selfIntrovertMin;
+  final int? selfIntrovertMax;
   final String? partnerIntrovertPreference;
   final String? exerciseHabit;
   final String? sleepSchedule;
@@ -94,6 +97,8 @@ class AuthUser {
     this.occupation,
     this.drinkingHabit,
     this.introvertScale,
+    this.selfIntrovertMin,
+    this.selfIntrovertMax,
     this.partnerIntrovertPreference,
     this.exerciseHabit,
     this.sleepSchedule,
@@ -118,6 +123,7 @@ class AuthUser {
     this.hobbies = const [],
     this.prompts = const {},
     this.isOnboarded = false,
+    this.onboardingCheckpoint = 0,
     this.isEmailVerified = false,
     this.isAdmin = false,
     this.isPremium = false,
@@ -148,6 +154,7 @@ class AuthUser {
   Map<String, dynamic> toApiPayload() {
     return {
       if (name != null) 'name': name,
+      'onboardingCheckpoint': onboardingCheckpoint,
       if (age != null) 'age': age,
       if (birthDate != null) 'birthDate': birthDate!.toIso8601String(),
       if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
@@ -162,6 +169,8 @@ class AuthUser {
       'occupation': occupation,
       'drinkingHabit': drinkingHabit,
       'introvertScale': introvertScale,
+      if (selfIntrovertMin != null) 'selfIntrovertMin': selfIntrovertMin,
+      if (selfIntrovertMax != null) 'selfIntrovertMax': selfIntrovertMax,
       'partnerIntrovertPreference': partnerIntrovertPreference,
       'exerciseHabit': exerciseHabit,
       'sleepSchedule': sleepSchedule,
@@ -251,6 +260,7 @@ class AuthUser {
       name: data['name'] as String?,
       age: data['age'] as int?,
       isOnboarded: data['isOnboarded'] as bool? ?? false,
+      onboardingCheckpoint: data['onboardingCheckpoint'] as int? ?? 0,
       birthDate: _parseDateTime(data['birthDate']),
       photoUrls: List<String>.from(data['photoUrls'] ?? []),
       gender: data['gender'] as String?,
@@ -265,6 +275,8 @@ class AuthUser {
       occupation: data['occupation'] as String?,
       drinkingHabit: data['drinkingHabit'] as String?,
       introvertScale: data['introvertScale'] as int?,
+      selfIntrovertMin: data['selfIntrovertMin'] as int?,
+      selfIntrovertMax: data['selfIntrovertMax'] as int?,
       partnerIntrovertPreference: data['partnerIntrovertPreference'] as String?,
       exerciseHabit: data['exerciseHabit'] as String?,
       sleepSchedule: data['sleepSchedule'] as String?,
@@ -332,6 +344,8 @@ class AuthUser {
     String? occupation,
     String? drinkingHabit,
     int? introvertScale,
+    int? selfIntrovertMin,
+    int? selfIntrovertMax,
     String? partnerIntrovertPreference,
     String? exerciseHabit,
     String? sleepSchedule,
@@ -356,6 +370,7 @@ class AuthUser {
     List<String>? hobbies,
     Map<String, String>? prompts,
     bool? isOnboarded,
+    int? onboardingCheckpoint,
     bool? isEmailVerified,
     bool? isAdmin,
     bool? isPremium,
@@ -398,6 +413,8 @@ class AuthUser {
       occupation: occupation ?? this.occupation,
       drinkingHabit: drinkingHabit ?? this.drinkingHabit,
       introvertScale: introvertScale ?? this.introvertScale,
+      selfIntrovertMin: selfIntrovertMin ?? this.selfIntrovertMin,
+      selfIntrovertMax: selfIntrovertMax ?? this.selfIntrovertMax,
       partnerIntrovertPreference:
           partnerIntrovertPreference ?? this.partnerIntrovertPreference,
       exerciseHabit: exerciseHabit ?? this.exerciseHabit,
@@ -425,6 +442,7 @@ class AuthUser {
       hobbies: hobbies ?? this.hobbies,
       prompts: prompts ?? this.prompts,
       isOnboarded: isOnboarded ?? this.isOnboarded,
+      onboardingCheckpoint: onboardingCheckpoint ?? this.onboardingCheckpoint,
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
       isAdmin: isAdmin ?? this.isAdmin,
       isPremium: isPremium ?? this.isPremium,
@@ -627,6 +645,19 @@ class AuthRepository {
 
   CollectionReference<Map<String, dynamic>> get _users =>
       _db.collection('users');
+
+  // ── Registration Draft (Checkpointing) ───────────────────────────────────
+  Future<void> updateRegistrationDraft(
+      String uid, Map<String, dynamic> draftData) async {
+    try {
+      await _users.doc(uid).set(
+            draftData,
+            SetOptions(merge: true),
+          );
+    } catch (e) {
+      debugPrint("[AUTH] Failed to update draft for $uid: $e");
+    }
+  }
 
   // ── Login ────────────────────────────────────────────────────────────────
   Future<AuthUser> loginWithEmail(String email, String password) async {

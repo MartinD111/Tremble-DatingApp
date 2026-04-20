@@ -398,6 +398,16 @@ const Map<String, Map<String, String>> _translations = {
     'onb4_title': 'YOUR RULES.',
     'onb4_body':
         'Unmatch or block at any time. Unidirectional — no one knows you waved until it\'s mutual.',
+    // Hardware Calibration Setup
+    'calib1_title': 'SENSOR INITIALIZATION',
+    'calib1_body':
+        'Activating BLE and GPS hybrid sensing. Tremble establishes a localized proximity net with <2% battery impact.',
+    'calib2_title': 'ON-DEVICE ARCHITECTURE',
+    'calib2_body':
+        'Privacy is not a policy, it is architecture. Proximity is calculated locally and discarded. Zero location stored.',
+    'calib3_title': 'RANGE CALIBRATION',
+    'calib3_body':
+        'Configuring radar for a 40-meter radius. Only physical presence triggers a signal lock.',
     'consent_subtitle':
         'By continuing, you agree to our Terms of Service and Privacy Policy.',
     'dating_preference': 'Dating preference',
@@ -781,6 +791,16 @@ const Map<String, Map<String, String>> _translations = {
     'onb4_title': 'TVOJA PRAVILA.',
     'onb4_body':
         'Odpravi ujemanje ali blokiraj kadarkoli. Enosmerno — nihče ne ve, da si poslal val, dokler ni vzajemno.',
+    // Hardware Calibration Setup
+    'calib1_title': 'INICIALIZACIJA SENZORJEV',
+    'calib1_body':
+        'Aktivacija BLE in GPS zaznavanja. Tremble vzpostavlja lokalno mrežo z minimalnim vplivom na baterijo pod 2%.',
+    'calib2_title': 'ON-DEVICE ARHITEKTURA',
+    'calib2_body':
+        'Zasebnost ni politika, je arhitektura. Oddaljenost je izračunana lokalno in takoj zavržena. Brez shranjevanja lokacije.',
+    'calib3_title': 'KALIBRACIJA OBMOČJA',
+    'calib3_body':
+        'Konfiguracija radarja za radij 40 metrov. Samo fizična prisotnost sproži signal.',
     'consent_subtitle':
         'Z nadaljevanjem se strinjate z našimi Pogoji poslovanja in Politiko zasebnosti.',
     'dating_preference': 'Dating preference',

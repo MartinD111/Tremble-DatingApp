@@ -37,6 +37,7 @@ import 'widgets/registration_steps/hobbies_step.dart';
 import 'widgets/registration_steps/photos_step.dart';
 import 'widgets/registration_steps/consent_step.dart';
 import '../../../core/upload_service.dart';
+import '../../../shared/ui/tremble_logo.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE INDICES (actual PageView order)
@@ -95,13 +96,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         currentUser?.providerData.any((p) => p.providerId == 'google.com') ??
             false;
     if (currentUser != null) {
-      // Pre-fill known fields for any authenticated user resuming onboarding
-      _emailController.text = currentUser.email ?? '';
-      if (isGoogleUser) {
-        _nameController.text = currentUser.displayName ?? '';
+      final appUser = ref.read(authStateProvider);
+      if (appUser != null && appUser.onboardingCheckpoint > 0) {
+        _currentPage = appUser.onboardingCheckpoint;
+        _restoreStateFromUser(appUser);
+      } else {
+        _emailController.text = currentUser.email ?? '';
+        if (isGoogleUser) {
+          _nameController.text = currentUser.displayName ?? '';
+        }
+        _currentPage = 0;
       }
+    } else {
+      _currentPage = 0;
     }
-    _currentPage = 0;
 
     _pageController = PageController(initialPage: _currentPage);
   }
@@ -126,16 +134,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // Height
   int _heightCm = 170;
   bool _isMetric = true;
+  bool _isHardLocking = false;
 
   // About you lifestyle
   String? _exerciseHabit; // 'active' | 'sometimes' | 'almost_never'
   String? _drinkingHabit; // 'socially' | 'never' | 'frequently' | 'sober'
   String? _smokingHabit; // 'yes' | 'no'
   String? _childrenPreference; // 'want_someday' | 'dont_want' | ...
-  double _introversionLevel = 0.5; // 0.0 (Introvert) to 1.0 (Extrovert)
+  RangeValues _introversionRange = const RangeValues(0.3, 0.7); // 30% to 70%
   String? _sleepHabit; // 'night_owl' | 'early_bird'
-  String? _petPreference; // 'dog' | 'cat' | 'something_else' | 'nothing'
-  final TextEditingController _customPetController = TextEditingController();
+  String? _petPreference; // 'dog' | 'cat' | 'nothing'
   final List<String> _selectedLanguages = [];
   final TextEditingController _customLanguageController =
       TextEditingController();
@@ -143,8 +151,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // New fields
   String? _status; // 'student' | 'employed'
-  final TextEditingController _customOccupationController =
-      TextEditingController();
 
   // Appearance toggles
   bool _isClassicAppearance = true;
@@ -186,6 +192,62 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // helpers
   String tr(String key) => t(key, _selectedLanguage);
 
+  void _restoreStateFromUser(AuthUser appUser) {
+    _emailController.text = appUser.email ?? '';
+    _nameController.text = appUser.name ?? '';
+    if (appUser.birthDate != null) {
+      _birthDate = appUser.birthDate;
+      _pickerMonth = _birthDate!.month;
+      _pickerDay = _birthDate!.day;
+      _pickerYear = _birthDate!.year;
+    }
+    _selectedGender = appUser.gender;
+    _heightCm = appUser.height ?? 170;
+    _isClassicAppearance = appUser.isClassicAppearance;
+    _status = appUser.jobStatus;
+    if (appUser.occupation != null) {}
+    _exerciseHabit = appUser.exerciseHabit;
+    _drinkingHabit = appUser.drinkingHabit;
+    _smokingHabit = appUser.isSmoker == true
+        ? 'yes'
+        : (appUser.isSmoker == false ? 'no' : null);
+    _childrenPreference = appUser.childrenPreference;
+    if (appUser.selfIntrovertMin != null && appUser.selfIntrovertMax != null) {
+      _introversionRange = RangeValues(
+        appUser.selfIntrovertMin! / 100.0,
+        appUser.selfIntrovertMax! / 100.0,
+      );
+    } else if (appUser.introvertScale != null) {
+      final center = appUser.introvertScale! / 100.0;
+      _introversionRange = RangeValues(
+        (center - 0.2).clamp(0.0, 1.0),
+        (center + 0.2).clamp(0.0, 1.0),
+      );
+    }
+    _sleepHabit = appUser.sleepSchedule;
+    _petPreference = appUser.petPreference;
+    _religion = appUser.religion;
+    _ethnicity = appUser.ethnicity;
+    _hairColor = appUser.hairColor;
+    if (appUser.lookingFor.isNotEmpty)
+      _datingPreference = appUser.lookingFor.first;
+    if (appUser.interestedIn.isNotEmpty)
+      _wantToMeet.addAll(appUser.interestedIn);
+    if (appUser.hobbies.isNotEmpty) _selectedHobbies.addAll(appUser.hobbies);
+    if (appUser.politicalAffiliation != null) {
+      final map = {
+        'politics_dont_care': 0.0,
+        'politics_undisclosed': -1.0,
+        'politics_left': 1.0,
+        'politics_center_left': 2.0,
+        'politics_center': 3.0,
+        'politics_center_right': 4.0,
+        'politics_right': 5.0,
+      };
+      _politicalAffiliationValue = map[appUser.politicalAffiliation] ?? 3.0;
+    }
+  }
+
   void _nextPage() {
     // Notify user about verification email when leaving the email/password page
     if (_currentPage == 5) {
@@ -198,6 +260,65 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       curve: Curves.easeInOut,
     );
     setState(() => _currentPage++);
+    _saveCheckpoint(_currentPage);
+  }
+
+  Future<void> _saveCheckpoint(int index) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    try {
+      final dump = AuthUser(
+        id: currentUser.uid,
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        age: _birthDate != null
+            ? (DateTime.now().difference(_birthDate!).inDays ~/ 365)
+            : 20,
+        birthDate: _birthDate,
+        height: _heightCm,
+        gender: _selectedGender ?? 'male',
+        location: _locationController.text.isNotEmpty
+            ? _locationController.text
+            : null,
+        interestedIn: _wantToMeet,
+        isSmoker: _smokingHabit == 'yes',
+        jobStatus: _status ?? 'student',
+        occupation: null,
+        drinkingHabit: _drinkingHabit ?? 'never',
+        introvertScale:
+            ((_introversionRange.start + _introversionRange.end) / 2 * 100)
+                .toInt(),
+        selfIntrovertMin: (_introversionRange.start * 100).toInt(),
+        selfIntrovertMax: (_introversionRange.end * 100).toInt(),
+        exerciseHabit: _exerciseHabit ?? 'sometimes',
+        sleepSchedule: _sleepHabit ?? 'night_owl',
+        petPreference: _petPreference ?? 'dog',
+        childrenPreference: _childrenPreference ?? 'not_sure',
+        religion: _religion,
+        ethnicity: _ethnicity,
+        hairColor: _hairColor,
+        politicalAffiliation: _politicalAffiliationValue == 0
+            ? 'politics_dont_care'
+            : _politicalAffiliationValue == -1
+                ? 'politics_undisclosed'
+                : [
+                    'politics_left',
+                    'politics_center_left',
+                    'politics_center',
+                    'politics_center_right',
+                    'politics_right'
+                  ][(_politicalAffiliationValue - 1).toInt()],
+        onboardingCheckpoint: index,
+        isOnboarded: false,
+      ).toApiPayload();
+
+      await ref
+          .read(authRepositoryProvider)
+          .updateRegistrationDraft(currentUser.uid, dump);
+    } catch (e) {
+      debugPrint("Failed to save checkpoint: $e");
+    }
   }
 
   Future<void> _registerUser() async {
@@ -586,7 +707,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   StatusStep(
                     status: _status,
                     onStatusSelect: (k) => setState(() => _status = k),
-                    occupationController: _customOccupationController,
                     onBack: () => _goToPage(_currentPage - 1),
                     onNext: _nextPage,
                     tr: tr,
@@ -628,8 +748,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     tr: tr,
                   ),
                   IntroversionStep(
-                    value: _introversionLevel,
-                    onChanged: (v) => setState(() => _introversionLevel = v),
+                    values: _introversionRange,
+                    onChanged: (v) => setState(() => _introversionRange = v),
                     onBack: () => _goToPage(_currentPage - 1),
                     onContinueTap: () => _showPartnerRangeModal(
                       title: tr('introversion'),
@@ -660,7 +780,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   PetsStep(
                     selected: _petPreference,
                     onSelect: (k) => setState(() => _petPreference = k),
-                    customPetController: _customPetController,
                     onBack: () => _goToPage(_currentPage - 1),
                     onContinueTap: () {
                       final pref = _petPreference;
@@ -671,10 +790,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                         options: [
                           {'key': 'dog', 'label': tr('dog_person')},
                           {'key': 'cat', 'label': tr('cat_person')},
-                          {
-                            'key': 'something_else',
-                            'label': tr('something_else')
-                          },
                           {'key': 'nothing', 'label': tr('nothing')},
                         ],
                         userSelection: pref,
@@ -804,6 +919,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             right: 0,
             child: _buildProgressBar(),
           ),
+          if (_isHardLocking)
+            Positioned.fill(
+              child: _buildHardLockOverlay(),
+            ),
         ],
       ),
     );
@@ -1464,11 +1583,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         interestedIn: _wantToMeet,
         isSmoker: _smokingHabit == 'yes',
         jobStatus: _status ?? 'student',
-        occupation: _customOccupationController.text.isNotEmpty
-            ? _customOccupationController.text
-            : null,
+        occupation: null,
         drinkingHabit: _drinkingHabit ?? 'never',
-        introvertScale: (_introversionLevel * 100).toInt(),
+        introvertScale:
+            ((_introversionRange.start + _introversionRange.end) / 2 * 100)
+                .toInt(),
+        selfIntrovertMin: (_introversionRange.start * 100).toInt(),
+        selfIntrovertMax: (_introversionRange.end * 100).toInt(),
         exerciseHabit: _exerciseHabit ?? 'sometimes',
         sleepSchedule: _sleepHabit ?? 'night_owl',
         petPreference: _petPreference ?? 'dog',
@@ -1530,7 +1651,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       // Reset GDPR consent so the permission gate always shows after fresh registration.
       await ref.read(gdprConsentProvider.notifier).resetConsent();
 
-      if (mounted) context.go('/');
+      if (mounted) {
+        setState(() => _isHardLocking = true);
+        await Future.delayed(const Duration(milliseconds: 2500));
+        context.go('/');
+      }
     } catch (e) {
       if (kDebugMode && user != null) {
         // Dev mode: show error but force local state and navigate through.
@@ -1548,6 +1673,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               duration: const Duration(seconds: 5),
             ),
           );
+          setState(() => _isHardLocking = true);
+          await Future.delayed(const Duration(milliseconds: 2500));
           context.go('/');
         }
       } else {
@@ -1559,5 +1686,59 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         }
       }
     }
+  }
+
+  Widget _buildHardLockOverlay() {
+    return Container(
+      color: Colors.black.withValues(alpha: 0.95),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.08, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInQuint,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: const TrembleLogo(size: 80),
+                );
+              },
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'Synchronizing Signal...',
+              style: GoogleFonts.instrumentSans(
+                color: Colors.white70,
+                fontSize: 16,
+                letterSpacing: 2.0,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeIn,
+              builder: (context, val, child) {
+                return Opacity(
+                  opacity: val > 0.8 ? 1.0 : 0.0,
+                  child: child,
+                );
+              },
+              child: Text(
+                'SIGNAL LOCKED',
+                style: GoogleFonts.instrumentSans(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4.0,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -94,10 +94,10 @@ String? computeRedirect({
       return null;
     }
     // Guard: a stale email+password session that was never completed (email
-    // not yet verified, no Firestore profile) should land on /login so the
+    // not yet verified, no Firestore profile draft) should land on /login so the
     // user can choose to sign in or register fresh — NOT silently resume an
     // orphaned registration flow that they may not remember starting.
-    if (!isSocialUser && !isEmailVerified) {
+    if (!isSocialUser && !isEmailVerified && status is ProfileStatusNotFound) {
       final redirect = currentPath == '/login' ? null : '/login';
       if (kDebugMode) {
         debugPrint(
