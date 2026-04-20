@@ -160,7 +160,7 @@ export const findNearby = onCall(
         const requesterDoc = await db.collection("users").doc(uid).get();
         const requesterData = requesterDoc.data();
         if (!requesterData) {
-            console.log(`[PROXIMITY] Requester data not found: ${uid}`);
+            console.log(`[PROXIMITY] Requester data not found: ${uid.substring(0, 8)}...`);
             return { nearby: [] };
         }
 
@@ -227,7 +227,7 @@ export const findNearby = onCall(
         }
 
         nearbyUsers.sort((a, b) => a.distanceKm - b.distanceKm);
-        console.log(`[PROXIMITY] ${uid}: ${nearbyUsers.length} users within ${data.radiusKm}km`);
+        console.log(`[PROXIMITY] ${uid.substring(0, 8)}...: ${nearbyUsers.length} users within ${data.radiusKm}km`);
 
         return { nearby: nearbyUsers };
     }
@@ -313,7 +313,7 @@ export const onBleProximity = onDocumentCreated(
 
         // ── Skip if sender is blocked by recipient ────────────────
         if (blockedIds.includes(fromUid)) {
-            console.log(`[BLE] ${fromUid} blocked by ${toUid} — skipping`);
+            console.log(`[BLE] ${fromUid.substring(0, 8)}... blocked by ${toUid.substring(0, 8)}... — skipping`);
             return;
         }
 
@@ -347,7 +347,7 @@ export const onBleProximity = onDocumentCreated(
 
         if (currentCount > GLOBAL_THROTTLE_MAX) {
             console.log(
-                `[BLE] Global throttle: ${toUid} at ${currentCount}/${GLOBAL_THROTTLE_MAX} — suppressing`
+                `[BLE] Global throttle: ${toUid.substring(0, 8)}... at ${currentCount}/${GLOBAL_THROTTLE_MAX} — suppressing`
             );
             // Roll back pair cooldown so a later attempt in a quieter window succeeds
             await redis.del(pairKey);
@@ -356,7 +356,7 @@ export const onBleProximity = onDocumentCreated(
 
         // ── Send anonymous CROSSING_PATHS notification ────────────
         if (!fcmToken) {
-            console.log(`[BLE] No FCM token for ${toUid}`);
+            console.log(`[BLE] No FCM token for ${toUid.substring(0, 8)}...`);
             return;
         }
 
@@ -381,7 +381,7 @@ export const onBleProximity = onDocumentCreated(
         });
 
         console.log(
-            `[BLE] CROSSING_PATHS → ${toUid} (throttle ${currentCount}/${GLOBAL_THROTTLE_MAX})`
+            `[BLE] CROSSING_PATHS → ${toUid.substring(0, 8)}... (throttle ${currentCount}/${GLOBAL_THROTTLE_MAX})`
         );
     }
 );

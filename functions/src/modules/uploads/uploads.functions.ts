@@ -75,7 +75,7 @@ export const generateUploadUrl = onCall(
 
         const publicUrl = `${config.r2.publicUrl}/${objectKey}`;
 
-        console.log(`[UPLOADS] Presigned URL generated for ${uid}: ${objectKey}`);
+        console.log(`[UPLOADS] Presigned URL generated for ${uid.substring(0, 8)}...: ${objectKey}`);
 
         return {
             uploadUrl,   // PUT to this URL directly from the client

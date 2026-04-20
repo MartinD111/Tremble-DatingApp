@@ -39,7 +39,7 @@ export const onUserDocCreated = onDocumentCreated(
 
     // Idempotency check: if createdAt already exists, trigger has already run
     if (snap.get('createdAt')) {
-        console.log(`[AUTH] onUserDocCreated: Already enriched for ${uid}, skipping`);
+        console.log(`[AUTH] onUserDocCreated: Already enriched for ${uid.substring(0, 8)}..., skipping`);
         return;
     }
 
@@ -55,7 +55,7 @@ export const onUserDocCreated = onDocumentCreated(
             { merge: true }
         );
 
-        console.log(`[AUTH] User doc enriched: ${uid}`);
+        console.log(`[AUTH] User doc enriched: ${uid.substring(0, 8)}...`);
     } catch (error) {
         console.error(`[AUTH] Failed to enrich user doc for ${uid}:`, error);
         throw error; // Let Cloud Functions retry on error
@@ -132,14 +132,14 @@ export const completeOnboarding = onCall(
                 { merge: true }
             );
 
-        console.log(`[AUTH] Onboarding completed: ${uid}`);
+        console.log(`[AUTH] Onboarding completed: ${uid.substring(0, 8)}...`);
 
         // Send welcome email — fire and forget (don't block response)
         const userDoc = await db.collection("users").doc(uid).get();
         const email = userDoc.data()?.email as string | undefined;
         if (email && data.name) {
             sendWelcomeEmail(email, data.name).catch((err) =>
-                console.error(`[AUTH] Welcome email failed for ${uid}:`, err)
+                console.error(`[AUTH] Welcome email failed for ${uid.substring(0, 8)}...:`, err)
             );
         }
 

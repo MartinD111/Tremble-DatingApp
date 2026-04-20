@@ -44,7 +44,7 @@ export const updateProfile = onCall(
 
         await db.collection("users").doc(uid).update(updateData);
 
-        console.log(`[USERS] Profile updated: ${uid}`);
+        console.log(`[USERS] Profile updated: ${uid.substring(0, 8)}...`);
         return { success: true };
     }
 );

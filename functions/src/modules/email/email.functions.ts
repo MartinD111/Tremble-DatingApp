@@ -56,7 +56,7 @@ export async function sendWelcomeEmail(
         </div>`,
   });
 
-  console.log(`[EMAIL] Welcome email sent to ${toEmail}`);
+  console.log('[EMAIL] Welcome email sent successfully');
 }
 
 /**
@@ -93,7 +93,7 @@ export async function sendMatchNotificationEmail(
         </div>`,
   });
 
-  console.log(`[EMAIL] Match notification sent to ${toEmail} — matched with ${matchName}`);
+  console.log('[EMAIL] Match notification sent successfully');
 }
 
 /**
@@ -125,7 +125,7 @@ export async function sendDeletionConfirmationEmail(
         </div>`,
   });
 
-  console.log(`[EMAIL] Deletion confirmation sent to ${toEmail}`);
+  console.log('[EMAIL] Deletion confirmation sent successfully');
 }
 
 // ── Public callable: resend verification email ────────────

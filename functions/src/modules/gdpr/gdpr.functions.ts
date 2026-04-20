@@ -85,7 +85,7 @@ async function deleteR2UserFiles(uid: string): Promise<void> {
         continuationToken = listResp.IsTruncated ? listResp.NextContinuationToken : undefined;
     } while (continuationToken);
 
-    console.log(`[GDPR] R2: deleted ${totalDeleted} files for user ${uid}`);
+    console.log(`[GDPR] R2: deleted ${totalDeleted} files for user ${uid.substring(0, 8)}...`);
 }
 
 // ── Batch deletion helper ─────────────────────────────────────────────────
@@ -182,7 +182,7 @@ export const exportUserData = onCall(
             proximity: proximityDoc.exists ? proximityDoc.data() : null,
         };
 
-        console.log(`[GDPR] Data exported for user: ${uid}`);
+        console.log(`[GDPR] Data exported for user: ${uid.substring(0, 8)}...`);
 
         return { data: exportData };
     }
@@ -292,7 +292,7 @@ export const deleteUserAccount = onCall(
                     anonymiseBatch.update(doc.ref, { reportedId: "[deleted]" });
                 });
                 await anonymiseBatch.commit();
-                console.log(`[GDPR] Anonymised ${reportsAbout.size} report(s) about user ${uid} (Art. 17(3)(e))`);
+                console.log(`[GDPR] Anonymised ${reportsAbout.size} report(s) about user ${uid.substring(0, 8)}... (Art. 17(3)(e))`);
             }
 
             // 8. Delete matches involving user
@@ -322,7 +322,7 @@ export const deleteUserAccount = onCall(
                 completedAt: FieldValue.serverTimestamp(),
             });
 
-            console.log(`[GDPR] Account fully deleted (Firestore + R2 + Auth): ${uid}`);
+            console.log(`[GDPR] Account fully deleted (Firestore + R2 + Auth): ${uid.substring(0, 8)}...`);
             return { success: true, message: "All data has been permanently deleted." };
         } catch (error) {
             await gdprRef.update({
@@ -331,7 +331,7 @@ export const deleteUserAccount = onCall(
                 completedAt: FieldValue.serverTimestamp(),
             });
 
-            console.error(`[GDPR] Deletion failed for ${uid}:`, error);
+            console.error(`[GDPR] Deletion failed for ${uid.substring(0, 8)}...:`, error);
             throw new HttpsError("internal", "Account deletion failed.");
         }
     }
