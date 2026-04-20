@@ -22,3 +22,11 @@ Source: Map Troubleshooting, April 2026.
 [2026-04-20] The registration flow must contain zero custom text input fields (excluding Name). The brand identity ("Stoic, Solid") demands binary/enum-based selection only to maintain a technical "Signal Calibration" theme. Any request for "Custom" free-text fields (eg: custom pet, custom job) must be rejected to ensure zero verbal friction.
 Source: Registration Phase 2 (Signal Calibration), April 2026.
 
+**Rule #18 — Flutter/Dart Environment Paths are variable on local machines.**
+[2026-04-20] The standard `flutter` command may fail in certain shell environments if not properly sourced. Always verify the absolute path (on this machine: `/Users/aleksandarbojic/flutter/bin/flutter`) when standard commands fail.
+Source: i18n Cleanup TASK-011, April 2026.
+
+**Rule #19 — Duplicate keys in `const Map` are compile-time errors.**
+[2026-04-20] In Dart, adding a key that already exists to a constant map literal will prevent the app from building. When extracting strings to `translations.dart`, first perform a global key-check to avoid silent build failures in the IDE.
+Source: i18n Cleanup TASK-011, April 2026.
+

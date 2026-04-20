@@ -11,13 +11,13 @@
 - [x] **TASK-006:** 30-Min Timer UI + Cancel Gumb (🔴 P0 - High Energy/Technical).
 - [x] **TASK-003:** Match Card Redesign (Glassmorphism, Playfair Display 900).
 - [x] **TASK-002:** Pills Transparency Fix (Opaque color: `0xFF2A2A28`).
-- [/] **TASK-011:** Systematic cleanup of 40+ hardcoded Slovenian strings (D-25) — Partially complete.
+- [x] **TASK-011:** Systematic cleanup of 40+ hardcoded Slovenian strings (D-25) — **COMPLETE**.
 - [ ] **TASK-007:** Notification Dedup & Logic Improvements (🔴 P1).
 - [ ] **TASK-004:** Profile Card Hobbies + Political Slider (🔴 P2).
 
 ### 3. Technical Debt
 - [x] **D-28:** Execute 17-item registration UI fix plan.
-- [ ] **D-25:** Move all hardcoded strings to `translations.dart`.
+- [x] **D-25:** Move all hardcoded strings to `translations.dart`.
 - [ ] **D-37:** Test 3-state Map Toggle (TASK-008) once Maps API is live.
 
 ---
