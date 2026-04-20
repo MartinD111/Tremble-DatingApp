@@ -19,7 +19,18 @@ We have stabilized the Tremble platform by resolving core authentication and inf
 
 ## 4. Maintenance
 - ✅ Fixed `Flutter analyze` warning regarding unused `_prevPage` in `registration_flow.dart`.
+- ✅ Resolved all "undefined lang" errors in Dashboard, Matches, and Edit Profile screens.
+- ✅ Cleaned up all redundant duplicate keys in `translations.dart` (Zero analysis issues).
+- ✅ Ran project-wide `dart format .` on 108 files.
 - ✅ All MPC documents (`context.md`, `debt.md`, `learning.md`, `handoff.md`) are up-to-date.
+
+## 5. Systematic i18n Cleanup (TASK-011)
+**Problem**: Residual hardcoded Slovenian strings were present in key features (Matches, Profile, Home), and the translation system had accumulated duplicate keys causing static analysis errors.
+**Solution**:
+- Extracted ~60+ strings into `translations.dart`.
+- Refactored the Hobby system to use technical keys for localization while preserving legacy data compatibility.
+- Automated cleanup of `translations.dart` to ensure unique keys in constant maps.
+- Verified with `flutter analyze` and `dart format`.
 
 ---
 *Aesthetics reminder: The new banner uses the Tremble Rose color (#F4436C) for brand consistency.*

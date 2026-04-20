@@ -31,13 +31,15 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
   }
 
   void _removeMatch(String matchId, String name) {
+    final lang = ref.read(appLanguageProvider);
     setState(() => _removedIds.add(matchId));
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$name odstranjen/-a'),
+        content: Text(t('removed_msg', lang).replaceAll('{name}', name)),
         duration: const Duration(seconds: 3),
         action: SnackBarAction(
-          label: 'Razveljavi',
+          label: t('undo', lang),
           textColor: Theme.of(context).primaryColor,
           onPressed: () => setState(() => _removedIds.remove(matchId)),
         ),
@@ -175,13 +177,13 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                     children: [
                       Icon(LucideIcons.wifiOff, size: 48, color: dimColor),
                       const SizedBox(height: 12),
-                      Text('Napaka pri nalaganju',
+                      Text(t('loading_error', lang),
                           style: GoogleFonts.instrumentSans(
                               color: subtextColor, fontSize: 16)),
                       const SizedBox(height: 8),
                       TextButton(
                         onPressed: () => ref.invalidate(matchesStreamProvider),
-                        child: Text('Poskusi znova',
+                        child: Text(t('try_again', lang),
                             style: TextStyle(
                                 color: Theme.of(context).primaryColor)),
                       ),
@@ -293,7 +295,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                       children: [
                                         Text(
                                           isLocked
-                                              ? 'Skrita oseba'
+                                              ? t('hidden_person', lang)
                                               : profile.name,
                                           style: TrembleTheme.displayFont(
                                             fontSize: 20,
@@ -304,7 +306,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                         if (!isLocked) ...[
                                           const SizedBox(height: 2),
                                           Text(
-                                            '${profile.age} let',
+                                            '${profile.age} ${t('years', lang)}',
                                             style: GoogleFonts.instrumentSans(
                                               fontSize: 13,
                                               color: subtextColor,

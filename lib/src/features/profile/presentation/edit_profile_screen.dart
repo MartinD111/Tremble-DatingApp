@@ -371,7 +371,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Upload failed: $e'),
+              content: Text('${t('upload_failed', _lang)}: $e'),
               backgroundColor: Colors.red,
             ),
           );

@@ -511,7 +511,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
   }
 
   static const Map<String, List<String>> _hobbyCategories = {
-    'Active 🏋️': [
+    'hobby_cat_active': [
       'Fitnes',
       'Pilates',
       'Sprehodi',
@@ -521,7 +521,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       'Plezanje',
       'Plavanje'
     ],
-    'Prosti čas ☕': [
+    'hobby_cat_leisure': [
       'Branje',
       'Kava',
       'Čaj',
@@ -531,14 +531,14 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       'Videoigre',
       'Glasba'
     ],
-    'Umetnost 🎨': [
+    'hobby_cat_art': [
       'Slikanje',
       'Fotografija',
       'Pisanje',
       'Muzeji',
       'Gledališče'
     ],
-    'Potovanja ✈️': [
+    'hobby_cat_travel': [
       'Izleti',
       'Narava',
       'Gore',
@@ -547,6 +547,67 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       'Kampiranje'
     ],
   };
+
+  String _getHobbyKey(String hobby) {
+    switch (hobby) {
+      case 'Fitnes':
+        return 'hobby_fitness';
+      case 'Pilates':
+        return 'hobby_pilates';
+      case 'Sprehodi':
+        return 'hobby_walking';
+      case 'Tek':
+        return 'hobby_running';
+      case 'Smučanje':
+        return 'hobby_skiing';
+      case 'Snowboarding':
+        return 'hobby_snowboarding';
+      case 'Plezanje':
+        return 'hobby_climbing';
+      case 'Plavanje':
+        return 'hobby_swimming';
+      case 'Branje':
+        return 'hobby_reading';
+      case 'Kava':
+        return 'hobby_coffee';
+      case 'Čaj':
+        return 'hobby_tea';
+      case 'Kuhanje':
+        return 'hobby_cooking';
+      case 'Filmi':
+        return 'hobby_movies';
+      case 'Serije':
+        return 'hobby_series';
+      case 'Videoigre':
+        return 'hobby_video_games';
+      case 'Glasba':
+        return 'hobby_music';
+      case 'Slikanje':
+        return 'hobby_painting';
+      case 'Fotografija':
+        return 'hobby_photography';
+      case 'Pisanje':
+        return 'hobby_writing';
+      case 'Muzeji':
+        return 'hobby_museums';
+      case 'Gledališče':
+        return 'hobby_theater';
+      case 'Izleti':
+        return 'hobby_trips';
+      case 'Narava':
+        return 'hobby_nature';
+      case 'Gore':
+        return 'hobby_mountains';
+      case 'Morje':
+        return 'hobby_sea';
+      case 'Mestna potepanja':
+        return 'hobby_city_walks';
+      case 'Kampiranje':
+        return 'hobby_camping';
+      default:
+        return hobby;
+    }
+  }
 
   Widget _buildHobbySection(
       MatchProfile match, bool isDark, Color textColor, Color subColor) {
@@ -580,7 +641,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          entry.key,
+                          t(entry.key, lang),
                           textAlign: TextAlign.center,
                           style: GoogleFonts.instrumentSans(
                             color: subColor,
@@ -595,8 +656,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                           alignment: WrapAlignment.center,
                           children: entry.value
                               .where((h) => userHobbies.contains(h))
-                              .map((h) =>
-                                  _PreferencePill(label: _formatChipText(h)))
+                              .map((h) => _PreferencePill(
+                                  label: _formatChipText(
+                                      t(_getHobbyKey(h), lang))))
                               .toList(),
                         ),
                       ],
@@ -625,8 +687,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                         runSpacing: 8,
                         alignment: WrapAlignment.center,
                         children: customHobbies
-                            .map((h) =>
-                                _PreferencePill(label: _formatChipText(h)))
+                            .map((h) => _PreferencePill(
+                                label:
+                                    _formatChipText(t(_getHobbyKey(h), lang))))
                             .toList(),
                       ),
                     ],

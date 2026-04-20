@@ -48,7 +48,7 @@ class _RadarAnimationState extends State<RadarAnimation>
 
     _logoController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2500),
     );
     _logoOpacity = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),

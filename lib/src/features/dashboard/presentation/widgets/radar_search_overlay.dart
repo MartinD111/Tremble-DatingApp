@@ -187,13 +187,13 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
                         const SizedBox(width: 8),
                         Text(
                           isMutual
-                              ? t('radar_lock_active', lang)
-                              : t('waiting_for_acceptance', lang),
-                          style: GoogleFonts.instrumentSans(
+                              ? t('radar_lock_active', lang).toUpperCase()
+                              : t('waiting_for_acceptance', lang).toUpperCase(),
+                          style: GoogleFonts.playfairDisplay(
                             color:
                                 isMutual ? colorScheme.primary : Colors.white70,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
                             letterSpacing: 2,
                           ),
                         ),
@@ -217,26 +217,38 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: Colors.white12),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(LucideIcons.clock,
-                              size: 16,
-                              color: _remaining.inMinutes < 5
-                                  ? colorScheme.primary
-                                  : const Color(0xFFF5C842)),
-                          const SizedBox(width: 8),
-                          Text(
-                            _formatDuration(_remaining),
-                            style: GoogleFonts.jetBrainsMono(
-                              color: _remaining.inMinutes < 5
-                                  ? colorScheme.primary
-                                  : const Color(0xFFF5C842),
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      child: Builder(
+                        builder: (context) {
+                          Widget timerRow = Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(LucideIcons.clock,
+                                  size: 16,
+                                  color: _remaining.inMinutes < 5
+                                      ? colorScheme.primary
+                                      : const Color(0xFFF5C842)),
+                              const SizedBox(width: 8),
+                              Text(
+                                _formatDuration(_remaining),
+                                style: GoogleFonts.jetBrainsMono(
+                                  color: _remaining.inMinutes < 5
+                                      ? colorScheme.primary
+                                      : const Color(0xFFF5C842),
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: -1.0,
+                                ),
+                              ),
+                            ],
+                          );
+
+                          if (_remaining.inMinutes < 5) {
+                            return timerRow
+                                .animate(onPlay: (c) => c.repeat(reverse: true))
+                                .fade(duration: 1200.ms, begin: 0.4, end: 1.0);
+                          }
+                          return timerRow;
+                        },
                       ),
                     ),
                   ],
@@ -253,17 +265,20 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
                   child: Container(
                     height: 56,
                     decoration: BoxDecoration(
-                      color: Colors.white12,
+                      color: Colors.transparent,
                       borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: Colors.white24),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1.5),
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      t('cancel_search', lang).toUpperCase(),
+                      t('cancel', lang).toUpperCase(),
                       style: GoogleFonts.instrumentSans(
                         color: Colors.white70,
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
                       ),
                     ),
                   ),
@@ -294,7 +309,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      'NAŠLI SMO SE!',
+                      t('found_each_other', lang),
                       style: GoogleFonts.instrumentSans(
                         color: Colors.white,
                         fontSize: 16,

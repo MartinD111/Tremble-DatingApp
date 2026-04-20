@@ -1,9 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../shared/ui/glass_card.dart';
 import '../data/match_repository.dart';
 import '../../../core/translations.dart';
 
@@ -16,8 +17,25 @@ class MatchDialog extends ConsumerStatefulWidget {
   ConsumerState<MatchDialog> createState() => _MatchDialogState();
 }
 
-class _MatchDialogState extends ConsumerState<MatchDialog> {
+class _MatchDialogState extends ConsumerState<MatchDialog>
+    with SingleTickerProviderStateMixin {
   bool _isGreeting = false;
+  late AnimationController _waveController;
+
+  @override
+  void initState() {
+    super.initState();
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    super.dispose();
+  }
 
   IconData _getHobbyIcon(String hobby) {
     switch (hobby.toLowerCase()) {
@@ -60,7 +78,6 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
       if (context.canPop()) context.pop();
 
       if (matched) {
-        // Mutual match — show celebration
         _showMutualMatchBanner();
       } else {
         final lang = ref.read(appLanguageProvider);
@@ -92,51 +109,94 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
   }
 
   void _showMutualMatchBanner() {
+    final lang = ref.read(appLanguageProvider);
     showDialog(
       context: context,
       barrierColor: Colors.black87,
       builder: (ctx) => Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: GlassCard(
-            opacity: 0.15,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('🎉', style: TextStyle(fontSize: 64)),
-                const SizedBox(height: 16),
-                Text(
-                  'Match!',
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A18).withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: const Color(0xFFF4436C).withValues(alpha: 0.4),
+                    width: 1.5,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Ti in ${widget.match.name}\nsta si poslala pozdrav.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: Colors.white70, fontSize: 16, height: 1.5),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Rose signal dot
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF4436C),
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .fade(duration: 800.ms, begin: 0.3, end: 1.0),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Match.',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 42,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.03 * 42,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Ti in ${widget.match.name} sta si poslala pozdrav.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.lora(
+                        color: Colors.white60,
+                        fontSize: 15,
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(ctx),
+                      child: Container(
+                        width: double.infinity,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF4436C),
+                          borderRadius: BorderRadius.circular(26),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFF4436C)
+                                  .withValues(alpha: 0.35),
+                              blurRadius: 20,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          t('continue', lang).toUpperCase(),
+                          style: GoogleFonts.instrumentSans(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 14),
-                  ),
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Super!',
-                      style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16)),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -147,89 +207,148 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
   @override
   Widget build(BuildContext context) {
     final match = widget.match;
+    final lang = ref.watch(appLanguageProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Align(
       alignment: Alignment.center,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Material(
           color: Colors.transparent,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // ── Card ──────────────────────────────────────────────
               GestureDetector(
                 onTap: () {
                   ref.read(matchControllerProvider.notifier).dismiss();
                   if (context.canPop()) context.pop();
                   context.push('/profile', extra: match);
                 },
-                child: GlassCard(
-                  opacity: 0.9,
-                  padding: const EdgeInsets.all(0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Photo
-                      Container(
-                        height: 250,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(20)),
-                          image: DecorationImage(
-                            image: NetworkImage(match.imageUrl),
-                            fit: BoxFit.cover,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A1A18).withValues(alpha: 0.88),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.10),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Photo
+                          Stack(
+                            alignment: Alignment.bottomLeft,
+                            children: [
+                              Container(
+                                height: 260,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(24)),
+                                  image: DecorationImage(
+                                    image: NetworkImage(match.imageUrl),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              // Gradient scrim over photo
+                              Container(
+                                height: 260,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(24)),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      const Color(0xFF1A1A18)
+                                          .withValues(alpha: 0.7),
+                                    ],
+                                    stops: const [0.45, 1.0],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
 
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            Text('${match.name}, ${match.age}',
-                                style: GoogleFonts.instrumentSans(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87)),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              alignment: WrapAlignment.center,
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: match.hobbies.take(3).map((h) {
-                                return Chip(
-                                  avatar: Icon(_getHobbyIcon(h),
-                                      size: 16, color: Colors.white),
-                                  label: Text(h,
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600)),
-                                  backgroundColor:
-                                      Colors.black.withValues(alpha: 0.6),
-                                  padding: const EdgeInsets.all(4),
-                                  labelPadding: const EdgeInsets.only(right: 8),
-                                  side: BorderSide.none,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                );
-                              }).toList(),
+                          // Name + Hobbies
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${match.name}, ${match.age}',
+                                  style: GoogleFonts.playfairDisplay(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    letterSpacing: -0.03 * 32,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: match.hobbies.take(3).map((h) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF2A2A28),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.10),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(_getHobbyIcon(h),
+                                              size: 14,
+                                              color: const Color(0xFFF4436C)),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            h,
+                                            style: GoogleFonts.instrumentSans(
+                                              color: Colors.white70,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
 
-              // Action Buttons
+              const SizedBox(height: 20),
+
+              // ── Action Buttons ────────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Dismiss
+                  // Dismiss — subtle outlined
                   GestureDetector(
                     onTap: _isGreeting
                         ? null
@@ -243,54 +362,137 @@ class _MatchDialogState extends ConsumerState<MatchDialog> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: Colors.transparent,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white24, width: 2),
+                        border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            width: 1.5),
                       ),
-                      child: const Icon(Icons.close,
-                          color: Colors.white, size: 30),
+                      child: Icon(
+                        LucideIcons.x,
+                        color: Colors.white.withValues(alpha: 0.6),
+                        size: 22,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 24),
 
-                  // Greet — now calls sendGreeting CF
+                  // Wave — triple-ring pulse
                   GestureDetector(
                     onTap: _isGreeting ? null : _sendGreet,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: _isGreeting
-                            ? Theme.of(context)
-                                .primaryColor
-                                .withValues(alpha: 0.5)
-                            : Theme.of(context).primaryColor,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(context)
-                                .primaryColor
-                                .withValues(alpha: 0.4),
-                            blurRadius: 20,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: _isGreeting
-                            ? const SizedBox(
-                                width: 28,
-                                height: 28,
-                                child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2.5))
-                            : const Text('👋', style: TextStyle(fontSize: 36)),
+                    child: AnimatedBuilder(
+                      animation: _waveController,
+                      builder: (context, child) {
+                        return Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Outer ring
+                            Container(
+                              width: 84 +
+                                  (28 * _waveController.value).clamp(0.0, 28.0),
+                              height: 84 +
+                                  (28 * _waveController.value).clamp(0.0, 28.0),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: colorScheme.primary.withValues(
+                                      alpha: (1.0 - _waveController.value)
+                                          .clamp(0.0, 0.25)),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            // Middle ring
+                            Container(
+                              width: 84 +
+                                  (14 * _waveController.value).clamp(0.0, 14.0),
+                              height: 84 +
+                                  (14 * _waveController.value).clamp(0.0, 14.0),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: colorScheme.primary.withValues(
+                                      alpha: (1.0 - _waveController.value)
+                                          .clamp(0.0, 0.35)),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            // Core button
+                            child!,
+                          ],
+                        );
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 84,
+                        height: 84,
+                        decoration: BoxDecoration(
+                          gradient: _isGreeting
+                              ? LinearGradient(
+                                  colors: [
+                                    colorScheme.primary.withValues(alpha: 0.5),
+                                    colorScheme.primary.withValues(alpha: 0.5),
+                                  ],
+                                )
+                              : LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    colorScheme.primary,
+                                    const Color(0xFFC02048), // rose-dark
+                                  ],
+                                ),
+                          shape: BoxShape.circle,
+                          boxShadow: _isGreeting
+                              ? []
+                              : [
+                                  BoxShadow(
+                                    color: colorScheme.primary
+                                        .withValues(alpha: 0.45),
+                                    blurRadius: 24,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                        ),
+                        child: Center(
+                          child: _isGreeting
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2))
+                              : const Text('👋',
+                                  style: TextStyle(fontSize: 34)),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+
+              const SizedBox(height: 16),
+
+              // Dismiss later — text link
+              GestureDetector(
+                onTap: _isGreeting
+                    ? null
+                    : () {
+                        ref.read(matchControllerProvider.notifier).dismiss();
+                        if (context.canPop()) context.pop();
+                      },
+                child: Text(
+                  t('decide_later', lang).toUpperCase(),
+                  style: GoogleFonts.instrumentSans(
+                    color: Colors.white.withValues(alpha: 0.35),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
             ],
           ),
         ),

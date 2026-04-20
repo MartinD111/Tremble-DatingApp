@@ -152,7 +152,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     final user = ref.watch(authStateProvider);
+    final lang = ref.watch(appLanguageProvider);
     final navIndex = ref.watch(navIndexProvider);
+
     final isScanning = ref.watch(isScanningProvider);
     final pingDistance = ref.watch(pingDistanceProvider);
     final pingAngle = ref.watch(pingAngleProvider);
@@ -192,10 +194,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const SettingsScreen(),
       ];
       navItems = [
-        LiquidNavItem(icon: LucideIcons.radar, label: 'Radar'),
-        LiquidNavItem(icon: LucideIcons.map, label: 'Map'),
-        LiquidNavItem(icon: LucideIcons.users, label: 'Ljudje'),
-        LiquidNavItem(icon: LucideIcons.settings, label: 'Settings'),
+        LiquidNavItem(icon: LucideIcons.radar, label: t('tab_radar', lang)),
+        LiquidNavItem(icon: LucideIcons.map, label: t('tab_map', lang)),
+        LiquidNavItem(icon: LucideIcons.users, label: t('tab_people', lang)),
+        LiquidNavItem(
+            icon: LucideIcons.settings, label: t('tab_settings', lang)),
       ];
     } else {
       screens = [
@@ -215,9 +218,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const SettingsScreen(),
       ];
       navItems = [
-        LiquidNavItem(icon: LucideIcons.radar, label: 'Radar'),
-        LiquidNavItem(icon: LucideIcons.users, label: 'Ljudje'),
-        LiquidNavItem(icon: LucideIcons.settings, label: 'Settings'),
+        LiquidNavItem(icon: LucideIcons.radar, label: t('tab_radar', lang)),
+        LiquidNavItem(icon: LucideIcons.users, label: t('tab_people', lang)),
+        LiquidNavItem(
+            icon: LucideIcons.settings, label: t('tab_settings', lang)),
       ];
     }
 
@@ -322,7 +326,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             height: 50,
             child: Center(
               child: Text(
-                'Radar',
+                t('tab_radar', lang),
                 style: TrembleTheme.displayFont(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -368,7 +372,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     const CircularProgressIndicator(),
                                 error: (_, __) => RadarSearchOverlay(
                                   match: activeMatch,
-                                  partnerName: 'Nekdo v bližini',
+                                  partnerName: t('someone_nearby', lang),
                                 ),
                               );
                             },
@@ -445,7 +449,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           top: MediaQuery.of(context).padding.top + 36,
                           left: 0,
                           child: Center(
-                            child: _PowerSavePill(batteryLevel: batteryLevel)
+                            child: _PowerSavePill(
+                                    batteryLevel: batteryLevel, lang: lang)
                                 .animate()
                                 .fade()
                                 .slideY(begin: -1.0, curve: Curves.easeOutBack),
@@ -463,7 +468,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         size: 60, color: Colors.black26),
                     const SizedBox(height: 20),
                     Text(
-                      "Radar je zaklenjen.",
+                      t('radar_locked', lang),
                       style: GoogleFonts.instrumentSans(
                           color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 24,
@@ -471,7 +476,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "Prosim preveri svoj email za dostop.",
+                      t('check_email_access', lang),
                       style: TextStyle(
                           color: Theme.of(context)
                               .colorScheme
@@ -480,7 +485,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(height: 20),
                     PrimaryButton(
-                      text: "Pojdi v nastavitve",
+                      text: t('go_to_settings', lang),
                       width: 200,
                       onPressed: () {
                         ref.read(navIndexProvider.notifier).state =
@@ -544,7 +549,8 @@ final navIndexProvider = StateProvider<int>((ref) => 0);
 /// is in battery-saver (degraded) mode — BLE off, Geo-only matching.
 class _PowerSavePill extends StatefulWidget {
   final int batteryLevel;
-  const _PowerSavePill({required this.batteryLevel});
+  final String lang;
+  const _PowerSavePill({required this.batteryLevel, required this.lang});
 
   @override
   State<_PowerSavePill> createState() => _PowerSavePillState();
@@ -597,7 +603,7 @@ class _PowerSavePillState extends State<_PowerSavePill>
                 color: Colors.black87, size: 16),
             const SizedBox(width: 7),
             Text(
-              'Radar v varč. načinu  •  ${widget.batteryLevel}%',
+              '${t('radar_power_save', widget.lang)}  •  ${widget.batteryLevel}%',
               style: TrembleTheme.telemetryTextStyle(
                 context,
                 color: Colors.black87,
