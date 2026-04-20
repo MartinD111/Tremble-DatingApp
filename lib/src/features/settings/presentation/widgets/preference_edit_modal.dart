@@ -997,8 +997,10 @@ Future<void> showSelectedItemsModal({
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (ctx) => Container(
-      padding: EdgeInsets.fromLTRB(24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
-      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+      padding: EdgeInsets.fromLTRB(
+          24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
+      constraints:
+          BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -1049,7 +1051,8 @@ Future<void> showSelectedItemsModal({
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Text(
                       'No items selected.',
-                      style: GoogleFonts.instrumentSans(color: isDark ? Colors.white54 : Colors.black45),
+                      style: GoogleFonts.instrumentSans(
+                          color: isDark ? Colors.white54 : Colors.black45),
                     ),
                   )
                 : ListView.builder(
@@ -1058,12 +1061,16 @@ Future<void> showSelectedItemsModal({
                     itemBuilder: (context, index) {
                       return Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 14, horizontal: 20),
                         margin: const EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.03),
                           borderRadius: BorderRadius.circular(100),
-                          border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                          border: Border.all(
+                              color: isDark ? Colors.white12 : Colors.black12),
                         ),
                         child: Text(
                           formatter(items[index]),

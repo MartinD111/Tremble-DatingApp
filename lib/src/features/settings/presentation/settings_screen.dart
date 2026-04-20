@@ -1024,7 +1024,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           label: _t('gender'),
           values: user.interestedIn.isNotEmpty
               ? user.interestedIn.map((v) => v as String?).toList()
-              : [null],
+              : <String?>[null],
           formatter: _t,
           onTap: () => _openInterestedInModal(user),
           onEdit: () => _openInterestedInModal(user),
@@ -1160,7 +1160,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           label: _t('looking_for'),
           values: user.lookingFor.isNotEmpty
               ? user.lookingFor.map((v) => v as String?).toList()
-              : [null],
+              : <String?>[null],
           formatter: _t, // _t(v) translates known keys; unknown values return v
           onTap: () => _openLookingForModal(user),
           onEdit: () => _openLookingForModal(user),
