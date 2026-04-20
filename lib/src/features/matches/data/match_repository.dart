@@ -155,35 +155,23 @@ class MatchRepository {
   }
 
   /// Check if a match is compatible based on gender preferences.
-  /// Users with gender 'Ne želim povedati' only match with those
-  /// whose interestedIn == 'Oba'.
+  /// [userInterestedIn] and [matchInterestedIn] are lists of gender keys
+  /// (e.g. ['male', 'female', 'non_binary']).
   static bool isMatchCompatible({
     required String? userGender,
-    required String? userInterestedIn,
+    required List<String> userInterestedIn,
     required String matchGender,
-    required String? matchInterestedIn,
+    required List<String> matchInterestedIn,
   }) {
-    // If user chose 'Ne želim povedati', they can only be found
-    // by people searching for 'Oba'
-    if (userGender == 'Ne želim povedati') {
-      if (matchInterestedIn != 'Oba') return false;
-    }
+    // If either party has no stated preference, allow the match.
+    if (userInterestedIn.isEmpty || matchInterestedIn.isEmpty) return true;
 
-    // If match chose 'Ne želim povedati', user must be searching 'Oba'
-    if (matchGender == 'Ne želim povedati') {
-      if (userInterestedIn != 'Oba') return false;
-    }
+    // User must be interested in the match's gender.
+    if (!userInterestedIn.contains(matchGender)) return false;
 
-    // Standard gender filtering
-    if (userGender != 'Ne želim povedati' && matchInterestedIn != null) {
-      if (matchInterestedIn != 'Oba' && matchInterestedIn != userGender) {
-        return false;
-      }
-    }
-    if (matchGender != 'Ne želim povedati' && userInterestedIn != null) {
-      if (userInterestedIn != 'Oba' && userInterestedIn != matchGender) {
-        return false;
-      }
+    // Match must be interested in the user's gender.
+    if (userGender != null && !matchInterestedIn.contains(userGender)) {
+      return false;
     }
 
     return true;

@@ -535,7 +535,7 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
               const SizedBox(height: 8),
               // Live range display
               Text(
-                '${_label(_values.start)} – ${_label(_values.end)}',
+                '${widget.title}: ${_label(_values.start)} – ${_label(_values.end)}',
                 style: GoogleFonts.instrumentSans(
                   fontSize: 16,
                   color: brandRose,

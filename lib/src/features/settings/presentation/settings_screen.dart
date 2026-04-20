@@ -587,8 +587,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.black.withValues(alpha: 0.15),
-                              Colors.black.withValues(alpha: 0.75),
+                              (isDark ? Colors.black : Colors.white)
+                                  .withValues(alpha: 0.15),
+                              (isDark ? Colors.black : Colors.white)
+                                  .withValues(alpha: 0.75),
                             ],
                             stops: const [0.0, 0.5, 1.0],
                           ),
@@ -609,7 +611,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           style: GoogleFonts.instrumentSans(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: isDark ? Colors.white : Colors.black87,
                             height: 1.1,
                           ),
                         ),
@@ -810,7 +812,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               : Colors.black.withValues(alpha: 0.05),
           onChanged: (val) => _ctrl.toggleDarkMode(val),
         ),
-        if (user.interestedIn == 'both')
+        if (user.interestedIn.length > 1)
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(_t('pride_mode'), style: TextStyle(color: textColor)),
@@ -1016,32 +1018,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black12),
         const SizedBox(height: 8),
 
-        // ── Interested In ──
-        _prefPillRow(
-          context: context,
-          label: _t('gender'),
+        // ── Interested In (multi-select) ──
+        PreferencePillRow(
           icon: LucideIcons.users,
-          currentValue: user.interestedIn,
-          options: [
-            {
-              'label': _t('male'),
-              'value': 'male',
-              'icon': Icons.male,
-            },
-            {
-              'label': _t('female'),
-              'value': 'female',
-              'icon': Icons.female,
-            },
-            {
-              'label': _t('both'),
-              'value': 'both',
-              'icon': Icons.wc,
-            },
-          ],
-          onUpdate: (val) {
-            if (val != null) _ctrl.updateInterestedIn(val);
-          },
+          label: _t('gender'),
+          values: user.interestedIn.isNotEmpty
+              ? user.interestedIn.map((v) => v as String?).toList()
+              : [null],
+          formatter: _t,
+          onTap: () => _openInterestedInModal(user),
+          onEdit: () => _openInterestedInModal(user),
         ),
 
         Divider(
@@ -1244,6 +1230,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       ],
       currentValues: user.lookingFor,
       onUpdate: (vals) => _ctrl.updateUser((u) => u.copyWith(lookingFor: vals)),
+    );
+  }
+
+  /// Opens the Interested In multi-select modal.
+  /// Uses the same keys as the registration WhatToMeetStep.
+  void _openInterestedInModal(AuthUser user) {
+    _ctrl.openMultiSelectModal(
+      context: context,
+      title: _t('gender'),
+      options: [
+        {'label': _t('male'), 'value': 'male'},
+        {'label': _t('female'), 'value': 'female'},
+        {'label': _t('non_binary'), 'value': 'non_binary'},
+      ],
+      currentValues: user.interestedIn,
+      onUpdate: (vals) => _ctrl.updateInterestedIn(vals),
     );
   }
 

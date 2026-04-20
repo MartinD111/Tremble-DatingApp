@@ -44,7 +44,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   List<String> _photoUrls = [];
   final ValueNotifier<double> _buttonsOpacity = ValueNotifier(1.0);
   String? _gender;
-  String? _interestedIn;
+  List<String> _interestedIn = [];
   String? _jobStatus;
   String? _religion;
   String? _hairColor;
@@ -83,11 +83,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         'Moški': 'male',
         'Ženska': 'female',
       });
-      _interestedIn = _normalizeLegacyValue(user.interestedIn, {
-        'Moške': 'male',
-        'Ženske': 'female',
-        'Vse': 'both',
-      });
+      _interestedIn = List.from(user.interestedIn);
       _jobStatus = _normalizeLegacyValue(user.jobStatus, {
         'Študent': 'student',
         'Študent/-ka': 'student',
@@ -1498,7 +1494,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         final label = opt['label'] as String;
         final value = opt['value'] as String;
         final icon = opt['icon'] as IconData;
-        final sel = _interestedIn == value;
+        final sel = _interestedIn.contains(value);
         return ChoiceChip(
           avatar: Icon(icon,
               size: 16,
@@ -1508,10 +1504,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           label: Text(label),
           selected: sel,
           onSelected: (s) {
-            if (s) {
-              setState(() => _interestedIn = value);
-              _markChanged();
-            }
+            setState(() {
+              if (s) {
+                if (!_interestedIn.contains(value)) {
+                  _interestedIn = [..._interestedIn, value];
+                }
+              } else {
+                _interestedIn = _interestedIn.where((v) => v != value).toList();
+              }
+            });
+            _markChanged();
           },
           selectedColor: Theme.of(context).primaryColor,
           backgroundColor: isDark

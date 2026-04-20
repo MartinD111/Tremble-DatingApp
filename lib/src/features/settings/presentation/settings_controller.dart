@@ -113,8 +113,8 @@ class SettingsController {
 
   // ── Enum single-select update ──────────────────────────────────────────────
 
-  void updateInterestedIn(String value) {
-    updateUser((u) => u.copyWith(interestedIn: value));
+  void updateInterestedIn(List<String> values) {
+    updateUser((u) => u.copyWith(interestedIn: values));
   }
 
   // ── Clear partner political/introvert preferences ─────────────────────────

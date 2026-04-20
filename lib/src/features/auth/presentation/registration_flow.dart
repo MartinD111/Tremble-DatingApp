@@ -1461,7 +1461,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         location: _locationController.text.isNotEmpty
             ? _locationController.text
             : null,
-        interestedIn: _wantToMeet.join(', '),
+        interestedIn: _wantToMeet,
         isSmoker: _smokingHabit == 'yes',
         jobStatus: _status ?? 'student',
         occupation: _customOccupationController.text.isNotEmpty

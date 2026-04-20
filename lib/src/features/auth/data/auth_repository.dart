@@ -17,7 +17,7 @@ class AuthUser {
   final DateTime? birthDate;
   final List<String> photoUrls;
   final String? gender;
-  final String? interestedIn;
+  final List<String> interestedIn;
   final String? email;
   // REMOVED: final String? password; — never store passwords in app state
   final int? height;
@@ -87,7 +87,7 @@ class AuthUser {
     this.heightRangeEnd,
     this.photoUrls = const [],
     this.gender,
-    this.interestedIn,
+    this.interestedIn = const [],
     this.isSmoker,
     this.partnerSmokingPreference,
     this.jobStatus,
@@ -152,7 +152,7 @@ class AuthUser {
       if (birthDate != null) 'birthDate': birthDate!.toIso8601String(),
       if (photoUrls.isNotEmpty) 'photoUrls': photoUrls,
       if (gender != null) 'gender': gender!.toLowerCase(),
-      if (interestedIn != null) 'interestedIn': interestedIn!.toLowerCase(),
+      if (interestedIn.isNotEmpty) 'interestedIn': interestedIn,
       'height': height,
       'heightRangeStart': heightRangeStart,
       'heightRangeEnd': heightRangeEnd,
@@ -213,6 +213,27 @@ class AuthUser {
     };
   }
 
+  /// Parses interestedIn from Firestore — handles legacy String values and
+  /// current List<String> format. Migrates legacy compound string values:
+  ///   "both" → ['male', 'female']
+  ///   "male, female" → ['male', 'female']
+  ///   "male" → ['male']
+  static List<String> _parseInterestedIn(dynamic value) {
+    if (value == null) return [];
+    if (value is List) return List<String>.from(value);
+    if (value is String && value.isNotEmpty) {
+      if (value == 'both' || value == 'Vse' || value == 'Oba') {
+        return ['male', 'female'];
+      }
+      return value
+          .split(',')
+          .map((s) => s.trim().toLowerCase())
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    return [];
+  }
+
   /// Safely parses a Firestore field that may be a [Timestamp], an ISO-8601
   /// [String], or null. Documents written by older app versions or admin tools
   /// may store dates as strings, so a hard cast would throw.
@@ -233,7 +254,7 @@ class AuthUser {
       birthDate: _parseDateTime(data['birthDate']),
       photoUrls: List<String>.from(data['photoUrls'] ?? []),
       gender: data['gender'] as String?,
-      interestedIn: data['interestedIn'] as String?,
+      interestedIn: _parseInterestedIn(data['interestedIn']),
       email: data['email'] as String?,
       height: data['height'] as int?,
       heightRangeStart: data['heightRangeStart'] as int?,
@@ -304,7 +325,7 @@ class AuthUser {
     int? heightRangeEnd,
     List<String>? photoUrls,
     String? gender,
-    String? interestedIn,
+    List<String>? interestedIn,
     bool? isSmoker,
     String? partnerSmokingPreference,
     String? jobStatus,
