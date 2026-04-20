@@ -1,6 +1,7 @@
 {
   "projects": {
-    "development": "am---dating-app"
+    "dev": "tremble-dev",
+    "prod": "am---dating-app"
   },
   "targets": {},
   "etags": {}

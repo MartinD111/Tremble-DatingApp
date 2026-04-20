@@ -30,3 +30,6 @@ Source: i18n Cleanup TASK-011, April 2026.
 [2026-04-20] In Dart, adding a key that already exists to a constant map literal will prevent the app from building. When extracting strings to `translations.dart`, first perform a global key-check to avoid silent build failures in the IDE.
 Source: i18n Cleanup TASK-011, April 2026.
 
+**Rule #20 — "App as a Tool" Profile UI Logic.**
+[2026-04-20] Favor vertical `Wrap` over horizontal scrolling `Row` for data-dense sections (e.g., Hobbies). This improves transparency (everything visible at once) and reduces interaction friction. Additionally, always maintain 1:1 logic parity between `ProfileCardPreview` (self-view) and `ProfileDetailScreen` (match-view) to ensure the technical brand experience is consistent across all surfaces. Simplify complex visualizations (e.g., spectrum sliders) into direct data points (pills) for non-personality traits (e.g., politics) to avoid "designer-y" distractions.
+Source: Profile UI Refinement TASK-004, April 2026.

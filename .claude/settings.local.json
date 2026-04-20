@@ -54,7 +54,9 @@
       "Bash(cat ios/Flutter/Release.xcconfig)",
       "Bash(xargs cat *)",
       "Bash(cat android/app/src/dev/AndroidManifest.xml)",
-      "Bash(cat android/app/src/prod/AndroidManifest.xml)"
+      "Bash(cat android/app/src/prod/AndroidManifest.xml)",
+      "Skill(gsd:do)",
+      "Skill(gsd:add-phase)"
     ]
   }
 }

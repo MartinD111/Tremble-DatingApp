@@ -466,6 +466,14 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       ));
     }
 
+    // Political Affiliation - Simplified to a pill per brand strategy
+    if (user.politicalAffiliation != null) {
+      pills.add(_PreferencePill(
+        icon: LucideIcons.flag,
+        label: _formatChipText(t(user.politicalAffiliation!, lang)),
+      ));
+    }
+
     return SizedBox(
       width: double.infinity,
       child: Column(
@@ -481,9 +489,6 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
             alignment: WrapAlignment.center,
             children: pills,
           ),
-          const SizedBox(height: 24),
-
-          // 2. Spectrum Indicators (Sliders)
           _buildSpectrumIndicator(
             icon: LucideIcons.brain,
             label: t('personality_type', lang),
@@ -499,38 +504,69 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                 : '',
             isDark: isDark,
           ),
-          const SizedBox(height: 32),
-          if (user.politicalAffiliation != null)
-            _buildSpectrumIndicator(
-              icon: LucideIcons.flag,
-              label: t('political_affiliation', lang),
-              value: _getPoliticsValue(user.politicalAffiliation!),
-              min: 1,
-              max: 5,
-              leftLabel: t('politics_left', lang),
-              rightLabel: t('politics_right', lang),
-              currentText: t(user.politicalAffiliation!, lang),
-              isDark: isDark,
-            ),
         ],
       ),
     );
   }
 
-  double _getPoliticsValue(String key) {
-    switch (key) {
-      case 'politics_left':
-        return 1.0;
-      case 'politics_center_left':
-        return 2.0;
-      case 'politics_center':
-        return 3.0;
-      case 'politics_center_right':
-        return 4.0;
-      case 'politics_right':
-        return 5.0;
+  String _getHobbyKey(String hobby) {
+    switch (hobby) {
+      case 'Fitnes':
+        return 'hobby_fitness';
+      case 'Pilates':
+        return 'hobby_pilates';
+      case 'Sprehodi':
+        return 'hobby_walking';
+      case 'Tek':
+        return 'hobby_running';
+      case 'Smučanje':
+        return 'hobby_skiing';
+      case 'Snowboarding':
+        return 'hobby_snowboarding';
+      case 'Plezanje':
+        return 'hobby_climbing';
+      case 'Plavanje':
+        return 'hobby_swimming';
+      case 'Branje':
+        return 'hobby_reading';
+      case 'Kava':
+        return 'hobby_coffee';
+      case 'Čaj':
+        return 'hobby_tea';
+      case 'Kuhanje':
+        return 'hobby_cooking';
+      case 'Filmi':
+        return 'hobby_movies';
+      case 'Serije':
+        return 'hobby_series';
+      case 'Videoigre':
+        return 'hobby_video_games';
+      case 'Glasba':
+        return 'hobby_music';
+      case 'Slikanje':
+        return 'hobby_painting';
+      case 'Fotografija':
+        return 'hobby_photography';
+      case 'Pisanje':
+        return 'hobby_writing';
+      case 'Muzeji':
+        return 'hobby_museums';
+      case 'Gledališče':
+        return 'hobby_theater';
+      case 'Izleti':
+        return 'hobby_trips';
+      case 'Narava':
+        return 'hobby_nature';
+      case 'Gore':
+        return 'hobby_mountains';
+      case 'Morje':
+        return 'hobby_sea';
+      case 'Mestna potepanja':
+        return 'hobby_city_walks';
+      case 'Kampiranje':
+        return 'hobby_camping';
       default:
-        return 3.0;
+        return hobby;
     }
   }
 
@@ -649,77 +685,65 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
             style: GoogleFonts.instrumentSans(
                 color: subColor, fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final entry in _hobbyCategories.entries) ...[
-                if (userHobbies.any((h) => entry.value.contains(h)))
-                  Container(
-                    width: 140,
-                    margin: const EdgeInsets.only(right: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          entry.key,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.instrumentSans(
-                            color: subColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.center,
-                          children: entry.value
-                              .where((h) => userHobbies.contains(h))
-                              .map((h) =>
-                                  _PreferencePill(label: _formatChipText(h)))
-                              .toList(),
-                        ),
-                      ],
+        Wrap(
+          spacing: 8,
+          runSpacing: 12,
+          alignment: WrapAlignment.center,
+          children: [
+            for (final entry in _hobbyCategories.entries)
+              if (userHobbies.any((h) => entry.value.contains(h)))
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      t(entry.key, lang),
+                      style: GoogleFonts.instrumentSans(
+                        color: subColor.withValues(alpha: 0.7),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.center,
+                      children: entry.value
+                          .where((h) => userHobbies.contains(h))
+                          .map((h) => _PreferencePill(
+                              label: _formatChipText(t(_getHobbyKey(h), lang))))
+                          .toList(),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+            if (customHobbies.isNotEmpty)
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    t('hobby_other', lang),
+                    style: GoogleFonts.instrumentSans(
+                      color: subColor.withValues(alpha: 0.7),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
-              ],
-              if (customHobbies.isNotEmpty)
-                Container(
-                  width: 140,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        t('hobby_other', lang),
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.instrumentSans(
-                          color: subColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        alignment: WrapAlignment.center,
-                        children: customHobbies
-                            .map((h) =>
-                                _PreferencePill(label: _formatChipText(h)))
-                            .toList(),
-                      ),
-                    ],
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    alignment: WrapAlignment.center,
+                    children: customHobbies
+                        .map((h) => _PreferencePill(
+                            label: _formatChipText(t(_getHobbyKey(h), lang))))
+                        .toList(),
                   ),
-                ),
-            ],
-          ),
+                ],
+              ),
+          ],
         ),
       ],
     );

@@ -130,6 +130,24 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 | 8. Paywall / Tremble Pro | v1.2 | 0/TBD | ⏳ Not started | - |
 | 9. Security Hardening & GDPR | v1.2 | 1/TBD | 🟡 In progress | - |
 | 10. Launch Polish & Store Deploy | v1.3 | 0/TBD | ⏳ Not started | - |
+| 11. SECURITY-01: Technical Security Audit & Hardening | v1.2 | 0/TBD | ⏳ Not started | - |
+
+---
+
+#### Phase 11: SECURITY-01: Technical Security Audit & Hardening
+**Goal**: Cloud Functions have App Check enforced, Firestore rules are deny-by-default with validated write schemas, secrets are confirmed env-only, and the Flutter client uses the correct App Check providers per flavor
+**Depends on**: Phase 9
+**Requirements**: SECURITY-01 through SECURITY-04
+**Success Criteria** (what must be TRUE):
+  1. Every `onCall` Cloud Function has `{ enforceAppCheck: true }` — unauthenticated requests return UNAUTHENTICATED
+  2. No `.passthrough()` in any Zod schema; all inputs have strict type and length constraints
+  3. PII (uid, email) masked or removed from all `console.log` statements in Cloud Functions
+  4. `proximity_events` Firestore write rule validates `from`, `toDeviceId`, `rssi` (int), `timestamp`, and `ttl` presence and types
+  5. `idempotencyKeys` and `rateLimits` collections are `allow read, write: if false`
+  6. Global deny rule `match /{document=**} { allow read, write: if false; }` is the last rule in `firestore.rules`
+  7. `functions/.env.example` contains no real secrets; `redis.ts` and `email.functions.ts` read exclusively from `process.env`
+  8. `main.dart` activates `AndroidDebugProvider`/`AppleDebugProvider` on dev flavor; real providers on prod
+**Plans**: TBD
 
 ---
 
