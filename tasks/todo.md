@@ -2,8 +2,9 @@
 
 ## Active Focus: Milestone v1.2 — Security & UI Polish 🚀
 
-### 1. Security Hardening (Phase 9) ✅ COMPLETE
+### 1. Security Hardening (Phase 9 + 11) ✅ COMPLETE
 - [x] **SEC-001:** Enforce Firebase App Check (`enforceAppCheck: true`) on all 19 Cloud Functions.
+- [x] **FUNCTIONS-DEPLOY:** All 19 Cloud Functions deployed to `tremble-dev` (2026-04-21).
 - [x] Manual registration of Dev Debug Tokens (Aleksandar's tokens added).
 - [x] Implementation of `FirebaseAppCheck` activation in mobile app (`main.dart`).
 
@@ -14,6 +15,8 @@
 - [x] **TASK-011:** Systematic cleanup of 40+ hardcoded Slovenian strings (D-25) — **COMPLETE**.
 - [x] **TASK-007:** Notification Dedup & Logic Improvements (🔴 P1) — **COMPLETE**.
 - [x] **TASK-004:** Profile Card Hobbies + Political Slider (🔴 P2) — **COMPLETE**.
+- [x] **D-27:** Button Spinner UX (Forgot PW) — **COMPLETE**.
+- [x] **D-26:** UgcActionSheet & Dialogs Glassmorphic Redesign — **COMPLETE**.
 - [x] **Phase 11:** Technical Security Audit & Hardening (App Check, Zod, Firestore Rules) — **COMPLETE**.
 
 ### 3. Technical Debt

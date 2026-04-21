@@ -47,8 +47,15 @@ See: `.planning/PROJECT.md` (updated 2026-04-18 after v1.1)
 
 | ID | Issue | Phase Impacted |
 |----|-------|----------------|
-| SEC-001 | Firebase App Check configured but not enforced in Cloud Functions | Phase 9 |
-| FUNCTIONS-DEPLOY | Cloud Functions not deployed to tremble-dev since 2026-04-18 | Phase 9 |
+| BLOCKER-003 | Legal/RevenueCat — Phase 8 on hold | Phase 8 |
+| BLOCKER-004 | Maps API missing in Prod project | Phase 10 |
+
+## Resolved Blockers (2026-04-21)
+
+| ID | Resolution |
+|----|------------|
+| ~~SEC-001~~ | ✅ All 19 Cloud Functions deployed to tremble-dev with App Check enforced |
+| ~~FUNCTIONS-DEPLOY~~ | ✅ `firebase deploy --only functions --project dev` — all 19 functions live |
 
 ## Known Tech Debt
 
@@ -66,11 +73,12 @@ D-25: 40+ hardcoded Slovenian strings | ~~D-26: ugc_action_sheet white bg~~ ✅ 
 
 ## Next Action
 
-Phase 11 complete. Cloud Functions need to be deployed to tremble-dev to activate the security changes. Then continue Phase 9 or move to Phase 10 (Launch Polish).
+Phase 9 + Phase 11 fully complete. All security hardening deployed to tremble-dev (App Check enforced, Zod schemas, Firestore rules).
 
-```bash
-cd functions && npm run deploy:dev
-```
+Next: Phase 10 (Launch Polish) — store listings, landing page, TestFlight prep.
+Run `/gsd:discuss-phase 10` or `/gsd:execute-phase 10`.
+
+Remaining debt: D-35 (Android Maps key), D-37 (3-state Map Toggle test after Maps API live).
 
 ---
-*Last updated: 2026-04-20 — Phase 11 complete. All 3 plans shipped: PII log masking, Firestore rule hardening, Zod schema migration.*
+*Last updated: 2026-04-21 — SEC-001 + FUNCTIONS-DEPLOY resolved. D-28 UI polish complete (PreferencePillRow overflow fix, settings section header Deep Graphite contrast). Language Modal already uses explicit Save.*

@@ -60,9 +60,13 @@ class PreferencePillRow extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: iconColor),
         const SizedBox(width: 10),
-        Text(
-          label,
-          style: TextStyle(color: textColor, fontSize: 14),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: textColor, fontSize: 14),
+          ),
         ),
         if (isPremium) ...[
           const SizedBox(width: 6),

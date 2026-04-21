@@ -27,6 +27,18 @@ All critical items reported by the founder have been addressed:
 **Impact:** Phase 8 (Paywall) is on hold until company registration and legal entities are established.
 **Action:** Move to Phase 9 (Security Hardening) and Phase C (UI Polish) instead.
 
+## SEC-001 — Firebase App Check Not Enforced in Cloud Functions
+**Date:** 2026-04-20
+**Status:** ✅ RESOLVED (2026-04-21)
+**Resolution:** All 19 Cloud Functions deployed to `tremble-dev` with `enforceAppCheck: true` and Zod schema validation. App Check + security hardening (Phase 11) is now live on dev.
+
+## FUNCTIONS-DEPLOY — Cloud Functions Stale on tremble-dev
+**Date:** 2026-04-18
+**Status:** ✅ RESOLVED (2026-04-21)
+**Resolution:** `firebase deploy --only functions --project dev` executed successfully. All 19 functions updated in europe-west1.
+
+---
+
 ## BLOCKER-004 — Missing Maps API in Production
 **Date:** 2026-04-20
 **Status:** 🔴 OPEN

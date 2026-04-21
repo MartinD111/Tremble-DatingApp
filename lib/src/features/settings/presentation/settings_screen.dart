@@ -729,7 +729,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }) {
     final isExpanded = _expandedSection == sectionKey;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A18);
 
     return GlassCard(
       key: _sectionKeys[sectionKey],
