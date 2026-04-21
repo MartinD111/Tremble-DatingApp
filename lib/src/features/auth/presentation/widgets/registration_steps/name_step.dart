@@ -24,76 +24,80 @@ class NameStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                StepHeader(tr('whats_your_name')),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: TrembleBackButton(
-                    onPressed: onBack,
-                    label: tr('back'),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  StepHeader(tr('whats_your_name')),
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    child: TrembleBackButton(
+                      onPressed: onBack,
+                      label: tr('back'),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          if (verificationBanner != null) ...[
-            const SizedBox(height: 16),
-            verificationBanner!,
-          ],
-          const SizedBox(height: 48),
-          TextField(
-            controller: nameController,
-            autofocus: true,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontSize: 28,
-                  color: isDark ? Colors.white : Colors.black,
-                  fontWeight: FontWeight.w500,
-                ),
-            onChanged: (_) {},
-            decoration: InputDecoration(
-              hintText: tr('name_hint'),
-              hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            if (verificationBanner != null) ...[
+              const SizedBox(height: 16),
+              verificationBanner!,
+            ],
+            const Spacer(),
+            TextField(
+              controller: nameController,
+              autofocus: true,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontSize: 28,
+                    color: isDark ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+              onChanged: (_) {},
+              decoration: InputDecoration(
+                hintText: tr('name_hint'),
+                hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize: 28,
+                      color: isDark ? Colors.white24 : Colors.black26,
+                    ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(100),
+                  borderSide: BorderSide(
                     color: isDark ? Colors.white24 : Colors.black26,
                   ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(100),
-                borderSide: BorderSide(
-                  color: isDark ? Colors.white24 : Colors.black26,
                 ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(100),
-                borderSide: BorderSide(
-                  color: isDark ? Colors.white : Colors.black,
-                  width: 2,
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(100),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.white : Colors.black,
+                    width: 2,
+                  ),
                 ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             ),
-          ),
-          const SizedBox(height: 24),
-          // Rebuild when text changes — parent wraps in ValueListenableBuilder
-          ListenableBuilder(
-            listenable: nameController,
-            builder: (_, __) => ContinueButton(
-              enabled: nameController.text.trim().isNotEmpty,
-              onTap: onNext,
-              label: tr('continue_btn'),
+            const SizedBox(height: 24),
+            // Rebuild when text changes — parent wraps in ValueListenableBuilder
+            ListenableBuilder(
+              listenable: nameController,
+              builder: (_, __) => ContinueButton(
+                enabled: nameController.text.trim().isNotEmpty,
+                onTap: onNext,
+                label: tr('continue_btn'),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-        ],
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }

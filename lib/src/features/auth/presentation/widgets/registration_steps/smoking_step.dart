@@ -23,48 +23,52 @@ class SmokingStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TrembleBackButton(label: tr('back'), onPressed: onBack),
-          const SizedBox(height: 24),
-          StepHeader(tr('do_you_smoke')),
-          const SizedBox(height: 32),
-          OptionPill(
-            label: tr('smoke_yes'),
-            selected: selected == 'yes',
-            onTap: () => onSelect('yes'),
-          ),
-          OptionPill(
-            label: tr('smoke_no'),
-            selected: selected == 'no',
-            onTap: () => onSelect('no'),
-          ),
-          const SizedBox(height: 24),
-          ContinueButton(
-            enabled: selected != null,
-            label: tr('continue_btn'),
-            onTap: () {
-              if (selected == 'no') {
-                showPartnerPreferenceModal(
-                  context,
-                  title: tr('do_you_smoke'),
-                  options: [
-                    {'key': 'no', 'label': tr('smoke_no')},
-                  ],
-                  userSelection: 'no',
-                  showCustom: false,
-                  onSave: onSavePartner,
-                  onNext: onNext,
-                );
-              } else {
-                onNext();
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24),
+            TrembleBackButton(label: tr('back'), onPressed: onBack),
+            const Spacer(),
+            StepHeader(tr('do_you_smoke')),
+            const SizedBox(height: 32),
+            OptionPill(
+              label: tr('smoke_yes'),
+              selected: selected == 'yes',
+              onTap: () => onSelect('yes'),
+            ),
+            OptionPill(
+              label: tr('smoke_no'),
+              selected: selected == 'no',
+              onTap: () => onSelect('no'),
+            ),
+            const Spacer(),
+            ContinueButton(
+              enabled: selected != null,
+              label: tr('continue_btn'),
+              onTap: () {
+                if (selected == 'no') {
+                  showPartnerPreferenceModal(
+                    context,
+                    title: tr('do_you_smoke'),
+                    options: [
+                      {'key': 'no', 'label': tr('smoke_no')},
+                    ],
+                    userSelection: 'no',
+                    showCustom: false,
+                    onSave: onSavePartner,
+                    onNext: onNext,
+                  );
+                } else {
+                  onNext();
+                }
+              },
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }

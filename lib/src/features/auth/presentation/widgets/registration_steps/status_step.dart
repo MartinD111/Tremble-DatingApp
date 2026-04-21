@@ -20,46 +20,50 @@ class StatusStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScrollableFormPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                StepHeader(tr('status')),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: TrembleBackButton(
-                    onPressed: onBack,
-                    label: tr('back'),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  StepHeader(tr('status')),
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    child: TrembleBackButton(
+                      onPressed: onBack,
+                      label: tr('back'),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 32),
-          OptionPill(
-            label: tr('student'),
-            selected: status == 'student',
-            onTap: () => onStatusSelect('student'),
-          ),
-          OptionPill(
-            label: tr('employed'),
-            selected: status == 'employed',
-            onTap: () => onStatusSelect('employed'),
-          ),
-          const SizedBox(height: 24),
-          ContinueButton(
-            enabled: status != null,
-            onTap: onNext,
-            label: tr('continue_btn'),
-          ),
-          const SizedBox(height: 16),
-        ],
+            const Spacer(),
+            OptionPill(
+              label: tr('student'),
+              selected: status == 'student',
+              onTap: () => onStatusSelect('student'),
+            ),
+            OptionPill(
+              label: tr('employed'),
+              selected: status == 'employed',
+              onTap: () => onStatusSelect('employed'),
+            ),
+            const Spacer(),
+            ContinueButton(
+              enabled: status != null,
+              onTap: onNext,
+              label: tr('continue_btn'),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }
