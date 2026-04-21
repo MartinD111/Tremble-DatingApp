@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../../../shared/ui/primary_button.dart';
 import '../../data/safety_repository.dart';
 import '../../../../core/translations.dart';
+
+const _kDeepGraphite = Color(0xFF1A1A18);
+const _kPrimaryRose = Color(0xFFF4436C);
 
 /// A generic bottom sheet that offers "Report User" and "Block User" options.
 class UgcActionSheet extends ConsumerWidget {
@@ -35,7 +40,7 @@ class UgcActionSheet extends ConsumerWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF1A1A18),
+        color: _kDeepGraphite,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
@@ -47,33 +52,37 @@ class UgcActionSheet extends ConsumerWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[400],
+                color: Colors.white24,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(LucideIcons.flag, color: Colors.red),
+              leading: const Icon(LucideIcons.flag, color: _kPrimaryRose),
               title: Text(
                 t('report_user', lang).replaceAll('{name}', targetName),
-                style: const TextStyle(
-                    color: Colors.red, fontWeight: FontWeight.bold),
+                style: GoogleFonts.instrumentSans(
+                  color: _kPrimaryRose,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               onTap: () {
-                Navigator.pop(context); // Close action sheet
+                Navigator.pop(context);
                 _showReportDialog(context, ref, lang);
               },
             ),
-            const Divider(),
+            Divider(color: Colors.white12, height: 1),
             ListTile(
-              leading: const Icon(LucideIcons.ban, color: Colors.red),
+              leading: const Icon(LucideIcons.ban, color: _kPrimaryRose),
               title: Text(
                 t('block_user', lang).replaceAll('{name}', targetName),
-                style: const TextStyle(
-                    color: Colors.red, fontWeight: FontWeight.bold),
+                style: GoogleFonts.instrumentSans(
+                  color: _kPrimaryRose,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               onTap: () {
-                Navigator.pop(context); // Close action sheet
+                Navigator.pop(context);
                 _showBlockDialog(context, ref, lang);
               },
             ),
@@ -88,26 +97,46 @@ class UgcActionSheet extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(t('block_user', lang).replaceAll('{name}', targetName)),
+        backgroundColor: _kDeepGraphite,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          t('block_user', lang).replaceAll('{name}', targetName),
+          style: GoogleFonts.playfairDisplay(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(
-            t('block_confirm_desc', lang).replaceAll('{name}', targetName)),
+          t('block_confirm_desc', lang).replaceAll('{name}', targetName),
+          style: GoogleFonts.instrumentSans(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(t('cancel', lang)),
+            child: Text(
+              t('cancel', lang),
+              style: GoogleFonts.instrumentSans(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _kPrimaryRose,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100)),
+              elevation: 0,
+            ),
             onPressed: () async {
-              // Calls WaveRepository.sendWave() → local write, mutual match detection is server-side
               Navigator.pop(ctx);
               try {
                 await ref.read(safetyRepositoryProvider).blockUser(targetUid);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(t('block_success', lang)
-                            .replaceAll('{name}', targetName))),
+                      content: Text(t('block_success', lang)
+                          .replaceAll('{name}', targetName)),
+                    ),
                   );
                 }
               } catch (e) {
@@ -118,8 +147,11 @@ class UgcActionSheet extends ConsumerWidget {
                 }
               }
             },
-            child: Text(t('block_user', lang).replaceAll(' {name}', ''),
-                style: const TextStyle(color: Colors.white)),
+            child: Text(
+              t('block_user', lang).replaceAll(' {name}', ''),
+              style: GoogleFonts.instrumentSans(
+                  color: Colors.white, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -182,8 +214,9 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(t('report_success', lang)
-                  .replaceAll('{name}', widget.targetName))),
+            content: Text(t('report_success', ref.read(appLanguageProvider))
+                .replaceAll('{name}', widget.targetName)),
+          ),
         );
       }
     } catch (e) {
@@ -199,10 +232,20 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
+    final canSubmit = _selectedReasons.isNotEmpty && !_isSubmitting;
 
     return AlertDialog(
-      title:
-          Text(t('report_user', lang).replaceAll('{name}', widget.targetName)),
+      backgroundColor: _kDeepGraphite,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      title: Text(
+        t('report_user', lang).replaceAll('{name}', widget.targetName),
+        style: GoogleFonts.playfairDisplay(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
       content: SizedBox(
         width: double.maxFinite,
         child: SingleChildScrollView(
@@ -210,67 +253,98 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(t('report_reasons_desc', lang),
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                t('report_reasons_desc', lang),
+                style: GoogleFonts.instrumentSans(color: Colors.white70),
+              ),
               const SizedBox(height: 12),
               ..._availableReasons.map((reason) {
                 return CheckboxListTile(
-                  title: Text(reason),
+                  title: Text(
+                    reason,
+                    style: GoogleFonts.instrumentSans(color: Colors.white),
+                  ),
                   value: _selectedReasons.contains(reason),
+                  activeColor: _kPrimaryRose,
+                  checkColor: Colors.white,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
-                  onChanged: (val) {
-                    setState(() {
-                      if (val == true) {
-                        _selectedReasons.add(reason);
-                      } else {
-                        _selectedReasons.remove(reason);
-                      }
-                    });
-                  },
+                  onChanged: _isSubmitting
+                      ? null
+                      : (val) {
+                          setState(() {
+                            if (val == true) {
+                              _selectedReasons.add(reason);
+                            } else {
+                              _selectedReasons.remove(reason);
+                            }
+                          });
+                        },
                 );
               }),
               const SizedBox(height: 16),
               TextField(
                 controller: _explanationCtrl,
+                style: GoogleFonts.instrumentSans(color: Colors.white),
+                maxLines: 3,
                 decoration: InputDecoration(
                   labelText: t('report_explanation', lang),
+                  labelStyle: GoogleFonts.instrumentSans(color: Colors.white54),
                   hintText: t('report_explanation_hint', lang),
-                  border: const OutlineInputBorder(),
+                  hintStyle: GoogleFonts.instrumentSans(color: Colors.white38),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.1),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.white30),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.white, width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                maxLines: 3,
               ),
               const SizedBox(height: 16),
               Text(
                 t('report_auto_block_warning', lang),
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.red),
+                style: GoogleFonts.instrumentSans(
+                  fontWeight: FontWeight.bold,
+                  color: _kPrimaryRose,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed:
+                        _isSubmitting ? null : () => Navigator.pop(context),
+                    child: Text(
+                      t('cancel', lang),
+                      style: GoogleFonts.instrumentSans(color: Colors.white54),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Opacity(
+                    opacity: canSubmit ? 1.0 : 0.45,
+                    child: AbsorbPointer(
+                      absorbing: !canSubmit,
+                      child: PrimaryButton(
+                        text: t('submit', lang),
+                        onPressed: () => _submitReport(lang),
+                        isLoading: _isSubmitting,
+                        width: 120,
+                        height: 44,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.pop(context),
-          child: Text(t('cancel', lang)),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          onPressed: (_isSubmitting || _selectedReasons.isEmpty)
-              ? null
-              : () => _submitReport(lang),
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2))
-              : Text(t('submit', lang),
-                  style: const TextStyle(color: Colors.white)),
-        ),
-      ],
     );
   }
 }
