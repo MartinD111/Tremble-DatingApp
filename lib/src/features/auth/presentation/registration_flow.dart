@@ -89,7 +89,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   @override
   void initState() {
     super.initState();
-    _selectedLanguage = ref.read(appLanguageProvider);
+    final lang = ref.read(appLanguageProvider);
+    _selectedLanguage = lang.isNotEmpty ? lang : 'sl';
 
     final currentUser = FirebaseAuth.instance.currentUser;
     final isGoogleUser =
@@ -190,7 +191,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // Prompt (Removed)
 
   // helpers
-  String tr(String key) => t(key, _selectedLanguage);
+  String tr(String key) {
+    final lang = _selectedLanguage.isNotEmpty ? _selectedLanguage : 'sl';
+    final result = t(key, lang);
+    // Fallback: if no translation in selected language, return English
+    if (result == key) return t(key, 'en');
+    return result;
+  }
 
   void _restoreStateFromUser(AuthUser appUser) {
     _emailController.text = appUser.email ?? '';
