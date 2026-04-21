@@ -571,10 +571,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     )
                   else
                     Container(
-                      color: Colors.white10,
-                      child: const Center(
-                        child:
-                            Icon(Icons.person, size: 80, color: Colors.white24),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : const Color(0xFF1A1A18).withValues(alpha: 0.06),
+                      child: Center(
+                        child: Icon(
+                          Icons.person,
+                          size: 80,
+                          color: isDark
+                              ? Colors.white24
+                              : const Color(0xFF1A1A18).withValues(alpha: 0.25),
+                        ),
                       ),
                     ),
                   // Gradient overlay
