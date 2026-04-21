@@ -112,7 +112,7 @@ class _ConsentStepState extends State<ConsentStep> {
           ),
           const SizedBox(height: 24),
           OptionPill(
-            label: 'Izberi Vse',
+            label: widget.tr('select_all'),
             selected: _consentGiven,
             onTap: _toggleAll,
             icon: Icons.done_all,
