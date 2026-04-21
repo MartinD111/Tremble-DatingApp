@@ -487,7 +487,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // ────── PROGRESS BAR ──────
   Widget _buildProgressBar() {
-    const totalSteps = 26;
+    const totalSteps = 27;
     final progress = (_currentPage + 1) / totalSteps;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return TweenAnimationBuilder<double>(
