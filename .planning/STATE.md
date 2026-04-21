@@ -52,7 +52,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-18 after v1.1)
 
 ## Known Tech Debt
 
-D-25: 40+ hardcoded Slovenian strings | D-26: ugc_action_sheet white bg | D-27: forgot-pw spinner | D-28: 17-item registration UI fix plan pending approval | D-29: map tile device test deferred | D-30: Phase 7 GSD tracking gap
+D-25: 40+ hardcoded Slovenian strings | D-26: ugc_action_sheet white bg | ~~D-27: forgot-pw spinner~~ ✅ fixed 2026-04-21 | D-28: 17-item registration UI fix plan pending approval | D-29: map tile device test deferred | D-30: Phase 7 GSD tracking gap
 
 ## Accumulated Context
 
