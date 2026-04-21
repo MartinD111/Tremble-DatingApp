@@ -1,9 +1,9 @@
-## Session State — 2026-04-21 (D-26, D-27, D-28 Final Polish Complete)
-- Active Task: Session handoff — all polish work done, context window full
+## Session State — 2026-04-21 (SEC-001 Deploy + D-28 Certification Complete)
+- Active Task: Session handoff — SEC-001 deployed, D-28 UI polish certified
 - Environment: Dev (tremble-dev)
-- Modified Files: ugc_action_sheet.dart, primary_button.dart, forgot_password_screen.dart, settings_screen.dart, STATE.md
+- Modified Files: preference_pill_row.dart, settings_screen.dart, blockers.md, todo.md, STATE.md
 - Open Problems: None.
-- System Status: Build passing. Zero analysis issues.
+- System Status: Build passing. Zero analysis issues. All 19 Cloud Functions live on tremble-dev.
 
 ---
 
@@ -11,34 +11,34 @@
 
 ### What Was Done This Session
 
-| Debt | Fix | Commit |
+| Item | Fix | Commit |
 |------|-----|--------|
-| D-27 | `PrimaryButton` gains `isLoading` param; `ForgotPasswordScreen` drops if/else spinner — no layout shift | `9ae2199` |
-| D-26 | `UgcActionSheet`: drag handle → white24, red → rose #F4436C, Instrument Sans. `BlockDialog` + `ReportDialog`: forced dark surface (0xFF1A1A18), Playfair Display titles, rose checkboxes, stoic TextField, PrimaryButton with isLoading | `6177c99` |
-| D-28 | Audited 17-point plan — 16/17 items already shipped 2026-04-20. Remaining gap: ProfileCard photo placeholder in light mode (white10/white24 → invisible). Fixed: Deep Graphite alpha-tinted fill + icon, theme-aware | `04f7aa0` |
+| SEC-001 | All 19 Cloud Functions deployed to `tremble-dev` with App Check enforced, Zod schemas, Firestore rules | `6e06315` |
+| FUNCTIONS-DEPLOY | `firebase deploy --only functions --project dev` — 19 functions live in europe-west1 | `6e06315` |
+| D-28 pill overflow | `PreferencePillRow`: label wrapped in `Flexible` + `maxLines:1` + `TextOverflow.ellipsis` | `6e06315` |
+| D-28 contrast | `_buildExpandableSection`: light-mode `textColor` → Deep Graphite `0xFF1A1A18` | `6e06315` |
+| Language Modal | Verified: already uses `showLanguageEditModal` with explicit Save. No change needed. | — |
 
-### Current Debt Status (STATE.md)
-- ~~D-25~~ ✅  ~~D-26~~ ✅  ~~D-27~~ ✅  ~~D-28~~ ✅
+### Current Debt Status
+- ~~D-25~~ ✅  ~~D-26~~ ✅  ~~D-27~~ ✅  ~~D-28~~ ✅  ~~SEC-001~~ ✅
 - D-35: Map grey screen — Android `local.properties` key awaiting founder confirmation
 - D-37: 3-state Map Toggle — untested due to map rendering failure
 
-### Open Blockers (from blockers.md)
-- SEC-001: Firebase App Check not enforced — Cloud Functions NOT yet deployed to tremble-dev
-- FUNCTIONS-DEPLOY: `cd functions && npm run deploy:dev` — run to activate security changes
+### Open Blockers
+- BLOCKER-003: Legal/RevenueCat — Phase 8 on hold
+- BLOCKER-004: Maps API missing in Prod project
 
-### Next Actions (pick one)
+### Next Action
 
-**Option A — Deploy security changes (unblocks Phase 9)**
-```bash
-cd functions && npm run deploy:dev
+**Phase 10 — Launch Polish**
 ```
-Then verify App Check enforcement in tremble-dev, close SEC-001, and mark Phase 9 complete.
-
-**Option B — Phase 10 (Launch Polish)**
-Run `/gsd:discuss-phase 10` or `/gsd:execute-phase 10` — store listings, landing page, TestFlight.
-
-**Option C — D-35 Map fix**
-Confirm correct Android Maps API key, update `local.properties`, test map rendering.
+/gsd:discuss-phase 10
+```
+or
+```
+/gsd:execute-phase 10
+```
+Store listings, landing page, TestFlight preparation.
 
 ### Resume Command
 ```
