@@ -36,3 +36,7 @@ Source: Profile UI Refinement TASK-004, April 2026.
 **Rule #21 — Always verify Firebase aliases in `.firebaserc` before deployment.**
 [2026-04-20] Never assume project aliases like `development` or `staging` point to the correct project. A misconfigured `.firebaserc` (e.g., `development` pointing to a production project ID) can lead to catastrophic data loss or policy violations. Always cross-reference the project ID in `firebase.json` or `.firebaserc` with the official project list (`firebase projects:list`) before executing any deployment command.
 Source: Phase 11 Security Audit, April 2026.
+
+**Rule #22 — Prefer native button loading states over manual if/else UI switching.**
+[2026-04-21] To avoid layout shifts and maintain a premium look, shared buttons (like `PrimaryButton`) should handle their own `isLoading` state. This centralizes the spinner logic (SVG/CircularProgressIndicator) and ensures the page layout remains stable while the backend call is in progress.
+Source: D-27 Spinner Fix, April 2021.

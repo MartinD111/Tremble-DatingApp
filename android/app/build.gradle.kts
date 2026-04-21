@@ -17,7 +17,8 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localPropertiesFile.inputStream().use { localProperties.load(it) }
 }
-val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: ""
+val mapsApiKeyDev: String = localProperties.getProperty("MAPS_API_KEY_DEV") ?: ""
+val mapsApiKeyProd: String = localProperties.getProperty("MAPS_API_KEY_PROD") ?: ""
 
 android {
     namespace = "tremble.dating.app"
@@ -38,12 +39,14 @@ android {
             applicationId = "com.pulse"
             versionCode = flutter.versionCode
             versionName = flutter.versionName
+            manifestPlaceholders["MAPS_API_KEY"] = mapsApiKeyDev
         }
         create("prod") {
             dimension = "environment"
             applicationId = "tremble.dating.app"
             versionCode = flutter.versionCode
             versionName = flutter.versionName
+            manifestPlaceholders["MAPS_API_KEY"] = mapsApiKeyProd
         }
     }
 
@@ -51,7 +54,6 @@ android {
         // applicationId is now handled by flavors
         minSdk = flutter.minSdkVersion  // flutter_blue_plus requires API 21+
         targetSdk = flutter.targetSdkVersion
-        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {
