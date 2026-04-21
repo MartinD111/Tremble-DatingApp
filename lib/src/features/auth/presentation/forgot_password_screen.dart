@@ -136,13 +136,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 25),
 
-        if (_isLoading)
-          CircularProgressIndicator(color: textPrimary)
-        else
-          PrimaryButton(
-            text: "Send Reset Email",
-            onPressed: _sendResetEmail,
-          ),
+        PrimaryButton(
+          text: "Send Reset Email",
+          onPressed: _sendResetEmail,
+          isLoading: _isLoading,
+        ),
 
         const SizedBox(height: 20),
         TextButton(

@@ -4,6 +4,7 @@ class PrimaryButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isSecondary;
+  final bool isLoading;
   final double? width;
   final double? height;
   final IconData? icon;
@@ -13,6 +14,7 @@ class PrimaryButton extends StatelessWidget {
       required this.text,
       required this.onPressed,
       this.isSecondary = false,
+      this.isLoading = false,
       this.width,
       this.height,
       this.icon});
@@ -38,13 +40,27 @@ class PrimaryButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
         elevation: 0,
       ),
-      onPressed: onPressed,
-      icon: icon != null ? Icon(icon) : const SizedBox.shrink(),
-      label: Text(
-        text,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16) ??
-            const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      ),
+      onPressed: isLoading ? null : onPressed,
+      icon: isLoading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : (icon != null ? Icon(icon) : const SizedBox.shrink()),
+      label: isLoading
+          ? const SizedBox.shrink()
+          : Text(
+              text,
+              style: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.copyWith(fontSize: 16) ??
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
     );
   }
 }
