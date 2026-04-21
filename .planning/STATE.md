@@ -59,7 +59,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-18 after v1.1)
 
 ## Known Tech Debt
 
-D-25: 40+ hardcoded Slovenian strings | ~~D-26: ugc_action_sheet white bg~~ ✅ fixed 2026-04-21 | ~~D-27: forgot-pw spinner~~ ✅ fixed 2026-04-21 | D-28: 17-item registration UI fix plan pending approval | D-29: map tile device test deferred | D-30: Phase 7 GSD tracking gap
+~~D-25~~ ✅ i18n defensive tr() + raw keys fixed 2026-04-21 | ~~D-26: ugc_action_sheet white bg~~ ✅ fixed 2026-04-21 | ~~D-27: forgot-pw spinner~~ ✅ fixed 2026-04-21 | ~~D-28~~ ✅ registration UI repair plan complete 2026-04-21 | D-29: map tile device test deferred | D-30: Phase 7 GSD tracking gap
 
 ## Accumulated Context
 
@@ -81,4 +81,4 @@ Run `/gsd:discuss-phase 10` or `/gsd:execute-phase 10`.
 Remaining debt: D-35 (Android Maps key), D-37 (3-state Map Toggle test after Maps API live).
 
 ---
-*Last updated: 2026-04-21 — SEC-001 + FUNCTIONS-DEPLOY resolved. D-28 UI polish complete (PreferencePillRow overflow fix, settings section header Deep Graphite contrast). Language Modal already uses explicit Save.*
+*Last updated: 2026-04-21 — Registration repair plan complete: gradient→Deep Graphite (REG-01), defensive tr() (REG-02), select_all i18n (REG-03), photos copy 4→6 (REG-04), Spacer layout on sparse steps (REG-05), totalSteps 26→27 (REG-06). flutter analyze: 0 issues.*
