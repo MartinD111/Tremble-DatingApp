@@ -564,20 +564,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     // Determine background brightness based on themeModeProvider
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
 
-    // Gender-specific gradient — intentional UI, not brand tokens. Do not replace with TrembleTheme colors.
-    Color topColor = isDark ? const Color(0xFF1E1E2E) : const Color(0xFFF0F4F8);
+    // Default dark gradient — Deep Graphite brand tokens
+    Color topColor = isDark ? const Color(0xFF1A1A18) : const Color(0xFFFAFAF7);
     Color bottomColor =
-        isDark ? const Color(0xFF2A2A3E) : const Color(0xFFD9E2EC);
+        isDark ? const Color(0xFF1F1F1D) : const Color(0xFFF0F0EB);
 
     if (!_isClassicAppearance) {
       if (_selectedGender == 'male') {
-        topColor = isDark ? const Color(0xFF0D253F) : const Color(0xFFE0F7FA);
+        topColor = isDark ? const Color(0xFF0D1B2A) : const Color(0xFFE0F7FA);
         bottomColor =
-            isDark ? const Color(0xFF005662) : const Color(0xFF80DEEA);
+            isDark ? const Color(0xFF0D1B2A) : const Color(0xFF80DEEA);
       } else if (_selectedGender == 'female') {
-        topColor = isDark ? const Color(0xFF2A0845) : const Color(0xFFF3E5F5);
+        topColor = isDark ? const Color(0xFF1F1018) : const Color(0xFFF3E5F5);
         bottomColor =
-            isDark ? const Color(0xFF6441A5) : const Color(0xFFCE93D8);
+            isDark ? const Color(0xFF1F1018) : const Color(0xFFCE93D8);
       }
     }
 
