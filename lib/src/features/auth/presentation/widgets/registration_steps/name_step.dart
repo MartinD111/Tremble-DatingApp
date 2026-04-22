@@ -37,13 +37,13 @@ class NameStep extends StatelessWidget {
                 const Spacer(),
               ],
             ),
-            const SizedBox(height: 16),
+            const Spacer(),
             StepHeader(tr('whats_your_name')),
             if (verificationBanner != null) ...[
               const SizedBox(height: 16),
               verificationBanner!,
             ],
-            const Spacer(),
+            const SizedBox(height: 24),
             TextField(
               controller: nameController,
               autofocus: true,
@@ -86,6 +86,7 @@ class NameStep extends StatelessWidget {
                 label: tr('continue_btn'),
               ),
             ),
+            const Spacer(),
             const SizedBox(height: 32),
           ],
         ),
