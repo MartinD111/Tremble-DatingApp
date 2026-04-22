@@ -27,23 +27,14 @@ class PetsStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                StepHeader(tr('pets')),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: TrembleBackButton(
-                    onPressed: onBack,
-                    label: tr('back'),
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              TrembleBackButton(onPressed: onBack, label: tr('back')),
+              const Spacer(),
+            ],
           ),
+          const SizedBox(height: 16),
+          StepHeader(tr('pets')),
           const SizedBox(height: 24),
           OptionPill(
             label: tr('dog_person'),

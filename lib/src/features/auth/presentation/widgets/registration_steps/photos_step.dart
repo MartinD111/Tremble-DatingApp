@@ -34,23 +34,14 @@ class PhotosStep extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          SizedBox(
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                StepHeader(tr('select_photo_title')),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: TrembleBackButton(
-                    onPressed: onBack,
-                    label: tr('back'),
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              TrembleBackButton(onPressed: onBack, label: tr('back')),
+              const Spacer(),
+            ],
           ),
+          const SizedBox(height: 16),
+          StepHeader(tr('select_photo_title')),
           const SizedBox(height: 8),
           Text(tr('photos_hint'),
               style: GoogleFonts.instrumentSans(

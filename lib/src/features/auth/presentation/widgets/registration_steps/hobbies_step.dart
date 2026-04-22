@@ -137,29 +137,30 @@ class _HobbiesStepState extends State<HobbiesStep> {
                 ),
               ),
               const SizedBox(height: 12),
-            ] else
-              SizedBox(
-                width: double.infinity,
-                child: Stack(
-                  alignment: Alignment.center,
+            ] else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
                   children: [
-                    StepHeader(
-                      widget.tr('hobbies'),
-                      subtitle:
-                          '${widget.selectedHobbies.length} ${widget.tr('hobbies_selected').replaceAll('{count}', '')}',
+                    TrembleBackButton(
+                      label: widget.tr('back'),
+                      onPressed:
+                          widget.onBack ?? () => Navigator.maybePop(context),
                     ),
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      child: TrembleBackButton(
-                        label: widget.tr('back'),
-                        onPressed:
-                            widget.onBack ?? () => Navigator.maybePop(context),
-                      ),
-                    ),
+                    const Spacer(),
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: StepHeader(
+                  widget.tr('hobbies'),
+                  subtitle:
+                      '${widget.selectedHobbies.length} ${widget.tr('hobbies_selected').replaceAll('{count}', '')}',
+                ),
+              ),
+            ],
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),

@@ -27,23 +27,14 @@ class StatusStep extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  StepHeader(tr('status')),
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    child: TrembleBackButton(
-                      onPressed: onBack,
-                      label: tr('back'),
-                    ),
-                  ),
-                ],
-              ),
+            Row(
+              children: [
+                TrembleBackButton(onPressed: onBack, label: tr('back')),
+                const Spacer(),
+              ],
             ),
+            const SizedBox(height: 16),
+            StepHeader(tr('status')),
             const Spacer(),
             OptionPill(
               label: tr('student'),

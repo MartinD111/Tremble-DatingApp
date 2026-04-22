@@ -28,23 +28,14 @@ class IntroversionStep extends StatelessWidget {
     return ScrollableFormPage(
       child: Column(
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                StepHeader(tr('introversion')),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: TrembleBackButton(
-                    onPressed: onBack,
-                    label: tr('back'),
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              TrembleBackButton(onPressed: onBack, label: tr('back')),
+              const Spacer(),
+            ],
           ),
+          const SizedBox(height: 16),
+          StepHeader(tr('introversion')),
           const SizedBox(height: 48),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

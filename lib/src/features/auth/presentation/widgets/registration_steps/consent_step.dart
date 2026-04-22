@@ -90,25 +90,17 @@ class _ConsentStepState extends State<ConsentStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                StepHeader(
-                  'Privacy and GDPR',
-                  subtitle: widget.tr('consent_subtitle'),
-                ),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: TrembleBackButton(
-                    label: widget.tr('back'),
-                    onPressed: widget.onBack,
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              TrembleBackButton(
+                  label: widget.tr('back'), onPressed: widget.onBack),
+              const Spacer(),
+            ],
+          ),
+          const SizedBox(height: 16),
+          StepHeader(
+            'Privacy and GDPR',
+            subtitle: widget.tr('consent_subtitle'),
           ),
           const SizedBox(height: 24),
           OptionPill(

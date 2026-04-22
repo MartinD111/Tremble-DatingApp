@@ -442,23 +442,15 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: double.infinity,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  StepHeader(widget.tr('basic_info')),
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    child: TrembleBackButton(
-                      label: widget.tr('back'),
-                      onPressed: widget.onBack,
-                    ),
-                  ),
-                ],
-              ),
+            Row(
+              children: [
+                TrembleBackButton(
+                    label: widget.tr('back'), onPressed: widget.onBack),
+                const Spacer(),
+              ],
             ),
+            const SizedBox(height: 16),
+            StepHeader(widget.tr('basic_info')),
             const SizedBox(height: 32),
             if (isAlreadyLoggedIn &&
                 (isSocialUser || isVerifiedPasswordUser) &&

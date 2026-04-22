@@ -31,23 +31,14 @@ class NameStep extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  StepHeader(tr('whats_your_name')),
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    child: TrembleBackButton(
-                      onPressed: onBack,
-                      label: tr('back'),
-                    ),
-                  ),
-                ],
-              ),
+            Row(
+              children: [
+                TrembleBackButton(onPressed: onBack, label: tr('back')),
+                const Spacer(),
+              ],
             ),
+            const SizedBox(height: 16),
+            StepHeader(tr('whats_your_name')),
             if (verificationBanner != null) ...[
               const SizedBox(height: 16),
               verificationBanner!,

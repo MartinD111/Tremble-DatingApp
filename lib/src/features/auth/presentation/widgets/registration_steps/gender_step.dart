@@ -35,23 +35,14 @@ class GenderStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                StepHeader(tr('whats_your_gender')),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: TrembleBackButton(
-                    label: tr('back'),
-                    onPressed: onBack,
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              TrembleBackButton(label: tr('back'), onPressed: onBack),
+              const Spacer(),
+            ],
           ),
+          const SizedBox(height: 16),
+          StepHeader(tr('whats_your_gender')),
           const SizedBox(height: 40),
           OptionPill(
             label: tr('gender_male'),

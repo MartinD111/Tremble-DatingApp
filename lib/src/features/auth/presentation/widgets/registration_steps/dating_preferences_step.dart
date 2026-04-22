@@ -54,23 +54,14 @@ class DatingPreferencesStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                StepHeader(tr('who_looking_for')),
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: TrembleBackButton(
-                    onPressed: onBack,
-                    label: tr('back'),
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              TrembleBackButton(onPressed: onBack, label: tr('back')),
+              const Spacer(),
+            ],
           ),
+          const SizedBox(height: 16),
+          StepHeader(tr('who_looking_for')),
           const SizedBox(height: 24),
           ...opts.map((o) => OptionPill(
                 label: o['label'] as String,

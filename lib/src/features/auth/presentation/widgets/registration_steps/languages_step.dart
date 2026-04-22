@@ -47,23 +47,14 @@ class LanguagesStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      StepHeader(tr('how_many_languages')),
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        child: TrembleBackButton(
-                          label: tr('back'),
-                          onPressed: onBack,
-                        ),
-                      ),
-                    ],
-                  ),
+                Row(
+                  children: [
+                    TrembleBackButton(label: tr('back'), onPressed: onBack),
+                    const Spacer(),
+                  ],
                 ),
+                const SizedBox(height: 16),
+                StepHeader(tr('how_many_languages')),
                 const SizedBox(height: 24),
               ],
             ),
