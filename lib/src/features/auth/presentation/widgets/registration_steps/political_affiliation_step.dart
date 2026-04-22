@@ -44,24 +44,18 @@ class PoliticalAffiliationStep extends StatelessWidget {
           const SizedBox(height: 40),
           StepHeader(tr('political_affiliation')),
           const SizedBox(height: 48),
-          Row(
-            children: List.generate(labels.length, (i) {
-              final isActive = !isSpecial && idx - 1 == i;
-              return Expanded(
-                child: Text(
-                  labels[i],
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.instrumentSans(
-                    color: isActive
-                        ? Theme.of(context).colorScheme.primary
-                        : labelColor,
-                    fontSize: 11,
-                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                  ),
+          if (!isSpecial)
+            Center(
+              child: Text(
+                labels[idx - 1],
+                style: GoogleFonts.instrumentSans(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
-              );
-            }),
-          ),
+              ),
+            ),
+          const SizedBox(height: 8),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               thumbShape: isSpecial
@@ -77,6 +71,19 @@ class PoliticalAffiliationStep extends StatelessWidget {
               activeColor: Theme.of(context).colorScheme.primary,
               inactiveColor: isDark ? Colors.white12 : Colors.black12,
             ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                tr('politics_left'),
+                style: TextStyle(fontSize: 11, color: labelColor),
+              ),
+              Text(
+                tr('politics_right'),
+                style: TextStyle(fontSize: 11, color: labelColor),
+              ),
+            ],
           ),
           const SizedBox(height: 32),
           OptionPill(
