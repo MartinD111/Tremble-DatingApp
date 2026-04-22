@@ -1,0 +1,6 @@
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "Logo/tremble_icon_clean.png"
+  adaptive_icon_background: "#1A1A18"
+  adaptive_icon_foreground: "Logo/tremble_icon_clean.png"

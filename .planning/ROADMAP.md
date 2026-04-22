@@ -111,7 +111,13 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
   5. trembledating.com shows a live landing page with hero section, proximity demo animation, and working waitlist or store redirect
   6. App Store Review submission has been accepted (or is in review)
   7. Play Store Review submission has been accepted (or is in review)
-**Plans**: TBD
+**Plans**:
+  - [x] TASK-10-01: Identity Injection (Icons & Splash)
+  - [x] TASK-10-02: Ghost State UX (System Nominal)
+  - [ ] TASK-10-03: Framing & Metadata
+  - [ ] TASK-10-04: TestFlight / Internal Beta
+  - [ ] TASK-10-05: Landing Page (trembledating.com)
+
 **UI hint**: yes
 
 ---
@@ -129,7 +135,7 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 | 7. Wave Mechanic + Push Notifications | v1.1 | - | ✅ Complete | 2026-04-09 |
 | 8. Paywall / Tremble Pro | v1.2 | 0/TBD | ⏳ Not started | - |
 | 9. Security Hardening & GDPR | v1.2 | 1/TBD | 🟡 In progress | - |
-| 10. Launch Polish & Store Deploy | v1.3 | 0/TBD | ⏳ Not started | - |
+| 10. Launch Polish & Store Deploy | v1.3 | 2/5 | 🟡 In progress | - |
 | 11. SECURITY-01: Technical Security Audit & Hardening | v1.2 | 0/TBD | ⏳ Not started | - |
 
 ---

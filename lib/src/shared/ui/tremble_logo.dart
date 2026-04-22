@@ -134,7 +134,7 @@ class _HeartWifiPainter extends CustomPainter {
     final scale = (size.width / 220.0) * 1.12;
 
     canvas.save();
-    canvas.translate(centerX - (4.0 * scale), centerY - (10.0 * scale));
+    canvas.translate(centerX - (3.5 * scale), centerY - (20.0 * scale));
     canvas.scale(scale);
 
     final Paint basePaint = Paint()
@@ -167,12 +167,11 @@ class _HeartWifiPainter extends CustomPainter {
         pathMid, basePaint..color = Colors.white.withValues(alpha: midOpacity));
 
     // 4. Animated Inner Wave
-    // Slightly more compressed y-range (28 to 38 instead of 25 to 40)
-    // to avoid touching the mid-wave (5 to 50)
+    // Matches SVG: M 12, 21 C 16, 11 26, 14 26, 20 C 26, 26 16, 31 12, 36
     final pathInner = Path()
-      ..moveTo(12, 28)
-      ..cubicTo(16, 22, 24, 24, 24, 30)
-      ..cubicTo(24, 36, 16, 38, 12, 38);
+      ..moveTo(12, 21)
+      ..cubicTo(16, 11, 26, 14, 26, 20)
+      ..cubicTo(26, 26, 16, 31, 12, 36);
     canvas.drawPath(pathInner,
         basePaint..color = Colors.white.withValues(alpha: innerOpacity));
 

@@ -445,17 +445,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         left: 0,
                         right: 0,
                         child: Center(
-                          child: Text(
-                            isDegraded
-                                ? t('geo_matching_paused', lang)
-                                : t('scanning', lang),
-                            style: TrembleTheme.telemetryTextStyle(
-                              context,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.7),
-                            ).copyWith(letterSpacing: 2),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                isDegraded
+                                    ? t('geo_matching_paused', lang)
+                                    : t('scanning', lang),
+                                style: TrembleTheme.telemetryTextStyle(
+                                  context,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.7),
+                                ).copyWith(letterSpacing: 2),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                t('system_nominal', lang).toUpperCase(),
+                                style: TrembleTheme.telemetryTextStyle(
+                                  context,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.5),
+                                ).copyWith(fontSize: 10, letterSpacing: 1.5),
+                              ),
+                            ],
                           ).animate().fade().slideY(begin: 0.5),
                         ),
                       ),

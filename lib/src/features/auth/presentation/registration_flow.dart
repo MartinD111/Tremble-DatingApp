@@ -1101,19 +1101,27 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(builder: (ctx, setModalState) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        return ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-                top: BorderSide(
-                    color: isDark ? Colors.white12 : Colors.black12)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(
+                      24, 12, 24, MediaQuery.of(context).padding.bottom + 24),
+                      decoration: BoxDecoration(
+                        color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
+                            .withValues(alpha: 0.8),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(28)),
+                        border: Border(
+                            top: BorderSide(
+                                color:
+                                    isDark ? Colors.white12 : Colors.black12)),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
               Center(
                 child: Container(
                     width: 40,
@@ -1124,21 +1132,21 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
               const SizedBox(height: 28),
               Text(
-                'Ali želiš, da ima tvoj partner enake preference?',
+                tr('partner_pref_title'),
                 style: GoogleFonts.instrumentSans(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
               ),
               const SizedBox(height: 24),
-              _optionPill('Enako kot jaz', tempSelection == 'same', () {
+              _optionPill(tr('partner_pref_same'), tempSelection == 'same', () {
                 setModalState(() => tempSelection = 'same');
               }),
-              _optionPill('Vseeno mi je', tempSelection == 'idc', () {
+              _optionPill(tr('partner_pref_idc'), tempSelection == 'idc', () {
                 setModalState(() => tempSelection = 'idc');
               }),
               if (showCustom)
-                _optionPill('Po meri', tempSelection == 'custom', () {
+                _optionPill(tr('partner_pref_custom'), tempSelection == 'custom', () {
                   setModalState(() => tempSelection = 'custom');
                 }),
               const SizedBox(height: 24),
@@ -1156,7 +1164,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                         Navigator.pop(ctx);
                       },
                       child: Text(
-                        'Nazaj',
+                        tr('back'),
                         style: TextStyle(
                             color: isDark ? Colors.white70 : Colors.black54,
                             fontSize: 16,
@@ -1194,7 +1202,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                     title, options, onSave);
                               }
                             },
-                      child: const Text('Nadaljuj',
+                      child: Text(tr('continue_btn'),
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
@@ -1203,7 +1211,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ],
           ),
-        );
+        )));
       }),
     );
   }
@@ -1245,14 +1253,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(builder: (ctx, setModalState) {
-        return SafeArea(
-            child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(28)),
-                child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+        return ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(
+                      24, 12, 24, MediaQuery.of(context).padding.bottom + 24),
                       decoration: BoxDecoration(
                         color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
                             .withValues(alpha: 0.8),
@@ -1279,7 +1286,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                           ),
                           const SizedBox(height: 28),
                           Text(
-                            'Kakšen naj bo tvoj partner?',
+                            tr('partner_pref_range_title'),
                             style: GoogleFonts.instrumentSans(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -1360,7 +1367,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               ),
                           ],
                           const SizedBox(height: 16),
-                          _optionPill('Vseeno mi je', dontCare, () {
+                          _optionPill(tr('partner_pref_idc'), dontCare, () {
                             setModalState(() => dontCare = !dontCare);
                           }),
                           const SizedBox(height: 24),
@@ -1379,7 +1386,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                   ),
                                   onPressed: () => Navigator.pop(ctx),
                                   child: Text(
-                                    'Nazaj',
+                                    tr('back'),
                                     style: TextStyle(
                                         color: isDark
                                             ? Colors.white70
@@ -1411,7 +1418,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                     }
                                     _nextPage();
                                   },
-                                  child: const Text('Nadaljuj',
+                                  child: Text(tr('continue_btn'),
                                       style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold)),
@@ -1421,7 +1428,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                           ),
                         ],
                       ),
-                    ))));
+                    )));
       }),
     );
   }
@@ -1436,14 +1443,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) {
-          return SafeArea(
-              child: ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(28)),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+          return ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(
+                      24, 12, 24, MediaQuery.of(context).padding.bottom + 24),
                       constraints: BoxConstraints(
                         maxHeight: MediaQuery.of(context).size.height * 0.75,
                       ),
@@ -1520,7 +1526,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                     Navigator.pop(ctx);
                                   },
                                   child: Text(
-                                    'Nazaj',
+                                    tr('back'),
                                     style: TextStyle(
                                         color: isDark
                                             ? Colors.white70
@@ -1545,8 +1551,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                           ),
                         ],
                       ),
-                    ),
-                  )));
+                    )));
         },
       ),
     );
