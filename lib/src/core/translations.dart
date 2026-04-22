@@ -441,6 +441,9 @@ const Map<String, Map<String, String>> _translations = {
     'onb4_body':
         'Unmatch or block at any time. Unidirectional — no one knows you waved until it\'s mutual.',
     // Hardware Calibration Setup
+    'calib0_title': 'It runs while you live.',
+    'calib0_body':
+        'No swiping. No scrolling. Tremble works quietly in your pocket while you go live your life.',
     'calib1_title': 'SENSOR INITIALIZATION',
     'calib1_body':
         'Activating BLE and GPS hybrid sensing. Tremble establishes a localized proximity net with <2% battery impact.',
@@ -881,6 +884,9 @@ const Map<String, Map<String, String>> _translations = {
     'onb4_body':
         'Odpravi ujemanje ali blokiraj kadarkoli. Enosmerno — nihče ne ve, da si poslal val, dokler ni vzajemno.',
     // Hardware Calibration Setup
+    'calib0_title': 'Deluje medtem, ko živiš.',
+    'calib0_body':
+        'Brez swipanja. Brez scrollanja. Tremble dela tiho v tvojem žepu, medtem ko živiš.',
     'calib1_title': 'INICIALIZACIJA SENZORJEV',
     'calib1_body':
         'Aktivacija BLE in GPS zaznavanja. Tremble vzpostavlja lokalno mrežo z minimalnim vplivom na baterijo pod 2%.',
@@ -1201,6 +1207,9 @@ const Map<String, Map<String, String>> _translations = {
     'onb4_title': 'DEINE REGELN.',
     'onb4_body':
         'Entmatch oder blockiere jederzeit. Unidirektional — niemand weiß, dass du eine Welle gesendet hast, bis es gegenseitig ist.',
+    'calib0_title': 'Es läuft, während du lebst.',
+    'calib0_body':
+        'Kein Swipen. Kein Scrollen. Tremble arbeitet still in deiner Tasche, während du dein Leben lebst.',
   },
 
   // ═══════════════════════════════════════════
@@ -1385,6 +1394,9 @@ const Map<String, Map<String, String>> _translations = {
     'onb4_title': 'LE TUE REGOLE.',
     'onb4_body':
         'Rimuovi il match o blocca in qualsiasi momento. Unidirezionale — nessuno sa che hai inviato un\'onda finché non è reciproca.',
+    'calib0_title': 'Funziona mentre vivi.',
+    'calib0_body':
+        'Niente swipe. Niente scroll. Tremble lavora silenziosamente in tasca mentre vivi la tua vita.',
   },
 
   // ═══════════════════════════════════════════
@@ -1547,6 +1559,9 @@ const Map<String, Map<String, String>> _translations = {
     'onb4_title': 'TES RÈGLES.',
     'onb4_body':
         'Supprime le match ou bloque à tout moment. Unidirectionnel — personne ne sait que tu as envoyé une vague jusqu\'à ce que ce soit mutuel.',
+    'calib0_title': 'Il tourne pendant que tu vis.',
+    'calib0_body':
+        'Pas de swipe. Pas de scroll. Tremble travaille silencieusement dans ta poche pendant que tu vis ta vie.',
   },
 
   // ═══════════════════════════════════════════
@@ -1857,6 +1872,9 @@ const Map<String, Map<String, String>> _translations = {
     'onb4_title': 'TVOJA PRAVILA.',
     'onb4_body':
         'Poništi podudaranje ili blokiraj u bilo kom trenutku. Jednosmerno — niko ne zna da si poslao val dok nije uzajamno.',
+    'calib0_title': 'Radi dok živiš.',
+    'calib0_body':
+        'Bez swipanja. Bez scrollanja. Tremble radi tiho u džepu dok živiš svoj život.',
   },
 
   // ═══════════════════════════════════════════
@@ -2010,6 +2028,9 @@ const Map<String, Map<String, String>> _translations = {
     'onb4_title': 'A TE SZABÁLYAID.',
     'onb4_body':
         'Szüntesd meg az egyezést vagy blokkold bármikor. Egyirányú — senki sem tudja, hogy hullámot küldtél, amíg nem kölcsönös.',
+    'calib0_title': 'Fut, amíg élsz.',
+    'calib0_body':
+        'Nincs swipe. Nincs görgetés. Tremble csendesen dolgozik a zsebedben, amíg éled az életed.',
   },
 };
 

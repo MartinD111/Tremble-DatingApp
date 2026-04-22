@@ -22,13 +22,13 @@ class IntroSlideStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final titles = [
-      '',
+      tr('calib0_title'),
       tr('calib1_title'),
       tr('calib2_title'),
       tr('calib3_title'),
     ];
     final bodies = [
-      '',
+      tr('calib0_body'),
       tr('calib1_body'),
       tr('calib2_body'),
       tr('calib3_body'),
