@@ -56,7 +56,8 @@
       "Bash(cat android/app/src/dev/AndroidManifest.xml)",
       "Bash(cat android/app/src/prod/AndroidManifest.xml)",
       "Skill(gsd:do)",
-      "Skill(gsd:add-phase)"
+      "Skill(gsd:add-phase)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

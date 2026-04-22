@@ -576,6 +576,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   @override
   Widget build(BuildContext context) {
+    // Keep language reactive
+    final lang = ref.watch(appLanguageProvider);
+    _selectedLanguage = lang.isNotEmpty ? lang : 'sl';
+
     // Determine background brightness based on themeModeProvider
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
 
@@ -1075,6 +1079,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   void _goToPage(int page) {
+    HapticFeedback.lightImpact();
+    _pingKey.currentState?.startAnimation();
     _pageController.animateToPage(page,
         duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
     setState(() => _currentPage = page);

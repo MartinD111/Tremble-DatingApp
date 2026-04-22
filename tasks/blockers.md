@@ -44,3 +44,7 @@ All critical items reported by the founder have been addressed:
 **Status:** 🔴 OPEN
 **Impact:** `am---dating-app` (Prod) has no Maps API enabled. App will fail to render maps in production flavor.
 **Action:** Founder must enable Maps SDK for Android/iOS in Google Cloud Console for the prod project.
+## BLOCKER-005 — Missing English Translation Keys (TASK-REG-07)
+**Date:** 2026-04-23
+**Status:** ✅ RESOLVED (2026-04-23)
+**Resolution:** Missing keys added for all 8 languages in `translations.dart`.

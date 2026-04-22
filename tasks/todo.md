@@ -18,6 +18,10 @@
 - [x] **D-27:** Button Spinner UX (Forgot PW) — **COMPLETE**.
 - [x] **D-26:** UgcActionSheet & Dialogs Glassmorphic Redesign — **COMPLETE**.
 - [x] **Phase 11:** Technical Security Audit & Hardening (App Check, Zod, Firestore Rules) — **COMPLETE**.
+- [x] **TASK-UX-01:** Visual "Ping" effect during registration flow transitions (🟠 P1).
+- [x] **TASK-UX-02:** Lofi photo aesthetic guidance + technical corner brackets (🟡 P2).
+- [x] **TASK-UX-03:** Interactive "Wave" simulation at end of registration (🔴 P0).
+- [x] **TASK-UX-04:** Final "Go Live" ritual screen (🟠 P1).
 
 ### 3. Technical Debt
 - [x] **D-28:** Execute 17-item registration UI fix plan.

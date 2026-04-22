@@ -48,3 +48,11 @@ Source: TASK-REG-18, April 2026.
 **Rule #24 — Centralize date/zodiac logic in `ZodiacUtils`.**
 [2026-04-22] Never implement age or zodiac calculations locally in UI components. All birthday-to-age and birthday-to-zodiac logic must reside in `ZodiacUtils` to ensure consistent data across Registration, Profile Editing, and Profile Detail screens. This avoids "logic drift" and ensures that if we update the calculation (e.g., Leap year edge cases), it propagates globally.
 Source: Zodiac Localization & UI Refinement, April 2026.
++
++**Rule #25 — Use `NotifierProvider` for persistent global app state (e.g., Language).**
++[2026-04-23] Standard `StateProvider` can reset unexpectedly if its dependencies (like `authStateProvider`) change while the user has no defined profile state. Switching to `NotifierProvider` with explicit state preservation (reading `ref.state` in the build method) ensures the UI language remains stable during high-friction flows like registration.
++Source: Onboarding v2 implementation.
++
++**Rule #26 — Use PageView indexing for multi-stage registration rituals.**
++[2026-04-23] For high-fidelity visual transitions (like the Ritual screen), keep the widget as a final index in the existing `PageView` rather than pushing a new route. This allows for seamless shared-element animations and ensures the `PingOverlay` logic remains active across the entire activation sequence.
++Source: Onboarding v2 implementation.

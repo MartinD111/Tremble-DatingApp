@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
@@ -26,13 +27,13 @@ class LanguagesStep extends StatelessWidget {
   final String Function(String) tr;
 
   static const _opts = [
-    'Angleščina',
-    'Slovenščina',
-    'Nemščina',
-    'Italijanščina',
-    'Hrvaščina',
-    'Španščina',
-    'Francoščina',
+    'lang_english',
+    'lang_slovenian',
+    'lang_german',
+    'lang_italian',
+    'lang_croatian',
+    'lang_spanish',
+    'lang_french',
   ];
 
   @override
@@ -65,19 +66,10 @@ class LanguagesStep extends StatelessWidget {
               children: [
                 ..._opts.map((lang) {
                   final sel = selectedLanguages.contains(lang);
-                  final flags = {
-                    'Angleščina': '🇬🇧',
-                    'Slovenščina': '🇸🇮',
-                    'Nemščina': '🇩🇪',
-                    'Italijanščina': '🇮🇹',
-                    'Hrvaščina': '🇭🇷',
-                    'Španščina': '🇪🇸',
-                    'Francoščina': '🇫🇷',
-                  };
                   return OptionPill(
-                    label: lang,
+                    label: tr(lang),
                     selected: sel,
-                    emoji: flags[lang],
+                    icon: LucideIcons.languages,
                     onTap: () => onToggleLanguage(lang),
                   );
                 }),

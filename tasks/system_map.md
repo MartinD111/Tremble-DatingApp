@@ -8,8 +8,8 @@ Tremble App Structure
 │   └── firebase_options_*.dart   ← Dev/Prod Config Maps
 │
 ├── lib/src/features/
-│   ├── auth/                     ← Login, Google Sign-In, Onboarding
-│   ├── dashboard/                ← Radar, Proximity discovery
+│   ├── auth/                     ← Login, Google Sign-In, Onboarding (PingOverlay, RitualStep)
+│   ├── dashboard/                ← Radar, Proximity discovery (WaveSimulationOverlay)
 │   ├── matches/                  ← Swipe queue, Match resolutions
 │   └── profile/                  ← Bio, Images, Preferences
 │

@@ -169,7 +169,7 @@ class _WaveSimulationOverlayState extends State<WaveSimulationOverlay>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          '~20 m away',
+                          widget.tr('sim_distance'),
                           style: GoogleFonts.instrumentSans(
                             color: isDark ? Colors.white70 : Colors.black54,
                             fontSize: 13,
@@ -201,9 +201,9 @@ class _WaveSimulationOverlayState extends State<WaveSimulationOverlay>
                               borderRadius: BorderRadius.circular(50),
                               border: Border.all(color: primary, width: 1.5),
                             ),
-                            child: Text(
+                            child: const Text(
                               '👋',
-                              style: const TextStyle(fontSize: 28),
+                              style: TextStyle(fontSize: 28),
                             ),
                           ),
                         ),
@@ -224,7 +224,7 @@ class _WaveSimulationOverlayState extends State<WaveSimulationOverlay>
             child: GestureDetector(
               onTap: _dismiss,
               child: Text(
-                'Preskoči',
+                widget.tr('skip_tutorial'),
                 style: GoogleFonts.instrumentSans(
                   color: Colors.white54,
                   fontSize: 13,

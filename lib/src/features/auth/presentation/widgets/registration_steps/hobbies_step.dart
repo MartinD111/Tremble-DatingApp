@@ -32,45 +32,45 @@ class _HobbiesStepState extends State<HobbiesStep> {
   final Map<String, ExpansibleController> _tileControllers = {};
 
   static const Map<String, IconData> _catIcons = {
-    'Active': LucideIcons.dumbbell,
-    'Prosti čas': LucideIcons.coffee,
-    'Umetnost': LucideIcons.palette,
-    'Potovanja': LucideIcons.plane,
+    'hobby_cat_active': LucideIcons.dumbbell,
+    'hobby_cat_leisure': LucideIcons.coffee,
+    'hobby_cat_art': LucideIcons.palette,
+    'hobby_cat_travel': LucideIcons.plane,
   };
 
   static const Map<String, List<String>> _cats = {
-    'Active': [
-      'Fitnes',
-      'Pilates',
-      'Sprehodi',
-      'Tek',
-      'Smučanje',
-      'Snowboarding',
-      'Plezanje',
-      'Plavanje',
+    'hobby_cat_active': [
+      'hobby_fitness',
+      'hobby_pilates',
+      'hobby_walking',
+      'hobby_running',
+      'hobby_skiing',
+      'hobby_snowboarding',
+      'hobby_climbing',
+      'hobby_swimming',
     ],
-    'Prosti čas': [
-      'Branje',
-      'Kava',
-      'Čaj',
-      'Kuhanje',
-      'Filmi',
-      'Serije',
-      'Videoigre',
-      'Glasba',
+    'hobby_cat_leisure': [
+      'hobby_reading',
+      'hobby_coffee',
+      'hobby_tea',
+      'hobby_cooking',
+      'hobby_movies',
+      'hobby_series',
+      'hobby_video_games',
+      'hobby_music',
     ],
-    'Umetnost': [
-      'Slikanje',
-      'Fotografija',
-      'Pisanje',
-      'Muzeji',
-      'Gledališče',
+    'hobby_cat_art': [
+      'hobby_painting',
+      'hobby_photography',
+      'hobby_writing',
+      'hobby_museums',
+      'hobby_theater',
     ],
-    'Potovanja': [
-      'Roadtrips',
-      'Camping',
-      'City breaks',
-      'Backpacking',
+    'hobby_cat_travel': [
+      'hobby_trips',
+      'hobby_camping',
+      'hobby_city_walks',
+      'hobby_nature',
     ],
   };
 
@@ -251,7 +251,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
                               if (_catIcons[e.key] != null)
                                 const SizedBox(width: 8),
                               Text(
-                                '${e.key} (${e.value.where((h) => widget.selectedHobbies.contains(h)).length})',
+                                '${widget.tr(e.key)} (${e.value.where((h) => widget.selectedHobbies.contains(h)).length})',
                                 style: GoogleFonts.instrumentSans(
                                     color:
                                         isDark ? Colors.white : Colors.black87,
@@ -272,7 +272,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
                                         widget.selectedHobbies.contains(hobby);
                                     return FilterChip(
                                       label: Text(
-                                        hobby,
+                                        widget.tr(hobby),
                                         style: GoogleFonts.instrumentSans(
                                           color: sel
                                               ? Colors.black

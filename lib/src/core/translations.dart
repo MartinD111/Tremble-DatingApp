@@ -565,6 +565,8 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_button': 'GOT IT',
     'sim_someone_nearby': 'Someone is nearby (20 m)',
     'sim_instruction': 'Hold the 👋 button to send a greeting.',
+    'sim_distance': '~20 m away',
+    'skip_tutorial': 'Skip tutorial',
   },
 
   // ═══════════════════════════════════════════
@@ -1023,6 +1025,8 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_button': 'RAZUMEM',
     'sim_someone_nearby': 'Nekdo je v bližini (20 m)',
     'sim_instruction': 'Pridrži gumb 👋, da pošlješ pozdrav.',
+    'sim_distance': '~20 m stran',
+    'skip_tutorial': 'Preskoči vodič',
   },
 
   // ═══════════════════════════════════════════
@@ -1293,6 +1297,8 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_button': 'VERSTANDEN',
     'sim_someone_nearby': 'Jemand ist in der Nähe (20 m)',
     'sim_instruction': 'Halte den 👋 Knopf gedrückt, um einen Gruß zu senden.',
+    'sim_distance': '~20 m entfernt',
+    'skip_tutorial': 'Tutorial überspringen',
   },
 
   // ═══════════════════════════════════════════
@@ -1503,6 +1509,8 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_button': 'CAPITO',
     'sim_someone_nearby': 'Qualcuno è vicino (20 m)',
     'sim_instruction': 'Tieni premuto il pulsante 👋 per inviare un saluto.',
+    'sim_distance': 'a circa 20 m di distanza',
+    'skip_tutorial': 'Salta il tutorial',
   },
 
   // ═══════════════════════════════════════════
@@ -1691,7 +1699,9 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_button': 'COMPRIS',
     'sim_someone_nearby': 'Quelqu\'un est proche (20 m)',
     'sim_instruction':
-        'Appuie longuement sur le bouton 👋 pour envoyer un salut.',
+        'Maintenez le bouton 👋 enfoncé pour envoyer un message.',
+    'sim_distance': 'à environ 20 m',
+    'skip_tutorial': 'Passer le tutoriel',
   },
 
   // ═══════════════════════════════════════════
@@ -1872,6 +1882,8 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_button': 'RAZUMIJEM',
     'sim_someone_nearby': 'Netko je u blizini (20 m)',
     'sim_instruction': 'Drži gumb 👋 za slanje pozdrava.',
+    'sim_distance': '~20 m udaljen',
+    'skip_tutorial': 'Preskoči vodič',
   },
 
   // ═══════════════════════════════════════════
@@ -2051,6 +2063,8 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_button': 'RAZUMEM',
     'sim_someone_nearby': 'Neko je u blizini (20 m)',
     'sim_instruction': 'Drži dugme 👋 da pošalješ pozdrav.',
+    'sim_distance': '~20 m udaljen',
+    'skip_tutorial': 'Preskoči vodič',
   },
 
   // ═══════════════════════════════════════════
@@ -2230,6 +2244,8 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_button': 'ÉRTETTEM',
     'sim_someone_nearby': 'Valaki a közelben van (20 m)',
     'sim_instruction': 'Tartsd nyomva a 👋 gombot, hogy üdvözlést küldj.',
+    'sim_distance': '~20 m-re',
+    'skip_tutorial': 'Tutorial kihagyása',
   },
 };
 
