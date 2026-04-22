@@ -31,7 +31,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
   final Map<String, ExpansibleController> _tileControllers = {};
 
   static const Map<String, List<String>> _cats = {
-    'Active 🏋️': [
+    'Active': [
       'Fitnes',
       'Pilates',
       'Sprehodi',
@@ -41,7 +41,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
       'Plezanje',
       'Plavanje',
     ],
-    'Prosti čas ☕': [
+    'Prosti čas': [
       'Branje',
       'Kava',
       'Čaj',
@@ -51,14 +51,14 @@ class _HobbiesStepState extends State<HobbiesStep> {
       'Videoigre',
       'Glasba',
     ],
-    'Umetnost 🎨': [
+    'Umetnost': [
       'Slikanje',
       'Fotografija',
       'Pisanje',
       'Muzeji',
       'Gledališče',
     ],
-    'Potovanja ✈️': [
+    'Potovanja': [
       'Roadtrips',
       'Camping',
       'City breaks',

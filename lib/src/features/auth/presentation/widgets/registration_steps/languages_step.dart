@@ -26,13 +26,13 @@ class LanguagesStep extends StatelessWidget {
   final String Function(String) tr;
 
   static const _opts = [
-    'Angleščina 🇬🇧',
-    'Slovenščina 🇸🇮',
-    'Nemščina 🇩🇪',
-    'Italijanščina 🇮🇹',
-    'Hrvaščina 🇭🇷',
-    'Španščina 🇪🇸',
-    'Francoščina 🇫🇷',
+    'Angleščina',
+    'Slovenščina',
+    'Nemščina',
+    'Italijanščina',
+    'Hrvaščina',
+    'Španščina',
+    'Francoščina',
   ];
 
   @override
