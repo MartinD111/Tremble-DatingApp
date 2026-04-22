@@ -27,6 +27,7 @@ import '../../match/data/wave_repository.dart';
 import '../../match/domain/match.dart' as wave_match;
 import '../../../core/dev_mock_users.dart'; // Dev-only mock nearby users
 import 'widgets/radar_search_overlay.dart';
+import 'widgets/wave_simulation_overlay.dart';
 import '../../profile/data/profile_repository.dart';
 
 final isScanningProvider =
@@ -52,15 +53,21 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _showTutorial = false;
+
   @override
   void initState() {
     super.initState();
-    // Register FCM Token on dashboard load
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Register FCM Token on dashboard load
       final user = ref.read(authStateProvider);
       if (user != null) {
         NotificationService.saveToken(user.id);
       }
+      // Check whether to show first-launch tutorial
+      hasSeenTutorial().then((seen) {
+        if (!seen && mounted) setState(() => _showTutorial = true);
+      });
     });
   }
 
@@ -296,6 +303,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
         ),
+
+        // First-launch wave tutorial overlay
+        if (_showTutorial)
+          Positioned.fill(
+            child: WaveSimulationOverlay(
+              tr: (key) => t(key, lang),
+              onDismiss: () => setState(() => _showTutorial = false),
+            ),
+          ),
       ],
     );
   }

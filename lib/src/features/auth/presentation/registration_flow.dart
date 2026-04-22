@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../data/auth_repository.dart';
@@ -36,6 +36,8 @@ import 'widgets/registration_steps/email_location_step.dart';
 import 'widgets/registration_steps/hobbies_step.dart';
 import 'widgets/registration_steps/photos_step.dart';
 import 'widgets/registration_steps/consent_step.dart';
+import 'widgets/registration_steps/ritual_step.dart';
+import 'widgets/ping_overlay.dart';
 import '../../../core/upload_service.dart';
 import '../../../shared/ui/tremble_logo.dart';
 
@@ -69,6 +71,7 @@ import '../../../shared/ui/tremble_logo.dart';
 // 24 : Hobbies
 // 25 : Photos
 // 26 : Consent
+// 27 : Ritual ("Signal Locked" post-onboarding activation)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class RegistrationFlow extends ConsumerStatefulWidget {
@@ -188,6 +191,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   final List<File?> _photos = [null, null, null, null, null, null];
   final ImagePicker _picker = ImagePicker();
 
+  // Ping overlay key — used to trigger animation on page transitions
+  final _pingKey = GlobalKey<PingOverlayState>();
+
   // Prompt (Removed)
 
   // helpers
@@ -262,6 +268,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       return; // Handled asynchronously by _registerUser
     }
 
+    HapticFeedback.lightImpact();
+    _pingKey.currentState?.startAnimation();
     _pageController.nextPage(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
@@ -916,9 +924,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     onComplete: completeRegistration,
                     tr: tr,
                   ),
+                  RitualStep(tr: tr),
                 ],
               ),
             ),
+          ),
+          // Ping animation — sits above PageView, ignores pointer events
+          Positioned.fill(
+            child: PingOverlay(key: _pingKey),
           ),
           Positioned(
             top: MediaQuery.of(context).padding.top,
@@ -1661,7 +1674,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       if (mounted) {
         setState(() => _isHardLocking = true);
         await Future.delayed(const Duration(milliseconds: 2500));
-        context.go('/');
+        if (mounted) {
+          setState(() => _isHardLocking = false);
+          _goToPage(27); // RitualStep — "SIGNAL LOCKED"
+        }
       }
     } catch (e) {
       if (kDebugMode && user != null) {
@@ -1682,7 +1698,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           );
           setState(() => _isHardLocking = true);
           await Future.delayed(const Duration(milliseconds: 2500));
-          context.go('/');
+          if (mounted) {
+            setState(() => _isHardLocking = false);
+            _goToPage(27); // RitualStep — "SIGNAL LOCKED"
+          }
         }
       } else {
         setState(() => _isRegistering = false);

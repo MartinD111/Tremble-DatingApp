@@ -3,11 +3,25 @@ import '../features/auth/data/auth_repository.dart';
 
 /// Lightweight i18n system — all translations stored as Map<langCode, Map<key, value>>
 
-final appLanguageProvider = StateProvider<String>((ref) {
-  final user = ref.watch(authStateProvider);
-  if (user != null && user.appLanguage.isNotEmpty) return user.appLanguage;
-  return 'sl';
-});
+class AppLanguageNotifier extends Notifier<String> {
+  @override
+  String build() {
+    ref.listen<AuthUser?>(authStateProvider, (prev, next) {
+      if (next != null && next.appLanguage.isNotEmpty) {
+        state = next.appLanguage;
+      }
+      // If next user has no language (e.g. during registration), preserve current state
+    });
+    final user = ref.read(authStateProvider);
+    if (user != null && user.appLanguage.isNotEmpty) return user.appLanguage;
+    return 'sl';
+  }
+
+  void setLanguage(String code) => state = code;
+}
+
+final appLanguageProvider =
+    NotifierProvider<AppLanguageNotifier, String>(AppLanguageNotifier.new);
 
 String t(String key, String lang) {
   return _translations[lang]?[key] ?? _translations['en']?[key] ?? key;
@@ -542,6 +556,15 @@ const Map<String, Map<String, String>> _translations = {
     'zodiac_capricorn': 'Capricorn',
     'zodiac_aquarius': 'Aquarius',
     'zodiac_pisces': 'Pisces',
+    // --- Post-Onboarding ---
+    'photos_lofi_hint':
+        'Take your photo in natural light, as people see you in the real world. No filters.',
+    'ritual_header': 'SIGNAL LOCKED',
+    'ritual_body':
+        'Radar is active. The transmitter is running in the background. Put down your phone. We\'ll call you when someone is nearby.',
+    'ritual_button': 'GOT IT',
+    'sim_someone_nearby': 'Someone is nearby (20 m)',
+    'sim_instruction': 'Hold the 👋 button to send a greeting.',
   },
 
   // ═══════════════════════════════════════════
@@ -991,6 +1014,15 @@ const Map<String, Map<String, String>> _translations = {
     'zodiac_capricorn': 'Kozorog',
     'zodiac_aquarius': 'Vodnar',
     'zodiac_pisces': 'Ribi',
+    // --- Post-Onboarding ---
+    'photos_lofi_hint':
+        'Slikaj se v naravni svetlobi, kot te vidijo ljudje v realnem svetu. Brez filtrov.',
+    'ritual_header': 'SIGNAL LOCKED',
+    'ritual_body':
+        'Radar je aktiven. Oddajnik deluje v ozadju. Odloži telefon. Mi te pokličemo, ko bo kdo blizu.',
+    'ritual_button': 'RAZUMEM',
+    'sim_someone_nearby': 'Nekdo je v bližini (20 m)',
+    'sim_instruction': 'Pridrži gumb 👋, da pošlješ pozdrav.',
   },
 
   // ═══════════════════════════════════════════
@@ -1252,6 +1284,15 @@ const Map<String, Map<String, String>> _translations = {
     'zodiac_capricorn': 'Steinbock',
     'zodiac_aquarius': 'Wassermann',
     'zodiac_pisces': 'Fische',
+    // --- Post-Onboarding ---
+    'photos_lofi_hint':
+        'Fotografiere dich in natürlichem Licht, so wie dich Menschen in der echten Welt sehen. Keine Filter.',
+    'ritual_header': 'SIGNAL LOCKED',
+    'ritual_body':
+        'Radar ist aktiv. Der Sender läuft im Hintergrund. Leg dein Handy weg. Wir melden uns, wenn jemand in der Nähe ist.',
+    'ritual_button': 'VERSTANDEN',
+    'sim_someone_nearby': 'Jemand ist in der Nähe (20 m)',
+    'sim_instruction': 'Halte den 👋 Knopf gedrückt, um einen Gruß zu senden.',
   },
 
   // ═══════════════════════════════════════════
@@ -1453,6 +1494,15 @@ const Map<String, Map<String, String>> _translations = {
     'zodiac_capricorn': 'Capricorno',
     'zodiac_aquarius': 'Acquario',
     'zodiac_pisces': 'Pesci',
+    // --- Post-Onboarding ---
+    'photos_lofi_hint':
+        'Fotografati in luce naturale, come ti vedono le persone nel mondo reale. Nessun filtro.',
+    'ritual_header': 'SIGNAL LOCKED',
+    'ritual_body':
+        'Il radar è attivo. Il trasmettitore funziona in background. Metti giù il telefono. Ti chiameremo quando qualcuno è vicino.',
+    'ritual_button': 'CAPITO',
+    'sim_someone_nearby': 'Qualcuno è vicino (20 m)',
+    'sim_instruction': 'Tieni premuto il pulsante 👋 per inviare un saluto.',
   },
 
   // ═══════════════════════════════════════════
@@ -1632,6 +1682,16 @@ const Map<String, Map<String, String>> _translations = {
     'zodiac_capricorn': 'Capricorne',
     'zodiac_aquarius': 'Verseau',
     'zodiac_pisces': 'Poissons',
+    // --- Post-Onboarding ---
+    'photos_lofi_hint':
+        'Prends ta photo en lumière naturelle, comme les gens te voient dans le monde réel. Sans filtres.',
+    'ritual_header': 'SIGNAL LOCKED',
+    'ritual_body':
+        'Le radar est actif. L\'émetteur fonctionne en arrière-plan. Pose ton téléphone. On t\'appellera quand quelqu\'un est proche.',
+    'ritual_button': 'COMPRIS',
+    'sim_someone_nearby': 'Quelqu\'un est proche (20 m)',
+    'sim_instruction':
+        'Appuie longuement sur le bouton 👋 pour envoyer un salut.',
   },
 
   // ═══════════════════════════════════════════
@@ -1803,6 +1863,15 @@ const Map<String, Map<String, String>> _translations = {
     'zodiac_capricorn': 'Jarac',
     'zodiac_aquarius': 'Vodenjak',
     'zodiac_pisces': 'Ribe',
+    // --- Post-Onboarding ---
+    'photos_lofi_hint':
+        'Slikaj se u prirodnom svjetlu, onako kako te ljudi vide u stvarnom svijetu. Bez filtera.',
+    'ritual_header': 'SIGNAL LOCKED',
+    'ritual_body':
+        'Radar je aktivan. Odašiljač radi u pozadini. Odloži telefon. Javit ćemo ti kad netko bude blizu.',
+    'ritual_button': 'RAZUMIJEM',
+    'sim_someone_nearby': 'Netko je u blizini (20 m)',
+    'sim_instruction': 'Drži gumb 👋 za slanje pozdrava.',
   },
 
   // ═══════════════════════════════════════════
@@ -1973,6 +2042,15 @@ const Map<String, Map<String, String>> _translations = {
     'zodiac_capricorn': 'Jarac',
     'zodiac_aquarius': 'Vodolija',
     'zodiac_pisces': 'Ribe',
+    // --- Post-Onboarding ---
+    'photos_lofi_hint':
+        'Fotografiši se u prirodnom svetlu, onako kako te ljudi vide u stvarnom svetu. Bez filtera.',
+    'ritual_header': 'SIGNAL LOCKED',
+    'ritual_body':
+        'Radar je aktivan. Odašiljač radi u pozadini. Odloži telefon. Javićemo ti kad neko bude blizu.',
+    'ritual_button': 'RAZUMEM',
+    'sim_someone_nearby': 'Neko je u blizini (20 m)',
+    'sim_instruction': 'Drži dugme 👋 da pošalješ pozdrav.',
   },
 
   // ═══════════════════════════════════════════
@@ -2143,6 +2221,15 @@ const Map<String, Map<String, String>> _translations = {
     'zodiac_capricorn': 'Bak',
     'zodiac_aquarius': 'Vízöntő',
     'zodiac_pisces': 'Halak',
+    // --- Post-Onboarding ---
+    'photos_lofi_hint':
+        'Fényképezd magad természetes fényben, ahogy az emberek látnak a valódi világban. Szűrők nélkül.',
+    'ritual_header': 'SIGNAL LOCKED',
+    'ritual_body':
+        'A radar aktív. Az adó a háttérben fut. Tedd le a telefont. Értesítünk, ha valaki a közelben van.',
+    'ritual_button': 'ÉRTETTEM',
+    'sim_someone_nearby': 'Valaki a közelben van (20 m)',
+    'sim_instruction': 'Tartsd nyomva a 👋 gombot, hogy üdvözlést küldj.',
   },
 };
 

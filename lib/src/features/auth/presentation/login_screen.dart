@@ -473,8 +473,9 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                           final isSelected = l['code'] == currentLang;
                           return InkWell(
                             onTap: () {
-                              ref.read(appLanguageProvider.notifier).state =
-                                  l['code']!;
+                              ref
+                                  .read(appLanguageProvider.notifier)
+                                  .setLanguage(l['code']!);
                               Navigator.pop(ctx);
                             },
                             child: Container(

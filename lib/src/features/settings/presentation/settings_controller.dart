@@ -68,7 +68,7 @@ class SettingsController {
 
   void setLanguage(String code) {
     updateUser((u) => u.copyWith(appLanguage: code));
-    _ref.read(appLanguageProvider.notifier).state = code;
+    _ref.read(appLanguageProvider.notifier).setLanguage(code);
   }
 
   // ── Range sliders ──────────────────────────────────────────────────────────
