@@ -5,8 +5,8 @@ import '../features/auth/data/auth_repository.dart';
 
 final appLanguageProvider = StateProvider<String>((ref) {
   final user = ref.watch(authStateProvider);
-  if (user != null) return user.appLanguage;
-  return 'sl'; // Default to Slovenian
+  if (user != null && user.appLanguage.isNotEmpty) return user.appLanguage;
+  return 'sl';
 });
 
 String t(String key, String lang) {

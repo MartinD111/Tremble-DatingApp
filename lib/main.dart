@@ -44,6 +44,15 @@ void main() async {
         flavor == 'prod' ? AppleDeviceCheckProvider() : AppleDebugProvider(),
   );
 
+  if (flavor != 'prod') {
+    const debugToken = String.fromEnvironment('APP_CHECK_DEBUG_TOKEN_IOS');
+    if (debugToken.isNotEmpty) {
+      await FirebaseAppCheck.instance.activate(
+        providerApple: AppleDebugProvider(),
+      );
+    }
+  }
+
   // Pass all uncaught Flutter errors to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
