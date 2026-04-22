@@ -6,6 +6,7 @@
  */
 
 import { HttpsError, CallableRequest } from "firebase-functions/v2/https";
+import { ENFORCE_APP_CHECK } from "../config/env";
 
 /**
  * Ensures the request has a valid authenticated user.
@@ -48,6 +49,7 @@ export function requireVerifiedEmail(request: CallableRequest): string {
  * Throws FAILED_PRECONDITION if App Check token is absent.
  */
 export function requireAppCheck(request: CallableRequest): void {
+    if (!ENFORCE_APP_CHECK) return;
     if (!request.app) {
         throw new HttpsError(
             "failed-precondition",

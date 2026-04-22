@@ -12,7 +12,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { Resend } from "resend";
 import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
-import { getConfig } from "../../config/env";
+import { getConfig, ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
 
@@ -131,7 +131,7 @@ export async function sendDeletionConfirmationEmail(
 // ── Public callable: resend verification email ────────────
 
 export const resendVerificationEmail = onCall(
-  { maxInstances: 10, enforceAppCheck: true, region: "europe-west1" },
+  { maxInstances: 10, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
   async (request) => {
     const uid = requireAuth(request);
 

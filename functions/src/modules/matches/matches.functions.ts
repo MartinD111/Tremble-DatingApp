@@ -14,6 +14,7 @@ import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth } from "../../middleware/authGuard";
 import { sendMatchNotificationEmail } from "../email/email.functions";
 import { getRedis, waveDedupKey, WAVE_DEDUP_SECS } from "../../core/redis";
+import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
 
@@ -221,7 +222,7 @@ export const onWaveCreated = onDocumentCreated(
 );
 
 export const getMatches = onCall(
-    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
         const userDoc = await db.collection("users").doc(uid).get();

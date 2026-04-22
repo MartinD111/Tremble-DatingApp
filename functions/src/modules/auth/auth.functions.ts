@@ -14,6 +14,7 @@ import { checkRateLimit } from "../../middleware/rateLimit";
 import { validateRequest } from "../../middleware/validate";
 import { completeOnboardingSchema, googleAuthSchema } from "./auth.schema";
 import { sendWelcomeEmail } from "../email/email.functions";
+import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
 const googleClient = new OAuth2Client();
@@ -67,7 +68,7 @@ export const onUserDocCreated = onDocumentCreated(
  * Validates all profile data server-side and writes to Firestore.
  */
 export const completeOnboarding = onCall(
-    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 50, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -152,7 +153,7 @@ export const completeOnboarding = onCall(
  * as requested in the security audit.
  */
 export const verifyGoogleToken = onCall(
-    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 50, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         // Rate limit: max 10 verification attempts per minute
         await checkRateLimit(request.rawRequest.ip || "anon", "verifyGoogleToken", {

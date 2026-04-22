@@ -26,6 +26,7 @@ import {
     GLOBAL_THROTTLE_SECS,
     GLOBAL_THROTTLE_MAX,
 } from "../../core/redis";
+import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
 
@@ -111,7 +112,7 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
  * Called periodically by the background service.
  */
 export const updateLocation = onCall(
-    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -146,7 +147,7 @@ export const updateLocation = onCall(
  * Returns users within the specified radius.
  */
 export const findNearby = onCall(
-    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -237,7 +238,7 @@ export const findNearby = onCall(
  * Mark user as inactive (called when app goes to background).
  */
 export const setInactive = onCall(
-    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 

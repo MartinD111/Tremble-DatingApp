@@ -30,6 +30,12 @@ export interface AppConfig {
 }
 
 /**
+ * True only when running against the production Firebase project (am---dating-app).
+ * Used to gate App Check enforcement so iOS simulator / dev builds aren't blocked.
+ */
+export const ENFORCE_APP_CHECK = process.env.TREMBLE_ENV === "prod";
+
+/**
  * Load configuration from environment.
  * Secrets (API keys) come from Firebase Secret Manager via process.env.
  */

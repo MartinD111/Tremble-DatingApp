@@ -12,7 +12,7 @@ import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { validateRequest } from "../../middleware/validate";
 import { generateUploadUrlSchema } from "./uploads.schema";
-import { getConfig } from "../../config/env";
+import { getConfig, ENFORCE_APP_CHECK } from "../../config/env";
 
 /**
  * Generate a presigned upload URL for Cloudflare R2.
@@ -24,7 +24,7 @@ import { getConfig } from "../../config/env";
  *   4. Client saves the returned publicUrl to their profile via updateProfile
  */
 export const generateUploadUrl = onCall(
-    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 50, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 

@@ -4,6 +4,7 @@ import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { validateRequest } from "../../middleware/validate";
 import { blockUserSchema, unblockUserSchema, reportUserSchema } from "./safety.schema";
+import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
 
@@ -13,7 +14,7 @@ const db = getFirestore();
  * - Deletes any existing match between them.
  */
 export const blockUser = onCall(
-    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 50, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
         await checkRateLimit(request.rawRequest.ip || uid, "blockUser", { maxRequests: 10, windowMs: 60000 });
@@ -69,7 +70,7 @@ export const blockUser = onCall(
  * - Removes targetUid from caller's `blockedUserIds` array.
  */
 export const unblockUser = onCall(
-    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 50, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
         await checkRateLimit(request.rawRequest.ip || uid, "unblockUser", { maxRequests: 10, windowMs: 60000 });
@@ -101,7 +102,7 @@ export const unblockUser = onCall(
  * - Automatically blocks the reported user to protect the reporter immediately.
  */
 export const reportUser = onCall(
-    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 50, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
         await checkRateLimit(request.rawRequest.ip || uid, "reportUser", { maxRequests: 5, windowMs: 60000 });

@@ -17,7 +17,7 @@ import { getAuth } from "firebase-admin/auth";
 import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
-import { getConfig } from "../../config/env";
+import { getConfig, ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
 const auth = getAuth();
@@ -134,7 +134,7 @@ function twoYearsFromNow(): Timestamp {
  * Rate limited to prevent abuse.
  */
 export const exportUserData = onCall(
-    { maxInstances: 10, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 10, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -214,7 +214,7 @@ export const exportUserData = onCall(
  * A GDPR audit log entry is kept in gdprRequests for 2 years (Firestore TTL).
  */
 export const deleteUserAccount = onCall(
-    { maxInstances: 10, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 10, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 

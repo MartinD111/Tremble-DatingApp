@@ -10,6 +10,7 @@ import { requireAuth, requireVerifiedEmail } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { validateRequest } from "../../middleware/validate";
 import { updateProfileSchema } from "./users.schema";
+import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
 
@@ -18,7 +19,7 @@ const db = getFirestore();
  * Only allows whitelisted fields (no isAdmin/isPremium injection).
  */
 export const updateProfile = onCall(
-    { maxInstances: 50, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 50, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -57,7 +58,7 @@ export const updateProfile = onCall(
  * This allows the client router to make routing decisions based on profile existence.
  */
 export const getProfile = onCall(
-    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
 
@@ -76,7 +77,7 @@ export const getProfile = onCall(
  * Requires verified email.
  */
 export const getPublicProfile = onCall(
-    { maxInstances: 100, enforceAppCheck: true, region: "europe-west1" },
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         requireVerifiedEmail(request);
 
