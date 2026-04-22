@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
@@ -20,18 +21,18 @@ int calcAge(DateTime d) {
 String zodiacSign(DateTime d) {
   final m = d.month;
   final day = d.day;
-  if ((m == 1 && day >= 20) || (m == 2 && day <= 18)) return '♒ Aquarius';
-  if ((m == 2 && day >= 19) || (m == 3 && day <= 20)) return '♓ Pisces';
-  if ((m == 3 && day >= 21) || (m == 4 && day <= 19)) return '♈ Aries';
-  if ((m == 4 && day >= 20) || (m == 5 && day <= 20)) return '♉ Taurus';
-  if ((m == 5 && day >= 21) || (m == 6 && day <= 20)) return '♊ Gemini';
-  if ((m == 6 && day >= 21) || (m == 7 && day <= 22)) return '♋ Cancer';
-  if ((m == 7 && day >= 23) || (m == 8 && day <= 22)) return '♌ Leo';
-  if ((m == 8 && day >= 23) || (m == 9 && day <= 22)) return '♍ Virgo';
-  if ((m == 9 && day >= 23) || (m == 10 && day <= 22)) return '♎ Libra';
-  if ((m == 10 && day >= 23) || (m == 11 && day <= 21)) return '♏ Scorpio';
-  if ((m == 11 && day >= 22) || (m == 12 && day <= 21)) return '♐ Sagittarius';
-  return '♑ Capricorn';
+  if ((m == 1 && day >= 20) || (m == 2 && day <= 18)) return 'Aquarius';
+  if ((m == 2 && day >= 19) || (m == 3 && day <= 20)) return 'Pisces';
+  if ((m == 3 && day >= 21) || (m == 4 && day <= 19)) return 'Aries';
+  if ((m == 4 && day >= 20) || (m == 5 && day <= 20)) return 'Taurus';
+  if ((m == 5 && day >= 21) || (m == 6 && day <= 20)) return 'Gemini';
+  if ((m == 6 && day >= 21) || (m == 7 && day <= 22)) return 'Cancer';
+  if ((m == 7 && day >= 23) || (m == 8 && day <= 22)) return 'Leo';
+  if ((m == 8 && day >= 23) || (m == 9 && day <= 22)) return 'Virgo';
+  if ((m == 9 && day >= 23) || (m == 10 && day <= 22)) return 'Libra';
+  if ((m == 10 && day >= 23) || (m == 11 && day <= 21)) return 'Scorpio';
+  if ((m == 11 && day >= 22) || (m == 12 && day <= 21)) return 'Sagittarius';
+  return 'Capricorn';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -331,9 +332,17 @@ class BirthdayStep extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Row(children: [
-            _BirthdayChip('🎂 $age', isDark: isDark),
+            _BirthdayChip(
+              label: '$age',
+              icon: LucideIcons.cake,
+              isDark: isDark,
+            ),
             const SizedBox(width: 8),
-            _BirthdayChip(zodiac, isDark: isDark),
+            _BirthdayChip(
+              label: zodiac,
+              icon: LucideIcons.star,
+              isDark: isDark,
+            ),
           ]),
           const SizedBox(height: 24),
           ContinueButton(
@@ -352,9 +361,14 @@ class BirthdayStep extends StatelessWidget {
 // BIRTHDAY CHIP — age & zodiac badge
 // ─────────────────────────────────────────────────────────────────────────────
 class _BirthdayChip extends StatelessWidget {
-  const _BirthdayChip(this.label, {required this.isDark});
+  const _BirthdayChip({
+    required this.label,
+    required this.icon,
+    required this.isDark,
+  });
 
   final String label;
+  final IconData icon;
   final bool isDark;
 
   @override
@@ -368,10 +382,23 @@ class _BirthdayChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: isDark ? Colors.white38 : Colors.black26),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-            color: isDark ? Colors.white : Colors.black87, fontSize: 13),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: isDark ? Colors.white70 : Colors.black54,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 13,
+            ),
+          ),
+        ],
       ),
     );
   }
