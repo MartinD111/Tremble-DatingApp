@@ -40,3 +40,7 @@ Source: Phase 11 Security Audit, April 2026.
 **Rule #22 — Prefer native button loading states over manual if/else UI switching.**
 [2026-04-21] To avoid layout shifts and maintain a premium look, shared buttons (like `PrimaryButton`) should handle their own `isLoading` state. This centralizes the spinner logic (SVG/CircularProgressIndicator) and ensures the page layout remains stable while the backend call is in progress.
 Source: D-27 Spinner Fix, April 2021.
+
+**Rule #23 — Avoid system emojis in UI elements for cross-platform stability.**
+[2026-04-22] System emojis often render as generic square blocks `[?]` on iOS if the font fallback is not perfectly configured or if the OS version differs. Always prefer `LucideIcons` or custom SVG assets for critical UI feedback (e.g., chips, status indicators, onboarding steps) to maintain a premium, technical aesthetic.
+Source: TASK-REG-18, April 2026.

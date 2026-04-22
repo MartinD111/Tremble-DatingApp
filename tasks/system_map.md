@@ -13,7 +13,7 @@ Tremble App Structure
 │   ├── matches/                  ← Swipe queue, Match resolutions
 │   └── profile/                  ← Bio, Images, Preferences
 │
-└── lib/src/shared/               ← Reusable Glassmorphism, Buttons, Hooks
+└── lib/src/shared/               ← Reusable Glassmorphism, Buttons, Hooks, LucideIcons (primary UI icons)
 
 Infrastructure:
 - Platforms: iOS (Swift base + ImageNotification extension), Android (Kotlin base)

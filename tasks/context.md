@@ -1,9 +1,9 @@
-## Session State — 2026-04-21 (SEC-001 Deploy + D-28 Certification Complete)
-- Active Task: Session handoff — SEC-001 deployed, D-28 UI polish certified
+## Session State — 2026-04-22 13:59
+- Active Task: Completed TASK-REG-18 — replaced emojis with Lucide icons in birthday step
 - Environment: Dev (tremble-dev)
-- Modified Files: preference_pill_row.dart, settings_screen.dart, blockers.md, todo.md, STATE.md
+- Modified Files: birthday_step.dart, context.md, task.md
 - Open Problems: None.
-- System Status: Build passing. Zero analysis issues. All 19 Cloud Functions live on tremble-dev.
+- System Status: Build passing. Zero analysis issues.
 
 ---
 
@@ -13,11 +13,10 @@
 
 | Item | Fix | Commit |
 |------|-----|--------|
-| SEC-001 | All 19 Cloud Functions deployed to `tremble-dev` with App Check enforced, Zod schemas, Firestore rules | `6e06315` |
-| FUNCTIONS-DEPLOY | `firebase deploy --only functions --project dev` — 19 functions live in europe-west1 | `6e06315` |
-| D-28 pill overflow | `PreferencePillRow`: label wrapped in `Flexible` + `maxLines:1` + `TextOverflow.ellipsis` | `6e06315` |
-| D-28 contrast | `_buildExpandableSection`: light-mode `textColor` → Deep Graphite `0xFF1A1A18` | `6e06315` |
-| Language Modal | Verified: already uses `showLanguageEditModal` with explicit Save. No change needed. | — |
+| TASK-REG-18 | Replaced emojis in birthday chips with LucideIcons (cake/star) | `0ec85e9` |
+| TASK-REG-17b| Added LucideIcons to hobbies categories and languages | `73c35cd` |
+| TASK-REG-17 | Removed emojis from hobbies and languages (iOS fix) | `09d49c0` |
+| SEC-001 | Cloud Functions deployed with App Check + Security Hardening | `6e06315` |
 
 ### Current Debt Status
 - ~~D-25~~ ✅  ~~D-26~~ ✅  ~~D-27~~ ✅  ~~D-28~~ ✅  ~~SEC-001~~ ✅
