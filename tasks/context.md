@@ -1,18 +1,19 @@
-## Session State — 2026-04-22 13:59
-- Active Task: Completed TASK-REG-18 — replaced emojis with Lucide icons in birthday step
+## Session State — 2026-04-22 14:30
+- Active Task: Completed Zodiac Localization & UI Refinement
 - Environment: Dev (tremble-dev)
-- Modified Files: birthday_step.dart, context.md, task.md
+- Modified Files: icon_utils.dart, birthday_step.dart, edit_profile_screen.dart, profile_card_preview.dart, profile_detail_screen.dart, context.md, task.md, lessons.md
 - Open Problems: None.
 - System Status: Build passing. Zero analysis issues.
 
 ---
 
-## Session Handoff — 2026-04-21
+## Session Handoff — 2026-04-22
 
 ### What Was Done This Session
 
 | Item | Fix | Commit |
 |------|-----|--------|
+| ZODIAC-LOC | Standardized zodiac localization (8 languages) & Lucide icons | `f2a9b3c` |
 | TASK-REG-18 | Replaced emojis in birthday chips with LucideIcons (cake/star) | `0ec85e9` |
 | TASK-REG-17b| Added LucideIcons to hobbies categories and languages | `73c35cd` |
 | TASK-REG-17 | Removed emojis from hobbies and languages (iOS fix) | `09d49c0` |
@@ -59,4 +60,3 @@ Store listings, landing page, TestFlight preparation.
 
 - **Security Update**: Phase 11 complete. Cloud Functions deployed to `tremble-dev`.
 - **Infrastructure**: `.firebaserc` aliases `dev` and `prod` strictly mapped.
-- **Core Governance**: Zod schemas enforced for all Safety module actions.

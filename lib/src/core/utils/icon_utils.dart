@@ -88,21 +88,32 @@ class ZodiacUtils {
   }
 
   /// Returns the zodiac sign name for a given [birthDate], or null if date is null.
-  static String? getZodiacSign(DateTime? birthDate) {
-    if (birthDate == null) return null;
-    final m = birthDate.month;
-    final d = birthDate.day;
-    if ((m == 3 && d >= 21) || (m == 4 && d <= 19)) return 'Aries';
-    if ((m == 4 && d >= 20) || (m == 5 && d <= 20)) return 'Taurus';
-    if ((m == 5 && d >= 21) || (m == 6 && d <= 20)) return 'Gemini';
-    if ((m == 6 && d >= 21) || (m == 7 && d <= 22)) return 'Cancer';
-    if ((m == 7 && d >= 23) || (m == 8 && d <= 22)) return 'Leo';
-    if ((m == 8 && d >= 23) || (m == 9 && d <= 22)) return 'Virgo';
-    if ((m == 9 && d >= 23) || (m == 10 && d <= 22)) return 'Libra';
-    if ((m == 10 && d >= 23) || (m == 11 && d <= 21)) return 'Scorpio';
-    if ((m == 11 && d >= 22) || (m == 12 && d <= 21)) return 'Sagittarius';
-    if ((m == 12 && d >= 22) || (m == 1 && d <= 19)) return 'Capricorn';
-    if ((m == 1 && d >= 20) || (m == 2 && d <= 18)) return 'Aquarius';
-    return 'Pisces';
+  static String? getZodiacSign(DateTime? date) {
+    if (date == null) return null;
+    final m = date.month;
+    final d = date.day;
+    if ((m == 3 && d >= 21) || (m == 4 && d <= 19)) return 'aries';
+    if ((m == 4 && d >= 20) || (m == 5 && d <= 20)) return 'taurus';
+    if ((m == 5 && d >= 21) || (m == 6 && d <= 20)) return 'gemini';
+    if ((m == 6 && d >= 21) || (m == 7 && d <= 22)) return 'cancer';
+    if ((m == 7 && d >= 23) || (m == 8 && d <= 22)) return 'leo';
+    if ((m == 8 && d >= 23) || (m == 9 && d <= 22)) return 'virgo';
+    if ((m == 9 && d >= 23) || (m == 10 && d <= 22)) return 'libra';
+    if ((m == 10 && d >= 23) || (m == 11 && d <= 21)) return 'scorpio';
+    if ((m == 11 && d >= 22) || (m == 12 && d <= 21)) return 'sagittarius';
+    if ((m == 12 && d >= 22) || (m == 1 && d <= 19)) return 'capricorn';
+    if ((m == 1 && d >= 20) || (m == 2 && d <= 18)) return 'aquarius';
+    return 'pisces';
+  }
+
+  /// Calculates age from birthDate.
+  static int calcAge(DateTime birthDate) {
+    final now = DateTime.now();
+    int age = now.year - birthDate.year;
+    if (now.month < birthDate.month ||
+        (now.month == birthDate.month && now.day < birthDate.day)) {
+      age--;
+    }
+    return age;
   }
 }

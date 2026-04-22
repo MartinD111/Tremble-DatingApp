@@ -12,8 +12,6 @@ import '../../../core/translations.dart';
 import '../../settings/presentation/widgets/preference_edit_modal.dart';
 import '../../settings/presentation/widgets/preference_pill_row.dart';
 import '../../auth/presentation/widgets/registration_steps/hobbies_step.dart';
-import '../../auth/presentation/widgets/registration_steps/birthday_step.dart'
-    show calcAge, zodiacSign;
 import '../../auth/presentation/widgets/registration_steps/step_shared.dart'
     show DrumPicker;
 import '../../../shared/ui/top_notification.dart';
@@ -326,7 +324,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           lookingFor: _lookingFor,
           languages: _languages,
           birthDate: _birthDate,
-          age: _birthDate != null ? _calcAge(_birthDate!) : user.age,
+          age: _birthDate != null ? ZodiacUtils.calcAge(_birthDate!) : user.age,
           politicalAffiliation: _politicalAffiliationValue == 0
               ? 'politics_dont_care'
               : _politicalAffiliationValue == -1
@@ -538,12 +536,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 children: [
                                   if (_birthDate != null) ...[
                                     _AgePill(
-                                      '🎂 ${calcAge(_birthDate!)}',
+                                      '${ZodiacUtils.calcAge(_birthDate!)}',
+                                      icon: LucideIcons.cake,
                                       isDark: isDark,
                                     ),
                                     const SizedBox(width: 8),
                                     _AgePill(
-                                      zodiacSign(_birthDate!),
+                                      t('zodiac_${ZodiacUtils.getZodiacSign(_birthDate!)}', lang),
+                                      icon: LucideIcons.star,
                                       isDark: isDark,
                                     ),
                                   ] else
@@ -552,7 +552,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                               t('set_birthday', lang) !=
                                                   'set_birthday'
                                           ? t('set_birthday', lang)
-                                          : '🎂 Set birthday',
+                                          : 'Set birthday',
+                                      icon: LucideIcons.calendar,
                                       isDark: isDark,
                                     ),
                                   const SizedBox(width: 8),
@@ -1792,15 +1793,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  int _calcAge(DateTime birthDate) {
-    final today = DateTime.now();
-    int age = today.year - birthDate.year;
-    if (today.month < birthDate.month ||
-        (today.month == birthDate.month && today.day < birthDate.day)) {
-      age--;
-    }
-    return age;
-  }
+  // Local _calcAge removed in favor of ZodiacUtils.calcAge
 
   // ── DOB drum-picker — identical UX to registration BirthdayStep ──────────
   void _showAgePickerModal() {
@@ -1913,7 +1906,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             selectedIndex: maxYear - year,
                             looping: false,
                             onChanged: (i) =>
-                                setSheet(() => year = maxYear - i),
+                                setSheet(() => year = (maxYear - i).toInt()),
                           ),
                         ),
                       ],
@@ -1924,12 +1917,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   Row(
                     children: [
                       _AgePill(
-                        '🎂 ${calcAge(DateTime(year, month, validDay))}',
+                        '${ZodiacUtils.calcAge(DateTime(year, month, validDay))}',
+                        icon: LucideIcons.cake,
                         isDark: isDark,
                       ),
                       const SizedBox(width: 8),
                       _AgePill(
-                        zodiacSign(DateTime(year, month, validDay)),
+                        t('zodiac_${ZodiacUtils.getZodiacSign(DateTime(year, month, validDay))}', _lang),
+                        icon: LucideIcons.star,
                         isDark: isDark,
                       ),
                     ],
@@ -1942,7 +1937,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     child: ElevatedButton(
                       onPressed: () {
                         final d = DateTime(year, month, validDay);
-                        final age = calcAge(d);
+                        final age = ZodiacUtils.calcAge(d);
                         if (age < 18) return;
                         setState(() {
                           _birthDate = d;
@@ -2165,9 +2160,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
 // ── Small age/zodiac pill ─────────────────────────────────────────────────────
 class _AgePill extends StatelessWidget {
-  const _AgePill(this.label, {required this.isDark});
+  const _AgePill(this.label, {required this.isDark, this.icon});
   final String label;
   final bool isDark;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -2182,13 +2178,23 @@ class _AgePill extends StatelessWidget {
             color:
                 isDark ? Colors.white30 : Colors.black.withValues(alpha: 0.12)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isDark ? Colors.white : Colors.black87,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon,
+                size: 13, color: isDark ? Colors.white70 : Colors.black54),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

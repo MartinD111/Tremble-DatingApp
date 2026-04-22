@@ -528,6 +528,20 @@ const Map<String, Map<String, String>> _translations = {
     'time_remaining': 'Time remaining',
     'cancel_search': 'Cancel search',
     'search_expired': 'Search expired',
+
+    // --- Zodiac Signs ---
+    'zodiac_aries': 'Aries',
+    'zodiac_taurus': 'Taurus',
+    'zodiac_gemini': 'Gemini',
+    'zodiac_cancer': 'Cancer',
+    'zodiac_leo': 'Leo',
+    'zodiac_virgo': 'Virgo',
+    'zodiac_libra': 'Libra',
+    'zodiac_scorpio': 'Scorpio',
+    'zodiac_sagittarius': 'Sagittarius',
+    'zodiac_capricorn': 'Capricorn',
+    'zodiac_aquarius': 'Aquarius',
+    'zodiac_pisces': 'Pisces',
   },
 
   // ═══════════════════════════════════════════
@@ -963,6 +977,20 @@ const Map<String, Map<String, String>> _translations = {
     'time_remaining': 'Preostali čas',
     'cancel_search': 'Prekini iskanje',
     'search_expired': 'Iskanje je poteklo',
+
+    // --- Horoskopska znamenja ---
+    'zodiac_aries': 'Oven',
+    'zodiac_taurus': 'Bik',
+    'zodiac_gemini': 'Dvojčka',
+    'zodiac_cancer': 'Rak',
+    'zodiac_leo': 'Lev',
+    'zodiac_virgo': 'Devica',
+    'zodiac_libra': 'Tehtnica',
+    'zodiac_scorpio': 'Škorpijon',
+    'zodiac_sagittarius': 'Strelec',
+    'zodiac_capricorn': 'Kozorog',
+    'zodiac_aquarius': 'Vodnar',
+    'zodiac_pisces': 'Ribi',
   },
 
   // ═══════════════════════════════════════════
@@ -1210,6 +1238,20 @@ const Map<String, Map<String, String>> _translations = {
     'calib0_title': 'Es läuft, während du lebst.',
     'calib0_body':
         'Kein Swipen. Kein Scrollen. Tremble arbeitet still in deiner Tasche, während du dein Leben lebst.',
+
+    // --- Sternzeichen ---
+    'zodiac_aries': 'Widder',
+    'zodiac_taurus': 'Stier',
+    'zodiac_gemini': 'Zwillinge',
+    'zodiac_cancer': 'Krebs',
+    'zodiac_leo': 'Löwe',
+    'zodiac_virgo': 'Jungfrau',
+    'zodiac_libra': 'Waage',
+    'zodiac_scorpio': 'Skorpion',
+    'zodiac_sagittarius': 'Schütze',
+    'zodiac_capricorn': 'Steinbock',
+    'zodiac_aquarius': 'Wassermann',
+    'zodiac_pisces': 'Fische',
   },
 
   // ═══════════════════════════════════════════
@@ -1397,6 +1439,20 @@ const Map<String, Map<String, String>> _translations = {
     'calib0_title': 'Funziona mentre vivi.',
     'calib0_body':
         'Niente swipe. Niente scroll. Tremble lavora silenziosamente in tasca mentre vivi la tua vita.',
+
+    // --- Segni zodiacali ---
+    'zodiac_aries': 'Ariete',
+    'zodiac_taurus': 'Toro',
+    'zodiac_gemini': 'Gemelli',
+    'zodiac_cancer': 'Cancro',
+    'zodiac_leo': 'Leone',
+    'zodiac_virgo': 'Vergine',
+    'zodiac_libra': 'Bilancia',
+    'zodiac_scorpio': 'Scorpione',
+    'zodiac_sagittarius': 'Sagittario',
+    'zodiac_capricorn': 'Capricorno',
+    'zodiac_aquarius': 'Acquario',
+    'zodiac_pisces': 'Pesci',
   },
 
   // ═══════════════════════════════════════════
@@ -1562,6 +1618,20 @@ const Map<String, Map<String, String>> _translations = {
     'calib0_title': 'Il tourne pendant que tu vis.',
     'calib0_body':
         'Pas de swipe. Pas de scroll. Tremble travaille silencieusement dans ta poche pendant que tu vis ta vie.',
+
+    // --- Signes du zodiaque ---
+    'zodiac_aries': 'Bélier',
+    'zodiac_taurus': 'Taureau',
+    'zodiac_gemini': 'Gémeaux',
+    'zodiac_cancer': 'Cancer',
+    'zodiac_leo': 'Lion',
+    'zodiac_virgo': 'Vierge',
+    'zodiac_libra': 'Balance',
+    'zodiac_scorpio': 'Scorpion',
+    'zodiac_sagittarius': 'Sagittaire',
+    'zodiac_capricorn': 'Capricorne',
+    'zodiac_aquarius': 'Verseau',
+    'zodiac_pisces': 'Poissons',
   },
 
   // ═══════════════════════════════════════════
@@ -1719,6 +1789,20 @@ const Map<String, Map<String, String>> _translations = {
     'onb4_title': 'TVOJA PRAVILA.',
     'onb4_body':
         'Poništi podudaranje ili blokiraj u bilo kojem trenutku. Jednosmjerno — nitko ne zna da si poslao val dok nije uzajamno.',
+
+    // --- Horoskopski znakovi ---
+    'zodiac_aries': 'Ovan',
+    'zodiac_taurus': 'Bik',
+    'zodiac_gemini': 'Blizanci',
+    'zodiac_cancer': 'Rak',
+    'zodiac_leo': 'Lav',
+    'zodiac_virgo': 'Djevica',
+    'zodiac_libra': 'Vaga',
+    'zodiac_scorpio': 'Škorpion',
+    'zodiac_sagittarius': 'Strijelac',
+    'zodiac_capricorn': 'Jarac',
+    'zodiac_aquarius': 'Vodenjak',
+    'zodiac_pisces': 'Ribe',
   },
 
   // ═══════════════════════════════════════════
@@ -1875,6 +1959,20 @@ const Map<String, Map<String, String>> _translations = {
     'calib0_title': 'Radi dok živiš.',
     'calib0_body':
         'Bez swipanja. Bez scrollanja. Tremble radi tiho u džepu dok živiš svoj život.',
+
+    // --- Horoskopski znaci ---
+    'zodiac_aries': 'Ovan',
+    'zodiac_taurus': 'Bik',
+    'zodiac_gemini': 'Blizanci',
+    'zodiac_cancer': 'Rak',
+    'zodiac_leo': 'Lav',
+    'zodiac_virgo': 'Devica',
+    'zodiac_libra': 'Vaga',
+    'zodiac_scorpio': 'Škorpija',
+    'zodiac_sagittarius': 'Strelac',
+    'zodiac_capricorn': 'Jarac',
+    'zodiac_aquarius': 'Vodolija',
+    'zodiac_pisces': 'Ribe',
   },
 
   // ═══════════════════════════════════════════
@@ -2031,6 +2129,20 @@ const Map<String, Map<String, String>> _translations = {
     'calib0_title': 'Fut, amíg élsz.',
     'calib0_body':
         'Nincs swipe. Nincs görgetés. Tremble csendesen dolgozik a zsebedben, amíg éled az életed.',
+
+    // --- Csillagjegyek ---
+    'zodiac_aries': 'Kos',
+    'zodiac_taurus': 'Bika',
+    'zodiac_gemini': 'Ikrek',
+    'zodiac_cancer': 'Rák',
+    'zodiac_leo': 'Oroszlán',
+    'zodiac_virgo': 'Szűz',
+    'zodiac_libra': 'Mérleg',
+    'zodiac_scorpio': 'Skorpió',
+    'zodiac_sagittarius': 'Nyilas',
+    'zodiac_capricorn': 'Bak',
+    'zodiac_aquarius': 'Vízöntő',
+    'zodiac_pisces': 'Halak',
   },
 };
 

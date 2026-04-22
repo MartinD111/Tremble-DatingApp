@@ -4,36 +4,10 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
+import 'package:tremble/src/core/utils/icon_utils.dart';
 import 'step_shared.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PURE HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-int calcAge(DateTime d) {
-  final now = DateTime.now();
-  int age = now.year - d.year;
-  if (now.month < d.month || (now.month == d.month && now.day < d.day)) {
-    age--;
-  }
-  return age;
-}
-
-String zodiacSign(DateTime d) {
-  final m = d.month;
-  final day = d.day;
-  if ((m == 1 && day >= 20) || (m == 2 && day <= 18)) return 'Aquarius';
-  if ((m == 2 && day >= 19) || (m == 3 && day <= 20)) return 'Pisces';
-  if ((m == 3 && day >= 21) || (m == 4 && day <= 19)) return 'Aries';
-  if ((m == 4 && day >= 20) || (m == 5 && day <= 20)) return 'Taurus';
-  if ((m == 5 && day >= 21) || (m == 6 && day <= 20)) return 'Gemini';
-  if ((m == 6 && day >= 21) || (m == 7 && day <= 22)) return 'Cancer';
-  if ((m == 7 && day >= 23) || (m == 8 && day <= 22)) return 'Leo';
-  if ((m == 8 && day >= 23) || (m == 9 && day <= 22)) return 'Virgo';
-  if ((m == 9 && day >= 23) || (m == 10 && day <= 22)) return 'Libra';
-  if ((m == 10 && day >= 23) || (m == 11 && day <= 21)) return 'Scorpio';
-  if ((m == 11 && day >= 22) || (m == 12 && day <= 21)) return 'Sagittarius';
-  return 'Capricorn';
-}
+// PURE HELPERS removed - moved to ZodiacUtils
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BIRTHDAY STEP (p4)
@@ -93,7 +67,7 @@ class BirthdayStep extends StatelessWidget {
 
   void _showConfirmation(BuildContext context) {
     final d = _currentDate();
-    final age = calcAge(d);
+    final age = ZodiacUtils.calcAge(d);
     final dateStr = DateFormat('MMMM d, yyyy').format(d);
     final brandRose = Theme.of(context).colorScheme.primary;
     const red = Color(0xFFFF4C4C);
@@ -277,8 +251,8 @@ class BirthdayStep extends StatelessWidget {
     final maxDays = DateTime(pickerYear, pickerMonth + 1, 0).day;
     final validDay = pickerDay > maxDays ? maxDays : pickerDay;
     final d = DateTime(pickerYear, pickerMonth, validDay);
-    final age = calcAge(d);
-    final zodiac = zodiacSign(d);
+    final age = ZodiacUtils.calcAge(d);
+    final zodiac = ZodiacUtils.getZodiacSign(d);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ScrollableFormPage(
@@ -339,7 +313,7 @@ class BirthdayStep extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             _BirthdayChip(
-              label: zodiac,
+              label: tr('zodiac_$zodiac'),
               icon: LucideIcons.star,
               isDark: isDark,
             ),

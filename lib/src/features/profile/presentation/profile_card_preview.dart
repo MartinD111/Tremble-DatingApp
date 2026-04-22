@@ -170,27 +170,34 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
 
                         // ── Name + Age ─────────────────────────────────────────────
                         Center(
-                          child: RichText(
-                            text: TextSpan(
-                              style: GoogleFonts.instrumentSans(
-                                color: textColor,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${user.name ?? 'Guest'}, ${user.age ?? '?'}',
+                                style: GoogleFonts.instrumentSans(
+                                  color: textColor,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              children: [
-                                TextSpan(
-                                    text:
-                                        '${user.name ?? 'Guest'}, ${user.age ?? '?'}'),
-                                if (ZodiacUtils.getZodiacEmoji(
-                                        user.birthDate) !=
-                                    null)
-                                  TextSpan(
-                                    text:
-                                        '  ${ZodiacUtils.getZodiacEmoji(user.birthDate)}',
-                                    style: const TextStyle(fontSize: 22),
+                              if (user.birthDate != null) ...[
+                                const SizedBox(width: 12),
+                                Icon(LucideIcons.star,
+                                    size: 20,
+                                    color: textColor.withValues(alpha: 0.6)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  t('zodiac_${ZodiacUtils.getZodiacSign(user.birthDate)}',
+                                      lang),
+                                  style: GoogleFonts.instrumentSans(
+                                    color: textColor.withValues(alpha: 0.8),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
                                   ),
+                                ),
                               ],
-                            ),
+                            ],
                           ),
                         ),
 

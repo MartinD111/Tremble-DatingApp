@@ -171,25 +171,34 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
                         // ── Name + Age ─────────────────────────────────────────────
                         Center(
-                          child: RichText(
-                            text: TextSpan(
-                              style: GoogleFonts.instrumentSans(
-                                color: textColor,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${match.name}, ${match.age}',
+                                style: GoogleFonts.instrumentSans(
+                                  color: textColor,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              children: [
-                                TextSpan(text: '${match.name}, ${match.age}'),
-                                if (ZodiacUtils.getZodiacEmoji(
-                                        match.birthDate) !=
-                                    null)
-                                  TextSpan(
-                                    text:
-                                        '  ${ZodiacUtils.getZodiacEmoji(match.birthDate)}',
-                                    style: const TextStyle(fontSize: 22),
+                              if (match.birthDate != null) ...[
+                                const SizedBox(width: 12),
+                                Icon(LucideIcons.star,
+                                    size: 20,
+                                    color: textColor.withValues(alpha: 0.6)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  t('zodiac_${ZodiacUtils.getZodiacSign(match.birthDate)}',
+                                      lang),
+                                  style: GoogleFonts.instrumentSans(
+                                    color: textColor.withValues(alpha: 0.8),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
                                   ),
+                                ),
                               ],
-                            ),
+                            ],
                           ),
                         ),
 
