@@ -61,8 +61,10 @@ class IntroSlideStep extends StatelessWidget {
               const SizedBox(height: 12),
             ] else
               const SizedBox(height: 60),
-            const TrembleLogo(size: 56),
-            const SizedBox(height: 40),
+            if (index == 0) ...[
+              const TrembleLogo(size: 56),
+              const SizedBox(height: 40),
+            ],
             Container(
               width: 96,
               height: 96,
