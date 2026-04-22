@@ -314,7 +314,7 @@ class BirthdayStep extends StatelessWidget {
             const SizedBox(width: 8),
             _BirthdayChip(
               label: tr('zodiac_$zodiac'),
-              icon: LucideIcons.star,
+              icon: ZodiacUtils.getZodiacIcon(zodiac),
               isDark: isDark,
             ),
           ]),

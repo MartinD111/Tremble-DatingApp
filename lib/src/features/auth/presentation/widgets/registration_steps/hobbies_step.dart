@@ -147,7 +147,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
               const SizedBox(height: 12),
             ] else ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
                 child: Row(
                   children: [
                     TrembleBackButton(

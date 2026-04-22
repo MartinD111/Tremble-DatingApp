@@ -192,6 +192,7 @@ class OptionPill extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.icon,
+    this.emoji,
     this.iconColor,
   });
 
@@ -199,6 +200,7 @@ class OptionPill extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final IconData? icon;
+  final String? emoji;
   final Color? iconColor;
 
   @override
@@ -240,6 +242,12 @@ class OptionPill extends StatelessWidget {
                         ? Colors.white
                         : (isDark ? Colors.white70 : Colors.black54)),
                 size: 20,
+              ),
+              const SizedBox(width: 12),
+            ] else if (emoji != null) ...[
+              Text(
+                emoji!,
+                style: const TextStyle(fontSize: 20),
               ),
               const SizedBox(width: 12),
             ],

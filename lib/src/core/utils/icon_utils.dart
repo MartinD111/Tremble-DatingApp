@@ -106,6 +106,38 @@ class ZodiacUtils {
     return 'pisces';
   }
 
+  /// Returns a conceptual Lucide icon for each zodiac sign.
+  static IconData getZodiacIcon(String? sign) {
+    switch (sign) {
+      case 'aries':
+        return LucideIcons.flame; // Fire
+      case 'taurus':
+        return LucideIcons.mountain; // Earth
+      case 'gemini':
+        return LucideIcons.users; // Twins
+      case 'cancer':
+        return LucideIcons.moon; // Ruler Moon
+      case 'leo':
+        return LucideIcons.sun; // Ruler Sun
+      case 'virgo':
+        return LucideIcons.flower; // Harvest/Nature
+      case 'libra':
+        return LucideIcons.scale; // Balance
+      case 'scorpio':
+        return LucideIcons.zap; // Sting/Intensity
+      case 'sagittarius':
+        return LucideIcons.compass; // Explorer
+      case 'capricorn':
+        return LucideIcons.gem; // Status/Earth
+      case 'aquarius':
+        return LucideIcons.waves; // Water Bearer
+      case 'pisces':
+        return LucideIcons.anchor; // Sea/Ocean
+      default:
+        return LucideIcons.star;
+    }
+  }
+
   /// Calculates age from birthDate.
   static int calcAge(DateTime birthDate) {
     final now = DateTime.now();

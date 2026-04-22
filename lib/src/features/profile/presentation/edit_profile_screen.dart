@@ -542,8 +542,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     _AgePill(
-                                      t('zodiac_${ZodiacUtils.getZodiacSign(_birthDate!)}', lang),
-                                      icon: LucideIcons.star,
+                                      t('zodiac_${ZodiacUtils.getZodiacSign(_birthDate!)}',
+                                          lang),
+                                      icon: ZodiacUtils.getZodiacIcon(
+                                        ZodiacUtils.getZodiacSign(_birthDate!),
+                                      ),
                                       isDark: isDark,
                                     ),
                                   ] else
@@ -1923,8 +1926,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ),
                       const SizedBox(width: 8),
                       _AgePill(
-                        t('zodiac_${ZodiacUtils.getZodiacSign(DateTime(year, month, validDay))}', _lang),
-                        icon: LucideIcons.star,
+                        t('zodiac_${ZodiacUtils.getZodiacSign(DateTime(year, month, validDay))}',
+                            _lang),
+                        icon: ZodiacUtils.getZodiacIcon(
+                          ZodiacUtils.getZodiacSign(
+                            DateTime(year, month, validDay),
+                          ),
+                        ),
                         isDark: isDark,
                       ),
                     ],

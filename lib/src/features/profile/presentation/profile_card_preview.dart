@@ -183,9 +183,13 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                               ),
                               if (user.birthDate != null) ...[
                                 const SizedBox(width: 12),
-                                Icon(LucideIcons.star,
-                                    size: 20,
-                                    color: textColor.withValues(alpha: 0.6)),
+                                Icon(
+                                  ZodiacUtils.getZodiacIcon(
+                                    ZodiacUtils.getZodiacSign(user.birthDate),
+                                  ),
+                                  size: 20,
+                                  color: textColor.withValues(alpha: 0.6),
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   t('zodiac_${ZodiacUtils.getZodiacSign(user.birthDate)}',
