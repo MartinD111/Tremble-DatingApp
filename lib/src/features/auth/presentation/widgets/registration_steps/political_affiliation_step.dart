@@ -40,8 +40,13 @@ class PoliticalAffiliationStep extends StatelessWidget {
     return ScrollableFormPage(
       child: Column(
         children: [
-          TrembleBackButton(label: tr('back'), onPressed: onBack),
-          const SizedBox(height: 40),
+          Row(
+            children: [
+              TrembleBackButton(label: tr('back'), onPressed: onBack),
+              const Spacer(),
+            ],
+          ),
+          const SizedBox(height: 16),
           StepHeader(tr('political_affiliation')),
           const SizedBox(height: 48),
           if (!isSpecial)

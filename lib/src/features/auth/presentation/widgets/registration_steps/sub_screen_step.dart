@@ -57,22 +57,17 @@ class SubScreenStep extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        StepHeader(title),
-                        Positioned(
-                          left: 0,
-                          child: TrembleBackButton(
-                            onPressed: onBack,
-                            label: tr('back'),
-                          ),
-                        ),
-                      ],
-                    ),
+                  Row(
+                    children: [
+                      TrembleBackButton(
+                        onPressed: onBack,
+                        label: tr('back'),
+                      ),
+                      const Spacer(),
+                    ],
                   ),
+                  const SizedBox(height: 16),
+                  StepHeader(title),
                   SizedBox(height: screenHeight < 700 ? 24.0 : 40.0),
                   ...options.map(
                     (o) => OptionPill(
