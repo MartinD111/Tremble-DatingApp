@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
@@ -68,6 +69,7 @@ class LanguagesStep extends StatelessWidget {
                   return OptionPill(
                     label: lang,
                     selected: sel,
+                    icon: LucideIcons.globe,
                     onTap: () => onToggleLanguage(lang),
                   );
                 }),

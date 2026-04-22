@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
@@ -29,6 +30,13 @@ class HobbiesStep extends StatefulWidget {
 
 class _HobbiesStepState extends State<HobbiesStep> {
   final Map<String, ExpansibleController> _tileControllers = {};
+
+  static const Map<String, IconData> _catIcons = {
+    'Active': LucideIcons.dumbbell,
+    'Prosti čas': LucideIcons.coffee,
+    'Umetnost': LucideIcons.palette,
+    'Potovanja': LucideIcons.plane,
+  };
 
   static const Map<String, List<String>> _cats = {
     'Active': [
@@ -231,11 +239,26 @@ class _HobbiesStepState extends State<HobbiesStep> {
                               }
                             }
                           },
-                          title: Text(
-                              '${e.key} (${e.value.where((h) => widget.selectedHobbies.contains(h)).length})',
-                              style: GoogleFonts.instrumentSans(
-                                  color: isDark ? Colors.white : Colors.black87,
-                                  fontWeight: FontWeight.bold)),
+                          title: Row(
+                            children: [
+                              if (_catIcons[e.key] != null)
+                                Icon(
+                                  _catIcons[e.key],
+                                  size: 18,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black54,
+                                ),
+                              if (_catIcons[e.key] != null)
+                                const SizedBox(width: 8),
+                              Text(
+                                '${e.key} (${e.value.where((h) => widget.selectedHobbies.contains(h)).length})',
+                                style: GoogleFonts.instrumentSans(
+                                    color:
+                                        isDark ? Colors.white : Colors.black87,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
                           children: [
                             SizedBox(
                               width: double.infinity,
