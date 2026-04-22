@@ -56,3 +56,12 @@ Source: Zodiac Localization & UI Refinement, April 2026.
 +**Rule #26 — Use PageView indexing for multi-stage registration rituals.**
 +[2026-04-23] For high-fidelity visual transitions (like the Ritual screen), keep the widget as a final index in the existing `PageView` rather than pushing a new route. This allows for seamless shared-element animations and ensures the `PingOverlay` logic remains active across the entire activation sequence.
 +Source: Onboarding v2 implementation.
++
++**Rule #27 — `flutter_launcher_icons` requires PNG assets.**
++[2026-04-23] The automated icon generation package (`flutter_launcher_icons`) does not support SVG files directly. To automate icon updates, always convert the master SVG to a high-resolution PNG (1024x1024) first. This ensures the pixel data is correctly extracted for various device resolutions.
++
++**Rule #28 — Center `CustomPainter` paths using SVG group transforms.**
++[2026-04-23] When implementing complex icons (like the Tremble logo) in a `CustomPainter`, matching the source design exactly requires translating the coordinate system to match the SVG's `group transform` (e.g., `translate(centerX - (X * scale), centerY - (Y * scale))`). Small deviations in these offsets cause the logo to look "broken" or uncentered on different screen densities.
++
++**Rule #29 — Avoid `SafeArea` as a global wrapper for modal bottom sheets.**
++[2026-04-23] Wrapping a `showModalBottomSheet` builder in `SafeArea` can cause a "black gap" or "cutoff" at the bottom of the screen (behind the iOS home indicator) because the `SafeArea` prevents the background color from extending into the system area. Instead, use `MediaQuery.of(context).padding.bottom` to add targeted padding inside the modal's background-colored container.

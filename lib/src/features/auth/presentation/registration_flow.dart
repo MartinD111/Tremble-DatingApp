@@ -1108,110 +1108,125 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 child: Container(
                   padding: EdgeInsets.fromLTRB(
                       24, 12, 24, MediaQuery.of(context).padding.bottom + 24),
-                      decoration: BoxDecoration(
-                        color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
-                            .withValues(alpha: 0.8),
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(28)),
-                        border: Border(
-                            top: BorderSide(
-                                color:
-                                    isDark ? Colors.white12 : Colors.black12)),
+                  decoration: BoxDecoration(
+                    color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
+                        .withValues(alpha: 0.8),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(28)),
+                    border: Border(
+                        top: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                                color: isDark ? Colors.white24 : Colors.black26,
+                                borderRadius: BorderRadius.circular(2))),
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 28),
+                      Text(
+                        tr('partner_pref_title'),
+                        style: GoogleFonts.instrumentSans(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF1E1E2E)),
+                      ),
+                      const SizedBox(height: 24),
+                      _optionPill(
+                          tr('partner_pref_same'), tempSelection == 'same', () {
+                        setModalState(() => tempSelection = 'same');
+                      }),
+                      _optionPill(
+                          tr('partner_pref_idc'), tempSelection == 'idc', () {
+                        setModalState(() => tempSelection = 'idc');
+                      }),
+                      if (showCustom)
+                        _optionPill(tr('partner_pref_custom'),
+                            tempSelection == 'custom', () {
+                          setModalState(() => tempSelection = 'custom');
+                        }),
+                      const SizedBox(height: 24),
+                      Row(
                         children: [
-              Center(
-                child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: isDark ? Colors.white24 : Colors.black26,
-                        borderRadius: BorderRadius.circular(2))),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                tr('partner_pref_title'),
-                style: GoogleFonts.instrumentSans(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF1E1E2E)),
-              ),
-              const SizedBox(height: 24),
-              _optionPill(tr('partner_pref_same'), tempSelection == 'same', () {
-                setModalState(() => tempSelection = 'same');
-              }),
-              _optionPill(tr('partner_pref_idc'), tempSelection == 'idc', () {
-                setModalState(() => tempSelection = 'idc');
-              }),
-              if (showCustom)
-                _optionPill(tr('partner_pref_custom'), tempSelection == 'custom', () {
-                  setModalState(() => tempSelection = 'custom');
-                }),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                            color: isDark ? Colors.white38 : Colors.black26),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: const StadiumBorder(),
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                    color: isDark
+                                        ? Colors.white38
+                                        : Colors.black26),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: const StadiumBorder(),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                              },
+                              child: Text(
+                                tr('back'),
+                                style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black54,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: tempSelection != null
+                                    ? Theme.of(context).colorScheme.primary
+                                    : (isDark
+                                        ? Colors.white12
+                                        : Colors.black12),
+                                foregroundColor: tempSelection != null
+                                    ? Colors.black
+                                    : (isDark
+                                        ? Colors.white38
+                                        : Colors.black38),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(28)),
+                                elevation: tempSelection != null ? 2 : 0,
+                              ),
+                              onPressed: tempSelection == null
+                                  ? null
+                                  : () {
+                                      Navigator.pop(ctx);
+                                      if (tempSelection == 'same') {
+                                        onSave([userSelection]);
+                                        _nextPage();
+                                      } else if (tempSelection == 'idc') {
+                                        onSave(null);
+                                        _nextPage();
+                                      } else if (tempSelection == 'custom') {
+                                        _showCustomPartnerPreferenceModal(
+                                            title, options, onSave);
+                                      }
+                                    },
+                              child: Text(tr('continue_btn'),
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
                       ),
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                      },
-                      child: Text(
-                        tr('back'),
-                        style: TextStyle(
-                            color: isDark ? Colors.white70 : Colors.black54,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: tempSelection != null
-                            ? Theme.of(context).colorScheme.primary
-                            : (isDark ? Colors.white12 : Colors.black12),
-                        foregroundColor: tempSelection != null
-                            ? Colors.black
-                            : (isDark ? Colors.white38 : Colors.black38),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28)),
-                        elevation: tempSelection != null ? 2 : 0,
-                      ),
-                      onPressed: tempSelection == null
-                          ? null
-                          : () {
-                              Navigator.pop(ctx);
-                              if (tempSelection == 'same') {
-                                onSave([userSelection]);
-                                _nextPage();
-                              } else if (tempSelection == 'idc') {
-                                onSave(null);
-                                _nextPage();
-                              } else if (tempSelection == 'custom') {
-                                _showCustomPartnerPreferenceModal(
-                                    title, options, onSave);
-                              }
-                            },
-                      child: Text(tr('continue_btn'),
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        )));
+                )));
       }),
     );
   }
@@ -1260,175 +1275,167 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 child: Container(
                   padding: EdgeInsets.fromLTRB(
                       24, 12, 24, MediaQuery.of(context).padding.bottom + 24),
-                      decoration: BoxDecoration(
-                        color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
-                            .withValues(alpha: 0.8),
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(28)),
-                        border: Border(
-                            top: BorderSide(
-                                color:
-                                    isDark ? Colors.white12 : Colors.black12)),
+                  decoration: BoxDecoration(
+                    color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
+                        .withValues(alpha: 0.8),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(28)),
+                    border: Border(
+                        top: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                                color: isDark ? Colors.white24 : Colors.black26,
+                                borderRadius: BorderRadius.circular(2))),
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Container(
-                                width: 40,
-                                height: 4,
-                                decoration: BoxDecoration(
+                      const SizedBox(height: 28),
+                      Text(
+                        tr('partner_pref_range_title'),
+                        style: GoogleFonts.instrumentSans(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF1E1E2E)),
+                      ),
+                      const SizedBox(height: 24),
+                      if (!dontCare) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(labels.first,
+                                style: TextStyle(
                                     color: isDark
-                                        ? Colors.white24
-                                        : Colors.black26,
-                                    borderRadius: BorderRadius.circular(2))),
-                          ),
-                          const SizedBox(height: 28),
-                          Text(
-                            tr('partner_pref_range_title'),
-                            style: GoogleFonts.instrumentSans(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF1E1E2E)),
-                          ),
-                          const SizedBox(height: 24),
-                          if (!dontCare) ...[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(labels.first,
-                                    style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white70
-                                            : Colors.black54)),
-                                Text(labels.last,
-                                    style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white70
-                                            : Colors.black54)),
-                              ],
-                            ),
-                            RangeSlider(
-                              values: tempRange,
-                              min: min,
-                              max: max,
-                              divisions: divisions > 0 ? divisions : null,
-                              labels: RangeLabels(
-                                title == tr('introversion')
-                                    ? _introvertLabelReg(tempRange.start)
-                                    : title == tr('political_affiliation')
-                                        ? _politicsLabelReg(tempRange.start)
-                                        : '${tempRange.start.toInt()}',
-                                title == tr('introversion')
-                                    ? _introvertLabelReg(tempRange.end)
-                                    : title == tr('political_affiliation')
-                                        ? _politicsLabelReg(tempRange.end)
-                                        : '${tempRange.end.toInt()}',
-                              ),
-                              activeColor:
-                                  Theme.of(context).colorScheme.primary,
-                              inactiveColor:
-                                  isDark ? Colors.white12 : Colors.black12,
-                              onChanged: (v) =>
-                                  setModalState(() => tempRange = v),
-                            ),
-                            if (title == tr('introversion'))
-                              Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    '${_introvertLabelReg(tempRange.start)} – ${_introvertLabelReg(tempRange.end)}',
-                                    style: TextStyle(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            if (title == tr('political_affiliation'))
-                              Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    '${_politicsLabelReg(tempRange.start)} – ${_politicsLabelReg(tempRange.end)}',
-                                    style: TextStyle(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                                        ? Colors.white70
+                                        : Colors.black54)),
+                            Text(labels.last,
+                                style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black54)),
                           ],
-                          const SizedBox(height: 16),
-                          _optionPill(tr('partner_pref_idc'), dontCare, () {
-                            setModalState(() => dontCare = !dontCare);
-                          }),
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    side: BorderSide(
-                                        color: isDark
-                                            ? Colors.white38
-                                            : Colors.black26),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
-                                    shape: const StadiumBorder(),
-                                  ),
-                                  onPressed: () => Navigator.pop(ctx),
-                                  child: Text(
-                                    tr('back'),
-                                    style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white70
-                                            : Colors.black54,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold),
-                                  ),
+                        ),
+                        RangeSlider(
+                          values: tempRange,
+                          min: min,
+                          max: max,
+                          divisions: divisions > 0 ? divisions : null,
+                          labels: RangeLabels(
+                            title == tr('introversion')
+                                ? _introvertLabelReg(tempRange.start)
+                                : title == tr('political_affiliation')
+                                    ? _politicsLabelReg(tempRange.start)
+                                    : '${tempRange.start.toInt()}',
+                            title == tr('introversion')
+                                ? _introvertLabelReg(tempRange.end)
+                                : title == tr('political_affiliation')
+                                    ? _politicsLabelReg(tempRange.end)
+                                    : '${tempRange.end.toInt()}',
+                          ),
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          inactiveColor:
+                              isDark ? Colors.white12 : Colors.black12,
+                          onChanged: (v) => setModalState(() => tempRange = v),
+                        ),
+                        if (title == tr('introversion'))
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                '${_introvertLabelReg(tempRange.start)} – ${_introvertLabelReg(tempRange.end)}',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        Theme.of(context).colorScheme.primary,
-                                    foregroundColor: Colors.black,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(28)),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.pop(ctx);
-                                    if (dontCare) {
-                                      onSave(null);
-                                    } else {
-                                      onSave(tempRange);
-                                    }
-                                    _nextPage();
-                                  },
-                                  child: Text(tr('continue_btn'),
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        if (title == tr('political_affiliation'))
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                '${_politicsLabelReg(tempRange.start)} – ${_politicsLabelReg(tempRange.end)}',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ],
+                            ),
+                          ),
+                      ],
+                      const SizedBox(height: 16),
+                      _optionPill(tr('partner_pref_idc'), dontCare, () {
+                        setModalState(() => dontCare = !dontCare);
+                      }),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                    color: isDark
+                                        ? Colors.white38
+                                        : Colors.black26),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: const StadiumBorder(),
+                              ),
+                              onPressed: () => Navigator.pop(ctx),
+                              child: Text(
+                                tr('back'),
+                                style: TextStyle(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black54,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                                foregroundColor: Colors.black,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(28)),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                if (dontCare) {
+                                  onSave(null);
+                                } else {
+                                  onSave(tempRange);
+                                }
+                                _nextPage();
+                              },
+                              child: Text(tr('continue_btn'),
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
+                            ),
                           ),
                         ],
                       ),
-                    )));
+                    ],
+                  ),
+                )));
       }),
     );
   }
@@ -1444,114 +1451,113 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) {
           return ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(28)),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                child: Container(
-                  padding: EdgeInsets.fromLTRB(
-                      24, 12, 24, MediaQuery.of(context).padding.bottom + 24),
-                      constraints: BoxConstraints(
-                        maxHeight: MediaQuery.of(context).size.height * 0.75,
-                      ),
-                      decoration: BoxDecoration(
-                        color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
-                            .withValues(alpha: 0.8),
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(28)),
-                        border: Border(
-                            top: BorderSide(
-                                color:
-                                    isDark ? Colors.white12 : Colors.black12)),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Container(
-                                width: 40,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                    color: isDark
-                                        ? Colors.white24
-                                        : Colors.black26,
-                                    borderRadius: BorderRadius.circular(2))),
+                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(
+                        24, 12, 24, MediaQuery.of(context).padding.bottom + 24),
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.75,
+                    ),
+                    decoration: BoxDecoration(
+                      color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
+                          .withValues(alpha: 0.8),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(28)),
+                      border: Border(
+                          top: BorderSide(
+                              color: isDark ? Colors.white12 : Colors.black12)),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                              width: 40,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                  color:
+                                      isDark ? Colors.white24 : Colors.black26,
+                                  borderRadius: BorderRadius.circular(2))),
+                        ),
+                        const SizedBox(height: 28),
+                        Text(
+                          title,
+                          style: GoogleFonts.instrumentSans(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1E1E2E)),
+                        ),
+                        const SizedBox(height: 16),
+                        Flexible(
+                          child: ListView(
+                            shrinkWrap: true,
+                            padding: EdgeInsets.zero,
+                            children: options.map((o) {
+                              final val = o['key'] as String;
+                              final isSelected = tempSelected.contains(val);
+                              return _optionPill(
+                                  o['label'] as String, isSelected, () {
+                                setModalState(() {
+                                  if (isSelected) {
+                                    tempSelected.remove(val);
+                                  } else {
+                                    tempSelected.add(val);
+                                  }
+                                });
+                              }, icon: o['icon'] as IconData?);
+                            }).toList(),
                           ),
-                          const SizedBox(height: 28),
-                          Text(
-                            title,
-                            style: GoogleFonts.instrumentSans(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF1E1E2E)),
-                          ),
-                          const SizedBox(height: 16),
-                          Flexible(
-                            child: ListView(
-                              shrinkWrap: true,
-                              padding: EdgeInsets.zero,
-                              children: options.map((o) {
-                                final val = o['key'] as String;
-                                final isSelected = tempSelected.contains(val);
-                                return _optionPill(
-                                    o['label'] as String, isSelected, () {
-                                  setModalState(() {
-                                    if (isSelected) {
-                                      tempSelected.remove(val);
-                                    } else {
-                                      tempSelected.add(val);
-                                    }
-                                  });
-                                }, icon: o['icon'] as IconData?);
-                              }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(
+                                      color: isDark
+                                          ? Colors.white38
+                                          : Colors.black26),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: const StadiumBorder(),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(ctx);
+                                },
+                                child: Text(
+                                  tr('back'),
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white70
+                                          : Colors.black54,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    side: BorderSide(
-                                        color: isDark
-                                            ? Colors.white38
-                                            : Colors.black26),
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
-                                    shape: const StadiumBorder(),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.pop(ctx);
-                                  },
-                                  child: Text(
-                                    tr('back'),
-                                    style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white70
-                                            : Colors.black54,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _continueButton(
+                                enabled: tempSelected.isNotEmpty,
+                                onTap: () {
+                                  Navigator.pop(ctx);
+                                  onSave(tempSelected);
+                                  _nextPage();
+                                },
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _continueButton(
-                                  enabled: tempSelected.isNotEmpty,
-                                  onTap: () {
-                                    Navigator.pop(ctx);
-                                    onSave(tempSelected);
-                                    _nextPage();
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    )));
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  )));
         },
       ),
     );
