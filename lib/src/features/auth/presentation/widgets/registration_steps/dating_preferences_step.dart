@@ -86,6 +86,34 @@ class DatingPreferencesStep extends StatelessWidget {
             inactiveColor:
                 isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${ageRangePref.start.round()}',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                ),
+                Text(
+                  '—',
+                  style: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.black38,
+                  ),
+                ),
+                Text(
+                  '${ageRangePref.end.round()}',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 24),
           ContinueButton(
             enabled: datingPreference != null,
