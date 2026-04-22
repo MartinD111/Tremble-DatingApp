@@ -65,3 +65,4 @@ Source: Zodiac Localization & UI Refinement, April 2026.
 +
 +**Rule #29 — Avoid `SafeArea` as a global wrapper for modal bottom sheets.**
 +[2026-04-23] Wrapping a `showModalBottomSheet` builder in `SafeArea` can cause a "black gap" or "cutoff" at the bottom of the screen (behind the iOS home indicator) because the `SafeArea` prevents the background color from extending into the system area. Instead, use `MediaQuery.of(context).padding.bottom` to add targeted padding inside the modal's background-colored container.
+**Rule #8** — Always pass translation functions (`tr`) to standalone widgets and bottom sheet utilities. Never rely on hardcoded strings in shared UI components. Source: Phase 10 Polish, April 2026.

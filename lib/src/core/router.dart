@@ -97,7 +97,7 @@ String? computeRedirect({
     // not yet verified, no Firestore profile draft) should land on /login so the
     // user can choose to sign in or register fresh — NOT silently resume an
     // orphaned registration flow that they may not remember starting.
-    if (!isSocialUser && !isEmailVerified && status is ProfileStatusNotFound) {
+    if (!isSocialUser && !isEmailVerified) {
       final redirect = currentPath == '/login' ? null : '/login';
       if (kDebugMode) {
         debugPrint(

@@ -13,6 +13,7 @@ void showPartnerPreferenceModal(
   required String userSelection,
   required ValueChanged<List<String>?> onSave,
   required VoidCallback onNext,
+  required String Function(String) tr,
   bool showCustom = true,
 }) {
   String? tempSelection;
@@ -23,123 +24,134 @@ void showPartnerPreferenceModal(
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (ctx) => StatefulBuilder(builder: (ctx, setModalState) {
-      return Container(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(
-              top: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : Colors.black26,
-                    borderRadius: BorderRadius.circular(2)),
-              ),
+      return ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Container(
+            padding: EdgeInsets.fromLTRB(
+                24, 12, 24, MediaQuery.of(context).padding.bottom + 24),
+            decoration: BoxDecoration(
+              color: (isDark ? const Color(0xFF1A1A2E) : Colors.white)
+                  .withValues(alpha: 0.8),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(
+                  top: BorderSide(
+                      color: isDark ? Colors.white12 : Colors.black12)),
             ),
-            const SizedBox(height: 28),
-            Center(
-              child: Text(
-                'Ali želiš, da ima tvoj partner enake preference?',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.instrumentSans(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF1E1E2E),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            OptionPill(
-              label: 'Enako kot jaz',
-              selected: tempSelection == 'same',
-              onTap: () => setModalState(() => tempSelection = 'same'),
-            ),
-            OptionPill(
-              label: 'Vseeno mi je',
-              selected: tempSelection == 'idc',
-              onTap: () => setModalState(() => tempSelection = 'idc'),
-            ),
-            if (showCustom)
-              OptionPill(
-                label: 'Po meri',
-                selected: tempSelection == 'custom',
-                onTap: () => setModalState(() => tempSelection = 'custom'),
-              ),
-            const SizedBox(height: 24),
-            Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(
-                          color: isDark ? Colors.white38 : Colors.black26),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: const StadiumBorder(),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black26,
+                        borderRadius: BorderRadius.circular(2)),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                Center(
+                  child: Text(
+                    tr('partner_pref_title'),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF1E1E2E),
                     ),
-                    onPressed: () => Navigator.pop(ctx),
-                    child: Text(
-                      'Nazaj',
-                      style: TextStyle(
-                        color: isDark ? Colors.white70 : Colors.black54,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                OptionPill(
+                  label: tr('partner_pref_same'),
+                  selected: tempSelection == 'same',
+                  onTap: () => setModalState(() => tempSelection = 'same'),
+                ),
+                OptionPill(
+                  label: tr('partner_pref_idc'),
+                  selected: tempSelection == 'idc',
+                  onTap: () => setModalState(() => tempSelection = 'idc'),
+                ),
+                if (showCustom)
+                  OptionPill(
+                    label: tr('partner_pref_custom'),
+                    selected: tempSelection == 'custom',
+                    onTap: () => setModalState(() => tempSelection = 'custom'),
+                  ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                              color: isDark ? Colors.white38 : Colors.black26),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: const StadiumBorder(),
+                        ),
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(
+                          tr('back'),
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: tempSelection != null
-                          ? Theme.of(context).colorScheme.primary
-                          : (isDark ? Colors.white12 : Colors.black12),
-                      foregroundColor: tempSelection != null
-                          ? Colors.black
-                          : (isDark ? Colors.white38 : Colors.black38),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28)),
-                      elevation: tempSelection != null ? 2 : 0,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: tempSelection != null
+                              ? Theme.of(context).colorScheme.primary
+                              : (isDark ? Colors.white12 : Colors.black12),
+                          foregroundColor: tempSelection != null
+                              ? Colors.black
+                              : (isDark ? Colors.white38 : Colors.black38),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28)),
+                          elevation: tempSelection != null ? 2 : 0,
+                        ),
+                        onPressed: tempSelection == null
+                            ? null
+                            : () {
+                                Navigator.pop(ctx);
+                                if (tempSelection == 'same') {
+                                  onSave([userSelection]);
+                                  onNext();
+                                } else if (tempSelection == 'idc') {
+                                  onSave(null);
+                                  onNext();
+                                } else if (tempSelection == 'custom') {
+                                  showCustomPartnerPreferenceModal(
+                                    context,
+                                    title: title,
+                                    options: options,
+                                    onSave: onSave,
+                                    onNext: onNext,
+                                    tr: tr,
+                                  );
+                                }
+                              },
+                        child: Text(
+                          tr('continue_btn'),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
-                    onPressed: tempSelection == null
-                        ? null
-                        : () {
-                            Navigator.pop(ctx);
-                            if (tempSelection == 'same') {
-                              onSave([userSelection]);
-                              onNext();
-                            } else if (tempSelection == 'idc') {
-                              onSave(null);
-                              onNext();
-                            } else if (tempSelection == 'custom') {
-                              showCustomPartnerPreferenceModal(
-                                context,
-                                title: title,
-                                options: options,
-                                onSave: onSave,
-                                onNext: onNext,
-                              );
-                            }
-                          },
-                    child: const Text(
-                      'Nadaljuj',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       );
     }),
@@ -155,6 +167,7 @@ void showCustomPartnerPreferenceModal(
   required List<Map<String, Object>> options,
   required ValueChanged<List<String>?> onSave,
   required VoidCallback onNext,
+  required String Function(String) tr,
 }) {
   List<String> tempSelected = [];
   final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -170,7 +183,8 @@ void showCustomPartnerPreferenceModal(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
             child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+              padding: EdgeInsets.fromLTRB(
+                  24, 12, 24, MediaQuery.of(context).padding.bottom + 24),
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height * 0.75,
               ),
@@ -242,7 +256,7 @@ void showCustomPartnerPreferenceModal(
                           ),
                           onPressed: () => Navigator.pop(ctx),
                           child: Text(
-                            'Nazaj',
+                            tr('back'),
                             style: TextStyle(
                               color: isDark ? Colors.white70 : Colors.black54,
                               fontSize: 16,
@@ -260,6 +274,7 @@ void showCustomPartnerPreferenceModal(
                             onSave(tempSelected);
                             onNext();
                           },
+                          label: tr('continue_btn'),
                         ),
                       ),
                     ],

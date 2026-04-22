@@ -99,6 +99,7 @@ class SubScreenStep extends ConsumerWidget {
                               showCustom: showCustomPartnerPref,
                               onSave: savePartner,
                               onNext: onNext,
+                              tr: tr,
                             );
                           } else {
                             onNext();

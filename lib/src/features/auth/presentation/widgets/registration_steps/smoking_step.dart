@@ -60,6 +60,7 @@ class SmokingStep extends StatelessWidget {
                     showCustom: false,
                     onSave: onSavePartner,
                     onNext: onNext,
+                    tr: tr,
                   );
                 } else {
                   onNext();

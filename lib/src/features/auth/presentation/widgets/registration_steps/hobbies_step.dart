@@ -164,8 +164,8 @@ class _HobbiesStepState extends State<HobbiesStep> {
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: StepHeader(
                   widget.tr('hobbies'),
-                  subtitle:
-                      '${widget.selectedHobbies.length} ${widget.tr('hobbies_selected').replaceAll('{count}', '')}',
+                  subtitle: widget.tr('hobbies_selected').replaceAll(
+                      '{count}', widget.selectedHobbies.length.toString()),
                 ),
               ),
             ],

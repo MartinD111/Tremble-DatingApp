@@ -1,0 +1,121 @@
+00:00 +0: loading /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart
+00:00 +0: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer isLegacyFormat returns true for double in 0–1 range
+00:00 +1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer isLegacyFormat returns false for int (new format)
+00:00 +2: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer isLegacyFormat returns false for null
+00:00 +3: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer isLegacyFormat returns false for double > 1.0 (new format)
+00:00 +4: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer toNewFormat converts legacy 0–1 to new 0–100
+00:00 +5: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer toNewFormat returns unchanged value for new format int
+00:00 +6: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer toNewFormat returns null for null input
+00:00 +7: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer toNewFormat handles edge case of double > 1.0
+00:00 +8: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer toLegacyFormat converts new 0–100 to legacy 0–1
+00:00 +9: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer toLegacyFormat returns unchanged value for legacy format double
+00:00 +10: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer toLegacyFormat returns null for null input
+00:00 +11: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer toLegacyFormat clamps values to 0–1 range
+00:00 +12: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer labelForIntroversion returns correct labels for 0–100 scale
+00:00 +13: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer labelForIntroversion clamps values outside 0–100 range
+00:00 +14: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer labelForPolitical returns correct labels for 1–5 scale
+00:00 +15: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/slider_normalizer_test.dart: SliderNormalizer labelForPolitical clamps values outside 1–5 range
+00:00 +16: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — unauthenticated uninitialized → null (hold)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=false, authUser=null, profileLoading=true, hasConsent=false
+[TREMBLE_ROUTER] Not initialized, holding...
+00:00 +17: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — unauthenticated no user, at / → redirect to /login
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=null, profileLoading=true, hasConsent=false
+[TREMBLE_ROUTER] No authUser, redirecting to: /login
+00:00 +18: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — unauthenticated no user, already at /login → null (stay)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/login, isInitialized=true, authUser=null, profileLoading=true, hasConsent=false
+[TREMBLE_ROUTER] No authUser, redirecting to: null
+00:00 +19: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — unauthenticated no user, at /onboarding → null (allow — registration flow)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/onboarding, isInitialized=true, authUser=null, profileLoading=true, hasConsent=false
+00:00 +20: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — unauthenticated no user, stale profileStatus=ready(onboarded=true) → /login
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=null, profileLoading=false, hasConsent=true
+[TREMBLE_ROUTER] No authUser, redirecting to: /login
+00:00 +21: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — unauthenticated no user, stale profileStatus=ready(onboarded=true), at /settings → /login
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/settings, isInitialized=true, authUser=null, profileLoading=false, hasConsent=true
+[TREMBLE_ROUTER] No authUser, redirecting to: /login
+00:00 +22: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — authenticated, profile loading profile status isLoading → null (hold — splash)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=test@test.com, profileLoading=true, hasConsent=false
+[TREMBLE_ROUTER] Profile loading, holding...
+00:00 +23: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — authenticated, profile not found doc not found → redirect to /onboarding (social user resuming)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=false
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusNotFound', needsOnboarding=true
+[TREMBLE_ROUTER] Needs onboarding, redirecting to: /onboarding
+00:00 +24: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — authenticated, profile not found doc not found, stale unverified email session → redirect to /login
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=false
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusNotFound', needsOnboarding=true
+[TREMBLE_ROUTER] Stale email session (not verified, no profile), redirecting to: /login
+00:00 +25: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — authenticated, profile not found doc not found, already at /onboarding → null (stay)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/onboarding, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=false
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusNotFound', needsOnboarding=true
+00:00 +26: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — authenticated, isOnboarded=false doc exists, isOnboarded=false → redirect to /onboarding (verified user)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=false
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=true
+[TREMBLE_ROUTER] Needs onboarding, redirecting to: /onboarding
+00:00 +27: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — authenticated, isOnboarded=false doc exists, isOnboarded=false, at /settings → /onboarding (verified user)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/settings, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=false
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=true
+[TREMBLE_ROUTER] Needs onboarding, redirecting to: /onboarding
+00:00 +28: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — authenticated, isOnboarded=false doc exists, isOnboarded=false, stale unverified session → /login
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=false
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=true
+[TREMBLE_ROUTER] Needs onboarding, redirecting to: /onboarding
+00:00 +28 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — authenticated, isOnboarded=false doc exists, isOnboarded=false, stale unverified session → /login [E]
+  Expected: '/login'
+    Actual: '/onboarding'
+     Which: is different.
+            Expected: /login
+              Actual: /onboarding ...
+                       ^
+             Differ at offset 1
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test/core/router_redirect_test.dart 212:7           main.<fn>.<fn>
+  
+00:00 +28 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — onboarded, no consent isOnboarded=true, no consent → /permission-gate
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=false
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=false
+00:00 +29 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — onboarded, no consent already at /permission-gate, no consent → null (stay)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/permission-gate, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=false
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=false
+00:00 +30 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — fully onboarded with consent /permission-gate after consent granted → redirect to /
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/permission-gate, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=true
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=false
+00:00 +31 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — fully onboarded with consent at /login while fully onboarded → redirect to /
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/login, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=true
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=false
+00:00 +32 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — fully onboarded with consent at /onboarding while fully onboarded → redirect to /
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/onboarding, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=true
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=false
+00:00 +33 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — fully onboarded with consent at / while fully onboarded → null (stay)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=true
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=false
+00:00 +34 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — fully onboarded with consent at /settings while fully onboarded → null (stay)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/settings, isInitialized=true, authUser=test@test.com, profileLoading=false, hasConsent=true
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=false
+00:00 +35 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — ghost-onboarded guard isOnboarded=true but no name and no photos → /login (landing page)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=ghost@test.com, profileLoading=false, hasConsent=true
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=false
+00:00 +36 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — ghost-onboarded guard ghost user already at /login → null (stay)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/login, isInitialized=true, authUser=ghost@test.com, profileLoading=false, hasConsent=true
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=false
+00:00 +37 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/core/router_redirect_test.dart: computeRedirect — ghost-onboarded guard isOnboarded=true, has name but no photos → null (stay — valid profile)
+[TREMBLE_ROUTER] computeRedirect() called: currentPath=/, isInitialized=true, authUser=ghost@test.com, profileLoading=false, hasConsent=true
+[TREMBLE_ROUTER] Profile status: Instance of 'ProfileStatusReady', needsOnboarding=false
+00:00 +38 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/profile_status_test.dart: ProfileStatus loading is distinct from notFound and ready
+00:00 +39 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/profile_status_test.dart: ProfileStatus ready copies isOnboarded correctly
+00:00 +40 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/profile_status_test.dart: ProfileStatus ready(isOnboarded: false) != ready(isOnboarded: true)
+00:00 +41 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/profile_status_test.dart: ProfileStatus map dispatches on loading
+00:00 +42 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/profile_status_test.dart: ProfileStatus map dispatches on notFound
+00:00 +43 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/profile_status_test.dart: ProfileStatus map dispatches on ready(isOnboarded: true)
+00:00 +44 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/profile_status_test.dart: profileStatusProvider — stream transitions starts in loading state before stream emits
+00:00 +45 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/registration_flow_test.dart: Registration Flow Integration Tests Email registration continues forward to next step without auth loop
+00:00 +46 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/registration_flow_test.dart: Registration Flow Integration Tests Email registration continues forward to next step without auth loop
+00:00 +47 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/registration_flow_test.dart: Registration Flow Integration Tests Email registration continues forward to next step without auth loop
+00:00 +48 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/registration_flow_test.dart: Registration Flow Integration Tests Email registration continues forward to next step without auth loop
+00:00 +49 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/registration_flow_test.dart: Registration Flow Integration Tests Email registration continues forward to next step without auth loop
+00:00 +50 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/registration_flow_test.dart: Registration Flow Integration Tests Second registration attempt should not reset flow state
+00:00 +51 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/registration_flow_test.dart: Registration Flow Integration Tests Settings slider edit persists after Save button click
+00:00 +52 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/registration_flow_test.dart: Registration Flow Integration Tests Multiple preference selection shows Selected X pill
+00:00 +53 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/features/auth/registration_flow_test.dart: Registration Flow Integration Tests Slider range normalization handles both 0-1 and 0-100 scales
+00:00 +54 -1: /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/test/widget_test.dart: CI Placeholder Test
+00:00 +55 -1: Some tests failed.
