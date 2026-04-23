@@ -88,9 +88,29 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         'Zaposlen': 'employed',
         'Zaposlen/-a': 'employed',
       });
-      _religion = user.religion;
-      _hairColor = user.hairColor;
-      _ethnicity = user.ethnicity;
+      _religion = _normalizeLegacyValue(user.religion, {
+        'Krščanstvo': 'christianity',
+        'Islam': 'islam',
+        'Hinduizem': 'hinduism',
+        'Budizem': 'buddhism',
+        'Judaizem': 'judaism',
+        'Agnostik': 'agnostic',
+        'Ateist': 'atheist',
+      });
+      _hairColor = _normalizeLegacyValue(user.hairColor, {
+        'Blond': 'hair_blonde',
+        'Rjavi': 'hair_brunette',
+        'Črni': 'hair_black',
+        'Rdeči': 'hair_red',
+        'Sivi/Beli': 'hair_gray_white',
+        'Drugo': 'hair_other',
+      });
+      _ethnicity = _normalizeLegacyValue(user.ethnicity, {
+        'Bela': 'ethnicity_white',
+        'Črna': 'ethnicity_black',
+        'Mešana': 'ethnicity_mixed',
+        'Azijska': 'ethnicity_asian',
+      });
       _isSmoker = user.isSmoker;
       _occupation = user.occupation;
       _occupationController.text = user.occupation ?? '';
@@ -154,7 +174,38 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _introversionLevel = rawIntrovert > 5
           ? (rawIntrovert / 100.0).clamp(0.0, 1.0)
           : ((rawIntrovert - 1) / 4.0).clamp(0.0, 1.0);
-      _hobbies = List.from(user.hobbies);
+      _hobbies = user.hobbies
+          .map((h) => _normalizeLegacyValue(h, {
+                'Fitnes': 'hobby_fitness',
+                'Pilates': 'hobby_pilates',
+                'Sprehodi': 'hobby_walking',
+                'Tek': 'hobby_running',
+                'Smučanje': 'hobby_skiing',
+                'Snowboarding': 'hobby_snowboarding',
+                'Plezanje': 'hobby_climbing',
+                'Plavanje': 'hobby_swimming',
+                'Branje': 'hobby_reading',
+                'Kava': 'hobby_coffee',
+                'Čaj': 'hobby_tea',
+                'Kuhanje': 'hobby_cooking',
+                'Filmi': 'hobby_movies',
+                'Serije': 'hobby_series',
+                'Videoigre': 'hobby_video_games',
+                'Glasba': 'hobby_music',
+                'Slikanje': 'hobby_painting',
+                'Fotografija': 'hobby_photography',
+                'Pisanje': 'hobby_writing',
+                'Muzeji': 'hobby_museums',
+                'Gledališče': 'hobby_theater',
+                'Izleti': 'hobby_trips',
+                'Narava': 'hobby_nature',
+                'Gore': 'hobby_mountains',
+                'Morje': 'hobby_sea',
+                'Mestna potepanja': 'hobby_city_walks',
+                'Kampiranje': 'hobby_camping',
+              }))
+          .whereType<String>()
+          .toList();
       _languages = List.from(user.languages);
       _distancePreference = user.maxDistance.toDouble();
       _isPremium = user.isPremium;
@@ -246,6 +297,29 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       'Imam in bi rad/-a še': 'have_and_want_more',
       'Imam, ne bi več': 'have_and_dont_want_more',
       'Še nisem odločen/-a': 'not_sure',
+      // Religion
+      'Krščanstvo': 'christianity',
+      'Islam': 'islam',
+      'Hinduizem': 'hinduism',
+      'Budizem': 'buddhism',
+      'Judaizem': 'judaism',
+      'Agnostik': 'agnostic',
+      'Ateist': 'atheist',
+      // Ethnicity
+      'Bela': 'ethnicity_white',
+      'Črna': 'ethnicity_black',
+      'Mešana': 'ethnicity_mixed',
+      'Azijska': 'ethnicity_asian',
+      // Hair
+      'Blond': 'hair_blonde',
+      'Rjavi': 'hair_brunette',
+      'Črni': 'hair_black',
+      'Rdeči': 'hair_red',
+      'Sivi/Beli': 'hair_gray_white',
+      'Drugo': 'hair_other',
+      // Other
+      'Nekaj drugega': 'something_else',
+      'Nič': 'nothing',
     });
 
     if (normalized == null) return '';
@@ -257,6 +331,53 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   String? _normalizeLegacyValue(String? value, Map<String, String> mapping) {
     if (value == null || value.isEmpty) return null;
     return mapping[value] ?? value;
+  }
+
+  String _formatHobby(String hobby, String lang) {
+    // If it's already a key (starts with hobby_), translate it
+    if (hobby.startsWith('hobby_')) {
+      final translated = t(hobby, lang);
+      return translated == hobby ? _titleCase(hobby.replaceAll('hobby_', '').replaceAll('_', ' ')) : translated;
+    }
+
+    // Otherwise, it might be a legacy Slovenian string
+    final mapping = {
+      'Fitnes': 'hobby_fitness',
+      'Pilates': 'hobby_pilates',
+      'Sprehodi': 'hobby_walking',
+      'Tek': 'hobby_running',
+      'Smučanje': 'hobby_skiing',
+      'Snowboarding': 'hobby_snowboarding',
+      'Plezanje': 'hobby_climbing',
+      'Plavanje': 'hobby_swimming',
+      'Branje': 'hobby_reading',
+      'Kava': 'hobby_coffee',
+      'Čaj': 'hobby_tea',
+      'Kuhanje': 'hobby_cooking',
+      'Filmi': 'hobby_movies',
+      'Serije': 'hobby_series',
+      'Videoigre': 'hobby_video_games',
+      'Glasba': 'hobby_music',
+      'Slikanje': 'hobby_painting',
+      'Fotografija': 'hobby_photography',
+      'Pisanje': 'hobby_writing',
+      'Muzeji': 'hobby_museums',
+      'Gledališče': 'hobby_theater',
+      'Izleti': 'hobby_trips',
+      'Narava': 'hobby_nature',
+      'Gore': 'hobby_mountains',
+      'Morje': 'hobby_sea',
+      'Mestna potepanja': 'hobby_city_walks',
+      'Kampiranje': 'hobby_camping',
+    };
+
+    final key = mapping[hobby];
+    if (key != null) {
+      return t(key, lang);
+    }
+
+    // Fallback for custom hobbies
+    return hobby;
   }
 
   String _titleCase(String s) {
@@ -1999,40 +2120,40 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   static const Map<String, List<String>> _hobbyCategories = {
-    'Active 🏋️': [
-      'Fitnes',
-      'Pilates',
-      'Sprehodi',
-      'Tek',
-      'Smučanje',
-      'Snowboarding',
-      'Plezanje',
-      'Plavanje'
+    'hobby_cat_active': [
+      'hobby_fitness',
+      'hobby_pilates',
+      'hobby_walking',
+      'hobby_running',
+      'hobby_skiing',
+      'hobby_snowboarding',
+      'hobby_climbing',
+      'hobby_swimming'
     ],
-    'Prosti čas ☕': [
-      'Branje',
-      'Kava',
-      'Čaj',
-      'Kuhanje',
-      'Filmi',
-      'Serije',
-      'Videoigre',
-      'Glasba'
+    'hobby_cat_leisure': [
+      'hobby_reading',
+      'hobby_coffee',
+      'hobby_tea',
+      'hobby_cooking',
+      'hobby_movies',
+      'hobby_series',
+      'hobby_video_games',
+      'hobby_music'
     ],
-    'Umetnost 🎨': [
-      'Slikanje',
-      'Fotografija',
-      'Pisanje',
-      'Muzeji',
-      'Gledališče'
+    'hobby_cat_art': [
+      'hobby_painting',
+      'hobby_photography',
+      'hobby_writing',
+      'hobby_museums',
+      'hobby_theater'
     ],
-    'Potovanja ✈️': [
-      'Izleti',
-      'Narava',
-      'Gore',
-      'Morje',
-      'Mestna potepanja',
-      'Kampiranje'
+    'hobby_cat_travel': [
+      'hobby_trips',
+      'hobby_nature',
+      'hobby_mountains',
+      'hobby_sea',
+      'hobby_city_walks',
+      'hobby_camping'
     ],
   };
 
@@ -2063,7 +2184,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                entry.key,
+                t(entry.key, lang),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.instrumentSans(
                   color: isDark ? Colors.white70 : Colors.black54,
@@ -2078,7 +2199,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 alignment: WrapAlignment.center,
                 children: matched
                     .map((h) => _smallHobbyChip(
-                        h, isDark, textColor, fillColor, borderColor))
+                        h, lang, isDark, textColor, fillColor, borderColor))
                     .toList(),
               ),
             ],
@@ -2111,7 +2232,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 alignment: WrapAlignment.center,
                 children: customHobbies
                     .map((h) => _smallHobbyChip(
-                        h, isDark, textColor, fillColor, borderColor))
+                        h, lang, isDark, textColor, fillColor, borderColor))
                     .toList(),
               ),
             ],
@@ -2131,8 +2252,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _smallHobbyChip(String hobby, bool isDark, Color textColor,
-      Color fillColor, Color borderColor) {
+  Widget _smallHobbyChip(String hobby, String lang, bool isDark,
+      Color textColor, Color fillColor, Color borderColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -2144,7 +2265,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            hobby,
+            _formatHobby(hobby, lang),
             style: TextStyle(
               color: textColor,
               fontSize: 11,

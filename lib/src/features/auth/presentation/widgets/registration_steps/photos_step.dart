@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -99,27 +100,43 @@ class PhotosStep extends StatelessWidget {
               itemBuilder: (ctx, i) => GestureDetector(
                 onTap: () => onPickImage(i),
                 child: Stack(clipBehavior: Clip.none, children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.07)
-                          : Colors.black.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                          color: photos[i] != null
-                              ? Theme.of(context).colorScheme.primary
-                              : (isDark ? Colors.white24 : Colors.black12)),
-                      image: photos[i] != null
-                          ? DecorationImage(
-                              image: FileImage(photos[i]!), fit: BoxFit.cover)
-                          : null,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.07)
+                              : Colors.black.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                              color: photos[i] != null
+                                  ? Theme.of(context).colorScheme.primary
+                                  : (isDark ? Colors.white24 : Colors.black12)),
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: photos[i] != null
+                              ? Container(
+                                  key: ValueKey(photos[i]!.path),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(4),
+                                    image: DecorationImage(
+                                      image: FileImage(photos[i]!),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                )
+                              : Center(
+                                  key: const ValueKey('empty'),
+                                  child: Icon(LucideIcons.plus,
+                                      color: isDark ? Colors.white38 : Colors.black26,
+                                      size: 28),
+                                ),
+                        ),
+                      ),
                     ),
-                    child: photos[i] == null
-                        ? Center(
-                            child: Icon(LucideIcons.plus,
-                                color: isDark ? Colors.white38 : Colors.black26,
-                                size: 28))
-                        : null,
                   ),
                   // Viewfinder brackets on empty slots
                   if (photos[i] == null)

@@ -215,20 +215,15 @@ class OptionPill extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: selected
-              ? Theme.of(context).colorScheme.primary
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.22)
               : (isDark
-                  ? const Color(0xFF2A2A28)
+                  ? Colors.white.withValues(alpha: 0.12)
                   : Colors.black.withValues(alpha: 0.05)),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: selected
                 ? Theme.of(context).colorScheme.primary
-                : (isDark
-                    ? Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.25)
-                    : Colors.black26),
+                : (isDark ? Colors.white38 : Colors.black26),
             width: selected ? 2 : 1,
           ),
         ),
@@ -239,7 +234,7 @@ class OptionPill extends StatelessWidget {
                 icon,
                 color: iconColor ??
                     (selected
-                        ? Colors.white
+                        ? Theme.of(context).colorScheme.primary
                         : (isDark ? Colors.white70 : Colors.black54)),
                 size: 20,
               ),
@@ -255,7 +250,7 @@ class OptionPill extends StatelessWidget {
               label,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: selected
-                        ? Colors.white
+                        ? (isDark ? Colors.white : Colors.black)
                         : (isDark ? const Color(0xDDFFFFFF) : Colors.black87),
                     fontSize: 16,
                     fontWeight: selected ? FontWeight.bold : FontWeight.w500,
@@ -263,7 +258,7 @@ class OptionPill extends StatelessWidget {
             ),
             const Spacer(),
             if (selected)
-              const Icon(Icons.check_circle, color: Colors.white, size: 20),
+              Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 20),
           ],
         ),
       ),

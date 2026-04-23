@@ -224,6 +224,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final brandRose = Theme.of(context).colorScheme.primary;
+    final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
 
     final hasChanges = _hasChanges();
     return PopScope(
@@ -290,7 +291,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                   )),
               // "Vseeno mi je" — clears the preference (no icon, no italic)
               _optionPill(
-                label: 'Vseeno mi je',
+                label: t('partner_pref_idc', lang),
                 isSelected: _pending == _none,
                 onTap: () => setState(() => _pending = _none),
                 isMuted: true,
@@ -300,8 +301,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
               // "Other" — custom text input
               if (widget.allowOther) ...[
                 _optionPill(
-                  label: t('something_else',
-                      ref.read(authStateProvider)?.appLanguage ?? 'en'),
+                  label: t('something_else', lang),
                   isSelected: _pending == _somethingElse,
                   onTap: () => setState(() => _pending = _somethingElse),
                   isMuted: true,
@@ -316,8 +316,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                       autofocus: true,
                       style: GoogleFonts.instrumentSans(color: textColor),
                       decoration: InputDecoration(
-                        hintText: t('write_answer',
-                            ref.read(authStateProvider)?.appLanguage ?? 'en'),
+                        hintText: t('write_answer', lang),
                         hintStyle: TextStyle(
                             color: isDark ? Colors.white30 : Colors.black38),
                         enabledBorder: OutlineInputBorder(
@@ -338,7 +337,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
               // "Po meri" — opens multi-select (only when allOptions provided)
               if (widget.allOptions != null)
                 _optionPill(
-                  label: 'Po meri',
+                  label: t('partner_pref_custom', lang),
                   isSelected: false,
                   onTap: _openCustom,
                   isMuted: true,
@@ -361,7 +360,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                       ),
                       onPressed: () => Navigator.pop(context),
                       child: Text(
-                        'Cancel',
+                        t('cancel', lang),
                         style: TextStyle(
                             color: isDark ? Colors.white70 : Colors.black54,
                             fontWeight: FontWeight.bold),
@@ -387,8 +386,8 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                         widget.onUpdate(finalVal);
                         Navigator.pop(context);
                       },
-                      child: const Text('Save',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: Text(t('save', lang),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -484,6 +483,7 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final brandRose = Theme.of(context).colorScheme.primary;
+    final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
 
     final hasChanges = _hasChanges();
     return PopScope(
@@ -583,7 +583,7 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
                       ),
                       onPressed: () => Navigator.pop(context),
                       child: Text(
-                        'Cancel',
+                        t('cancel', lang),
                         style: TextStyle(
                             color: isDark ? Colors.white70 : Colors.black54,
                             fontWeight: FontWeight.bold),
@@ -601,8 +601,8 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
                             borderRadius: BorderRadius.circular(28)),
                       ),
                       onPressed: () => widget.onSave(_values),
-                      child: const Text('Save',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: Text(t('save', lang),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -673,6 +673,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final brandRose = Theme.of(context).colorScheme.primary;
+    final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -710,7 +711,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
               TextButton(
                 onPressed: () => widget.onSave(_selected),
                 child: Text(
-                  'Save',
+                  t('save', lang),
                   style: GoogleFonts.instrumentSans(
                     color: brandRose,
                     fontWeight: FontWeight.bold,
@@ -843,6 +844,7 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final brandRose = Theme.of(context).colorScheme.primary;
+    final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
 
     final hasChanges = _hasChanges();
     return PopScope(
@@ -946,7 +948,7 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
                       ),
                       onPressed: widget.onCancel,
                       child: Text(
-                        'Cancel',
+                        t('cancel', lang),
                         style: TextStyle(
                             color: isDark ? Colors.white70 : Colors.black54,
                             fontWeight: FontWeight.bold),
@@ -966,8 +968,8 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
                       onPressed: _selected != null
                           ? () => widget.onSave(_selected!)
                           : null,
-                      child: const Text('Save',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: Text(t('save', lang),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,10 +18,20 @@ class RitualStep extends StatefulWidget {
 }
 
 class _RitualStepState extends State<RitualStep> {
+  bool _canEnter = false;
+
   @override
   void initState() {
     super.initState();
-    HapticFeedback.heavyImpact();
+    // Initial feedback
+    HapticFeedback.lightImpact();
+
+    // Enforce a 2.5 second delay before the CTA becomes active
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() => _canEnter = true);
+      }
+    });
   }
 
   @override
@@ -36,9 +48,9 @@ class _RitualStepState extends State<RitualStep> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Spacer(),
-              // Header
-              Text(
-                widget.tr('ritual_header'),
+              // Header with decryption animation
+              _DecryptedText(
+                text: widget.tr('ritual_header'),
                 style: GoogleFonts.jetBrainsMono(
                   color: rose,
                   fontSize: 22,
@@ -59,18 +71,22 @@ class _RitualStepState extends State<RitualStep> {
               const Spacer(),
               // CTA
               GestureDetector(
-                onTap: () => context.go('/'),
-                child: Container(
+                onTap: _canEnter ? () => context.go('/') : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 400),
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   decoration: BoxDecoration(
-                    border: Border.all(color: rose, width: 1.0),
+                    border: Border.all(
+                      color: _canEnter ? rose : rose.withValues(alpha: 0.15),
+                      width: 1.0,
+                    ),
                   ),
                   child: Text(
                     widget.tr('ritual_button'),
                     textAlign: TextAlign.center,
                     style: GoogleFonts.jetBrainsMono(
-                      color: rose,
+                      color: _canEnter ? rose : rose.withValues(alpha: 0.15),
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 2.0,
@@ -83,6 +99,77 @@ class _RitualStepState extends State<RitualStep> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DecryptedText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+
+  const _DecryptedText({required this.text, required this.style});
+
+  @override
+  State<_DecryptedText> createState() => _DecryptedTextState();
+}
+
+class _DecryptedTextState extends State<_DecryptedText> {
+  String _currentText = "";
+  late Timer _timer;
+  final Random _random = Random();
+  final String _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$%^&*()";
+  int _ticks = 0;
+  final int _maxTicks = 16; // Approx 800ms at 50ms per tick
+
+  @override
+  void initState() {
+    super.initState();
+    _currentText = _scramble(widget.text.length);
+
+    _timer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+      if (!mounted) return;
+      _ticks++;
+
+      if (_ticks >= _maxTicks) {
+        _timer.cancel();
+        setState(() {
+          _currentText = widget.text;
+        });
+        // The satisfying hard lock when the text finishes decrypting
+        HapticFeedback.heavyImpact();
+      } else {
+        setState(() {
+          // Progressively reveal the true text
+          int revealCount = (widget.text.length * (_ticks / _maxTicks)).floor();
+          String revealed = widget.text.substring(0, revealCount);
+          String scrambled = _scramble(widget.text.length - revealCount);
+          _currentText = revealed + scrambled;
+        });
+        
+        // Subtle mechanical ticking sound/haptic
+        if (_ticks % 3 == 0) {
+          HapticFeedback.selectionClick();
+        }
+      }
+    });
+  }
+
+  String _scramble(int length) {
+    if (length <= 0) return "";
+    return List.generate(length, (index) => _chars[_random.nextInt(_chars.length)]).join();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      _currentText,
+      style: widget.style,
     );
   }
 }
