@@ -258,7 +258,8 @@ class OptionPill extends StatelessWidget {
             ),
             const Spacer(),
             if (selected)
-              Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary, size: 20),
+              Icon(Icons.check_circle,
+                  color: Theme.of(context).colorScheme.primary, size: 20),
           ],
         ),
       ),

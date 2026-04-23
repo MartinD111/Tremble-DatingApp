@@ -131,7 +131,9 @@ class PhotosStep extends StatelessWidget {
                               : Center(
                                   key: const ValueKey('empty'),
                                   child: Icon(LucideIcons.plus,
-                                      color: isDark ? Colors.white38 : Colors.black26,
+                                      color: isDark
+                                          ? Colors.white38
+                                          : Colors.black26,
                                       size: 28),
                                 ),
                         ),

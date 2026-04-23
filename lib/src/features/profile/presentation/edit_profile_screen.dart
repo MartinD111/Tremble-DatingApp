@@ -337,7 +337,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     // If it's already a key (starts with hobby_), translate it
     if (hobby.startsWith('hobby_')) {
       final translated = t(hobby, lang);
-      return translated == hobby ? _titleCase(hobby.replaceAll('hobby_', '').replaceAll('_', ' ')) : translated;
+      return translated == hobby
+          ? _titleCase(hobby.replaceAll('hobby_', '').replaceAll('_', ' '))
+          : translated;
     }
 
     // Otherwise, it might be a legacy Slovenian string

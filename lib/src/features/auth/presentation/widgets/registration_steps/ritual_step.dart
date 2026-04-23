@@ -145,7 +145,7 @@ class _DecryptedTextState extends State<_DecryptedText> {
           String scrambled = _scramble(widget.text.length - revealCount);
           _currentText = revealed + scrambled;
         });
-        
+
         // Subtle mechanical ticking sound/haptic
         if (_ticks % 3 == 0) {
           HapticFeedback.selectionClick();
@@ -156,7 +156,8 @@ class _DecryptedTextState extends State<_DecryptedText> {
 
   String _scramble(int length) {
     if (length <= 0) return "";
-    return List.generate(length, (index) => _chars[_random.nextInt(_chars.length)]).join();
+    return List.generate(
+        length, (index) => _chars[_random.nextInt(_chars.length)]).join();
   }
 
   @override
