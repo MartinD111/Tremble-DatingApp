@@ -284,32 +284,35 @@ class StepHeader extends StatelessWidget {
     // Responsive font size: smaller on mobile, larger on tablet
     final titleFontSize = screenWidth < 400 ? 28.0 : 32.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.instrumentSans(
-            fontSize: titleFontSize,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
-            height: 1.2,
-          ),
-        ),
-        if (subtitle != null) ...[
-          const SizedBox(height: 8),
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
           Text(
-            subtitle!,
+            title,
             textAlign: TextAlign.center,
             style: GoogleFonts.instrumentSans(
-              color: isDark ? Colors.white60 : Colors.black54,
-              fontSize: 14,
-              height: 1.4,
+              fontSize: titleFontSize,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+              height: 1.2,
             ),
           ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              subtitle!,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.instrumentSans(
+                color: isDark ? Colors.white60 : Colors.black54,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
