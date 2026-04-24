@@ -58,7 +58,11 @@
       "Skill(gsd:do)",
       "Skill(gsd:add-phase)",
       "mcp__ide__getDiagnostics",
-      "Bash(/Users/aleksandarbojic/flutter/bin/flutter analyze:*)"
+      "Bash(/Users/aleksandarbojic/flutter/bin/flutter analyze:*)",
+      "Bash(python3 -c \"from PIL import Image; print\\('PIL available'\\)\")",
+      "Bash(convert --version)",
+      "Bash(python3:*)",
+      "Bash(dart run:*)"
     ]
   }
 }
