@@ -1,50 +1,22 @@
-- Active Task: Plan 20260424-UI-Icon-Stability (PARTIALLY EXECUTED — context handoff)
+- Active Task: None — Plan 20260424-UI-Icon-Stability FULLY COMPLETE
 - Environment: Dev (Android/iOS)
-- Modified Files: notification_service.dart, proximity.functions.ts, flutter_native_splash.yaml, Logo/tremble_splash_source.png, all Android/iOS splash drawables, CLAUDE.md
-- Open Problems: ADR-001 (iOS BLE background) | UI-Icon-Stability plan 50% done
-- System Status: Build passing. Splash fixed. Launcher icons + UI code fixes NOT YET DONE.
+- System Status: Build passing (commit 887abe3). All icon + UI fixes committed.
 
 ---
 
-## Session Handoff — 2026-04-24 (Context limit — mid-plan)
+## Session Handoff — 2026-04-24 (Plan complete)
 
-### What Was Done This Session
+### Plan 20260424-UI-Icon-Stability — ALL ITEMS COMPLETE
+
 | Item | Fix | Status |
 |------|-----|--------|
-| BUILD-001 | notification_service.dart — const DarwinInitializationSettings fix | ✅ Committed |
-| BUILD-002 | proximity.functions.ts — imageUrl key + remove haversineDistance | ✅ Committed |
-| SPLASH-001 | Splash logo — replaced white transparent with rose icon at 50% canvas | ✅ Committed |
-
-### Plan 20260424-UI-Icon-Stability — REMAINING ITEMS
-All items below are DIAGNOSED but NOT YET executed. Resume with this exact knowledge:
-
-#### 1. Launcher Icons (HIGHEST PRIORITY)
-**Problem:** `flutter_launcher_icons.yaml` uses `tremble_icon_clean_transparent.png` for both
-`image_path` and `adaptive_icon_foreground` → white outline on dark bg → monochrome in app switcher.
-**Fix:**
-```yaml
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "Logo/tremble_icon_clean.png"
-  adaptive_icon_background: "#1A1A18"
-  adaptive_icon_foreground: "Logo/tremble_splash_source.png"
-```
-Then run: `flutter pub run flutter_launcher_icons:main`
-
-#### 2. Radar Pulse Radius
-**File:** `lib/src/shared/widgets/radar_painter.dart` line 24
-**Fix:** Change `size.width * 0.45` → `size.width * 0.5`
-
-#### 3. Matches Screen Title/? Overlap
-**File:** `lib/src/features/matches/presentation/matches_screen.dart` lines 121-162
-**Problem:** Centered title `Text` in Stack + `Positioned(right:0)` with helpCircle+pencil buttons (combined ~93px wide) overlap.
-**Fix:** Wrap the centered title Text in `Padding(padding: EdgeInsets.symmetric(horizontal: 100))` or add `maxWidth` constraint.
-
-#### 4. Card Open Animation
-**File:** `lib/src/features/dashboard/presentation/home_screen.dart` lines 264-287
-**Problem:** `AnimatedSwitcher` with `FadeTransition + ScaleTransition(0.98→1.0)` on tab switches.
-**Decision needed:** Remove scale (keep fade only) OR remove both. Need to also check GoRouter push transition for `/profile` route in `router.dart` — not yet read.
+| BUILD-001 | notification_service.dart — const DarwinInitializationSettings fix | ✅ Committed (6cff719) |
+| BUILD-002 | proximity.functions.ts — imageUrl key + remove haversineDistance | ✅ Committed (6cff719) |
+| SPLASH-001 | Splash logo — rose icon at 50% canvas, fullscreen dark bg | ✅ Committed (aee4c18) |
+| ICONS-001 | flutter_launcher_icons.yaml — image_path → tremble_icon_clean.png, foreground → tremble_splash_source.png, bg #1A1A18. Regenerated all mipmap + iOS AppIcon assets. | ✅ Committed (887abe3) |
+| RADAR-001 | radar_painter.dart maxRadius 0.45 → 0.5 | ✅ Committed (887abe3) |
+| MATCHES-001 | matches_screen.dart title Padding(horizontal: 100) — no overlap with buttons | ✅ Committed (887abe3) |
+| ANIM-001 | home_screen.dart AnimatedSwitcher — removed ScaleTransition, fade-only at 200 ms | ✅ Committed (887abe3) |
 
 ### Open Blockers
 - ADR-001: iOS BLE background state restoration — not yet implemented
@@ -52,11 +24,9 @@ Then run: `flutter pub run flutter_launcher_icons:main`
 - D-37: Map toggle test — pending Martin on Samsung S25 Ultra
 
 ### Next Action
-Resume Plan 20260424-UI-Icon-Stability with: `/gsd:autonomous`
-Start with launcher icons fix (item 1 above), then items 2-4 in order.
-
-### Resume Command
-/gsd:autonomous
+Test on device: install debug APK, verify icon color in app switcher, splash, radar pulse, matches title, tab transitions.
+Next GSD work: Phase 10 (Launch Polish) — TASK-10-03: Framing & Metadata.
+Run: `/gsd:execute-phase 10`
 
 ---
 
