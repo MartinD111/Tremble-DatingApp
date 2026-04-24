@@ -97,3 +97,11 @@ Source: Splash Screen Fix, April 2026.
 **Rule #37 — flutter_launcher_icons adaptive foreground must use padded source.**
 [2026-04-24] For Android adaptive icons, the foreground image should have ~25% padding on all sides (safe zone is 66% of the 108dp canvas). Use `tremble_splash_source.png` (icon at 50% of 2048px canvas) as `adaptive_icon_foreground` to ensure the rose icon is fully visible in all launcher shapes (circle, squircle, etc.) without clipping.
 Source: Launcher Icon Fix, April 2026.
+
+**Rule #38 — AnimatedSwitcher ScaleTransition causes perceived lag on tab switches.**
+[2026-04-24] A ScaleTransition(0.98→1.0) on NavigationBar tab switches creates a subtle but noticeable "pop" effect — the content appears to breathe in before settling, which reads as sluggishness. Use FadeTransition only for tab-level AnimatedSwitcher; keep duration ≤200 ms. Reserve scale transitions for explicit "open detail" navigations (e.g., GoRouter push to profile screen).
+Source: UI-Icon-Stability polish, April 2026.
+
+**Rule #39 — RadarPainter maxRadius must match the outermost grid circle.**
+[2026-04-24] If `maxRadius` is smaller than the canvas boundary where the last concentric ring is drawn, the radar pulse stops short of the outermost circle and the scan line appears clipped. `maxRadius` drives both the grid rings AND the scan geometry — if you change one, the other must match. Set `size.width * 0.5` as the canonical value.
+Source: UI-Icon-Stability polish, April 2026.

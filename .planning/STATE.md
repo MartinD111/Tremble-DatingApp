@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Monetization & Security
 status: in_progress
-last_updated: "2026-04-20T14:00:00.000Z"
+last_updated: "2026-04-24T18:00:00.000Z"
 progress:
   total_phases: 2
   completed_phases: 1
@@ -40,7 +40,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-18 after v1.1)
 | 7 | Wave Mechanic + Push Notifications | ✅ Complete |
 | 8 | Paywall / Tremble Pro | ⛔ SKIPPED — legal reasons (RevenueCat deferred) |
 | 9 | Security Hardening & GDPR | 🟡 In progress (10-01 GDPR fix deployed to tremble-dev) |
-| 10 | Launch Polish & Store Deploy | ⏳ Not started |
+| 10 | Launch Polish & Store Deploy | 🟡 In progress — TASK-10-01 (icons + splash) ✅, TASK-10-02 (ghost state UX) ✅ |
 | 11 | Technical Security Audit & Hardening | ✅ Complete (2026-04-20) |
 
 ## Open Blockers
@@ -48,7 +48,7 @@ See: `.planning/PROJECT.md` (updated 2026-04-18 after v1.1)
 | ID | Issue | Phase Impacted |
 |----|-------|----------------|
 | BLOCKER-003 | Legal/RevenueCat — Phase 8 on hold | Phase 8 |
-| BLOCKER-004 | Maps API missing in Prod project | Phase 10 |
+| ~~BLOCKER-004~~ | ✅ RESOLVED 2026-04-24 — Maps API keys confirmed in tremble-dev and am---dating-app (iOS xcconfig + Android local.properties) |
 
 ## Resolved Blockers (2026-04-21)
 
@@ -73,12 +73,13 @@ See: `.planning/PROJECT.md` (updated 2026-04-18 after v1.1)
 
 ## Next Action
 
-Phase 9 + Phase 11 fully complete. All security hardening deployed to tremble-dev (App Check enforced, Zod schemas, Firestore rules).
+Visual identity plan (20260424-UI-Icon-Stability) fully complete — splash, launcher icons, radar pulse, matches title, tab animation. Build passing, flutter analyze: 0 issues.
 
-Next: Phase 10 (Launch Polish) — store listings, landing page, TestFlight prep.
-Run `/gsd:discuss-phase 10` or `/gsd:execute-phase 10`.
+Next: Phase 10 (Launch Polish) — TASK-10-03 (Framing & Metadata), TASK-10-04 (TestFlight), TASK-10-05 (Landing Page).
+Run `/gsd:execute-phase 10`.
 
-Remaining debt: D-35 (Android Maps key), D-37 (3-state Map Toggle test after Maps API live).
+Open debt: D-37 (3-state Map Toggle test — Martin, physical device).
+Open blocker: BLOCKER-003 (Phase 8/RevenueCat — legal entity).
 
 ---
-*Last updated: 2026-04-21 — Registration repair plan complete: gradient→Deep Graphite (REG-01), defensive tr() (REG-02), select_all i18n (REG-03), photos copy 4→6 (REG-04), Spacer layout on sparse steps (REG-05), totalSteps 26→27 (REG-06). flutter analyze: 0 issues.*
+*Last updated: 2026-04-24 — UI-Icon-Stability complete. Commits: aee4c18 (splash), 887abe3 (icons + radar + UI). flutter analyze: 0 issues. APK build: ✅*

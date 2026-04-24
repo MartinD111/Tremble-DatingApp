@@ -23,22 +23,26 @@
 - [x] **TASK-UX-03:** Interactive "Wave" simulation at end of registration (🔴 P0).
 - [x] **TASK-UX-04:** Final "Go Live" ritual screen (🟠 P1).
 
-### 3. Technical Debt
+### 3. Visual Identity — Plan 20260424-UI-Icon-Stability ✅ COMPLETE (2026-04-24)
+- [x] **SPLASH-001:** Splash screen — rose icon, #1A1A18 fullscreen background (commit aee4c18)
+- [x] **ICONS-001:** Launcher icons — full-color source, adaptive foreground, monochrome fixed (commit 887abe3)
+- [x] **RADAR-001:** Radar pulse maxRadius 0.45 → 0.5, pulse reaches outer ring (commit 887abe3)
+- [x] **MATCHES-001:** Matches title overlap with buttons fixed — Padding horizontal: 100 (commit 887abe3)
+- [x] **ANIM-001:** Tab AnimatedSwitcher — ScaleTransition removed, fade-only 200 ms (commit 887abe3)
+
+### 4. Technical Debt
 - [x] **D-28:** Execute 17-item registration UI fix plan.
 - [x] **D-25:** Move all hardcoded strings to `translations.dart`.
-- [ ] **D-37:** Test 3-state Map Toggle (TASK-008) once Maps API is live.
+- [x] **D-39–D-42:** UI-Icon-Stability debt resolved (commit 887abe3).
+- [ ] **D-37:** Test 3-state Map Toggle (TASK-008) — Martin, physical device.
 
 ---
 
 ## Infrastructure & Business
 - [ ] **LEGAL:** Company registration and legal status for RevenueCat (Phase 8 on hold).
-- [ ] **FOUNDER:** Final review of TestFlight build with Rich Push.
+- [ ] **FOUNDER:** TestFlight internal beta build + review.
 - [ ] Update landing page for Privacy Policy on `trembledating.com`.
-
-- [x] **Verification**
-    - [x] `flutter analyze` (Zero warnings) ✅
-    - [x] Manual check of color transition logic (Simulated/Planned) ✅
-    - [x] Visual audit against `tremble-brand-identity.html` ✅ & Strategy Doc.
+- [ ] **MARTIN:** Register Martin's debug token in Firebase App Check (tremble-dev) before testing.
 
 ---
-*Last Updated: 2026-04-20 09:45* — **Governance:** Adhere to `tremble-brand-identity.html` & Strategy Doc.
+*Last Updated: 2026-04-24* — Build: ✅ passing | flutter analyze: ✅ 0 issues | Commit: 887abe3
