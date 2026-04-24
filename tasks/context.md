@@ -11,9 +11,9 @@
 ### What Was Done This Session
 | Item | Fix | Status |
 |------|-----|--------|
-| UI-001 | Splash Screen Artifacts (White Square/Opacity) | ✅ Regenerated with transparent PNG |
-| UX-001 | Onboarding Logout / Cancel Registration | ✅ Implemented in IntroSlideStep |
-| UI-002 | Logo Wave Visibility ("opacity za lines") | ✅ Increased base alpha to 0.15 |
+| UI-001 | Splash Screen Artifacts (White Square/Opacity) | ✅ Regenerated with icon_background_color and transparent PNG |
+| UX-001 | Onboarding Logout / Cancel Registration | ✅ Implemented with translations for all languages |
+| UI-002 | Logo Wave Visibility ("opacity za lines") | ✅ Increased base alpha to 0.30 |
 | SEC-002 | Removed lat/lng from proximity Firestore writes | ✅ Deployed dev + prod |
 | BLOCKER-004 | Maps API keys confirmed both projects | ✅ Resolved |
 
