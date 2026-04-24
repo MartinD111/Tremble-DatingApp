@@ -1,57 +1,83 @@
-# Plan ID: 20260424-Build-Restoration
-**Risk Level:** LOW (Fixing syntax errors)
-**Founder Approval:** GRANTED (Via delegation to Claude CLI)
-**Branch:** `feature/build-restoration`
+# Plan ID: 20260424-Stability-Restoration-V2
+**Risk Level:** MEDIUM (Touches Auth, Firestore, and Maps)
+**Founder Approval:** REQUIRED for Maps SHA-1 verification
+**Branch:** `fix/regressions-and-polish`
 
 ## 1. OBJECTIVE
-Restore the Flutter and Firebase builds that were broken by hasty implementation. Fix `const` initialization errors in Dart, resolve strict TypeScript compiler errors in Cloud Functions, and ensure Firebase Auth is safely read when processing notification actions.
+Resolve all functional regressions introduced by recent merges: fix Maps authorization, restore Profile saving, fix Firestore proximity permissions, and polish the Radar UI to remove jitters and overflows.
+
+---
 
 ## 2. SCOPE
-**Files Affected:**
-- `lib/src/core/notification_service.dart`
-- `functions/src/modules/proximity/proximity.functions.ts`
-- `lib/src/core/router.dart`
+### Files Affected:
+- **UI/Polish:** `lib/src/shared/widgets/tremble_logo.dart`, `lib/src/features/profile/screens/edit_profile_screen.dart`, `lib/src/features/dashboard/widgets/profile_card.dart`
+- **Logic/Auth:** `lib/src/features/profile/repositories/profile_repository.dart`, `lib/src/core/notification_service.dart`, `lib/src/core/router.dart`
+- **Backend:** `functions/src/modules/proximity/proximity.functions.ts`
+- **Config:** `android/app/src/main/AndroidManifest.xml`, `ios/Runner/Info.plist`
 
-**What Does NOT Change:**
-- Proximity scanning logic.
-- UI components (PermissionGateScreen, TrembleLogo).
-- Native Android/iOS configuration.
+### What Does NOT Change:
+- Core BLE scanning algorithms.
+- Matching logic.
+- Navigation structure.
 
-## 3. STEPS FOR CLAUDE CLI
+---
 
-### Step 1: Fix Flutter Syntax Errors
-**Target:** `lib/src/core/notification_service.dart`
-**Action:**
-1. Locate the `iosSettings` declaration around line 124.
-2. Remove the `const` keyword from `const DarwinInitializationSettings(...)` because the `categories` argument passed to it is dynamic.
-3. Locate `_notifications.initialize(...)` around line 132.
-4. Remove the `const` keyword from `const InitializationSettings(...)`.
-**Verification:** `flutter analyze` must no longer flag `const_initialized_with_non_constant_value`.
+## 3. DETAILED STEPS
 
-### Step 2: Fix Cloud Functions TypeScript Errors
-**Target:** `functions/src/modules/proximity/proximity.functions.ts`
-**Action:**
-1. Locate the FCM `notification` payload object around line 385.
-2. Change the property name `image: photoUrl` to `imageUrl: photoUrl` (this is the correct key for the Firebase Admin SDK).
-3. Locate the `haversineDistance` function around line 96.
-4. Delete the entire `haversineDistance` function block, as it is unused and violates strict `noUnusedLocals` TypeScript settings.
-**Verification:** Run `cd functions && npm run build`. It must exit with code `0`.
+### Phase 1: Build & Logic Restoration (Critical)
+1.  **Notification Service Fix:**
+    -   Remove `const` from `DarwinInitializationSettings` in `notification_service.dart` because it contains dynamic categories.
+    -   Remove `const` from `InitializationSettings`.
+2.  **Cloud Functions Fix:**
+    -   Update `proximity.functions.ts`: Change `image` key to `imageUrl` in FCM payload to match Admin SDK expectations.
+    -   Remove unused `haversineDistance` to satisfy strict compiler.
+3.  **Auth Resilience in Router:**
+    -   In `router.dart`, wrap `NEARBY_WAVE_ACTION` logic in a `StreamSubscription` to `FirebaseAuth.instance.authStateChanges()` or a retry loop to ensure `currentUser` is populated during cold starts from notification taps.
 
-### Step 3: Secure Background/Foreground Auth State
-**Target:** `lib/src/core/router.dart` (Inside `handleNotificationNavigation`)
-**Action:**
-1. Locate the `NEARBY_WAVE_ACTION` block.
-2. The current implementation relies on `FirebaseAuth.instance.currentUser?.uid`. If the app was completely terminated (cold start), Firebase Auth might take a few milliseconds to restore the user session.
-3. Wrap the UID retrieval in a short retry mechanism (e.g., waiting up to 1 second for `currentUser` to become non-null) or explicitly await the auth state change stream for the first non-null emission before executing the Firestore write.
-**Verification:** Ensure the code compiles.
+### Phase 2: Profile & Permission Fixes
+1.  **Schema Alignment (The "Photo Save" Fix):**
+    -   The backend now enforces strict fields: `location`, `hasChildren`, `interestedIn` (as string, not array), etc.
+    -   Update `ProfileModel.toJson()` to ensure all mandatory fields are present.
+    -   Ensure `photoUrl` is correctly passed if a new image was uploaded to Cloudflare R2.
+2.  **Firestore Permission Audit:**
+    -   The log shows `PERMISSION_DENIED` on `proximity/{uid}`.
+    -   Verify `firestore.rules`. If the rule is `allow read, write: if false` (as per SEC-002), ensure the Flutter app is NOT trying to write directly to this collection. It should be handled via the `updateLocation` Cloud Function.
+    -   Redirect any direct Firestore writes for location to the `updateLocation` function.
+
+### Phase 3: UI Polish & Layout
+1.  **Radar (Logo) Jitter & Pulse:**
+    -   Audit `tremble_logo.dart`. 
+    -   Ensure the pulse animation uses a `Tween` that reaches the edge of the circular container without clipping.
+    -   Check for overlapping `Stack` children that might create the "double line" effect.
+    -   Wrap the pulse painter in a `RepaintBoundary`.
+2.  **Profile Card Overflows:**
+    -   In `edit_profile_screen.dart`, wrap Gender and Preferences sections in a `Wrap` widget or a scrollable list to handle smaller screens.
+    -   Adjust the "Info" button positioning in the dashboard profile card. Move it to a `Positioned(top: 8, right: 8)` and ensure it doesn't overlap the name/age title.
+3.  **Your People Section:**
+    -   Adjust layout constraints to prevent the info button from floating over text.
+
+### Phase 4: Maps Restoration (High Risk)
+1.  **Package Name & SHA-1 Sync:**
+    -   Verify `com.pulse` package name in `android/app/build.gradle`.
+    -   Run `cd android && ./gradlew signingReport` to extract the SHA-1 of the `dev` debug key.
+    -   **ACTION FOR USER:** Verify that this SHA-1 is added to the Google Cloud Console "API & Services > Credentials" for the Maps API key, restricted to the `com.pulse` package.
+2.  **API Key Verification:**
+    -   Ensure the flavor-specific `google_maps_api_key` is being correctly injected into `AndroidManifest.xml`.
+
+---
 
 ## 4. RISKS & TRADEOFFS
-- **Auth State Timing:** Waiting for Auth state in `router.dart` might delay the wave execution by a few hundred milliseconds, but it prevents silent failures.
+- **Strict Validation:** Updating the Profile model to match the backend might break compatibility with any older user documents that lack these new fields. Migration logic might be needed in the repository.
+- **Maps Delay:** If the SHA-1 mismatch is in the Cloud Console, only the user (Founder) can fix it, as I don't have access to the GCP UI.
+
+---
 
 ## 5. VERIFICATION PROTOCOL
-Claude must run the following commands sequentially and verify they all pass before marking this complete:
-```bash
-flutter analyze
-cd functions && npm run build
-```
-No warnings, no errors.
+1.  **Automated:**
+    -   `flutter analyze` (Zero errors).
+    -   `cd functions && npm run build` (Zero errors).
+2.  **Manual (Device Test):**
+    -   Verify Radar animation is smooth.
+    -   Attempt to save a profile photo; verify no 400 errors in console.
+    -   Open Map view; verify it doesn't show "Google Maps for this app is not authorized".
+    -   Check for pixel overflows in Onboarding/Profile Edit.
