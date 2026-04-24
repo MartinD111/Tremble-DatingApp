@@ -141,10 +141,11 @@ class IntroSlideStep extends StatelessWidget {
               TextButton(
                 onPressed: onLogout,
                 child: Text(
-                  tr('logout'),
+                  tr('cancel_registration'),
                   style: GoogleFonts.instrumentSans(
                     color: isDark ? Colors.white38 : Colors.black38,
                     fontWeight: FontWeight.w500,
+                    decoration: TextDecoration.underline,
                   ),
                 ),
               ),

@@ -124,6 +124,9 @@ const Map<String, Map<String, String>> _translations = {
     'back': 'Back',
     'finish': 'Finish',
     'logout': 'Logout',
+    'logout_confirm':
+        'Are you sure you want to log out and stop the registration process?',
+    'cancel_registration': 'Cancel Registration',
     'add': 'Add',
     'continue_with_google': 'Continue with Google',
     'continue_with_apple': 'Continue with Apple',
@@ -622,6 +625,9 @@ const Map<String, Map<String, String>> _translations = {
     'back': 'Nazaj',
     'finish': 'Zaključi',
     'logout': 'Odjava',
+    'logout_confirm':
+        'Ste prepričani, da se želite odjaviti in prekiniti postopek registracije?',
+    'cancel_registration': 'Prekliči registracijo',
     'add': 'Dodaj',
     'continue_with_google': 'Nadaljuj z Googlom',
     'continue_with_apple': 'Nadaljuj z Applom',
@@ -1058,6 +1064,9 @@ const Map<String, Map<String, String>> _translations = {
     'back': 'Zurück',
     'finish': 'Fertig',
     'logout': 'Abmelden',
+    'logout_confirm':
+        'Sind Sie sicher, dass Sie sich abmelden und den Registrierungsprozess abbrechen möchten?',
+    'cancel_registration': 'Registrierung abbrechen',
     'add': 'Hinzufügen',
     'profile_card_view': 'Profilkarte anzeigen',
     'my_card': 'Meine Karte',
@@ -1330,6 +1339,9 @@ const Map<String, Map<String, String>> _translations = {
     'back': 'Indietro',
     'finish': 'Fine',
     'logout': 'Esci',
+    'logout_confirm':
+        'Sei sicuro di voler uscire e interrompere il processo di registrazione?',
+    'cancel_registration': 'Annulla registrazione',
     'add': 'Aggiungi',
     'profile_card_view': 'Vedi scheda profilo',
     'my_card': 'La mia scheda',
@@ -1542,6 +1554,9 @@ const Map<String, Map<String, String>> _translations = {
     'back': 'Retour',
     'finish': 'Terminer',
     'logout': 'Déconnexion',
+    'logout_confirm':
+        'Êtes-vous sûr de vouloir vous déconnecter et interrompre le processus d\'inscription ?',
+    'cancel_registration': 'Annuler l\'inscription',
     'add': 'Ajouter',
     'profile_card_view': 'Voir la carte de profil',
     'my_card': 'Ma carte',
@@ -1733,6 +1748,9 @@ const Map<String, Map<String, String>> _translations = {
     'back': 'Nazad',
     'finish': 'Završi',
     'logout': 'Odjava',
+    'logout_confirm':
+        'Jeste li sigurni da se želite odjaviti i prekinuti postupak registracije?',
+    'cancel_registration': 'Odustani od registracije',
     'add': 'Dodaj',
     'profile_card_view': 'Pregledaj karticu profila',
     'my_card': 'Moja kartica',
@@ -1915,6 +1933,9 @@ const Map<String, Map<String, String>> _translations = {
     'back': 'Nazad',
     'finish': 'Završi',
     'logout': 'Odjava',
+    'logout_confirm':
+        'Da li ste sigurni da želite da se odjavite i prekinete postupak registracije?',
+    'cancel_registration': 'Odustani od registracije',
     'add': 'Dodaj',
     'profile_card_view': 'Prikaži karticu profila',
     'my_card': 'Moja kartica',
@@ -2096,6 +2117,9 @@ const Map<String, Map<String, String>> _translations = {
     'back': 'Vissza',
     'finish': 'Befejezés',
     'logout': 'Kijelentkezés',
+    'logout_confirm':
+        'Biztosan ki szeretne jelentkezni és megszakítani a regisztrációs folyamatot?',
+    'cancel_registration': 'Regisztráció megszakítása',
     'add': 'Hozzáadás',
     'profile_card_view': 'Profilkártya megtekintése',
     'my_card': 'Kártyám',
