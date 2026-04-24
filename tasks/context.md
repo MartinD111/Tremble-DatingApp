@@ -1,22 +1,50 @@
-- Active Task: Rich Proximity Notifications (Interaction System v2.1) & UI Polish
+- Active Task: Plan 20260424-UI-Icon-Stability (PARTIALLY EXECUTED — context handoff)
 - Environment: Dev (Android/iOS)
-- Modified Files: proximity.functions.ts, notification_service.dart, translations.dart, router.dart, permission_gate_screen.dart, tremble_logo.dart, styles.xml, lessons.md, CLAUDE.md
-- Open Problems: ADR-001 (iOS BLE background)
-- System Status: Interaction System v2.1 pushed to main and deployed to dev functions. Lessons synced to CLAUDE.md.
+- Modified Files: notification_service.dart, proximity.functions.ts, flutter_native_splash.yaml, Logo/tremble_splash_source.png, all Android/iOS splash drawables, CLAUDE.md
+- Open Problems: ADR-001 (iOS BLE background) | UI-Icon-Stability plan 50% done
+- System Status: Build passing. Splash fixed. Launcher icons + UI code fixes NOT YET DONE.
 
 ---
 
-## Session Handoff — 2026-04-24 (Update)
+## Session Handoff — 2026-04-24 (Context limit — mid-plan)
 
 ### What Was Done This Session
 | Item | Fix | Status |
 |------|-----|--------|
-| NOT-001 | Interaction System v2.1 | ✅ Rich notifications with sender identity (Name, Age, Photo) |
-| NOT-002 | Background Wave Action | ✅ Background interaction handling for "Wave" button |
-| UI-003 | Android White Square | ✅ NormalTheme fixed with Black parent and dark background |
-| UI-004 | Permission Gate Overflow | ✅ Wrapped in ScrollView for small devices |
-| UI-005 | Logo Opacity | ✅ Increased base opacity for "lines" per founder request |
-| LOC-001 | Translations v2.1 | ✅ Identity-based notification strings added to all languages |
+| BUILD-001 | notification_service.dart — const DarwinInitializationSettings fix | ✅ Committed |
+| BUILD-002 | proximity.functions.ts — imageUrl key + remove haversineDistance | ✅ Committed |
+| SPLASH-001 | Splash logo — replaced white transparent with rose icon at 50% canvas | ✅ Committed |
+
+### Plan 20260424-UI-Icon-Stability — REMAINING ITEMS
+All items below are DIAGNOSED but NOT YET executed. Resume with this exact knowledge:
+
+#### 1. Launcher Icons (HIGHEST PRIORITY)
+**Problem:** `flutter_launcher_icons.yaml` uses `tremble_icon_clean_transparent.png` for both
+`image_path` and `adaptive_icon_foreground` → white outline on dark bg → monochrome in app switcher.
+**Fix:**
+```yaml
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "Logo/tremble_icon_clean.png"
+  adaptive_icon_background: "#1A1A18"
+  adaptive_icon_foreground: "Logo/tremble_splash_source.png"
+```
+Then run: `flutter pub run flutter_launcher_icons:main`
+
+#### 2. Radar Pulse Radius
+**File:** `lib/src/shared/widgets/radar_painter.dart` line 24
+**Fix:** Change `size.width * 0.45` → `size.width * 0.5`
+
+#### 3. Matches Screen Title/? Overlap
+**File:** `lib/src/features/matches/presentation/matches_screen.dart` lines 121-162
+**Problem:** Centered title `Text` in Stack + `Positioned(right:0)` with helpCircle+pencil buttons (combined ~93px wide) overlap.
+**Fix:** Wrap the centered title Text in `Padding(padding: EdgeInsets.symmetric(horizontal: 100))` or add `maxWidth` constraint.
+
+#### 4. Card Open Animation
+**File:** `lib/src/features/dashboard/presentation/home_screen.dart` lines 264-287
+**Problem:** `AnimatedSwitcher` with `FadeTransition + ScaleTransition(0.98→1.0)` on tab switches.
+**Decision needed:** Remove scale (keep fade only) OR remove both. Need to also check GoRouter push transition for `/profile` route in `router.dart` — not yet read.
 
 ### Open Blockers
 - ADR-001: iOS BLE background state restoration — not yet implemented
@@ -24,12 +52,11 @@
 - D-37: Map toggle test — pending Martin on Samsung S25 Ultra
 
 ### Next Action
-iOS BLE Background State Restoration (ADR-001).
-Requires native iOS config (Info.plist) and background state preservation logic.
-Risk level HIGH — Founder approval required.
+Resume Plan 20260424-UI-Icon-Stability with: `/gsd:autonomous`
+Start with launcher icons fix (item 1 above), then items 2-4 in order.
 
 ### Resume Command
-/gsd:resume-work
+/gsd:autonomous
 
 ---
 

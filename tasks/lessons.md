@@ -89,3 +89,11 @@ Source: Notification Service Refactor.
 Rule #35 — Resolve Android startup "white flash" via `NormalTheme` inheritance.
 [2026-04-24] The common white flash during app initialization on Android is often caused by the `NormalTheme` inheriting from a `Light` parent in `styles.xml`. Changing the parent to `Theme.Black.NoTitleBar` (or a Material3 dark equivalent) and explicitly setting `windowBackground` to a dark color resolves this.
 Source: Android Theme Polish.
+
+**Rule #36 — Splash source image must be the COLORED icon, not the transparent variant.**
+[2026-04-24] `tremble_icon_clean_transparent.png` has WHITE artwork on transparent background. On a dark `#1A1A18` splash background, this renders as white/monochrome. Always use `tremble_icon_clean.png` (rose-colored full icon) as the splash/launcher source. For proper sizing, create `tremble_splash_source.png` — the rose icon at 50% of a 2048×2048 transparent canvas — to prevent zoom-in and cut-off on device.
+Source: Splash Screen Fix, April 2026.
+
+**Rule #37 — flutter_launcher_icons adaptive foreground must use padded source.**
+[2026-04-24] For Android adaptive icons, the foreground image should have ~25% padding on all sides (safe zone is 66% of the 108dp canvas). Use `tremble_splash_source.png` (icon at 50% of 2048px canvas) as `adaptive_icon_foreground` to ensure the rose icon is fully visible in all launcher shapes (circle, squircle, etc.) without clipping.
+Source: Launcher Icon Fix, April 2026.
