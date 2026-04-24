@@ -1,8 +1,8 @@
 - Active Task: Rich Proximity Notifications (Interaction System v2.1) & UI Polish
 - Environment: Dev (Android/iOS)
-- Modified Files: proximity.functions.ts, notification_service.dart, translations.dart, router.dart, permission_gate_screen.dart, tremble_logo.dart, styles.xml
+- Modified Files: proximity.functions.ts, notification_service.dart, translations.dart, router.dart, permission_gate_screen.dart, tremble_logo.dart, styles.xml, lessons.md, CLAUDE.md
 - Open Problems: ADR-001 (iOS BLE background)
-- System Status: Rich notifications deployed to dev functions; app logic for interactive waves implemented.
+- System Status: Interaction System v2.1 pushed to main and deployed to dev functions. Lessons synced to CLAUDE.md.
 
 ---
 
