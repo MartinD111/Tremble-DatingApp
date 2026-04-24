@@ -118,50 +118,31 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Header ────────────────────────────────────────────
-            SizedBox(
-              height: 50,
-              width: double.infinity,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 100),
-                    child: Text(
-                      t('matches_title', lang),
-                      style: TrembleTheme.displayFont(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    t('matches_title', lang),
+                    style: TrembleTheme.displayFont(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
-                  Positioned(
-                    right: 0,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TrembleCircleButton(
-                          icon: LucideIcons.helpCircle,
-                          onPressed: _showHelpDialog,
-                          size: 40,
-                        ),
-                        const SizedBox(width: 8),
-                        TrembleCircleButton(
-                          icon: _isEditMode
-                              ? LucideIcons.check
-                              : LucideIcons.pencil,
-                          onPressed: () =>
-                              setState(() => _isEditMode = !_isEditMode),
-                          color: _isEditMode
-                              ? Theme.of(context).primaryColor
-                              : null,
-                          size: 40,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                TrembleCircleButton(
+                  icon: LucideIcons.helpCircle,
+                  onPressed: _showHelpDialog,
+                  size: 40,
+                ),
+                const SizedBox(width: 8),
+                TrembleCircleButton(
+                  icon: _isEditMode ? LucideIcons.check : LucideIcons.pencil,
+                  onPressed: () => setState(() => _isEditMode = !_isEditMode),
+                  color: _isEditMode ? Theme.of(context).primaryColor : null,
+                  size: 40,
+                ),
+              ],
             ),
             const SizedBox(height: 10),
 
