@@ -21,7 +21,7 @@ class RadarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = size.width * 0.45;
+    final maxRadius = size.width * 0.5;
 
     // Draw concentric circles
     final circlePaint = Paint()

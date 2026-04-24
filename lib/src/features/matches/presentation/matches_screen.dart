@@ -124,12 +124,15 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Text(
-                    t('matches_title', lang),
-                    style: TrembleTheme.displayFont(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 100),
+                    child: Text(
+                      t('matches_title', lang),
+                      style: TrembleTheme.displayFont(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
                     ),
                   ),
                   Positioned(

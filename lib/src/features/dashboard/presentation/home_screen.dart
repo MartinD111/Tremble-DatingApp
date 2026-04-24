@@ -262,21 +262,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               return false;
             },
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
+              duration: const Duration(milliseconds: 200),
               transitionBuilder: (Widget child, Animation<double> animation) {
                 return FadeTransition(
                   opacity: animation,
-                  child: ScaleTransition(
-                    scale: Tween<double>(begin: 0.98, end: 1.0).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                      ),
-                    ),
-                    child: child,
-                  ),
+                  child: child,
                 );
               },
               child: KeyedSubtree(
