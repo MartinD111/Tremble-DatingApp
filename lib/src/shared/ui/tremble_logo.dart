@@ -71,9 +71,10 @@ class _AnimatedHeartWifi extends StatelessWidget {
               double p = (localValue - delay) % 1.0;
               if (p < 0) p += 1.0;
               // Pulse peaks at 0.3, fades out at 0.6
-              if (p < 0.3) return 0.06 + (p / 0.3) * 0.94;
-              if (p < 0.6) return 1.0 - ((p - 0.3) / 0.3) * 0.94;
-              return 0.06;
+              // Base visibility increased to 0.15 per founder request for "opacity za lines"
+              if (p < 0.3) return 0.15 + (p / 0.3) * 0.85;
+              if (p < 0.6) return 1.0 - ((p - 0.3) / 0.3) * 0.85;
+              return 0.15;
             }
 
             return CustomPaint(

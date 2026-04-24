@@ -429,6 +429,38 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     }
   }
 
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A18),
+        title: Text(tr('logout'),
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(tr('logout_confirm'),
+            style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(tr('cancel'),
+                style: const TextStyle(color: Colors.white38)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(tr('logout'),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ref.read(authStateProvider.notifier).logout();
+    }
+  }
+
   Future<void> _pickImage(int index) async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
@@ -626,6 +658,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     index: 0,
                     onNext: _nextPage,
                     onBack: () => _goToPage(_currentPage - 1),
+                    onLogout: _logout,
                     tr: tr,
                   ),
                   IntroSlideStep(

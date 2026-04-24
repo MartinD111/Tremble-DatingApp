@@ -1,9 +1,8 @@
-## Session State — 2026-04-24
-- Active Task: Korak 4 — iOS BLE Background State Restoration (ADR-001)
-- Environment: Both (dev verified, prod deployed)
-- Modified Files: functions/src/modules/proximity/proximity.functions.ts, firestore.rules
-- Open Problems: ADR-001 (iOS BLE background), D-37 (map toggle test pending Martin)
-- System Status: Build passing. 19/19 functions deployed to prod. Rules deployed dev + prod.
+- Active Task: Splash Screen Optimization & Onboarding Resilience
+- Environment: Dev (Android)
+- Modified Files: flutter_native_splash.yaml, flutter_launcher_icons.yaml, tremble_logo.dart, registration_flow.dart, intro_slide_step.dart
+- Open Problems: ADR-001 (iOS BLE background)
+- System Status: Splash regenerated, logo opacity improved, logout implemented in onboarding.
 
 ---
 
@@ -12,12 +11,11 @@
 ### What Was Done This Session
 | Item | Fix | Status |
 |------|-----|--------|
+| UI-001 | Splash Screen Artifacts (White Square/Opacity) | ✅ Regenerated with transparent PNG |
+| UX-001 | Onboarding Logout / Cancel Registration | ✅ Implemented in IntroSlideStep |
+| UI-002 | Logo Wave Visibility ("opacity za lines") | ✅ Increased base alpha to 0.15 |
 | SEC-002 | Removed lat/lng from proximity Firestore writes | ✅ Deployed dev + prod |
 | BLOCKER-004 | Maps API keys confirmed both projects | ✅ Resolved |
-| D-35 | Maps API keys confirmed both projects | ✅ Resolved |
-| Prod rules | Full Firestore rules deployed to am---dating-app | ✅ Done |
-| Prod backup | Point-in-time recovery + daily backup enabled | ✅ Done |
-| Store plan | Store submission master plan created | ✅ tasks/store_submission_plan.md |
 
 ### Open Blockers
 - ADR-001: iOS BLE background state restoration — not yet implemented

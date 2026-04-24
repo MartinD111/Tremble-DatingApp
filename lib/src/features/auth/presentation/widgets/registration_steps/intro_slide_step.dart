@@ -11,12 +11,14 @@ class IntroSlideStep extends StatelessWidget {
     required this.index,
     required this.onNext,
     required this.onBack,
+    this.onLogout,
     required this.tr,
   });
 
   final int index;
   final VoidCallback onNext;
   final VoidCallback onBack;
+  final VoidCallback? onLogout;
   final String Function(String) tr;
 
   @override
@@ -134,6 +136,19 @@ class IntroSlideStep extends StatelessWidget {
               onTap: onNext,
               label: tr('continue_btn'),
             ),
+            if (index == 0 && onLogout != null) ...[
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: onLogout,
+                child: Text(
+                  tr('logout'),
+                  style: GoogleFonts.instrumentSans(
+                    color: isDark ? Colors.white38 : Colors.black38,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
           ],
         ),
