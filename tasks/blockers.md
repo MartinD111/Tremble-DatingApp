@@ -41,9 +41,14 @@ All critical items reported by the founder have been addressed:
 
 ## BLOCKER-004 — Missing Maps API in Production
 **Date:** 2026-04-20
-**Status:** 🔴 OPEN
-**Impact:** `am---dating-app` (Prod) has no Maps API enabled. App will fail to render maps in production flavor.
-**Action:** Founder must enable Maps SDK for Android/iOS in Google Cloud Console for the prod project.
+**Status:** ✅ RESOLVED (2026-04-24)
+**Resolution:** Maps API keys confirmed present in both projects (tremble-dev and am---dating-app) for iOS and Android. Verified via Google Cloud Console on 2026-04-24.
+
+## SEC-002 — GPS Coordinates Stored in Firestore Proximity Collection
+**Date:** 2026-04-24
+**Status:** ✅ RESOLVED (2026-04-24)
+**Impact:** updateLocation Cloud Function was writing exact lat/lng coordinates to Firestore proximity/{uid}. Firestore rule allowed read access to all authenticated users — direct GDPR violation and conflict with "privacy by architecture" positioning.
+**Resolution:** lat/lng removed from updateLocation write. findNearby updated to use geohash-only filtering. Firestore rule set to allow read, write: if false (Cloud Functions use admin SDK, bypass rules). Deployed to dev and prod 2026-04-24.
 ## BLOCKER-005 — Missing English Translation Keys (TASK-REG-07)
 **Date:** 2026-04-23
 **Status:** ✅ RESOLVED (2026-04-23)

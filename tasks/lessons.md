@@ -66,3 +66,15 @@ Source: Zodiac Localization & UI Refinement, April 2026.
 +**Rule #29 — Avoid `SafeArea` as a global wrapper for modal bottom sheets.**
 +[2026-04-23] Wrapping a `showModalBottomSheet` builder in `SafeArea` can cause a "black gap" or "cutoff" at the bottom of the screen (behind the iOS home indicator) because the `SafeArea` prevents the background color from extending into the system area. Instead, use `MediaQuery.of(context).padding.bottom` to add targeted padding inside the modal's background-colored container.
 **Rule #8** — Always pass translation functions (`tr`) to standalone widgets and bottom sheet utilities. Never rely on hardcoded strings in shared UI components. Source: Phase 10 Polish, April 2026.
+
+**Rule #30 — Never store raw GPS coordinates in Firestore for proximity matching.**
+[2026-04-24] updateLocation was writing lat/lng to proximity/{uid} with a rule allowing all authenticated users to read. This is a GDPR violation and contradicts "privacy by architecture" — the core brand promise. Use geohash only for Firestore storage. Coordinates are used in-memory during Cloud Function execution and never persisted.
+Source: SEC-002 Privacy Fix, April 2026.
+
+**Rule #31 — Prod Firestore rules must be explicitly deployed — they do not inherit from dev.**
+[2026-04-24] Production Firestore (am---dating-app) had only waitlist rules. All other collections (users, matches, waves, proximity, etc.) were relying on default deny — which works but is not explicit and creates risk. Always deploy full rules to prod. Use: firebase deploy --only firestore --project prod
+Source: Prod rules audit, April 2026.
+
+**Rule #32 — Never answer N/Y prompts during firebase deploy without reading them.**
+[2026-04-24] During firestore deploy to prod, Firebase asked to delete TTL field overrides (gdprRequests.ttl, proximity.ttl, proximity_events.ttl). Answering Y would have permanently deleted TTL policies — documents would accumulate forever. Always answer N to field override deletion prompts unless you explicitly created those overrides and want them gone.
+Source: Prod deploy, April 2026.

@@ -130,13 +130,12 @@ export const updateLocation = onCall(
             .set(
                 {
                     geohash,
-                    lat: data.latitude,
-                    lng: data.longitude,
                     lastSeen: FieldValue.serverTimestamp(),
                     isActive: true,
                 },
                 { merge: true }
             );
+
 
         return { success: true, geohash };
     }
@@ -189,15 +188,7 @@ export const findNearby = onCall(
             if (doc.id === uid) continue;
             if (blockedUsers.includes(doc.id)) continue;
 
-            const docData = doc.data();
-            const distance = haversineDistance(
-                data.latitude, data.longitude,
-                docData.lat, docData.lng
-            );
-
-            if (distance <= (data.radiusKm ?? 5)) {
-                candidates.push({ id: doc.id, distance });
-            }
+            candidates.push({ id: doc.id, distance: 0 });
         }
 
         const nearbyUsers: Array<{ userId: string; distanceKm: number }> = [];

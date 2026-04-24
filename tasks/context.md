@@ -1,45 +1,36 @@
-## Session State — 2026-04-23 01:45
-- Active Task: Phase 10 Launch Polish — Part 1 (Localization & UI Polish)
-- Environment: Dev (tremble-dev)
-- Modified Files: hobbies_step.dart, partner_preference_modal.dart, sub_screen_step.dart, smoking_step.dart, router.dart, lessons.md
-- Open Problems: None. 
-- System Status: All tests passing. Localization audit complete. UI bugs squashed.
+## Session State — 2026-04-24
+- Active Task: Korak 4 — iOS BLE Background State Restoration (ADR-001)
+- Environment: Both (dev verified, prod deployed)
+- Modified Files: functions/src/modules/proximity/proximity.functions.ts, firestore.rules
+- Open Problems: ADR-001 (iOS BLE background), D-37 (map toggle test pending Martin)
+- System Status: Build passing. 19/19 functions deployed to prod. Rules deployed dev + prod.
 
 ---
 
-## Session Handoff — 2026-04-23
+## Session Handoff — 2026-04-24
 
 ### What Was Done This Session
-
-| Item | Fix | Commit |
+| Item | Fix | Status |
 |------|-----|--------|
-| HOBBY-UI | Fixed "?" bug in hobbies count label in `hobbies_step.dart` | `hobby_ui_fix` |
-| PREF-I18N | Localized all partner preference modals (Religion, Ethnicity, Hair Color) | `pref_i18n_fix` |
-| MODAL-UI | Added glassmorphic blur and responsive padding to preference modals | `modal_ui_polish` |
-| ROUTER-FIX | Fixed unverified email redirect bug (resolved pre-existing test failure) | `router_fix` |
-| BUILD-FIX | Resolved missing `tr` parameter errors in `SmokingStep` | `build_fix` |
-| FORMAT | Verified all files via `dart format` | `format` |
-
-### Current Debt Status
-- ~~D-35~~ ✅ (Map key logic confirmed)
-- ~~D-37~~ ✅ (UI polish in progress)
-- **NEW RULE #27-29** added to `lessons.md` (SVG icons, Painter offsets, Modal padding)
+| SEC-002 | Removed lat/lng from proximity Firestore writes | ✅ Deployed dev + prod |
+| BLOCKER-004 | Maps API keys confirmed both projects | ✅ Resolved |
+| D-35 | Maps API keys confirmed both projects | ✅ Resolved |
+| Prod rules | Full Firestore rules deployed to am---dating-app | ✅ Done |
+| Prod backup | Point-in-time recovery + daily backup enabled | ✅ Done |
+| Store plan | Store submission master plan created | ✅ tasks/store_submission_plan.md |
 
 ### Open Blockers
-- BLOCKER-003: Legal/RevenueCat — Phase 8 on hold (No company entity yet)
-- BLOCKER-004: Maps API missing in Prod project (Founder action required)
+- ADR-001: iOS BLE background state restoration — not yet implemented
+- BLOCKER-003: Legal/RevenueCat — Phase 8 on hold (AMS Solutions d.o.o. unregistered)
+- D-37: Map toggle test — pending Martin on Samsung S25 Ultra
 
 ### Next Action
-
-**Phase 10 — Launch Polish (Remaining)**
-- TASK-10-03: Framing & Metadata (App Store privacy/descriptions)
-- TASK-10-04: TestFlight Submission
-- TASK-10-05: Landing Page (trembledating.com)
+iOS BLE Background State Restoration (ADR-001).
+Use Korak 4 prompt from tasks/store_submission_plan.md.
+Risk level HIGH — requires native iOS config (Info.plist). Founder approval required before implementation.
 
 ### Resume Command
-```
 /gsd:resume-work
-```
 
 ---
 
@@ -56,3 +47,6 @@
 
 - **Security Update**: Phase 11 complete. Cloud Functions deployed to `tremble-dev`.
 - **Infrastructure**: `.firebaserc` aliases `dev` and `prod` strictly mapped.
+- **Privacy Fix**: SEC-002 resolved. lat/lng removed from proximity writes. Deployed dev + prod 2026-04-24.
+- **Prod Firestore**: Full rules (users, drafts, matches, waves, proximity, proximity_events, rateLimits, idempotencyKeys, gdprRequests, default deny) deployed to am---dating-app 2026-04-24.
+- **Prod Backup**: Point-in-time recovery (7 days) + daily backup (7 days expiry) enabled 2026-04-24.
