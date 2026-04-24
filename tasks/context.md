@@ -1,21 +1,22 @@
-- Active Task: Splash Screen Optimization & Onboarding Resilience
-- Environment: Dev (Android)
-- Modified Files: flutter_native_splash.yaml, flutter_launcher_icons.yaml, tremble_logo.dart, registration_flow.dart, intro_slide_step.dart
+- Active Task: Rich Proximity Notifications (Interaction System v2.1) & UI Polish
+- Environment: Dev (Android/iOS)
+- Modified Files: proximity.functions.ts, notification_service.dart, translations.dart, router.dart, permission_gate_screen.dart, tremble_logo.dart, styles.xml
 - Open Problems: ADR-001 (iOS BLE background)
-- System Status: Splash regenerated, logo opacity improved, logout implemented in onboarding.
+- System Status: Rich notifications deployed to dev functions; app logic for interactive waves implemented.
 
 ---
 
-## Session Handoff — 2026-04-24
+## Session Handoff — 2026-04-24 (Update)
 
 ### What Was Done This Session
 | Item | Fix | Status |
 |------|-----|--------|
-| UI-001 | Splash Screen Artifacts (White Square/Opacity) | ✅ Regenerated with icon_background_color and transparent PNG |
-| UX-001 | Onboarding Logout / Cancel Registration | ✅ Implemented with translations for all languages |
-| UI-002 | Logo Wave Visibility ("opacity za lines") | ✅ Increased base alpha to 0.30 |
-| SEC-002 | Removed lat/lng from proximity Firestore writes | ✅ Deployed dev + prod |
-| BLOCKER-004 | Maps API keys confirmed both projects | ✅ Resolved |
+| NOT-001 | Interaction System v2.1 | ✅ Rich notifications with sender identity (Name, Age, Photo) |
+| NOT-002 | Background Wave Action | ✅ Background interaction handling for "Wave" button |
+| UI-003 | Android White Square | ✅ NormalTheme fixed with Black parent and dark background |
+| UI-004 | Permission Gate Overflow | ✅ Wrapped in ScrollView for small devices |
+| UI-005 | Logo Opacity | ✅ Increased base opacity for "lines" per founder request |
+| LOC-001 | Translations v2.1 | ✅ Identity-based notification strings added to all languages |
 
 ### Open Blockers
 - ADR-001: iOS BLE background state restoration — not yet implemented
@@ -24,8 +25,8 @@
 
 ### Next Action
 iOS BLE Background State Restoration (ADR-001).
-Use Korak 4 prompt from tasks/store_submission_plan.md.
-Risk level HIGH — requires native iOS config (Info.plist). Founder approval required before implementation.
+Requires native iOS config (Info.plist) and background state preservation logic.
+Risk level HIGH — Founder approval required.
 
 ### Resume Command
 /gsd:resume-work

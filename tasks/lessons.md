@@ -78,3 +78,14 @@ Source: Prod rules audit, April 2026.
 **Rule #32 — Never answer N/Y prompts during firebase deploy without reading them.**
 [2026-04-24] During firestore deploy to prod, Firebase asked to delete TTL field overrides (gdprRequests.ttl, proximity.ttl, proximity_events.ttl). Answering Y would have permanently deleted TTL policies — documents would accumulate forever. Always answer N to field override deletion prompts unless you explicitly created those overrides and want them gone.
 Source: Prod deploy, April 2026.
+Rule #33 — Rich notification payloads must use `imageUrl` for FCM Admin SDK.
+[2026-04-24] While the client uses `photoUrl` for internal models, the Firebase Cloud Messaging payload key for images in the data/notification block must be `imageUrl` (or matching the `NotificationService` wrapper) to ensure images appear correctly in the system notification shade.
+Source: Interaction System v2.1.
+
+Rule #34 — Avoid `const` for initialization with dynamic categories in `flutter_local_notifications`.
+[2026-04-24] Initialization settings for both Darwin (iOS) and Android cannot be declared as `const` if they depend on runtime-generated notification categories or actions. Attempting to use `const` will cause a compile-time error when categories are passed as a variable.
+Source: Notification Service Refactor.
+
+Rule #35 — Resolve Android startup "white flash" via `NormalTheme` inheritance.
+[2026-04-24] The common white flash during app initialization on Android is often caused by the `NormalTheme` inheriting from a `Light` parent in `styles.xml`. Changing the parent to `Theme.Black.NoTitleBar` (or a Material3 dark equivalent) and explicitly setting `windowBackground` to a dark color resolves this.
+Source: Android Theme Polish.

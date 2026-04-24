@@ -131,7 +131,14 @@ Source: Multi-Env Setup, March 2026.
 
 **Rule #5** — iOS Map configuration lives in `ios/Flutter/Debug.xcconfig` and `Release.xcconfig`. `ios/Runner/Info.plist` resolves `$(MAPS_API_KEY)` from these files.
 
+**Rule #33** — Rich notification payloads must use `imageUrl` for FCM Admin SDK to ensure images render in notification shade. Source: Interaction System v2.1, April 2026.
+
+**Rule #34** — Avoid `const` for initialization with dynamic categories in `flutter_local_notifications`. Source: Notification Service Refactor, April 2026.
+
+**Rule #35** — Resolve Android startup "white flash" via `NormalTheme` inheritance from `Theme.Black`. Source: Android Theme Polish, April 2026.
+
 Add new rules here immediately after any mistake. Format: `**Rule #N** — [rule]. Source: [context], [date].`
+
 
 ---
 

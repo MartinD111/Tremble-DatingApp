@@ -90,21 +90,6 @@ function geohashPrecisionForRadius(radiusKm: number): number {
     return 2;
 }
 
-/**
- * Calculate distance between two lat/lng points (Haversine formula).
- */
-function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLng = ((lng2 - lng1) * Math.PI) / 180;
-    const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLng / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
 // ── Cloud Functions ──────────────────────────────────────
 
 /**
@@ -352,23 +337,63 @@ export const onBleProximity = onDocumentCreated(
             return;
         }
 
+        // ── Fetch sender profile (Interaction System v2.2 — Rich Notifications) ──
+        const fromUserDoc = await db.collection("users").doc(fromUid).get();
+        const fromUserData = fromUserDoc.data();
+        if (!fromUserData) {
+            console.log(`[BLE] Sender ${fromUid} not found — skipping`);
+            return;
+        }
+
+        const name = fromUserData.displayName || "Someone";
+        const photoUrl = fromUserData.photoUrls?.[0] || "";
+        
+        // Calculate age
+        let age = 0;
+        if (fromUserData.dateOfBirth) {
+            const dob = fromUserData.dateOfBirth.toDate();
+            const today = new Date();
+            age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+        }
+
         await getMessaging().send({
             token: fcmToken,
             notification: {
                 title: "Tremble",
-                // ANONYMOUS — no name, no photo, no identity at this stage.
-                body: "Nekdo je blizu. Boš pomahal-a?",
+                // Multi-language support: app uses body_loc_key to translate locally
+                // Fallback body for devices not yet updated
+                body: `${name}, ${age} is nearby. Want to send a wave?`,
+                imageUrl: photoUrl,
             },
             data: {
                 type: "CROSSING_PATHS",
+                fromUid: fromUid,
+                name: name,
+                age: age.toString(),
+                photoUrl: photoUrl,
             },
             apns: {
                 payload: {
-                    aps: { sound: "default" },
+                    aps: {
+                        sound: "default",
+                        category: "NEARBY_CATEGORY",
+                        // loc_key used for client-side translation with variables
+                        "alert-body-loc-key": "notify_nearby_body_rich",
+                        "alert-body-loc-args": [name, age.toString()],
+                    },
                 },
             },
             android: {
                 priority: "high",
+                notification: {
+                    clickAction: "NEARBY_CATEGORY",
+                    bodyLocKey: "notify_nearby_body_rich",
+                    bodyLocArgs: [name, age.toString()],
+                },
             },
         });
 

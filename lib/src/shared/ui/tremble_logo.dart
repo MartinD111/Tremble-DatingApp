@@ -71,10 +71,10 @@ class _AnimatedHeartWifi extends StatelessWidget {
               double p = (localValue - delay) % 1.0;
               if (p < 0) p += 1.0;
               // Pulse peaks at 0.3, fades out at 0.6
-              // Base visibility increased to 0.3 per founder request for "opacity za lines"
-              if (p < 0.3) return 0.3 + (p / 0.3) * 0.7;
-              if (p < 0.6) return 1.0 - ((p - 0.3) / 0.3) * 0.7;
-              return 0.3;
+              // Base visibility increased per founder request for "opacity za lines"
+              if (p < 0.3) return 0.5 + (p / 0.3) * 0.5;
+              if (p < 0.6) return 1.0 - ((p - 0.3) / 0.3) * 0.5;
+              return 0.5;
             }
 
             return CustomPaint(
@@ -97,7 +97,7 @@ class _RimLightPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.1)
+      ..color = Colors.white.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;

@@ -344,6 +344,7 @@ const Map<String, Map<String, String>> _translations = {
     'personality': 'Personality',
     // Interaction System v2.1 — notification strings
     'notify_nearby_body': 'Someone is nearby. Wave?',
+    'notify_nearby_body_rich': '{name}, {age} is nearby. Want to send a wave?',
     'notify_incoming_wave_title': '%s waved',
     'notify_incoming_wave_body': 'Wave back?',
     'notify_match_title': '%s waved back!',
@@ -837,6 +838,7 @@ const Map<String, Map<String, String>> _translations = {
     'personality': 'Osebnost',
     // Interaction System v2.1 — nizi za obvestila
     'notify_nearby_body': 'Nekdo je blizu. Boš pomahal-a?',
+    'notify_nearby_body_rich': '{name}, {age} je v bližini. Boš pomahal-a?',
     'notify_incoming_wave_title': '%s ti je pomahal-a',
     'notify_incoming_wave_body': 'Pomahaš nazaj?',
     'notify_match_title': '%s ti je pomahal-a nazaj!',
@@ -1192,6 +1194,8 @@ const Map<String, Map<String, String>> _translations = {
     'personality': 'Persönlichkeit',
     // Interaction System v2.1 — Benachrichtigungstexte
     'notify_nearby_body': 'Jemand ist in der Nähe. Winken?',
+    'notify_nearby_body_rich':
+        '{name}, {age} ist in der Nähe. Willst du winken?',
     'notify_incoming_wave_title': '%s hat gewinkt',
     'notify_incoming_wave_body': 'Zurückwinken?',
     'notify_match_title': '%s hat zurückgewinkt!',
@@ -1434,6 +1438,17 @@ const Map<String, Map<String, String>> _translations = {
     'interests': 'Interessi',
     'personality': 'Personalità',
     'years': 'anni',
+    // Interaction System v2.1 — notification strings
+    'notify_nearby_body': 'Qualcuno è nelle vicinanze. Fare un cenno?',
+    'notify_nearby_body_rich':
+        '{name}, {age} è nelle vicinanze. Vuoi fare un cenno?',
+    'notify_incoming_wave_title': '%s ha fatto un cenno',
+    'notify_incoming_wave_body': 'Ricambiare?',
+    'notify_match_title': '%s ha ricambiato!',
+    'notify_match_body': 'Aprire il radar?',
+    'action_wave_back': 'Ricambia',
+    'action_not_now': 'Non ora',
+
     'change_password': 'Cambia password',
     'old_password': 'Vecchia password',
     'new_password': 'Nuova password',
@@ -1626,6 +1641,17 @@ const Map<String, Map<String, String>> _translations = {
     'interests': 'Intérêts',
     'personality': 'Personnalité',
     'years': 'ans',
+    // Interaction System v2.1 — notification strings
+    'notify_nearby_body': 'Quelqu\'un est à proximité. Faire un signe ?',
+    'notify_nearby_body_rich':
+        '{name}, {age} est à proximité. Voulez-vous faire un signe ?',
+    'notify_incoming_wave_title': '%s vous a fait signe',
+    'notify_incoming_wave_body': 'Lui répondre ?',
+    'notify_match_title': '%s vous a répondu !',
+    'notify_match_body': 'Ouvrir le radar ?',
+    'action_wave_back': 'Répondre',
+    'action_not_now': 'Plus tard',
+
     'change_password': 'Changer le mot de passe',
     'old_password': 'Ancien mot de passe',
     'new_password': 'Nouveau mot de passe',
@@ -1816,6 +1842,16 @@ const Map<String, Map<String, String>> _translations = {
     'interests': 'Interesi',
     'personality': 'Osobnost',
     'years': 'godina',
+    // Interaction System v2.1 — notification strings
+    'notify_nearby_body': 'Netko je u blizini. Želiš mahnuti?',
+    'notify_nearby_body_rich': '{name}, {age} je u blizini. Želiš mahnuti?',
+    'notify_incoming_wave_title': '%s ti maše',
+    'notify_incoming_wave_body': 'Mahni natrag?',
+    'notify_match_title': '%s je mahnuo/la natrag!',
+    'notify_match_body': 'Otvori radar?',
+    'action_wave_back': 'Mahni natrag',
+    'action_not_now': 'Ne sada',
+
     'change_password': 'Promijeni lozinku',
     'old_password': 'Stara lozinka',
     'new_password': 'Nova lozinka',
@@ -1997,6 +2033,16 @@ const Map<String, Map<String, String>> _translations = {
     'interests': 'Interesi',
     'personality': 'Ličnost',
     'years': 'godina',
+    // Interaction System v2.1 — notification strings
+    'notify_nearby_body': 'Neko je u blizini. Želiš mahnuti?',
+    'notify_nearby_body_rich': '{name}, {age} je u blizini. Želiš mahnuti?',
+    'notify_incoming_wave_title': '%s ti maše',
+    'notify_incoming_wave_body': 'Mahni nazad?',
+    'notify_match_title': '%s je mahnuo/la nazad!',
+    'notify_match_body': 'Otvori radar?',
+    'action_wave_back': 'Mahni nazad',
+    'action_not_now': 'Ne sada',
+
     'change_password': 'Promeni lozinku',
     'old_password': 'Stara lozinka',
     'new_password': 'Nova lozinka',
@@ -2182,6 +2228,16 @@ const Map<String, Map<String, String>> _translations = {
     'interests': 'Érdeklődési körök',
     'personality': 'Személyiség',
     'years': 'év',
+    // Interaction System v2.1 — notification strings
+    'notify_nearby_body': 'Valaki a közelben van. Integetsz neki?',
+    'notify_nearby_body_rich': '{name}, {age} a közelben van. Integetsz neki?',
+    'notify_incoming_wave_title': '%s integetett',
+    'notify_incoming_wave_body': 'Integetsz vissza?',
+    'notify_match_title': '%s visszaintegetett!',
+    'notify_match_body': 'Radar megnyitása?',
+    'action_wave_back': 'Visszaintegetés',
+    'action_not_now': 'Most nem',
+
     'change_password': 'Jelszó megváltoztatása',
     'old_password': 'Régi jelszó',
     'new_password': 'Új jelszó',

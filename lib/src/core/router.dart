@@ -20,6 +20,8 @@ import '../features/match/presentation/match_reveal_screen.dart';
 import '../features/match/domain/match.dart';
 import '../shared/ui/gradient_scaffold.dart';
 import 'consent_service.dart';
+import 'notification_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // ── Navigator Key ─────────────────────────────────────────────────────────────
 // Exposed so notification handlers (outside the widget tree) can navigate.
@@ -164,29 +166,52 @@ Future<void> handleNotificationNavigation(
   Duration delay = Duration.zero,
 }) async {
   final type = data['type'] as String?;
-  final matchId = data['matchId'] as String?;
+  final actionId = data['actionId'] as String?;
 
-  if (type != 'MUTUAL_WAVE' || matchId == null) return;
-
-  try {
-    final doc = await FirebaseFirestore.instance
-        .collection('matches')
-        .doc(matchId)
-        .get();
-
-    if (!doc.exists) return;
-
-    final match = Match.fromFirestore(doc);
-
-    // Small delay ensures GoRouter is fully mounted before navigation
-    if (delay > Duration.zero) await Future.delayed(delay);
-
-    final ctx = rootNavigatorKey.currentContext;
-    if (ctx != null && ctx.mounted) {
-      ctx.pushNamed('match_reveal', extra: match);
+  // 1. Handle "Wave" action button from Proximity Notification
+  if (actionId == 'NEARBY_WAVE_ACTION') {
+    final targetUid = data['fromUid'] as String?;
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    if (targetUid != null && myUid != null) {
+      try {
+        await FirebaseFirestore.instance.collection('waves').add({
+          'fromUid': myUid,
+          'toUid': targetUid,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        debugPrint(
+            '[ROUTER] Auto-wave sent via notification action: $myUid → $targetUid');
+      } catch (e) {
+        debugPrint('[ROUTER] Auto-wave failed: $e');
+      }
     }
-  } catch (e) {
-    debugPrint('[ROUTER] Notification navigation failed: $e');
+    // After waving, we might want to stay on the current screen or show a confirmation.
+    // For now, we just proceed.
+  }
+
+  // 2. Handle navigation for Mutual Waves (Matches)
+  final matchId = data['matchId'] as String?;
+  if (type == 'MUTUAL_WAVE' && matchId != null) {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('matches')
+          .doc(matchId)
+          .get();
+
+      if (!doc.exists) return;
+
+      final match = Match.fromFirestore(doc);
+
+      // Small delay ensures GoRouter is fully mounted before navigation
+      if (delay > Duration.zero) await Future.delayed(delay);
+
+      final ctx = rootNavigatorKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        ctx.pushNamed('match_reveal', extra: match);
+      }
+    } catch (e) {
+      debugPrint('[ROUTER] Notification navigation failed: $e');
+    }
   }
 }
 
@@ -389,6 +414,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           'profile=${notifier.profileStatus} '
           'consent=${notifier.hasConsent}');
       return result;
+    },
+  );
+
+  // ── Local Notification handling (including action buttons) ───────────────
+  NotificationService.initialize(
+    onNotificationTap: (data) {
+      handleNotificationNavigation(data);
     },
   );
 

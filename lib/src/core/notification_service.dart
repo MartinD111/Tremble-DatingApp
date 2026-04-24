@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:convert';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,9 +20,12 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   final clickAction = message.data['click_action'];
   final type = message.data['type'];
 
-  // Handle "Pomahaj nazaj" silent background action
-  if (clickAction == 'WAVE_BACK_ACTION' || type == 'INCOMING_WAVE') {
-    final targetUid = message.data['senderId'];
+  // Handle "Pomahaj nazaj" or "Wave back" silent background actions
+  // clickAction covers iOS category actions, type covers generic FCM data
+  if (clickAction == 'WAVE_BACK_ACTION' ||
+      clickAction == 'NEARBY_WAVE_ACTION' ||
+      type == 'INCOMING_WAVE') {
+    final targetUid = message.data['senderId'] ?? message.data['fromUid'];
     final myUid = FirebaseAuth.instance.currentUser?.uid;
 
     if (targetUid != null && targetUid.isNotEmpty && myUid != null) {
@@ -81,36 +85,68 @@ class NotificationService {
     // ── Local Notifications init ──────────────────────────
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
+    // ── iOS: Register NEARBY_CATEGORY and WAVE_CATEGORY with action buttons ───
+    // This must be done before any notification of this category arrives.
+    final List<DarwinNotificationCategory> categories = [
+      DarwinNotificationCategory(
+        'NEARBY_CATEGORY',
+        actions: <DarwinNotificationAction>[
+          DarwinNotificationAction.plain(
+            'NEARBY_WAVE_ACTION',
+            '👋 Wave',
+            options: <DarwinNotificationActionOption>{
+              DarwinNotificationActionOption.foreground,
+            },
+          ),
+          DarwinNotificationAction.plain(
+            'NEARBY_DISMISS_ACTION',
+            'Dismiss',
+          ),
+        ],
+        options: <DarwinNotificationCategoryOption>{
+          DarwinNotificationCategoryOption.hiddenPreviewShowTitle,
+        },
+      ),
+      DarwinNotificationCategory(
+        'WAVE_CATEGORY',
+        actions: <DarwinNotificationAction>[
+          DarwinNotificationAction.plain(
+            'WAVE_BACK_ACTION',
+            '👋 Wave back',
+            options: <DarwinNotificationActionOption>{
+              DarwinNotificationActionOption.foreground,
+            },
+          ),
+        ],
+      ),
+    ];
+
+    final iosSettings = DarwinInitializationSettings(
       requestSoundPermission: true,
       requestBadgePermission: true,
       requestAlertPermission: true,
+      notificationCategories: categories,
     );
 
     await _notifications.initialize(
-      const InitializationSettings(android: androidSettings, iOS: iosSettings),
+      InitializationSettings(android: androidSettings, iOS: iosSettings),
       onDidReceiveNotificationResponse: (details) {
-        // Local notification tap — parse payload as type string
         if (details.payload != null && onNotificationTap != null) {
-          onNotificationTap({'type': details.payload});
+          try {
+            final data =
+                Map<String, dynamic>.from(json.decode(details.payload!));
+            // If an action button was pressed, add the actionId to the data map
+            if (details.actionId != null) {
+              data['actionId'] = details.actionId;
+            }
+            onNotificationTap(data);
+          } catch (e) {
+            debugPrint('[NOTIFY] Error decoding notification payload: $e');
+            onNotificationTap({'type': details.payload});
+          }
         }
       },
     );
-
-    // ── FCM Permission ────────────────────────────────────
-    final messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
-    // ── iOS: Register WAVE_CATEGORY with action buttons ───
-    // This must be done before any notification of this category arrives.
-    await _notifications
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
 
     // ── Foreground FCM messages ───────────────────────────
     // Haptic throttle: suppress duplicate vibrations within 2 seconds.
@@ -207,6 +243,19 @@ class NotificationService {
       largeIcon: notification.android?.imageUrl != null
           ? FilePathAndroidBitmap(notification.android!.imageUrl!)
           : null,
+      actions: type == 'CROSSING_PATHS'
+          ? <AndroidNotificationAction>[
+              const AndroidNotificationAction(
+                'NEARBY_WAVE_ACTION',
+                '👋 Wave',
+                showsUserInterface: true,
+              ),
+              const AndroidNotificationAction(
+                'NEARBY_DISMISS_ACTION',
+                'Dismiss',
+              ),
+            ]
+          : null,
     );
 
     final details = NotificationDetails(android: androidDetails);
@@ -216,7 +265,7 @@ class NotificationService {
       notification.title,
       notification.body,
       details,
-      payload: type,
+      payload: json.encode(message.data),
     );
   }
 }
