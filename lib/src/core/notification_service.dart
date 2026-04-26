@@ -67,7 +67,7 @@ abstract class TrembleNotificationType {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class NotificationService {
-  static final FlutterLocalNotificationsPlugin _notifications =
+  static final FlutterLocalNotificationsPlugin notifications =
       FlutterLocalNotificationsPlugin();
 
   /// Call ONCE before runApp() in main.dart.
@@ -128,7 +128,7 @@ class NotificationService {
       notificationCategories: categories,
     );
 
-    await _notifications.initialize(
+    await notifications.initialize(
       InitializationSettings(android: androidSettings, iOS: iosSettings),
       onDidReceiveNotificationResponse: (details) {
         if (details.payload != null && onNotificationTap != null) {
@@ -260,7 +260,7 @@ class NotificationService {
 
     final details = NotificationDetails(android: androidDetails);
 
-    await _notifications.show(
+    await notifications.show(
       message.hashCode,
       notification.title,
       notification.body,

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -105,13 +104,7 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
 
   // Stable IDs so a follow-up notification (waveReceived) replaces the previous
   // one in the shade rather than stacking.
-  // Reuses the singleton plugin already initialized by NotificationService —
-  // calling .show() on a fresh instance throws because init() was never run on
-  // it, which previously masked legitimate failures and risked breaking the
-  // state-update chain when callers forget the try/catch.
   static const int _kHeadsUpNotificationId = 7710;
-  static final FlutterLocalNotificationsPlugin _localNotifications =
-      FlutterLocalNotificationsPlugin();
 
   // Timing constants (single source of truth — keeps tests honest).
   static const Duration kDiscoveryDelay = Duration(seconds: 10);
@@ -332,7 +325,7 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
         android: androidDetails,
         iOS: iosDetails,
       );
-      await _localNotifications.show(
+      await NotificationService.notifications.show(
         _kHeadsUpNotificationId,
         title,
         body,
@@ -349,7 +342,7 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
 
   Future<void> _dismissHeadsUpNotification() async {
     try {
-      await _localNotifications.cancel(_kHeadsUpNotificationId);
+      await NotificationService.notifications.cancel(_kHeadsUpNotificationId);
     } catch (_) {}
   }
 

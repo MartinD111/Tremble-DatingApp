@@ -58,8 +58,63 @@ class IconUtils {
         return LucideIcons.zap;
       case 'long_open_short':
         return LucideIcons.gem;
+      case 'undecided':
+        return LucideIcons.helpCircle;
       default:
         return LucideIcons.heart;
+    }
+  }
+
+  static IconData getLifestyleIcon(String key) {
+    switch (key) {
+      // Exercise
+      case 'active':
+        return LucideIcons.zap;
+      case 'sometimes':
+        return LucideIcons.activity;
+      case 'almost_never':
+        return LucideIcons.moon;
+      // Drinking
+      case 'socially':
+        return LucideIcons.users;
+      case 'never':
+        return LucideIcons.ban;
+      case 'frequently':
+        return LucideIcons.trendingUp;
+      case 'sober':
+        return LucideIcons.shieldCheck;
+      // Smoking
+      case 'yes':
+        return LucideIcons.cigarette;
+      case 'no':
+        return LucideIcons.ban;
+      case 'socially_smoking':
+        return LucideIcons.users;
+      // Children
+      case 'want_someday':
+        return LucideIcons.heart;
+      case 'dont_want':
+        return LucideIcons.ban;
+      case 'have_and_want_more':
+        return LucideIcons.users;
+      case 'have_and_dont_want_more':
+        return LucideIcons.userCheck;
+      case 'not_sure':
+        return LucideIcons.helpCircle;
+      // Sleep
+      case 'night_owl':
+        return LucideIcons.moon;
+      case 'early_bird':
+        return LucideIcons.sun;
+      // Pets
+      case 'dog':
+        return LucideIcons.dog;
+      case 'cat':
+        return LucideIcons.cat;
+      case 'nothing':
+        return LucideIcons.ban;
+      default:
+        return LucideIcons.circle;
     }
   }
 }

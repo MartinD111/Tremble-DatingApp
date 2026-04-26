@@ -531,41 +531,56 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
   static const Map<String, List<String>> _hobbyCategories = {
     'hobby_cat_active': [
-      'Fitnes',
-      'Pilates',
-      'Sprehodi',
-      'Tek',
-      'Smučanje',
-      'Snowboarding',
-      'Plezanje',
-      'Plavanje'
+      'hobby_fitness',
+      'hobby_pilates',
+      'hobby_walking',
+      'hobby_running',
+      'hobby_skiing',
+      'hobby_snowboarding',
+      'hobby_climbing',
+      'hobby_swimming'
     ],
     'hobby_cat_leisure': [
-      'Branje',
-      'Kava',
-      'Čaj',
-      'Kuhanje',
-      'Filmi',
-      'Serije',
-      'Videoigre'
+      'hobby_reading',
+      'hobby_coffee',
+      'hobby_tea',
+      'hobby_cooking',
+      'hobby_movies',
+      'hobby_series',
+      'hobby_video_games'
     ],
     'hobby_cat_art': [
-      'Slikanje',
-      'Fotografija',
-      'Pisanje',
-      'Muzeji',
-      'Gledališče',
-      'Glasba'
+      'hobby_painting',
+      'hobby_photography',
+      'hobby_writing',
+      'hobby_museums',
+      'hobby_theater',
+      'hobby_music'
     ],
     'hobby_cat_travel': [
-      'Izleti',
-      'Narava',
-      'Gore',
-      'Morje',
-      'Mestna potepanja',
-      'Kampiranje'
+      'hobby_trips',
+      'hobby_nature',
+      'hobby_mountains',
+      'hobby_sea',
+      'hobby_city_walks',
+      'hobby_camping'
     ],
   };
+
+  IconData _getCategoryIcon(String categoryKey) {
+    switch (categoryKey) {
+      case 'hobby_cat_active':
+        return LucideIcons.zap;
+      case 'hobby_cat_leisure':
+        return LucideIcons.coffee;
+      case 'hobby_cat_art':
+        return LucideIcons.palette;
+      case 'hobby_cat_travel':
+        return LucideIcons.map;
+      default:
+        return LucideIcons.sparkles;
+    }
+  }
 
   String _getHobbyKey(String hobby) {
     switch (hobby) {
@@ -631,7 +646,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
   Widget _buildHobbySection(
       MatchProfile match, bool isDark, Color textColor, Color subColor) {
     final lang = ref.watch(appLanguageProvider);
-    final userHobbies = match.hobbies.toList();
+    final userHobbies = match.hobbies.map((h) => _getHobbyKey(h)).toList();
     final categorizedHobbies = _hobbyCategories.values.expand((e) => e).toSet();
     final customHobbies =
         userHobbies.where((h) => !categorizedHobbies.contains(h)).toList();
@@ -649,14 +664,25 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
               if (userHobbies.any((h) => entry.value.contains(h))) ...[
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    t(entry.key, lang).toUpperCase(),
-                    style: GoogleFonts.instrumentSans(
-                      color: subColor.withValues(alpha: 0.5),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _getCategoryIcon(entry.key),
+                        size: 12,
+                        color: subColor.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        t(entry.key, lang).toUpperCase(),
+                        style: GoogleFonts.instrumentSans(
+                          color: subColor.withValues(alpha: 0.5),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Wrap(
@@ -674,14 +700,25 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
             if (customHobbies.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  t('hobby_other', lang).toUpperCase(),
-                  style: GoogleFonts.instrumentSans(
-                    color: subColor.withValues(alpha: 0.5),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      LucideIcons.sparkles,
+                      size: 12,
+                      color: subColor.withValues(alpha: 0.5),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      t('hobby_other', lang).toUpperCase(),
+                      style: GoogleFonts.instrumentSans(
+                        color: subColor.withValues(alpha: 0.5),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Wrap(
@@ -722,38 +759,38 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     // 1. Basic Lifestyle Traits (Pills)
     if (match.exerciseHabit != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.zap,
+        icon: IconUtils.getLifestyleIcon(match.exerciseHabit!),
         label: _formatChipText(t(match.exerciseHabit!, lang)),
       ));
     }
     if (match.drinkingHabit != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.wine,
+        icon: IconUtils.getLifestyleIcon(match.drinkingHabit!),
         label: _formatChipText(t(match.drinkingHabit!, lang)),
       ));
     }
     if (match.isSmoker != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.cigarette,
+        icon: IconUtils.getLifestyleIcon(match.isSmoker! ? 'yes' : 'no'),
         label: _formatChipText(
             match.isSmoker! ? t('smoker', lang) : t('smoke_no', lang)),
       ));
     }
     if (match.sleepSchedule != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.moon,
+        icon: IconUtils.getLifestyleIcon(match.sleepSchedule!),
         label: _formatChipText(t(match.sleepSchedule!, lang)),
       ));
     }
     if (match.petPreference != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.dog,
+        icon: IconUtils.getLifestyleIcon(match.petPreference!),
         label: _formatChipText(t(match.petPreference!, lang)),
       ));
     }
     if (match.childrenPreference != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.baby,
+        icon: IconUtils.getLifestyleIcon(match.childrenPreference!),
         label: _formatChipText(t(match.childrenPreference!, lang)),
       ));
     }

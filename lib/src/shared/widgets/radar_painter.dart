@@ -4,6 +4,7 @@ import 'dart:math';
 class RadarPainter extends CustomPainter {
   final double radarProgress;
   final double pingProgress;
+  final double activationProgress;
   final double? pingDistance;
   final double pingAngle;
   final Color brandColor;
@@ -12,6 +13,7 @@ class RadarPainter extends CustomPainter {
   RadarPainter({
     required this.radarProgress,
     required this.pingProgress,
+    required this.activationProgress,
     this.pingDistance,
     this.pingAngle = 0,
     this.brandColor = const Color(0xFFF4436C),
@@ -83,6 +85,26 @@ class RadarPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, 4, centerDotPaint);
 
+    // ── Activation Echo Rings ───────────────────────────────────
+    // Expanding rings that radiate from the center when the radar
+    // is first activated.
+    if (activationProgress > 0 && activationProgress < 1.0) {
+      for (int i = 0; i < 3; i++) {
+        final ringProgress = (activationProgress - (i * 0.15)).clamp(0.0, 1.0);
+        if (ringProgress <= 0) continue;
+
+        final radius = ringProgress * maxRadius * 1.5;
+        final opacity = (1.0 - ringProgress).clamp(0.0, 1.0) * 0.5;
+        
+        final echoPaint = Paint()
+          ..color = brandColor.withValues(alpha: opacity)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2;
+        
+        canvas.drawCircle(center, radius, echoPaint);
+      }
+    }
+
     // Sonar ping (if active)
     if (pingDistance != null) {
       _drawSonarPing(canvas, center, maxRadius);
@@ -125,6 +147,7 @@ class RadarPainter extends CustomPainter {
   bool shouldRepaint(covariant RadarPainter oldDelegate) {
     return oldDelegate.radarProgress != radarProgress ||
         oldDelegate.pingProgress != pingProgress ||
+        oldDelegate.activationProgress != activationProgress ||
         oldDelegate.pingDistance != pingDistance ||
         oldDelegate.pingAngle != pingAngle;
   }

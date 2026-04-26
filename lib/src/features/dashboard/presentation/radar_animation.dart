@@ -30,6 +30,7 @@ class _RadarAnimationState extends State<RadarAnimation>
   late final AnimationController _radarController;
   late final AnimationController _pingController;
   late final AnimationController _logoController;
+  late final AnimationController _activationController;
   late final Animation<double> _logoOpacity;
   double _lastPingValue = 0.0;
 
@@ -39,6 +40,11 @@ class _RadarAnimationState extends State<RadarAnimation>
     _radarController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
+    );
+
+    _activationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
     );
 
     _pingController = AnimationController(
@@ -57,6 +63,7 @@ class _RadarAnimationState extends State<RadarAnimation>
     if (widget.isScanning) {
       _radarController.repeat();
       _logoController.repeat(reverse: true);
+      _activationController.forward();
     }
 
     if (widget.pingDistance != null) {
@@ -96,11 +103,14 @@ class _RadarAnimationState extends State<RadarAnimation>
     if (widget.isScanning && !_radarController.isAnimating) {
       _radarController.repeat();
       _logoController.repeat(reverse: true);
+      _activationController.forward(from: 0.0);
     } else if (!widget.isScanning && _radarController.isAnimating) {
       _radarController.stop();
       _logoController
         ..stop()
         ..value = 0.0; // reset to 0.4 opacity (tween begin)
+      _activationController.stop();
+      _activationController.value = 0.0;
     }
 
     if (widget.pingDistance != null) {
@@ -119,6 +129,7 @@ class _RadarAnimationState extends State<RadarAnimation>
     _radarController.dispose();
     _pingController.dispose();
     _logoController.dispose();
+    _activationController.dispose();
     super.dispose();
   }
 
@@ -126,7 +137,7 @@ class _RadarAnimationState extends State<RadarAnimation>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: Listenable.merge(
-          [_radarController, _pingController, _logoController]),
+          [_radarController, _pingController, _logoController, _activationController]),
       builder: (context, child) {
         return Stack(
           alignment: Alignment.center,
@@ -135,6 +146,7 @@ class _RadarAnimationState extends State<RadarAnimation>
               painter: RadarPainter(
                 radarProgress: _radarController.value,
                 pingProgress: _pingController.value,
+                activationProgress: _activationController.value,
                 pingDistance: widget.pingDistance,
                 pingAngle: widget.pingAngle ?? pi / 4,
                 brandColor: widget.brandColor ?? Theme.of(context).primaryColor,

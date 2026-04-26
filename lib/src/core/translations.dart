@@ -244,6 +244,13 @@ const Map<String, Map<String, String>> _translations = {
     'remove_ping_sub': 'Turn off subtle pulses in background',
     'proximity_vibration': 'Proximity vibration',
     'proximity_vibration_sub': 'Vibrate when someone is nearby',
+    'map_title': 'Tremble Map',
+    'active_people_count': '{count} active',
+    'events_count': '{count} events',
+    'active_now': 'Active now',
+    'coming_at': 'Coming at {time}',
+    'people_here': '{count} people here',
+    'nobody_here': 'Nobody here yet',
 
     // --- Account ---
     'email_verified': 'Email Verified',
@@ -642,6 +649,13 @@ const Map<String, Map<String, String>> _translations = {
     'app_language': 'Jezik aplikacije',
     'account_settings': 'Nastavitve računa',
     'premium_account': 'Premium account',
+    'map_title': 'Tremble Zemljevid',
+    'active_people_count': '{count} aktivnih',
+    'events_count': '{count} dogodkov',
+    'active_now': 'Aktiven zdaj',
+    'coming_at': 'Prihaja ob {time}',
+    'people_here': '{count} ljudi trenutno tukaj',
+    'nobody_here': 'Še nihče — prihaja kmalu',
 
     // --- UGC Safety ---
     'report_user': 'Prijavi {name}',
@@ -740,15 +754,6 @@ const Map<String, Map<String, String>> _translations = {
     'proximity_vibration': 'Vibracija ob približevanju',
     'proximity_vibration_sub': 'Vibriraj, ko je nekdo v bližini',
 
-    // --- Political Affiliation ---
-    'political_affiliation': 'Politična usmerjenost',
-    'politics_left': 'Levo',
-    'politics_center_left': 'Sredinsko levo',
-    'politics_center': 'Sredina',
-    'politics_center_right': 'Sredinsko desno',
-    'politics_right': 'Desno',
-    'politics_dont_care': "Politična usmerjenost me ne zanima",
-    'politics_undisclosed': "Ne želim povedati",
 
     'email_verified': 'Email Verificiran',
     'email_not_verified': 'Email NI Verificiran',
@@ -993,10 +998,6 @@ const Map<String, Map<String, String>> _translations = {
     'hair_gray_white': 'Sivi/Beli',
     'hair_other': 'Drugo',
 
-    'politics_match_any': 'Vseeno mi je',
-    'politics_popup_title': 'Ujemanje po politiki',
-    'politics_popup_body':
-        'Ujemali se boste z osebami, ki so izbrale enako ali podobno politično prepričanje.',
 
     'distance': 'Razdalja',
     'battery_warning':

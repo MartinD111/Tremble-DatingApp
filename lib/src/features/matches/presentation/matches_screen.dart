@@ -342,23 +342,16 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                       ),
                                     )
                                   else
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(LucideIcons.moreVertical,
-                                              color: subtextColor),
-                                          onPressed: () {
-                                            UgcActionSheet.show(
-                                              context,
-                                              targetUid: profile.id,
-                                              targetName: profile.name,
-                                            );
-                                          },
-                                        ),
-                                        Icon(LucideIcons.chevronRight,
-                                            color: dimColor, size: 20),
-                                      ],
+                                    IconButton(
+                                      icon: Icon(LucideIcons.moreVertical,
+                                          color: subtextColor),
+                                      onPressed: () {
+                                        UgcActionSheet.show(
+                                          context,
+                                          targetUid: profile.id,
+                                          targetName: profile.name,
+                                        );
+                                      },
                                     ),
                                   const SizedBox(width: 5),
                                 ],

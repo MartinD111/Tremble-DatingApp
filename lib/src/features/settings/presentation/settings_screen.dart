@@ -1238,22 +1238,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         {
           'label': _t('short_term_fun'),
           'value': 'short_term_fun',
-          'icon': LucideIcons.flame,
+          'icon': IconUtils.getLookingForIcon('short_term_fun'),
         },
         {
           'label': _t('long_term_partner'),
           'value': 'long_term_partner',
-          'icon': LucideIcons.heart,
+          'icon': IconUtils.getLookingForIcon('long_term_partner'),
         },
         {
           'label': _t('short_open_long'),
           'value': 'short_open_long',
-          'icon': LucideIcons.zap,
+          'icon': IconUtils.getLookingForIcon('short_open_long'),
         },
         {
           'label': _t('long_open_short'),
           'value': 'long_open_short',
-          'icon': LucideIcons.gem,
+          'icon': IconUtils.getLookingForIcon('long_open_short'),
+        },
+        {
+          'label': _t('undecided'),
+          'value': 'undecided',
+          'icon': IconUtils.getLookingForIcon('undecided'),
         },
       ],
       currentValues: user.lookingFor,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../core/translations.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/theme.dart';
 
@@ -40,8 +41,8 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
 
   static const int _activePeople = 47;
 
-  // Dev-only heatmap simulation. In prod this stays empty until the real
-  // presence aggregation backend lands (see CLAUDE.md Phase 3 / heatmap TODO).
+  // Dev-only heatmap simulation. In production, this layer is populated via
+  // the proximity aggregation backend (Phase 3 heatmap implementation).
   static const bool _isDev =
       String.fromEnvironment('FLAVOR', defaultValue: 'dev') != 'prod';
 
@@ -183,7 +184,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
 ]
 ''';
 
-  void _showEventsSheet() {
+  void _showEventsSheet(String lang) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
@@ -230,6 +231,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                           (e) => _EventTile(
                             event: e,
                             isDark: isDark,
+                            lang: lang,
                             onTap: () {
                               Navigator.pop(context);
                               Future.delayed(const Duration(milliseconds: 300),
@@ -245,6 +247,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                           (e) => _EventTile(
                             event: e,
                             isDark: isDark,
+                            lang: lang,
                             onTap: () {
                               Navigator.pop(context);
                               Future.delayed(const Duration(milliseconds: 300),
@@ -292,6 +295,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider);
+    final lang = user?.appLanguage ?? 'sl';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isPride = user?.isPrideMode ?? false;
     final isGenderBased = user?.isGenderBasedColor ?? false;
@@ -318,7 +322,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
               const SizedBox(height: 20),
               Center(
                 child: Text(
-                  "Tremble Map",
+                  t('map_title', lang),
                   textAlign: TextAlign.center,
                   style: TrembleTheme.displayFont(
                     fontSize: 32, // Standardized to 32px
@@ -332,14 +336,16 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _MapPill(
-                    text: "$_activePeople active",
+                    text: t('active_people_count', lang)
+                        .replaceAll('{count}', '$_activePeople'),
                     isDark: isDark,
                   ),
                   const SizedBox(width: 8),
                   _MapPill(
-                    text: "${_events.length} events",
+                    text: t('events_count', lang)
+                        .replaceAll('{count}', '${_events.length}'),
                     isDark: isDark,
-                    onTap: _showEventsSheet,
+                    onTap: () => _showEventsSheet(lang),
                   ),
                 ],
               ),
@@ -537,17 +543,22 @@ class _SheetSectionHeader extends StatelessWidget {
 class _EventTile extends StatelessWidget {
   final _TrembleEvent event;
   final bool isDark;
+  final String lang;
   final VoidCallback onTap;
   const _EventTile(
-      {required this.event, required this.isDark, required this.onTap});
+      {required this.event,
+      required this.isDark,
+      required this.lang,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final statusColor = event.isActive
         ? Theme.of(context).primaryColor
         : TrembleTheme.accentYellow;
-    final statusText =
-        event.isActive ? 'Aktiven zdaj' : 'Prihaja ob ${event.startsAt}';
+    final statusText = event.isActive
+        ? t('active_now', lang)
+        : t('coming_at', lang).replaceAll('{time}', event.startsAt ?? '');
 
     return GestureDetector(
       onTap: onTap,
@@ -582,8 +593,9 @@ class _EventTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     event.isActive
-                        ? '${event.peopleCount} ljudi trenutno tukaj'
-                        : 'Še nihče — prihaja kmalu',
+                        ? t('people_here', lang)
+                            .replaceAll('{count}', '${event.peopleCount}')
+                        : t('nobody_here', lang),
                     style: TrembleTheme.uiFont(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,

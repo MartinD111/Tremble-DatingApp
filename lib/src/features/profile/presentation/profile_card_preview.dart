@@ -381,41 +381,56 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
 
   static const Map<String, List<String>> _hobbyCategories = {
     'hobby_cat_active': [
-      'Fitnes',
-      'Pilates',
-      'Sprehodi',
-      'Tek',
-      'Smučanje',
-      'Snowboarding',
-      'Plezanje',
-      'Plavanje'
+      'hobby_fitness',
+      'hobby_pilates',
+      'hobby_walking',
+      'hobby_running',
+      'hobby_skiing',
+      'hobby_snowboarding',
+      'hobby_climbing',
+      'hobby_swimming'
     ],
     'hobby_cat_leisure': [
-      'Branje',
-      'Kava',
-      'Čaj',
-      'Kuhanje',
-      'Filmi',
-      'Serije',
-      'Videoigre'
+      'hobby_reading',
+      'hobby_coffee',
+      'hobby_tea',
+      'hobby_cooking',
+      'hobby_movies',
+      'hobby_series',
+      'hobby_video_games'
     ],
     'hobby_cat_art': [
-      'Slikanje',
-      'Fotografija',
-      'Pisanje',
-      'Muzeji',
-      'Gledališče',
-      'Glasba'
+      'hobby_painting',
+      'hobby_photography',
+      'hobby_writing',
+      'hobby_museums',
+      'hobby_theater',
+      'hobby_music'
     ],
     'hobby_cat_travel': [
-      'Izleti',
-      'Narava',
-      'Gore',
-      'Morje',
-      'Mestna potepanja',
-      'Kampiranje'
+      'hobby_trips',
+      'hobby_nature',
+      'hobby_mountains',
+      'hobby_sea',
+      'hobby_city_walks',
+      'hobby_camping'
     ],
   };
+
+  IconData _getCategoryIcon(String categoryKey) {
+    switch (categoryKey) {
+      case 'hobby_cat_active':
+        return LucideIcons.zap;
+      case 'hobby_cat_leisure':
+        return LucideIcons.coffee;
+      case 'hobby_cat_art':
+        return LucideIcons.palette;
+      case 'hobby_cat_travel':
+        return LucideIcons.map;
+      default:
+        return LucideIcons.sparkles;
+    }
+  }
 
   String _formatChipText(String text) {
     if (text.isEmpty) return text;
@@ -439,38 +454,38 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     // 1. Basic Lifestyle Traits (Pills)
     if (user.exerciseHabit != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.zap,
+        icon: IconUtils.getLifestyleIcon(user.exerciseHabit!),
         label: _formatChipText(t(user.exerciseHabit!, lang)),
       ));
     }
     if (user.drinkingHabit != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.wine,
+        icon: IconUtils.getLifestyleIcon(user.drinkingHabit!),
         label: _formatChipText(t(user.drinkingHabit!, lang)),
       ));
     }
     if (user.isSmoker != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.cigarette,
+        icon: IconUtils.getLifestyleIcon(user.isSmoker! ? 'yes' : 'no'),
         label: _formatChipText(
             user.isSmoker! ? t('smoker', lang) : t('smoke_no', lang)),
       ));
     }
     if (user.sleepSchedule != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.moon,
+        icon: IconUtils.getLifestyleIcon(user.sleepSchedule!),
         label: _formatChipText(t(user.sleepSchedule!, lang)),
       ));
     }
     if (user.petPreference != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.dog,
+        icon: IconUtils.getLifestyleIcon(user.petPreference!),
         label: _formatChipText(t(user.petPreference!, lang)),
       ));
     }
     if (user.childrenPreference != null) {
       pills.add(_PreferencePill(
-        icon: LucideIcons.baby,
+        icon: IconUtils.getLifestyleIcon(user.childrenPreference!),
         label: _formatChipText(t(user.childrenPreference!, lang)),
       ));
     }
@@ -744,7 +759,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
   Widget _buildHobbySection(
       AuthUser user, bool isDark, Color textColor, Color subColor) {
     final lang = user.appLanguage;
-    final userHobbies = user.hobbies.toList();
+    final userHobbies = user.hobbies.map((h) => _getHobbyKey(h)).toList();
     final categorizedHobbies = _hobbyCategories.values.expand((e) => e).toSet();
     final customHobbies =
         userHobbies.where((h) => !categorizedHobbies.contains(h)).toList();
@@ -762,14 +777,25 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
               if (userHobbies.any((h) => entry.value.contains(h))) ...[
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    t(entry.key, lang).toUpperCase(),
-                    style: GoogleFonts.instrumentSans(
-                      color: subColor.withValues(alpha: 0.5),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _getCategoryIcon(entry.key),
+                        size: 12,
+                        color: subColor.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        t(entry.key, lang).toUpperCase(),
+                        style: GoogleFonts.instrumentSans(
+                          color: subColor.withValues(alpha: 0.5),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Wrap(
@@ -787,14 +813,25 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
             if (customHobbies.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  t('hobby_other', lang).toUpperCase(),
-                  style: GoogleFonts.instrumentSans(
-                    color: subColor.withValues(alpha: 0.5),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      LucideIcons.sparkles,
+                      size: 12,
+                      color: subColor.withValues(alpha: 0.5),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      t('hobby_other', lang).toUpperCase(),
+                      style: GoogleFonts.instrumentSans(
+                        color: subColor.withValues(alpha: 0.5),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Wrap(

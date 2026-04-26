@@ -906,6 +906,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               label: t('exercise', lang),
                               values: [_exerciseHabit],
                               formatter: (v) => _formatValue(v, lang),
+                              iconMapper: IconUtils.getLifestyleIcon,
                               onEdit: () => showPreferenceEditModal(
                                 context: context,
                                 title: t('exercise', lang),
@@ -941,6 +942,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               label: t('alcohol', lang),
                               values: [_drinkingHabit],
                               formatter: (v) => _formatValue(v, lang),
+                              iconMapper: IconUtils.getLifestyleIcon,
                               onEdit: () => showPreferenceEditModal(
                                 context: context,
                                 title: t('alcohol', lang),
@@ -976,6 +978,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               label: t('sleep', lang),
                               values: [_sleepSchedule],
                               formatter: (v) => _formatValue(v, lang),
+                              iconMapper: IconUtils.getLifestyleIcon,
                               onEdit: () => showPreferenceEditModal(
                                 context: context,
                                 title: t('sleep', lang),
@@ -1008,6 +1011,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               label: t('pets', lang),
                               values: [_petPreference],
                               formatter: (v) => _formatValue(v, lang),
+                              iconMapper: IconUtils.getLifestyleIcon,
                               onEdit: () => showPreferenceEditModal(
                                 context: context,
                                 title: t('pets', lang),
@@ -1039,6 +1043,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               label: t('children', lang),
                               values: [_childrenPreference],
                               formatter: (v) => _formatValue(v, lang),
+                              iconMapper: IconUtils.getLifestyleIcon,
                               onEdit: () => showPreferenceEditModal(
                                 context: context,
                                 title: t('children', lang),
@@ -1126,7 +1131,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600)),
                                 const Spacer(),
-                                _multiPill(_lookingFor, lang, isDark, subColor),
+                                _multiPill(_lookingFor, lang, isDark, subColor,
+                                    iconMapper: IconUtils.getLookingForIcon),
                                 const SizedBox(width: 8),
                                 _editCircle(isDark, borderColor, fillColor,
                                     onTap: () => showMultiSelectModal(
@@ -1136,26 +1142,31 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                             {
                                               'label':
                                                   t('short_term_fun', lang),
-                                              'value': 'short_term_fun'
+                                              'value': 'short_term_fun',
+                                              'icon': IconUtils.getLookingForIcon('short_term_fun'),
                                             },
                                             {
                                               'label':
                                                   t('long_term_partner', lang),
-                                              'value': 'long_term_partner'
+                                              'value': 'long_term_partner',
+                                              'icon': IconUtils.getLookingForIcon('long_term_partner'),
                                             },
                                             {
                                               'label':
                                                   t('short_open_long', lang),
-                                              'value': 'short_open_long'
+                                              'value': 'short_open_long',
+                                              'icon': IconUtils.getLookingForIcon('short_open_long'),
                                             },
                                             {
                                               'label':
                                                   t('long_open_short', lang),
-                                              'value': 'long_open_short'
+                                              'value': 'long_open_short',
+                                              'icon': IconUtils.getLookingForIcon('long_open_short'),
                                             },
                                             {
                                               'label': t('undecided', lang),
-                                              'value': 'undecided'
+                                              'value': 'undecided',
+                                              'icon': IconUtils.getLookingForIcon('undecided'),
                                             },
                                           ],
                                           currentValues: _lookingFor,
@@ -1816,12 +1827,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   /// Pill showing count/value for multi-select rows.
   Widget _multiPill(
-      List<String> values, String lang, bool isDark, Color subColor) {
+      List<String> values, String lang, bool isDark, Color subColor,
+      {IconData? Function(String)? iconMapper}) {
     final String display;
+    IconData? icon;
     if (values.isEmpty) {
       display = '—';
     } else if (values.length == 1) {
       display = _formatValue(values.first, lang);
+      icon = iconMapper?.call(values.first);
     } else {
       display = 'Selected ${values.length}';
     }
@@ -1836,11 +1850,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           borderRadius: BorderRadius.circular(100),
           border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
         ),
-        child: Text(
-          display,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: subColor, fontSize: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 14, color: subColor),
+              const SizedBox(width: 6),
+            ],
+            Flexible(
+              child: Text(
+                display,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: subColor, fontSize: 12),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -2159,9 +2184,61 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     ],
   };
 
+  IconData _getCategoryIcon(String categoryKey) {
+    switch (categoryKey) {
+      case 'hobby_cat_active':
+        return LucideIcons.zap;
+      case 'hobby_cat_leisure':
+        return LucideIcons.coffee;
+      case 'hobby_cat_art':
+        return LucideIcons.palette;
+      case 'hobby_cat_travel':
+        return LucideIcons.map;
+      default:
+        return LucideIcons.sparkles;
+    }
+  }
+
+  String _getHobbyKey(String hobby) {
+    if (hobby.startsWith('hobby_')) return hobby;
+    final mapping = {
+      'Fitnes': 'hobby_fitness',
+      'Pilates': 'hobby_pilates',
+      'Sprehodi': 'hobby_walking',
+      'Tek': 'hobby_running',
+      'Smučanje': 'hobby_skiing',
+      'Snowboarding': 'hobby_snowboarding',
+      'Plezanje': 'hobby_climbing',
+      'Plavanje': 'hobby_swimming',
+      'Branje': 'hobby_reading',
+      'Kava': 'hobby_coffee',
+      'Čaj': 'hobby_tea',
+      'Kuhanje': 'hobby_cooking',
+      'Filmi': 'hobby_movies',
+      'Serije': 'hobby_series',
+      'Video igre': 'hobby_video_games',
+      'Slikanje': 'hobby_painting',
+      'Fotografija': 'hobby_photography',
+      'Pisanje': 'hobby_writing',
+      'Muzeji': 'hobby_museums',
+      'Gledališče': 'hobby_theater',
+      'Glasba': 'hobby_music',
+      'Izleti': 'hobby_trips',
+      'Narava': 'hobby_nature',
+      'Gore': 'hobby_mountains',
+      'Morje': 'hobby_sea',
+      'Sprehodi po mestu': 'hobby_city_walks',
+      'Kampiranje': 'hobby_camping',
+    };
+    return mapping[hobby] ?? hobby;
+  }
+
   Widget _buildCategorizedHobbies(String lang, bool isDark, Color textColor,
       Color fillColor, Color borderColor) {
     if (_hobbies.isEmpty) return const SizedBox.shrink();
+
+    // Normalize hobbies to keys for categorization
+    final normalizedHobbies = _hobbies.map((h) => _getHobbyKey(h)).toList();
 
     final categorizedHobbies = <String>{};
     for (var group in _hobbyCategories.values) {
@@ -2169,29 +2246,40 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
 
     final customHobbies =
-        _hobbies.where((h) => !categorizedHobbies.contains(h)).toList();
+        normalizedHobbies.where((h) => !categorizedHobbies.contains(h)).toList();
 
     return Column(
       children: [
         for (final entry in _hobbyCategories.entries)
-          if (_hobbies.any((h) => entry.value.contains(h))) ...[
+          if (normalizedHobbies.any((h) => entry.value.contains(h))) ...[
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                t(entry.key, lang).toUpperCase(),
-                style: GoogleFonts.instrumentSans(
-                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _getCategoryIcon(entry.key),
+                    size: 12,
+                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    t(entry.key, lang).toUpperCase(),
+                    style: GoogleFonts.instrumentSans(
+                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
               ),
             ),
             Wrap(
               spacing: 6,
               runSpacing: 6,
               alignment: WrapAlignment.center,
-              children: _hobbies
+              children: normalizedHobbies
                   .where((h) => entry.value.contains(h))
                   .map((h) => _smallHobbyChip(
                       h, lang, isDark, textColor, fillColor, borderColor))
@@ -2202,14 +2290,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         if (customHobbies.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              t('hobby_other', lang).toUpperCase(),
-              style: GoogleFonts.instrumentSans(
-                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  LucideIcons.sparkles,
+                  size: 12,
+                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  t('hobby_other', lang).toUpperCase(),
+                  style: GoogleFonts.instrumentSans(
+                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
             ),
           ),
           Wrap(
