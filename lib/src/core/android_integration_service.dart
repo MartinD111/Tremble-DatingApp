@@ -35,6 +35,22 @@ class AndroidIntegrationService {
         .invokeMethod<void>('setRadarActive', {'active': active});
   }
 
+  /// Start the Radar foreground service via the native trampoline.
+  /// RadarForegroundService.onStartCommand calls startForeground() on its
+  /// first line (well within Android 14+'s 5s deadline) then relay-starts
+  /// flutter_background_service to host the Dart isolate. No-op on iOS.
+  Future<void> startRadarService() async {
+    if (!Platform.isAndroid) return;
+    await _methodChannel.invokeMethod<void>('startRadarService');
+  }
+
+  /// Stop the Radar foreground service AND the downstream plugin service.
+  /// No-op on iOS.
+  Future<void> stopRadarService() async {
+    if (!Platform.isAndroid) return;
+    await _methodChannel.invokeMethod<void>('stopRadarService');
+  }
+
   /// Read the persisted state (useful before the EventChannel emits its first
   /// event, e.g. at cold start). Returns false on iOS.
   Future<bool> getRadarActive() async {

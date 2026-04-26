@@ -1,23 +1,22 @@
-## Session State — 2026-04-26 01:10
-- Active Task: Profile View Polish (Spacing & Political Spectrum) — COMPLETE
+## Session State — 2026-04-26 15:30
+- Active Task: Dev Simulation UI & Timer Styling — COMPLETE
 - Environment: Dev
 - Modified Files:
-    - `lib/src/features/profile/presentation/profile_card_preview.dart`
-    - `lib/src/features/profile/presentation/profile_detail_screen.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `lib/src/shared/widgets/radar_painter.dart`
+    - `lib/src/features/dashboard/presentation/widgets/radar_search_overlay.dart`
 - Open Problems:
     - ADR-001 still open — toggle drives mock timer.
 - System Status: Build passing, flutter analyze clean (0 issues).
 
 ## Session Handoff — 2026-04-26
 - Completed:
-    - **Spacing**: Increased vertical space between lifestyle trait pills and spectrum indicators (added `32dp` height).
-    - **Political Spectrum**:
-        - Introduced a 1-5 scale slider for political affiliation (`politics_left` to `politics_right`).
-        - Applied logic to only show the slider for spectrum-compatible values.
-        - Kept "Don't care" and "Undisclosed" as pills for clarity.
-        - Synchronized design across "My Profile" (`ProfileCardPreview`) and other users' profiles (`ProfileDetailScreen`).
+    - **Radar Ping Visibility**: Fixed bug where ping was hidden during `mutualWaveActive` by ensuring `pingDistance` and `pingAngle` are passed correctly.
+    - **Reactivity**: Added `pingAngle` to `RadarPainter.shouldRepaint` for smooth movement.
+    - **Overlay Positioning**: Moved `RadarSearchOverlay` to `bottom: 120` to clear the `LiquidNavBar`.
+    - **Timer Styling**: Updated timer text, icon, and divider in `RadarSearchOverlay` to use adaptive `colorScheme.onSurface` (dark in light mode, light in dark mode) while maintaining `primary` rose color for urgent state (<5m).
     - Verified all changes with `flutter analyze` (0 issues).
-- Next Action: User to review the new layout and political spectrum sliders in the app.
+- Next Action: User to verify visual fixes in both Light and Dark modes.
 
 ---
 

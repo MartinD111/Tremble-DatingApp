@@ -51,6 +51,32 @@ Future<void> initializeBackgroundService() async {
       onBackground: onIosBackground,
     ),
   );
+
+  // ── Ghost-state shutdown ─────────────────────────────────────────────
+  // After a crash the plugin can leave its internal "running" flag set
+  // and SharedPrefs `radar_active=true` persisted, causing a phantom
+  // notification to appear at next cold start before the user touches
+  // anything. We are the source of truth for whether radar should be
+  // running at process boot: if no user gesture has authorised it, force
+  // the plugin off and clear the persisted flag.
+  //
+  // We only run this on the FIRST boot of each process — once the user
+  // toggles the radar on, this function is not called again until the
+  // process dies and respawns.
+  final prefs = await SharedPreferences.getInstance();
+  final wasActive = prefs.getBool('radar_active') ?? false;
+  final isRunning = await service.isRunning();
+  if (!wasActive && isRunning) {
+    // Plugin is running but our state-of-truth says it shouldn't be.
+    // Tell its onStart handler to gracefully stop (cancels notif).
+    service.invoke('stopService', null);
+  }
+  // Always reset persisted active flag at cold start. The user must
+  // re-enable radar after a process death — matches the ghost-free
+  // expectation and avoids any auto-start leakage from prior sessions.
+  if (wasActive) {
+    await prefs.setBool('radar_active', false);
+  }
 }
 
 @pragma('vm:entry-point')

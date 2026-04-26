@@ -125,6 +125,7 @@ class RadarPainter extends CustomPainter {
   bool shouldRepaint(covariant RadarPainter oldDelegate) {
     return oldDelegate.radarProgress != radarProgress ||
         oldDelegate.pingProgress != pingProgress ||
-        oldDelegate.pingDistance != pingDistance;
+        oldDelegate.pingDistance != pingDistance ||
+        oldDelegate.pingAngle != pingAngle;
   }
 }

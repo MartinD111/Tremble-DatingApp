@@ -9,6 +9,7 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import tremble.dating.app.radar.RadarForegroundService
 import tremble.dating.app.radar.RadarStateBridge
 import tremble.dating.app.radar.RadarWidgetProvider
 import tremble.dating.app.radar.RadarTileService
@@ -42,6 +43,19 @@ class MainActivity : FlutterFragmentActivity() {
                         val active = call.argument<Boolean>("active") ?: false
                         RadarStateBridge.isActive = active
                         RadarWidgetProvider.updateAll(applicationContext)
+                        result.success(null)
+                    }
+                    "startRadarService" -> {
+                        // Trampoline path: our service calls startForeground()
+                        // synchronously so Android's 5s deadline is always met,
+                        // then relay-starts the flutter_background_service
+                        // plugin which hosts the Dart isolate. See
+                        // RadarForegroundService.kt.
+                        RadarForegroundService.start(applicationContext)
+                        result.success(null)
+                    }
+                    "stopRadarService" -> {
+                        RadarForegroundService.stop(applicationContext)
                         result.success(null)
                     }
                     "getRadarActive" -> {

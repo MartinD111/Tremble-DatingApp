@@ -1,9 +1,15 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Foreground service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <!-- Required on Android 14+ when foregroundServiceType includes
+         "connectedDevice" (BLE radar). Android throws SecurityException at
+         startForeground() time without this. Both the plugin service and our
+         RadarForegroundService trampoline declare this type. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
 
     <!-- BLE permissions (Android 12+) -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
@@ -63,6 +69,50 @@
 
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
+            android:foregroundServiceType="dataSync|location|connectedDevice"
+            />
+
+        <!-- ── flutter_background_service auto-restart blockade ─────────────
+             The plugin's manifest auto-merges two receivers into our app:
+               - WatchdogReceiver: schedules a 5s alarm on every onStartCommand
+                 and respawns BackgroundService directly via
+                 ContextCompat.startForegroundService(BackgroundService.class)
+                 — bypassing our RadarForegroundService trampoline. This is
+                 the cause of the recurring ForegroundServiceDidNotStartInTime
+                 crash on app open / process revival.
+               - BootReceiver: same direct-start pattern after device boot or
+                 package replacement.
+             Both must be removed from the merged manifest. Our trampoline is
+             the only legitimate entry-point for BackgroundService. The plugin
+             still works in foreground mode because we relay-start it through
+             RadarForegroundService.start() while the trampoline holds the
+             foreground notification on NOTIF_ID 888.
+
+             tools:node="remove" instructs the manifest merger to drop these
+             nodes entirely. Verified by inspecting build/intermediates/
+             merged_manifests/.../AndroidManifest.xml after build.
+
+             If the plugin is upgraded and either receiver is renamed, this
+             blockade silently stops working. See lessons.md Rule on this
+             handoff brittleness.
+        -->
+        <receiver
+            android:name="id.flutter.flutter_background_service.WatchdogReceiver"
+            tools:node="remove" />
+        <receiver
+            android:name="id.flutter.flutter_background_service.BootReceiver"
+            tools:node="remove" />
+
+        <!-- ── Radar trampoline foreground service ──────────────────────────
+             Started by MainActivity (via MethodChannel) and by the QS tile /
+             widget toggle paths. Calls startForeground() synchronously on the
+             first line of onStartCommand so Android's 5s deadline is always
+             met, then relay-starts the flutter_background_service plugin
+             service to host the Dart isolate. See RadarForegroundService.kt.
+        -->
+        <service
+            android:name=".radar.RadarForegroundService"
+            android:exported="false"
             android:foregroundServiceType="dataSync|location|connectedDevice"
             />
 

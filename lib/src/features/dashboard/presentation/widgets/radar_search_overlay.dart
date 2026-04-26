@@ -68,7 +68,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isUrgent = _remaining.inMinutes < 5;
-    final timerColor = isUrgent ? colorScheme.primary : const Color(0xFFF5C842);
+    final timerColor = isUrgent ? colorScheme.primary : colorScheme.onSurface;
 
     final pill = GlassCard(
       opacity: 0.18,
@@ -94,7 +94,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
           Container(
             width: 1,
             height: 22,
-            color: Colors.white.withValues(alpha: 0.18),
+            color: colorScheme.onSurface.withValues(alpha: 0.18),
           ),
           const SizedBox(width: 14),
           // Compact stop button
@@ -106,13 +106,13 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(LucideIcons.square,
-                      size: 14, color: Colors.white),
+                  Icon(LucideIcons.square,
+                      size: 14, color: colorScheme.onSurface),
                   const SizedBox(width: 6),
                   Text(
                     'STOP',
                     style: GoogleFonts.instrumentSans(
-                      color: Colors.white,
+                      color: colorScheme.onSurface,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.4,

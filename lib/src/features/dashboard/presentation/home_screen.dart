@@ -116,10 +116,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (active == current) return; // already in sync
       ref.read(isScanningProvider.notifier).state = active;
       if (active) {
-        FlutterBackgroundService().startService();
+        // Android: trampoline service satisfies the 5s startForeground
+        // deadline before relay-starting the plugin. iOS: pluginsko pot.
+        if (Platform.isAndroid) {
+          AndroidIntegrationService.instance.startRadarService();
+        } else {
+          FlutterBackgroundService().startService();
+        }
       } else {
         BleService().stop();
-        FlutterBackgroundService().invoke('stopService', null);
+        if (Platform.isAndroid) {
+          AndroidIntegrationService.instance.stopRadarService();
+        } else {
+          FlutterBackgroundService().invoke('stopService', null);
+        }
       }
     });
 
@@ -345,8 +355,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       isScanning: isScanning &&
                           !isSearchActive, // stop visual pulse if searching
                       isVibrationEnabled: user?.isPingVibrationEnabled ?? true,
-                      pingDistance: isSearchActive ? null : pingDistance,
-                      pingAngle: isSearchActive ? null : pingAngle,
+                      pingDistance: pingDistance,
+                      pingAngle: pingAngle,
                       brandColor: Theme.of(context).primaryColor,
                     ),
                   ),
@@ -357,7 +367,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Positioned(
                       left: 0,
                       right: 0,
-                      bottom: 24,
+                      bottom: 120,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: Center(
@@ -428,13 +438,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 await Permission.notification.request();
                               }
                             }
-                            // Start background service first — this triggers the plugin's
-                            // initial plain-text notification on NOTIF_ID 888.
-                            FlutterBackgroundService().startService();
-                            // Then flip RadarStateBridge → fires the local broadcast →
-                            // RadarNotificationReceiver posts the CallStyle notification
-                            // on the SAME id 888, atomically replacing the plain text.
-                            // Also re-tints QS tile + widget.
+                            // Start background service. On Android we go through
+                            // RadarForegroundService (trampoline) which calls
+                            // startForeground() synchronously on its first line
+                            // — that satisfies Android 14+'s 5s deadline and
+                            // eliminates ForegroundServiceDidNotStartInTime
+                            // crashes. The trampoline then relay-starts
+                            // flutter_background_service which boots the Dart
+                            // isolate without deadline pressure. iOS keeps
+                            // the original plugin path. Same NOTIF_ID 888 +
+                            // channel tremble_radar_v2 → no flicker on swap.
+                            if (Platform.isAndroid) {
+                              await AndroidIntegrationService.instance
+                                  .startRadarService();
+                            } else {
+                              FlutterBackgroundService().startService();
+                            }
+                            // Flip RadarStateBridge → tile + widget re-tint and
+                            // (on the active edge) the rich notification refresh
+                            // is broadcast. Notif builder is identical to the
+                            // one our trampoline already posted, so this is a
+                            // no-op repaint.
                             await AndroidIntegrationService.instance.setRadarActive(true);
                             // BleService must run in the main isolate — flutter_blue_plus
                             // requires an Android Activity which the background isolate
@@ -458,8 +482,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             // Stop BLE in main isolate and signal background service.
                             await AndroidIntegrationService.instance.setRadarActive(false);
                             BleService().stop();
-                            FlutterBackgroundService()
-                                .invoke('stopService', null);
+                            if (Platform.isAndroid) {
+                              await AndroidIntegrationService.instance
+                                  .stopRadarService();
+                            } else {
+                              FlutterBackgroundService()
+                                  .invoke('stopService', null);
+                            }
                             // Cancel any in-flight dev simulation without persisting.
                             if (kDebugMode) {
                               ref
