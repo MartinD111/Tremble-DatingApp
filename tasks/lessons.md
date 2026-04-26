@@ -94,6 +94,18 @@ Source: Android Theme Polish.
 [2026-04-24] `tremble_icon_clean_transparent.png` has WHITE artwork on transparent background. On a dark `#1A1A18` splash background, this renders as white/monochrome. Always use `tremble_icon_clean.png` (rose-colored full icon) as the splash/launcher source. For proper sizing, create `tremble_splash_source.png` — the rose icon at 50% of a 2048×2048 transparent canvas — to prevent zoom-in and cut-off on device.
 Source: Splash Screen Fix, April 2026.
 
+**Rule #38 — Quick Settings tile icons must be monochrome vectors.**
+[2026-04-25] Android Quick Settings tiles require a single-color vector drawable (`ic_tremble_qs_tile.xml`). The system tints the icon with the device accent colour (Material You) at runtime — do NOT embed brand colours in the drawable. Using a coloured PNG or a vector with hard-coded fillColor produces a flat white square on most OEM launchers and fails Play Store review.
+Source: Android OS Integration, April 2026.
+
+**Rule #39 — `setColorInt` (RemoteViews) requires API 31+ for icon tinting in widgets.**
+[2026-04-25] `RemoteViews.setColorInt` is only available from Android 12 (API 31). Always gate calls to this method behind `Build.VERSION.SDK_INT >= Build.VERSION_CODES.S` and provide a pre-12 fallback (static drawable with brand border) so older devices do not crash.
+Source: Android OS Integration, April 2026.
+
+**Rule #40 — `MainActivity` should extend `FlutterFragmentActivity`, not `FlutterActivity`.**
+[2026-04-25] `FlutterFragmentActivity` is the modern embedding base and is required for clean `MethodChannel`/`EventChannel` lifecycle management when adding custom native code alongside Flutter. `FlutterActivity` works but causes subtle issues with channel teardown during orientation changes.
+Source: Android OS Integration, April 2026.
+
 **Rule #37 — flutter_launcher_icons adaptive foreground must use padded source.**
 [2026-04-24] For Android adaptive icons, the foreground image should have ~25% padding on all sides (safe zone is 66% of the 108dp canvas). Use `tremble_splash_source.png` (icon at 50% of 2048px canvas) as `adaptive_icon_foreground` to ensure the rose icon is fully visible in all launcher shapes (circle, squircle, etc.) without clipping.
 Source: Launcher Icon Fix, April 2026.

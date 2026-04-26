@@ -53,14 +53,10 @@ class PreferenceRangeSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     final brandRose = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final labelColor = isDark ? Colors.white : Colors.black87;
-    final valueColor = isDark ? Colors.white70 : Colors.black54;
-    final editBg = isDark
-        ? Colors.white.withValues(alpha: 0.1)
-        : Colors.black.withValues(alpha: 0.06);
-    final editIcon = isDark ? Colors.white54 : Colors.black38;
-    final endLabelColor = isDark ? Colors.white38 : Colors.black38;
-    final sliderInactive = isDark ? Colors.white24 : Colors.black12;
+    final labelColor = isDark ? Colors.white : const Color(0xFF1A1A18);
+    final valueColor = isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black54;
+    final endLabelColor = isDark ? Colors.white.withValues(alpha: 0.38) : Colors.black38;
+    final sliderInactive = isDark ? Colors.white.withValues(alpha: 0.24) : Colors.black12;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,31 +70,54 @@ class PreferenceRangeSlider extends StatelessWidget {
               children: [
                 if (icon != null) ...[
                   Icon(icon,
-                      size: 18, color: labelColor.withValues(alpha: 0.7)),
+                      size: 18, color: labelColor.withValues(alpha: 0.6)),
                   const SizedBox(width: 10),
                 ],
-                Text(label, style: TextStyle(color: labelColor)),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: labelColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 if (isPremium) ...[
                   const SizedBox(width: 8),
-                  const Icon(LucideIcons.lock, size: 14, color: Colors.amber),
+                  const Icon(LucideIcons.lock, size: 13, color: Colors.amber),
                 ],
               ],
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(valueLabel, style: TextStyle(color: valueColor)),
-                const SizedBox(width: 8),
+                Text(
+                  valueLabel,
+                  style: TextStyle(
+                    color: valueColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 10),
                 GestureDetector(
                   onTap: onEdit,
                   child: Container(
-                    width: 28,
-                    height: 28,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: editBg,
+                      color: isDark
+                          ? brandRose.withValues(alpha: 0.15)
+                          : brandRose.withValues(alpha: 0.1),
+                      border: Border.all(
+                        color: brandRose.withValues(alpha: 0.3),
+                      ),
                     ),
-                    child: Icon(LucideIcons.pencil, size: 14, color: editIcon),
+                    child: Icon(
+                      LucideIcons.pencil,
+                      size: 16,
+                      color: brandRose,
+                    ),
                   ),
                 ),
               ],

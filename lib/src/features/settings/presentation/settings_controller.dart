@@ -223,27 +223,13 @@ class SettingsController {
     required List<String> currentValues,
     required ValueChanged<List<String>> onUpdate,
   }) async {
-    // Flow: View Selected (prevent accidental edits) -> Edit
-    await showSelectedItemsModal(
+    // Directly open the multi-select editing modal as requested by the user.
+    await showMultiSelectModal(
       context: context,
       title: title,
-      items: currentValues,
-      formatter: (val) {
-        final opt = options.firstWhere(
-          (o) => o['value'] == val,
-          orElse: () => {'label': val},
-        );
-        return opt['label'] as String;
-      },
-      onEdit: () async {
-        await showMultiSelectModal(
-          context: context,
-          title: title,
-          options: options,
-          currentValues: currentValues,
-          onSave: onUpdate,
-        );
-      },
+      options: options,
+      currentValues: currentValues,
+      onSave: onUpdate,
     );
   }
 

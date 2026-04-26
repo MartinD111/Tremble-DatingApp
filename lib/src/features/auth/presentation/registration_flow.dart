@@ -37,6 +37,7 @@ import 'widgets/registration_steps/hobbies_step.dart';
 import 'widgets/registration_steps/photos_step.dart';
 import 'widgets/registration_steps/consent_step.dart';
 import 'widgets/registration_steps/ritual_step.dart';
+import 'widgets/registration_steps/android_system_integration_step.dart';
 import 'widgets/ping_overlay.dart';
 import '../../../core/upload_service.dart';
 import '../../../shared/ui/tremble_logo.dart';
@@ -70,8 +71,9 @@ import '../../../shared/ui/tremble_logo.dart';
 // 23 : What to meet
 // 24 : Hobbies
 // 25 : Photos
-// 26 : Consent
-// 27 : Ritual ("Signal Locked" post-onboarding activation)
+// 26 : Android System Integration (Android only — skipped on iOS)
+// 26 : Consent                    (iOS) / 27 : Consent (Android)
+// 27 : Ritual                     (iOS) / 28 : Ritual  (Android)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class RegistrationFlow extends ConsumerStatefulWidget {
@@ -155,6 +157,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // New fields
   String? _status; // 'student' | 'employed'
+  final TextEditingController _occupationController = TextEditingController();
 
   // Appearance toggles
   bool _isClassicAppearance = true;
@@ -218,7 +221,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     _heightCm = appUser.height ?? 170;
     _isClassicAppearance = appUser.isClassicAppearance;
     _status = appUser.jobStatus;
-    if (appUser.occupation != null) {}
+    _occupationController.text = appUser.occupation ?? '';
     _exerciseHabit = appUser.exerciseHabit;
     _drinkingHabit = appUser.drinkingHabit;
     _smokingHabit = appUser.isSmoker == true
@@ -299,7 +302,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         interestedIn: _wantToMeet,
         isSmoker: _smokingHabit == 'yes',
         jobStatus: _status ?? 'student',
-        occupation: null,
+        occupation: _occupationController.text.trim(),
         drinkingHabit: _drinkingHabit ?? 'never',
         introvertScale:
             ((_introversionRange.start + _introversionRange.end) / 2 * 100)
@@ -527,7 +530,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // ────── PROGRESS BAR ──────
   Widget _buildProgressBar() {
-    const totalSteps = 27;
+    // Android has one extra step (AndroidSystemIntegrationStep) before ConsentStep.
+    final totalSteps = Platform.isAndroid ? 28 : 27;
     final progress = (_currentPage + 1) / totalSteps;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return TweenAnimationBuilder<double>(
@@ -759,6 +763,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   StatusStep(
                     status: _status,
                     onStatusSelect: (k) => setState(() => _status = k),
+                    occupationController: _occupationController,
                     onBack: () => _goToPage(_currentPage - 1),
                     onNext: _nextPage,
                     tr: tr,
@@ -956,6 +961,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     onContinue: _nextPage,
                     tr: tr,
                   ),
+                  // Android-only: Quick Settings tile + widget opt-in (index 26 on Android).
+                  // Platform.isAndroid guard keeps the PageView children list
+                  // length consistent per platform — iOS never sees this widget.
+                  if (Platform.isAndroid)
+                    AndroidSystemIntegrationStep(
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onContinue: _nextPage,
+                    ),
                   ConsentStep(
                     onBack: () => _goToPage(_currentPage - 1),
                     onComplete: completeRegistration,
@@ -1653,7 +1666,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         interestedIn: _wantToMeet,
         isSmoker: _smokingHabit == 'yes',
         jobStatus: _status ?? 'student',
-        occupation: null,
+        occupation: _occupationController.text.trim(),
         drinkingHabit: _drinkingHabit ?? 'never',
         introvertScale:
             ((_introversionRange.start + _introversionRange.end) / 2 * 100)

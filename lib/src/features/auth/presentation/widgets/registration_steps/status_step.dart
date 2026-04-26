@@ -7,6 +7,7 @@ class StatusStep extends StatelessWidget {
     super.key,
     required this.status,
     required this.onStatusSelect,
+    required this.occupationController,
     required this.onBack,
     required this.onNext,
     required this.tr,
@@ -17,44 +18,50 @@ class StatusStep extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onNext;
   final String Function(String) tr;
+  final TextEditingController occupationController;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                TrembleBackButton(onPressed: onBack, label: tr('back')),
-                const Spacer(),
-              ],
-            ),
+    return ScrollableFormPage(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              TrembleBackButton(onPressed: onBack, label: tr('back')),
+              const Spacer(),
+            ],
+          ),
+          const SizedBox(height: 16),
+          StepHeader(tr('status')),
+          const SizedBox(height: 24),
+          OptionPill(
+            label: tr('student'),
+            selected: status == 'student',
+            onTap: () => onStatusSelect('student'),
+          ),
+          OptionPill(
+            label: tr('employed'),
+            selected: status == 'employed',
+            onTap: () => onStatusSelect('employed'),
+          ),
+          if (status != null) ...[
             const SizedBox(height: 16),
-            StepHeader(tr('status')),
-            const Spacer(),
-            OptionPill(
-              label: tr('student'),
-              selected: status == 'student',
-              onTap: () => onStatusSelect('student'),
+            RegistrationInputField(
+              label:
+                  status == 'student' ? tr('course_of_study') : tr('job_title'),
+              controller: occupationController,
             ),
-            OptionPill(
-              label: tr('employed'),
-              selected: status == 'employed',
-              onTap: () => onStatusSelect('employed'),
-            ),
-            const Spacer(),
-            ContinueButton(
-              enabled: status != null,
-              onTap: onNext,
-              label: tr('continue_btn'),
-            ),
-            const SizedBox(height: 32),
           ],
-        ),
+          const Spacer(),
+          const SizedBox(height: 24),
+          ContinueButton(
+            enabled: status != null,
+            onTap: onNext,
+            label: tr('continue_btn'),
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }

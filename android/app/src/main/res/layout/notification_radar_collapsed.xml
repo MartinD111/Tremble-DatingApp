@@ -1,0 +1,61 @@
+<!--
+  Collapsed (standard height) view for the Tremble Radar foreground notification.
+  Used with Notification.DecoratedCustomViewStyle — the system wraps this in
+  its own header row (icon, app name, time) so we only provide the body row.
+
+  Samsung NowBar promotes ongoing foreground notifications that use
+  DecoratedCustomViewStyle and are posted with:
+    setOngoing(true)
+    setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
+  This layout is sized to fit the NowBar chip (≈48dp height content area).
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="4dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <!-- Pulsing dot indicator (tinted via setColorFilter at runtime) -->
+    <ImageView
+        android:id="@+id/notif_icon"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_tremble_qs_tile"
+        android:contentDescription="Radar" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="10dp">
+
+        <TextView
+            android:id="@+id/notif_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/notification_radar_active"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/notif_body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/notification_radar_scanning"
+            android:textSize="11sp"
+            android:textColor="#B3FFFFFF"
+            android:fontFamily="sans-serif"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+</LinearLayout>

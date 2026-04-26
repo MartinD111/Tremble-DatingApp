@@ -23,12 +23,15 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- Notifications (Android 13+ runtime grant required) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <!-- BLE hardware feature (optional — allows non-BLE devices to still install) -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
 
     <application
         android:label="Tremble"
-        android:name="${applicationName}"
+        android:name=".MainApplication"
         android:icon="@mipmap/launcher_icon"
         android:enableOnBackInvokedCallback="true">
         <activity
@@ -60,8 +63,43 @@
 
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
-            android:foregroundServiceType="dataSync|location"
+            android:foregroundServiceType="dataSync|location|connectedDevice"
             />
+
+        <!-- ── Quick Settings tile ───────────────────────────────────────── -->
+        <service
+            android:name=".radar.RadarTileService"
+            android:exported="true"
+            android:label="@string/qs_tile_label"
+            android:icon="@drawable/ic_tremble_qs_tile"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <!-- ── Home / lock-screen widget ────────────────────────────────── -->
+        <receiver
+            android:name=".radar.RadarWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_radar_info" />
+        </receiver>
+
+        <!-- ── Radar toggle broadcast receiver (widget tap + tile) ──────── -->
+        <receiver
+            android:name=".radar.RadarToggleReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="app.tremble.action.RADAR_TOGGLE" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
     <queries>

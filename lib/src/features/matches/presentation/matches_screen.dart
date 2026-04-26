@@ -245,8 +245,11 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                             opacity: isLocked ? 0.6 : 1.0,
                             child: GlassCard(
                               opacity: 0.15,
-                              borderRadius: 20,
-                              padding: const EdgeInsets.all(14),
+                              // True pill — perfectly rounded ends regardless
+                              // of card height (avatar + name push it to ~80dp).
+                              borderRadius: 999,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 10),
                               child: Row(
                                 children: [
                                   if (!isLocked)

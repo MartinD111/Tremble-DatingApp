@@ -1,0 +1,73 @@
+<!--
+  Expanded (big) view for the Tremble Radar foreground notification.
+  Shown when the user expands the notification card in the shade.
+  Includes a tap-to-stop action area at the bottom.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="4dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="8dp">
+
+    <!-- Top row: icon + title -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/notif_expanded_icon"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_tremble_qs_tile"
+            android:contentDescription="Radar" />
+
+        <TextView
+            android:id="@+id/notif_expanded_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:text="@string/notification_radar_active"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <!-- Body text -->
+    <TextView
+        android:id="@+id/notif_expanded_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="@string/notification_radar_scanning"
+        android:textSize="12sp"
+        android:textColor="#B3FFFFFF"
+        android:fontFamily="sans-serif"
+        android:maxLines="2" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="6dp"
+        android:background="#1AFFFFFF" />
+
+    <!-- Stop radar action -->
+    <TextView
+        android:id="@+id/notif_action_stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop Radar"
+        android:textSize="12sp"
+        android:textColor="#F4436C"
+        android:fontFamily="sans-serif-medium"
+        android:padding="4dp" />
+
+</LinearLayout>

@@ -22,32 +22,27 @@ import 'geo_service.dart';
 Future<void> initializeBackgroundService() async {
   final service = FlutterBackgroundService();
 
-  const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'tremble_background',
-    'Tremble Background Service',
-    description: 'Tremble Radar is active and looking for nearby matches.',
-    importance: Importance.low,
-  );
-
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
-  final androidPlugin =
-      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-
-  if (androidPlugin != null) {
-    await androidPlugin.createNotificationChannel(channel);
-  }
+  // NOTE: Channel `tremble_radar_v2` is created synchronously in
+  // MainApplication.onCreate (RadarNotificationBuilder.ensureChannel).
+  // We deliberately do NOT create it here — channel importance is immutable
+  // after first creation and Kotlin owns the canonical definition.
+  //
+  // The plugin's native onStartCommand calls startForeground(888, basic)
+  // BEFORE the Dart isolate boots. Pointing it at the same channel + ID our
+  // native RadarNotificationBuilder uses means the rich notification posted
+  // later via the RadarStateBridge MethodChannel atomically replaces the
+  // placeholder on the same ID — no flicker, no second notification, and the
+  // 5-second ForegroundServiceDidNotStartInTime deadline is satisfied
+  // entirely from native code.
 
   await service.configure(
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
       autoStart: false, // Started explicitly when user enables Radar
       isForegroundMode: true,
-      notificationChannelId: 'tremble_background',
+      notificationChannelId: 'tremble_radar_v2',
       initialNotificationTitle: 'Tremble Radar',
-      initialNotificationContent: 'Looking for nearby matches...',
+      initialNotificationContent: 'Starting…',
       foregroundServiceNotificationId: 888,
     ),
     iosConfiguration: IosConfiguration(
@@ -90,18 +85,11 @@ void onStart(ServiceInstance service) async {
   final battery = Battery();
   final prefs = await SharedPreferences.getInstance();
 
-  // Update foreground notification IMMEDIATELY to prevent double-initialization sync issues on Android
-  if (service is AndroidServiceInstance) {
-    if (await service.isForegroundService()) {
-      final level = await battery.batteryLevel;
-      service.setForegroundNotificationInfo(
-        title: 'Tremble Radar',
-        content: geoService.isLowPowerMode
-            ? 'Power-saving mode — Geo matching active ($level%)'
-            : 'Scanning for nearby matches... ($level%)',
-      );
-    }
-  }
+  // The rich DecoratedCustomViewStyle notification is posted natively by
+  // RadarStateBridge → RadarNotificationReceiver on the same ID (888) the
+  // plugin used for the placeholder startForeground call. We do NOT call
+  // setForegroundNotificationInfo here — it would overwrite the rich
+  // notification with a plain-text one on the same ID.
 
   // GDPR consent gate
   final hasConsent = prefs.getBool('gdpr_ble_location_consent') ?? false;
@@ -165,17 +153,12 @@ void onStart(ServiceInstance service) async {
       }
     }
 
-    // Update Android foreground notification content
-    if (service is AndroidServiceInstance) {
-      if (await service.isForegroundService()) {
-        service.setForegroundNotificationInfo(
-          title: 'Tremble Radar',
-          content: isLowPower
-              ? 'Power-saving mode — Geo matching active ($level%)'
-              : 'Scanning for nearby matches... ($level%)',
-        );
-      }
-    }
+    // The rich foreground notification (DecoratedCustomViewStyle, ID 888,
+    // channel `tremble_radar_v2`) is owned and refreshed natively by
+    // RadarNotificationReceiver. We deliberately do NOT call
+    // setForegroundNotificationInfo from here — it would post a plain-text
+    // notification on the same ID and overwrite the rich one. Battery /
+    // power-mode is surfaced to the UI via the radarState invoke below.
 
     // Emit radar state to UI
     service.invoke('radarState', {

@@ -1,66 +1,60 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:tremble/src/shared/ui/glass_card.dart';
-import 'package:tremble/src/features/match/data/wave_repository.dart';
-import 'package:tremble/src/features/match/domain/match.dart' as wave_match;
-import 'package:tremble/src/features/dashboard/application/proximity_ping_controller.dart';
-import 'package:tremble/src/core/translations.dart';
 
+import 'package:tremble/src/features/dashboard/application/radar_search_session.dart';
+import 'package:tremble/src/shared/ui/glass_card.dart';
+
+/// Compact bottom-anchored search controller for an active mutual-wave session.
+///
+/// Layout philosophy: the radar canvas + ping must remain 100% unobstructed.
+/// Everything in this widget is laid out as a slim horizontal pill so the user
+/// sees the partner ping moving across the radar at all times. The widget is
+/// expected to be placed at the bottom of the radar area
+/// (Align.bottomCenter or similar in the parent stack).
+///
+/// Stop action is direct — no confirmation dialog. The mutual-wave window is
+/// short (30 min) and the user explicitly tapped Stop; surfacing a modal here
+/// would obstruct the radar (the very thing we just optimised to expose).
 class RadarSearchOverlay extends ConsumerStatefulWidget {
-  final wave_match.Match match;
-  final String partnerName;
+  final RadarSearchSession session;
 
   const RadarSearchOverlay({
     super.key,
-    required this.match,
-    required this.partnerName,
+    required this.session,
   });
 
   @override
   ConsumerState<RadarSearchOverlay> createState() => _RadarSearchOverlayState();
 }
 
-class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
-    with TickerProviderStateMixin {
+class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
   late Timer _timer;
   late Duration _remaining;
-  late AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
     _calculateRemaining();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {
-          _calculateRemaining();
-        });
-      }
-      if (_remaining.inSeconds <= 0) {
-        _timer.cancel();
-      }
+      if (!mounted) return;
+      setState(_calculateRemaining);
+      if (_remaining.inSeconds <= 0) _timer.cancel();
     });
   }
 
   void _calculateRemaining() {
-    final expiry = widget.match.createdAt.add(const Duration(minutes: 30));
-    _remaining = expiry.difference(DateTime.now());
+    _remaining = widget.session.expiresAt.difference(DateTime.now());
     if (_remaining.isNegative) _remaining = Duration.zero;
   }
 
   @override
   void dispose() {
     _timer.cancel();
-    _pulseController.dispose();
     super.dispose();
   }
 
@@ -70,259 +64,130 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
-  void _showStopSearchDialog() {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey.shade900.withValues(alpha: 0.95),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(
-          'Končaj iskanje', // "End search"
-          style: GoogleFonts.playfairDisplay(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          'Ali sta se uspela najti?', // "Did you manage to find each other?"
-          style: GoogleFonts.instrumentSans(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref
-                  .read(waveRepositoryProvider)
-                  .markMatchAsExpired(widget.match.id);
-            },
-            child: Text(
-              'NISMO SE NAŠLI', // "Couldn't find"
-              style: GoogleFonts.instrumentSans(color: Colors.white38),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref
-                  .read(waveRepositoryProvider)
-                  .markMatchAsFound(widget.match.id);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text(
-              'NAŠLI SMO SE!', // "Found each other"
-              style: GoogleFonts.instrumentSans(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final lang = ref.watch(appLanguageProvider);
+    final isUrgent = _remaining.inMinutes < 5;
+    final timerColor = isUrgent ? colorScheme.primary : const Color(0xFFF5C842);
 
-    // Listen to pings for visual feedback
-    ref.listen(proximityPingControllerProvider, (_, __) {
-      if (mounted && widget.match.isMutual) {
-        _pulseController.forward(from: 0);
-      }
-    });
-
-    final isMutual = widget.match.isMutual;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
+    final pill = GlassCard(
+      opacity: 0.18,
+      borderRadius: 100,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              // Visual Pulse Ring (Only if mutual)
-              if (isMutual)
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, child) {
-                    return Container(
-                      width: 200 + (100 * _pulseController.value),
-                      height: 100 + (50 * _pulseController.value),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: colorScheme.primary.withValues(
-                            alpha:
-                                (1.0 - _pulseController.value).clamp(0.0, 1.0),
-                          ),
-                          width: 2,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              GlassCard(
-                opacity: 0.15,
-                borderRadius: 24,
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(isMutual ? LucideIcons.search : LucideIcons.clock,
-                                size: 20, color: Colors.white70)
-                            .animate(onPlay: (c) => c.repeat())
-                            .shimmer(duration: 2.seconds),
-                        const SizedBox(width: 8),
-                        Text(
-                          isMutual
-                              ? t('radar_lock_active', lang).toUpperCase()
-                              : t('waiting_for_acceptance', lang).toUpperCase(),
-                          style: GoogleFonts.playfairDisplay(
-                            color:
-                                isMutual ? colorScheme.primary : Colors.white70,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.partnerName,
-                      style: GoogleFonts.playfairDisplay(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white12),
-                      ),
-                      child: Builder(
-                        builder: (context) {
-                          Widget timerRow = Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(LucideIcons.clock,
-                                  size: 16,
-                                  color: _remaining.inMinutes < 5
-                                      ? colorScheme.primary
-                                      : const Color(0xFFF5C842)),
-                              const SizedBox(width: 8),
-                              Text(
-                                _formatDuration(_remaining),
-                                style: GoogleFonts.jetBrainsMono(
-                                  color: _remaining.inMinutes < 5
-                                      ? colorScheme.primary
-                                      : const Color(0xFFF5C842),
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: -1.0,
-                                ),
-                              ),
-                            ],
-                          );
-
-                          if (_remaining.inMinutes < 5) {
-                            return timerRow
-                                .animate(onPlay: (c) => c.repeat(reverse: true))
-                                .fade(duration: 1200.ms, begin: 0.4, end: 1.0);
-                          }
-                          return timerRow;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          // Live timer
+          Icon(LucideIcons.clock, size: 16, color: timerColor),
+          const SizedBox(width: 8),
+          Text(
+            _formatDuration(_remaining),
+            style: GoogleFonts.jetBrainsMono(
+              color: timerColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: _showStopSearchDialog,
-                  child: Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 1.5),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      t('cancel', lang).toUpperCase(),
-                      style: GoogleFonts.instrumentSans(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: GestureDetector(
-                  onTap: () {
-                    ref
-                        .read(waveRepositoryProvider)
-                        .markMatchAsFound(widget.match.id);
-                  },
-                  child: Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [colorScheme.primary, colorScheme.secondary],
-                      ),
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.primary.withValues(alpha: 0.3),
-                          blurRadius: 15,
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      t('found_each_other', lang),
-                      style: GoogleFonts.instrumentSans(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+          const SizedBox(width: 14),
+          // Vertical divider
+          Container(
+            width: 1,
+            height: 22,
+            color: Colors.white.withValues(alpha: 0.18),
+          ),
+          const SizedBox(width: 14),
+          // Compact stop button
+          GestureDetector(
+            onTap: widget.session.onStop,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(LucideIcons.square,
+                      size: 14, color: Colors.white),
+                  const SizedBox(width: 6),
+                  Text(
+                    'STOP',
+                    style: GoogleFonts.instrumentSans(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.4,
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ],
       ),
     );
+
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        if (widget.session.showMutualFlash)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _MutualWaveFlash(primary: colorScheme.primary),
+          ),
+        isUrgent
+            ? pill
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .fade(duration: 1200.ms, begin: 0.55, end: 1.0)
+            : pill,
+      ],
+    );
+
+    return content;
+  }
+}
+
+class _MutualWaveFlash extends StatelessWidget {
+  final Color primary;
+
+  const _MutualWaveFlash({required this.primary});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primary.withValues(alpha: 0.95), const Color(0xFFF5C842)],
+        ),
+        borderRadius: BorderRadius.circular(100),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.5),
+            blurRadius: 16,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(LucideIcons.sparkles, size: 14, color: Colors.white),
+          const SizedBox(width: 6),
+          Text(
+            'Mutual Wave! Find them.',
+            style: GoogleFonts.playfairDisplay(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    )
+        .animate()
+        .scale(duration: 350.ms, curve: Curves.easeOutBack)
+        .fadeIn(duration: 250.ms);
   }
 }

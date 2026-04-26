@@ -668,6 +668,55 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
     _selected = List.from(widget.currentValues);
   }
 
+  bool _hasChanges() {
+    if (_selected.length != widget.currentValues.length) return true;
+    return !_selected.every((v) => widget.currentValues.contains(v));
+  }
+
+  Widget _optionPill({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required bool isDark,
+    required Color textColor,
+  }) {
+    final brandRose = Theme.of(context).colorScheme.primary;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? brandRose.withValues(alpha: 0.15)
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.07)
+                  : Colors.black.withValues(alpha: 0.04)),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: isSelected
+                ? brandRose
+                : (isDark ? Colors.white24 : Colors.black12),
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.instrumentSans(
+                color: textColor,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
+            const Spacer(),
+            if (isSelected) Icon(LucideIcons.checkCircle, color: brandRose, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -675,105 +724,110 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
     final brandRose = Theme.of(context).colorScheme.primary;
     final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-          24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag handle
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white24 : Colors.black26,
-              borderRadius: BorderRadius.circular(2),
+    final hasChanges = _hasChanges();
+
+    return PopScope(
+      canPop: !hasChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final res = await showDiscardChangesModal(context, ref);
+        if (res == 'save') {
+          widget.onSave(_selected);
+          if (context.mounted) Navigator.pop(context);
+        } else if (res == 'discard') {
+          if (context.mounted) Navigator.pop(context);
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.fromLTRB(
+            24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : Colors.black26,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          // Title row with Edit (Save) button top-right
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  widget.title,
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
-                ),
+            const SizedBox(height: 20),
+            // Title
+            Text(
+              widget.title,
+              style: GoogleFonts.instrumentSans(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: textColor,
               ),
-              TextButton(
-                onPressed: () => widget.onSave(_selected),
-                child: Text(
-                  t('save', lang),
-                  style: GoogleFonts.instrumentSans(
-                    color: brandRose,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Options
-          ...widget.options.map((opt) {
-            final value = opt['value']!;
-            final isSelected = _selected.contains(value);
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  if (isSelected) {
-                    _selected.remove(value);
-                  } else {
-                    _selected.add(value);
-                  }
-                });
-              },
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? brandRose.withValues(alpha: 0.15)
-                      : (isDark
-                          ? Colors.white.withValues(alpha: 0.07)
-                          : Colors.black.withValues(alpha: 0.04)),
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(
-                    color: isSelected
-                        ? brandRose
-                        : (isDark ? Colors.white24 : Colors.black12),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      opt['label']!,
-                      style: GoogleFonts.instrumentSans(
-                        color: textColor,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.w500,
-                      ),
+            ),
+            const SizedBox(height: 20),
+            // Options
+            ...widget.options.map((opt) {
+              final value = opt['value']!;
+              final isSelected = _selected.contains(value);
+              return _optionPill(
+                label: opt['label']!,
+                isSelected: isSelected,
+                onTap: () {
+                  setState(() {
+                    if (isSelected) {
+                      _selected.remove(value);
+                    } else {
+                      _selected.add(value);
+                    }
+                  });
+                },
+                isDark: isDark,
+                textColor: textColor,
+              );
+            }),
+            const SizedBox(height: 16),
+            // Save / Cancel
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                          color: isDark ? Colors.white38 : Colors.black26),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: const StadiumBorder(),
                     ),
-                    const Spacer(),
-                    if (isSelected)
-                      Icon(LucideIcons.checkCircle,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 20),
-                  ],
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      t('cancel', lang),
+                      style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
-              ),
-            );
-          }),
-        ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: brandRose,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28)),
+                    ),
+                    onPressed: () => widget.onSave(_selected),
+                    child: Text(t('save', lang),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

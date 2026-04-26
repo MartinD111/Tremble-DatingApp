@@ -1,0 +1,48 @@
+<!--
+  Home/lock-screen widget layout — centered horizontal pill.
+  Background is Rose (#F4436C) when active, Graphite when off.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:background="@drawable/widget_background_inactive">
+
+    <ImageView
+        android:id="@+id/widget_icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_tremble_qs_tile"
+        android:contentDescription="@string/widget_label" />
+
+    <LinearLayout
+        android:id="@+id/widget_text_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginStart="12dp">
+
+        <TextView
+            android:id="@+id/widget_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Radar"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/widget_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Off"
+            android:textColor="#B3FFFFFF"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif"
+            android:maxLines="1" />
+    </LinearLayout>
+
+</LinearLayout>

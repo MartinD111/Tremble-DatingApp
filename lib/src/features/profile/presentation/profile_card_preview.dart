@@ -477,13 +477,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       ));
     }
 
-    // Political Affiliation - Simplified to a pill per brand strategy
-    if (user.politicalAffiliation != null) {
-      pills.add(_PreferencePill(
-        icon: LucideIcons.flag,
-        label: _formatChipText(t(user.politicalAffiliation!, lang)),
-      ));
-    }
+    // Political Affiliation - Handled below as a spectrum slider
 
     return SizedBox(
       width: double.infinity,
@@ -500,6 +494,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
             alignment: WrapAlignment.center,
             children: pills,
           ),
+          const SizedBox(height: 32),
           _buildSpectrumIndicator(
             icon: LucideIcons.brain,
             label: t('personality_type', lang),
@@ -515,9 +510,48 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                 : '',
             isDark: isDark,
           ),
+          if (user.politicalAffiliation != null &&
+              !['politics_dont_care', 'politics_undisclosed']
+                  .contains(user.politicalAffiliation)) ...[
+            const SizedBox(height: 40),
+            _buildSpectrumIndicator(
+              icon: LucideIcons.flag,
+              label: t('political_affiliation', lang),
+              value: _getPoliticalValue(user.politicalAffiliation!),
+              min: 1.0,
+              max: 5.0,
+              leftLabel: t('politics_left', lang),
+              rightLabel: t('politics_right', lang),
+              currentText: t(user.politicalAffiliation!, lang),
+              isDark: isDark,
+            ),
+          ] else if (user.politicalAffiliation != null) ...[
+            const SizedBox(height: 24),
+            _PreferencePill(
+              icon: LucideIcons.flag,
+              label: _formatChipText(t(user.politicalAffiliation!, lang)),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  double _getPoliticalValue(String affiliation) {
+    switch (affiliation) {
+      case 'politics_left':
+        return 1.0;
+      case 'politics_center_left':
+        return 2.0;
+      case 'politics_center':
+        return 3.0;
+      case 'politics_center_right':
+        return 4.0;
+      case 'politics_right':
+        return 5.0;
+      default:
+        return 3.0;
+    }
   }
 
   String _getHobbyKey(String hobby) {

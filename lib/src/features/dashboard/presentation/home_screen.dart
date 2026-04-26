@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,8 +8,6 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'radar_animation.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/liquid_nav_bar.dart'; // Import LiquidNavBar
-import '../../matches/data/match_repository.dart';
-import '../../matches/presentation/match_dialog.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../map/presentation/pulse_map_screen.dart';
 import '../../../core/theme.dart';
@@ -25,10 +24,14 @@ import '../../../core/translations.dart';
 import '../../match/application/match_service.dart';
 import '../../match/data/wave_repository.dart';
 import '../../match/domain/match.dart' as wave_match;
-import '../../../core/dev_mock_users.dart'; // Dev-only mock nearby users
+import '../../../core/android_integration_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'widgets/radar_search_overlay.dart';
 import 'widgets/wave_simulation_overlay.dart';
 import '../../profile/data/profile_repository.dart';
+import '../application/dev_simulation_controller.dart';
+import '../application/radar_search_session.dart';
+import '../../match/presentation/widgets/match_notification_pill.dart';
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State
@@ -97,55 +100,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     });
 
-    // Listen to the stream and update controller with visual Sonar Ping
-    ref.listen(matchesStreamProvider, (prev, next) {
-      final isScanning = ref.read(isScanningProvider);
-      if (!isScanning) return; // Only match when radar is active
+    // Legacy proximity ping → MatchDialog flow has been removed.
+    // All wave interactions now flow exclusively through MatchNotificationPill,
+    // driven by DevSimulationController (and, in production, the future BLE
+    // wave controller). See lib/src/features/match/presentation/widgets/
+    // match_notification_pill.dart and DevSimPhase mapping below in
+    // _phaseToPillState().
 
-      next.whenData((matches) {
-        if (matches.isNotEmpty) {
-          final newMatch = matches.first;
-          final isNewMatch =
-              prev?.valueOrNull?.any((m) => m.id == newMatch.id) != true;
-
-          if (isNewMatch) {
-            // Trigger visual ping
-            // Simulating relative angle and distance since actual coordinate math
-            // requires fetching the other user's location which is masked anyway.
-            final randomAngle =
-                (DateTime.now().millisecond / 1000) * 2 * 3.14159;
-            final randomDist =
-                0.4 + (DateTime.now().millisecond / 2000); // 0.4 to 0.9
-
-            ref.read(pingAngleProvider.notifier).state = randomAngle;
-            ref.read(pingDistanceProvider.notifier).state = randomDist;
-
-            // Wait for the radar sweep to pass over the dot (1.5s) then pop dialog
-            Future.delayed(const Duration(milliseconds: 1500), () {
-              if (mounted) {
-                ref.read(pingAngleProvider.notifier).state = null;
-                ref.read(pingDistanceProvider.notifier).state = null;
-                ref.read(matchControllerProvider.notifier).setMatch(newMatch);
-              }
-            });
-          }
-        }
-      });
-    });
-
-    // Listen to controller to show dialog
-    ref.listen(matchControllerProvider, (prev, match) {
-      if (match != null) {
-        showGeneralDialog(
-          context: context,
-          pageBuilder: (ctx, a1, a2) => MatchDialog(match: match),
-          barrierDismissible: true,
-          barrierLabel: "Dismiss",
-          barrierColor: Colors.black54,
-          transitionDuration: const Duration(milliseconds: 200),
-        ).then((_) {
-          ref.read(matchControllerProvider.notifier).dismiss();
-        });
+    // Listen for Radar state changes pushed from native tile / widget (Android).
+    // When the user toggles via QS tile or home-screen widget, this fires and
+    // starts/stops the background service to match.
+    AndroidIntegrationService.instance.radarStateChanges.listen((active) {
+      if (!mounted) return;
+      final current = ref.read(isScanningProvider);
+      if (active == current) return; // already in sync
+      ref.read(isScanningProvider.notifier).state = active;
+      if (active) {
+        FlutterBackgroundService().startService();
+      } else {
+        BleService().stop();
+        FlutterBackgroundService().invoke('stopService', null);
       }
     });
 
@@ -156,6 +130,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final battery = event['batteryLevel'] as int? ?? 100;
       ref.read(radarModeProvider.notifier).state = mode;
       ref.read(radarBatteryLevelProvider.notifier).state = battery;
+    });
+
+    // ── Dev Simulation → Radar Ping bridge ─────────────────────────────────
+    // Pipes the dev sim's tracking values into pingDistance/pingAngle so the
+    // radar canvas reacts only after a mutual wave (Phase 3 of the plan).
+    ref.listen(devSimulationControllerProvider, (prev, next) {
+      if (next.isMutualWaveActive) {
+        ref.read(pingDistanceProvider.notifier).state = next.pingDistance;
+        ref.read(pingAngleProvider.notifier).state = next.pingAngle;
+      } else if (prev?.isMutualWaveActive == true) {
+        // Search ended — clear the radar ping.
+        ref.read(pingDistanceProvider.notifier).state = null;
+        ref.read(pingAngleProvider.notifier).state = null;
+      }
     });
 
     final user = ref.watch(authStateProvider);
@@ -177,6 +165,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // ── Active Search State ──────────────────────────────────────────────
     final activeMatch = ref.watch(currentSearchProvider);
+    final devSim = ref.watch(devSimulationControllerProvider);
 
     // Define Screens and Nav Items
     final List<Widget> screens;
@@ -195,7 +184,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             pingAngle,
             radarMode,
             batteryLevel,
-            activeMatch),
+            activeMatch,
+            devSim),
         const PulseMapScreen(),
         const MatchesScreen(),
         const SettingsScreen(),
@@ -220,7 +210,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             pingAngle,
             radarMode,
             batteryLevel,
-            activeMatch),
+            activeMatch,
+            devSim),
         const MatchesScreen(),
         const SettingsScreen(),
       ];
@@ -317,10 +308,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       double? pingAngle,
       String radarMode,
       int batteryLevel,
-      wave_match.Match? activeMatch) {
+      wave_match.Match? activeMatch,
+      DevSimulationState devSim) {
     final isDegraded = radarMode == 'degraded';
     final lang = ref.watch(appLanguageProvider);
-    final bool isSearchActive = activeMatch != null;
+    final bool isDevSearchActive = devSim.isMutualWaveActive;
+    final bool isSearchActive = activeMatch != null || isDevSearchActive;
     return Stack(
       children: [
         // ── Radar Header ─────────────────────────────────────────
@@ -358,31 +351,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   if (isSearchActive)
-                    Positioned.fill(
-                      child: Container(
-                        color: Colors.black
-                            .withValues(alpha: 0.2), // Dim radar during search
+                    // Bottom-anchored, NOT centered, NOT dimmed — the radar
+                    // canvas + ping must remain 100% visible during a mutual
+                    // wave so the user can see the partner approaching.
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 24,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: Center(
-                          child: Consumer(
-                            builder: (context, ref, child) {
-                              final partnerId =
-                                  activeMatch.getPartnerId(user?.id ?? '');
-                              final profile =
-                                  ref.watch(publicProfileProvider(partnerId));
-                              return profile.when(
-                                data: (p) => RadarSearchOverlay(
-                                  match: activeMatch,
-                                  partnerName: p.name,
+                          child: isDevSearchActive
+                              ? RadarSearchOverlay(
+                                  session: RadarSearchSession(
+                                    partnerName: devSim.profile?.name ??
+                                        t('someone_nearby', lang),
+                                    expiresAt: devSim.mutualWaveExpiresAt ??
+                                        DateTime.now().add(
+                                            const Duration(minutes: 30)),
+                                    showMutualFlash: devSim.showMutualFlash,
+                                    onStop: () => ref
+                                        .read(devSimulationControllerProvider
+                                            .notifier)
+                                        .stopAndPersist(),
+                                  ),
+                                )
+                              : Consumer(
+                                  builder: (context, ref, child) {
+                                    final partnerId = activeMatch!
+                                        .getPartnerId(user?.id ?? '');
+                                    final profile = ref.watch(
+                                        publicProfileProvider(partnerId));
+                                    Widget buildOverlay(String name) =>
+                                        RadarSearchOverlay(
+                                          session: RadarSearchSession(
+                                            partnerName: name,
+                                            expiresAt: activeMatch.createdAt
+                                                .add(const Duration(minutes: 30)),
+                                            onStop: () => ref
+                                                .read(waveRepositoryProvider)
+                                                .markMatchAsFound(
+                                                    activeMatch.id),
+                                          ),
+                                        );
+                                    return profile.when(
+                                      data: (p) => buildOverlay(p.name),
+                                      loading: () =>
+                                          const CircularProgressIndicator(),
+                                      error: (_, __) => buildOverlay(
+                                          t('someone_nearby', lang)),
+                                    );
+                                  },
                                 ),
-                                loading: () =>
-                                    const CircularProgressIndicator(),
-                                error: (_, __) => RadarSearchOverlay(
-                                  match: activeMatch,
-                                  partnerName: t('someone_nearby', lang),
-                                ),
-                              );
-                            },
-                          ),
                         ),
                       ).animate().fade(),
                     )
@@ -399,8 +419,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           if (newState) {
                             debugPrint(
                                 "📍 Location Captured: mock_lat: 46.05, mock_lng: 14.50 [Ljubljana]");
-                            // Start background service (GeoService lives here).
+                            // Android 13+: POST_NOTIFICATIONS is a runtime grant.
+                            // Without this the foreground service notification
+                            // (and our CallStyle live activity) is invisible.
+                            if (Platform.isAndroid) {
+                              final status = await Permission.notification.status;
+                              if (!status.isGranted) {
+                                await Permission.notification.request();
+                              }
+                            }
+                            // Start background service first — this triggers the plugin's
+                            // initial plain-text notification on NOTIF_ID 888.
                             FlutterBackgroundService().startService();
+                            // Then flip RadarStateBridge → fires the local broadcast →
+                            // RadarNotificationReceiver posts the CallStyle notification
+                            // on the SAME id 888, atomically replacing the plain text.
+                            // Also re-tints QS tile + widget.
+                            await AndroidIntegrationService.instance.setRadarActive(true);
                             // BleService must run in the main isolate — flutter_blue_plus
                             // requires an Android Activity which the background isolate
                             // does not have. Gate on GDPR consent before starting.
@@ -411,17 +446,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               await BleService().start();
                             }
 
-                            // ── Admin Mode demo: inject mock nearby users ──────
-                            // Only fires in kDebugMode when Admin Mode (Bypass Radar)
-                            // is active — never touches real Firebase.
+                            // ── Dev Mode: passive-discovery simulation ──────────
+                            // Phase 1 fires after 10s — pill first, radar empty
+                            // until mutual wave. kDebugMode guards production.
                             if (kDebugMode && ref.read(bypassRadarProvider)) {
-                              _injectMockRadarPings(ref);
+                              ref
+                                  .read(devSimulationControllerProvider.notifier)
+                                  .start();
                             }
                           } else {
                             // Stop BLE in main isolate and signal background service.
+                            await AndroidIntegrationService.instance.setRadarActive(false);
                             BleService().stop();
                             FlutterBackgroundService()
                                 .invoke('stopService', null);
+                            // Cancel any in-flight dev simulation without persisting.
+                            if (kDebugMode) {
+                              ref
+                                  .read(devSimulationControllerProvider.notifier)
+                                  .cancelWithoutPersist();
+                            }
                           }
                         },
                       )
@@ -517,47 +561,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 ),
               ),
+
+        // ── Dev-Mode Match Notification Pill ─────────────────────────────
+        // Shown for waitingForAction / waveSent / waveReceived. Floats near
+        // the top of the radar so the canvas stays visibly empty until a
+        // mutual wave unlocks the ping.
+        if (devSim.hasPillVisible && devSim.profile != null)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 80,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: MatchNotificationPill(
+                name: devSim.profile!.name,
+                age: devSim.profile!.age,
+                imageUrl: devSim.profile!.imageUrl,
+                pillState: _phaseToPillState(devSim.phase),
+                onWave: () {
+                  final notifier = ref
+                      .read(devSimulationControllerProvider.notifier);
+                  if (devSim.phase == DevSimPhase.waitingForAction) {
+                    notifier.onUserWave();
+                  } else if (devSim.phase == DevSimPhase.waveReceived) {
+                    notifier.onUserWaveBack();
+                  }
+                },
+                onIgnore: () => ref
+                    .read(devSimulationControllerProvider.notifier)
+                    .onIgnore(),
+              )
+                  .animate()
+                  .fadeIn(duration: 250.ms)
+                  .slideY(begin: -0.4, curve: Curves.easeOutCubic),
+            ),
+          ),
       ],
     );
   }
-}
 
-/// Sequentially fires mock radar pings so the dev can experience every
-/// notification + profile card UI state without any real BLE scanning.
-///
-/// Schedule:
-///   t+2s  → Nika (22F)   — first ping
-///   t+6s  → Luka (26M)   — second ping
-///   t+11s → Sara (24F)   — third ping
-///
-/// Each ping:
-///   1. Sets a random visual angle/distance on the radar canvas.
-///   2. After 1.5s sweep, shows the MatchDialog (same as a real BLE match).
-void _injectMockRadarPings(WidgetRef ref) {
-  if (!kDebugMode) return; // Hard guard — never runs in prod
-
-  // We simulate a single user approaching to demonstrate the dynamic feedback
-  final user = kMockNearbyUsers[0];
-
-  for (var i = 0; i <= 8; i++) {
-    final delay = Duration(seconds: 2 + (i * 2));
-    final distance = 0.9 - (i * 0.1); // 0.9 -> 0.8 -> ... -> 0.1
-
-    Future.delayed(delay, () {
-      // Set visual ping on radar canvas
-      const angle = 0.8; // Fixed angle for tracking feel
-      ref.read(pingAngleProvider.notifier).state = angle;
-      ref.read(pingDistanceProvider.notifier).state = distance;
-
-      // When very close, finalize with the MatchDialog after a short delay
-      if (i == 8) {
-        Future.delayed(const Duration(milliseconds: 2000), () {
-          ref.read(pingAngleProvider.notifier).state = null;
-          ref.read(pingDistanceProvider.notifier).state = null;
-          ref.read(matchControllerProvider.notifier).setMatch(user);
-        });
-      }
-    });
+  PillState _phaseToPillState(DevSimPhase phase) {
+    switch (phase) {
+      case DevSimPhase.waveSent:
+        return PillState.waveSent;
+      case DevSimPhase.waveReceived:
+        return PillState.waveReceived;
+      case DevSimPhase.waitingForAction:
+      default:
+        return PillState.waitingForAction;
+    }
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
@@ -38,11 +39,13 @@ class PetsStep extends StatelessWidget {
           const SizedBox(height: 24),
           OptionPill(
             label: tr('dog_person'),
+            icon: LucideIcons.dog,
             selected: selected == 'dog',
             onTap: () => onSelect('dog'),
           ),
           OptionPill(
             label: tr('cat_person'),
+            icon: LucideIcons.cat,
             selected: selected == 'cat',
             onTap: () => onSelect('cat'),
           ),

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tremble</string>
+    <string name="qs_tile_label">Tremble Radar</string>
+    <string name="widget_label">Tremble Radar</string>
+    <string name="notification_channel_name">Tremble Background Service</string>
+    <string name="notification_radar_active">Radar Active</string>
+    <string name="notification_radar_scanning">Scanning for nearby matches…</string>
+    <string name="notification_action_stop">Stop Radar</string>
+</resources>

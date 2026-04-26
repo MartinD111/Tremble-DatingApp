@@ -763,13 +763,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       ));
     }
 
-    // Political Affiliation - Simplified to a pill per brand strategy
-    if (match.politicalAffiliation != null) {
-      pills.add(_PreferencePill(
-        icon: LucideIcons.flag,
-        label: _formatChipText(t(match.politicalAffiliation!, lang)),
-      ));
-    }
+    // Political Affiliation - Handled below as a spectrum slider
 
     return SizedBox(
       width: double.infinity,
@@ -786,6 +780,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
             alignment: WrapAlignment.center,
             children: pills,
           ),
+          const SizedBox(height: 32),
           _buildSpectrumIndicator(
             icon: LucideIcons.brain,
             label: t('personality_type', lang),
@@ -801,9 +796,48 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                 : '',
             isDark: isDark,
           ),
+          if (match.politicalAffiliation != null &&
+              !['politics_dont_care', 'politics_undisclosed']
+                  .contains(match.politicalAffiliation)) ...[
+            const SizedBox(height: 40),
+            _buildSpectrumIndicator(
+              icon: LucideIcons.flag,
+              label: t('political_affiliation', lang),
+              value: _getPoliticalValue(match.politicalAffiliation!),
+              min: 1.0,
+              max: 5.0,
+              leftLabel: t('politics_left', lang),
+              rightLabel: t('politics_right', lang),
+              currentText: t(match.politicalAffiliation!, lang),
+              isDark: isDark,
+            ),
+          ] else if (match.politicalAffiliation != null) ...[
+            const SizedBox(height: 24),
+            _PreferencePill(
+              icon: LucideIcons.flag,
+              label: _formatChipText(t(match.politicalAffiliation!, lang)),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  double _getPoliticalValue(String affiliation) {
+    switch (affiliation) {
+      case 'politics_left':
+        return 1.0;
+      case 'politics_center_left':
+        return 2.0;
+      case 'politics_center':
+        return 3.0;
+      case 'politics_center_right':
+        return 4.0;
+      case 'politics_right':
+        return 5.0;
+      default:
+        return 3.0;
+    }
   }
 
   Widget _buildSpectrumIndicator({

@@ -110,14 +110,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     return t(key, user?.appLanguage ?? 'en');
   }
 
-  /// Converts a string to Title Case (e.g. "night_owl" → "Night Owl").
-  String _toTitleCase(String s) {
-    if (s.isEmpty) return s;
-    return s.replaceAll('_', ' ').split(' ').map((w) {
-      if (w.isEmpty) return w;
-      return '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}';
-    }).join(' ');
-  }
 
   /// Maps political scale value 1–5 to a readable label.
   String _politicalLabel(double v) {
@@ -736,6 +728,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       padding: EdgeInsets.zero, // Padding handled by internal slots
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           InkWell(
             onTap: () => _onToggleSection(sectionKey),
@@ -803,7 +796,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     final subColor = isDark ? Colors.white38 : Colors.black38;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
@@ -906,7 +899,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   Widget _buildPreferencesContent(AuthUser user) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // ── Sliders group (first per spec) ──
 
@@ -1197,7 +1190,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               .map((o) => o['label']!)
               .firstOrNull ??
           v;
-      return _toTitleCase(raw);
+      return raw as String;
     };
     return PreferencePillRow(
       icon: icon,
@@ -1374,7 +1367,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
   Widget _buildLifestyleContent(AuthUser user) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _prefPillRow(
           context: context,
@@ -1521,6 +1514,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               'label': _t('cat_person'),
               'value': 'cat',
               'icon': LucideIcons.cat,
+            },
+            {
+              'label': _t('nothing'),
+              'value': 'nothing',
+              'icon': LucideIcons.ban,
             },
           ],
           onUpdate: (val) =>

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api_client.dart';
+import '../../dashboard/application/dev_mock_matches_provider.dart';
 import '../../match/data/wave_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -184,9 +185,17 @@ class MatchRepository {
 
 final matchRepositoryProvider = Provider((ref) => MatchRepository());
 
-/// Stream of real matches from the server.
+/// Stream of real matches from the server, merged with dev-mode mock matches
+/// produced by completed proximity simulations. Dev mocks are appended to the
+/// front of the list so they appear at the top of the People tab.
 final matchesStreamProvider = StreamProvider<List<MatchProfile>>((ref) {
-  return ref.watch(matchRepositoryProvider).watchMatches();
+  final devMocks = ref.watch(devMockMatchesProvider);
+  return ref.watch(matchRepositoryProvider).watchMatches().map((real) {
+    if (devMocks.isEmpty) return real;
+    final realIds = real.map((m) => m.id).toSet();
+    final unique = devMocks.where((m) => !realIds.contains(m.id));
+    return [...unique, ...real];
+  });
 });
 
 /// Controller to handle user actions (Like/Pass/Greet)
