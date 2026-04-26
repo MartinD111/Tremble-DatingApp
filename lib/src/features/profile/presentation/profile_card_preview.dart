@@ -428,11 +428,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
           RegExp('burnette', caseSensitive: false), 'Brunette');
     }
 
-    // Title Case: capitalize every word
-    return processed.split(' ').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
+    // Ensure the first letter of the entire string is capitalized (Sentence case)
+    return processed[0].toUpperCase() + processed.substring(1);
   }
 
   Widget _buildLifestylePreferences(AuthUser user, bool isDark, Color textColor,
@@ -517,16 +514,64 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                 : '',
             isDark: isDark,
           ),
-          if (user.politicalAffiliation != null) ...[
-            const SizedBox(height: 24),
-            _PreferencePill(
+          const SizedBox(height: 32),
+          Builder(builder: (context) {
+            final val = _getPoliticalValue(user.politicalAffiliation);
+            String currentText = user.politicalAffiliation != null
+                ? t(user.politicalAffiliation!, lang)
+                : t('politics_undisclosed', lang);
+            if (val > 0 && user.politicalAffiliation != null) {
+              currentText = _politicsLabelReg(val, lang);
+            }
+
+            return _buildSpectrumIndicator(
               icon: LucideIcons.flag,
-              label: _formatChipText(t(user.politicalAffiliation!, lang)),
-            ),
-          ],
+              label: t('political_affiliation', lang),
+              value: val <= 0 ? 3.0 : val,
+              min: 1,
+              max: 5,
+              leftLabel: t('politics_left', lang),
+              rightLabel: t('politics_right', lang),
+              currentText: currentText,
+              isDark: isDark,
+              hideThumb: val <= 0,
+            );
+          }),
         ],
       ),
     );
+  }
+
+  double _getPoliticalValue(String? affiliation) {
+    switch (affiliation) {
+      case 'politics_left':
+        return 1.0;
+      case 'politics_center_left':
+        return 2.0;
+      case 'politics_center':
+        return 3.0;
+      case 'politics_center_right':
+        return 4.0;
+      case 'politics_right':
+        return 5.0;
+      case 'politics_dont_care':
+        return 0.0;
+      case 'politics_undisclosed':
+        return -1.0;
+      default:
+        return -1.0;
+    }
+  }
+
+  String _politicsLabelReg(double v, String lang) {
+    final idx = v.round().clamp(1, 5) - 1;
+    return [
+      t('politics_left', lang),
+      t('politics_center_left', lang),
+      t('politics_center', lang),
+      t('politics_center_right', lang),
+      t('politics_right', lang),
+    ][idx];
   }
 
 
@@ -602,6 +647,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     required String rightLabel,
     required String currentText,
     required bool isDark,
+    bool hideThumb = false,
   }) {
     final trackColor =
         isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
@@ -653,6 +699,9 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
               final percent = (value - min) / (max - min);
               final thumbSize = 12.0;
               final leftOffset = (constraints.maxWidth - thumbSize) * percent;
+
+              if (hideThumb) return const SizedBox.shrink();
+
               return Container(
                 margin: EdgeInsets.only(left: leftOffset),
                 alignment: Alignment.centerLeft,
@@ -712,14 +761,14 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
             for (final entry in _hobbyCategories.entries)
               if (userHobbies.any((h) => entry.value.contains(h))) ...[
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    t(entry.key, lang),
+                    t(entry.key, lang).toUpperCase(),
                     style: GoogleFonts.instrumentSans(
-                      color: subColor.withValues(alpha: 0.7),
+                      color: subColor.withValues(alpha: 0.5),
                       fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
@@ -737,14 +786,14 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
               ],
             if (customHobbies.isNotEmpty) ...[
               Padding(
-                padding: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
-                  t('hobby_other', lang),
+                  t('hobby_other', lang).toUpperCase(),
                   style: GoogleFonts.instrumentSans(
-                    color: subColor.withValues(alpha: 0.7),
+                    color: subColor.withValues(alpha: 0.5),
                     fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
                   ),
                 ),
               ),

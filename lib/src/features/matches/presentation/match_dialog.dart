@@ -224,7 +224,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
                 onTap: () {
                   ref.read(matchControllerProvider.notifier).dismiss();
                   if (context.canPop()) context.pop();
-                  context.push('/profile', extra: match);
+                  context.push('/profile?showActions=false', extra: match);
                 },
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),

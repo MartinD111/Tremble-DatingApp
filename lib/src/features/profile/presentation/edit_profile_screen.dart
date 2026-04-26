@@ -2178,12 +2178,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                t(entry.key, lang),
+                t(entry.key, lang).toUpperCase(),
                 style: GoogleFonts.instrumentSans(
-                  color: isDark ? Colors.white70 : Colors.black54,
+                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
                   fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
                 ),
               ),
             ),
@@ -2203,12 +2203,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              t('hobby_other', lang),
+              t('hobby_other', lang).toUpperCase(),
               style: GoogleFonts.instrumentSans(
-                color: isDark ? Colors.white70 : Colors.black54,
+                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
                 fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.2,
               ),
             ),
           ),

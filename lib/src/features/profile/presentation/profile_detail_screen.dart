@@ -797,29 +797,29 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                 : '',
             isDark: isDark,
           ),
-          if (match.politicalAffiliation != null) ...[
-            const SizedBox(height: 32),
-            Builder(builder: (context) {
-              final val = _getPoliticalValue(match.politicalAffiliation);
-              String currentText = t(match.politicalAffiliation!, lang);
-              if (val > 0) {
-                currentText = _politicsLabelReg(val, lang);
-              }
+          const SizedBox(height: 32),
+          Builder(builder: (context) {
+            final val = _getPoliticalValue(match.politicalAffiliation);
+            String currentText = match.politicalAffiliation != null 
+                ? t(match.politicalAffiliation!, lang)
+                : t('politics_undisclosed', lang);
+            if (val > 0 && match.politicalAffiliation != null) {
+              currentText = _politicsLabelReg(val, lang);
+            }
 
-              return _buildSpectrumIndicator(
-                icon: LucideIcons.flag,
-                label: t('political_affiliation', lang),
-                value: val <= 0 ? 3.0 : val,
-                min: 1,
-                max: 5,
-                leftLabel: t('politics_left', lang),
-                rightLabel: t('politics_right', lang),
-                currentText: currentText,
-                isDark: isDark,
-                hideThumb: val <= 0,
-              );
-            }),
-          ],
+            return _buildSpectrumIndicator(
+              icon: LucideIcons.flag,
+              label: t('political_affiliation', lang),
+              value: val <= 0 ? 3.0 : val,
+              min: 1,
+              max: 5,
+              leftLabel: t('politics_left', lang),
+              rightLabel: t('politics_right', lang),
+              currentText: currentText,
+              isDark: isDark,
+              hideThumb: val <= 0,
+            );
+          }),
         ],
       ),
     );
