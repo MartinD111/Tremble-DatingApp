@@ -3,8 +3,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 class TrembleLogo extends StatelessWidget {
   final double size;
+  final bool isAnimated;
 
-  const TrembleLogo({super.key, this.size = 120.0});
+  const TrembleLogo({
+    super.key,
+    this.size = 120.0,
+    this.isAnimated = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +50,10 @@ class TrembleLogo extends StatelessWidget {
           ),
 
           // 3. Heart-Wifi Icon with Animation
-          _AnimatedHeartWifi(size: size * 0.8),
+          _AnimatedHeartWifi(
+            size: size * 0.8,
+            isAnimated: isAnimated,
+          ),
         ],
       ),
     );
@@ -54,11 +62,24 @@ class TrembleLogo extends StatelessWidget {
 
 class _AnimatedHeartWifi extends StatelessWidget {
   final double size;
+  final bool isAnimated;
 
-  const _AnimatedHeartWifi({required this.size});
+  const _AnimatedHeartWifi({
+    required this.size,
+    this.isAnimated = true,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final painter = _HeartWifiPainter(0.5, 0.5, 0.5); // Static base visibility
+
+    if (!isAnimated) {
+      return CustomPaint(
+        size: Size(size, size),
+        painter: painter,
+      );
+    }
+
     return CustomPaint(
       size: Size(size, size),
       painter: _HeartWifiPainter(0.06, 0.06, 0.06), // Initial opacity

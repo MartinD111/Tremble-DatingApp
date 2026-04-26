@@ -64,63 +64,69 @@ class PreferenceRangeSlider extends StatelessWidget {
         // Header row: label + value + edit icon
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (icon != null) ...[
-                  Icon(icon,
-                      size: 18, color: labelColor.withValues(alpha: 0.6)),
-                  const SizedBox(width: 10),
-                ],
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: labelColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (icon != null) ...[
+                        Icon(icon,
+                            size: 18, color: labelColor.withValues(alpha: 0.6)),
+                        const SizedBox(width: 10),
+                      ],
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: labelColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (isPremium) ...[
+                        const SizedBox(width: 8),
+                        const Icon(LucideIcons.lock, size: 13, color: Colors.amber),
+                      ],
+                    ],
                   ),
-                ),
-                if (isPremium) ...[
-                  const SizedBox(width: 8),
-                  const Icon(LucideIcons.lock, size: 13, color: Colors.amber),
-                ],
-              ],
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  valueLabel,
-                  style: TextStyle(
-                    color: valueColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: onEdit,
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isDark
-                          ? brandRose.withValues(alpha: 0.15)
-                          : brandRose.withValues(alpha: 0.1),
-                      border: Border.all(
-                        color: brandRose.withValues(alpha: 0.3),
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: EdgeInsets.only(left: icon != null ? 28 : 0),
+                    child: Text(
+                      valueLabel,
+                      style: TextStyle(
+                        color: valueColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    child: Icon(
-                      LucideIcons.pencil,
-                      size: 16,
-                      color: brandRose,
-                    ),
+                  ),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: onEdit,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDark
+                      ? brandRose.withValues(alpha: 0.15)
+                      : brandRose.withValues(alpha: 0.1),
+                  border: Border.all(
+                    color: brandRose.withValues(alpha: 0.3),
                   ),
                 ),
-              ],
+                child: Icon(
+                  LucideIcons.pencil,
+                  size: 16,
+                  color: brandRose,
+                ),
+              ),
             ),
           ],
         ),

@@ -186,6 +186,7 @@ class SettingsController {
     String? startLabel,
     String? endLabel,
     String Function(double)? labelMapper,
+    String? unit,
     bool isPremium = false,
   }) async {
     final user = _user;
@@ -210,6 +211,7 @@ class SettingsController {
       startLabel: startLabel,
       endLabel: endLabel,
       labelMapper: labelMapper,
+      unit: unit,
       onSave: onUpdate,
     );
   }

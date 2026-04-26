@@ -380,7 +380,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
   }
 
   static const Map<String, List<String>> _hobbyCategories = {
-    'Active 🏋️': [
+    'hobby_cat_active': [
       'Fitnes',
       'Pilates',
       'Sprehodi',
@@ -390,24 +390,24 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       'Plezanje',
       'Plavanje'
     ],
-    'Prosti čas ☕': [
+    'hobby_cat_leisure': [
       'Branje',
       'Kava',
       'Čaj',
       'Kuhanje',
       'Filmi',
       'Serije',
-      'Videoigre',
-      'Glasba'
+      'Videoigre'
     ],
-    'Umetnost 🎨': [
+    'hobby_cat_art': [
       'Slikanje',
       'Fotografija',
       'Pisanje',
       'Muzeji',
       'Gledališče',
+      'Glasba'
     ],
-    'Potovanja ✈️': [
+    'hobby_cat_travel': [
       'Izleti',
       'Narava',
       'Gore',
@@ -421,6 +421,13 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     if (text.isEmpty) return text;
     // Replace underscores with spaces
     String processed = text.replaceAll('_', ' ');
+
+    // Fix specific typos mentioned in bug reports
+    if (processed.toLowerCase().contains('burnette')) {
+      processed = processed.replaceAll(
+          RegExp('burnette', caseSensitive: false), 'Brunette');
+    }
+
     // Title Case: capitalize every word
     return processed.split(' ').map((word) {
       if (word.isEmpty) return word;
@@ -510,22 +517,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                 : '',
             isDark: isDark,
           ),
-          if (user.politicalAffiliation != null &&
-              !['politics_dont_care', 'politics_undisclosed']
-                  .contains(user.politicalAffiliation)) ...[
-            const SizedBox(height: 40),
-            _buildSpectrumIndicator(
-              icon: LucideIcons.flag,
-              label: t('political_affiliation', lang),
-              value: _getPoliticalValue(user.politicalAffiliation!),
-              min: 1.0,
-              max: 5.0,
-              leftLabel: t('politics_left', lang),
-              rightLabel: t('politics_right', lang),
-              currentText: t(user.politicalAffiliation!, lang),
-              isDark: isDark,
-            ),
-          ] else if (user.politicalAffiliation != null) ...[
+          if (user.politicalAffiliation != null) ...[
             const SizedBox(height: 24),
             _PreferencePill(
               icon: LucideIcons.flag,
@@ -537,22 +529,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     );
   }
 
-  double _getPoliticalValue(String affiliation) {
-    switch (affiliation) {
-      case 'politics_left':
-        return 1.0;
-      case 'politics_center_left':
-        return 2.0;
-      case 'politics_center':
-        return 3.0;
-      case 'politics_center_right':
-        return 4.0;
-      case 'politics_right':
-        return 5.0;
-      default:
-        return 3.0;
-    }
-  }
+
 
   String _getHobbyKey(String hobby) {
     switch (hobby) {
@@ -730,45 +707,14 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
             style: GoogleFonts.instrumentSans(
                 color: subColor, fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          runSpacing: 12,
-          alignment: WrapAlignment.center,
+        Column(
           children: [
             for (final entry in _hobbyCategories.entries)
-              if (userHobbies.any((h) => entry.value.contains(h)))
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      t(entry.key, lang),
-                      style: GoogleFonts.instrumentSans(
-                        color: subColor.withValues(alpha: 0.7),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      alignment: WrapAlignment.center,
-                      children: entry.value
-                          .where((h) => userHobbies.contains(h))
-                          .map((h) => _PreferencePill(
-                              label: _formatChipText(t(_getHobbyKey(h), lang))))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-            if (customHobbies.isNotEmpty)
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    t('hobby_other', lang),
+              if (userHobbies.any((h) => entry.value.contains(h))) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    t(entry.key, lang),
                     style: GoogleFonts.instrumentSans(
                       color: subColor.withValues(alpha: 0.7),
                       fontSize: 10,
@@ -776,18 +722,42 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                       letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    alignment: WrapAlignment.center,
-                    children: customHobbies
-                        .map((h) => _PreferencePill(
-                            label: _formatChipText(t(_getHobbyKey(h), lang))))
-                        .toList(),
+                ),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.center,
+                  children: entry.value
+                      .where((h) => userHobbies.contains(h))
+                      .map((h) => _PreferencePill(
+                          label: _formatChipText(t(_getHobbyKey(h), lang))))
+                      .toList(),
+                ),
+                const SizedBox(height: 24),
+              ],
+            if (customHobbies.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  t('hobby_other', lang),
+                  style: GoogleFonts.instrumentSans(
+                    color: subColor.withValues(alpha: 0.7),
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
-                ],
+                ),
               ),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                alignment: WrapAlignment.center,
+                children: customHobbies
+                    .map((h) => _PreferencePill(
+                        label: _formatChipText(t(_getHobbyKey(h), lang))))
+                    .toList(),
+              ),
+            ],
           ],
         ),
       ],
@@ -804,7 +774,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
           _badge(LucideIcons.user, user.gender!, isDark, subColor, iconColor));
     }
     if (user.hairColor != null) {
-      badges.add(_badge(Icons.circle, t(user.hairColor!, lang), isDark,
+      badges.add(_badge(
+          Icons.circle, _formatChipText(t(user.hairColor!, lang)), isDark,
           subColor, IconUtils.getHairColor(user.hairColor!)));
     }
     if (user.ethnicity != null) {

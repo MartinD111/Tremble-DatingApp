@@ -938,7 +938,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           isPremium: !user.isPremium,
           onEdit: () => _ctrl.openSliderEditModal(
             context: context,
-            title: _t('height'),
+            title: _t('height_label'),
             min: 130,
             max: 250,
             divisions: 120,
@@ -946,6 +946,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               (user.heightRangeStart ?? 130).toDouble(),
               (user.heightRangeEnd ?? 250).toDouble(),
             ),
+            unit: ' cm',
             isPremium: !user.isPremium,
             onUpdate: _ctrl.updateHeightRange,
           ),
@@ -1026,6 +1027,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               ? user.interestedIn.map((v) => v as String?).toList()
               : <String?>[null],
           formatter: _t,
+          iconMapper: (v) {
+            if (v == 'male') return Icons.male;
+            if (v == 'female') return Icons.female;
+            if (v == 'non_binary') return LucideIcons.userX;
+            return null;
+          },
           onTap: () => _openInterestedInModal(user),
           onEdit: () => _openInterestedInModal(user),
         ),
@@ -1082,6 +1089,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ],
           onUpdate: (val) =>
               _ctrl.updateUser((u) => u.copyWith(religionPreference: val)),
+          iconMapper: (v) => IconUtils.getReligionIcon(v),
         ),
         const SizedBox(height: 16),
 
@@ -1148,6 +1156,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ],
           onUpdate: (val) =>
               _ctrl.updateUser((u) => u.copyWith(hairColorPreference: val)),
+          iconMapper: (v) => Icons.circle,
         ),
 
         // ── Looking For (multi-select) ──
@@ -1162,6 +1171,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               ? user.lookingFor.map((v) => v as String?).toList()
               : <String?>[null],
           formatter: _t, // _t(v) translates known keys; unknown values return v
+          iconMapper: (v) => IconUtils.getLookingForIcon(v),
           onTap: () => _openLookingForModal(user),
           onEdit: () => _openLookingForModal(user),
         ),
@@ -1178,6 +1188,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     required List<Map<String, dynamic>> options,
     required void Function(String?) onUpdate,
     bool isPremium = false,
+    IconData? Function(String)? iconMapper,
   }) {
     // Formatter: handles comma-joined multi-values ("Po meri") and single values.
     final formatter = (String v) {
@@ -1197,6 +1208,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       label: label,
       values: [currentValue],
       formatter: formatter,
+      iconMapper: iconMapper,
       isPremium: isPremium,
       onEdit: () => _ctrl.openPillEditModal(
         context: context,
@@ -1223,10 +1235,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       context: context,
       title: _t('looking_for'),
       options: [
-        {'label': _t('short_term_fun'), 'value': 'short_term_fun'},
-        {'label': _t('long_term_partner'), 'value': 'long_term_partner'},
-        {'label': _t('short_open_long'), 'value': 'short_open_long'},
-        {'label': _t('long_open_short'), 'value': 'long_open_short'},
+        {
+          'label': _t('short_term_fun'),
+          'value': 'short_term_fun',
+          'icon': LucideIcons.flame,
+        },
+        {
+          'label': _t('long_term_partner'),
+          'value': 'long_term_partner',
+          'icon': LucideIcons.heart,
+        },
+        {
+          'label': _t('short_open_long'),
+          'value': 'short_open_long',
+          'icon': LucideIcons.zap,
+        },
+        {
+          'label': _t('long_open_short'),
+          'value': 'long_open_short',
+          'icon': LucideIcons.gem,
+        },
       ],
       currentValues: user.lookingFor,
       onUpdate: (vals) => _ctrl.updateUser((u) => u.copyWith(lookingFor: vals)),
@@ -1240,9 +1268,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       context: context,
       title: _t('gender'),
       options: [
-        {'label': _t('male'), 'value': 'male'},
-        {'label': _t('female'), 'value': 'female'},
-        {'label': _t('non_binary'), 'value': 'non_binary'},
+        {
+          'label': _t('male'),
+          'value': 'male',
+          'icon': Icons.male,
+        },
+        {
+          'label': _t('female'),
+          'value': 'female',
+          'icon': Icons.female,
+        },
+        {
+          'label': _t('non_binary'),
+          'value': 'non_binary',
+          'icon': LucideIcons.userX,
+        },
       ],
       currentValues: user.interestedIn,
       onUpdate: (vals) => _ctrl.updateInterestedIn(vals),

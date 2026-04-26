@@ -12,6 +12,7 @@ import 'package:tremble/src/features/match/domain/match.dart' as wave_match;
 import 'package:tremble/src/features/safety/presentation/widgets/ugc_action_sheet.dart';
 import 'package:tremble/src/core/theme.dart';
 import 'package:tremble/src/core/translations.dart';
+import 'package:tremble/src/core/utils/icon_utils.dart';
 
 class MatchesScreen extends ConsumerStatefulWidget {
   const MatchesScreen({super.key});
@@ -27,7 +28,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
   final Set<String> _removedIds = {};
 
   void _openProfile(MatchProfile match) {
-    context.push('/profile', extra: match);
+    context.push('/profile?showActions=false', extra: match);
   }
 
   void _removeMatch(String matchId, String name) {
@@ -292,12 +293,28 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                         ),
                                         if (!isLocked) ...[
                                           const SizedBox(height: 2),
-                                          Text(
-                                            '${profile.age} ${t('years', lang)}',
-                                            style: GoogleFonts.instrumentSans(
-                                              fontSize: 13,
-                                              color: subtextColor,
-                                            ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                '${profile.age} ${t('years', lang)}',
+                                                style: GoogleFonts.instrumentSans(
+                                                  fontSize: 13,
+                                                  color: subtextColor,
+                                                ),
+                                              ),
+                                              if (profile.birthDate != null) ...[
+                                                const SizedBox(width: 8),
+                                                Icon(
+                                                  ZodiacUtils.getZodiacIcon(
+                                                    ZodiacUtils.getZodiacSign(
+                                                        profile.birthDate),
+                                                  ),
+                                                  size: 14,
+                                                  color: subtextColor
+                                                      .withValues(alpha: 0.7),
+                                                ),
+                                              ],
+                                            ],
                                           ),
                                         ],
                                       ],

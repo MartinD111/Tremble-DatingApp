@@ -17,8 +17,13 @@ import '../../auth/data/auth_repository.dart';
 
 class ProfileDetailScreen extends ConsumerStatefulWidget {
   final MatchProfile match;
+  final bool showActions;
 
-  const ProfileDetailScreen({super.key, required this.match});
+  const ProfileDetailScreen({
+    super.key,
+    required this.match,
+    this.showActions = true,
+  });
 
   @override
   ConsumerState<ProfileDetailScreen> createState() =>
@@ -374,27 +379,28 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
           ),
 
           // --- Action Buttons ---
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(
-                  24, 20, 24, MediaQuery.of(context).padding.bottom + 20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    bottomBgColor.withValues(alpha: 0),
-                    bottomBgColor.withValues(alpha: 0.9),
-                    bottomBgColor,
-                  ],
+          if (widget.showActions)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(
+                    24, 20, 24, MediaQuery.of(context).padding.bottom + 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      bottomBgColor.withValues(alpha: 0),
+                      bottomBgColor.withValues(alpha: 0.9),
+                      bottomBgColor,
+                    ],
+                  ),
                 ),
+                child: _buildActionButtons(context, ref, match),
               ),
-              child: _buildActionButtons(context, ref, match),
             ),
-          ),
         ],
       ),
     );
@@ -508,7 +514,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       addBadge(LucideIcons.graduationCap, match.school!);
     }
     if (match.hairColor != null) {
-      addBadge(Icons.circle, t(match.hairColor!, lang),
+      addBadge(Icons.circle, _formatChipText(t(match.hairColor!, lang)),
           IconUtils.getHairColor(match.hairColor!));
     }
     if (match.ethnicity != null) {
@@ -541,15 +547,15 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       'Kuhanje',
       'Filmi',
       'Serije',
-      'Videoigre',
-      'Glasba'
+      'Videoigre'
     ],
     'hobby_cat_art': [
       'Slikanje',
       'Fotografija',
       'Pisanje',
       'Muzeji',
-      'Gledališče'
+      'Gledališče',
+      'Glasba'
     ],
     'hobby_cat_travel': [
       'Izleti',
@@ -637,64 +643,57 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
             style: GoogleFonts.instrumentSans(
                 color: subColor, fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
-        Wrap(
-          spacing: 8,
-          runSpacing: 12,
-          alignment: WrapAlignment.center,
+        Column(
           children: [
             for (final entry in _hobbyCategories.entries)
-              if (userHobbies.any((h) => entry.value.contains(h)))
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      t(entry.key, lang),
-                      style: GoogleFonts.instrumentSans(
-                        color: subColor.withValues(alpha: 0.7),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      alignment: WrapAlignment.center,
-                      children: entry.value
-                          .where((h) => userHobbies.contains(h))
-                          .map((h) => _PreferencePill(
-                              label: _formatChipText(t(_getHobbyKey(h), lang))))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-            if (customHobbies.isNotEmpty)
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    t('hobby_other', lang),
+              if (userHobbies.any((h) => entry.value.contains(h))) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    t(entry.key, lang).toUpperCase(),
                     style: GoogleFonts.instrumentSans(
-                      color: subColor.withValues(alpha: 0.7),
+                      color: subColor.withValues(alpha: 0.5),
                       fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    alignment: WrapAlignment.center,
-                    children: customHobbies
-                        .map((h) => _PreferencePill(
-                            label: _formatChipText(t(_getHobbyKey(h), lang))))
-                        .toList(),
+                ),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.center,
+                  children: entry.value
+                      .where((h) => userHobbies.contains(h))
+                      .map((h) => _PreferencePill(
+                          label: _formatChipText(t(_getHobbyKey(h), lang))))
+                      .toList(),
+                ),
+                const SizedBox(height: 24),
+              ],
+            if (customHobbies.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  t('hobby_other', lang).toUpperCase(),
+                  style: GoogleFonts.instrumentSans(
+                    color: subColor.withValues(alpha: 0.5),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
                   ),
-                ],
+                ),
               ),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                alignment: WrapAlignment.center,
+                children: customHobbies
+                    .map((h) => _PreferencePill(
+                        label: _formatChipText(t(_getHobbyKey(h), lang))))
+                    .toList(),
+              ),
+            ],
           ],
         ),
       ],
@@ -705,13 +704,15 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     if (text.isEmpty) return text;
     // Replace underscores with spaces
     String processed = text.replaceAll('_', ' ');
-    // Handle the specific typo mentioned ("_v" or similar) if needed, but replaceAll covers it broadly
 
-    // Title Case: capitalize every word
-    return processed.split(' ').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
+    // Fix specific typos mentioned in bug reports
+    if (processed.toLowerCase().contains('burnette')) {
+      processed = processed.replaceAll(
+          RegExp('burnette', caseSensitive: false), 'Brunette');
+    }
+
+    // Ensure the first letter of the entire string is capitalized (Sentence case)
+    return processed[0].toUpperCase() + processed.substring(1);
   }
 
   Widget _buildLifestylePreferences(MatchProfile match, bool isDark,
@@ -796,34 +797,35 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                 : '',
             isDark: isDark,
           ),
-          if (match.politicalAffiliation != null &&
-              !['politics_dont_care', 'politics_undisclosed']
-                  .contains(match.politicalAffiliation)) ...[
-            const SizedBox(height: 40),
-            _buildSpectrumIndicator(
-              icon: LucideIcons.flag,
-              label: t('political_affiliation', lang),
-              value: _getPoliticalValue(match.politicalAffiliation!),
-              min: 1.0,
-              max: 5.0,
-              leftLabel: t('politics_left', lang),
-              rightLabel: t('politics_right', lang),
-              currentText: t(match.politicalAffiliation!, lang),
-              isDark: isDark,
-            ),
-          ] else if (match.politicalAffiliation != null) ...[
-            const SizedBox(height: 24),
-            _PreferencePill(
-              icon: LucideIcons.flag,
-              label: _formatChipText(t(match.politicalAffiliation!, lang)),
-            ),
+          if (match.politicalAffiliation != null) ...[
+            const SizedBox(height: 32),
+            Builder(builder: (context) {
+              final val = _getPoliticalValue(match.politicalAffiliation);
+              String currentText = t(match.politicalAffiliation!, lang);
+              if (val > 0) {
+                currentText = _politicsLabelReg(val, lang);
+              }
+
+              return _buildSpectrumIndicator(
+                icon: LucideIcons.flag,
+                label: t('political_affiliation', lang),
+                value: val <= 0 ? 3.0 : val,
+                min: 1,
+                max: 5,
+                leftLabel: t('politics_left', lang),
+                rightLabel: t('politics_right', lang),
+                currentText: currentText,
+                isDark: isDark,
+                hideThumb: val <= 0,
+              );
+            }),
           ],
         ],
       ),
     );
   }
 
-  double _getPoliticalValue(String affiliation) {
+  double _getPoliticalValue(String? affiliation) {
     switch (affiliation) {
       case 'politics_left':
         return 1.0;
@@ -835,10 +837,27 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
         return 4.0;
       case 'politics_right':
         return 5.0;
+      case 'politics_dont_care':
+        return 0.0;
+      case 'politics_undisclosed':
+        return -1.0;
       default:
-        return 3.0;
+        return -1.0;
     }
   }
+
+  String _politicsLabelReg(double v, String lang) {
+    final idx = v.round().clamp(1, 5) - 1;
+    return [
+      t('politics_left', lang),
+      t('politics_center_left', lang),
+      t('politics_center', lang),
+      t('politics_center_right', lang),
+      t('politics_right', lang),
+    ][idx];
+  }
+
+
 
   Widget _buildSpectrumIndicator({
     required IconData icon,
@@ -850,6 +869,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     required String rightLabel,
     required String currentText,
     required bool isDark,
+    bool hideThumb = false,
   }) {
     final trackColor =
         isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
@@ -901,6 +921,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
               final percent = (value - min) / (max - min);
               final thumbSize = 12.0;
               final leftOffset = (constraints.maxWidth - thumbSize) * percent;
+
+              if (hideThumb) return const SizedBox.shrink();
+
               return Container(
                 margin: EdgeInsets.only(left: leftOffset),
                 alignment: Alignment.centerLeft,

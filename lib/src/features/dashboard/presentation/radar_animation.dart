@@ -145,7 +145,10 @@ class _RadarAnimationState extends State<RadarAnimation>
             IgnorePointer(
               child: Opacity(
                 opacity: _logoOpacity.value,
-                child: const TrembleLogo(size: 52),
+                child: TrembleLogo(
+                  size: 52,
+                  isAnimated: widget.isScanning,
+                ),
               ),
             ),
           ],

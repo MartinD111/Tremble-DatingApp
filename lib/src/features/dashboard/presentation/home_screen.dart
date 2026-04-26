@@ -9,7 +9,7 @@ import 'radar_animation.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/liquid_nav_bar.dart'; // Import LiquidNavBar
 import '../../settings/presentation/settings_screen.dart';
-import '../../map/presentation/pulse_map_screen.dart';
+import '../../map/presentation/tremble_map_screen.dart';
 import '../../../core/theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../matches/presentation/matches_screen.dart';
@@ -32,6 +32,7 @@ import '../../profile/data/profile_repository.dart';
 import '../application/dev_simulation_controller.dart';
 import '../application/radar_search_session.dart';
 import '../../match/presentation/widgets/match_notification_pill.dart';
+import '../../../shared/ui/premium_paywall.dart';
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State
@@ -196,7 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             batteryLevel,
             activeMatch,
             devSim),
-        const PulseMapScreen(),
+        const TrembleMapScreen(),
         const MatchesScreen(),
         const SettingsScreen(),
       ];
@@ -302,7 +303,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // the same hook will be fed by the BLE wave controller.
         if (devSim.hasPillVisible && devSim.profile != null)
           Positioned(
-            top: MediaQuery.of(context).padding.top + 20,
+            top: MediaQuery.of(context).padding.top + 80,
             left: 0,
             right: 0,
             child: SafeArea(
@@ -312,6 +313,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   name: devSim.profile!.name,
                   age: devSim.profile!.age,
                   imageUrl: devSim.profile!.imageUrl,
+                  birthDate: devSim.profile!.birthDate,
                   pillState: _phaseToPillState(devSim.phase),
                   onWave: () {
                     final notifier =
@@ -325,6 +327,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onIgnore: () => ref
                       .read(devSimulationControllerProvider.notifier)
                       .onIgnore(),
+                  // Premium → open profile reveal. Free → paywall bottom sheet.
+                  // Source of truth for premium gating is AuthUser.isPremium
+                  // (same provider used by matches_screen and settings).
+                  onTap: () {
+                    final tapUser = ref.read(authStateProvider);
+                    final tapIsPremium = tapUser?.isPremium == true;
+                    if (!tapIsPremium) {
+                      PremiumPaywallBottomSheet.show(context);
+                      return;
+                    }
+                    // Synthesize a wave_match.Match from the dev profile so the
+                    // production match_reveal route accepts it without a
+                    // dev-only sibling. id uses ms-since-epoch (good enough
+                    // for an ephemeral dev object — no Firestore write).
+                    final now = DateTime.now();
+                    final synthesized = wave_match.Match(
+                      id: 'dev-${now.microsecondsSinceEpoch}',
+                      userIds: [
+                        tapUser?.id ?? 'dev-self',
+                        devSim.profile!.id,
+                      ],
+                      createdAt: now,
+                      seenBy: [tapUser?.id ?? 'dev-self'],
+                      status: 'found',
+                      isFound: true,
+                      gestures: {
+                        (tapUser?.id ?? 'dev-self'): true,
+                        devSim.profile!.id: true,
+                      },
+                      expiresAt: now.add(const Duration(minutes: 30)),
+                    );
+                    context.pushNamed('match_reveal', extra: synthesized);
+                  },
                 )
                     .animate()
                     .fadeIn(duration: 250.ms)
@@ -510,8 +545,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                             // ── Dev Mode: passive-discovery simulation ──────────
                             // Phase 1 fires after 10s — pill first, radar empty
-                            // until mutual wave. kDebugMode guards production.
-                            if (kDebugMode && ref.read(bypassRadarProvider)) {
+                            // until mutual wave. kDebugMode guards production;
+                            // localAdminMode/bypassRadar OR canAccessRadar
+                            // both qualify so the sim works whether the dev
+                            // is signed in as admin or as a normal verified
+                            // user during testing.
+                            if (kDebugMode &&
+                                (ref.read(bypassRadarProvider) ||
+                                    canAccessRadar)) {
                               ref
                                   .read(devSimulationControllerProvider.notifier)
                                   .start();
@@ -809,24 +850,14 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
                 );
               }),
 
-            // Core button
             GlassCard(
               opacity: 0.15,
               borderRadius: 100,
               padding: const EdgeInsets.all(20),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: widget.isScanning
-                    ? TrembleLogo(key: const ValueKey('logo'), size: 90)
-                    : Icon(
-                        LucideIcons.play,
-                        key: const ValueKey('play'),
-                        size: 60,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.7),
-                      ),
+              child: TrembleLogo(
+                key: const ValueKey('logo'),
+                size: 90,
+                isAnimated: widget.isScanning,
               ),
             ),
           ],

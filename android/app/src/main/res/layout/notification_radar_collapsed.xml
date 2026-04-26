@@ -19,20 +19,14 @@
     android:paddingTop="6dp"
     android:paddingBottom="6dp">
 
-    <!-- Pulsing dot indicator (tinted via setColorFilter at runtime) -->
-    <ImageView
-        android:id="@+id/notif_icon"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:src="@drawable/ic_tremble_qs_tile"
-        android:contentDescription="Radar" />
+
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:layout_marginStart="10dp">
+        android:layout_marginStart="2dp">
 
         <TextView
             android:id="@+id/notif_title"

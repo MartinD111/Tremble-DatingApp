@@ -1552,7 +1552,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       {
         'label': t('non_binary', lang),
         'value': 'non_binary',
-        'icon': Icons.transgender
+        'icon': LucideIcons.userX
       },
     ];
     return Row(
@@ -1613,7 +1613,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final options = [
       {'label': t('male', lang), 'value': 'male', 'icon': Icons.male},
       {'label': t('female', lang), 'value': 'female', 'icon': Icons.female},
-      {'label': t('both', lang), 'value': 'both', 'icon': Icons.people},
+      {'label': t('non_binary', lang), 'value': 'non_binary', 'icon': LucideIcons.userX},
     ];
     return Wrap(
       spacing: 10,
@@ -2139,15 +2139,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       'hobby_cooking',
       'hobby_movies',
       'hobby_series',
-      'hobby_video_games',
-      'hobby_music'
+      'hobby_video_games'
     ],
     'hobby_cat_art': [
       'hobby_painting',
       'hobby_photography',
       'hobby_writing',
       'hobby_museums',
-      'hobby_theater'
+      'hobby_theater',
+      'hobby_music'
     ],
     'hobby_cat_travel': [
       'hobby_trips',
@@ -2171,86 +2171,58 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final customHobbies =
         _hobbies.where((h) => !categorizedHobbies.contains(h)).toList();
 
-    final categoryTabs = <Widget>[];
-
-    for (final entry in _hobbyCategories.entries) {
-      final matched = _hobbies.where((h) => entry.value.contains(h)).toList();
-      if (matched.isEmpty) continue;
-
-      categoryTabs.add(
-        Container(
-          width: 140,
-          margin: const EdgeInsets.only(right: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
+    return Column(
+      children: [
+        for (final entry in _hobbyCategories.entries)
+          if (_hobbies.any((h) => entry.value.contains(h))) ...[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
                 t(entry.key, lang),
-                textAlign: TextAlign.center,
                 style: GoogleFonts.instrumentSans(
                   color: isDark ? Colors.white70 : Colors.black54,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                alignment: WrapAlignment.center,
-                children: matched
-                    .map((h) => _smallHobbyChip(
-                        h, lang, isDark, textColor, fillColor, borderColor))
-                    .toList(),
+            ),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              alignment: WrapAlignment.center,
+              children: _hobbies
+                  .where((h) => entry.value.contains(h))
+                  .map((h) => _smallHobbyChip(
+                      h, lang, isDark, textColor, fillColor, borderColor))
+                  .toList(),
+            ),
+            const SizedBox(height: 24),
+          ],
+        if (customHobbies.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              t('hobby_other', lang),
+              style: GoogleFonts.instrumentSans(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
-            ],
+            ),
           ),
-        ),
-      );
-    }
-
-    if (customHobbies.isNotEmpty) {
-      categoryTabs.add(
-        Container(
-          width: 140,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                t('hobby_other', lang),
-                textAlign: TextAlign.center,
-                style: GoogleFonts.instrumentSans(
-                  color: isDark ? Colors.white70 : Colors.black54,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                alignment: WrapAlignment.center,
-                children: customHobbies
-                    .map((h) => _smallHobbyChip(
-                        h, lang, isDark, textColor, fillColor, borderColor))
-                    .toList(),
-              ),
-            ],
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            alignment: WrapAlignment.center,
+            children: customHobbies
+                .map((h) => _smallHobbyChip(
+                    h, lang, isDark, textColor, fillColor, borderColor))
+                .toList(),
           ),
-        ),
-      );
-    }
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: categoryTabs,
-      ),
+        ],
+      ],
     );
   }
 

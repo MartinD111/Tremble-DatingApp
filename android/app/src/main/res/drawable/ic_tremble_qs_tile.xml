@@ -10,13 +10,13 @@
     android:viewportHeight="220">
 
     <group
-        android:translateX="110"
-        android:translateY="110"
-        android:scaleX="1.12"
-        android:scaleY="1.12">
+        android:translateX="106"
+        android:translateY="100"
+        android:scaleX="1.25"
+        android:scaleY="1.25">
         <group
-            android:translateX="-3.5"
-            android:translateY="-20">
+            android:translateX="-4"
+            android:translateY="-10">
             
             <!-- Main curve -->
             <path

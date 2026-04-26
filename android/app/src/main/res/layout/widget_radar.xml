@@ -12,8 +12,8 @@
 
     <ImageView
         android:id="@+id/widget_icon"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:src="@drawable/ic_tremble_qs_tile"
         android:contentDescription="@string/widget_label" />
 
@@ -22,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginStart="12dp">
+        android:layout_marginStart="16dp">
 
         <TextView
             android:id="@+id/widget_label"

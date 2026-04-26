@@ -143,7 +143,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
     final labelColor = isRoseLabel
         ? brandRose
         : isSelected
-            ? textColor
+            ? brandRose
             : isMuted
                 ? (isDark ? Colors.white54 : Colors.black45)
                 : textColor;
@@ -179,12 +179,12 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
             // Icon — shown when provided (rowIcon from the row, or per-option)
             if (icon != null) ...[
               Icon(icon,
-                  size: 18,
+                  size: 20,
                   color: isSelected
                       ? brandRose
                       : (iconColor ??
-                          (isDark ? Colors.white54 : Colors.black45))),
-              const SizedBox(width: 10),
+                          (isDark ? Colors.white : Colors.black87))),
+              const SizedBox(width: 12),
             ],
             Text(
               label,
@@ -414,6 +414,7 @@ Future<void> showSliderEditModal({
   String? startLabel,
   String? endLabel,
   String Function(double)? labelMapper,
+  String? unit,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -428,6 +429,7 @@ Future<void> showSliderEditModal({
       startLabel: startLabel,
       endLabel: endLabel,
       labelMapper: labelMapper,
+      unit: unit,
       onSave: (v) {
         onSave(v);
         Navigator.pop(ctx);
@@ -445,6 +447,7 @@ class _SliderEditSheet extends ConsumerStatefulWidget {
   final String? startLabel;
   final String? endLabel;
   final String Function(double)? labelMapper;
+  final String? unit;
   final ValueChanged<RangeValues> onSave;
 
   const _SliderEditSheet({
@@ -457,6 +460,7 @@ class _SliderEditSheet extends ConsumerStatefulWidget {
     this.startLabel,
     this.endLabel,
     this.labelMapper,
+    this.unit,
   });
 
   @override
@@ -535,7 +539,7 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
               const SizedBox(height: 8),
               // Live range display
               Text(
-                '${widget.title}: ${_label(_values.start)} – ${_label(_values.end)}',
+                '${_label(_values.start)} – ${_label(_values.end)}${widget.unit ?? ''}',
                 style: GoogleFonts.instrumentSans(
                   fontSize: 16,
                   color: brandRose,
@@ -679,6 +683,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
     required VoidCallback onTap,
     required bool isDark,
     required Color textColor,
+    IconData? icon,
   }) {
     final brandRose = Theme.of(context).colorScheme.primary;
     return GestureDetector(
@@ -702,6 +707,14 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
         ),
         child: Row(
           children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 20,
+                color: isSelected ? brandRose : (isDark ? Colors.white : Colors.black87),
+              ),
+              const SizedBox(width: 12),
+            ],
             Text(
               label,
               style: GoogleFonts.instrumentSans(
@@ -774,6 +787,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
               final isSelected = _selected.contains(value);
               return _optionPill(
                 label: opt['label']!,
+                icon: opt['icon'] as IconData?,
                 isSelected: isSelected,
                 onTap: () {
                   setState(() {

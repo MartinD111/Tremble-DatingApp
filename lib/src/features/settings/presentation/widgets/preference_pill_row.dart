@@ -18,6 +18,7 @@ class PreferencePillRow extends StatelessWidget {
   final String label;
   final List<String?> values; // nullable: null = not set
   final String Function(String) formatter;
+  final IconData? Function(String)? iconMapper;
   final VoidCallback onEdit;
   final VoidCallback? onTap;
   final bool isPremium;
@@ -28,6 +29,7 @@ class PreferencePillRow extends StatelessWidget {
     required this.label,
     required this.values,
     required this.formatter,
+    this.iconMapper,
     required this.onEdit,
     this.onTap,
     this.isPremium = false,
@@ -47,13 +49,46 @@ class PreferencePillRow extends StatelessWidget {
     final iconColor = isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black45;
 
     final nonNull = values.whereType<String>().toList();
-    final String displayLabel;
-    if (nonNull.isEmpty) {
-      displayLabel = '—';
-    } else if (nonNull.length == 1) {
-      displayLabel = formatter(nonNull.first);
-    } else {
-      displayLabel = 'Selected ${nonNull.length}';
+    
+    Widget buildPillContent() {
+      if (nonNull.isEmpty) {
+        return Text('—', style: TextStyle(color: subColor, fontSize: 13, fontWeight: FontWeight.w600));
+      }
+      
+      if (nonNull.length == 1) {
+        final val = nonNull.first;
+        final pillIcon = iconMapper?.call(val);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (pillIcon != null) ...[
+              Icon(pillIcon, size: 14, color: subColor),
+              const SizedBox(width: 6),
+            ],
+            Flexible(
+              child: Text(
+                formatter(val),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: subColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+      
+      return Text(
+        'Izbrano: ${nonNull.length}',
+        style: TextStyle(
+          color: subColor,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      );
     }
 
     return Padding(
@@ -99,16 +134,7 @@ class PreferencePillRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(100),
                     border: Border.all(color: pillBorder),
                   ),
-                  child: Text(
-                    displayLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: subColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: buildPillContent(),
                 ),
               ),
               const SizedBox(width: 10),

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -21,21 +23,29 @@ class _TrembleEvent {
   });
 }
 
-class PulseMapScreen extends ConsumerStatefulWidget {
-  const PulseMapScreen({super.key});
+class TrembleMapScreen extends ConsumerStatefulWidget {
+  const TrembleMapScreen({super.key});
 
   @override
-  ConsumerState<PulseMapScreen> createState() => _PulseMapScreenState();
+  ConsumerState<TrembleMapScreen> createState() => _TrembleMapScreenState();
 }
 
 enum _MapZoom { city, nearby, national }
 
-class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
+class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
+  Set<Circle> _circles = {};
   _MapZoom _zoom = _MapZoom.city;
 
   static const int _activePeople = 47;
+
+  // Dev-only heatmap simulation. In prod this stays empty until the real
+  // presence aggregation backend lands (see CLAUDE.md Phase 3 / heatmap TODO).
+  static const bool _isDev =
+      String.fromEnvironment('FLAVOR', defaultValue: 'dev') != 'prod';
+
+  static const LatLng _ljubljanaCenter = LatLng(46.0569, 14.5058);
 
   static const _zoomLevels = {
     _MapZoom.city: 13.5,
@@ -43,12 +53,59 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
     _MapZoom.national: 7.5,
   };
 
+  @override
+  void initState() {
+    super.initState();
+    if (_isDev) {
+      _circles = _generateMockHeatmapCircles();
+    }
+  }
+
+  /// Visual-only simulation of clustered radar users around Ljubljana.
+  /// Not backed by real presence data — exists so the map does not look
+  /// empty during dev. Replace with a real Heatmap layer once the
+  /// Firestore presence aggregation Cloud Function is in place.
+  Set<Circle> _generateMockHeatmapCircles() {
+    // Stable seed so the cluster does not jitter on every rebuild.
+    final rng = math.Random(42);
+    final count = 15 + rng.nextInt(16); // 15–30
+    const brand = Color(0xFFF4436C);
+
+    final circles = <Circle>{};
+    for (var i = 0; i < count; i++) {
+      // Gaussian-ish offset: two uniforms summed → tighter cluster around center.
+      final dLat = (rng.nextDouble() - rng.nextDouble()) * 0.012;
+      final dLng = (rng.nextDouble() - rng.nextDouble()) * 0.018;
+      final position = LatLng(
+        _ljubljanaCenter.latitude + dLat,
+        _ljubljanaCenter.longitude + dLng,
+      );
+
+      final radius = 60.0 + rng.nextDouble() * 220.0; // 60–280 m
+      final fillOpacity = 0.10 + rng.nextDouble() * 0.30; // 0.10–0.40
+      final strokeOpacity = 0.25 + rng.nextDouble() * 0.45; // 0.25–0.70
+      final strokeWidth = 1 + rng.nextInt(3); // 1–3 px
+
+      circles.add(
+        Circle(
+          circleId: CircleId('mock_heat_$i'),
+          center: position,
+          radius: radius,
+          fillColor: brand.withValues(alpha: fillOpacity),
+          strokeColor: brand.withValues(alpha: strokeOpacity),
+          strokeWidth: strokeWidth,
+        ),
+      );
+    }
+    return circles;
+  }
+
   void _setZoom(_MapZoom zoom) {
     setState(() => _zoom = zoom);
     _mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
-          target: const LatLng(46.0569, 14.5058),
+          target: _ljubljanaCenter,
           zoom: _zoomLevels[zoom]!,
         ),
       ),
@@ -313,7 +370,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
                     child: GoogleMap(
                       style: isDark ? _darkMapStyle : null,
                       initialCameraPosition: const CameraPosition(
-                        target: LatLng(46.0569, 14.5058),
+                        target: _ljubljanaCenter,
                         zoom: 13.5,
                       ),
                       onMapCreated: (controller) => _mapController = controller,
@@ -322,6 +379,7 @@ class _PulseMapScreenState extends ConsumerState<PulseMapScreen> {
                       zoomControlsEnabled: false,
                       compassEnabled: false,
                       markers: _markers,
+                      circles: _circles,
                     ),
                   ),
                 ),

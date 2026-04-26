@@ -362,11 +362,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/profile',
         builder: (context, state) {
           final match = state.extra as MatchProfile?;
+          final showActions = state.uri.queryParameters['showActions'] != 'false';
           if (match == null) {
             return const Scaffold(
                 body: Center(child: Text("Profile not found")));
           }
-          return ProfileDetailScreen(match: match);
+          return ProfileDetailScreen(match: match, showActions: showActions);
         },
       ),
       GoRoute(

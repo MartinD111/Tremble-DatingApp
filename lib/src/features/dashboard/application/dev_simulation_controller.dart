@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -104,6 +105,10 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
 
   // Stable IDs so a follow-up notification (waveReceived) replaces the previous
   // one in the shade rather than stacking.
+  // Reuses the singleton plugin already initialized by NotificationService —
+  // calling .show() on a fresh instance throws because init() was never run on
+  // it, which previously masked legitimate failures and risked breaking the
+  // state-update chain when callers forget the try/catch.
   static const int _kHeadsUpNotificationId = 7710;
   static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -292,6 +297,16 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
     required String title,
     required String body,
   }) async {
+    // Foreground suppression: when the app is resumed (visible + interactive),
+    // the global MatchNotificationPill is already on-screen — firing a system
+    // heads-up on top is redundant and feels noisy. Only fire when the app is
+    // backgrounded, inactive (call/control-center overlay), hidden, or
+    // detached. Lifecycle is null very briefly during the first frame; treat
+    // null as "not foreground" so we don't drop the very first wave.
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle == AppLifecycleState.resumed) {
+      return;
+    }
     try {
       const androidDetails = AndroidNotificationDetails(
         TrembleNotificationChannels.match,
