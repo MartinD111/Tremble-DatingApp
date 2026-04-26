@@ -295,6 +295,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
 
+        // ── Global Match Notification Pill ───────────────────────────────
+        // Rendered above all tabs (Radar / Map / People / Settings) AND above
+        // the LiquidNavBar so a wave is impossible to miss regardless of which
+        // tab the user is on. Driven by DevSimulationController; in production
+        // the same hook will be fed by the BLE wave controller.
+        if (devSim.hasPillVisible && devSim.profile != null)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 20,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Center(
+                child: MatchNotificationPill(
+                  name: devSim.profile!.name,
+                  age: devSim.profile!.age,
+                  imageUrl: devSim.profile!.imageUrl,
+                  pillState: _phaseToPillState(devSim.phase),
+                  onWave: () {
+                    final notifier =
+                        ref.read(devSimulationControllerProvider.notifier);
+                    if (devSim.phase == DevSimPhase.waitingForAction) {
+                      notifier.onUserWave();
+                    } else if (devSim.phase == DevSimPhase.waveReceived) {
+                      notifier.onUserWaveBack();
+                    }
+                  },
+                  onIgnore: () => ref
+                      .read(devSimulationControllerProvider.notifier)
+                      .onIgnore(),
+                )
+                    .animate()
+                    .fadeIn(duration: 250.ms)
+                    .slideY(begin: -0.4, curve: Curves.easeOutCubic),
+              ),
+            ),
+          ),
+
         // First-launch wave tutorial overlay
         if (_showTutorial)
           Positioned.fill(
@@ -591,39 +629,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-        // ── Dev-Mode Match Notification Pill ─────────────────────────────
-        // Shown for waitingForAction / waveSent / waveReceived. Floats near
-        // the top of the radar so the canvas stays visibly empty until a
-        // mutual wave unlocks the ping.
-        if (devSim.hasPillVisible && devSim.profile != null)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 80,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: MatchNotificationPill(
-                name: devSim.profile!.name,
-                age: devSim.profile!.age,
-                imageUrl: devSim.profile!.imageUrl,
-                pillState: _phaseToPillState(devSim.phase),
-                onWave: () {
-                  final notifier = ref
-                      .read(devSimulationControllerProvider.notifier);
-                  if (devSim.phase == DevSimPhase.waitingForAction) {
-                    notifier.onUserWave();
-                  } else if (devSim.phase == DevSimPhase.waveReceived) {
-                    notifier.onUserWaveBack();
-                  }
-                },
-                onIgnore: () => ref
-                    .read(devSimulationControllerProvider.notifier)
-                    .onIgnore(),
-              )
-                  .animate()
-                  .fadeIn(duration: 250.ms)
-                  .slideY(begin: -0.4, curve: Curves.easeOutCubic),
-            ),
-          ),
+        // Match notification pill is rendered globally in HomeScreen.build —
+        // see the main Stack above the LiquidNavBar. This keeps it visible
+        // across Radar / Map / People / Settings tabs.
       ],
     );
   }

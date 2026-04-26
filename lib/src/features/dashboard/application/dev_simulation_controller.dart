@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/dev_mock_users.dart';
+import '../../../core/notification_service.dart';
 import '../../matches/data/match_repository.dart';
 import 'dev_mock_matches_provider.dart';
 
@@ -99,6 +102,12 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
   final Ref _ref;
   final Random _rng = Random();
 
+  // Stable IDs so a follow-up notification (waveReceived) replaces the previous
+  // one in the shade rather than stacking.
+  static const int _kHeadsUpNotificationId = 7710;
+  static final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+
   // Timing constants (single source of truth — keeps tests honest).
   static const Duration kDiscoveryDelay = Duration(seconds: 10);
   static const Duration kUserActionWindow = Duration(seconds: 10);
@@ -137,12 +146,20 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
     if (state.phase != DevSimPhase.countdownToDiscovery) return;
     state = state.copyWith(phase: DevSimPhase.waitingForAction);
     _userActionTimer = Timer(kUserActionWindow, _enterWaveReceived);
+    final p = state.profile;
+    if (p != null) {
+      _showHeadsUpNotification(
+        title: '${p.name} is nearby',
+        body: 'Tap to wave or open Tremble to respond.',
+      );
+    }
   }
 
   /// Phase 2 / Scenario A — user initiates the wave.
   void onUserWave() {
     if (state.phase != DevSimPhase.waitingForAction) return;
     _userActionTimer?.cancel();
+    _dismissHeadsUpNotification();
     state = state.copyWith(phase: DevSimPhase.waveSent);
     _waveSentTimer = Timer(kWaveSentToMutual, _enterMutualWaveActive);
   }
@@ -151,6 +168,13 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
   void _enterWaveReceived() {
     if (state.phase != DevSimPhase.waitingForAction) return;
     state = state.copyWith(phase: DevSimPhase.waveReceived);
+    final p = state.profile;
+    if (p != null) {
+      _showHeadsUpNotification(
+        title: '${p.name} sent you a wave!',
+        body: 'Open Tremble to wave back.',
+      );
+    }
   }
 
   /// Phase 2 / Scenario B — user taps Wave Back.
@@ -163,12 +187,14 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
   void onIgnore() {
     if (!state.hasPillVisible) return;
     _resetTimers();
+    _dismissHeadsUpNotification();
     state = const DevSimulationState.idle();
   }
 
   void _enterMutualWaveActive() {
     _waveSentTimer?.cancel();
     _userActionTimer?.cancel();
+    _dismissHeadsUpNotification();
     _mutualWaveStartedAt = DateTime.now();
     _baseAngle = _rng.nextDouble() * 2 * pi;
     state = state.copyWith(
@@ -221,12 +247,14 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
   /// External cancellation (e.g., radar toggled off) — does NOT persist.
   void cancelWithoutPersist() {
     _resetTimers();
+    _dismissHeadsUpNotification();
     state = const DevSimulationState.idle();
   }
 
   void _terminate({required bool persist}) {
     final profile = state.profile;
     _resetTimers();
+    _dismissHeadsUpNotification();
     if (persist && profile != null) {
       _ref.read(devMockMatchesProvider.notifier).add(profile);
     }
@@ -251,6 +279,63 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
 
   MatchProfile _pickMockProfile() {
     return kMockNearbyUsers[_rng.nextInt(kMockNearbyUsers.length)];
+  }
+
+  // ── Heads-up system notification ────────────────────────────────────────
+  // Fired when entering pill-visible phases so the user is alerted even when
+  // the app is backgrounded or the screen is locked. Uses the existing
+  // `tremble_match` channel (Importance.max / Priority.max) so Android renders
+  // it as a heads-up banner. Tapping the notification routes through the OS's
+  // default activity launcher → brings the app to the foreground, where the
+  // global MatchNotificationPill in HomeScreen is already rendered.
+  Future<void> _showHeadsUpNotification({
+    required String title,
+    required String body,
+  }) async {
+    try {
+      const androidDetails = AndroidNotificationDetails(
+        TrembleNotificationChannels.match,
+        'Tremble — Wave',
+        channelDescription: 'Alerts when someone is nearby or sends a wave.',
+        importance: Importance.max,
+        priority: Priority.max,
+        category: AndroidNotificationCategory.message,
+        fullScreenIntent: false,
+        playSound: true,
+        enableVibration: true,
+        ticker: 'Tremble',
+        visibility: NotificationVisibility.public,
+      );
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        interruptionLevel: InterruptionLevel.timeSensitive,
+        categoryIdentifier: 'WAVE_CATEGORY',
+      );
+      const details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+      await _localNotifications.show(
+        _kHeadsUpNotificationId,
+        title,
+        body,
+        details,
+        payload: jsonEncode({
+          'type': TrembleNotificationType.incomingWave,
+          'source': 'dev_simulation',
+        }),
+      );
+    } catch (e) {
+      debugPrint('[DevSim] heads-up notification failed: $e');
+    }
+  }
+
+  Future<void> _dismissHeadsUpNotification() async {
+    try {
+      await _localNotifications.cancel(_kHeadsUpNotificationId);
+    } catch (_) {}
   }
 
   @override
