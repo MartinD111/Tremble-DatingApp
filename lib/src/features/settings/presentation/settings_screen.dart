@@ -17,6 +17,9 @@ import 'widgets/preference_pill_row.dart';
 import 'widgets/preference_range_slider.dart';
 import '../../../core/utils/icon_utils.dart';
 import '../../../shared/ui/tremble_header.dart';
+import '../../../core/theme.dart';
+import '../../dashboard/application/radar_schedule_controller.dart';
+import '../../dashboard/presentation/widgets/radar_schedule_modal.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
 
@@ -1388,6 +1391,38 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             context.push('/blocked-users');
           },
         ),
+        Divider(color: dividerColor),
+        Consumer(builder: (context, ref, _) {
+          final isActivated = ref.watch(radarScheduleProvider).isActivated;
+          final statusColor = isActivated
+              ? TrembleTheme.rose
+              : (isDark ? Colors.white54 : Colors.black45);
+          return ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(LucideIcons.clock,
+                color: isDark ? Colors.white70 : Colors.black45),
+            title:
+                Text(_t('schedule_radar'), style: TextStyle(color: textColor)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isActivated ? _t('activated') : _t('not_activated'),
+                  style: GoogleFonts.instrumentSans(
+                    fontSize: 13,
+                    color: statusColor,
+                    fontWeight:
+                        isActivated ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(LucideIcons.chevronRight,
+                    color: isDark ? Colors.white30 : Colors.black26),
+              ],
+            ),
+            onTap: () => showRadarScheduleModal(context),
+          );
+        }),
         const SizedBox(height: 24),
         PrimaryButton(
             text: _t('change_password'),

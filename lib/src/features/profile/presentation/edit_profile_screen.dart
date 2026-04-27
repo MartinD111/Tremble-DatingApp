@@ -1873,6 +1873,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Widget _editCircle(bool isDark, Color borderColor, Color fillColor,
       {required VoidCallback onTap}) {
+    final primary = Theme.of(context).primaryColor;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1880,11 +1881,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: fillColor,
-          border: Border.all(color: borderColor),
+          color: isDark ? primary.withValues(alpha: 0.2) : fillColor,
+          border: Border.all(
+              color: isDark ? primary.withValues(alpha: 0.3) : borderColor),
         ),
         child: Icon(LucideIcons.pencil,
-            size: 14, color: isDark ? Colors.white54 : Colors.black38),
+            size: 14, color: isDark ? primary : Colors.black38),
       ),
     );
   }

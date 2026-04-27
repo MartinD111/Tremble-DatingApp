@@ -27,6 +27,7 @@ import '../../match/domain/match.dart' as wave_match;
 import '../../../core/android_integration_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'widgets/radar_search_overlay.dart';
+import 'widgets/radar_schedule_modal.dart';
 import 'widgets/wave_simulation_overlay.dart';
 import '../../profile/data/profile_repository.dart';
 import '../application/dev_simulation_controller.dart';
@@ -669,6 +670,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 ),
               ),
+
+        // ── Schedule Radar Clock Icon (top-right, top of stack) ───
+        // Placed last so it sits above RadarAnimation's full-bleed canvas
+        // and remains tappable. Wrapped in Material for the InkWell ripple.
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 24,
+          right: 12,
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => showRadarScheduleModal(context),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(
+                  LucideIcons.clock,
+                  size: 22,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+          ),
+        ),
 
         // Match notification pill is rendered globally in HomeScreen.build —
         // see the main Stack above the LiquidNavBar. This keeps it visible

@@ -147,10 +147,10 @@ class PreferencePillRow extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isDark
-                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
-                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.25)
+                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Icon(

@@ -262,7 +262,7 @@ class TrembleTheme {
   static ThemeData darkTheme(AuthUser? user) {
     Color primary = roseDark;
     if (user != null && user.isGenderBasedColor && user.gender == 'male') {
-      primary = azureDark;
+      primary = azure;
     }
 
     const darkOnSurface = Color(0xFFE0E0E0);
