@@ -837,7 +837,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
           const SizedBox(height: 32),
           Builder(builder: (context) {
             final val = _getPoliticalValue(match.politicalAffiliation);
-            String currentText = match.politicalAffiliation != null 
+            String currentText = match.politicalAffiliation != null
                 ? t(match.politicalAffiliation!, lang)
                 : t('politics_undisclosed', lang);
             if (val > 0 && match.politicalAffiliation != null) {
@@ -893,8 +893,6 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       t('politics_right', lang),
     ][idx];
   }
-
-
 
   Widget _buildSpectrumIndicator({
     required IconData icon,

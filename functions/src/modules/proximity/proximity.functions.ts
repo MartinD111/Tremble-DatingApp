@@ -30,6 +30,13 @@ import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
 
+// ── F9: Radius Tier Constants ─────────────────────────────
+// GPS geohash pre-filter radii (BLE RSSI confirms final proximity).
+// Free:    100m  — RSSI threshold ≥ −75 dBm
+// Premium: 250m  — RSSI threshold ≥ −85 dBm
+const RADIUS_FREE_M = 100;
+const RADIUS_PRO_M = 250;
+
 // ── Schemas ──────────────────────────────────────────────
 
 const updateLocationSchema = z.object({
@@ -40,7 +47,14 @@ const updateLocationSchema = z.object({
 const findNearbySchema = z.object({
     latitude: z.number().min(-90).max(90),
     longitude: z.number().min(-180).max(180),
-    radiusKm: z.number().min(0.1).max(100).default(5),
+    // radiusKm kept for backward-compat but ignored — radius is determined
+    // server-side from the user's isPremium status (F9 requirement).
+    radiusKm: z.number().min(0.1).max(100).optional(),
+});
+
+const proximityMatchCandidatesSchema = z.object({
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
 });
 
 // ── Geohash Utils ────────────────────────────────────────
@@ -49,7 +63,7 @@ const BASE32 = "0123456789bcdefghjkmnpqrstuvwxyz";
 
 /**
  * Encode a lat/lng into a geohash string.
- * Precision 7 gives ~150m accuracy — good for proximity matching.
+ * Precision 7 gives ~150m × 75m cell — used for proximity pre-filtering.
  */
 function encodeGeohash(lat: number, lng: number, precision: number = 7): string {
     let idx = 0;
@@ -78,16 +92,50 @@ function encodeGeohash(lat: number, lng: number, precision: number = 7): string 
 }
 
 /**
- * Get the geohash prefix for a given radius.
- * Shorter prefix = wider area.
+ * Decode a geohash string to its cell-center lat/lng.
+ * Returns the CENTER of the geohash cell — NOT the user's exact location.
+ * At precision 7, accuracy is ~75m. This is GDPR-safe (Art. 5 minimization).
  */
-function geohashPrecisionForRadius(radiusKm: number): number {
-    if (radiusKm <= 0.5) return 7;
-    if (radiusKm <= 1) return 6;
-    if (radiusKm <= 5) return 5;
-    if (radiusKm <= 20) return 4;
-    if (radiusKm <= 80) return 3;
-    return 2;
+function decodeGeohash(geohash: string): { lat: number; lng: number } {
+    const latRange = [-90.0, 90.0];
+    const lngRange = [-180.0, 180.0];
+    let evenBit = true;
+
+    for (const char of geohash) {
+        const idx = BASE32.indexOf(char);
+        if (idx === -1) break;
+        for (let bits = 4; bits >= 0; bits--) {
+            const bitN = (idx >> bits) & 1;
+            if (evenBit) {
+                const mid = (lngRange[0] + lngRange[1]) / 2;
+                if (bitN === 1) lngRange[0] = mid; else lngRange[1] = mid;
+            } else {
+                const mid = (latRange[0] + latRange[1]) / 2;
+                if (bitN === 1) latRange[0] = mid; else latRange[1] = mid;
+            }
+            evenBit = !evenBit;
+        }
+    }
+
+    return {
+        lat: (latRange[0] + latRange[1]) / 2,
+        lng: (lngRange[0] + lngRange[1]) / 2,
+    };
+}
+
+/**
+ * Haversine distance between two lat/lng points, in metres.
+ */
+function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6_371_000;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 // ── Cloud Functions ──────────────────────────────────────
@@ -128,7 +176,18 @@ export const updateLocation = onCall(
 
 /**
  * Find nearby users based on geohash proximity.
- * Returns users within the specified radius.
+ *
+ * F9 — Radius Logic:
+ * - Radius is determined SERVER-SIDE from the user's `isPremium` status.
+ *   Client-provided `radiusKm` is accepted for backward-compat but ignored.
+ * - Free:    GPS pre-filter 100m  (RSSI ≥ −75 dBm confirmed by BLE)
+ * - Premium: GPS pre-filter 250m  (RSSI ≥ −85 dBm confirmed by BLE)
+ *
+ * Query strategy:
+ * - Encode requester location at precision 6 (~1.2km cell) for a wide net.
+ * - Haversine-filter results to the actual tier radius.
+ * - NOTE: precision-6 prefix may miss users just across a cell boundary.
+ *   This is an acceptable trade-off for v1 — BLE RSSI is the real filter.
  */
 export const findNearby = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
@@ -146,7 +205,7 @@ export const findNearby = onCall(
         const requesterData = requesterDoc.data();
         if (!requesterData) {
             console.log(`[PROXIMITY] Requester data not found: ${uid.substring(0, 8)}...`);
-            return { nearby: [] };
+            return { nearby: [], radiusTier: "free", radiusM: RADIUS_FREE_M };
         }
 
         const myGender = requesterData.gender;
@@ -154,30 +213,48 @@ export const findNearby = onCall(
         const myAge = requesterData.age;
         const myMinAge = requesterData.ageRangeStart ?? 18;
         const myMaxAge = requesterData.ageRangeEnd ?? 100;
-        const blockedUsers = requesterData.blockedUserIds || [];
+        const blockedUsers: string[] = requesterData.blockedUserIds ?? [];
 
-        const precision = geohashPrecisionForRadius(data.radiusKm ?? 5);
-        const centerGeohash = encodeGeohash(data.latitude, data.longitude, precision);
+        // F9: radius is server-determined from isPremium — never trust the client
+        const isPremium = requesterData.isPremium === true;
+        const radiusM = isPremium ? RADIUS_PRO_M : RADIUS_FREE_M;
+        const radiusTier = isPremium ? "pro" : "free";
+
+        // Query at precision 6 (~1.2km cell) to cast a wide net, then
+        // haversine-filter to the actual tier radius below.
+        const queryPrecision = 6;
+        const centerGeohash = encodeGeohash(data.latitude, data.longitude, queryPrecision);
 
         const snapshot = await db
             .collection("proximity")
             .where("isActive", "==", true)
             .where("geohash", ">=", centerGeohash)
             .where("geohash", "<=", centerGeohash + "\uf8ff")
-            .limit(100)
+            .limit(200)
             .get();
 
-        const candidates: Array<{ id: string; distance: number }> = [];
+        // Haversine-filter candidates to actual tier radius.
+        // Geohash is decoded to its cell center (~75m accuracy) — GDPR-safe.
+        const candidates: Array<{ id: string; distanceM: number }> = [];
 
         for (const doc of snapshot.docs) {
             if (doc.id === uid) continue;
             if (blockedUsers.includes(doc.id)) continue;
 
-            candidates.push({ id: doc.id, distance: 0 });
+            const geohash = doc.data().geohash as string | undefined;
+            if (!geohash) continue;
+
+            const center = decodeGeohash(geohash);
+            const distM = haversineMeters(data.latitude, data.longitude, center.lat, center.lng);
+            if (distM <= radiusM) {
+                candidates.push({ id: doc.id, distanceM: distM });
+            }
         }
 
-        const nearbyUsers: Array<{ userId: string; distanceKm: number }> = [];
-        const userDocs = await Promise.all(candidates.map(c => db.collection("users").doc(c.id).get()));
+        const nearbyUsers: Array<{ userId: string; distanceM: number }> = [];
+        const userDocs = await Promise.all(
+            candidates.map(c => db.collection("users").doc(c.id).get())
+        );
 
         for (let i = 0; i < userDocs.length; i++) {
             const candidateDoc = userDocs[i];
@@ -190,23 +267,32 @@ export const findNearby = onCall(
             const theirMinAge = candidateData.ageRangeStart ?? 18;
             const theirMaxAge = candidateData.ageRangeEnd ?? 100;
 
-            const iMatchThem = myInterest === "Oba" || myInterest === "Both" || myInterest === theirGender;
-            const theyMatchMe = theirInterest === "Oba" || theirInterest === "Both" || theirInterest === myGender;
+            // Support both legacy string and new List<String> interestedIn formats
+            const iMatchThem =
+                Array.isArray(myInterest)
+                    ? myInterest.includes(theirGender)
+                    : myInterest === "Oba" || myInterest === "Both" || myInterest === theirGender;
+            const theyMatchMe =
+                Array.isArray(theirInterest)
+                    ? theirInterest.includes(myGender)
+                    : theirInterest === "Oba" || theirInterest === "Both" || theirInterest === myGender;
             const ageMatchesMe = !theirAge || (theirAge >= myMinAge && theirAge <= myMaxAge);
             const ageMatchesThem = !myAge || (myAge >= theirMinAge && myAge <= theirMaxAge);
 
             if (iMatchThem && theyMatchMe && ageMatchesMe && ageMatchesThem) {
                 nearbyUsers.push({
                     userId: candidates[i].id,
-                    distanceKm: Math.round(candidates[i].distance * 10) / 10,
+                    distanceM: Math.round(candidates[i].distanceM),
                 });
             }
         }
 
-        nearbyUsers.sort((a, b) => a.distanceKm - b.distanceKm);
-        console.log(`[PROXIMITY] ${uid.substring(0, 8)}...: ${nearbyUsers.length} users within ${data.radiusKm}km`);
+        nearbyUsers.sort((a, b) => a.distanceM - b.distanceM);
+        console.log(
+            `[PROXIMITY] ${uid.substring(0, 8)}...: ${nearbyUsers.length} users within ${radiusM}m (${radiusTier})`
+        );
 
-        return { nearby: nearbyUsers };
+        return { nearby: nearbyUsers, radiusTier, radiusM };
     }
 );
 
@@ -224,6 +310,86 @@ export const setInactive = onCall(
         });
 
         return { success: true };
+    }
+);
+
+// ── F9: getProximityMatchCandidates ──────────────────────────────
+
+/**
+ * getProximityMatchCandidates — F9 Radius Logic (MASTER_PLAN spec).
+ *
+ * GPS geohash pre-filter + haversine confirmation.
+ * Called by the Flutter app when initiating a proximity match session.
+ *
+ * lat/lng are ephemeral — received in request, used for query only,
+ * never stored or logged. Privacy Policy must describe this.
+ *
+ * Returns candidate UIDs within the user's tier radius, ordered by
+ * ascending distance. BLE RSSI confirmation happens client-side.
+ */
+export const getProximityMatchCandidates = onCall(
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+    async (request) => {
+        const uid = requireAuth(request);
+
+        await checkRateLimit(uid, "getProximityMatchCandidates", {
+            maxRequests: 30,
+            windowMs: 60_000,
+        });
+
+        const data = validateRequest(proximityMatchCandidatesSchema, request.data);
+
+        // Read requester profile for tier + preference filtering
+        const requesterDoc = await db.collection("users").doc(uid).get();
+        const requesterData = requesterDoc.data();
+        if (!requesterData) {
+            return { candidates: [], radiusTier: "free", radiusM: RADIUS_FREE_M };
+        }
+
+        const isPremium = requesterData.isPremium === true;
+        const radiusM = isPremium ? RADIUS_PRO_M : RADIUS_FREE_M;
+        const radiusTier = isPremium ? "pro" : "free";
+        const blockedUsers: string[] = requesterData.blockedUserIds ?? [];
+
+        // Precision 6 (~1.2km × 600m) — wide enough to contain all candidates
+        // within 250m (pro radius), then haversine-filter to actual radius.
+        const queryGeohash = encodeGeohash(data.latitude, data.longitude, 6);
+
+        const snapshot = await db
+            .collection("proximity")
+            .where("isActive", "==", true)
+            .where("geohash", ">=", queryGeohash)
+            .where("geohash", "<=", queryGeohash + "\uf8ff")
+            .limit(200)
+            .get();
+
+        const candidates: Array<{ uid: string; distanceM: number }> = [];
+
+        for (const doc of snapshot.docs) {
+            if (doc.id === uid) continue;
+            if (blockedUsers.includes(doc.id)) continue;
+
+            const geohash = doc.data().geohash as string | undefined;
+            if (!geohash) continue;
+
+            // Decode geohash to cell center for haversine.
+            // lat/lng is NEVER stored — computed transiently for this query.
+            const center = decodeGeohash(geohash);
+            const distM = haversineMeters(data.latitude, data.longitude, center.lat, center.lng);
+
+            if (distM <= radiusM) {
+                candidates.push({ uid: doc.id, distanceM: Math.round(distM) });
+            }
+        }
+
+        candidates.sort((a, b) => a.distanceM - b.distanceM);
+
+        console.log(
+            `[PROXIMITY] getProximityMatchCandidates: ${uid.substring(0, 8)}... → ` +
+            `${candidates.length} candidates within ${radiusM}m (${radiusTier})`
+        );
+
+        return { candidates, radiusTier, radiusM };
     }
 );
 

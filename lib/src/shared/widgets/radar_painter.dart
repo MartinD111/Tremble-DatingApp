@@ -95,12 +95,12 @@ class RadarPainter extends CustomPainter {
 
         final radius = ringProgress * maxRadius * 1.5;
         final opacity = (1.0 - ringProgress).clamp(0.0, 1.0) * 0.5;
-        
+
         final echoPaint = Paint()
           ..color = brandColor.withValues(alpha: opacity)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2;
-        
+
         canvas.drawCircle(center, radius, echoPaint);
       }
     }

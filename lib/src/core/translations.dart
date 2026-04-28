@@ -608,8 +608,7 @@ const Map<String, Map<String, String>> _translations = {
     'save': 'Shrani',
     'cancel': 'Prekliči',
     'schedule_radar': 'Urnik radarja',
-    'schedule_radar_sub':
-        'Nastavi ure, ko naj se radar samodejno vklopi.',
+    'schedule_radar_sub': 'Nastavi ure, ko naj se radar samodejno vklopi.',
     'activated': 'Aktiviran',
     'not_activated': 'Neaktiviran',
     'monday': 'Ponedeljek',
@@ -777,7 +776,6 @@ const Map<String, Map<String, String>> _translations = {
     'remove_ping_sub': 'Izklopi subtilne pulze v ozadju',
     'proximity_vibration': 'Vibracija ob približevanju',
     'proximity_vibration_sub': 'Vibriraj, ko je nekdo v bližini',
-
 
     'email_verified': 'Email Verificiran',
     'email_not_verified': 'Email NI Verificiran',
@@ -1022,7 +1020,6 @@ const Map<String, Map<String, String>> _translations = {
     'hair_gray_white': 'Sivi/Beli',
     'hair_other': 'Drugo',
 
-
     'distance': 'Razdalja',
     'battery_warning':
         'Ta funkcija porablja {percent}% več baterije kot običajno.',
@@ -1043,8 +1040,8 @@ const Map<String, Map<String, String>> _translations = {
     'politics_undisclosed': 'Nočem povedati',
     'politics_match_any': 'Vseeno mi je',
     'politics_popup_title': 'Politično ujemanje',
-    'politics_popup_body': 'Ujemali se boste z osebami s podobnimi ali sosednjimi političnimi pogledi.',
-
+    'politics_popup_body':
+        'Ujemali se boste z osebami s podobnimi ali sosednjimi političnimi pogledi.',
 
     // --- Edit profile ---
     'distance_help':
@@ -1390,8 +1387,8 @@ const Map<String, Map<String, String>> _translations = {
     'politics_undisclosed': 'Keine Angabe',
     'politics_match_any': 'Ist mir egal',
     'politics_popup_title': 'Politisches Matching',
-    'politics_popup_body': 'Sie werden mit Personen zusammengebracht, die die gleichen oder benachbarten politischen Ansichten ausgewählt haben.',
-
+    'politics_popup_body':
+        'Sie werden mit Personen zusammengebracht, die die gleichen oder benachbarten politischen Ansichten ausgewählt haben.',
   },
 
   // ═══════════════════════════════════════════
@@ -2142,7 +2139,8 @@ const Map<String, Map<String, String>> _translations = {
     'politics_undisclosed': 'Ne želim da kažem',
     'politics_match_any': 'Svejedno mi je',
     'politics_popup_title': 'Političko podudaranje',
-    'politics_popup_body': 'Bićete spojeni sa osobama koje imaju slične ili susedne političke stavove.',
+    'politics_popup_body':
+        'Bićete spojeni sa osobama koje imaju slične ili susedne političke stavove.',
 
     'looking_for': 'Tražim',
     'scanning': 'Skeniranje...',
@@ -2492,8 +2490,8 @@ const Map<String, Map<String, String>> _translations = {
     'politics_undisclosed': 'Nem szeretném megmondani',
     'politics_match_any': 'Mindegy',
     'politics_popup_title': 'Politikai párosítás',
-    'politics_popup_body': 'Olyan személyekkel leszel párosítva, akik hasonló vagy közeli politikai nézeteket vallanak.',
-
+    'politics_popup_body':
+        'Olyan személyekkel leszel párosítva, akik hasonló vagy közeli politikai nézeteket vallanak.',
   },
 };
 

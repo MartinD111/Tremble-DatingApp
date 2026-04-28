@@ -1143,30 +1143,40 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                               'label':
                                                   t('short_term_fun', lang),
                                               'value': 'short_term_fun',
-                                              'icon': IconUtils.getLookingForIcon('short_term_fun'),
+                                              'icon':
+                                                  IconUtils.getLookingForIcon(
+                                                      'short_term_fun'),
                                             },
                                             {
                                               'label':
                                                   t('long_term_partner', lang),
                                               'value': 'long_term_partner',
-                                              'icon': IconUtils.getLookingForIcon('long_term_partner'),
+                                              'icon':
+                                                  IconUtils.getLookingForIcon(
+                                                      'long_term_partner'),
                                             },
                                             {
                                               'label':
                                                   t('short_open_long', lang),
                                               'value': 'short_open_long',
-                                              'icon': IconUtils.getLookingForIcon('short_open_long'),
+                                              'icon':
+                                                  IconUtils.getLookingForIcon(
+                                                      'short_open_long'),
                                             },
                                             {
                                               'label':
                                                   t('long_open_short', lang),
                                               'value': 'long_open_short',
-                                              'icon': IconUtils.getLookingForIcon('long_open_short'),
+                                              'icon':
+                                                  IconUtils.getLookingForIcon(
+                                                      'long_open_short'),
                                             },
                                             {
                                               'label': t('undecided', lang),
                                               'value': 'undecided',
-                                              'icon': IconUtils.getLookingForIcon('undecided'),
+                                              'icon':
+                                                  IconUtils.getLookingForIcon(
+                                                      'undecided'),
                                             },
                                           ],
                                           currentValues: _lookingFor,
@@ -1624,7 +1634,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final options = [
       {'label': t('male', lang), 'value': 'male', 'icon': Icons.male},
       {'label': t('female', lang), 'value': 'female', 'icon': Icons.female},
-      {'label': t('non_binary', lang), 'value': 'non_binary', 'icon': LucideIcons.userX},
+      {
+        'label': t('non_binary', lang),
+        'value': 'non_binary',
+        'icon': LucideIcons.userX
+      },
     ];
     return Wrap(
       spacing: 10,
@@ -2247,8 +2261,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       categorizedHobbies.addAll(group);
     }
 
-    final customHobbies =
-        normalizedHobbies.where((h) => !categorizedHobbies.contains(h)).toList();
+    final customHobbies = normalizedHobbies
+        .where((h) => !categorizedHobbies.contains(h))
+        .toList();
 
     return Column(
       children: [
@@ -2262,13 +2277,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   Icon(
                     _getCategoryIcon(entry.key),
                     size: 12,
-                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
+                    color: (isDark ? Colors.white : Colors.black)
+                        .withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     t(entry.key, lang).toUpperCase(),
                     style: GoogleFonts.instrumentSans(
-                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
+                      color: (isDark ? Colors.white : Colors.black)
+                          .withValues(alpha: 0.5),
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
@@ -2298,13 +2315,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 Icon(
                   LucideIcons.sparkles,
                   size: 12,
-                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
+                  color: (isDark ? Colors.white : Colors.black)
+                      .withValues(alpha: 0.5),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   t('hobby_other', lang).toUpperCase(),
                   style: GoogleFonts.instrumentSans(
-                    color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
+                    color: (isDark ? Colors.white : Colors.black)
+                        .withValues(alpha: 0.5),
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.2,

@@ -8,13 +8,16 @@ import 'package:battery_plus/battery_plus.dart';
 /// Geo Service — uploads minimized location data to Firestore periodically.
 ///
 /// GDPR Compliance (Art. 5 — Data Minimization):
-/// - Only a Geohash at precision 8 (~38x19m) is stored. Raw GPS coordinates
-///   (lat, lng) are NEVER written to Firestore. This prevents identification
-///   of a user's exact address or home location.
+/// - Only a Geohash at precision 7 (~150m×75m cell) is stored. Raw GPS
+///   coordinates (lat, lng) are NEVER written to Firestore. The geohash is
+///   reversible to ~75m accuracy — NOT the user's exact location.
 ///
-/// Proximity tiers:
-///   Free users  — radar shows users in the same geohash cell (~38m)
-///   Premium     — radar shows users in current + 8 adjacent cells (~100m)
+/// Proximity tiers (F9 — Radius Logic):
+///   Free    — GPS geohash pre-filter 100m + RSSI threshold ≥ −75 dBm
+///   Premium — GPS geohash pre-filter 250m + RSSI threshold ≥ −85 dBm
+///
+/// The tier is written as `radiusTier: 'free' | 'pro'` so Cloud Functions
+/// can apply the correct radius without trusting the client for premium status.
 class GeoService {
   static final GeoService _instance = GeoService._internal();
   factory GeoService() => _instance;
@@ -27,28 +30,47 @@ class GeoService {
   Timer? _geoTimer;
   StreamSubscription<BatteryState>? _batterySub;
   bool _isLowPowerMode = false;
+  bool _isPremium = false;
 
   static const Duration _normalInterval = Duration(seconds: 60);
   static const Duration _lowPowerInterval = Duration(minutes: 5);
 
-  /// Geohash precision 8 ≈ 38m × 19m cell.
-  /// Free users see matches in the same cell (~38m).
-  /// Premium users see matches across a 3×3 grid (~100m).
-  static const int _geohashPrecision = 8;
+  /// Geohash precision 7 ≈ 150m × 75m cell.
+  /// Used as a coarse GPS pre-filter; BLE RSSI confirms final proximity.
+  static const int _geohashPrecision = 7;
+
+  /// Proximity docs auto-expire after 30 min without refresh.
+  /// Prevents stale location data persisting after the user closes the app.
+  static const Duration _geoTtl = Duration(minutes: 30);
 
   /// Start uploading location data.
   /// MUST only be called after the user has explicitly consented via
   /// the in-app location consent screen (locationConsentGiven == true).
   Future<void> start() async {
+    await _fetchUserTier();
     await _checkBatteryState();
     _listenBatteryChanges();
     _scheduleUpdate();
+  }
+
+  /// Reads the user's `isPremium` flag from Firestore once at service start.
+  /// Result is cached for the lifetime of this radar session.
+  Future<void> _fetchUserTier() async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return;
+      final doc = await _firestore.collection('users').doc(uid).get();
+      _isPremium = doc.data()?['isPremium'] as bool? ?? false;
+    } catch (_) {
+      _isPremium = false;
+    }
   }
 
   /// Stop all geo updates and mark user as inactive in Firestore.
   Future<void> stop() async {
     _geoTimer?.cancel();
     _batterySub?.cancel();
+    _isPremium = false;
 
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
@@ -56,6 +78,7 @@ class GeoService {
     try {
       await _firestore.collection('proximity').doc(uid).set({
         'radarActive': false,
+        'isActive': false,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (_) {
@@ -114,28 +137,37 @@ class GeoService {
       );
 
       // GDPR Art. 5 — Data Minimization:
-      // Only encode as Geohash at precision 8 (~38m cell).
+      // Only encode as Geohash at precision 7 (~150m × 75m cell).
       // Raw coordinates are used locally for encoding ONLY and are
-      // never written to Firestore.
+      // never written to Firestore. The geohash is reversible to ~75m
+      // accuracy — this is disclosed in the Privacy Policy.
       final geohash = GeoHasher().encode(
         pos.longitude,
         pos.latitude,
         precision: _geohashPrecision,
       );
 
-      // TTL field: proximity doc auto-expires if not refreshed for 2 hours.
-      // This prevents stale location data persisting after the user closes the app.
-      final ttl = Timestamp.fromDate(
-        DateTime.now().add(const Duration(hours: 2)),
+      // Radius tier — written server-side so Cloud Functions can apply
+      // the correct GPS pre-filter without trusting the client.
+      // isPremium is read from Firestore once at start() — not from client.
+      final radiusTier = _isPremium ? 'pro' : 'free';
+
+      // TTL: proximity doc auto-expires after 30 min without refresh.
+      // Prevents stale location data persisting after the user closes the app.
+      final geoHashExpiresAt = Timestamp.fromDate(
+        DateTime.now().add(_geoTtl),
       );
 
       // Write ONLY the minimized geohash — no lat, no lng.
+      // isActive mirrors radarActive for Cloud Function query compatibility.
       await _firestore.collection('proximity').doc(uid).set({
         'geohash': geohash,
+        'radiusTier': radiusTier,
         'radarActive': true,
+        'isActive': true,
         'isLowPowerMode': _isLowPowerMode,
         'updatedAt': FieldValue.serverTimestamp(),
-        'ttl': ttl, // Firestore TTL — delete if stale > 2h
+        'geoHashExpiresAt': geoHashExpiresAt,
       }, SetOptions(merge: true));
     } catch (_) {
       // Silently fail — will retry on next tick

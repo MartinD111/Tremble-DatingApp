@@ -2,54 +2,24 @@
 
 ---
 
-## BLOCKER-001 — D-01/D-05 Were Stale: BLE Already Implemented
-**Date:** 2026-04-02
-**Status:** Resolved (no code change required)
+## BLOCKER-001 / ADR-001 — iOS BLE Background State Restoration
+**Date:** 2026-04-29
+**Status:** 🔴 OPEN
+**Impact:** `flutter_blue_plus` is not wired correctly in `background_service.dart`, which still relies on a mock timer. This prevents background scanning for devices, acting as a critical functional blocker for TestFlight.
+**Action:** Requires manual Flutter/Native communication channel implementation that bypasses standard background service limits.
 
-## BLOCKER-002 — Critical Functional Failures (Handoff to Aleksandar)
-**Date:** 2026-04-15
-**Status:** ✅ CLOSED (2026-04-18)
-
-### Resolution Summary
-All critical items reported by the founder have been addressed:
-1. **Matching Logic:** RESTORED (MatchController uses WaveRepository.sendWave()).
-2. **Profile UI:** ALIGNED (Waitlist for Phase C polish, but monolith extraction complete).
-3. **Data Persistence:** FIXED (BUG-002: Zod schema updated, images/hobbies saving correctly).
-4. **"Pozdrav" Feature:** FIXED (Legacy greeting removed, replaced with Waves).
-5. **Map Visibility:** RESTORED (TASK-008: 3-state toggle implemented).
-6. **Visual Assets:** UPDATED (TASK-005: Tremble Logo integrated in Radar center).
-
----
+## BLOCKER-002 / D-37 — 3-State Map Toggle Untested on Physical Device
+**Date:** 2026-04-29
+**Status:** ✅ RESOLVED
+**Impact:** The 3-state map toggle logic was implemented and has been verified by Martin on a physical Samsung S25 Ultra.
+**Action:** None.
 
 ## BLOCKER-003 — Legal/Legislative (RevenueCat)
 **Date:** 2026-04-18
 **Status:** 🔴 OPEN
 **Impact:** Phase 8 (Paywall) is on hold until company registration and legal entities are established.
-**Action:** Move to Phase 9 (Security Hardening) and Phase C (UI Polish) instead.
-
-## SEC-001 — Firebase App Check Not Enforced in Cloud Functions
-**Date:** 2026-04-20
-**Status:** ✅ RESOLVED (2026-04-21)
-**Resolution:** All 19 Cloud Functions deployed to `tremble-dev` with `enforceAppCheck: true` and Zod schema validation. App Check + security hardening (Phase 11) is now live on dev.
-
-## FUNCTIONS-DEPLOY — Cloud Functions Stale on tremble-dev
-**Date:** 2026-04-18
-**Status:** ✅ RESOLVED (2026-04-21)
-**Resolution:** `firebase deploy --only functions --project dev` executed successfully. All 19 functions updated in europe-west1.
+**Action:** Move to Phase 9 (Security Hardening) and Phase C (UI Polish) instead (now complete). Resume when company entity is confirmed.
 
 ---
 
-## BLOCKER-004 — Missing Maps API in Production
-**Date:** 2026-04-20
-**Status:** ✅ RESOLVED (2026-04-24)
-**Resolution:** Maps API keys confirmed present in both projects (tremble-dev and am---dating-app) for iOS and Android. Verified via Google Cloud Console on 2026-04-24.
-
-## SEC-002 — GPS Coordinates Stored in Firestore Proximity Collection
-**Date:** 2026-04-24
-**Status:** ✅ RESOLVED (2026-04-24)
-**Impact:** updateLocation Cloud Function was writing exact lat/lng coordinates to Firestore proximity/{uid}. Firestore rule allowed read access to all authenticated users — direct GDPR violation and conflict with "privacy by architecture" positioning.
-**Resolution:** lat/lng removed from updateLocation write. findNearby updated to use geohash-only filtering. Firestore rule set to allow read, write: if false (Cloud Functions use admin SDK, bypass rules). Deployed to dev and prod 2026-04-24.
-## BLOCKER-005 — Missing English Translation Keys (TASK-REG-07)
-**Date:** 2026-04-23
-**Status:** ✅ RESOLVED (2026-04-23)
-**Resolution:** Missing keys added for all 8 languages in `translations.dart`.
+*(Historical resolved blockers (SEC-001, FUNCTIONS-DEPLOY, SEC-002, etc.) have been archived to `MASTER_PLAN.md` and `lessons.md` to keep this file actionable).*

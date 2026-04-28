@@ -113,7 +113,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     return t(key, user?.appLanguage ?? 'en');
   }
 
-
   /// Maps political scale value 1–5 to a readable label.
   String _politicalLabel(double v) {
     switch (v.round()) {
@@ -1411,8 +1410,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   style: GoogleFonts.instrumentSans(
                     fontSize: 13,
                     color: statusColor,
-                    fontWeight:
-                        isActivated ? FontWeight.w600 : FontWeight.w500,
+                    fontWeight: isActivated ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
                 const SizedBox(width: 4),

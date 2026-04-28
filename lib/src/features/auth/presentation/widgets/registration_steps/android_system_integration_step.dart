@@ -119,8 +119,7 @@ class _AndroidSystemIntegrationStepState
           _IntegrationToggle(
             icon: Icons.grid_view_rounded,
             title: 'Quick Settings tile',
-            subtitle:
-                'A one-tap toggle in your notification panel. '
+            subtitle: 'A one-tap toggle in your notification panel. '
                 'Drag it wherever feels natural.',
             value: _addQsTile,
             onChanged: (v) => setState(() => _addQsTile = v),
@@ -129,8 +128,7 @@ class _AndroidSystemIntegrationStepState
           _IntegrationToggle(
             icon: Icons.widgets_rounded,
             title: 'Home screen widget',
-            subtitle:
-                'Pin a small radar indicator to your home or lock screen '
+            subtitle: 'Pin a small radar indicator to your home or lock screen '
                 'for instant access.',
             value: _addWidget,
             onChanged: (v) => setState(() => _addWidget = v),
@@ -145,8 +143,8 @@ class _AndroidSystemIntegrationStepState
                   ? Colors.white.withValues(alpha: 0.05)
                   : Colors.black.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                  color: isDark ? Colors.white12 : Colors.black12),
+              border:
+                  Border.all(color: isDark ? Colors.white12 : Colors.black12),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,

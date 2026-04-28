@@ -56,7 +56,8 @@ class DevSimulationState {
   final DevSimPhase phase;
   final MatchProfile? profile;
   final DateTime? mutualWaveExpiresAt;
-  final double pingDistance; // 0.0 (center) → 1.0 (edge); only meaningful in mutualWaveActive
+  final double
+      pingDistance; // 0.0 (center) → 1.0 (edge); only meaningful in mutualWaveActive
   final double pingAngle; // radians
   final bool showMutualFlash; // brief "Mutual Wave! Find them." flash
 

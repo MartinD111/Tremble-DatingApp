@@ -1,5 +1,9 @@
 # Permanent Project Knowledge (Lessons)
 
+**Rule #41 — Single Source of Truth Documentation (MASTER_PLAN.md).**
+[2026-04-29] Do not fragment implementation plans, UI specs, or store submission strategies across multiple files. All architectural policies, deployment rules, and feature implementations MUST reside in `tasks/MASTER_PLAN.md` to ensure context is never dropped across agent sessions.
+Source: Project Consolidation, April 2026.
+
 Rule #1
 [2026-03-31] Never run un-flavored `flutter build` or `flutter run`. Must provide `--flavor dev --dart-define=FLAVOR=dev` or prod equivalents.
 Source: Multi-Env Setup March 2026.
@@ -117,3 +121,63 @@ Source: UI-Icon-Stability polish, April 2026.
 **Rule #39 — RadarPainter maxRadius must match the outermost grid circle.**
 [2026-04-24] If `maxRadius` is smaller than the canvas boundary where the last concentric ring is drawn, the radar pulse stops short of the outermost circle and the scan line appears clipped. `maxRadius` drives both the grid rings AND the scan geometry — if you change one, the other must match. Set `size.width * 0.5` as the canonical value.
 Source: UI-Icon-Stability polish, April 2026.
+
+
+## 🧠 Learning Log — Tremble Development
+
+### 1. Flutter + Google Maps: Safe API Key Injection (2026-04-08)
+- **Problem:** Storing API keys in `AndroidManifest.xml` or `AppDelegate.swift` leaks them to version control.
+- **Solution:** Multi-layered injection using platform configuration files that are excluded from `.gitignore`.
+- **Pattern (Android):**
+    1. `android/local.properties` -> `MAPS_API_KEY=your_key`
+    2. `android/app/build.gradle.kts` -> Load properties, add to `manifestPlaceholders`.
+    3. `AndroidManifest.xml` -> `<meta-data android:name="..." android:value="${MAPS_API_KEY}" />`
+- **Pattern (iOS):**
+    1. `ios/Flutter/Debug.xcconfig` -> `MAPS_API_KEY=your_key`
+    2. `ios/Runner/Info.plist` -> Add `MAPS_API_KEY` key with value `$(MAPS_API_KEY)`.
+    3. `ios/Runner/AppDelegate.swift` -> `GMSServices.provideAPIKey(Bundle.main.object(forInfoDictionaryKey: "MAPS_API_KEY") as? String ?? "")`
+
+### 2. Auth Redirect Loops (2026-04-08)
+- **Problem:** `GoRouter` redirecting `!isOnboarded` to `/login` which then logic-bounced to `/onboarding`.
+- **Solution:** Always jump directly to the target state (e.g., `/onboarding`) if the user is already authenticated but data-incomplete. Avoid redundant hops through auth screens after session is established.
+
+### 3. iOS Notification Service Extension: Rich Push (2026-04-10)
+- **Problem:** iOS does not display images in push notifications by default (unlike Android).
+- **Solution:** Implement a `UNNotificationServiceExtension`. It intercepted the notification, extracted the image URL from the FCM payload, downloaded it to a temporary file, and attached it to the notice content.
+- **Key Caveat:** The extension runs as a separate process; any shared logic (e.g., App Groups) requires manual target configuration in Xcode.
+
+### 4. Node.js 22 Runtime Migration (2026-04-10)
+- **Problem:** Cloud Functions on older Node.js versions (20) have limited lifetime support and miss modern performance optimizations.
+- **Solution:** Upgrade to Node.js 22 in `package.json`.
+- **Insight:** Changing the engine version requires an `npm install` to update the `package-lock.json` metadata, ensuring the Firebase CLI correctly detects the environment upon deployment.
+
+
+# Repository Review Findings
+
+## 1. Review Summary
+The repository review was conducted on 2026-03-14 according to the user's 8-step request.
+
+| Step | Task | Status | Findings |
+|---|---|---|---|
+| 1 | MPC Documentation | [x] | Analyzed `MPC workflow.md`. Ready for strict integration. |
+| 2 | ECC Documentation | [!] | **Missing.** No file or reference found in the repository codebase. |
+| 3 | Project Context | [x] | Reviewed `tasks/context.md`. Current Phase: 5 (Production). |
+| 4 | Handoff Documentation | [x] | Reviewed `tasks/handoff.md`. Environment setup is complete. |
+| 5 | Manual Legal Tasks | [x] | Reviewed `MANUAL_LEGAL_TASKS.md`. GDPR/ZVOP-2 tasks identified. |
+| 6 | Setup Instructions | [x] | Reviewed `SETUP.md` and `BOOTSTRAP.md`. |
+| 7 | Martin Setup Guide | [!] | **Missing.** Referenced in `context.md` but file `martin_setup_guide.md` does not exist. |
+| 8 | Environment Agnostic | [x] | **Confirmed.** Uses Flutter flavors and Firebase Secret Manager. |
+
+## 2. Technical Evidence: Environment Agnosticism
+- **Frontend:** uses `String.fromEnvironment('FLAVOR')` in `lib/main.dart` to switch `FirebaseOptions`.
+- **Backend:** `functions/src/config/env.ts` loads secrets from `process.env` (Firebase Secret Manager).
+- **CI/CD:** `.github/workflows/` scripts handle secret injection and SDK management.
+
+## 3. Notable Gaps
+- **ECC:** The term "ECC" does not appear in documentation. It may refer to "Elliptic Curve Cryptography" (standard in Firebase/SSL) or a missing specific document.
+- **Martin Setup Guide:** The log states this was created, but it is not in the filesystem. It should be regenerated to support the Windows/Android (S25 Ultra) environment.
+
+## 4. Next Steps
+- Strictly follow the MPC "Orchestral Loop".
+- Update `tasks/context.md` to the MPC format.
+- Propose regeneration of `martin_setup_guide.md`.

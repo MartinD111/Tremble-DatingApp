@@ -451,8 +451,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     partnerName: devSim.profile?.name ??
                                         t('someone_nearby', lang),
                                     expiresAt: devSim.mutualWaveExpiresAt ??
-                                        DateTime.now().add(
-                                            const Duration(minutes: 30)),
+                                        DateTime.now()
+                                            .add(const Duration(minutes: 30)),
                                     showMutualFlash: devSim.showMutualFlash,
                                     onStop: () => ref
                                         .read(devSimulationControllerProvider
@@ -471,7 +471,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           session: RadarSearchSession(
                                             partnerName: name,
                                             expiresAt: activeMatch.createdAt
-                                                .add(const Duration(minutes: 30)),
+                                                .add(const Duration(
+                                                    minutes: 30)),
                                             onStop: () => ref
                                                 .read(waveRepositoryProvider)
                                                 .markMatchAsFound(
@@ -507,7 +508,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             // Without this the foreground service notification
                             // (and our CallStyle live activity) is invisible.
                             if (Platform.isAndroid) {
-                              final status = await Permission.notification.status;
+                              final status =
+                                  await Permission.notification.status;
                               if (!status.isGranted) {
                                 await Permission.notification.request();
                               }
@@ -533,7 +535,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             // is broadcast. Notif builder is identical to the
                             // one our trampoline already posted, so this is a
                             // no-op repaint.
-                            await AndroidIntegrationService.instance.setRadarActive(true);
+                            await AndroidIntegrationService.instance
+                                .setRadarActive(true);
                             // BleService must run in the main isolate — flutter_blue_plus
                             // requires an Android Activity which the background isolate
                             // does not have. Gate on GDPR consent before starting.
@@ -555,12 +558,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 (ref.read(bypassRadarProvider) ||
                                     canAccessRadar)) {
                               ref
-                                  .read(devSimulationControllerProvider.notifier)
+                                  .read(
+                                      devSimulationControllerProvider.notifier)
                                   .start();
                             }
                           } else {
                             // Stop BLE in main isolate and signal background service.
-                            await AndroidIntegrationService.instance.setRadarActive(false);
+                            await AndroidIntegrationService.instance
+                                .setRadarActive(false);
                             BleService().stop();
                             if (Platform.isAndroid) {
                               await AndroidIntegrationService.instance
@@ -572,7 +577,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             // Cancel any in-flight dev simulation without persisting.
                             if (kDebugMode) {
                               ref
-                                  .read(devSimulationControllerProvider.notifier)
+                                  .read(
+                                      devSimulationControllerProvider.notifier)
                                   .cancelWithoutPersist();
                             }
                           }

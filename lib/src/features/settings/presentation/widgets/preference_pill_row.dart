@@ -39,22 +39,26 @@ class PreferencePillRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A18);
-    final subColor = isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black54;
+    final subColor =
+        isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black54;
     final pillBg = isDark
         ? Colors.white.withValues(alpha: 0.08)
         : Colors.black.withValues(alpha: 0.04);
     final pillBorder = isDark
         ? Colors.white.withValues(alpha: 0.12)
         : Colors.black.withValues(alpha: 0.08);
-    final iconColor = isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black45;
+    final iconColor =
+        isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black45;
 
     final nonNull = values.whereType<String>().toList();
-    
+
     Widget buildPillContent() {
       if (nonNull.isEmpty) {
-        return Text('—', style: TextStyle(color: subColor, fontSize: 13, fontWeight: FontWeight.w600));
+        return Text('—',
+            style: TextStyle(
+                color: subColor, fontSize: 13, fontWeight: FontWeight.w600));
       }
-      
+
       if (nonNull.length == 1) {
         final val = nonNull.first;
         final pillIcon = iconMapper?.call(val);
@@ -80,7 +84,7 @@ class PreferencePillRow extends StatelessWidget {
           ],
         );
       }
-      
+
       return Text(
         'Izbrano: ${nonNull.length}',
         style: TextStyle(
@@ -128,7 +132,8 @@ class PreferencePillRow extends StatelessWidget {
                 onTap: onTap,
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 150),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: pillBg,
                     borderRadius: BorderRadius.circular(100),
@@ -147,10 +152,19 @@ class PreferencePillRow extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isDark
-                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.25)
-                        : Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                        ? Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.25)
+                        : Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.12),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.4),
                     ),
                   ),
                   child: Icon(

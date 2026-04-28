@@ -711,7 +711,9 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
               Icon(
                 icon,
                 size: 20,
-                color: isSelected ? brandRose : (isDark ? Colors.white : Colors.black87),
+                color: isSelected
+                    ? brandRose
+                    : (isDark ? Colors.white : Colors.black87),
               ),
               const SizedBox(width: 12),
             ],
@@ -723,7 +725,8 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
               ),
             ),
             const Spacer(),
-            if (isSelected) Icon(LucideIcons.checkCircle, color: brandRose, size: 20),
+            if (isSelected)
+              Icon(LucideIcons.checkCircle, color: brandRose, size: 20),
           ],
         ),
       ),

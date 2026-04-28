@@ -136,8 +136,12 @@ class _RadarAnimationState extends State<RadarAnimation>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge(
-          [_radarController, _pingController, _logoController, _activationController]),
+      animation: Listenable.merge([
+        _radarController,
+        _pingController,
+        _logoController,
+        _activationController
+      ]),
       builder: (context, child) {
         return Stack(
           alignment: Alignment.center,

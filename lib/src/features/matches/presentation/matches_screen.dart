@@ -297,12 +297,14 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
                                             children: [
                                               Text(
                                                 '${profile.age} ${t('years', lang)}',
-                                                style: GoogleFonts.instrumentSans(
+                                                style:
+                                                    GoogleFonts.instrumentSans(
                                                   fontSize: 13,
                                                   color: subtextColor,
                                                 ),
                                               ),
-                                              if (profile.birthDate != null) ...[
+                                              if (profile.birthDate !=
+                                                  null) ...[
                                                 const SizedBox(width: 8),
                                                 Icon(
                                                   ZodiacUtils.getZodiacIcon(

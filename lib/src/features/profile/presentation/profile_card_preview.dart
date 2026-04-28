@@ -589,8 +589,6 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     ][idx];
   }
 
-
-
   String _getHobbyKey(String hobby) {
     switch (hobby) {
       case 'Fitnes':
@@ -860,9 +858,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
           _badge(LucideIcons.user, user.gender!, isDark, subColor, iconColor));
     }
     if (user.hairColor != null) {
-      badges.add(_badge(
-          Icons.circle, _formatChipText(t(user.hairColor!, lang)), isDark,
-          subColor, IconUtils.getHairColor(user.hairColor!)));
+      badges.add(_badge(Icons.circle, _formatChipText(t(user.hairColor!, lang)),
+          isDark, subColor, IconUtils.getHairColor(user.hairColor!)));
     }
     if (user.ethnicity != null) {
       badges.add(_badge(LucideIcons.users,

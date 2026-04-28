@@ -194,8 +194,8 @@ class _RadarScheduleSheetState extends ConsumerState<_RadarScheduleSheet> {
                         final picked =
                             await _pickTime(_draft.entries[wd]!.startTime);
                         if (picked != null) {
-                          _updateEntry(_draft.entries[wd]!
-                              .copyWith(startTime: picked));
+                          _updateEntry(
+                              _draft.entries[wd]!.copyWith(startTime: picked));
                         }
                       },
                       onPickEnd: () async {
@@ -206,10 +206,10 @@ class _RadarScheduleSheetState extends ConsumerState<_RadarScheduleSheet> {
                               _draft.entries[wd]!.copyWith(endTime: picked));
                         }
                       },
-                      onRemove: (wd == DateTime.saturday ||
-                              wd == DateTime.sunday)
-                          ? () => _removeWeekday(wd)
-                          : null,
+                      onRemove:
+                          (wd == DateTime.saturday || wd == DateTime.sunday)
+                              ? () => _removeWeekday(wd)
+                              : null,
                     ),
                   // "+ Add Saturday" / "+ Add Sunday" pills
                   for (final wd in weekendMissing)
@@ -304,16 +304,14 @@ class _DayPill extends StatelessWidget {
         : (isDark
             ? Colors.white.withValues(alpha: 0.07)
             : Colors.black.withValues(alpha: 0.04));
-    final borderColor = isSelected
-        ? brandRose
-        : (isDark ? Colors.white24 : Colors.black12);
+    final borderColor =
+        isSelected ? brandRose : (isDark ? Colors.white24 : Colors.black12);
     final labelColor = isSelected ? brandRose : textColor;
 
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 8),
-      padding:
-          const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       decoration: BoxDecoration(
         color: bgColor,
         // Pill shape — matches Lifestyle option rows.
@@ -328,8 +326,7 @@ class _DayPill extends StatelessWidget {
               label,
               style: GoogleFonts.instrumentSans(
                 color: labelColor,
-                fontWeight:
-                    isSelected ? FontWeight.bold : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 fontSize: 15,
               ),
             ),
@@ -343,8 +340,7 @@ class _DayPill extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Icon(LucideIcons.arrowRight,
-                size: 14,
-                color: brandRose.withValues(alpha: 0.7)),
+                size: 14, color: brandRose.withValues(alpha: 0.7)),
             const SizedBox(width: 6),
             _TimeChip(
               value: formatTime(entry.endTime),
@@ -361,8 +357,7 @@ class _DayPill extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(2),
                 child: Icon(LucideIcons.x,
-                    size: 16,
-                    color: isDark ? Colors.white54 : Colors.black45),
+                    size: 16, color: isDark ? Colors.white54 : Colors.black45),
               ),
             ),
             const SizedBox(width: 4),
@@ -376,8 +371,7 @@ class _DayPill extends StatelessWidget {
                 value: entry.enabled,
                 activeThumbColor: Colors.white,
                 activeTrackColor: brandRose,
-                inactiveTrackColor:
-                    isDark ? Colors.white24 : Colors.black12,
+                inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
                 onChanged: onToggle,
               ),
             ),
@@ -406,8 +400,7 @@ class _TimeChip extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(100),
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: brandRose.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(100),
@@ -449,8 +442,7 @@ class _AddDayPill extends StatelessWidget {
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 8),
-        padding:
-            const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         decoration: BoxDecoration(
           color: isDark
               ? Colors.white.withValues(alpha: 0.04)
@@ -463,8 +455,7 @@ class _AddDayPill extends StatelessWidget {
         child: Row(
           children: [
             Icon(LucideIcons.plus,
-                size: 18,
-                color: isDark ? Colors.white54 : Colors.black45),
+                size: 18, color: isDark ? Colors.white54 : Colors.black45),
             const SizedBox(width: 12),
             Text(
               'Add $label',

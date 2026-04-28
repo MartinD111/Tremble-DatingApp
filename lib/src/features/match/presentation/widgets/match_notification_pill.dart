@@ -10,8 +10,8 @@ import '../../../../core/utils/icon_utils.dart';
 // values (waitingForAction / waveSent / waveReceived).
 enum PillState {
   waitingForAction, // "Sarah, 24" + [Wave][Ignore]
-  waveSent,         // "Wave sent…" pending, no actions
-  waveReceived,     // "Sarah sent you a wave!" + [Wave Back][Ignore]
+  waveSent, // "Wave sent…" pending, no actions
+  waveReceived, // "Sarah sent you a wave!" + [Wave Back][Ignore]
 }
 
 class MatchNotificationPill extends StatelessWidget {

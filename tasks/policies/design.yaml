@@ -1,8 +1,0 @@
-# Visual Design Policies
-style_contract:
-  - Tremble UI is dark-themed by default.
-  - Glassmorphism is used strategically (e.g. `GlassCard`), not everywhere to avoid jank.
-  - Google Fonts ONLY — no generic system fonts. Use the brand tokens.
-  - Animations must be fluid (radar pulse, match reveal).
-  - No generic Material default blue (#2196F3) — use Tremble brand tokens.
-  - Icons should typically be sharp and premium, not generic outline defaults.

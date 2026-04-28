@@ -54,9 +54,12 @@ class PreferenceRangeSlider extends StatelessWidget {
     final brandRose = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final labelColor = isDark ? Colors.white : const Color(0xFF1A1A18);
-    final valueColor = isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black54;
-    final endLabelColor = isDark ? Colors.white.withValues(alpha: 0.38) : Colors.black38;
-    final sliderInactive = isDark ? Colors.white.withValues(alpha: 0.24) : Colors.black12;
+    final valueColor =
+        isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black54;
+    final endLabelColor =
+        isDark ? Colors.white.withValues(alpha: 0.38) : Colors.black38;
+    final sliderInactive =
+        isDark ? Colors.white.withValues(alpha: 0.24) : Colors.black12;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,7 +91,8 @@ class PreferenceRangeSlider extends StatelessWidget {
                       ),
                       if (isPremium) ...[
                         const SizedBox(width: 8),
-                        const Icon(LucideIcons.lock, size: 13, color: Colors.amber),
+                        const Icon(LucideIcons.lock,
+                            size: 13, color: Colors.amber),
                       ],
                     ],
                   ),
