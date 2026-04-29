@@ -866,6 +866,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
+          title: Text('Gym Mode obvestila', style: TextStyle(color: textColor)),
+          subtitle: Text('Obvesti me ob prihodu v fitnes',
+              style: TextStyle(color: subColor, fontSize: 12)),
+          value: user.gymNotificationsEnabled ?? false,
+          activeThumbColor: Theme.of(context).colorScheme.primary,
+          activeTrackColor: isDark ? Colors.white24 : Colors.black12,
+          inactiveTrackColor: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.05),
+          onChanged: (val) => _ctrl.toggleGymNotifications(val),
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
           title:
               Text('Hide Navigation bar', style: TextStyle(color: textColor)),
           subtitle: Text('Auto-hide on scroll',

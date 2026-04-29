@@ -83,6 +83,8 @@ class AuthUser {
   final bool isPingVibrationEnabled;
   final bool isGenderBasedColor;
   final DateTime? lastWaveFoundAt;
+  // null = user has not been asked yet; true/false = explicit choice
+  final bool? gymNotificationsEnabled;
 
   const AuthUser({
     required this.id,
@@ -151,6 +153,7 @@ class AuthUser {
     this.isPingVibrationEnabled = true,
     this.isGenderBasedColor = false,
     this.lastWaveFoundAt,
+    this.gymNotificationsEnabled,
   });
 
   // ── Serialization for Cloud Functions API ─────────────────────────────────
@@ -224,6 +227,8 @@ class AuthUser {
       'company': company,
       'isPingVibrationEnabled': isPingVibrationEnabled,
       'hasChildren': hasChildren,
+      if (gymNotificationsEnabled != null)
+        'gymNotificationsEnabled': gymNotificationsEnabled,
     };
   }
 
@@ -327,6 +332,7 @@ class AuthUser {
       isPingVibrationEnabled: data['isPingVibrationEnabled'] as bool? ?? true,
       hasChildren: data['hasChildren'] as bool?,
       lastWaveFoundAt: _parseDateTime(data['lastWaveFoundAt']),
+      gymNotificationsEnabled: data['gymNotificationsEnabled'] as bool?,
       isEmailVerified: emailVerified,
     );
   }
@@ -398,6 +404,7 @@ class AuthUser {
     bool? isPingVibrationEnabled,
     bool? hasChildren,
     DateTime? lastWaveFoundAt,
+    bool? gymNotificationsEnabled,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -471,6 +478,8 @@ class AuthUser {
           isPingVibrationEnabled ?? this.isPingVibrationEnabled,
       hasChildren: hasChildren ?? this.hasChildren,
       lastWaveFoundAt: lastWaveFoundAt ?? this.lastWaveFoundAt,
+      gymNotificationsEnabled:
+          gymNotificationsEnabled ?? this.gymNotificationsEnabled,
     );
   }
 }

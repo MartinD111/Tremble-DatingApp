@@ -35,6 +35,7 @@ import '../application/radar_search_session.dart';
 import '../../match/presentation/widgets/match_notification_pill.dart';
 import '../../../shared/ui/premium_paywall.dart';
 import '../../gym/application/gym_mode_controller.dart';
+import '../../gym/application/gym_dwell_service.dart';
 import '../../gym/presentation/gym_mode_sheet.dart';
 
 final isScanningProvider =
@@ -159,6 +160,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(pingAngleProvider.notifier).state = null;
       }
     });
+
+    // Keep the gym dwell service alive as long as HomeScreen is in the tree.
+    ref.watch(gymDwellServiceProvider);
 
     final user = ref.watch(authStateProvider);
     final lang = ref.watch(appLanguageProvider);

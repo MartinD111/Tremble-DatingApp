@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
 import 'package:tremble/src/core/theme.dart';
+import '../../auth/data/auth_repository.dart';
 import '../data/gym_repository.dart';
 import '../application/gym_mode_controller.dart';
 
@@ -32,6 +33,103 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
   void initState() {
     super.initState();
     _loadGyms();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowNotificationOnboarding();
+    });
+  }
+
+  /// Shows the gym notification onboarding prompt the first time the sheet
+  /// is opened if the user has not yet made a choice.
+  void _maybeShowNotificationOnboarding() {
+    final user = ref.read(authStateProvider);
+    if (!mounted || user == null) return;
+    if (user.gymNotificationsEnabled != null) return; // already decided
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: GlassCard(
+            opacity: 0.18,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.bell,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 36,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Gym obvestila',
+                  style: TrembleTheme.displayFont(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Te obvestimo, ko 10 minut prebivaš v bližini fitnesa?',
+                  style: GoogleFonts.instrumentSans(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.25),
+                          ),
+                          foregroundColor: Colors.white70,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          _saveGymNotificationsPref(enabled: false);
+                        },
+                        child: const Text('Zavrni'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          _saveGymNotificationsPref(enabled: true);
+                        },
+                        child: const Text('Omogoči'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _saveGymNotificationsPref({required bool enabled}) {
+    ref.read(authStateProvider.notifier).updateProfile(
+          ref.read(authStateProvider)!.copyWith(
+                gymNotificationsEnabled: enabled,
+              ),
+        );
   }
 
   Future<void> _loadGyms() async {

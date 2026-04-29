@@ -55,6 +55,10 @@ class SettingsController {
     updateUser((u) => u.copyWith(isPingVibrationEnabled: enabled));
   }
 
+  void toggleGymNotifications(bool enabled) {
+    updateUser((u) => u.copyWith(gymNotificationsEnabled: enabled));
+  }
+
   // ── Toggle: gender-based color theming ────────────────────────────────────
 
   void toggleGenderBasedColor(bool enabled) {
