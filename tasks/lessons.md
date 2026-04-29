@@ -4,6 +4,14 @@
 [2026-04-29] Do not fragment implementation plans, UI specs, or store submission strategies across multiple files. All architectural policies, deployment rules, and feature implementations MUST reside in `tasks/MASTER_PLAN.md` to ensure context is never dropped across agent sessions.
 Source: Project Consolidation, April 2026.
 
+**Rule #42 — Always use Places API Session Tokens.**
+[2026-04-29] To avoid astronomical GCP billing costs (reducing from $0.017/keystroke to $0.017/session), location autocomplete implementations MUST pass a unique, long-lived `sessionToken` with every search request until a location is explicitly selected.
+Source: Places API (New) Integration, April 2026.
+
+**Rule #43 — Avoid booleans for dynamic lifestyle preferences.**
+[2026-04-29] User preferences that span multiple choices (e.g., Nicotine covering vaping, cigarettes, shisha, ZYN) should be stored as multi-select lists (`List<String>`) rather than simple true/false switches. This supports evolving cultural habits without frequent database migrations.
+Source: Nicotine Step Implementation, April 2026.
+
 Rule #1
 [2026-03-31] Never run un-flavored `flutter build` or `flutter run`. Must provide `--flavor dev --dart-define=FLAVOR=dev` or prod equivalents.
 Source: Multi-Env Setup March 2026.

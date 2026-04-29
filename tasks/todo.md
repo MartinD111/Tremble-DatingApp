@@ -23,6 +23,7 @@
 - [x] **F1 Native Config:** N/A — Places API (New) je čisti REST, native spremembe niso potrebne. ✅
 - [x] **F1 API Key:** GCP: Places API (New) aktiviran. Ključ omejen samo na Places API (New).
 - [ ] **F1 Verifikacija:** Zaženi z `--dart-define=PLACES_KEY_DEV=AIzaSyDMDovcXJeLqTywS4bzEpDlyCnIvIxQ-tk` in testiraj na napravi.
+- [x] **F11 (Nicotine):** Migrated legacy smoking boolean to flexible multi-select nicotine list logic. ✅ COMPLETE
 
 ### 5. Infrastructure & Business Blockers
 - [ ] **LEGAL:** Company registration and legal status for RevenueCat (Blocks F8).
@@ -32,4 +33,4 @@
 - [ ] **MARTIN:** Register Martin's debug token in Firebase App Check (tremble-dev) before testing Cloud Functions.
 
 ---
-*Last Updated: 2026-04-29* — Build: ✅ passing | flutter analyze: ✅ 0 issues | F9 ✅ | F1 Flutter layer ✅ | Native config ⏳
+*Last Updated: 2026-04-29* — Build: ✅ passing | flutter analyze: ✅ 0 issues | F9 ✅ | F1 ✅ | F11 ✅
