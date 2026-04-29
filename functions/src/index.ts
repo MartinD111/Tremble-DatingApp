@@ -57,3 +57,9 @@ export {
     unblockUser,
     reportUser,
 } from "./modules/safety/safety.functions";
+
+// ── Events Module ────────────────────────────────────────
+export {
+    onEventModeActivate,
+    expireEventModes,
+} from "./modules/events/events.functions";

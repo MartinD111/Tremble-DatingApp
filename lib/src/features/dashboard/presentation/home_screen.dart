@@ -34,6 +34,7 @@ import '../application/dev_simulation_controller.dart';
 import '../application/radar_search_session.dart';
 import '../../match/presentation/widgets/match_notification_pill.dart';
 import '../../../shared/ui/premium_paywall.dart';
+import '../../matches/data/match_repository.dart';
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State
@@ -698,6 +699,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       .colorScheme
                       .onSurface
                       .withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // ── Event Mode Icon (top-left, top of stack) ───
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 24,
+          left: 12,
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () async {
+                try {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Activating Event Mode...')),
+                  );
+                  await ref.read(matchRepositoryProvider).activateEventMode(
+                        eventId: 'mock-event-123', // Hardcoded mock for testing
+                        latitude: 46.0569, // Mock Ljubljana latitude
+                        longitude: 14.5058, // Mock Ljubljana longitude
+                      );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Joined Event! Match threshold lowered.'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to join event: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(
+                  LucideIcons.partyPopper,
+                  size: 22,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.9),
                 ),
               ),
             ),

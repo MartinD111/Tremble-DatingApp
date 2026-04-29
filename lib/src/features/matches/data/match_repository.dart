@@ -139,6 +139,19 @@ class MatchRepository {
         .toList();
   }
 
+  /// Activate event mode for the current user.
+  Future<void> activateEventMode({
+    required String eventId,
+    required double latitude,
+    required double longitude,
+  }) async {
+    await _api.call('onEventModeActivate', data: {
+      'eventId': eventId,
+      'latitude': latitude,
+      'longitude': longitude,
+    });
+  }
+
   /// Stream that polls for new matches periodically.
   /// Replaces the old mock simulateMatches() with real polling.
   Stream<List<MatchProfile>> watchMatches({

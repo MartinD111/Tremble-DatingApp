@@ -50,6 +50,18 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════════════════════
+    // EVENTS — F2: Event Mode Matching
+    // Branje dovoljeno vsem avtentificiranim (da preverijo aktiven event).
+    // Pisanje je IZKLJUČNO Cloud Functions (admin-ustvarjeni eventi).
+    // ══════════════════════════════════════════════════════
+    match /events/{eventId} {
+      // Authenticated users can read events to join them
+      allow read: if request.auth != null;
+      // Only Cloud Functions (no auth uid == service account) can write
+      allow create, update, delete: if false;
+    }
+
+    // ══════════════════════════════════════════════════════
     // PROXIMITY — branje aktivnih uporabnikov za radar
     // ══════════════════════════════════════════════════════
     match /proximity/{userId} {

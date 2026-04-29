@@ -279,7 +279,27 @@ export const findNearby = onCall(
             const ageMatchesMe = !theirAge || (theirAge >= myMinAge && theirAge <= myMaxAge);
             const ageMatchesThem = !myAge || (myAge >= theirMinAge && myAge <= theirMaxAge);
 
+            // Basic compatibility score (placeholder for Phase 5 ML/Algo)
+            let score = 0.0;
             if (iMatchThem && theyMatchMe && ageMatchesMe && ageMatchesThem) {
+                score = 1.0;
+            } else if (iMatchThem && theyMatchMe) {
+                // Partial match if gender matches but age is slightly off
+                score = 0.60;
+            }
+
+            // F2: Event Mode Matching Override
+            let threshold = 0.70;
+            if (
+                requesterData.activeEventId &&
+                candidateData.activeEventId &&
+                requesterData.activeEventId === candidateData.activeEventId
+            ) {
+                // If both users are active in the same event, lower the barrier
+                threshold = 0.55;
+            }
+
+            if (score >= threshold) {
                 nearbyUsers.push({
                     userId: candidates[i].id,
                     distanceM: Math.round(candidates[i].distanceM),
