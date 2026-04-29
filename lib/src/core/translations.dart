@@ -577,11 +577,26 @@ const Map<String, Map<String, String>> _translations = {
     'discard': 'Discard',
 
     // --- Matches screen ---
-    'matches_title': 'Your people',
+    'matches_title': 'Your Matches',
     'no_matches': 'No matches yet — go outside and turn on the radar!',
-    'matches_help_title': 'About People',
+    'matches_help_title': 'About Matches',
     'matches_help_body':
         'Everyone who waved at you (one-way or mutual) appears here.',
+
+    // F3 — Match category tabs
+    'match_tab_all': 'All',
+    'match_tab_standard': 'Standard',
+    'match_tab_event': 'Event',
+    'match_tab_activity': 'Activity',
+    'match_tab_gym': 'Gym',
+
+    // F3 — History filter labels
+    'history_filter_label': 'Period',
+    'history_last_week': 'Last 7 days',
+    'history_last_month': 'Last 30 days',
+    'history_last_3months': 'Last 3 months',
+    'history_last_12months': 'Last 12 months',
+    'history_all': 'All time',
 
     // --- Radar search overlay ---
     'time_remaining': 'Time remaining',
@@ -1079,11 +1094,26 @@ const Map<String, Map<String, String>> _translations = {
     'discard': 'Zavrži',
 
     // --- Matches screen ---
-    'matches_title': 'Tvoji ljudje',
+    'matches_title': 'Tvoje ujemanje',
     'no_matches': 'Še nimaš matchev — pojdi ven in vklopi radar!',
-    'matches_help_title': 'O strani Ljudje',
+    'matches_help_title': 'O tvojih matchih',
     'matches_help_body':
         'Tukaj se pojavijo vsi, ki so ti pomahali (enosmerno ali vzajemno).',
+
+    // F3 — Zavihki kategorij
+    'match_tab_all': 'Vsi',
+    'match_tab_standard': 'Standardno',
+    'match_tab_event': 'Dogodek',
+    'match_tab_activity': 'Aktivnost',
+    'match_tab_gym': 'Gym',
+
+    // F3 — Filtri zgodovine
+    'history_filter_label': 'Obdobje',
+    'history_last_week': 'Zadnjih 7 dni',
+    'history_last_month': 'Zadnjih 30 dni',
+    'history_last_3months': 'Zadnje 3 mesece',
+    'history_last_12months': 'Zadnje 12 mesecev',
+    'history_all': 'Vsi časi',
 
     // --- Radar search overlay ---
     'time_remaining': 'Preostali čas',
