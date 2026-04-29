@@ -83,7 +83,20 @@ class IconUtils {
         return LucideIcons.trendingUp;
       case 'sober':
         return LucideIcons.shieldCheck;
-      // Smoking
+      // Nicotine products
+      case 'nicotine_cigarettes':
+        return LucideIcons.cigarette;
+      case 'nicotine_vape':
+        return LucideIcons.wind;
+      case 'nicotine_iqos':
+        return LucideIcons.zap;
+      case 'nicotine_zyn':
+        return LucideIcons.circle;
+      case 'nicotine_shisha':
+        return LucideIcons.flame;
+      case 'nicotine_cannabis':
+        return LucideIcons.leaf;
+      // Legacy smoking keys (backward compat)
       case 'yes':
         return LucideIcons.cigarette;
       case 'no':

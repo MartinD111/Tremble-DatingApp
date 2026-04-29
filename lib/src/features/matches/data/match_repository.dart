@@ -25,7 +25,7 @@ class MatchProfile {
   final String? occupation;
   final String? company;
   final String? school;
-  final bool? isSmoker;
+  final List<String> nicotineUse;
   final String? drinkingHabit;
   final int? introvertLevel;
   final List<String> photoUrls;
@@ -60,7 +60,7 @@ class MatchProfile {
     this.occupation,
     this.company,
     this.school,
-    this.isSmoker,
+    this.nicotineUse = const [],
     this.drinkingHabit,
     this.introvertLevel,
     this.prompts = const [],
@@ -95,7 +95,7 @@ class MatchProfile {
       ethnicity: data['ethnicity'] as String?,
       jobStatus: data['jobStatus'] as String?,
       occupation: data['occupation'] as String?,
-      isSmoker: data['isSmoker'] as bool?,
+      nicotineUse: List<String>.from(data['nicotineUse'] ?? []),
       drinkingHabit: data['drinkingHabit'] as String?,
       introvertLevel: data['introvertScale'] as int?,
       gender: data['gender'] as String? ?? 'Female',

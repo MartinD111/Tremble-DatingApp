@@ -17,9 +17,12 @@
 - [x] Visual "Ping" effect and "Wave" simulation during registration.
 - [x] **D-37:** Test 3-state Map Toggle (TASK-008) — Martin, physical device.
 
-### 4. Phase A Execution (F1, F9) 🔴 NEXT
-- [ ] **F9 (Radius Logic):** Implement GPS geohash pre-filter + BLE confirmation.
-- [ ] **F1 (Google Maps/Places API):** Implement Session Token Model for autocomplete.
+### 4. Phase A Execution (F1, F9) ✅ COMPLETE
+- [x] **F9 (Radius Logic):** GPS geohash pre-filter + BLE confirmation. ✅ COMPLETE
+- [x] **F1 Flutter layer:** `PlacesService` (session token model) + `email_location_step` + `edit_profile_screen` migrated. ✅ COMPLETE
+- [x] **F1 Native Config:** N/A — Places API (New) je čisti REST, native spremembe niso potrebne. ✅
+- [x] **F1 API Key:** GCP: Places API (New) aktiviran. Ključ omejen samo na Places API (New).
+- [ ] **F1 Verifikacija:** Zaženi z `--dart-define=PLACES_KEY_DEV=AIzaSyDMDovcXJeLqTywS4bzEpDlyCnIvIxQ-tk` in testiraj na napravi.
 
 ### 5. Infrastructure & Business Blockers
 - [ ] **LEGAL:** Company registration and legal status for RevenueCat (Blocks F8).
@@ -29,4 +32,4 @@
 - [ ] **MARTIN:** Register Martin's debug token in Firebase App Check (tremble-dev) before testing Cloud Functions.
 
 ---
-*Last Updated: 2026-04-29* — Build: ✅ passing | flutter analyze: ✅ 0 issues
+*Last Updated: 2026-04-29* — Build: ✅ passing | flutter analyze: ✅ 0 issues | F9 ✅ | F1 Flutter layer ✅ | Native config ⏳

@@ -464,11 +464,10 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
         label: _formatChipText(t(user.drinkingHabit!, lang)),
       ));
     }
-    if (user.isSmoker != null) {
+    for (final product in user.nicotineUse) {
       pills.add(_PreferencePill(
-        icon: IconUtils.getLifestyleIcon(user.isSmoker! ? 'yes' : 'no'),
-        label: _formatChipText(
-            user.isSmoker! ? t('smoker', lang) : t('smoke_no', lang)),
+        icon: IconUtils.getLifestyleIcon('nicotine_$product'),
+        label: _formatChipText(t('nicotine_$product', lang)),
       ));
     }
     if (user.sleepSchedule != null) {

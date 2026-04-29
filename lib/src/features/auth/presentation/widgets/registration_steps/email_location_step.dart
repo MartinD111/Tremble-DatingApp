@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../../core/translations.dart';
+import '../../../../../core/places_service.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
@@ -44,10 +45,60 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
   bool _hasDigit = false;
   bool _hasSpecialChar = false;
 
+  // Places API
+  final PlacesService _placesService = PlacesService();
+  List<PlacePrediction> _locationPredictions = [];
+  Timer? _debounce;
+  bool _showSuggestions = false;
+  final FocusNode _locationFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _locationFocus.addListener(() {
+      if (_locationFocus.hasFocus) {
+        _placesService.startSession();
+      }
+    });
+  }
+
   @override
   void dispose() {
     _confirmPasswordController.dispose();
+    _debounce?.cancel();
+    _locationFocus.dispose();
     super.dispose();
+  }
+
+  void _onLocationChanged(String value) {
+    widget.locationController.text = value;
+    _debounce?.cancel();
+    if (value.trim().length < 2) {
+      setState(() {
+        _locationPredictions = [];
+        _showSuggestions = false;
+      });
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 300), () async {
+      final results = await _placesService.autocomplete(value);
+      if (mounted) {
+        setState(() {
+          _locationPredictions = results;
+          _showSuggestions = results.isNotEmpty;
+        });
+      }
+    });
+  }
+
+  void _onLocationSelected(PlacePrediction prediction) {
+    widget.locationController.text = prediction.displayName;
+    _placesService.endSession();
+    setState(() {
+      _locationPredictions = [];
+      _showSuggestions = false;
+    });
+    _locationFocus.unfocus();
   }
 
   bool get _isPasswordValid =>
@@ -266,25 +317,14 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
     final borderColor = isDark ? Colors.white30 : Colors.black26;
     final borderFocusColor = isDark ? Colors.white : Colors.black;
 
-    return Autocomplete<String>(
-      optionsBuilder: (tv) {
-        if (tv.text.isEmpty) return const Iterable<String>.empty();
-        return locationSuggestions
-            .where((c) => c.toLowerCase().contains(tv.text.toLowerCase()));
-      },
-      onSelected: (s) => setState(() => widget.locationController.text = s),
-      fieldViewBuilder: (ctx, ctrl, fn, _) {
-        if (widget.locationController.text.isNotEmpty && ctrl.text.isEmpty) {
-          ctrl.text = widget.locationController.text;
-        }
-        return TextField(
-          controller: ctrl,
-          focusNode: fn,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: widget.locationController,
+          focusNode: _locationFocus,
           style: TextStyle(color: textColor, fontSize: 17),
-          onChanged: (v) {
-            widget.locationController.text = v;
-            setState(() {});
-          },
+          onChanged: _onLocationChanged,
           decoration: InputDecoration(
             labelText: widget.tr('from_where'),
             labelStyle: TextStyle(color: hintColor),
@@ -298,34 +338,42 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           ),
-        );
-      },
-      optionsViewBuilder: (ctx, onSel, opts) => Align(
-        alignment: Alignment.topLeft,
-        child: Material(
-          elevation: 8,
-          color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 180, maxWidth: 340),
-            child: ListView.builder(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              itemCount: opts.length,
-              itemBuilder: (ctx, i) {
-                final o = opts.elementAt(i);
-                return ListTile(
+        ),
+        if (_showSuggestions && _locationPredictions.isNotEmpty)
+          Material(
+            elevation: 8,
+            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                shrinkWrap: true,
+                itemCount: _locationPredictions.length,
+                itemBuilder: (ctx, i) {
+                  final p = _locationPredictions[i];
+                  return ListTile(
                     dense: true,
                     leading: Icon(LucideIcons.mapPin,
                         size: 14,
                         color: isDark ? Colors.white54 : Colors.black54),
-                    title: Text(o, style: TextStyle(color: textColor)),
-                    onTap: () => onSel(o));
-              },
+                    title: Text(
+                      p.mainText ?? p.description,
+                      style: TextStyle(color: textColor, fontSize: 14),
+                    ),
+                    subtitle: p.secondaryText != null
+                        ? Text(
+                            p.secondaryText!,
+                            style: TextStyle(color: hintColor, fontSize: 12),
+                          )
+                        : null,
+                    onTap: () => _onLocationSelected(p),
+                  );
+                },
+              ),
             ),
           ),
-        ),
-      ),
+      ],
     );
   }
 

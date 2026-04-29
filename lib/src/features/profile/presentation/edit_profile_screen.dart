@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/tremble_header.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
+import '../../../core/places_service.dart';
 import '../../settings/presentation/widgets/preference_edit_modal.dart';
 import '../../settings/presentation/widgets/preference_pill_row.dart';
 import '../../auth/presentation/widgets/registration_steps/hobbies_step.dart';
@@ -39,6 +41,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _isPremium = false;
   bool _isUploading = false;
 
+  // Places API — session token model
+  final PlacesService _placesService = PlacesService();
+  List<PlacePrediction> _locationPredictions = [];
+  Timer? _locationDebounce;
+  bool _showLocationSuggestions = false;
+  final FocusNode _locationFocus = FocusNode();
+
   List<String> _photoUrls = [];
   final ValueNotifier<double> _buttonsOpacity = ValueNotifier(1.0);
   String? _gender;
@@ -49,7 +58,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   String? _ethnicity;
   String? _occupation;
   final _occupationController = TextEditingController();
-  bool? _isSmoker;
+  final List<String> _nicotineUse = [];
   String? _drinkingHabit;
   String? _exerciseHabit;
   String? _sleepSchedule;
@@ -71,6 +80,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _locationFocus.addListener(() {
+      if (_locationFocus.hasFocus) {
+        _placesService.startSession();
+      }
+    });
     final user = ref.read(authStateProvider);
     if (user != null) {
       _lang = user.appLanguage;
@@ -111,7 +125,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         'Mešana': 'ethnicity_mixed',
         'Azijska': 'ethnicity_asian',
       });
-      _isSmoker = user.isSmoker;
+      _nicotineUse
+        ..clear()
+        ..addAll(user.nicotineUse);
       _occupation = user.occupation;
       _occupationController.text = user.occupation ?? '';
       _schoolController.text = user.school ?? '';
@@ -249,6 +265,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _schoolController.dispose();
     _companyController.dispose();
     _buttonsOpacity.dispose();
+    _locationDebounce?.cancel();
+    _locationFocus.dispose();
     super.dispose();
   }
 
@@ -436,7 +454,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ? _companyController.text
               : null,
           hasChildren: _hasChildren,
-          isSmoker: _isSmoker,
+          nicotineUse: _nicotineUse,
           drinkingHabit: _drinkingHabit,
           exerciseHabit: _exerciseHabit,
           sleepSchedule: _sleepSchedule,
@@ -881,8 +899,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ),
                             const SizedBox(height: 24),
 
-                            // ── Smoker & Children ─────────────────────────────────
-                            _buildSmokerSwitch(lang, isDark, textColor),
+                            // ── Nicotine & Children ────────────────────────────────
+                            _buildNicotineSelector(lang, isDark, textColor),
+                            const SizedBox(height: 16),
                             _buildChildrenSwitch(lang, isDark, textColor),
 
                             Divider(color: borderColor, height: 24),
@@ -1495,27 +1514,39 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Widget _buildLocationField(String lang, Color textColor, Color fillColor,
       Color iconColor, bool isDark) {
-    return Autocomplete<String>(
-      initialValue: TextEditingValue(text: _locationController.text),
-      optionsBuilder: (textEditingValue) {
-        if (textEditingValue.text.isEmpty) {
-          return const Iterable<String>.empty();
-        }
-        return locationSuggestions.where((city) =>
-            city.toLowerCase().contains(textEditingValue.text.toLowerCase()));
-      },
-      onSelected: (String selection) {
-        _locationController.text = selection;
-      },
-      fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-        return TextField(
-          controller: controller,
-          focusNode: focusNode,
+    final hintColor = textColor.withValues(alpha: 0.3);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _locationController,
+          focusNode: _locationFocus,
           style: TextStyle(color: textColor),
-          onChanged: (val) => _locationController.text = val,
+          onChanged: (val) {
+            _locationController.text = val;
+            _markChanged();
+            _locationDebounce?.cancel();
+            if (val.trim().length < 2) {
+              setState(() {
+                _locationPredictions = [];
+                _showLocationSuggestions = false;
+              });
+              return;
+            }
+            _locationDebounce =
+                Timer(const Duration(milliseconds: 300), () async {
+              final results = await _placesService.autocomplete(val);
+              if (mounted) {
+                setState(() {
+                  _locationPredictions = results;
+                  _showLocationSuggestions = results.isNotEmpty;
+                });
+              }
+            });
+          },
           decoration: InputDecoration(
             hintText: t('location_hint', lang),
-            hintStyle: TextStyle(color: textColor.withValues(alpha: 0.3)),
+            hintStyle: TextStyle(color: hintColor),
             filled: true,
             fillColor: fillColor,
             prefixIcon: Icon(LucideIcons.mapPin, size: 18, color: iconColor),
@@ -1526,39 +1557,53 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
-        );
-      },
-      optionsViewBuilder: (context, onSelected, options) {
-        return Align(
-          alignment: Alignment.topLeft,
-          child: Material(
+        ),
+        if (_showLocationSuggestions && _locationPredictions.isNotEmpty)
+          Material(
             elevation: 8,
             color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
             borderRadius: BorderRadius.circular(12),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 200, maxWidth: 340),
               child: ListView.builder(
-                padding: EdgeInsets.zero,
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 shrinkWrap: true,
-                itemCount: options.length,
-                itemBuilder: (context, index) {
-                  final option = options.elementAt(index);
+                itemCount: _locationPredictions.length,
+                itemBuilder: (ctx, i) {
+                  final p = _locationPredictions[i];
                   return ListTile(
                     dense: true,
                     leading: Icon(LucideIcons.mapPin,
                         size: 16,
                         color: isDark ? Colors.white54 : Colors.black45),
-                    title: Text(option,
-                        style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black87)),
-                    onTap: () => onSelected(option),
+                    title: Text(
+                      p.mainText ?? p.description,
+                      style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontSize: 14),
+                    ),
+                    subtitle: p.secondaryText != null
+                        ? Text(p.secondaryText!,
+                            style: TextStyle(
+                                color: isDark ? Colors.white54 : Colors.black45,
+                                fontSize: 12))
+                        : null,
+                    onTap: () {
+                      _locationController.text = p.displayName;
+                      _placesService.endSession();
+                      _markChanged();
+                      setState(() {
+                        _locationPredictions = [];
+                        _showLocationSuggestions = false;
+                      });
+                      _locationFocus.unfocus();
+                    },
                   );
                 },
               ),
             ),
           ),
-        );
-      },
+      ],
     );
   }
 
@@ -1723,18 +1768,103 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _buildSmokerSwitch(String lang, bool isDark, Color textColor) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(t('smoking', lang), style: TextStyle(color: textColor)),
-      value: _isSmoker ?? false,
-      activeThumbColor: Theme.of(context).primaryColor,
-      activeTrackColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-      inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
-      onChanged: (val) => setState(() {
-        _isSmoker = val;
-        _hasChanges = true;
-      }),
+  Widget _buildNicotineSelector(String lang, bool isDark, Color textColor) {
+    final primary = Theme.of(context).colorScheme.primary;
+    const products = [
+      'cigarettes',
+      'vape',
+      'iqos',
+      'zyn',
+      'shisha',
+      'cannabis',
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(t('nicotine_title', lang),
+            style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 12),
+        // "None" pill
+        GestureDetector(
+          onTap: () => setState(() {
+            _nicotineUse.clear();
+            _hasChanges = true;
+          }),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            margin: const EdgeInsets.only(bottom: 10),
+            decoration: BoxDecoration(
+              color: _nicotineUse.isEmpty
+                  ? primary.withValues(alpha: 0.18)
+                  : (isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.black.withValues(alpha: 0.04)),
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(
+                color: _nicotineUse.isEmpty
+                    ? primary
+                    : (isDark ? Colors.white24 : Colors.black12),
+                width: _nicotineUse.isEmpty ? 2 : 1,
+              ),
+            ),
+            child: Text(t('nicotine_none', lang),
+                style: TextStyle(
+                  color: _nicotineUse.isEmpty
+                      ? (isDark ? Colors.white : Colors.black)
+                      : textColor,
+                  fontWeight:
+                      _nicotineUse.isEmpty ? FontWeight.bold : FontWeight.w500,
+                )),
+          ),
+        ),
+        // Product chips
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: products.map((key) {
+            final sel = _nicotineUse.contains(key);
+            return GestureDetector(
+              onTap: () => setState(() {
+                if (sel) {
+                  _nicotineUse.remove(key);
+                } else {
+                  _nicotineUse.add(key);
+                }
+                _hasChanges = true;
+              }),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                decoration: BoxDecoration(
+                  color: sel
+                      ? primary.withValues(alpha: 0.18)
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : Colors.black.withValues(alpha: 0.04)),
+                  borderRadius: BorderRadius.circular(100),
+                  border: Border.all(
+                    color: sel
+                        ? primary
+                        : (isDark ? Colors.white24 : Colors.black12),
+                    width: sel ? 2 : 1,
+                  ),
+                ),
+                child: Text(t('nicotine_$key', lang),
+                    style: TextStyle(
+                      color: sel
+                          ? (isDark ? Colors.white : Colors.black)
+                          : textColor,
+                      fontWeight: sel ? FontWeight.bold : FontWeight.w500,
+                      fontSize: 13,
+                    )),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 

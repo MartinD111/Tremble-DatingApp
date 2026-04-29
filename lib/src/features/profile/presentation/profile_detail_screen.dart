@@ -769,11 +769,10 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
         label: _formatChipText(t(match.drinkingHabit!, lang)),
       ));
     }
-    if (match.isSmoker != null) {
+    for (final product in match.nicotineUse) {
       pills.add(_PreferencePill(
-        icon: IconUtils.getLifestyleIcon(match.isSmoker! ? 'yes' : 'no'),
-        label: _formatChipText(
-            match.isSmoker! ? t('smoker', lang) : t('smoke_no', lang)),
+        icon: IconUtils.getLifestyleIcon('nicotine_$product'),
+        label: _formatChipText(t('nicotine_$product', lang)),
       ));
     }
     if (match.sleepSchedule != null) {

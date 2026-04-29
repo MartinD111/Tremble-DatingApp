@@ -1501,23 +1501,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         const SizedBox(height: 16),
         _prefPillRow(
           context: context,
-          label: _t('smoking'),
-          icon: LucideIcons.cigarette,
-          currentValue: user.partnerSmokingPreference,
+          label: _t('nicotine_title'),
+          icon: LucideIcons.wind,
+          currentValue: user.nicotineFilter,
           options: [
             {
-              'label': _t('smoke_no'),
-              'value': 'no',
+              'label': _t('nicotine_pref_no_preference'),
+              'value': 'no_preference',
+              'icon': LucideIcons.helpCircle,
+            },
+            {
+              'label': _t('nicotine_pref_none_only'),
+              'value': 'none_only',
               'icon': LucideIcons.ban,
             },
             {
-              'label': _t('smoke_yes'),
-              'value': 'yes',
-              'icon': LucideIcons.cigarette,
+              'label': _t('nicotine_pref_any'),
+              'value': 'any',
+              'icon': LucideIcons.heart,
             },
           ],
-          onUpdate: (val) => _ctrl
-              .updateUser((u) => u.copyWith(partnerSmokingPreference: val)),
+          onUpdate: (val) =>
+              _ctrl.updateUser((u) => u.copyWith(nicotineFilter: val)),
         ),
         const SizedBox(height: 16),
         _prefPillRow(

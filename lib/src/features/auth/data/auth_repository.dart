@@ -24,8 +24,13 @@ class AuthUser {
   final int? height;
   final int? heightRangeStart;
   final int? heightRangeEnd;
-  final bool? isSmoker;
-  final String? partnerSmokingPreference;
+
+  /// Nicotine products the user uses. Empty list = none.
+  /// Valid values: 'cigarettes' | 'vape' | 'iqos' | 'zyn' | 'shisha' | 'cannabis'
+  final List<String> nicotineUse;
+
+  /// Partner nicotine filter. Values: 'any' | 'none_only' | 'no_preference'
+  final String? nicotineFilter;
   final String? jobStatus; // 'student' or 'employed'
   final String? occupation; // Specific title (e.g. 'Computer Science')
   final String? drinkingHabit;
@@ -91,8 +96,8 @@ class AuthUser {
     this.photoUrls = const [],
     this.gender,
     this.interestedIn = const [],
-    this.isSmoker,
-    this.partnerSmokingPreference,
+    this.nicotineUse = const [],
+    this.nicotineFilter,
     this.jobStatus,
     this.occupation,
     this.drinkingHabit,
@@ -163,8 +168,8 @@ class AuthUser {
       'height': height,
       'heightRangeStart': heightRangeStart,
       'heightRangeEnd': heightRangeEnd,
-      'isSmoker': isSmoker,
-      'partnerSmokingPreference': partnerSmokingPreference,
+      'nicotineUse': nicotineUse,
+      'nicotineFilter': nicotineFilter,
       'jobStatus': jobStatus,
       'occupation': occupation,
       'drinkingHabit': drinkingHabit,
@@ -269,8 +274,8 @@ class AuthUser {
       height: data['height'] as int?,
       heightRangeStart: data['heightRangeStart'] as int?,
       heightRangeEnd: data['heightRangeEnd'] as int?,
-      isSmoker: data['isSmoker'] as bool?,
-      partnerSmokingPreference: data['partnerSmokingPreference'] as String?,
+      nicotineUse: List<String>.from(data['nicotineUse'] ?? []),
+      nicotineFilter: data['nicotineFilter'] as String?,
       jobStatus: data['jobStatus'] as String?,
       occupation: data['occupation'] as String?,
       drinkingHabit: data['drinkingHabit'] as String?,
@@ -338,8 +343,8 @@ class AuthUser {
     List<String>? photoUrls,
     String? gender,
     List<String>? interestedIn,
-    bool? isSmoker,
-    String? partnerSmokingPreference,
+    List<String>? nicotineUse,
+    String? nicotineFilter,
     String? jobStatus,
     String? occupation,
     String? drinkingHabit,
@@ -406,9 +411,8 @@ class AuthUser {
       photoUrls: photoUrls ?? this.photoUrls,
       gender: gender ?? this.gender,
       interestedIn: interestedIn ?? this.interestedIn,
-      isSmoker: isSmoker ?? this.isSmoker,
-      partnerSmokingPreference:
-          partnerSmokingPreference ?? this.partnerSmokingPreference,
+      nicotineUse: nicotineUse ?? this.nicotineUse,
+      nicotineFilter: nicotineFilter ?? this.nicotineFilter,
       jobStatus: jobStatus ?? this.jobStatus,
       occupation: occupation ?? this.occupation,
       drinkingHabit: drinkingHabit ?? this.drinkingHabit,

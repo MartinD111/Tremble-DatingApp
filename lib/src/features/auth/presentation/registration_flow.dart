@@ -18,7 +18,7 @@ import 'widgets/registration_steps/gender_step.dart';
 import 'widgets/registration_steps/status_step.dart';
 import 'widgets/registration_steps/exercise_step.dart';
 import 'widgets/registration_steps/drinking_step.dart';
-import 'widgets/registration_steps/smoking_step.dart';
+import 'widgets/registration_steps/nicotine_step.dart';
 import 'widgets/registration_steps/children_step.dart';
 import 'widgets/registration_steps/introversion_step.dart';
 import 'widgets/registration_steps/sleep_step.dart';
@@ -145,7 +145,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // About you lifestyle
   String? _exerciseHabit; // 'active' | 'sometimes' | 'almost_never'
   String? _drinkingHabit; // 'socially' | 'never' | 'frequently' | 'sober'
-  String? _smokingHabit; // 'yes' | 'no'
+  final List<String> _nicotineUse = [];
   String? _childrenPreference; // 'want_someday' | 'dont_want' | ...
   RangeValues _introversionRange = const RangeValues(0.3, 0.7); // 30% to 70%
   String? _sleepHabit; // 'night_owl' | 'early_bird'
@@ -176,7 +176,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   List<String>? _partnerChildrenPreference;
   List<String>? _partnerSleepHabit;
   List<String>? _partnerPetPreference;
-  List<String>? _partnerSmokingHabit;
+  String? _partnerNicotineFilter;
   String? _partnerPoliticalAffiliationPreference;
   String? _partnerIntroversionRange;
   String? _partnerHeightRange;
@@ -224,9 +224,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     _occupationController.text = appUser.occupation ?? '';
     _exerciseHabit = appUser.exerciseHabit;
     _drinkingHabit = appUser.drinkingHabit;
-    _smokingHabit = appUser.isSmoker == true
-        ? 'yes'
-        : (appUser.isSmoker == false ? 'no' : null);
+    // Nicotine: restore list from stored nicotineUse
+    _nicotineUse.clear();
+    _nicotineUse.addAll(appUser.nicotineUse);
+    if (appUser.nicotineFilter != null) {
+      _partnerNicotineFilter = appUser.nicotineFilter;
+    }
     _childrenPreference = appUser.childrenPreference;
     if (appUser.selfIntrovertMin != null && appUser.selfIntrovertMax != null) {
       _introversionRange = RangeValues(
@@ -300,7 +303,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ? _locationController.text
             : null,
         interestedIn: _wantToMeet,
-        isSmoker: _smokingHabit == 'yes',
+        nicotineUse: List.from(_nicotineUse),
         jobStatus: _status ?? 'student',
         occupation: _occupationController.text.trim(),
         drinkingHabit: _drinkingHabit ?? 'never',
@@ -786,13 +789,19 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                         setState(() => _partnerDrinkingHabit = v),
                     tr: tr,
                   ),
-                  SmokingStep(
-                    selected: _smokingHabit,
-                    onSelect: (k) => setState(() => _smokingHabit = k),
+                  NicotineStep(
+                    selected: _nicotineUse,
+                    onToggle: (key) => setState(() {
+                      if (_nicotineUse.contains(key)) {
+                        _nicotineUse.remove(key);
+                      } else {
+                        _nicotineUse.add(key);
+                      }
+                    }),
                     onBack: () => _goToPage(_currentPage - 1),
                     onNext: _nextPage,
                     onSavePartner: (v) =>
-                        setState(() => _partnerSmokingHabit = v),
+                        setState(() => _partnerNicotineFilter = v?.join(',')),
                     tr: tr,
                   ),
                   ChildrenStep(
@@ -1664,7 +1673,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ? _locationController.text
             : null,
         interestedIn: _wantToMeet,
-        isSmoker: _smokingHabit == 'yes',
+        nicotineUse: List.from(_nicotineUse),
         jobStatus: _status ?? 'student',
         occupation: _occupationController.text.trim(),
         drinkingHabit: _drinkingHabit ?? 'never',
@@ -1699,7 +1708,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         partnerSleepSchedule: _partnerSleepHabit?.join(', '),
         partnerPetPreference: _partnerPetPreference?.join(', '),
         partnerChildrenPreference: _partnerChildrenPreference?.join(', '),
-        partnerSmokingPreference: _partnerSmokingHabit?.join(', '),
+        nicotineFilter: _partnerNicotineFilter,
         politicalAffiliationPreference: _partnerPoliticalAffiliationPreference,
         partnerIntrovertPreference: _partnerIntroversionRange,
         partnerHeightPreference: _partnerHeightRange,
