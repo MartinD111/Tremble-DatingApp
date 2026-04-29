@@ -28,6 +28,7 @@ export {
 export {
     onWaveCreated,
     getMatches,
+    migrateMatchTypes,
 } from "./modules/matches/matches.functions";
 
 // ── Uploads Module (Cloudflare R2) ───────────────────────
@@ -63,3 +64,10 @@ export {
     onEventModeActivate,
     expireEventModes,
 } from "./modules/events/events.functions";
+
+// ── Gym Module ───────────────────────────────────────────
+export {
+    onGymModeActivate,
+    onGymModeDeactivate,
+    expireGymSessions,
+} from "./modules/gym/gym.functions";

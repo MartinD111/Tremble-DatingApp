@@ -95,15 +95,35 @@ export const onWaveCreated = onDocumentCreated(
                 return;
             }
 
+            const userADoc = await db.collection("users").doc(uids[0]).get();
+            const userBDoc = await db.collection("users").doc(uids[1]).get();
+            const userAEvent = userADoc.data()?.activeEventId;
+            const userBEvent = userBDoc.data()?.activeEventId;
+            const userAGym = userADoc.data()?.activeGymId;
+            const userBGym = userBDoc.data()?.activeGymId;
+
+            let matchType = "standard";
+            let matchContext: any = null;
+
+            if (userAEvent && userBEvent && userAEvent === userBEvent) {
+                matchType = "event";
+                matchContext = { eventId: userAEvent };
+            } else if (userAGym && userBGym && userAGym === userBGym) {
+                matchType = "gym";
+                matchContext = { gymId: userAGym };
+            }
+
             const batch = db.batch();
 
             batch.set(db.collection("matches").doc(matchId), {
                 userA: uids[0],
                 userB: uids[1],
                 userIds: uids,
+                matchType,
+                matchContext,
                 createdAt: FieldValue.serverTimestamp(),
                 expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes from now
-                status: 'pending',
+                status: "pending",
                 seenBy: [fromUid],
                 // No lastMessage — Tremble has no in-app chat.
             });
@@ -261,5 +281,43 @@ export const getMatches = onCall(
         );
 
         return { matches: profiles.filter(Boolean) };
+    }
+);
+
+export const migrateMatchTypes = onCall(
+    { maxInstances: 10, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+    async (request) => {
+        requireAuth(request);
+
+        const matchesSnapshot = await db.collection("matches").get();
+        let updatedCount = 0;
+
+        let batch = db.batch();
+        let batchCount = 0;
+
+        for (const doc of matchesSnapshot.docs) {
+            const data = doc.data();
+            if (!data.matchType) {
+                batch.update(doc.ref, {
+                    matchType: "standard",
+                    matchContext: null,
+                });
+                updatedCount++;
+                batchCount++;
+
+                if (batchCount === 490) {
+                    await batch.commit();
+                    batch = db.batch();
+                    batchCount = 0;
+                }
+            }
+        }
+
+        if (batchCount > 0) {
+            await batch.commit();
+        }
+
+        console.log(`[MIGRATION] migrateMatchTypes: updated ${updatedCount} matches`);
+        return { success: true, updatedCount };
     }
 );
