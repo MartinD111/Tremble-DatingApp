@@ -24,6 +24,7 @@
 - [x] **F1 API Key:** GCP: Places API (New) aktiviran. Ključ omejen samo na Places API (New).
 - [ ] **F1 Verifikacija:** Zaženi z `--dart-define=PLACES_KEY_DEV=[REDACTED]` in testiraj na napravi.
 - [x] **F11 (Nicotine):** Migrated legacy smoking boolean to flexible multi-select nicotine list logic. ✅ COMPLETE
+- [x] **F3 (Match Categories):** Implemented Event, Activity, Gym tabs + history date filters. ✅ COMPLETE
 
 ### 5. Infrastructure & Business Blockers
 - [ ] **LEGAL:** Company registration and legal status for RevenueCat (Blocks F8).

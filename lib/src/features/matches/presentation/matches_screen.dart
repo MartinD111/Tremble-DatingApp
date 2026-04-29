@@ -17,23 +17,12 @@ import 'package:tremble/src/core/utils/icon_utils.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: maps HistoryFilter → display label translation key
 // ─────────────────────────────────────────────────────────────────────────────
-String _historyKey(wave_match.HistoryFilter filter) => switch (filter) {
-      wave_match.HistoryFilter.lastWeek => 'history_last_week',
-      wave_match.HistoryFilter.lastMonth => 'history_last_month',
-      wave_match.HistoryFilter.last3Months => 'history_last_3months',
-      wave_match.HistoryFilter.last12Months => 'history_last_12months',
-      wave_match.HistoryFilter.all => 'history_all',
-    };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper: maps MatchType → display label translation key
-// ─────────────────────────────────────────────────────────────────────────────
-String _tabKey(wave_match.MatchType? type) => switch (type) {
-      null => 'match_tab_all',
-      wave_match.MatchType.standard => 'match_tab_standard',
-      wave_match.MatchType.event => 'match_tab_event',
-      wave_match.MatchType.activity => 'match_tab_activity',
-      wave_match.MatchType.gym => 'match_tab_gym',
+String _historyKey(HistoryFilter filter) => switch (filter) {
+      HistoryFilter.lastWeek => 'history_last_week',
+      HistoryFilter.lastMonth => 'history_last_month',
+      HistoryFilter.last3Months => 'history_last_3months',
+      HistoryFilter.last12Months => 'history_last_12months',
+      HistoryFilter.all => 'history_all',
     };
 
 class MatchesScreen extends ConsumerStatefulWidget {
@@ -48,24 +37,31 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
   bool _isEditMode = false;
   final Set<String> _removedIds = {};
 
-  // F3 — Tab + Filter State
+  // F3 — Tab controller (drives TabBar animation only)
   late final TabController _tabController;
-  wave_match.HistoryFilter _historyFilter = wave_match.HistoryFilter.all;
 
-  // Tab index → MatchType (null = All)
-  static const List<wave_match.MatchType?> _tabs = [
-    null,
-    wave_match.MatchType.standard,
-    wave_match.MatchType.event,
-    wave_match.MatchType.activity,
-    wave_match.MatchType.gym,
+  // Tab index → (translation key, matchType String value for matchFilterProvider)
+  // null matchType = show all types
+  static const _tabs = <(String, String?)>[
+    ('match_tab_all', null),
+    ('match_tab_event', 'event'),
+    ('match_tab_activity', 'activity'),
+    ('match_tab_gym', 'gym'),
   ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
-    _tabController.addListener(() => setState(() {}));
+    _tabController.addListener(() {
+      // Fire once animation settles (indexIsChanging = true during animation)
+      if (_tabController.indexIsChanging) return;
+      final current = ref.read(matchFilterProvider);
+      ref.read(matchFilterProvider.notifier).state = MatchFilterState(
+        historyFilter: current.historyFilter,
+        matchType: _tabs[_tabController.index].$2,
+      );
+    });
   }
 
   @override
@@ -145,97 +141,20 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
     );
   }
 
-  void _showHistoryFilterSheet(String lang, Color primary) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF1F1F1F),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        padding: EdgeInsets.fromLTRB(
-          24,
-          16,
-          24,
-          MediaQuery.of(ctx).padding.bottom + 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              t('history_filter_label', lang),
-              style: GoogleFonts.instrumentSans(
-                  color: Colors.white70, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            ...wave_match.HistoryFilter.values.map((filter) {
-              final selected = filter == _historyFilter;
-              return GestureDetector(
-                onTap: () {
-                  setState(() => _historyFilter = filter);
-                  Navigator.pop(ctx);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? primary.withValues(alpha: 0.12)
-                        : Colors.white.withValues(alpha: 0.04),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: selected
-                          ? primary
-                          : Colors.white.withValues(alpha: 0.08),
-                      width: selected ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          t(_historyKey(filter), lang),
-                          style: GoogleFonts.instrumentSans(
-                            color: selected ? Colors.white : Colors.white70,
-                            fontWeight:
-                                selected ? FontWeight.bold : FontWeight.w500,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                      if (selected)
-                        Icon(Icons.check_circle, color: primary, size: 18),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
+  void _setHistoryFilter(HistoryFilter filter) {
+    final current = ref.read(matchFilterProvider);
+    ref.read(matchFilterProvider.notifier).state = MatchFilterState(
+      historyFilter: filter,
+      matchType: current.matchType,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final matchesAsync = ref.watch(matchesStreamProvider);
+    // ── Providers ──────────────────────────────────────────────────
+    final filteredAsync = ref.watch(filteredMatchesProvider);
     final activeMatchesAsync = ref.watch(activeMatchesStreamProvider);
+    final activeFilter = ref.watch(matchFilterProvider);
     final user = ref.watch(authStateProvider);
     final isPremium = user?.isPremium == true;
     final lang = ref.watch(appLanguageProvider);
@@ -245,8 +164,6 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
     final subtextColor = isDark ? Colors.white70 : Colors.black54;
     final dimColor = isDark ? Colors.white24 : Colors.black26;
     final primary = Theme.of(context).primaryColor;
-
-    final activeType = _tabs[_tabController.index];
 
     return SafeArea(
       child: Column(
@@ -267,51 +184,6 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                     ),
                   ),
                 ),
-                // History filter pill
-                GestureDetector(
-                  onTap: () => _showHistoryFilterSheet(lang, primary),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _historyFilter == wave_match.HistoryFilter.all
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : primary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(
-                        color: _historyFilter == wave_match.HistoryFilter.all
-                            ? Colors.white.withValues(alpha: 0.15)
-                            : primary,
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(LucideIcons.calendarDays,
-                            size: 13,
-                            color:
-                                _historyFilter == wave_match.HistoryFilter.all
-                                    ? subtextColor
-                                    : primary),
-                        const SizedBox(width: 5),
-                        Text(
-                          t(_historyKey(_historyFilter), lang),
-                          style: GoogleFonts.instrumentSans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color:
-                                _historyFilter == wave_match.HistoryFilter.all
-                                    ? subtextColor
-                                    : primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
                 TrembleCircleButton(
                   icon: LucideIcons.helpCircle,
                   onPressed: _showHelpDialog,
@@ -350,19 +222,63 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
-              tabs: _tabs
-                  .map((type) => Tab(text: t(_tabKey(type), lang)))
-                  .toList(),
+              tabs: _tabs.map((tab) => Tab(text: t(tab.$1, lang))).toList(),
             ),
           ),
 
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
 
-          // ── List ───────────────────────────────────────────────────
+          // ── History Filter Chips ───────────────────────────────────
+          SizedBox(
+            height: 32,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: HistoryFilter.values.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              itemBuilder: (ctx, i) {
+                final filter = HistoryFilter.values[i];
+                final selected = activeFilter.historyFilter == filter;
+                return GestureDetector(
+                  onTap: () => _setHistoryFilter(filter),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? primary.withValues(alpha: 0.15)
+                          : Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(
+                        color: selected
+                            ? primary
+                            : Colors.white.withValues(alpha: 0.12),
+                        width: selected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Text(
+                      t(_historyKey(filter), lang),
+                      style: GoogleFonts.instrumentSans(
+                        fontSize: 11,
+                        fontWeight:
+                            selected ? FontWeight.bold : FontWeight.w500,
+                        color: selected ? primary : subtextColor,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // ── Match List ─────────────────────────────────────────────
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: matchesAsync.when(
+              child: filteredAsync.when(
                 loading: () => Center(
                   child: CircularProgressIndicator(
                     color: primary,
@@ -387,13 +303,14 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                     ],
                   ),
                 ),
-                data: (allProfiles) {
+                data: (filteredProfiles) {
                   final activeMatches = activeMatchesAsync.value ?? [];
-                  final cutoff = _historyFilter.cutoffDate;
 
-                  // Build display items
+                  // Join filtered MatchProfiles with wave_match.Match for
+                  // locked/unlocked state — type + date filtering is already
+                  // done by filteredMatchesProvider.
                   final matchesToDisplay = <_MatchDisplayItem>[];
-                  for (final profile in allProfiles) {
+                  for (final profile in filteredProfiles) {
                     final matchData = activeMatches.firstWhere(
                       (m) => m.getPartnerId(user?.id ?? '') == profile.id,
                       orElse: () => wave_match.Match(
@@ -406,33 +323,26 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                       ),
                     );
 
-                    // Apply time filter
-                    if (matchData.createdAt.isBefore(cutoff)) continue;
-
-                    // Apply category filter
-                    if (activeType != null && matchData.matchType != activeType)
-                      continue;
-
-                    if (isPremium || matchData.isFound) {
+                    if (isPremium ||
+                        matchData.isFound ||
+                        profile.matchType == 'event') {
                       matchesToDisplay.add(_MatchDisplayItem(
                         profile: profile,
-                        match: matchData,
                         isLocked: false,
                       ));
                     } else if (!matchData.isFound) {
                       matchesToDisplay.add(_MatchDisplayItem(
                         profile: profile,
-                        match: matchData,
                         isLocked: true,
                       ));
                     }
                   }
 
-                  final filteredItems = matchesToDisplay
+                  final visibleItems = matchesToDisplay
                       .where((item) => !_removedIds.contains(item.profile.id))
                       .toList();
 
-                  if (filteredItems.isEmpty) {
+                  if (visibleItems.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -451,10 +361,10 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                   }
 
                   return ListView.builder(
-                    itemCount: filteredItems.length,
+                    itemCount: visibleItems.length,
                     padding: const EdgeInsets.only(top: 8, bottom: 12),
                     itemBuilder: (context, index) {
-                      final item = filteredItems[index];
+                      final item = visibleItems[index];
                       final profile = item.profile;
                       final isLocked = item.isLocked;
 
@@ -536,13 +446,12 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                                       .withValues(alpha: 0.7),
                                                 ),
                                               ],
-                                              // F3 — Match type badge
-                                              if (item.match.matchType !=
-                                                  wave_match
-                                                      .MatchType.standard) ...[
+                                              // Match type badge (hidden for standard)
+                                              if (profile.matchType !=
+                                                  'standard') ...[
                                                 const SizedBox(width: 8),
                                                 _MatchTypeBadge(
-                                                  type: item.match.matchType,
+                                                  type: profile.matchType,
                                                   primary: primary,
                                                 ),
                                               ],
@@ -608,7 +517,8 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
 // _MatchTypeBadge — small inline badge for non-standard match types
 // ─────────────────────────────────────────────────────────────────────────────
 class _MatchTypeBadge extends StatelessWidget {
-  final wave_match.MatchType type;
+  /// Raw matchType string from [MatchProfile.matchType].
+  final String type;
   final Color primary;
 
   const _MatchTypeBadge({required this.type, required this.primary});
@@ -616,10 +526,10 @@ class _MatchTypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, icon) = switch (type) {
-      wave_match.MatchType.event => ('Event', LucideIcons.calendar),
-      wave_match.MatchType.activity => ('Activity', LucideIcons.activitySquare),
-      wave_match.MatchType.gym => ('Gym', LucideIcons.dumbbell),
-      wave_match.MatchType.standard => ('Standard', LucideIcons.zap),
+      'event' => ('Event', LucideIcons.calendar),
+      'activity' => ('Activity', LucideIcons.activitySquare),
+      'gym' => ('Gym', LucideIcons.dumbbell),
+      _ => ('Standard', LucideIcons.zap),
     };
 
     return Container(
@@ -653,12 +563,10 @@ class _MatchTypeBadge extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 class _MatchDisplayItem {
   final MatchProfile profile;
-  final wave_match.Match match;
   final bool isLocked;
 
   _MatchDisplayItem({
     required this.profile,
-    required this.match,
     required this.isLocked,
   });
 }

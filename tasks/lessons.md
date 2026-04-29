@@ -1,5 +1,10 @@
 # Permanent Project Knowledge (Lessons)
 
+**Rule #47 — Use matchType for distinct product tiers in matching UI.**
+[2026-04-29] Distinct proximity scenarios (e.g., Event Mode vs Gym Mode) require separate UI visibility rules. For Event Mode, all users receive temporary Premium access (full profile cards unlocked) to drive engagement. For Gym Mode, Basic users remain locked (pill UI) while Do Not Disturb (DND) prevents intrusive push notifications during workout sessions.
+Source: Proximity Engine Refinement, April 2026.
+
+
 **Rule #46 — Use Native Geofencing for Static Proximity Points.**
 [2026-04-29] To achieve zero battery drain while the app is killed, tracking for static locations (like gyms or event venues) must rely on OS Geofencing APIs rather than continuous GPS polling. The phone's secure location hardware wakes up the application only upon entering the region.
 Source: Proximity Engine Refinement, April 2026.

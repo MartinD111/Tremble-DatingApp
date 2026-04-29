@@ -209,7 +209,15 @@ exports.migrateStringLocations = onCall(async (req) => {
 
 **Effort:** M
 
+### Event Mode UI in UX Pravila
+* **Logika ujemanja (0.55 prag):** Prag ujemanja se zniža na 0.55 (prej 0.70).
+* **Brez piskov/notifikacij (Quiet List):** Uporabnik ne prejema nenehnih notifikacij med dogodkom. Prikaže se tih seznam vseh potencialnih ujemov.
+* **Interakcija:** Na seznamu lahko uporabnike pozdraviš (pošlješ "wave").
+* **Zgodovina:** Ko zapustiš dogodek, se ohrani zgodovina vseh, ki si jim lahko poslal wave ali z njimi ujel.
+* **Začasni Premium:** Če je dogodek partneriziran, imajo uporabniki na dogodku **začasni Premium** (lahko vpogledajo v celotne Profile Cards, čeprav so sicer Free uporabniki).
+
 ### Firestore Schema
+
 ```javascript
 // events/{eventId}
 {
@@ -826,6 +834,13 @@ Prej je bila poraba okoli 2 % na uro, ker je deloval zgolj izjemno varčen Bluet
 Z vsemi pametnimi triki bo poraba med aktivnim iskanjem narasla iz prejšnjih 2 % na **približno 3 do 4 % na uro**.
 
 
+### Gym Mode UI in UX Pravila
+* **Basic Tier:** Uporabnik ima status "Basic" (Free) uporabnika, razen če že ima kupljen Premium.
+* **Vpogled v profile:** Free uporabniki vidijo samo "pill" (zaklenjeno), Premium pa polno kartico (razen če se z osebo ujamejo).
+* **Avtomatski DND:** Vklopi se Do Not Disturb (DND) — brez proximity notifikacij med vadbo.
+* **Interakcija (Quiet List):** Prikaže se tih seznam prisotnih, kjer lahko pošlješ "wave".
+* **Zgodovina:** Ohrani se zgodovina vseh ljudi, ki si jih srečal v fitnesu.
+
 ### Session obnašanje
 ```
 Gym Mode aktiven:
@@ -834,6 +849,7 @@ Gym Mode aktiven:
 → Beleži vse prisotne v gymSessions dokument
 
 Gym Mode konča (GEOFENCE EXIT ali ročno):
+
 → Push: "Workout done. [N] people were with you."
 → Summary screen — mini profili vseh prisotnih
 → Wave iz summary screena (ne med treningom)

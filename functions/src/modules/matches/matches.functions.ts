@@ -255,27 +255,30 @@ export const getMatches = onCall(
             .limit(50)
             .get();
 
-        const matchedUserIds = new Set<string>();
-
-        for (const doc of matchesQuery.docs) {
-            const data = doc.data();
-            const partnerId = data.userA === uid ? data.userB : data.userA;
-            if (blockedUsers.includes(partnerId)) continue;
-            matchedUserIds.add(partnerId);
-        }
-
         const profiles = await Promise.all(
-            Array.from(matchedUserIds).map(async (userId) => {
-                const profileDoc = await db.collection("users").doc(userId).get();
+            matchesQuery.docs.map(async (doc) => {
+                const matchData = doc.data();
+                const partnerId = matchData.userA === uid ? matchData.userB : matchData.userA;
+
+                if (blockedUsers.includes(partnerId)) return null;
+
+                const profileDoc = await db.collection("users").doc(partnerId).get();
                 if (!profileDoc.exists) return null;
-                const data = profileDoc.data()!;
+                const pData = profileDoc.data()!;
+
                 return {
-                    id: userId,
-                    name: data.name,
-                    age: data.age,
-                    photoUrls: data.photoUrls,
-                    hobbies: data.hobbies,
-                    lookingFor: data.lookingFor,
+                    id: partnerId,
+                    name: pData.name,
+                    age: pData.age,
+                    photoUrls: pData.photoUrls ?? [],
+                    hobbies: pData.hobbies ?? [],
+                    lookingFor: pData.lookingFor ?? [],
+                    // F3 — match categorisation fields from the match document
+                    matchType: (matchData.matchType as string | undefined) ?? "standard",
+                    matchContext: (matchData.matchContext as Record<string, unknown> | undefined) ?? null,
+                    matchedAt: matchData.createdAt != null
+                        ? (matchData.createdAt as FirebaseFirestore.Timestamp).toDate().toISOString()
+                        : null,
                 };
             })
         );

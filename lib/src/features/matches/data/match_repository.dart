@@ -6,6 +6,29 @@ import '../../dashboard/application/dev_mock_matches_provider.dart';
 import '../../match/data/wave_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MatchContext — context that created the match (event, gym, activity, etc.)
+// ─────────────────────────────────────────────────────────────────────────────
+class MatchContext {
+  final String? eventId;
+  final String? activityType;
+  final String? gymPlaceId;
+
+  const MatchContext({
+    this.eventId,
+    this.activityType,
+    this.gymPlaceId,
+  });
+
+  factory MatchContext.fromMap(Map<String, dynamic> map) {
+    return MatchContext(
+      eventId: map['eventId'] as String?,
+      activityType: map['activityType'] as String?,
+      gymPlaceId: map['gymPlaceId'] as String?,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MatchProfile — data model for matched users
 // ─────────────────────────────────────────────────────────────────────────────
 class MatchProfile {
@@ -32,6 +55,10 @@ class MatchProfile {
   final List<Map<String, String>> prompts;
   final String gender;
 
+  // Match categorisation
+  final String matchType;
+  final MatchContext? matchContext;
+
   // Lifestyle
   final String? exerciseHabit;
   final String? sleepSchedule;
@@ -43,6 +70,7 @@ class MatchProfile {
   final bool? hasChildren;
   final List<String> lookingFor;
   final DateTime? birthDate;
+  final DateTime? matchedAt;
 
   const MatchProfile({
     required this.id,
@@ -65,6 +93,8 @@ class MatchProfile {
     this.introvertLevel,
     this.prompts = const [],
     this.gender = 'Female',
+    this.matchType = 'standard',
+    this.matchContext,
     this.exerciseHabit,
     this.sleepSchedule,
     this.petPreference,
@@ -75,6 +105,7 @@ class MatchProfile {
     this.hasChildren,
     this.lookingFor = const [],
     this.birthDate,
+    this.matchedAt,
   });
 
   /// Create a MatchProfile from Cloud Functions response data.
@@ -111,6 +142,13 @@ class MatchProfile {
       school: data['school'] as String?,
       lookingFor: List<String>.from(data['lookingFor'] ?? []),
       birthDate: _parseDateTime(data['birthDate']),
+      matchType: data['matchType'] as String? ?? 'standard',
+      matchContext: data['matchContext'] is Map
+          ? MatchContext.fromMap(
+              Map<String, dynamic>.from(data['matchContext'] as Map),
+            )
+          : null,
+      matchedAt: _parseDateTime(data['matchedAt']),
     );
   }
 
@@ -168,6 +206,36 @@ class MatchRepository {
     }
   }
 
+  /// Filters [matches] in-memory according to [filter].
+  ///
+  /// - [filter.historyFilter] restricts by [MatchProfile.matchedAt].
+  ///   Matches without a [matchedAt] are kept when [HistoryFilter.all] is
+  ///   selected and excluded otherwise (unknown timestamp = cannot confirm
+  ///   recency).
+  /// - [filter.matchType] restricts by [MatchProfile.matchType].
+  ///   Null means "no restriction".
+  static List<MatchProfile> filterMatches(
+    List<MatchProfile> matches,
+    MatchFilterState filter,
+  ) {
+    final cutoff = filter.historyFilter.cutoff;
+    return matches.where((m) {
+      // ── time-window gate ──────────────────────────────────────────────────
+      if (cutoff != null) {
+        final matchedAt = m.matchedAt;
+        if (matchedAt == null) return false; // unknown → exclude
+        if (matchedAt.isBefore(cutoff)) return false;
+      }
+
+      // ── match-type gate ───────────────────────────────────────────────────
+      if (filter.matchType != null && m.matchType != filter.matchType) {
+        return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
   /// Check if a match is compatible based on gender preferences.
   /// [userInterestedIn] and [matchInterestedIn] are lists of gender keys
   /// (e.g. ['male', 'female', 'non_binary']).
@@ -190,6 +258,47 @@ class MatchRepository {
 
     return true;
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HistoryFilter — time-window filter applied in-memory on the matches list
+// ─────────────────────────────────────────────────────────────────────────────
+enum HistoryFilter {
+  lastWeek,
+  lastMonth,
+  last3Months,
+  last12Months,
+  all;
+
+  /// Returns the earliest [DateTime] that qualifies for this filter,
+  /// or null when the filter is [all] (no cutoff applied).
+  DateTime? get cutoff {
+    final now = DateTime.now();
+    return switch (this) {
+      HistoryFilter.lastWeek => now.subtract(const Duration(days: 7)),
+      HistoryFilter.lastMonth => DateTime(now.year, now.month - 1, now.day),
+      HistoryFilter.last3Months => DateTime(now.year, now.month - 3, now.day),
+      HistoryFilter.last12Months => DateTime(now.year - 1, now.month, now.day),
+      HistoryFilter.all => null,
+    };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MatchFilterState — combined filter applied by filteredMatchesProvider
+// ─────────────────────────────────────────────────────────────────────────────
+class MatchFilterState {
+  /// Time-window filter. Defaults to [HistoryFilter.all].
+  final HistoryFilter historyFilter;
+
+  /// When non-null, only matches with this [MatchProfile.matchType] are shown.
+  /// Null means "show all types".
+  final String? matchType;
+
+  const MatchFilterState({
+    this.historyFilter = HistoryFilter.all,
+    this.matchType,
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -233,4 +342,23 @@ class MatchController extends StateNotifier<MatchProfile?> {
 final matchControllerProvider =
     StateNotifierProvider<MatchController, MatchProfile?>((ref) {
   return MatchController(ref.watch(waveRepositoryProvider));
+});
+
+/// Holds the active [MatchFilterState] — UI writes here to drive filtering.
+final matchFilterProvider = StateProvider<MatchFilterState>(
+  (_) => const MatchFilterState(),
+);
+
+/// Filtered view of [matchesStreamProvider].
+///
+/// Applies the active [MatchFilterState] in-memory via
+/// [MatchRepository.filterMatches]. Rebuilds whenever the upstream stream
+/// emits a new list or the filter state changes.
+final filteredMatchesProvider = Provider<AsyncValue<List<MatchProfile>>>((ref) {
+  final allMatches = ref.watch(matchesStreamProvider);
+  final filter = ref.watch(matchFilterProvider);
+
+  return allMatches.whenData(
+    (matches) => MatchRepository.filterMatches(matches, filter),
+  );
 });
