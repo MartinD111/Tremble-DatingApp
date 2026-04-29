@@ -1,30 +1,35 @@
-## Session State — 2026-04-29 12:00
-- Active Task: Phase B — F2 Event Mode Matching (Plan: 20260429-event-mode-matching)
+## Session State — 2026-04-29 17:30
+- Active Task: F10 — Gym Mode (COMPLETE)
 - Environment: Dev
 - Modified Files:
-    - `firestore.rules` — Added read permissions for `events` collection.
-    - `firestore.indexes.json` — Added composite indexes.
-    - `functions/src/modules/events/events.functions.ts` — Added `onEventModeActivate` and `expireEventModes`.
-    - `functions/src/modules/proximity/proximity.functions.ts` — Updated `findNearby` matching logic.
-    - `lib/src/features/dashboard/presentation/home_screen.dart` — Added Event Mode toggle button.
-    - `lib/src/features/matches/data/match_repository.dart` — Added `activateEventMode` method.
+    - `functions/src/modules/gym/gym.functions.ts` — NEW: onGymModeActivate, onGymModeDeactivate, expireGymSessions
+    - `functions/src/modules/matches/matches.functions.ts` — gym match type detection added
+    - `functions/src/index.ts` — gym module exported
+    - `lib/src/features/gym/data/gym_repository.dart` — NEW: GymRepository
+    - `lib/src/features/gym/application/gym_mode_controller.dart` — NEW: GymModeController (Riverpod)
+    - `lib/src/features/gym/presentation/gym_mode_sheet.dart` — NEW: GymModeSheet UI
+    - `lib/src/features/dashboard/presentation/home_screen.dart` — dumbbell icon + _GymModeButton
 - Open Problems:
     - ADR-001 still open — BLE proximity engine still uses mock timer.
-- System Status: Build passing. Formatted and analyzed cleanly. Firestore indexes deployed.
+    - F10 Gym list is empty until `gyms` Firestore collection is seeded.
+- System Status: Build passing. All 3 gym Cloud Functions deployed to `tremble-dev`. flutter analyze clean.
 
 ## Session Handoff
 - Completed:
-    - F2 Event Mode Matching implementation.
-    - Cloud Functions for event activation and cleanup deployed.
-    - Proximity matching algorithm updated to apply 0.55 threshold for mutual event participants.
-    - Flutter UI updated with mock event join button for testing.
+    - F10 — Gym Mode full implementation:
+        - Backend: gym.functions.ts (activate/deactivate/expire), gym match type in matches.functions.ts
+        - Flutter: GymRepository, GymModeController, GymModeSheet, home_screen dumbbell button
+        - Deployed to tremble-dev. Committed + pushed (0584a38).
+    - plan_gym_mode.md updated to reflect actual implementation (replaces old draft).
 - In Progress:
-    - None
+    - Nothing. Clean handoff.
 - Blocked:
-    - ADR-001: BLE background restoration.
+    - ADR-001: BLE background service.
+    - F10 device test requires at least one gym seeded in Firestore `gyms` collection.
 - Next Action:
-    - Deploy Cloud Functions (`firebase deploy --only functions`).
-    - Verify event-mode matching via the emulator or dev environment.
+    - Seed `gyms` collection in Firebase Console (tremble-dev) with at least one test gym.
+    - Device test F10 flow on physical Android (Martin) or iOS simulator.
+    - After test passes: implement gym match badge in `matches_screen.dart` (P1).
 
 ---
 
@@ -32,3 +37,4 @@
 - **Security Update**: App Check is strictly enforced on all Cloud Functions.
 - **Privacy Fix**: SEC-002 resolved. lat/lng coordinates are never permanently stored.
 - **Policies**: All MPC rules and policies are now centralized within `MASTER_PLAN.md`.
+- **Gym Mode**: `activeGymId` + `gymModeUntil` fields added to user doc (nullable). Not in Firestore Rules yet — add before prod deploy.
