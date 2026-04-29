@@ -22,7 +22,7 @@
 - [x] **F1 Flutter layer:** `PlacesService` (session token model) + `email_location_step` + `edit_profile_screen` migrated. ✅ COMPLETE
 - [x] **F1 Native Config:** N/A — Places API (New) je čisti REST, native spremembe niso potrebne. ✅
 - [x] **F1 API Key:** GCP: Places API (New) aktiviran. Ključ omejen samo na Places API (New).
-- [ ] **F1 Verifikacija:** Zaženi z `--dart-define=PLACES_KEY_DEV=AIzaSyDMDovcXJeLqTywS4bzEpDlyCnIvIxQ-tk` in testiraj na napravi.
+- [ ] **F1 Verifikacija:** Zaženi z `--dart-define=PLACES_KEY_DEV=[REDACTED]` in testiraj na napravi.
 - [x] **F11 (Nicotine):** Migrated legacy smoking boolean to flexible multi-select nicotine list logic. ✅ COMPLETE
 
 ### 5. Infrastructure & Business Blockers

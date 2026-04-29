@@ -1,5 +1,9 @@
 # Permanent Project Knowledge (Lessons)
 
+**Rule #44 — Always verify Cloud Function exports in `index.ts`.**
+[2026-04-29] When creating new backend endpoints, schedules, or triggers in Cloud Functions, always remember to export them in the core `functions/src/index.ts`. Failure to do so will result in functions not being deployed by the Firebase CLI.
+Source: Event Mode Matching (F2), April 2026.
+
 **Rule #41 — Single Source of Truth Documentation (MASTER_PLAN.md).**
 [2026-04-29] Do not fragment implementation plans, UI specs, or store submission strategies across multiple files. All architectural policies, deployment rules, and feature implementations MUST reside in `tasks/MASTER_PLAN.md` to ensure context is never dropped across agent sessions.
 Source: Project Consolidation, April 2026.
@@ -189,3 +193,8 @@ The repository review was conducted on 2026-03-14 according to the user's 8-step
 - Strictly follow the MPC "Orchestral Loop".
 - Update `tasks/context.md` to the MPC format.
 - Propose regeneration of `martin_setup_guide.md`.
+
+**Rule #45 — NEVER commit secrets to version control.**
+[2026-04-29] Hardcoded API keys, access tokens, or private credentials MUST NEVER be placed in documentation, todo lists, or code files committed to git. Use `.env` files, Secret Managers, or compile-time flags like `--dart-define`. Leaked secrets must be rotated and revoked instantly.
+Source: Google Places API Leak in todo.md, April 2026.
+
