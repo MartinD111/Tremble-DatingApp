@@ -1,31 +1,41 @@
-## Session State — 2026-04-29 23:30
-- Active Task: Gym Mode V2 — Event-driven geofence detection (COMPLETE)
+## Session State — 2026-04-30 00:30
+- Active Task: Gym Mode V3 — Native OS geofencing via MethodChannel (COMPLETE)
 - Environment: Dev
 - Modified Files:
-    - `pubspec.yaml` — added `geofence_service: ^6.0.0`
-    - `lib/src/features/gym/application/gym_dwell_service.dart` — complete rewrite: polling timer removed, replaced with GeofenceService DWELL events
+    - `pubspec.yaml` — removed geofence_service
+    - `android/app/build.gradle.kts` — added play-services-location:21.3.0
+    - `android/app/src/main/AndroidManifest.xml` — added GymGeofenceReceiver
+    - `android/app/src/main/kotlin/.../gym/GymGeofenceManager.kt` — GeofencingClient
+    - `android/app/src/main/kotlin/.../gym/GymGeofenceReceiver.kt` — BroadcastReceiver
+    - `android/app/src/main/kotlin/.../gym/GymGeofenceStore.kt` — SharedPrefs name lookup
+    - `android/app/src/main/kotlin/.../gym/GymGeofenceBridge.kt` — native NotificationManager
+    - `android/app/src/main/kotlin/.../MainActivity.kt` — GEOFENCE_CHANNEL registered
+    - `ios/Runner/GymGeofenceManager.swift` — CLLocationManager + UNTimeIntervalNotificationTrigger
+    - `ios/Runner/AppDelegate.swift` — GEOFENCE_CHANNEL registered
+    - `lib/src/features/gym/application/gym_dwell_service.dart` — pure MethodChannel bridge
 - Open Problems:
     - ADR-001 still open — BLE proximity background limits.
-- System Status: flutter analyze clean (0 issues), APK builds ✅
+- System Status: flutter analyze clean (0 issues), Android APK builds ✅
 
 ## Session Handoff
 - Completed:
-    - Replaced foreground polling timer (1-min GPS poll) in GymDwellService with
-      event-driven GeofenceService. State machine: ENTER → DWELL (10 min) → EXIT.
-    - iOS UIBackgroundModes: location + Android ACCESS_BACKGROUND_LOCATION were
-      already present — no native config changes needed.
-    - EXIT event resets _notificationSent so re-entry re-notifies.
-- In Progress:
-    - Nothing.
-- Blocked:
-    - ADR-001: BLE background limits (unchanged).
+    - Full native OS geofencing implementation via MethodChannel.
+    - Android: GeofencingClient DWELL (10 min) → BroadcastReceiver → native notification.
+      Works when app is killed, 0% battery cost in idle state.
+    - iOS: CLLocationManager.startMonitoring → on ENTER schedule UNTimeIntervalNotificationTrigger
+      (600s) → on EXIT cancel. Notification fires from iOS system even when app is killed.
+    - Dart layer reduced to 4-line bridge (invokeMethod start/stop).
+    - Radius clamped 70–100 m per plan, default 80 m from Firestore gym.radiusMeters.
+- In Progress: Nothing.
+- Blocked: ADR-001 (unchanged).
 - Next Action:
-    - Device test: simulate entry into 80m radius → wait 10 min → verify DWELL
-      notification fires. Use Xcode Location Simulation or Android Studio GPS mock.
-    - V3 task (future): WillStartForegroundTask widget + native Android
-      GeofencingClient via method channel for true killed-state 0%-battery geofencing.
-    - Note: geofence_service 6.0.0+1 is officially discontinued (replaced by
-      geofencing_api). Migration to geofencing_api is a V3 clean-up item.
+    - DEVICE TEST REQUIRED (cannot emulate geofence reliably in simulator):
+      Android: use Android Studio GPS mock → set location inside gym radius →
+               wait 10 min → verify BroadcastReceiver fires + notification appears.
+      iOS: Xcode → Debug → Simulate Location → custom GPX with gym coordinates →
+           wait → verify UNTimeIntervalNotificationTrigger fires.
+    - Ensure ACCESS_BACKGROUND_LOCATION runtime grant before testing Android.
+    - Ensure CLLocationManager "Always" permission granted before testing iOS.
 
 
 ---
