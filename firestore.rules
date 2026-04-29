@@ -6,7 +6,9 @@ service cloud.firestore {
     // USERS — branje lastnega profila, pisanje samo preko backend-a
     // ══════════════════════════════════════════════════════
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId && !request.resource.data.keys().hasAny(['isPremium', 'isAdmin', 'activeGymId', 'gymModeUntil', 'activeEventId']);
+      allow update: if request.auth != null && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isPremium', 'isAdmin', 'activeGymId', 'gymModeUntil', 'activeEventId']);
     }
 
     match /drafts/{userId} {
