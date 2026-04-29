@@ -760,44 +760,71 @@ geoHashExpiresAt: Timestamp       // +30 min → Scheduled cleanup
 
 **Effort:** XL · **Zahteva:** F1 · **Founder required:** Info.plist permissions
 
-### Geofencing
-```yaml
-# pubspec.yaml
-flutter_background_geolocation: ^4.15
-# ALI: geofencer_flutter za lažjo implementacijo (manj kontrole)
-```
+### Tehnična arhitektura: Native Geofencing (Avtomatizacija)
 
-```xml
-<!-- Info.plist (founder approval) -->
-<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-<string>Tremble uses your location to auto-activate Gym Mode when you arrive at your gym.</string>
-<key>NSLocationWhenInUseUsageDescription</key>  
-<string>Tremble uses your location to detect nearby users.</string>
-<!-- Background Modes: Location updates ✓ -->
+Tukaj je podroben pregled vseh scenarijev, ki prikazuje, kako Native Geofencing deluje v praksi. Celoten sistem je zasnovan tako, da **naprava opravi vse delo**, strežnik pa ne ve ničesar, dokler uporabnik ne poda izrecnega soglasja.
 
-<!-- AndroidManifest.xml (founder approval) -->
-<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
-```
+#### Kako rešujemo GDPR, Zasebnost in Stroške?
+* **GDPR & Zasebnost:** Točne GPS koordinate uporabnika se **nikoli** ne pošiljajo na naš backend. Lokacija se računa izključno znotraj varnega čipa na telefonu.
+* **Stroški za backend:** Ko se uporabnik giblje po mestu, se na naš strežnik ne pošlje **niti en sam API klic**. Strežnik je vključen šele takrat, ko uporabnik dejansko aktivira Gym Mode (samo 1 Firestore zapis).
 
-### Gym Selection
-```dart
-// 3 načini aktivacije:
-// 1. Onboarding — Places autocomplete, type: establishment, keyword: "gym yoga pilates fitness"
-// 2. Profile settings — "My Gym" section, edit anytime
-// 3. Auto-detect — geofence ENTER → notification "Arrived at [Gym] — Activate Gym Mode?"
-//    NIKOLI auto-aktivacija brez user consenta
+---
 
-// Geofence parametri
-final geofence = Geofence(
-  identifier: gymPlaceId,
-  radius: 80.0,           // 80m — primerno za večino fitnes centrov
-  latitude: gym.lat,
-  longitude: gym.lng,
-  notifyOnEntry: true,
-  notifyOnExit: true,
-);
-```
+#### Scenarij 1: Aplikacija je popolnoma ugasnjena (Killed / Swiped away)
+* **Poraba baterije:** Praktično 0 %.
+* **Kaj se dogaja:** Operacijski sistem v ozadju pasivno spremlja bazne postaje in Wi-Fi omrežja. Naša aplikacija "spi" in ne porablja procesorskih moči.
+
+#### Scenarij 2: Aplikacija je odprta, vendar Radar NI aktiven
+* **Poraba baterije:** Normalna uporaba aplikacije.
+* **Kaj se dogaja:** Geofencing sistem operacijskega sistema še vedno deluje pasivno v ozadju in čaka na vstop v fitnes.
+
+#### Scenarij 3: Radar JE aktiven (aplikacija je v ozadju)
+* **Poraba baterije:** Zmerna poraba (zaradi delovanja Bluetooth Low Energy skenerja).
+* **Kaj se dogaja:** Aplikacija preko BLE išče druge telefone v bližini ter hkrati preko Geofence API-ja čaka na prihod v fitnes.
+
+#### Scenarij 4: Uporabnik pride v fitnes in tam ostane 10 minut (App je v ozadju/ugasnjena)
+1. **Vstop (0. minuta):** Uporabnik prečka navidezno mejo (radius 80 m) okoli fitnesa. Operacijski sistem zazna vstop in za 30 sekund **tiho prebudi** našo aplikacijo iz mirovanja.
+2. **Zagon časovnika:** Aplikacija si lokalno zabeleži čas vstopa.
+3. **Dwell preverjanje (10. minuta):** Ko mine 10 minut, operacijski sistem preveri, ali je uporabnik še vedno znotraj meje.
+4. **Lokalno obvestilo:** Če je še vedno tam, aplikacija neposredno iz telefona (brez klica na strežnik!) sproži push obvestilo:
+   * *»Si v [Ime Fitnesa]. Vklopiš Gym Mode?«*
+5. **Zaključek:**
+   * Če uporabnik obvestilo prezre: **0 API stroškov**.
+   * Če uporabnik klikne "Vklopi": Aplikacija pošlje **en sam** zapis na backend, ki ga označi kot aktivnega v fitnesu za naslednji 2 uri.
+
+S tem dosežemo popoln »Set and forget« mehanizem, ki ne segreva naprave in spoštuje zasebnost.
+
+### GPS in Radar (Razlike v varčevanju z baterijo)
+
+Za Radar (iskanje drugih uporabnikov v bližini) že uporabljamo GPS, vendar deluje na povsem drugačen način kot pri fitnesih.
+
+#### 1. Gym Mode (Fiksne točke -> Geofencing)
+* **Stavba fitnesa se ne premika.**
+* Ker je to fiksna točka, delo v celoti prepustimo operacijskemu sistemu preko **pasivnega Geofencinga**. To ne porablja baterije.
+
+#### 2. Radar (Premikajoče se točke -> GPS Geohashing)
+* **Uporabniki se premikajo.** Tukaj operacijski sistem ne more vnaprej vedeti, kje se bosta srečala dva človeka, zato je potreben GPS.
+* **Kako deluje omejitev razdalje (100 m / 250 m):**
+  * Ko uporabnik **vklopi Radar**, aplikacija vsakih nekaj minut strežniku sporoči svojo trenutno lokacijo.
+  * Strežnik nato izvede hitro ujemanje:
+    * **Free paket:** Uporabniku prikaže samo tiste ljudi, ki so znotraj **100 m**.
+    * **Premium paket:** Krog se razširi na **250 m**, kar pomeni bistveno več možnosti za hitro ujemanje.
+
+#### Ključ za varčevanje z baterijo pri Radarju:
+Radar deluje **samo takrat, ko ga uporabnik zavestno vklopi** (ko gre npr. v mesto in želi spoznavati ljudi). Ko ga ugasne, se sledenje lokaciji v trenutku popolnoma ustavi.
+
+Tako imamo najboljše iz obeh svetov:
+* **Gym Mode:** Popolnoma avtomatski (set-and-forget), brez porabe baterije.
+* **Radar:** Ročno nadzorovan, porablja baterijo samo takrat, ko uporabnik to želi.
+
+Prej je bila poraba okoli 2 % na uro, ker je deloval zgolj izjemno varčen Bluetooth (BLE). Če bi zdaj GPS pustili teči neprekinjeno z maksimalno natančnostjo (kot npr. pri Google Maps navigacija), bi poraba poskočila na 10–15 % na uro, telefon pa bi se začel močno greti.
+
+#### Kako preprečimo praznjenje baterije?
+1. **Zaznava znatnega premika (Significant Motion Changes):** GPS-a ne sprašujemo po koordinatah vsako minuto. Operacijskemu sistemu naročimo, naj nas prebudi samo takrat, ko zazna, da se je uporabnik premaknil za več kot npr. 50 metrov.
+2. **Spanje ob mirovanju:** Če uporabnik sedi v pisarni ali kavarni, GPS popolnoma miruje in poraba je spet 0 %.
+
+Z vsemi pametnimi triki bo poraba med aktivnim iskanjem narasla iz prejšnjih 2 % na **približno 3 do 4 % na uro**.
+
 
 ### Session obnašanje
 ```

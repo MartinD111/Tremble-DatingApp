@@ -35,7 +35,7 @@ class Gym {
         lat: (loc['lat'] as num?)?.toDouble() ?? 0.0,
         lng: (loc['lng'] as num?)?.toDouble() ?? 0.0,
       ),
-      radiusMeters: data['radiusMeters'] as int? ?? 200,
+      radiusMeters: data['radiusMeters'] as int? ?? 80,
     );
   }
 }

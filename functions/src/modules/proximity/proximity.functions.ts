@@ -138,6 +138,32 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// ── F11: Nicotine Compatibility Helpers ─────────────────────
+
+/**
+ * Returns true if the user's nicotineUse indicates active nicotine usage
+ * (i.e., the array is non-empty and not exclusively ['none']).
+ */
+function userSmokes(nicotineUse: string[]): boolean {
+    if (nicotineUse.length === 0) return false;
+    return nicotineUse.some(u => u !== "none");
+}
+
+/**
+ * Returns false when a hard nicotine incompatibility exists.
+ *
+ * Filter value 'none_only' is the only hard-exclude value.
+ * 'any' and 'no_preference' (and missing/null) are both permissive.
+ */
+function nicotineCompatible(
+    requesterUse: string[], requesterFilter: string,
+    candidateUse: string[], candidateFilter: string,
+): boolean {
+    if (requesterFilter === "none_only" && userSmokes(candidateUse)) return false;
+    if (candidateFilter === "none_only" && userSmokes(requesterUse)) return false;
+    return true;
+}
+
 // ── Cloud Functions ──────────────────────────────────────
 
 /**
@@ -215,6 +241,10 @@ export const findNearby = onCall(
         const myMaxAge = requesterData.ageRangeEnd ?? 100;
         const blockedUsers: string[] = requesterData.blockedUserIds ?? [];
 
+        // F11: Nicotine preferences
+        const myNicotineUse: string[] = requesterData.nicotineUse ?? [];
+        const myNicotineFilter: string = requesterData.nicotineFilter ?? "any";
+
         // F9: radius is server-determined from isPremium — never trust the client
         const isPremium = requesterData.isPremium === true;
         const radiusM = isPremium ? RADIUS_PRO_M : RADIUS_FREE_M;
@@ -266,6 +296,13 @@ export const findNearby = onCall(
             const theirAge = candidateData.age;
             const theirMinAge = candidateData.ageRangeStart ?? 18;
             const theirMaxAge = candidateData.ageRangeEnd ?? 100;
+
+            // F11: Nicotine hard filter — skip immediately if incompatible
+            const theirNicotineUse: string[] = candidateData.nicotineUse ?? [];
+            const theirNicotineFilter: string = candidateData.nicotineFilter ?? "any";
+            if (!nicotineCompatible(myNicotineUse, myNicotineFilter, theirNicotineUse, theirNicotineFilter)) {
+                continue;
+            }
 
             // Support both legacy string and new List<String> interestedIn formats
             const iMatchThem =
@@ -371,6 +408,10 @@ export const getProximityMatchCandidates = onCall(
         const radiusTier = isPremium ? "pro" : "free";
         const blockedUsers: string[] = requesterData.blockedUserIds ?? [];
 
+        // F11: Nicotine preferences
+        const myNicotineUse: string[] = requesterData.nicotineUse ?? [];
+        const myNicotineFilter: string = requesterData.nicotineFilter ?? "any";
+
         // Precision 6 (~1.2km × 600m) — wide enough to contain all candidates
         // within 250m (pro radius), then haversine-filter to actual radius.
         const queryGeohash = encodeGeohash(data.latitude, data.longitude, 6);
@@ -402,14 +443,33 @@ export const getProximityMatchCandidates = onCall(
             }
         }
 
-        candidates.sort((a, b) => a.distanceM - b.distanceM);
+        // F11: Batch-fetch user profiles to apply nicotine filter
+        const userDocs = await Promise.all(
+            candidates.map(c => db.collection("users").doc(c.uid).get())
+        );
+
+        const filteredCandidates: Array<{ uid: string; distanceM: number }> = [];
+        for (let i = 0; i < candidates.length; i++) {
+            const candidateData = userDocs[i].data();
+            if (!candidateData) continue;
+
+            const theirNicotineUse: string[] = candidateData.nicotineUse ?? [];
+            const theirNicotineFilter: string = candidateData.nicotineFilter ?? "any";
+            if (!nicotineCompatible(myNicotineUse, myNicotineFilter, theirNicotineUse, theirNicotineFilter)) {
+                continue;
+            }
+            filteredCandidates.push(candidates[i]);
+        }
+
+        filteredCandidates.sort((a, b) => a.distanceM - b.distanceM);
 
         console.log(
             `[PROXIMITY] getProximityMatchCandidates: ${uid.substring(0, 8)}... → ` +
-            `${candidates.length} candidates within ${radiusM}m (${radiusTier})`
+            `${filteredCandidates.length} candidates within ${radiusM}m (${radiusTier}) ` +
+            `[nicotine filter: ${myNicotineFilter}]`
         );
 
-        return { candidates, radiusTier, radiusM };
+        return { candidates: filteredCandidates, radiusTier, radiusM };
     }
 );
 

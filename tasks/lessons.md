@@ -1,5 +1,10 @@
 # Permanent Project Knowledge (Lessons)
 
+**Rule #46 — Use Native Geofencing for Static Proximity Points.**
+[2026-04-29] To achieve zero battery drain while the app is killed, tracking for static locations (like gyms or event venues) must rely on OS Geofencing APIs rather than continuous GPS polling. The phone's secure location hardware wakes up the application only upon entering the region.
+Source: Proximity Engine Refinement, April 2026.
+
+
 **Rule #44 — Always verify Cloud Function exports in `index.ts`.**
 [2026-04-29] When creating new backend endpoints, schedules, or triggers in Cloud Functions, always remember to export them in the core `functions/src/index.ts`. Failure to do so will result in functions not being deployed by the Firebase CLI.
 Source: Event Mode Matching (F2), April 2026.

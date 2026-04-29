@@ -1,35 +1,23 @@
-## Session State — 2026-04-29 17:30
-- Active Task: F10 — Gym Mode (COMPLETE)
+## Session State — 2026-04-29 22:00
+- Active Task: Gym Mode V2 Proximity Planning (Native Geofencing)
 - Environment: Dev
 - Modified Files:
-    - `functions/src/modules/gym/gym.functions.ts` — NEW: onGymModeActivate, onGymModeDeactivate, expireGymSessions
-    - `functions/src/modules/matches/matches.functions.ts` — gym match type detection added
-    - `functions/src/index.ts` — gym module exported
-    - `lib/src/features/gym/data/gym_repository.dart` — NEW: GymRepository
-    - `lib/src/features/gym/application/gym_mode_controller.dart` — NEW: GymModeController (Riverpod)
-    - `lib/src/features/gym/presentation/gym_mode_sheet.dart` — NEW: GymModeSheet UI
-    - `lib/src/features/dashboard/presentation/home_screen.dart` — dumbbell icon + _GymModeButton
+    - `tasks/MASTER_PLAN.md` — Added specifications for Geofencing, GDPR compliance, zero-cost operational logic, and battery footprint maps.
 - Open Problems:
-    - ADR-001 still open — BLE proximity engine still uses mock timer.
-    - F10 Gym list is empty until `gyms` Firestore collection is seeded.
-- System Status: Build passing. All 3 gym Cloud Functions deployed to `tremble-dev`. flutter analyze clean.
+    - ADR-001 still open — BLE proximity background limits.
+- System Status: Specifications updated. Code builds.
 
 ## Session Handoff
 - Completed:
-    - F10 — Gym Mode full implementation:
-        - Backend: gym.functions.ts (activate/deactivate/expire), gym match type in matches.functions.ts
-        - Flutter: GymRepository, GymModeController, GymModeSheet, home_screen dumbbell button
-        - Deployed to tremble-dev. Committed + pushed (0584a38).
-    - plan_gym_mode.md updated to reflect actual implementation (replaces old draft).
+    - Architected full cross-environment operational lifecycle matrix for Gym Mode.
+    - Validated GDPR & client-heavy isolation constraints for Proximity services.
 - In Progress:
-    - Nothing. Clean handoff.
+    - Awaiting implementation roadmap for Native Geofencing hooks.
 - Blocked:
-    - ADR-001: BLE background service.
-    - F10 device test requires at least one gym seeded in Firestore `gyms` collection.
+    - ADR-001: BLE background limits.
 - Next Action:
-    - Seed `gyms` collection in Firebase Console (tremble-dev) with at least one test gym.
-    - Device test F10 flow on physical Android (Martin) or iOS simulator.
-    - After test passes: implement gym match badge in `matches_screen.dart` (P1).
+    - Begin development on native OS wrapper integration.
+
 
 ---
 
