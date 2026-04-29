@@ -86,6 +86,9 @@ kotlin {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
+    // Native geofencing (Gym Mode) — GeofencingClient + BroadcastReceiver
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
     // Firebase BoM — manages all Firebase library versions
     implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
     implementation("com.google.firebase:firebase-analytics")

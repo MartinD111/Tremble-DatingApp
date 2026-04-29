@@ -9,6 +9,7 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import tremble.dating.app.gym.GymGeofenceManager
 import tremble.dating.app.radar.RadarForegroundService
 import tremble.dating.app.radar.RadarStateBridge
 import tremble.dating.app.radar.RadarWidgetProvider
@@ -16,6 +17,7 @@ import tremble.dating.app.radar.RadarTileService
 
 private const val METHOD_CHANNEL = "app.tremble/radar"
 private const val EVENT_CHANNEL = "app.tremble/radar/events"
+private const val GEOFENCE_CHANNEL = "tremble.dating.app/geofence"
 
 class MainActivity : FlutterFragmentActivity() {
 
@@ -91,6 +93,24 @@ class MainActivity : FlutterFragmentActivity() {
                         } else {
                             result.success(false)
                         }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+
+        // ── Gym Mode — native OS geofencing ──────────────────────────────────
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, GEOFENCE_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "startMonitoring" -> {
+                        @Suppress("UNCHECKED_CAST")
+                        val gyms = call.arguments as? List<Map<String, Any>> ?: emptyList()
+                        GymGeofenceManager.startMonitoring(applicationContext, gyms)
+                        result.success(null)
+                    }
+                    "stopMonitoring" -> {
+                        GymGeofenceManager.stopMonitoring(applicationContext)
+                        result.success(null)
                     }
                     else -> result.notImplemented()
                 }

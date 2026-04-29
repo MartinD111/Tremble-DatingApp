@@ -141,6 +141,13 @@
                 android:resource="@xml/widget_radar_info" />
         </receiver>
 
+        <!-- ── Gym Mode native geofence receiver ────────────────────────── -->
+        <!-- Woken by GeofencingClient PendingIntent on DWELL event.        -->
+        <!-- Works when app is killed — no Flutter engine required.         -->
+        <receiver
+            android:name=".gym.GymGeofenceReceiver"
+            android:exported="false" />
+
         <!-- ── Radar toggle broadcast receiver (widget tap + tile) ──────── -->
         <receiver
             android:name=".radar.RadarToggleReceiver"

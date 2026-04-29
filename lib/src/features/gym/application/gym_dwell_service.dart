@@ -1,37 +1,29 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geofence_service/geofence_service.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/gym_repository.dart';
 import '../application/gym_mode_controller.dart';
-import '../../../core/notification_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GymDwellService — event-driven geofence detection for Gym Mode.
+// GymDwellService — thin Method Channel bridge to native OS geofencing.
 //
-// V2: Replaces the 1-minute foreground polling timer with GeofenceService
-// event listeners. A geofence region is registered for each gym in Firestore.
-// When the user enters a region and remains for 10 minutes, GeofenceService
-// fires a DWELL event which triggers a local push notification.
+// All dwell logic lives on the platform side:
 //
-// State machine per gym:
-//   ENTER  → dwell clock starts (inside loiteringDelayMs window)
-//   DWELL  → fires after 10 min continuous presence → send notification once
-//   EXIT   → resets notification gate so re-entry re-notifies
+//   Android — GeofencingClient (play-services-location) registers a
+//             GEOFENCE_TRANSITION_DWELL listener with a 10-minute loitering
+//             delay. The OS fires GymGeofenceReceiver via PendingIntent even
+//             when the app is killed. Battery cost in idle/killed state: 0 %.
 //
-// Platform notes:
-//   Android — GeofenceService uses a reactive position stream from geolocator.
-//             Background execution beyond OS idle threshold requires adding
-//             WillStartForegroundTask (flutter_foreground_task) to the widget
-//             tree — deferred to V3 to avoid conflicting with the existing
-//             RadarForegroundService notification.
-//             V3 path: native Android GeofencingClient via method channel
-//             gives 0 % battery cost when app is killed.
-//   iOS     — Uses background location stream. Requires
-//             NSLocationAlwaysAndWhenInUseUsageDescription (declared) and
-//             UIBackgroundModes: location (declared).
+//   iOS     — CLLocationManager.startMonitoring registers circular regions
+//             (70–100 m, default 80 m). On didEnterRegion a
+//             UNTimeIntervalNotificationTrigger is scheduled 10 minutes out.
+//             On didExitRegion the pending notification is cancelled.
+//             The iOS notification system fires the notification regardless
+//             of whether the app is alive. Battery cost in killed state: 0 %.
+//
+// This class only sends the gym list to native on start and removes it on
+// dispose. There is no timer, no location stream, and no polling.
 //
 // Lifecycle: started/stopped by gymDwellServiceProvider based on:
 //   - user.gymNotificationsEnabled == true
@@ -44,110 +36,35 @@ class GymDwellService {
 
   final List<Gym> gyms;
 
-  static const _loiteringDelayMs = 10 * 60 * 1000; // 10 minutes
-  static const _notificationId = 9001;
-  static const _defaultRadiusMeters = 80.0;
-
-  bool _notificationSent = false;
-
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  static const _channel = MethodChannel('tremble.dating.app/geofence');
 
   void start() {
-    final geofenceList = gyms.map(_gymToGeofence).toList();
+    final payload = gyms
+        .map(
+          (g) => {
+            'id': g.id,
+            'name': g.name,
+            'lat': g.location.lat,
+            'lng': g.location.lng,
+            'radiusMeters': g.radiusMeters,
+          },
+        )
+        .toList();
 
-    GeofenceService.instance
-      ..setup(
-        interval: 5000, // position check interval (ms) — iOS stream cadence
-        accuracy: 100, // acceptable position accuracy (m)
-        loiteringDelayMs: _loiteringDelayMs,
-        statusChangeDelayMs: 10000, // debounce rapid enter/exit transitions
-        useActivityRecognition: false,
-        allowMockLocations: false,
-        printDevLog: kDebugMode,
-        geofenceRadiusSortType: GeofenceRadiusSortType.DESC,
-      )
-      ..addGeofenceStatusChangeListener(_onGeofenceStatus)
-      ..addStreamErrorListener(_onError);
-
-    GeofenceService.instance.start(geofenceList).catchError(_onError);
-    debugPrint('[GymDwell] Started — monitoring ${gyms.length} gym(s)');
+    _channel.invokeMethod<void>('startMonitoring', payload).then(
+          (_) => debugPrint(
+              '[GymDwell] Native monitoring started (${gyms.length} gym(s))'),
+          onError: (Object e) =>
+              debugPrint('[GymDwell] startMonitoring error: $e'),
+        );
   }
 
   void dispose() {
-    GeofenceService.instance
-      ..removeGeofenceStatusChangeListener(_onGeofenceStatus)
-      ..removeStreamErrorListener(_onError)
-      ..stop();
-    debugPrint('[GymDwell] Stopped');
-  }
-
-  // ── Geofence helpers ──────────────────────────────────────────────────────
-
-  Geofence _gymToGeofence(Gym gym) {
-    final radius = gym.radiusMeters > 0
-        ? gym.radiusMeters.toDouble()
-        : _defaultRadiusMeters;
-    return Geofence(
-      id: gym.id,
-      latitude: gym.location.lat,
-      longitude: gym.location.lng,
-      radius: [
-        GeofenceRadius(id: 'radius_${gym.id}', length: radius),
-      ],
-    );
-  }
-
-  // ── Event handlers ────────────────────────────────────────────────────────
-
-  Future<void> _onGeofenceStatus(
-    Geofence geofence,
-    GeofenceRadius geofenceRadius,
-    GeofenceStatus status,
-    Location location,
-  ) async {
-    debugPrint('[GymDwell] ${geofence.id} → $status');
-
-    // Reset notification gate when the user leaves so re-entry re-notifies.
-    if (status == GeofenceStatus.EXIT) {
-      _notificationSent = false;
-      return;
-    }
-
-    if (status == GeofenceStatus.DWELL && !_notificationSent) {
-      final gym = gyms.firstWhere(
-        (g) => g.id == geofence.id,
-        orElse: () => gyms.first,
-      );
-      await _sendNotification(gym.name);
-      _notificationSent = true;
-    }
-  }
-
-  // ignore: avoid_dynamic_calls — ValueChanged<dynamic> required by geofence_service
-  void _onError(dynamic error) {
-    debugPrint('[GymDwell] GeofenceService error: $error');
-  }
-
-  Future<void> _sendNotification(String gymName) async {
-    const androidDetails = AndroidNotificationDetails(
-      TrembleNotificationChannels.proximity,
-      'Tremble — V bližini',
-      importance: Importance.high,
-      priority: Priority.high,
-      showWhen: true,
-    );
-    const iosDetails = DarwinNotificationDetails();
-    const details =
-        NotificationDetails(android: androidDetails, iOS: iosDetails);
-
-    await NotificationService.notifications.show(
-      _notificationId,
-      'Si v $gymName? 💪',
-      'Vklopiš Gym Mode in se poveži z drugimi!',
-      details,
-      payload: '{"type":"GYM_DWELL"}',
-    );
-    debugPrint('[GymDwell] DWELL notification sent for $gymName');
+    _channel.invokeMethod<void>('stopMonitoring').then(
+          (_) => debugPrint('[GymDwell] Native monitoring stopped'),
+          onError: (Object e) =>
+              debugPrint('[GymDwell] stopMonitoring error: $e'),
+        );
   }
 }
 
@@ -161,7 +78,7 @@ final gymsListProvider = FutureProvider<List<Gym>>((ref) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // gymDwellServiceProvider — manages GymDwellService lifecycle.
-// Watch this in HomeScreen to keep the geofence listener alive.
+// Watch this in HomeScreen to keep the channel registration alive.
 // ─────────────────────────────────────────────────────────────────────────────
 
 final gymDwellServiceProvider = Provider.autoDispose<GymDwellService?>((ref) {
