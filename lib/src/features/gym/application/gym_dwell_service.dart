@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:geofence_service/geofence_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/gym_repository.dart';
@@ -9,13 +9,31 @@ import '../application/gym_mode_controller.dart';
 import '../../../core/notification_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GymDwellService — foreground dwell timer for gym arrival detection.
+// GymDwellService — event-driven geofence detection for Gym Mode.
 //
-// Polls location every 60 seconds. If the user remains within a gym's radius
-// for 10 consecutive minutes, fires a local push notification prompting them
-// to activate Gym Mode.
+// V2: Replaces the 1-minute foreground polling timer with GeofenceService
+// event listeners. A geofence region is registered for each gym in Firestore.
+// When the user enters a region and remains for 10 minutes, GeofenceService
+// fires a DWELL event which triggers a local push notification.
 //
-// Lifecycle: started/stopped automatically by gymDwellServiceProvider based on:
+// State machine per gym:
+//   ENTER  → dwell clock starts (inside loiteringDelayMs window)
+//   DWELL  → fires after 10 min continuous presence → send notification once
+//   EXIT   → resets notification gate so re-entry re-notifies
+//
+// Platform notes:
+//   Android — GeofenceService uses a reactive position stream from geolocator.
+//             Background execution beyond OS idle threshold requires adding
+//             WillStartForegroundTask (flutter_foreground_task) to the widget
+//             tree — deferred to V3 to avoid conflicting with the existing
+//             RadarForegroundService notification.
+//             V3 path: native Android GeofencingClient via method channel
+//             gives 0 % battery cost when app is killed.
+//   iOS     — Uses background location stream. Requires
+//             NSLocationAlwaysAndWhenInUseUsageDescription (declared) and
+//             UIBackgroundModes: location (declared).
+//
+// Lifecycle: started/stopped by gymDwellServiceProvider based on:
 //   - user.gymNotificationsEnabled == true
 //   - gym mode is not already active
 //   - at least one gym exists in Firestore
@@ -26,77 +44,88 @@ class GymDwellService {
 
   final List<Gym> gyms;
 
-  Timer? _timer;
-  DateTime? _dwellStart;
-  String? _dwellingGymId;
+  static const _loiteringDelayMs = 10 * 60 * 1000; // 10 minutes
+  static const _notificationId = 9001;
+  static const _defaultRadiusMeters = 80.0;
+
   bool _notificationSent = false;
 
-  static const _checkInterval = Duration(minutes: 1);
-  static const _dwellThreshold = Duration(minutes: 10);
-  static const _notificationId = 9001;
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   void start() {
-    _timer?.cancel();
-    _timer = Timer.periodic(_checkInterval, _tick);
+    final geofenceList = gyms.map(_gymToGeofence).toList();
+
+    GeofenceService.instance
+      ..setup(
+        interval: 5000, // position check interval (ms) — iOS stream cadence
+        accuracy: 100, // acceptable position accuracy (m)
+        loiteringDelayMs: _loiteringDelayMs,
+        statusChangeDelayMs: 10000, // debounce rapid enter/exit transitions
+        useActivityRecognition: false,
+        allowMockLocations: false,
+        printDevLog: kDebugMode,
+        geofenceRadiusSortType: GeofenceRadiusSortType.DESC,
+      )
+      ..addGeofenceStatusChangeListener(_onGeofenceStatus)
+      ..addStreamErrorListener(_onError);
+
+    GeofenceService.instance.start(geofenceList).catchError(_onError);
+    debugPrint('[GymDwell] Started — monitoring ${gyms.length} gym(s)');
   }
 
   void dispose() {
-    _timer?.cancel();
-    _timer = null;
+    GeofenceService.instance
+      ..removeGeofenceStatusChangeListener(_onGeofenceStatus)
+      ..removeStreamErrorListener(_onError)
+      ..stop();
+    debugPrint('[GymDwell] Stopped');
   }
 
-  Future<void> _tick(Timer _) async {
-    if (_notificationSent) return;
+  // ── Geofence helpers ──────────────────────────────────────────────────────
 
-    try {
-      final permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        return;
-      }
+  Geofence _gymToGeofence(Gym gym) {
+    final radius = gym.radiusMeters > 0
+        ? gym.radiusMeters.toDouble()
+        : _defaultRadiusMeters;
+    return Geofence(
+      id: gym.id,
+      latitude: gym.location.lat,
+      longitude: gym.location.lng,
+      radius: [
+        GeofenceRadius(id: 'radius_${gym.id}', length: radius),
+      ],
+    );
+  }
 
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings:
-            const LocationSettings(accuracy: LocationAccuracy.medium),
-      );
+  // ── Event handlers ────────────────────────────────────────────────────────
 
-      Gym? nearbyGym;
-      for (final gym in gyms) {
-        final distance = Geolocator.distanceBetween(
-          position.latitude,
-          position.longitude,
-          gym.location.lat,
-          gym.location.lng,
-        );
-        if (distance <= gym.radiusMeters) {
-          nearbyGym = gym;
-          break;
-        }
-      }
+  Future<void> _onGeofenceStatus(
+    Geofence geofence,
+    GeofenceRadius geofenceRadius,
+    GeofenceStatus status,
+    Location location,
+  ) async {
+    debugPrint('[GymDwell] ${geofence.id} → $status');
 
-      if (nearbyGym == null) {
-        // User left all gyms — reset dwell tracking.
-        _dwellStart = null;
-        _dwellingGymId = null;
-        return;
-      }
-
-      if (_dwellingGymId != nearbyGym.id) {
-        // Entered a new gym — start dwell clock.
-        _dwellingGymId = nearbyGym.id;
-        _dwellStart = DateTime.now();
-        return;
-      }
-
-      // Same gym — check how long they've been here.
-      final elapsed = DateTime.now().difference(_dwellStart!);
-      if (elapsed >= _dwellThreshold) {
-        await _sendNotification(nearbyGym.name);
-        _notificationSent = true;
-      }
-    } on Exception catch (e) {
-      debugPrint('[GymDwell] Location check failed: $e');
+    // Reset notification gate when the user leaves so re-entry re-notifies.
+    if (status == GeofenceStatus.EXIT) {
+      _notificationSent = false;
+      return;
     }
+
+    if (status == GeofenceStatus.DWELL && !_notificationSent) {
+      final gym = gyms.firstWhere(
+        (g) => g.id == geofence.id,
+        orElse: () => gyms.first,
+      );
+      await _sendNotification(gym.name);
+      _notificationSent = true;
+    }
+  }
+
+  // ignore: avoid_dynamic_calls — ValueChanged<dynamic> required by geofence_service
+  void _onError(dynamic error) {
+    debugPrint('[GymDwell] GeofenceService error: $error');
   }
 
   Future<void> _sendNotification(String gymName) async {
@@ -118,12 +147,12 @@ class GymDwellService {
       details,
       payload: '{"type":"GYM_DWELL"}',
     );
-    debugPrint('[GymDwell] Notification sent for $gymName');
+    debugPrint('[GymDwell] DWELL notification sent for $gymName');
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FutureProvider for gym list (cached)
+// FutureProvider for gym list (cached per session)
 // ─────────────────────────────────────────────────────────────────────────────
 
 final gymsListProvider = FutureProvider<List<Gym>>((ref) {
@@ -131,8 +160,8 @@ final gymsListProvider = FutureProvider<List<Gym>>((ref) {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// gymDwellServiceProvider — manages the GymDwellService lifecycle.
-// Watch this in HomeScreen to keep it alive.
+// gymDwellServiceProvider — manages GymDwellService lifecycle.
+// Watch this in HomeScreen to keep the geofence listener alive.
 // ─────────────────────────────────────────────────────────────────────────────
 
 final gymDwellServiceProvider = Provider.autoDispose<GymDwellService?>((ref) {

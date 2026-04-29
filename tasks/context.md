@@ -1,22 +1,31 @@
-## Session State — 2026-04-29 22:00
-- Active Task: Gym Mode V2 Proximity Planning (Native Geofencing)
+## Session State — 2026-04-29 23:30
+- Active Task: Gym Mode V2 — Event-driven geofence detection (COMPLETE)
 - Environment: Dev
 - Modified Files:
-    - `tasks/MASTER_PLAN.md` — Added specifications for Geofencing, GDPR compliance, zero-cost operational logic, and battery footprint maps.
+    - `pubspec.yaml` — added `geofence_service: ^6.0.0`
+    - `lib/src/features/gym/application/gym_dwell_service.dart` — complete rewrite: polling timer removed, replaced with GeofenceService DWELL events
 - Open Problems:
     - ADR-001 still open — BLE proximity background limits.
-- System Status: Specifications updated. Code builds.
+- System Status: flutter analyze clean (0 issues), APK builds ✅
 
 ## Session Handoff
 - Completed:
-    - Architected full cross-environment operational lifecycle matrix for Gym Mode.
-    - Validated GDPR & client-heavy isolation constraints for Proximity services.
+    - Replaced foreground polling timer (1-min GPS poll) in GymDwellService with
+      event-driven GeofenceService. State machine: ENTER → DWELL (10 min) → EXIT.
+    - iOS UIBackgroundModes: location + Android ACCESS_BACKGROUND_LOCATION were
+      already present — no native config changes needed.
+    - EXIT event resets _notificationSent so re-entry re-notifies.
 - In Progress:
-    - Awaiting implementation roadmap for Native Geofencing hooks.
+    - Nothing.
 - Blocked:
-    - ADR-001: BLE background limits.
+    - ADR-001: BLE background limits (unchanged).
 - Next Action:
-    - Begin development on native OS wrapper integration.
+    - Device test: simulate entry into 80m radius → wait 10 min → verify DWELL
+      notification fires. Use Xcode Location Simulation or Android Studio GPS mock.
+    - V3 task (future): WillStartForegroundTask widget + native Android
+      GeofencingClient via method channel for true killed-state 0%-battery geofencing.
+    - Note: geofence_service 6.0.0+1 is officially discontinued (replaced by
+      geofencing_api). Migration to geofencing_api is a V3 clean-up item.
 
 
 ---
