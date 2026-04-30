@@ -44,7 +44,7 @@ enum HistoryFilter {
 // ─────────────────────────────────────────────────────────────────────────────
 class MatchContext {
   final String? eventId;
-  final String? activityType; // 'running' | 'cycling' | null
+  final String? activityType; // 'running' | null
   final String? gymPlaceId; // Google Place ID
 
   const MatchContext({

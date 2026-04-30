@@ -1,5 +1,18 @@
 # Permanent Project Knowledge (Lessons)
 
+**Rule #49 — The "Jebiga Rule" (Strict 10-minute TTL for Run Club).**
+[2026-04-30] Proximity data for high-speed activities (running) must have a strictly enforced 10-minute TTL in Firestore. If users do not interact (send a Wave) within 10 minutes of crossing paths, the match record is purged. This maintains the "in-the-moment" brand promise and eliminates stalking risks.
+Source: Run Club (F6) Finalization, April 2026.
+
+**Rule #50 — Native Motion Sensors (CoreMotion/ActivityRecognition) over Background Timers.**
+[2026-04-30] Background activity sensing for fitness (Run Club) MUST rely on native OS motion co-processors (`CMMotionActivityManager` on iOS and `ActivityRecognitionClient` on Android) via an `EventChannel`. Mock timers in the background isolate are unreliable and battery-heavy. Native sensors provide <1% battery drain and accurate state detection (`RUNNING`, `STATIONARY`).
+Source: ADR-001 Implementation, April 2026.
+
+**Rule #51 — Mid-Run Intercept UI overrides Silent Mode.**
+[2026-04-30] While Run Club is in "Silent Mode" (no notifications during the run), an explicit user action (e.g., sending a Wave from the Live Run Card) must override the receiver's silent state. This ensures that "Intentional Waves" are delivered immediately, while "Passive Proximity" remains silent.
+Source: Run Club (F6) UX Design, April 2026.
++
+
 **Rule #48 — Staged files modified by pre-commit hooks must be re-added.**
 [2026-04-29] If a pre-commit hook runs `dart format .` or any other auto-formatter, it may modify files in the commit. These modifications stay in the working directory unstaged, causing the commit to fail. Always run `git add <file>` to re-stage the newly formatted files before committing again.
 Source: Git Hook Troubleshooting, April 2026.

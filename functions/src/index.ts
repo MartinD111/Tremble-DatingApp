@@ -41,6 +41,8 @@ export {
     setInactive,
     onBleProximity,
     getProximityMatchCandidates,
+    onRunEncounter,
+    onRunCrossUpdated,
 } from "./modules/proximity/proximity.functions";
 
 // ── GDPR Module ──────────────────────────────────────────

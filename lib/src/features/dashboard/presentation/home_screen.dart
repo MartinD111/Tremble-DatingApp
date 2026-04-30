@@ -37,6 +37,9 @@ import '../../../shared/ui/premium_paywall.dart';
 import '../../gym/application/gym_mode_controller.dart';
 import '../../gym/application/gym_dwell_service.dart';
 import '../../gym/presentation/gym_mode_sheet.dart';
+import '../data/run_club_repository.dart';
+import 'widgets/live_run_card.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State
@@ -147,6 +150,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(radarBatteryLevelProvider.notifier).state = battery;
     });
 
+    // Listen for Run Club state changes from the background motion service.
+    // When the motion filter detects 5+ min of running (or 15+ min stationary),
+    // it writes SharedPreferences and signals here. BleService then restarts
+    // advertising with the updated manufacturerId (0xFF01 vs 0xFFFF).
+    FlutterBackgroundService().on('onRunClubStateChanged').listen((event) {
+      if (event == null) return;
+      BleService().updateAdvertisingMode();
+    });
+
     // ── Dev Simulation → Radar Ping bridge ─────────────────────────────────
     // Pipes the dev sim's tracking values into pingDistance/pingAngle so the
     // radar canvas reacts only after a mutual wave (Phase 3 of the plan).
@@ -184,6 +196,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // ── Active Search State ──────────────────────────────────────────────
     final activeMatch = ref.watch(currentSearchProvider);
     final devSim = ref.watch(devSimulationControllerProvider);
+
+    // ── Run Club Crosses State ───────────────────────────────────────────
+    final runCrossesAsync = user != null
+        ? ref.watch(activeRunCrossesProvider(user.id))
+        : const AsyncValue.data([]);
+    final DocumentSnapshot? activeRunCross = runCrossesAsync.maybeWhen(
+      data: (docs) => docs.isNotEmpty ? docs.first : null,
+      orElse: () => null,
+    );
 
     // Define Screens and Nav Items
     final List<Widget> screens;
@@ -371,6 +392,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     .animate()
                     .fadeIn(duration: 250.ms)
                     .slideY(begin: -0.4, curve: Curves.easeOutCubic),
+              ),
+            ),
+          ),
+
+        // ── Global Live Run Card ─────────────────────────────────────────
+        if (activeRunCross != null && user != null)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 80,
+            left: 20,
+            right: 20,
+            child: SafeArea(
+              bottom: false,
+              child: Center(
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final data = activeRunCross.data() as Map<String, dynamic>;
+                    final userIds = List<String>.from(data['userIds'] ?? []);
+                    final partnerId = userIds.firstWhere((id) => id != user.id,
+                        orElse: () => '');
+                    if (partnerId.isEmpty) return const SizedBox.shrink();
+
+                    final dismissedBy =
+                        List<String>.from(data['dismissedBy'] ?? []);
+                    if (dismissedBy.contains(user.id))
+                      return const SizedBox.shrink();
+
+                    final profileAsync =
+                        ref.watch(publicProfileProvider(partnerId));
+                    return profileAsync.when(
+                      data: (profile) {
+                        return LiveRunCard(
+                          name: profile.name,
+                          age: profile.age,
+                          onWave: () {
+                            ref
+                                .read(runClubRepositoryProvider)
+                                .sendWave(activeRunCross.id, user.id);
+                          },
+                          onDismiss: () {
+                            ref
+                                .read(runClubRepositoryProvider)
+                                .dismissEncounter(activeRunCross.id, user.id);
+                          },
+                        )
+                            .animate()
+                            .fadeIn(duration: 250.ms)
+                            .slideY(begin: -0.4, curve: Curves.easeOutCubic);
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
+                ),
               ),
             ),
           ),

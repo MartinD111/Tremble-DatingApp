@@ -300,7 +300,7 @@ TTL: do endsAt eventa
   matchType: "standard",   // "standard" | "event" | "activity" | "gym"
   matchContext: {
     eventId: "eventId" | null,
-    activityType: "running" | "cycling" | null,
+    activityType: "running" | null,
     gymPlaceId: "ChIJ..." | null
   },
   createdAt: Timestamp,
@@ -398,50 +398,61 @@ Widget _warmthIndicator(WarmthDirection direction) => switch (direction) {
 
 ## F6 — Run Club (In-Motion Handshake)
 
-**Effort:** L · **Status:** Planned
+**Effort:** L · **Status:** 🟡 In Progress (Native Bridge Foundation Complete)
 
 ### Philosophy
 Strictly ephemeral. No GPS maps. No historical tracks. No Strava. Tremble detected in the moment only.
 
 ### Technology Stack
-1. **Motion Detection:** `CMMotionActivityManager` (iOS) & `Activity Recognition API` (Android). Zero GPS dependency for detection.
-2. **Bluetooth:** BLE Advertisement with `Run Mode Flag (0x01)` in manufacturer data.
-3. **Infrastructure:** Firebase Cloud Functions for handshake verification + Firestore TTL (10-minute expiry).
+1.  **Motion Detection:** `CMMotionActivityManager` (iOS) & `Activity Recognition API` (Android).
+2.  **Native Bridge:** `NativeMotionService` (Flutter `EventChannel`) bridges real-time activity states (`RUNNING`, `STATIONARY`, `WALKING`) to the background isolate.
+3.  **Bluetooth:** BLE Advertisement with `Run Mode Flag (0x01)` in manufacturer data byte 0.
+4.  **Infrastructure:** Firebase Cloud Functions (Handshake processor) + Firestore TTL (10-minute expiry).
+5.  **Redis (Upstash):** Ephemeral tracking of "Run Club Active" users for geohash-based proximity optimization (optional/future).
 
-### Battery & Cloud Efficiency
-*   **Battery:** ~0.5-1% per activity hour. Uses low-power motion co-processors.
-*   **Cloud:** Minimal. Costs generated only on successful handshakes. Auto-cleanup via TTL is free.
+### Phase 6.1: Native & Background Foundation (DONE ✅)
+*   **Permissions:** `ACTIVITY_RECOGNITION` (Android) and `NSMotionUsageDescription` (iOS) configured.
+*   **Bridges:** `MainActivity.kt` and `AppDelegate.swift` now stream motion states via `app.tremble/motion/events`.
+*   **Logic:** `background_service.dart` handles the state machine:
+    *   **5-min Running:** Smart Activation trigger.
+    *   **15-min Stationary:** Smart Deactivation trigger.
+    *   **20-min Inactivity:** Auto-Close logic.
 
-### Implementation Logic
-1.  **Smart Activation:** Detect `running` state via native sensors. After **5 minutes**, prompt: *"🔔 Zaznali smo tek. Želiš vklopiti Run Club za diskretno skeniranje bližine?"* (Vklopi / Prezri). Never auto-starts.
-2.  **Matching:** Use **55% threshold** (RSSI ~ -85dBm) for high-speed crossings.
-3.  **Smart Deactivation:** After **15 minutes** of `stationary` state, prompt: *"🔔 Si končal s tekom? Run Club je še vedno aktiven."* (Gumba: Izklopi / Pusti aktivno).
-4.  **Auto-Close:** System kills activity after 20 minutes of total inactivity. Prompt: *"🔔 Run Club se bo kmalu samodejno izklopil."* (Gumba: V redu).
+### Phase 6.2: BLE Signature & Handshake
+*   **BLE Flag:** Restore `Run Mode Flag (0x01)` in `BleService.dart` manufacturer data.
+*   **Logic:** When `run_club_active` is true in `SharedPreferences`, `BleService` restarts advertising with the flag.
+*   **Handshake:** Scanning runners who detect the 0x01 flag use a more aggressive RSSI threshold (55% signal) to account for high-speed crossing.
 
-### User Experience (Physical-First)
-1. **Smart Activation:** After 5 min running: *"🔔 Zaznali smo tek. Želiš vklopiti Run Club?"* (Vklopi / Prezri).
-2. **Silent Mode (Real-World Intuition):** No notifications during the run. System silently logs proximity. You rely purely on your physical senses (The Spark). If you feel the vibe and open the app, your recent cross appears as a **Live Run Card** (e.g., *"Pravkar šla mimo: Ana, 24"*).
-3. **Mid-Run Intercept (Active Wave):** If User A opens the app and sends a Wave to a Live Run Card, this overrides Silent Mode for User B. User B receives: *"Ana (24), ki je pravkar pritekla mimo, ti pošilja Wave! Poglej nazaj 👀"*. If accepted, F4 (Trembling Window) opens.
-4. **Smart Deactivation:** After 15 min stationary: *"🔔 Si končal s tekom? Run Club je še vedno aktiven."* (Izklopi / Pusti aktivno).
-5. **Auto-Close:** After 20 min inactivity: *"🔔 Run Club se bo kmalu samodejno izklopil."* (V redu).
-6. **Post-Run Recap:** Immediate after-run: *"Hej, med tekom si bil potential match z uporabniki. Preveri!"* (Only shows users crossed in the last 10 minutes).
-7. **Re-Encounter:** When a confirmed run-match is nearby at a later date: *"Tvoj run-match od prejšnjič je spet blizu! Želiš aktivirati Trembling Window?"* (Aktiviraj / Prezri).
-8. **Context Wave:** 
-    - For stationary user: *"Tvoj match s teka (Ana, 24) je blizu! Pošlji Wave?"* 
-    - For receiver: *"Marko (run-match) ti pošilja Wave. Vklopi Trembling window?"*
-* **NO CHATROOM:** Mutual likes result in a **"Pulse Confirmed"** status only.
-* **The Expiry (Jebiga Rule):** Data purged after **10 minutes** of inactivity/no-interaction. If you miss the moment, it's gone.
+### Phase 6.3: Ephemeral Handshake (The Jebiga Rule)
+*   **Handshake Entry:** Proximity events marked as `run_cross` are sent to a dedicated Firestore collection or processed via Cloud Functions.
+*   **TTL Policy:** Every `run_cross` record MUST have an `expiresAt` field set to `now + 10 minutes`.
+*   **Handshake Function:** A Cloud Function monitors mutual crosses. If both users "Wave" within the 10-minute window, the match is upgraded to a `Pulse Confirmed`. If the window closes, the data is purged.
 
-### Firestore Schema
+### Phase 6.4: UI/UX (Mid-Run Intercept)
+*   **Dashboard:** A dedicated **Live Run Card** appears at the top of the radar during an active run session.
+    *   *Visuals:* GlassCard with neon/vibrant pulse border.
+    *   *Content:* "Pravkar šla mimo: Ana, 24".
+*   **Interaction:**
+    *   **[Send Wave]**: Explicitly notifies the other user (overriding Silent Mode).
+    *   **[Recap]**: Appears post-run to show all crosses from the last 10 minutes.
+*   **Notifications:** High-priority "Intercept" notification for the receiver: *"Ana (24) ti pošilja Wave med tekom! 👀"*.
+
+### Phase 6.5: Verification & Polish
+*   **Physical Testing:** Samsung S25 Ultra vs iPhone 15 Pro crossing test.
+*   **Battery Audit:** Verify <1% battery consumption over a 1-hour run.
+*   **Privacy Audit:** Ensure zero GPS traces are left in Firestore after the 10-minute expiry.
+
+### Firestore Schema (Handshake)
 ```javascript
-// matches/{matchId}
-// tip: "run_cross" - uporablja 55% logic
+// run_encounters/{encounterId}
 {
-  users: ["uid1", "uid2"],
-  type: "run_cross",
+  participants: ["uid1", "uid2"],
   timestamp: ServerTimestamp,
-  expiresAt: Timestamp, // now + 10 minutes (TTL)
-  seenBy: []
+  expiresAt: Timestamp, // 10 min TTL
+  signals: {
+    "uid1": { rssi: -72, waved: false },
+    "uid2": { rssi: -85, waved: false }
+  }
 }
 ```
 

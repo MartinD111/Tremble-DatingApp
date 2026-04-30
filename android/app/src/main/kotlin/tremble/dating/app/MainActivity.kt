@@ -37,6 +37,17 @@ class MainActivity : FlutterFragmentActivity() {
                 }
             })
 
+        // ── EventChannel: push Motion states to Dart ─────────────────────────
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "app.tremble/motion/events")
+            .setStreamHandler(object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    MotionService.setEventSink(events)
+                }
+                override fun onCancel(arguments: Any?) {
+                    MotionService.setEventSink(null)
+                }
+            })
+
         // ── MethodChannel: Dart → native commands ─────────────────────────────
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL)
             .setMethodCallHandler { call, result ->
@@ -110,6 +121,22 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     "stopMonitoring" -> {
                         GymGeofenceManager.stopMonitoring(applicationContext)
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+
+        // ── Motion Service — native Activity Recognition ─────────────────────
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "app.tremble/motion")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "startMonitoring" -> {
+                        MotionService.start(applicationContext)
+                        result.success(null)
+                    }
+                    "stopMonitoring" -> {
+                        MotionService.stop(applicationContext)
                         result.success(null)
                     }
                     else -> result.notImplemented()

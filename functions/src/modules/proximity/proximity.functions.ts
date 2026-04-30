@@ -11,7 +11,7 @@
  */
 
 import { onCall } from "firebase-functions/v2/https";
-import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth } from "../../middleware/authGuard";
@@ -646,5 +646,256 @@ export const onBleProximity = onDocumentCreated(
         console.log(
             `[BLE] CROSSING_PATHS → ${toUid.substring(0, 8)}... (throttle ${currentCount}/${GLOBAL_THROTTLE_MAX})`
         );
+    }
+);
+
+// ── F6: Run Club Proximity Trigger ────────────────────────────────
+
+/**
+ * onRunEncounter — F6 Run Club Ephemeral Handshake
+ * 
+ * Triggered when a runner detects another runner (flag 0x01).
+ * Aggregates the encounter and sends a Run Club specific notification.
+ * 
+ * Security: onDocumentCreated receives data from authenticated clients.
+ * Privacy: run_encounters TTL = 10 min (Jebiga Rule).
+ */
+export const onRunEncounter = onDocumentCreated(
+    { document: "run_encounters/{eventId}", region: "europe-west1" },
+    async (event) => {
+        const data = event.data?.data();
+        if (!data) return;
+
+        const { from: fromUid, toDeviceId } = data as {
+            from: string;
+            toDeviceId: string;
+            timestamp: Timestamp;
+            expiresAt: Timestamp;
+        };
+
+        if (!fromUid || !toDeviceId) return;
+
+        // Resolve toDeviceId → Tremble UID
+        const toUidSnapshot = await db
+            .collection("proximity")
+            .where("deviceId", "==", toDeviceId)
+            .limit(1)
+            .get();
+
+        if (toUidSnapshot.empty) {
+            console.log(`[RUN_CLUB] Device ${toDeviceId} not registered — skipping`);
+            return;
+        }
+
+        const toUid = toUidSnapshot.docs[0].id;
+        if (fromUid === toUid) return;
+
+        // Fetch sender profile for the "Mid-Run Intercept" notification
+        const fromUserDoc = await db.collection("users").doc(fromUid).get();
+        const fromUserData = fromUserDoc.data();
+        if (!fromUserData) return;
+
+        const toUserDoc = await db.collection("users").doc(toUid).get();
+        const toUserData = toUserDoc.data();
+        const fcmToken = toUserData?.fcmToken as string | undefined;
+        const blockedIds: string[] = toUserData?.blockedUserIds ?? [];
+
+        if (blockedIds.includes(fromUid)) return;
+
+        const redis = getRedis();
+        
+        // 1. Run Club Cooldown: 10 minutes per pair to avoid spamming the same runner
+        const pairKey = `run_cooldown:${[fromUid, toUid].sort().join("_")}`;
+        const pairSet = await redis.set(pairKey, "1", {
+            ex: 600, // 10 minutes
+            nx: true,
+        });
+
+        if (pairSet === null) {
+            // Already notified this runner in the last 10 minutes
+            return;
+        }
+
+        // Upsert mutual encounter document for the Live Run Card
+        // This is what the UI listens to for the [Send Wave] action
+        const matchId = [fromUid, toUid].sort().join("_");
+        await db.collection("active_run_crosses").doc(matchId).set({
+            userIds: [fromUid, toUid],
+            status: "pending",
+            timestamp: FieldValue.serverTimestamp(),
+            expiresAt: Timestamp.fromDate(new Date(Date.now() + 10 * 60 * 1000)), // 10 min TTL
+            signals: {
+                [fromUid]: false,
+                [toUid]: false
+            }
+        }, { merge: true });
+
+        // Send High Priority Notification
+        if (!fcmToken) return;
+
+        const name = fromUserData.displayName || "Nekdo";
+        let age = 0;
+        if (fromUserData.dateOfBirth) {
+            const dob = fromUserData.dateOfBirth.toDate();
+            const today = new Date();
+            age = today.getFullYear() - dob.getFullYear();
+            if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
+                age--;
+            }
+        }
+
+        // Rule #51: Mid-Run Intercept (overrides silent mode)
+        await getMessaging().send({
+            token: fcmToken,
+            notification: {
+                title: "Run Club 🏃",
+                body: `Pravkar šla mimo: ${name}, ${age}. Pošlji Wave! 👀`,
+            },
+            data: {
+                type: "RUN_INTERCEPT",
+                fromUid: fromUid,
+                name: name,
+                age: age.toString(),
+            },
+            android: {
+                priority: "high", // Overrides background silent state
+                notification: {
+                    clickAction: "RUN_INTERCEPT_ACTION",
+                    channelId: "tremble_run_club",
+                },
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        sound: "default",
+                        category: "RUN_INTERCEPT_CATEGORY",
+                        "interruption-level": "active", // iOS override
+                    },
+                },
+            },
+        });
+
+        console.log(`[RUN_CLUB] MID-RUN INTERCEPT → ${toUid.substring(0, 8)}... from ${fromUid.substring(0, 8)}...`);
+    }
+);
+
+/**
+ * onRunCrossUpdated — Firestore trigger on active_run_crosses/{crossId}
+ * 
+ * Listens for mutual signal events in a Run Club encounter.
+ * If both users wave (signals[uid] === true) and status is "pending",
+ * creates a standard match and notifies both users.
+ */
+export const onRunCrossUpdated = onDocumentUpdated(
+    { document: "active_run_crosses/{crossId}", region: "europe-west1" },
+    async (event) => {
+        const snap = event.data;
+        if (!snap) return;
+
+        const data = snap.after.data();
+        const prevData = snap.before.data();
+
+        if (data.status !== "pending" || prevData.status !== "pending") return;
+
+        const signals = data.signals as Record<string, boolean>;
+        const userIds = data.userIds as string[];
+
+        // Check if both users sent a wave
+        if (userIds.length === 2 && signals[userIds[0]] === true && signals[userIds[1]] === true) {
+            
+            // Mark as matched to prevent duplicate triggers
+            await snap.after.ref.update({ status: "matched" });
+
+            const matchId = userIds.sort().join("_");
+            const existingMatch = await db.collection("matches").doc(matchId).get();
+            if (existingMatch.exists) {
+                console.log(`[RUN_CLUB] Match ${matchId} already exists — skipping duplicate trigger`);
+                return;
+            }
+
+            // Create match
+            const batch = db.batch();
+            batch.set(db.collection("matches").doc(matchId), {
+                userA: userIds[0],
+                userB: userIds[1],
+                userIds: userIds,
+                matchType: "run_club", // Special match type for filtering UI later
+                matchContext: null,
+                createdAt: FieldValue.serverTimestamp(),
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000), // Standard match TTL
+                status: "pending",
+                seenBy: [],
+            });
+            await batch.commit();
+
+            console.log(`[RUN_CLUB] Mutual wave! Match created: ${matchId}`);
+
+            // Fetch profiles to send rich push
+            const [userADoc, userBDoc] = await Promise.all([
+                db.collection("users").doc(userIds[0]).get(),
+                db.collection("users").doc(userIds[1]).get(),
+            ]);
+
+            const userA = userADoc.data();
+            const userB = userBDoc.data();
+
+            if (!userA || !userB) return;
+
+            const nameA = userA.displayName || userA.name || "Nekdo";
+            const nameB = userB.displayName || userB.name || "Nekdo";
+            const photoA = (userA.photoUrls as string[] | undefined)?.[0] ?? "";
+            const photoB = (userB.photoUrls as string[] | undefined)?.[0] ?? "";
+            const tokenA = userA.fcmToken as string | undefined;
+            const tokenB = userB.fcmToken as string | undefined;
+
+            const messaging = getMessaging();
+            const notifications: Promise<string>[] = [];
+
+            if (tokenA) {
+                notifications.push(
+                    messaging.send({
+                        token: tokenA,
+                        notification: {
+                            title: `Ujeli smo se! 🏃‍♀️`,
+                            body: `${nameB} ti je pomahal-a nazaj! Odpremo radar?`,
+                            imageUrl: photoB || undefined,
+                        },
+                        data: {
+                            type: "MUTUAL_WAVE",
+                            matchId,
+                            path: "/radar",
+                        },
+                        apns: {
+                            payload: { aps: { sound: "default", "mutable-content": 1 } },
+                        },
+                        android: { priority: "high" },
+                    })
+                );
+            }
+
+            if (tokenB) {
+                notifications.push(
+                    messaging.send({
+                        token: tokenB,
+                        notification: {
+                            title: `Ujeli smo se! 🏃‍♀️`,
+                            body: `${nameA} ti je pomahal-a nazaj! Odpremo radar?`,
+                            imageUrl: photoA || undefined,
+                        },
+                        data: {
+                            type: "MUTUAL_WAVE",
+                            matchId,
+                            path: "/radar",
+                        },
+                        apns: {
+                            payload: { aps: { sound: "default", "mutable-content": 1 } },
+                        },
+                        android: { priority: "high" },
+                    })
+                );
+            }
+
+            await Promise.allSettled(notifications);
+        }
     }
 );

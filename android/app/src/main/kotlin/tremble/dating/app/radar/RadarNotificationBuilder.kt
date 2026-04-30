@@ -24,7 +24,7 @@ const val NOTIF_ID = 888
 /**
  * Builds the foreground-service ongoing notification for Tremble Radar.
  *
- * Design: standard ongoing notification — same pattern Uber, Spotify, Strava
+ * Design: standard ongoing notification — same pattern Uber, Spotify
  * use for active background sessions. No CallStyle (crashes on Android 14+
  * because the service is not a phoneCall), no Samsung proprietary extras
  * (undocumented and fragile), no full-screen intent (not eligible without

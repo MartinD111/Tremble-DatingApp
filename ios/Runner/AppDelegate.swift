@@ -1,6 +1,62 @@
 import Flutter
 import UIKit
 import GoogleMaps
+import CoreMotion
+
+class MotionService: NSObject, FlutterStreamHandler {
+    static let shared = MotionService()
+    
+    private let activityManager = CMMotionActivityManager()
+    private var eventSink: FlutterEventSink?
+    private let queue = OperationQueue()
+    
+    private var isMonitoring = false
+    
+    override private init() {
+        super.init()
+        queue.name = "app.tremble.motionQueue"
+    }
+    
+    func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+        self.eventSink = events
+        return nil
+    }
+    
+    func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        self.eventSink = nil
+        return nil
+    }
+    
+    func startMonitoring() {
+        guard CMMotionActivityManager.isActivityAvailable(), !isMonitoring else { return }
+        
+        isMonitoring = true
+        activityManager.startActivityUpdates(to: queue) { [weak self] activity in
+            guard let self = self, let activity = activity else { return }
+            
+            var state = "UNKNOWN"
+            if activity.running {
+                state = "RUNNING"
+            } else if activity.stationary {
+                state = "STATIONARY"
+            } else if activity.walking {
+                state = "WALKING"
+            }
+            
+            if state != "UNKNOWN" {
+                DispatchQueue.main.async {
+                    self.eventSink?(state)
+                }
+            }
+        }
+    }
+    
+    func stopMonitoring() {
+        guard isMonitoring else { return }
+        isMonitoring = false
+        activityManager.stopActivityUpdates()
+    }
+}
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -50,6 +106,30 @@ import GoogleMaps
                 GymGeofenceManager.shared.stopMonitoring()
                 result(nil)
 
+            default:
+                result(FlutterMethodNotImplemented)
+            }
+        }
+        
+        // ── Motion Service — native Activity Recognition ─────────────────────
+        let motionEventChannel = FlutterEventChannel(
+            name: "app.tremble/motion/events",
+            binaryMessenger: engineBridge.binaryMessenger
+        )
+        motionEventChannel.setStreamHandler(MotionService.shared)
+        
+        let motionMethodChannel = FlutterMethodChannel(
+            name: "app.tremble/motion",
+            binaryMessenger: engineBridge.binaryMessenger
+        )
+        motionMethodChannel.setMethodCallHandler { call, result in
+            switch call.method {
+            case "startMonitoring":
+                MotionService.shared.startMonitoring()
+                result(nil)
+            case "stopMonitoring":
+                MotionService.shared.stopMonitoring()
+                result(nil)
             default:
                 result(FlutterMethodNotImplemented)
             }

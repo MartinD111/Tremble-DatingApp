@@ -16,6 +16,7 @@ import 'firebase_options_prod.dart';
 //   NullPointerException: ActivityPluginBinding.getActivity() on null
 // BleService is started/stopped from home_screen.dart in the main isolate.
 import 'geo_service.dart';
+import 'native_motion_service.dart';
 
 /// Configure and register the background service.
 /// Call once in main() before runApp().
@@ -139,6 +140,77 @@ void onStart(ServiceInstance service) async {
       await geoService.start();
     }
   });
+
+  // ── Run Club: Smart Activation & Deactivation ──────────────────────────
+  DateTime? lastRunningStart;
+  DateTime? lastStationaryStart;
+  bool runClubActive = prefs.getBool('run_club_active') ?? false;
+
+  importNativeMotion() {
+    NativeMotionService.instance.motionStateChanges.listen((state) async {
+      final now = DateTime.now();
+
+      if (state == MotionState.running) {
+        lastStationaryStart = null;
+        lastRunningStart ??= now;
+
+        if (!runClubActive &&
+            now.difference(lastRunningStart!).inMinutes >= 5) {
+          runClubActive = true;
+          await prefs.setBool('run_club_active', true);
+          service.invoke('onRunClubStateChanged', {'active': true});
+
+          await notificationsPlugin.show(
+            2,
+            'Run Club Aktiven',
+            'Zaznali smo tek. Tvoj profil je sedaj viden drugim tekačem!',
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'tremble_run_club',
+                'Tremble Run Club',
+                importance: Importance.high,
+                priority: Priority.high,
+              ),
+              iOS: DarwinNotificationDetails(),
+            ),
+            payload: 'run_club_activated',
+          );
+        }
+      } else if (state == MotionState.stationary) {
+        // We only reset the running timer if stationary (not walking)
+        lastRunningStart = null;
+        lastStationaryStart ??= now;
+
+        if (runClubActive &&
+            now.difference(lastStationaryStart!).inMinutes >= 15) {
+          runClubActive = false;
+          await prefs.setBool('run_club_active', false);
+          service.invoke('onRunClubStateChanged', {'active': false});
+
+          await notificationsPlugin.show(
+            3,
+            'Run Club Pavza',
+            'Zdi se, da počivaš. Run Club je sedaj izklopljen.',
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'tremble_run_club',
+                'Tremble Run Club',
+                importance: Importance.defaultImportance,
+                priority: Priority.defaultPriority,
+              ),
+              iOS: DarwinNotificationDetails(),
+            ),
+            payload: 'run_club_deactivated',
+          );
+        }
+      } else if (state == MotionState.walking) {
+        // Brief walking doesn't reset either timer
+      }
+    });
+    NativeMotionService.instance.startMonitoring();
+  }
+
+  importNativeMotion();
 
   // Update the persistent notification and emit radarState to UI every 60s
   Timer.periodic(const Duration(seconds: 60), (_) async {

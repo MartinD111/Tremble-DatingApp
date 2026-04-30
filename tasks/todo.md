@@ -33,5 +33,13 @@
 - [ ] Update landing page for Privacy Policy on `trembledating.com`.
 - [ ] **MARTIN:** Register Martin's debug token in Firebase App Check (tremble-dev) before testing Cloud Functions.
 
+### 6. Phase F6 Execution (Run Club) ⏳ NEXT
+- [ ] **F6 Native:** Bridge `CMMotionActivityManager` (iOS) & `Activity Recognition` (Android).
+- [ ] **F6 Logic:** Implement 10-min TTL in Firestore handshake function.
+- [ ] **F6 UI:** Build **Live Run Card** for Dashboard (blur/pulse effect).
+- [ ] **F6 UI:** Implement **Post-Run Recap** screen with 10-min countdown.
+- [ ] **F6 Interaction:** Implement **Mid-Run Intercept** notification override.
+- [ ] **F6 History:** Add "Run Club" tags and context to match history cards.
+
 ---
-*Last Updated: 2026-04-29* — Build: ✅ passing | flutter analyze: ✅ 0 issues | F9 ✅ | F1 ✅ | F11 ✅
+*Last Updated: 2026-04-30* — Build: ✅ passing | flutter analyze: ✅ 0 issues | F6 Design ✅ | F6 Implementation ⏳
