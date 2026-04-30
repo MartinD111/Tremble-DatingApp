@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import 'package:tremble/src/features/dashboard/application/warmth_controller.dart';
+import 'package:tremble/src/features/dashboard/domain/warmth_direction.dart';
 import 'package:tremble/src/features/dashboard/application/radar_search_session.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
 
@@ -69,6 +71,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
     final colorScheme = Theme.of(context).colorScheme;
     final isUrgent = _remaining.inMinutes < 5;
     final timerColor = isUrgent ? colorScheme.primary : colorScheme.onSurface;
+    final warmth = ref.watch(warmthControllerProvider);
 
     final pill = GlassCard(
       opacity: 0.18,
@@ -135,6 +138,8 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
             padding: const EdgeInsets.only(bottom: 8),
             child: _MutualWaveFlash(primary: colorScheme.primary),
           ),
+        // Warmth Indicator (Hot/Cold Navigation)
+        _warmthIndicator(warmth, colorScheme),
         isUrgent
             ? pill
                 .animate(onPlay: (c) => c.repeat(reverse: true))
@@ -144,6 +149,40 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
     );
 
     return content;
+  }
+
+  Widget _warmthIndicator(WarmthDirection direction, ColorScheme colorScheme) {
+    if (direction == WarmthDirection.neutral) return const SizedBox.shrink();
+
+    final isWarmer = direction == WarmthDirection.warmer;
+    final label = isWarmer ? 'GETTING CLOSER' : 'MOVING AWAY';
+    final color = isWarmer
+        ? const Color(0xFFF4436C)
+        : colorScheme.onSurface.withValues(alpha: 0.5);
+    final icon = isWarmer ? LucideIcons.trendingUp : LucideIcons.trendingDown;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.instrumentSans(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ],
+      ),
+    )
+        .animate(key: ValueKey(direction))
+        .fadeIn(duration: 300.ms)
+        .slideY(begin: 0.2, end: 0, curve: Curves.easeOut);
   }
 }
 

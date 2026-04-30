@@ -76,7 +76,7 @@ class RunRecapScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Signali potečejo 10 minut po srečanju. Ukrepaj zdaj ali nikoli.',
+                          'Pravilo Momentum: Signali potečejo 10 minut po srečanju. Ukrepaj zdaj ali nikoli.',
                           style: GoogleFonts.instrumentSans(
                             fontSize: 12,
                             color: TrembleTheme.rose.withValues(alpha: 0.8),

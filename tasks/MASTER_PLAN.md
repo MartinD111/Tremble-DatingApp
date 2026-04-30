@@ -41,20 +41,20 @@
 ## Implementacijski vrstni red
 
 ### Faza A — Teden 1–3 (foundation)
-1. **F9** — Radius logic (RSSI threshold + geohash filter)
-2. **F1** — Google Maps / Places API (blocker za F10)
+1. **F9** — Radius logic (RSSI threshold + geohash filter) ✅
+2. **F1** — Google Maps / Places API (blocker za F10) ✅
 
 *Opomba: F8 (Pricing) je začasno umaknjen iz Faze A in prestavljen na čas, ko bo uradno ustanovljeno podjetje AMS Solutions.*
 
 ### Faza B — Teden 4–8
 4. **F11** — Smoking preferences (profil field + filter) ✅
-5. **F3** — Match categories + history filters
-6. **F2** — Event mode matching
-7. **F10** — Gym Mode (zahteva F1)
+5. **F3** — Match categories + history filters ✅
+6. **F2** — Event mode matching ✅
+7. **F10** — Gym Mode (zahteva F1) ✅
 
 ### Faza C — Teden 9–11
 8. **F4** — Hot/Cold navigation (pure Flutter, brez infra)
-9. **F6** — Run Club (native activity detection, ephemeral proximity)
+9. **F6** — Run Club (native activity detection, ephemeral proximity) ✅
 
 ### Faza D — Teden 14–16
 11. **F7** — Valentine Promo (time-gated, deploy pred 1. februarjem)
@@ -359,7 +359,7 @@ Stream<List<Match>> getMatchHistory(String uid, HistoryFilter filter, String? ty
 
 ---
 
-## F4 — Hot/Cold Navigation
+## F4 — Hot/Cold Navigation (DONE ✅)
 
 **Effort:** S · **Infrastructure:** nič — pure Flutter
 
@@ -418,17 +418,17 @@ Strictly ephemeral. No GPS maps. No historical tracks. No Strava. Tremble detect
     *   **15-min Stationary:** Smart Deactivation trigger.
     *   **20-min Inactivity:** Auto-Close logic.
 
-### Phase 6.2: BLE Signature & Handshake
+### Phase 6.2: BLE Signature & Handshake (DONE ✅)
 *   **BLE Flag:** Restore `Run Mode Flag (0x01)` in `BleService.dart` manufacturer data.
 *   **Logic:** When `run_club_active` is true in `SharedPreferences`, `BleService` restarts advertising with the flag.
 *   **Handshake:** Scanning runners who detect the 0x01 flag use a more aggressive RSSI threshold (55% signal) to account for high-speed crossing.
 
-### Phase 6.3: Ephemeral Handshake (The Jebiga Rule)
+### Phase 6.3: Ephemeral Handshake (The Momentum Rule) (DONE ✅)
 *   **Handshake Entry:** Proximity events marked as `run_cross` are sent to a dedicated Firestore collection or processed via Cloud Functions.
 *   **TTL Policy:** Every `run_cross` record MUST have an `expiresAt` field set to `now + 10 minutes`.
 *   **Handshake Function:** A Cloud Function monitors mutual crosses. If both users "Wave" within the 10-minute window, the match is upgraded to a `Pulse Confirmed`. If the window closes, the data is purged.
 
-### Phase 6.4: UI/UX (Mid-Run Intercept)
+### Phase 6.4: UI/UX (Mid-Run Intercept) (DONE ✅)
 *   **Dashboard:** A dedicated **Live Run Card** appears at the top of the radar during an active run session.
     *   *Visuals:* GlassCard with neon/vibrant pulse border.
     *   *Content:* "Pravkar šla mimo: Ana, 24".

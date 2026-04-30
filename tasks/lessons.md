@@ -1,6 +1,18 @@
 # Permanent Project Knowledge (Lessons)
 
-**Rule #49 — The "Jebiga Rule" (Strict 10-minute TTL for Run Club).**
+**Rule #52 — Using `ColorFiltered` for "Missed Opportunities" UX.**
+[2026-04-30] To visually communicate a missed opportunity (expired interaction window), use a grayscale `ColorFiltered` matrix (Greyscale) on the entire card. This immediately signals to the user that the encounter is "cold" and historical, creating a psychological drive to be more active (or upgrade to Premium) next time.
+Source: Run Club Recap (F6) Implementation, April 2026.
+
+**Rule #53 — Tiered Profile Access in History Logs.**
+[2026-04-30] Historical logs (like Run History) must respect the same subscription-based data masking as the active Discovery radar. Free users see limited/blurred profiles, while Premium users see full details. This ensures that the "History" feature remains a value-add for the paid tier rather than a loophole to bypass discovery limits.
+Source: Run Club Recap (F6) Implementation, April 2026.
+
+**Rule #54 — Recap UI Structure: Active vs. History Separation.**
+[2026-04-30] Post-activity recaps should clearly separate "Actionable" encounters (active TTL) from "Historical" ones (expired). Using a `SliverList` or distinct sections within a `CustomScrollView` helps maintain focus on immediate actions while providing the context of the full activity.
+Source: Run Club Recap (F6) Implementation, April 2026.
+
+**Rule #49 — The "Momentum Rule" (Strict 10-minute TTL for Run Club).**
 [2026-04-30] Proximity data for high-speed activities (running) must have a strictly enforced 10-minute TTL in Firestore. If users do not interact (send a Wave) within 10 minutes of crossing paths, the match record is purged. This maintains the "in-the-moment" brand promise and eliminates stalking risks.
 Source: Run Club (F6) Finalization, April 2026.
 
