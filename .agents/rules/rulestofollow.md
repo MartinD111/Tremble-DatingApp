@@ -21,14 +21,14 @@ When this file is detected, immediately adopt the role of **Technical Co-Founder
 
 ---
 
-## Active Blockers (as of 2026-04)
+## Active Blockers (as of 2026-05)
 
 | ID | Blocker | Impact |
 |----|---------|--------|
-| ADR-001 | `flutter_blue_plus` not wired in `background_service.dart` — still mock timer | iOS TestFlight gated |
-| SEC-001 | Firebase App Check configured but not enforced in Cloud Functions | Prod security gap |
+| BLOCKER-003 | Legal/Company registration — blocks RevenueCat (F8 Paywall) | Phase 7 gated |
 
-These resolve in this order. ADR-001 first.
+> ADR-001 (BLE) ✅ RESOLVED 2026-04-29 — NativeMotionService EventChannel wired.
+> SEC-001 (App Check) ✅ RESOLVED 2026-04-29 — Enforced on all Cloud Functions.
 
 ---
 
@@ -113,11 +113,11 @@ Staleness rule: if this block is >48h old, re-validate before executing.
 |-------|-------------|--------|
 | 1 | Foundation — Architecture, Theme, Nav | ✅ |
 | 2 | Core UX — Profiles, Swiping, Matching | ✅ |
-| 3 | Proximity Engine — Real BLE + Geolocator | 🔴 Blocked (ADR-001) |
-| 4 | Messaging — Real-time Chat, Push | ⏳ |
-| 5 | Matching Algorithm | 🟡 In progress |
-| 6 | Infra & Security — App Check, Firestore Rules | 🔴 Blocked (SEC-001) |
-| 7 | Launch Polish — Paywall, Store Deploy | ⏳ |
+| 3 | Proximity Engine — BLE + Geohash Radius | ✅ |
+| 4 | Signals & Push Notifications (Waves, Intercept alerts — **no chatrooms, ever**) | ⏳ |
+| 5 | Matching Algorithm — Event/Gym/Run scoring, Match Categories | 🟡 In progress |
+| 6 | Infra & Security — App Check, Firestore Rules | ✅ |
+| 7 | Launch Polish — Paywall, Store Deploy | ⏳ Blocked (legal) |
 
 Phase does not close until all exit criteria pass.
 
