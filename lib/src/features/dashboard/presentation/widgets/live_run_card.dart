@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../shared/ui/glass_card.dart';
-import '../../../../core/theme.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../core/theme.dart';
+import '../../../../core/translations.dart';
+import '../../../../shared/ui/glass_card.dart';
 
-class LiveRunCard extends StatelessWidget {
+class LiveRunCard extends ConsumerWidget {
   final String name;
   final int age;
   final VoidCallback onWave;
@@ -19,7 +21,8 @@ class LiveRunCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -50,7 +53,7 @@ class LiveRunCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'SIGNAL DETECTED',
+                      t('signal_detected', lang).toUpperCase(),
                       style: GoogleFonts.jetBrainsMono(
                         fontSize: 10,
                         color: TrembleTheme.rose.withValues(alpha: 0.7),
@@ -92,7 +95,7 @@ class LiveRunCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Wave',
+                        t('wave', lang),
                         style: GoogleFonts.jetBrainsMono(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,

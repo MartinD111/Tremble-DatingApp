@@ -86,6 +86,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     // ── Wave Match Reveal Listener ────────────────────────────────────────
     // Reads the activeMatchesStream and triggers the reveal screen exactly once
     // per match by atomically marking seenBy BEFORE navigating.
@@ -819,6 +820,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showRunRecapPrompt() {
+    final lang = ref.read(appLanguageProvider);
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -851,7 +853,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'TEK ZAKLJUČEN',
+                          t('run_finished_title', lang),
                           style: GoogleFonts.jetBrainsMono(
                             fontSize: 10,
                             color: TrembleTheme.rose.withValues(alpha: 0.7),
@@ -861,7 +863,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Lep tek je bil. Poglej, če se je kje zaiskrilo.',
+                          t('run_finished_sub', lang),
                           style: TrembleTheme.displayFont(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -896,7 +898,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   color: Colors.white, size: 16),
                               const SizedBox(width: 8),
                               Text(
-                                'Poglej koga si srečal',
+                                t('run_finished_action', lang),
                                 style: GoogleFonts.jetBrainsMono(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,

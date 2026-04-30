@@ -723,7 +723,7 @@ export const onRunEncounter = onDocumentCreated(
         
         let isRepeatEncounter = false;
         if (prevTimestampStr) {
-            const prevTimestamp = parseInt(prevTimestampStr, 10);
+            const prevTimestamp = parseInt(prevTimestampStr as string, 10);
             // If previous encounter was more than 1 hour ago (different hours)
             if (now - prevTimestamp > 3600000) {
                 isRepeatEncounter = true;

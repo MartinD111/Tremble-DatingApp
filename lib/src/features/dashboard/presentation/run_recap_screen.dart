@@ -8,6 +8,7 @@ import '../../../shared/ui/glass_card.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../data/run_club_repository.dart';
+import '../../../core/translations.dart';
 
 class RunRecapScreen extends ConsumerWidget {
   const RunRecapScreen({super.key});
@@ -15,6 +16,7 @@ class RunRecapScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider);
+    final lang = ref.watch(appLanguageProvider);
     if (user == null) return const SizedBox.shrink();
 
     final activeAsync = ref.watch(recentRunCrossesProvider(user.id));
@@ -47,7 +49,7 @@ class RunRecapScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 16),
                         Text(
-                          'POVZETEK TEKA',
+                          t('run_recap', lang).toUpperCase(),
                           style: GoogleFonts.jetBrainsMono(
                             fontSize: 13,
                             color: TrembleTheme.rose,
@@ -64,7 +66,7 @@ class RunRecapScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'AKTIVNI SIGNALI: ${activeAsync.valueOrNull?.length ?? 0}',
+                          '${t('active_signals', lang).toUpperCase()}: ${activeAsync.valueOrNull?.length ?? 0}',
                           style: GoogleFonts.jetBrainsMono(
                             fontSize: 12,
                             color: Theme.of(context)
@@ -76,7 +78,7 @@ class RunRecapScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Pravilo Momentum: Signali potečejo 10 minut po srečanju. Ukrepaj zdaj ali nikoli.',
+                          '${t('momentum_rule', lang)}: ${t('momentum_desc', lang)}',
                           style: GoogleFonts.instrumentSans(
                             fontSize: 12,
                             color: TrembleTheme.rose.withValues(alpha: 0.8),
@@ -141,7 +143,7 @@ class RunRecapScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'ZGODOVINA TEKA',
+                      t('history', lang).toUpperCase(),
                       style: GoogleFonts.jetBrainsMono(
                         fontSize: 11,
                         color: Theme.of(context)
@@ -154,7 +156,7 @@ class RunRecapScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Seznam oseb, ki so ustrezale tvojim kriterijem.',
+                      t('history_subtitle', lang),
                       style: GoogleFonts.instrumentSans(
                         fontSize: 11,
                         color: Theme.of(context)
@@ -193,7 +195,7 @@ class RunRecapScreen extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: Text(
-                        'Nič se ni premaknilo.',
+                        t('no_encounters_history', lang),
                         style: GoogleFonts.jetBrainsMono(
                           fontSize: 11,
                           color: Theme.of(context)
@@ -271,6 +273,7 @@ class _RecapItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(publicProfileProvider(partnerId));
+    final lang = ref.watch(appLanguageProvider);
 
     return profileAsync.when(
       data: (profile) => GestureDetector(
@@ -335,7 +338,7 @@ class _RecapItem extends ConsumerWidget {
                 ),
                 if (isHistory)
                   Text(
-                    'ZAMUJENO',
+                    t('missed', lang).toUpperCase(),
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 10,
                       color: Theme.of(context)
@@ -348,7 +351,7 @@ class _RecapItem extends ConsumerWidget {
                   )
                 else if (iWaved)
                   Text(
-                    'WAVE POSLAN',
+                    t('run_wave_sent', lang).toUpperCase(),
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 10,
                       color: TrembleTheme.rose.withValues(alpha: 0.6),
@@ -373,7 +376,7 @@ class _RecapItem extends ConsumerWidget {
                               color: Colors.white, size: 14),
                           const SizedBox(width: 5),
                           Text(
-                            'Wave',
+                            t('wave', lang),
                             style: GoogleFonts.jetBrainsMono(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,

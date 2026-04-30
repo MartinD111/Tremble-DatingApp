@@ -10,6 +10,7 @@ import 'package:tremble/src/features/dashboard/application/warmth_controller.dar
 import 'package:tremble/src/features/dashboard/domain/warmth_direction.dart';
 import 'package:tremble/src/features/dashboard/application/radar_search_session.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
+import '../../../../core/translations.dart';
 
 /// Compact bottom-anchored search controller for an active mutual-wave session.
 ///
@@ -72,6 +73,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
     final isUrgent = _remaining.inMinutes < 5;
     final timerColor = isUrgent ? colorScheme.primary : colorScheme.onSurface;
     final warmth = ref.watch(warmthControllerProvider);
+    final lang = ref.watch(appLanguageProvider);
 
     final pill = GlassCard(
       opacity: 0.18,
@@ -113,7 +115,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
                       size: 14, color: colorScheme.onSurface),
                   const SizedBox(width: 6),
                   Text(
-                    'STOP',
+                    t('stop', lang).toUpperCase(),
                     style: GoogleFonts.instrumentSans(
                       color: colorScheme.onSurface,
                       fontSize: 13,
@@ -136,7 +138,10 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
         if (widget.session.showMutualFlash)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: _MutualWaveFlash(primary: colorScheme.primary),
+            child: _MutualWaveFlash(
+              primary: colorScheme.primary,
+              lang: lang,
+            ),
           ),
         // Warmth Indicator (Hot/Cold Navigation)
         _warmthIndicator(warmth, colorScheme),
@@ -155,7 +160,8 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
     if (direction == WarmthDirection.neutral) return const SizedBox.shrink();
 
     final isWarmer = direction == WarmthDirection.warmer;
-    final label = isWarmer ? 'GETTING CLOSER' : 'MOVING AWAY';
+    final lang = ref.watch(appLanguageProvider);
+    final label = isWarmer ? t('getting_closer', lang) : t('moving_away', lang);
     final color = isWarmer
         ? const Color(0xFFF4436C)
         : colorScheme.onSurface.withValues(alpha: 0.5);
@@ -188,8 +194,12 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
 
 class _MutualWaveFlash extends StatelessWidget {
   final Color primary;
+  final String lang;
 
-  const _MutualWaveFlash({required this.primary});
+  const _MutualWaveFlash({
+    required this.primary,
+    required this.lang,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +224,7 @@ class _MutualWaveFlash extends StatelessWidget {
           const Icon(LucideIcons.sparkles, size: 14, color: Colors.white),
           const SizedBox(width: 6),
           Text(
-            'Mutual Wave! Find them.',
+            t('mutual_wave_find', lang),
             style: GoogleFonts.playfairDisplay(
               color: Colors.white,
               fontSize: 13,

@@ -41,27 +41,22 @@ class _RadarScheduleSheetState extends ConsumerState<_RadarScheduleSheet> {
     _draft = ref.read(radarScheduleProvider);
   }
 
-  String _t(String key) {
-    final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
-    return t(key, lang);
-  }
-
-  String _weekdayLabel(int weekday) {
+  String _weekdayLabel(int weekday, String lang) {
     switch (weekday) {
       case DateTime.monday:
-        return _t('monday');
+        return t('monday', lang);
       case DateTime.tuesday:
-        return _t('tuesday');
+        return t('tuesday', lang);
       case DateTime.wednesday:
-        return _t('wednesday');
+        return t('wednesday', lang);
       case DateTime.thursday:
-        return _t('thursday');
+        return t('thursday', lang);
       case DateTime.friday:
-        return _t('friday');
+        return t('friday', lang);
       case DateTime.saturday:
-        return _t('saturday');
+        return t('saturday', lang);
       case DateTime.sunday:
-        return _t('sunday');
+        return t('sunday', lang);
       default:
         return '?';
     }
@@ -121,7 +116,7 @@ class _RadarScheduleSheetState extends ConsumerState<_RadarScheduleSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final brandRose = Theme.of(context).colorScheme.primary;
-    final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
+    final lang = ref.watch(appLanguageProvider);
 
     final sortedWeekdays = _draft.entries.keys.toList()..sort();
     final weekendMissing = <int>[
@@ -151,7 +146,7 @@ class _RadarScheduleSheetState extends ConsumerState<_RadarScheduleSheet> {
           const SizedBox(height: 20),
           // Title
           Text(
-            _t('schedule_radar'),
+            t('schedule_radar', lang),
             style: GoogleFonts.instrumentSans(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -163,7 +158,7 @@ class _RadarScheduleSheetState extends ConsumerState<_RadarScheduleSheet> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
-              _t('schedule_radar_sub'),
+              t('schedule_radar_sub', lang),
               textAlign: TextAlign.center,
               style: GoogleFonts.instrumentSans(
                 fontSize: 13,
@@ -182,7 +177,7 @@ class _RadarScheduleSheetState extends ConsumerState<_RadarScheduleSheet> {
                   for (final wd in sortedWeekdays)
                     _DayPill(
                       key: ValueKey('day-$wd'),
-                      label: _weekdayLabel(wd),
+                      label: _weekdayLabel(wd, lang),
                       entry: _draft.entries[wd]!,
                       isDark: isDark,
                       textColor: textColor,
@@ -215,7 +210,7 @@ class _RadarScheduleSheetState extends ConsumerState<_RadarScheduleSheet> {
                   for (final wd in weekendMissing)
                     _AddDayPill(
                       key: ValueKey('add-$wd'),
-                      label: _weekdayLabel(wd),
+                      label: _weekdayLabel(wd, lang),
                       isDark: isDark,
                       textColor: textColor,
                       onTap: () => _addWeekday(wd),
@@ -437,36 +432,41 @@ class _AddDayPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.04)
-              : Colors.black.withValues(alpha: 0.02),
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: isDark ? Colors.white12 : Colors.black12,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(LucideIcons.plus,
-                size: 18, color: isDark ? Colors.white54 : Colors.black45),
-            const SizedBox(width: 12),
-            Text(
-              'Add $label',
-              style: GoogleFonts.instrumentSans(
-                color: isDark ? Colors.white54 : Colors.black45,
-                fontWeight: FontWeight.w500,
+    return Consumer(
+      builder: (context, ref, child) {
+        final lang = ref.watch(appLanguageProvider);
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : Colors.black.withValues(alpha: 0.02),
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(
+                color: isDark ? Colors.white12 : Colors.black12,
               ),
             ),
-          ],
-        ),
-      ),
+            child: Row(
+              children: [
+                Icon(LucideIcons.plus,
+                    size: 18, color: isDark ? Colors.white54 : Colors.black45),
+                const SizedBox(width: 12),
+                Text(
+                  '${t('add', lang)} $label',
+                  style: GoogleFonts.instrumentSans(
+                    color: isDark ? Colors.white54 : Colors.black45,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
