@@ -31,6 +31,11 @@ export {
     migrateMatchTypes,
 } from "./modules/matches/matches.functions";
 
+export {
+    requestPulseIntercept,
+    getPulseIntercept,
+} from "./modules/matches/intercept.functions";
+
 // ── Uploads Module (Cloudflare R2) ───────────────────────
 export { generateUploadUrl } from "./modules/uploads/uploads.functions";
 

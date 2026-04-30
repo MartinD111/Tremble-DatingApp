@@ -14,6 +14,7 @@ import '../../../core/theme_provider.dart';
 import '../../../core/consent_service.dart';
 import 'widgets/registration_steps/intro_slide_step.dart';
 import 'widgets/registration_steps/name_step.dart';
+import 'widgets/registration_steps/phone_step.dart';
 import 'widgets/registration_steps/gender_step.dart';
 import 'widgets/registration_steps/status_step.dart';
 import 'widgets/registration_steps/exercise_step.dart';
@@ -52,28 +53,29 @@ import '../../../shared/ui/tremble_logo.dart';
 // 4  : Birthday
 // 5  : Email / Password / Location  (skipped for Google users)
 // 6  : Name
-// 7  : Gender
-// 8  : Height
-// 9  : Status
-// 10 : Exercise
-// 11 : Drinking
-// 12 : Smoking
-// 13 : Children
-// 14 : Introversion
-// 15 : Sleep
-// 16 : Pets
-// 17 : Religion
-// 18 : Ethnicity
-// 19 : Hair colour
-// 20 : Political affiliation
-// 21 : Languages
-// 22 : Dating preferences
-// 23 : What to meet
-// 24 : Hobbies
-// 25 : Photos
-// 26 : Android System Integration (Android only — skipped on iOS)
-// 26 : Consent                    (iOS) / 27 : Consent (Android)
-// 27 : Ritual                     (iOS) / 28 : Ritual  (Android)
+// 7  : Phone
+// 8  : Gender
+// 9  : Height
+// 10 : Status
+// 11 : Exercise
+// 12 : Drinking
+// 13 : Smoking (Nicotine)
+// 14 : Children
+// 15 : Introversion
+// 16 : Sleep
+// 17 : Pets
+// 18 : Religion
+// 19 : Ethnicity
+// 20 : Hair colour
+// 21 : Political affiliation
+// 22 : Languages
+// 23 : Dating preferences
+// 24 : What to meet
+// 25 : Hobbies
+// 26 : Photos
+// 27 : Android System Integration (Android only — skipped on iOS)
+// 27 : Consent                    (iOS) / 28 : Consent (Android)
+// 28 : Ritual                     (iOS) / 29 : Ritual  (Android)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class RegistrationFlow extends ConsumerStatefulWidget {
@@ -127,6 +129,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // Name
   final TextEditingController _nameController = TextEditingController();
+
+  // Phone
+  final TextEditingController _phoneController = TextEditingController();
 
   // Gender
   String? _selectedGender; // 'male' | 'female' | 'non_binary'
@@ -211,6 +216,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   void _restoreStateFromUser(AuthUser appUser) {
     _emailController.text = appUser.email ?? '';
     _nameController.text = appUser.name ?? '';
+    _phoneController.text = appUser.phoneNumber ?? '';
     if (appUser.birthDate != null) {
       _birthDate = appUser.birthDate;
       _pickerMonth = _birthDate!.month;
@@ -298,6 +304,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             : 20,
         birthDate: _birthDate,
         height: _heightCm,
+        phoneNumber: _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
+            : null,
         gender: _selectedGender ?? 'male',
         location: _locationController.text.isNotEmpty
             ? _locationController.text
@@ -724,6 +733,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                                 false))
                         ? _buildEmailVerificationBanner()
                         : null,
+                  ),
+                  PhoneStep(
+                    phoneController: _phoneController,
+                    onBack: () => _goToPage(_currentPage - 1),
+                    onNext: _nextPage,
+                    onSkip: _nextPage,
+                    tr: tr,
                   ),
                   GenderStep(
                     selectedGender: _selectedGender,
@@ -1668,6 +1684,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         age: _birthDate != null ? _calcAge(_birthDate!) : 20,
         birthDate: _birthDate,
         height: _heightCm, // Included height in cm
+        phoneNumber: _phoneController.text.trim().isNotEmpty
+            ? _phoneController.text.trim()
+            : null,
         gender: _selectedGender ?? 'male',
         location: _locationController.text.isNotEmpty
             ? _locationController.text
@@ -1748,7 +1767,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         await Future.delayed(const Duration(milliseconds: 2500));
         if (mounted) {
           setState(() => _isHardLocking = false);
-          _goToPage(27); // RitualStep — "SIGNAL LOCKED"
+          _goToPage(
+              Platform.isAndroid ? 29 : 28); // RitualStep — "SIGNAL LOCKED"
         }
       }
     } catch (e) {
@@ -1772,7 +1792,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           await Future.delayed(const Duration(milliseconds: 2500));
           if (mounted) {
             setState(() => _isHardLocking = false);
-            _goToPage(27); // RitualStep — "SIGNAL LOCKED"
+            _goToPage(
+                Platform.isAndroid ? 29 : 28); // RitualStep — "SIGNAL LOCKED"
           }
         }
       } else {

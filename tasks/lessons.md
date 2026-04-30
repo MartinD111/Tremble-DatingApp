@@ -1,5 +1,17 @@
 # Permanent Project Knowledge (Lessons)
 
+**Rule #55 — Ephemeral Media Cleanup Strategy.**
+[2026-04-30] "View-once" photos (Pulse Intercept F12) MUST be deleted server-side immediately upon the recipient triggering the `viewedAt` timestamp. UI-level hiding is insufficient for GDPR/MPC compliance. Always use a Cloud Function trigger to purge the file from Storage to ensure zero persistence.
+Source: Pulse Intercept (F12) Planning, April 2026.
+
+**Rule #56 — Zero-Chat Privacy Architecture.**
+[2026-04-30] To maintain the "Privacy-by-Architecture" standard and avoid GDPR complexities of private message storage, Tremble strictly forbids free-text chatrooms. Communication during the Trembling Window must be restricted to atomic, actionable buttons (e.g., [Send Phone]) and ephemeral visual aids.
+Source: Pulse Intercept (F12) Planning, April 2026.
+
+**Rule #57 — Assistance Contact Sharing UX.**
+[2026-04-30] Collection of phone numbers during onboarding is required for legitimacy but remains optional for the "Send Phone" feature. If a user skips phone entry, the sharing button in the Trembling Window must be disabled/hidden with a clear explanation, rather than prompting for input mid-interaction.
+Source: Pulse Intercept (F12) Planning, April 2026.
+
 **Rule #52 — Using `ColorFiltered` for "Missed Opportunities" UX.**
 [2026-04-30] To visually communicate a missed opportunity (expired interaction window), use a grayscale `ColorFiltered` matrix (Greyscale) on the entire card. This immediately signals to the user that the encounter is "cold" and historical, creating a psychological drive to be more active (or upgrade to Premium) next time.
 Source: Run Club Recap (F6) Implementation, April 2026.

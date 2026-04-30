@@ -17,7 +17,7 @@
 
 | | |
 |---|---|
-| Verzija | v2.0 |
+| Verzija | v3.0 |
 | Datum | April 2026 |
 | Features | 11 (F1–F11) + addons |
 | Faze | 4 |
@@ -58,6 +58,9 @@
 
 ### Faza D — Teden 14–16
 11. **F7** — Valentine Promo (time-gated, deploy pred 1. februarjem)
+
+### Faza E — Next (Expansion)
+12. **F12** — Pulse Intercept (Phone & Ephemeral Photo) ✅ DONE
 
 ---
 
@@ -439,7 +442,7 @@ Strictly ephemeral. No GPS maps. No historical tracks. No Strava. Tremble detect
 
 ### Phase 6.5: Verification & Polish
 *   **Physical Testing:** Samsung S25 Ultra vs iPhone 15 Pro crossing test.
-*   **Battery Audit:** Verify <1% battery consumption over a 1-hour run.
+*   **Battery Audit:** Verify 3–4% battery consumption over a 1-hour active run session (GPS + BLE hybrid).
 *   **Privacy Audit:** Ensure zero GPS traces are left in Firestore after the 10-minute expiry.
 
 ### Firestore Schema (Handshake)
@@ -897,11 +900,47 @@ function smokingCompatible(user1Prefs, user2Prefs, filter) {
   }
   return true;
 }
-// Smoking je SOFT filter — ne izključi matcha, zniža score če ni match
+
+---
+
+## F12 — Pulse Intercept (Assistance & Visual Aid)
+
+**Effort:** L · **Risk:** HIGH (PII, Ephemeral Media)
+
+### Problem
+Med "Trembling Window" (F4) uporabniki včasih potrebujejo dodatno pomoč za fizično lociranje partnerja, ne da bi se pri tem zapletli v klasičen chat.
+
+### Rešitev
+Dva atomska gumba na Radar overlay-u:
+1. **[Send Phone]**: Pošlje svojo številko za neposreden klic (asistenca).
+2. **[Send Photo]**: Pošlje "view-once" sliko okolice (orientacija).
+
+### Onboarding & GDPR
+* **Onboarding:** Dodan `PhoneStep`. Če uporabnik preskoči, gumb "Send Phone" kasneje ni na voljo.
+* **Privacy Policy:** Posodobitev za hrambo PII (tel. št.) in efemerno obdelavo slik.
+* **Zero Chat Policy:** Nobenega prostega vnosa besedila. Komunikacija je omejena na gumbe in slike.
+
+### Firestore Schema
+```javascript
+// users/{uid}
+phoneNumber: "+386..." | null
+
+// interactions/{id}
+{
+  fromUid: "...",
+  toUid: "...",
+  type: "phone" | "photo_once",
+  payload: "+386..." | "storage_path",
+  createdAt: ServerTimestamp,
+  viewedAt: Timestamp | null,
+  expiresAt: Timestamp // 10 min TTL
+}
 ```
 
-### Privacy Policy
-Dodaj v Privacy Policy pod "What data we collect": *"Lifestyle preferences including smoking habits, used solely for user-controlled filtering."*
+### Tehnična izvedba (Snap-style)
+* **Photo Storage:** Slike se nalagajo v ločen bucket z minimalnim TTL.
+* **View Once Logic:** Cloud Function ob posodobitvi `viewedAt` (ko prejemnik odpre sliko) takoj izbriše datoteko iz storage-a in zapre dostop.
+* **Notifications:** High-priority push: *"Ana ti je poslala svojo številko za pomoč! 📞"* ali *"Ana ti pošilja sliko okolice! 📷"*.
 
 ---
 

@@ -1,4 +1,4 @@
-# MPC v5 — Tremble Mobile App
+# MPC v5.1 — Tremble Mobile App
 
 > **Role:** Technical Co-Founder & Lead Mobile Engineer
 > **Standard:** Production-grade. No shortcuts that create debt.
@@ -17,15 +17,17 @@ When this file is detected, immediately adopt the role of **Technical Co-Founder
 
 ---
 
-## Active Blockers (as of 2026-04)
+## Active Blockers (as of 2026-04-30)
 
 | ID | Blocker | Impact |
 |----|---------|--------|
-| ADR-001 | `flutter_blue_plus` not wired in `background_service.dart` — still mock timer | iOS TestFlight gated |
-| MAP-002 | Cloud Functions enforced App Check | Requires registered Debug Tokens for all devs |
-| MAP-003 | Maps API missing in Prod project (`am---dating-app`) | Launch gate |
+| BLOCKER-003 | RevenueCat / Legal Setup | Phase 8 (Paywall) on hold until company registration |
+| SEC-001 | App Check enforcement | Done for backend, needs verification in every new PR |
 
-These resolve in this order. MAP-002 requires manual token registration.
+**Resolved:**
+- ADR-001 (BLE wiring): ✅ RESOLVED (NativeMotionService integrated).
+- D-37 (3-State Map): ✅ RESOLVED (Verified on physical S25 Ultra).
+- F5 (Strava): ✅ REMOVED (Privacy alignment).
 
 ---
 
@@ -108,13 +110,11 @@ Staleness rule: if this block is >48h old, re-validate before executing.
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| 1 | Foundation — Architecture, Theme, Nav | ✅ |
-| 2 | Core UX — Profiles, Swiping, Matching | ✅ |
-| 3 | Proximity Engine — Real BLE + Geolocator | 🔴 Blocked (ADR-001) |
-| 4 | Messaging — Real-time Chat, Push | ⏳ |
-| 5 | Matching Algorithm | 🟡 In progress |
-| 6 | Infra & Security — App Check, Firestore Rules | ✅ Done |
-| 7 | Launch Polish — Paywall, Store Deploy | ⏳ |
+| A | Foundation — Architecture, Theme, Nav | ✅ |
+| B | Core UX — Profiles, Events, Gym Mode | ✅ |
+| C | Proximity Engine — Run Club, Hot/Cold | ✅ |
+| E | Next — Pulse Intercept (F12) | 🟡 In progress |
+| 8 | Paywall — RevenueCat | 🔴 Blocked (BLOCKER-003) |
 
 Phase does not close until all exit criteria pass.
 
@@ -127,18 +127,13 @@ Source: Multi-Env Setup, March 2026.
 
 **Rule #2** — Do not bypass Riverpod strictly typed state. Never mutate state directly in UI layer.
 
-**Rule #4** — Server-side App Check is ENFORCED. Every new Cloud Function must have `enforceAppCheck: true` and `requireAppCheck(request)` in the middleware.
+**Rule #4** — Server-side App Check is ENFORCED. Every new Cloud Function must have `enforceAppCheck: true`.
 
-**Rule #5** — iOS Map configuration lives in `ios/Flutter/Debug.xcconfig` and `Release.xcconfig`. `ios/Runner/Info.plist` resolves `$(MAPS_API_KEY)` from these files.
+**Rule #55** — F12 Interactions MUST use `expiresAt` (now + 10m) in Firestore. Cloud Function purges data after trigger.
 
-**Rule #33** — Rich notification payloads must use `imageUrl` for FCM Admin SDK to ensure images render in notification shade. Source: Interaction System v2.1, April 2026.
-
-**Rule #34** — Avoid `const` for initialization with dynamic categories in `flutter_local_notifications`. Source: Notification Service Refactor, April 2026.
-
-**Rule #35** — Resolve Android startup "white flash" via `NormalTheme` inheritance from `Theme.Black`. Source: Android Theme Polish, April 2026.
+**Rule #56** — Zero-Chat Policy: Absolutely no free-text chatrooms. All communication is button-triggered.
 
 Add new rules here immediately after any mistake. Format: `**Rule #N** — [rule]. Source: [context], [date].`
-
 
 ---
 
@@ -175,45 +170,13 @@ Add new rules here immediately after any mistake. Format: `**Rule #N** — [rule
 
 ```
 1. SYNC        → context.md + blockers.md + lessons.md. >48h old? Re-validate.
-2. HYPOTHESIZE → Root cause first. "UI stutters" → real problem: expensive build method or bad image cache.
+2. HYPOTHESIZE → Root cause first.
 3. PLAN        → 5-step plan. HIGH/CRITICAL = founder approval before step 4.
-4. EXECUTE     → One logical component at a time. Never mix native changes with UI refactors in the same commit.
-5. VERIFY      → flutter test. flutter analyze (zero warnings). UI change = screenshot or recording.
+4. EXECUTE     → One logical component at a time.
+5. VERIFY      → flutter test. flutter analyze.
 6. REFLECT     → Mistake → lessons.md. Shortcut → blockers.md. Major decision → ADR.
 7. CLOSE       → Update context.md handoff block.
 ```
-
-### 5-Step Plan Template
-
-```markdown
-Plan ID: YYYYMMDD-[feature-name]
-Risk Level: LOW / MEDIUM / HIGH / CRITICAL
-Founder Approval Required: YES / NO
-Branch: feature/[name]
-
-1. OBJECTIVE — one sentence: what does done look like?
-2. SCOPE — files affected + what does NOT change
-3. STEPS — each: one atomic action + verification method
-4. RISKS & TRADEOFFS — what could go wrong, mitigation, debt introduced
-5. VERIFICATION — unit tests, integration tests, device test (BLE if applicable), flutter analyze, coverage target
-```
-
----
-
-## Flutter Verification Protocol
-
-Run in this order after every significant change:
-
-```bash
-flutter analyze
-flutter test
-flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev
-```
-
-For BLE changes, also run on physical device — emulator cannot simulate Bluetooth hardware.
-For Firebase changes, run against emulator suite first: `firebase emulators:start`.
-
-ECC `verification-loop` skill covers JS/TS projects. The above is the Flutter equivalent.
 
 ---
 
@@ -224,20 +187,14 @@ Maintained in `tasks/system_map.md`. Update when structure changes.
 ```
 lib/src/
 ├── core/
-│   ├── ble_service.dart           ← BLE interface (flutter_blue_plus) — ADR-001
-│   ├── background_service.dart    ← Background execution — mock timer pending replacement
-│   └── firebase_options_*.dart    ← Dev/Prod config maps
+│   ├── ble_service.dart           ← BLE interface
+│   ├── background_service.dart    ← Background execution
 ├── features/
-│   ├── auth/                      ← Login, Google Sign-In, Onboarding
-│   ├── dashboard/                 ← Radar, Proximity discovery
-│   ├── matches/                   ← Swipe queue, Match resolution
-│   └── profile/                   ← Bio, Images, Preferences
-└── shared/                        ← GlassCard, Buttons, shared hooks
-
-Infrastructure:
-- Platforms: iOS (Swift base), Android (Kotlin base)
-- Secret Manager: 40 items (Secret Manager, not hardcoded)
-- CI/CD: GitHub Actions (Base64 secret injection, flutter stable channel)
+│   ├── auth/                      ← Login, Onboarding
+│   ├── dashboard/                 ← Radar, Proximity
+│   ├── interactions/              ← Pulse Intercept (F12)
+│   └── profile/                   ← Bio, Images
+└── shared/                        ← GlassCard, Buttons
 ```
 
 ---
@@ -260,33 +217,11 @@ Infrastructure:
 # Enforced at code review. Block PR if violated.
 style_contract:
   - Dark theme by default
-  - Glassmorphism via GlassCard only — not applied globally (causes jank)
-  - Google Fonts only — no system fonts
-  - Animations: radar pulse, match reveal — fluid, never decorative
-  - No Material default blue (#2196F3) — use Tremble brand tokens
-  - Primary rose: #F4436C | Signal yellow: #F5C842 | Deep graphite: #1A1A18 | Warm cream: #FAFAF7
-  - Typography: Playfair Display / Lora / Instrument Sans / JetBrains Mono
+  - Glassmorphism via GlassCard only
+  - Google Fonts only (Inter, Playfair Display)
+  - Animations: radar pulse, match reveal
+  - Primary rose: #F4436C | Signal yellow: #F5C842 | Deep graphite: #1A1A18
 ```
-
----
-
-## Deploy Pipeline
-
-```
-Local (flutter run --flavor dev)
-        ↓
-flutter analyze + flutter test (GitHub Actions)
-        ↓
-Firebase Rules (Emulator suite)
-        ↓
-Beta Build (TestFlight / Play Console Internal)
-        ↓
-Founder sign-off
-        ↓
-Production (flutter build ipa/appbundle --flavor prod)
-```
-
-TestFlight currently gated on ADR-001 (BLE blocker).
 
 ---
 

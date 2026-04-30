@@ -104,13 +104,11 @@ Read this first. Update this last. Every session.
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| 1 | Foundation — Architecture, Theme, Nav | ✅ |
-| 2 | Core UX — Profiles, Swiping, Matching | ✅ |
-| 3 | Proximity Engine — Real BLE + Geolocator | 🔴 Blocked (ADR-001) |
-| 4 | Messaging — Real-time Chat, Push | ⏳ |
-| 5 | Matching Algorithm | 🟡 In progress |
-| 6 | Infra & Security — App Check, Firestore Rules | ✅ DONE |
-| 7 | Launch Polish — Paywall, Store Deploy | ⏳ |
+| A | Foundation — Architecture, Theme, Nav | ✅ |
+| B | Core UX — Profiles, Events, Gym Mode | ✅ |
+| C | Proximity Engine — Run Club, Hot/Cold | ✅ |
+| E | Next — Pulse Intercept (F12) | 🟡 In progress |
+| 8 | Paywall — RevenueCat | 🔴 Blocked (BLOCKER-003) |
 Phase 8 – Notifications           [PENDING] FCM + local notifications
 Phase 9 – Location Permissions    [PENDING] iOS/Android permission flows
 Phase 10 – BLE Background Mode    [PENDING] Background execution strategy
@@ -163,23 +161,20 @@ Phase 24 – Public Launch          [PENDING] App Store + Play Store production
 ```markdown
 ## CRITICAL BLOCKERS
 
-### ADR-001: BLE Integration (flutter_blue_plus wiring)
-**Status:** IN PROGRESS — iOS TestFlight gated  
-**Issue:** Background service still using mock timer instead of real flutter_blue_plus BLE scanning  
-**Impact:** Cannot test proximity detection on real devices; app does not actually scan for nearby users  
-**Root Cause:** flutter_blue_plus integration in background_service.dart incomplete  
-**Unblocking Plan:**
-1. Replace mock Timer with real BLE stream: `flutterBluePlus.scanResults.listen(...)`
-2. Wire RSSI → distance mapping function
-3. Device test: run on two iOS devices, verify radar updates on proximity
-4. Retest on Android with real Bluetooth hardware
-5. TestFlight build gate: pass device test before promoting to beta
-**Owner:** Aleksandar  
-**ETA:** [DATE]
+### BLOCKER-003: RevenueCat / Legal Setup
+**Status:** OPEN
+**Issue:** Phase 8 (Paywall) on hold until company registration and legal entities are established.
+**Action:** Resume when company entity is confirmed.
+
+## RESOLVED BLOCKERS
+
+### ADR-001: BLE Integration (NativeMotionService)
+**Status:** ✅ RESOLVED (2026-04-29)
+**Resolution:** `flutter_blue_plus` successfully integrated via NativeMotionService EventChannel, enabling background state restoration.
 
 ### Firebase App Check Enforcement
 **Status:** ✅ RESOLVED (2026-04-20)
-**Resolution:** All 19 Cloud Functions in `tremble-dev` now use `enforceAppCheck: true` and verify `request.appToken`. All dev devices registered with Debug Tokens. 
+**Resolution:** Enforced in Cloud Functions and Firestore rules.
 
 ## MEDIUM BLOCKERS
 

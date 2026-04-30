@@ -85,6 +85,7 @@ class AuthUser {
   final DateTime? lastWaveFoundAt;
   // null = user has not been asked yet; true/false = explicit choice
   final bool? gymNotificationsEnabled;
+  final String? phoneNumber;
 
   const AuthUser({
     required this.id,
@@ -154,6 +155,7 @@ class AuthUser {
     this.isGenderBasedColor = false,
     this.lastWaveFoundAt,
     this.gymNotificationsEnabled,
+    this.phoneNumber,
   });
 
   // ── Serialization for Cloud Functions API ─────────────────────────────────
@@ -229,6 +231,7 @@ class AuthUser {
       'hasChildren': hasChildren,
       if (gymNotificationsEnabled != null)
         'gymNotificationsEnabled': gymNotificationsEnabled,
+      if (phoneNumber != null) 'phoneNumber': phoneNumber,
     };
   }
 
@@ -333,6 +336,7 @@ class AuthUser {
       hasChildren: data['hasChildren'] as bool?,
       lastWaveFoundAt: _parseDateTime(data['lastWaveFoundAt']),
       gymNotificationsEnabled: data['gymNotificationsEnabled'] as bool?,
+      phoneNumber: data['phoneNumber'] as String?,
       isEmailVerified: emailVerified,
     );
   }
@@ -405,6 +409,7 @@ class AuthUser {
     bool? hasChildren,
     DateTime? lastWaveFoundAt,
     bool? gymNotificationsEnabled,
+    String? phoneNumber,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -480,6 +485,7 @@ class AuthUser {
       lastWaveFoundAt: lastWaveFoundAt ?? this.lastWaveFoundAt,
       gymNotificationsEnabled:
           gymNotificationsEnabled ?? this.gymNotificationsEnabled,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
     );
   }
 }

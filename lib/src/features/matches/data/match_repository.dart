@@ -190,6 +190,26 @@ class MatchRepository {
     });
   }
 
+  /// Request a Pulse Intercept (Phone or Photo).
+  Future<Map<String, dynamic>> requestPulseIntercept({
+    required String targetUid,
+    required String type,
+    String? data,
+  }) async {
+    return await _api.call('requestPulseIntercept', data: {
+      'targetUid': targetUid,
+      'type': type,
+      'data': data,
+    });
+  }
+
+  /// Retrieve a Pulse Intercept sent by a match.
+  Future<Map<String, dynamic>> getPulseIntercept(String senderUid) async {
+    return await _api.call('getPulseIntercept', data: {
+      'senderUid': senderUid,
+    });
+  }
+
   /// Stream that polls for new matches periodically.
   /// Replaces the old mock simulateMatches() with real polling.
   Stream<List<MatchProfile>> watchMatches({
@@ -323,8 +343,9 @@ final matchesStreamProvider = StreamProvider<List<MatchProfile>>((ref) {
 /// Controller to handle user actions (Like/Pass/Greet)
 class MatchController extends StateNotifier<MatchProfile?> {
   final WaveRepository _waveRepo;
+  final MatchRepository _matchRepo;
 
-  MatchController(this._waveRepo) : super(null);
+  MatchController(this._waveRepo, this._matchRepo) : super(null);
 
   void setMatch(MatchProfile? match) => state = match;
   void dismiss() => state = null;
@@ -337,11 +358,32 @@ class MatchController extends StateNotifier<MatchProfile?> {
     state = null;
     return false;
   }
+
+  /// Request Pulse Intercept for a specific match partner.
+  Future<void> requestIntercept({
+    required String targetUid,
+    required String type,
+    String? data,
+  }) async {
+    await _matchRepo.requestPulseIntercept(
+      targetUid: targetUid,
+      type: type,
+      data: data,
+    );
+  }
+
+  /// Retrieve a Pulse Intercept sent by a match.
+  Future<Map<String, dynamic>> fetchIntercept(String senderUid) async {
+    return await _matchRepo.getPulseIntercept(senderUid);
+  }
 }
 
 final matchControllerProvider =
     StateNotifierProvider<MatchController, MatchProfile?>((ref) {
-  return MatchController(ref.watch(waveRepositoryProvider));
+  return MatchController(
+    ref.watch(waveRepositoryProvider),
+    ref.watch(matchRepositoryProvider),
+  );
 });
 
 /// Holds the active [MatchFilterState] — UI writes here to drive filtering.
