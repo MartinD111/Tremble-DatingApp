@@ -10,6 +10,9 @@ class RadarPainter extends CustomPainter {
   final Color brandColor;
   final Color gridColor;
 
+  final double
+      signalPulseProgress; // 0.0→1.0 one-shot expanding ring on run encounter
+
   RadarPainter({
     required this.radarProgress,
     required this.pingProgress,
@@ -18,6 +21,7 @@ class RadarPainter extends CustomPainter {
     this.pingAngle = 0,
     this.brandColor = const Color(0xFFF4436C),
     this.gridColor = Colors.white,
+    this.signalPulseProgress = 0.0,
   });
 
   @override
@@ -109,6 +113,21 @@ class RadarPainter extends CustomPainter {
     if (pingDistance != null) {
       _drawSonarPing(canvas, center, maxRadius);
     }
+
+    // Run Club signal pulse — single fast-expanding ring, fades in ~500ms
+    if (signalPulseProgress > 0 && signalPulseProgress < 1.0) {
+      _drawSignalPulse(canvas, center, maxRadius);
+    }
+  }
+
+  void _drawSignalPulse(Canvas canvas, Offset center, double maxRadius) {
+    final radius = signalPulseProgress * maxRadius * 1.2;
+    final opacity = (1.0 - signalPulseProgress).clamp(0.0, 1.0) * 0.7;
+    final pulsePaint = Paint()
+      ..color = brandColor.withValues(alpha: opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(center, radius, pulsePaint);
   }
 
   void _drawSonarPing(Canvas canvas, Offset center, double maxRadius) {
@@ -149,6 +168,7 @@ class RadarPainter extends CustomPainter {
         oldDelegate.pingProgress != pingProgress ||
         oldDelegate.activationProgress != activationProgress ||
         oldDelegate.pingDistance != pingDistance ||
-        oldDelegate.pingAngle != pingAngle;
+        oldDelegate.pingAngle != pingAngle ||
+        oldDelegate.signalPulseProgress != signalPulseProgress;
   }
 }

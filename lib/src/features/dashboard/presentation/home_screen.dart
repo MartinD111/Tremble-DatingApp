@@ -206,6 +206,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       orElse: () => null,
     );
 
+    // Signal pulse key: increments each time a new run encounter arrives,
+    // triggering the one-shot expanding ring on the radar canvas.
+    final int signalPulseKey = runCrossesAsync.maybeWhen(
+      data: (docs) => docs.length,
+      orElse: () => 0,
+    );
+
     // Define Screens and Nav Items
     final List<Widget> screens;
     final List<LiquidNavItem> navItems;
@@ -224,7 +231,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             radarMode,
             batteryLevel,
             activeMatch,
-            devSim),
+            devSim,
+            signalPulseKey),
         const TrembleMapScreen(),
         const MatchesScreen(),
         const SettingsScreen(),
@@ -250,7 +258,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             radarMode,
             batteryLevel,
             activeMatch,
-            devSim),
+            devSim,
+            signalPulseKey),
         const MatchesScreen(),
         const SettingsScreen(),
       ];
@@ -473,7 +482,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       String radarMode,
       int batteryLevel,
       wave_match.Match? activeMatch,
-      DevSimulationState devSim) {
+      DevSimulationState devSim,
+      int signalPulseKey) {
     final isDegraded = radarMode == 'degraded';
     final lang = ref.watch(appLanguageProvider);
     final bool isDevSearchActive = devSim.isMutualWaveActive;
@@ -512,6 +522,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       pingDistance: pingDistance,
                       pingAngle: pingAngle,
                       brandColor: Theme.of(context).primaryColor,
+                      signalPulseKey: signalPulseKey,
                     ),
                   ),
                   if (isSearchActive)

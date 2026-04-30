@@ -12,6 +12,10 @@ class RadarAnimation extends StatefulWidget {
   final double? pingAngle; // angle in radians for ping position
   final Color? brandColor;
 
+  /// Increment this value to trigger a one-shot signal pulse ring on the radar.
+  /// Typically driven by the count of active run encounters.
+  final int signalPulseKey;
+
   const RadarAnimation({
     super.key,
     this.isScanning = true,
@@ -19,6 +23,7 @@ class RadarAnimation extends StatefulWidget {
     this.pingDistance,
     this.pingAngle,
     this.brandColor,
+    this.signalPulseKey = 0,
   });
 
   @override
@@ -31,6 +36,7 @@ class _RadarAnimationState extends State<RadarAnimation>
   late final AnimationController _pingController;
   late final AnimationController _logoController;
   late final AnimationController _activationController;
+  late final AnimationController _signalPulseController;
   late final Animation<double> _logoOpacity;
   double _lastPingValue = 0.0;
 
@@ -58,6 +64,11 @@ class _RadarAnimationState extends State<RadarAnimation>
     );
     _logoOpacity = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
+    );
+
+    _signalPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
     );
 
     if (widget.isScanning) {
@@ -122,6 +133,12 @@ class _RadarAnimationState extends State<RadarAnimation>
     } else if (widget.pingDistance == null && _pingController.isAnimating) {
       _pingController.stop();
     }
+
+    // Fire one-shot signal pulse when a new run encounter is detected.
+    if (widget.signalPulseKey != oldWidget.signalPulseKey &&
+        widget.signalPulseKey > 0) {
+      _signalPulseController.forward(from: 0.0);
+    }
   }
 
   @override
@@ -130,6 +147,7 @@ class _RadarAnimationState extends State<RadarAnimation>
     _pingController.dispose();
     _logoController.dispose();
     _activationController.dispose();
+    _signalPulseController.dispose();
     super.dispose();
   }
 
@@ -140,7 +158,8 @@ class _RadarAnimationState extends State<RadarAnimation>
         _radarController,
         _pingController,
         _logoController,
-        _activationController
+        _activationController,
+        _signalPulseController,
       ]),
       builder: (context, child) {
         return Stack(
@@ -155,6 +174,7 @@ class _RadarAnimationState extends State<RadarAnimation>
                 pingAngle: widget.pingAngle ?? pi / 4,
                 brandColor: widget.brandColor ?? Theme.of(context).primaryColor,
                 gridColor: Theme.of(context).colorScheme.onSurface,
+                signalPulseProgress: _signalPulseController.value,
               ),
               size: Size.infinite,
             ),

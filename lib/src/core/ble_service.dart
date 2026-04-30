@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -194,6 +195,11 @@ class BleService {
       {bool isPartnerRunning = false}) async {
     if (_isHighFrequency)
       return; // Skip Firestore logging during high-freq lock session
+
+    // Distinct haptic for Run Club encounters — medium impact vs. light for standard pings.
+    if (isPartnerRunning) {
+      HapticFeedback.mediumImpact();
+    }
 
     final remoteDeviceId = result.device.remoteId.str;
 
