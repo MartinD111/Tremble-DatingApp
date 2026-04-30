@@ -5,7 +5,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../../core/theme.dart';
 import '../../../../core/translations.dart';
-import '../../../auth/data/auth_repository.dart';
 import '../../application/radar_schedule_controller.dart';
 
 /// Bottom-sheet modal for configuring the weekly radar auto-activation schedule.

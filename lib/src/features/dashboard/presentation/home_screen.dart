@@ -86,7 +86,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     // ── Wave Match Reveal Listener ────────────────────────────────────────
     // Reads the activeMatchesStream and triggers the reveal screen exactly once
     // per match by atomically marking seenBy BEFORE navigating.

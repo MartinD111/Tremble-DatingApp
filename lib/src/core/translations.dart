@@ -665,7 +665,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Run Club ---
     'run_recap': 'Run Recap',
     'momentum_rule': 'Momentum Rule',
-    'momentum_desc': 'Signals expire 10 minutes after encounter. Act now or never.',
+    'momentum_desc':
+        'Signals expire 10 minutes after encounter. Act now or never.',
     'active_signals': 'Active Signals',
     'history': 'History',
     'run_wave_sent': 'Wave sent',
@@ -1240,7 +1241,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Run Club ---
     'run_recap': 'Povzetek teka',
     'momentum_rule': 'Pravilo Momentum',
-    'momentum_desc': 'Signali potečejo 10 minut po srečanju. Ukrepaj zdaj ali nikoli.',
+    'momentum_desc':
+        'Signali potečejo 10 minut po srečanju. Ukrepaj zdaj ali nikoli.',
     'active_signals': 'Aktivni signali',
     'history': 'Zgodovina',
     'run_wave_sent': 'Val poslan',
@@ -1588,7 +1590,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Run Club ---
     'run_recap': 'Run Recap',
     'momentum_rule': 'Momentum Rule',
-    'momentum_desc': 'Signals expire 10 minutes after encounter. Act now or never.',
+    'momentum_desc':
+        'Signals expire 10 minutes after encounter. Act now or never.',
     'active_signals': 'Active Signals',
     'history': 'History',
     'run_wave_sent': 'Wave sent',
@@ -1885,7 +1888,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Run Club ---
     'run_recap': 'Run Recap',
     'momentum_rule': 'Momentum Rule',
-    'momentum_desc': 'Signals expire 10 minutes after encounter. Act now or never.',
+    'momentum_desc':
+        'Signals expire 10 minutes after encounter. Act now or never.',
     'active_signals': 'Active Signals',
     'history': 'History',
     'run_wave_sent': 'Wave sent',
@@ -2133,7 +2137,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Run Club ---
     'run_recap': 'Run Recap',
     'momentum_rule': 'Momentum Rule',
-    'momentum_desc': 'Signals expire 10 minutes after encounter. Act now or never.',
+    'momentum_desc':
+        'Signals expire 10 minutes after encounter. Act now or never.',
     'active_signals': 'Active Signals',
     'history': 'History',
     'run_wave_sent': 'Wave sent',
@@ -2371,7 +2376,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Run Club ---
     'run_recap': 'Rezime trčanja',
     'momentum_rule': 'Pravilo Momentum',
-    'momentum_desc': 'Signali ističu 10 minuta nakon susreta. Djeluj sad ili nikad.',
+    'momentum_desc':
+        'Signali ističu 10 minuta nakon susreta. Djeluj sad ili nikad.',
     'active_signals': 'Aktivni signali',
     'history': 'Povijest',
     'run_wave_sent': 'Val poslan',
@@ -2623,7 +2629,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Run Club ---
     'run_recap': 'Rezime trčanja',
     'momentum_rule': 'Pravilo Momentum',
-    'momentum_desc': 'Signali ističu 10 minuta nakon susreta. Deluj sad ili nikad.',
+    'momentum_desc':
+        'Signali ističu 10 minuta nakon susreta. Deluj sad ili nikad.',
     'active_signals': 'Aktivni signali',
     'history': 'Istorija',
     'run_wave_sent': 'Talas poslat',
@@ -2874,7 +2881,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Run Club ---
     'run_recap': 'Run Recap',
     'momentum_rule': 'Momentum Rule',
-    'momentum_desc': 'Signals expire 10 minutes after encounter. Act now or never.',
+    'momentum_desc':
+        'Signals expire 10 minutes after encounter. Act now or never.',
     'active_signals': 'Active Signals',
     'history': 'History',
     'run_wave_sent': 'Wave sent',
