@@ -1,21 +1,20 @@
-## Session State — 2026-04-30 10:48
-- Active Task: Finalized Run Club Implementation
+## Session State — 2026-04-30 16:30
+- Active Task: Phase 6.2 + 6.3 complete — Run Club BLE wiring + tool-first UI
 - Environment: Dev
-- Modified Files: `functions/src/modules/proximity/proximity.functions.ts`, `functions/src/index.ts`, `lib/src/features/dashboard/data/run_club_repository.dart`, `lib/src/features/dashboard/presentation/home_screen.dart`, `lib/src/features/dashboard/presentation/widgets/live_run_card.dart`
-- Open Problems: None. F6 is fully implemented and end-to-end logical flow is verified.
-- System Status: Build passing (Native Bridges registered), zero analyze errors.
+- Modified Files: `lib/src/core/ble_service.dart`, `lib/src/core/background_service.dart`, `lib/src/features/dashboard/presentation/home_screen.dart`, `lib/src/features/dashboard/presentation/widgets/live_run_card.dart`, `lib/src/shared/widgets/radar_painter.dart`, `lib/src/features/dashboard/presentation/radar_animation.dart`
+- Open Problems: None. Physical device test pending.
+- System Status: Build passing, zero analyze errors. Two commits: b0c02ad (6.2), d86edbe (6.3).
 
 ## Session Handoff
-- Completed: 
-    - Updated `activeRunCrossesProvider` to filter out user-dismissed encounters (`dismissedBy`).
-    - Added `onRunCrossUpdated` Cloud Function to listen for mutual `signals` = `true`.
-    - Handled standard match creation and rich FCM pushes for mutual Run Club waves.
-    - Verified `HomeScreen` logic that automatically routes new Run Club matches to `MatchRevealScreen`.
-- In Progress: Waiting for real-world physical device testing.
-- Blocked: None.
-- Next Action: 
-    - Perform physical device testing to validate BLE manufacturer data (-85 dBm threshold) for Run Club intercept.
-    - Test match reveal user experience in physical proximity context.
+- Completed:
+    - Phase 6.2: Background isolate now signals main via `onRunClubStateChanged`. BleService.updateAdvertisingMode() restarts advertising with correct manufacturerId (0xFF01 run / 0xFFFF normal).
+    - Phase 6.3: LiveRunCard stripped of neon glow/pulse — static GlassCard, JetBrains Mono, zap icon, SIGNAL DETECTED label.
+    - Phase 6.3: RadarPainter + RadarAnimation wired with signalPulseKey → one-shot 500ms expanding ring on new run encounter.
+    - Phase 6.3: HapticFeedback.mediumImpact() on run partner detection in BleService.
+- In Progress: Waiting for physical device test.
+- Blocked: None (BLOCKER-003 RevenueCat still open, unrelated).
+- Next Action:
+    - Physical device test on two phones: verify BLE manufacturerId switch, LiveRunCard display, signal pulse, haptic.
 
 ---
 
