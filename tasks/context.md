@@ -1,20 +1,24 @@
-## Session State — 2026-04-30 16:30
-- Active Task: Phase 6.2 + 6.3 complete — Run Club BLE wiring + tool-first UI
+## Session State — 2026-04-30 18:00
+- Active Task: Phase 6.4 — Run Club Interactivity (High Priority Notifications)
 - Environment: Dev
-- Modified Files: `lib/src/core/ble_service.dart`, `lib/src/core/background_service.dart`, `lib/src/features/dashboard/presentation/home_screen.dart`, `lib/src/features/dashboard/presentation/widgets/live_run_card.dart`, `lib/src/shared/widgets/radar_painter.dart`, `lib/src/features/dashboard/presentation/radar_animation.dart`
-- Open Problems: None. Physical device test pending.
-- System Status: Build passing, zero analyze errors. Two commits: b0c02ad (6.2), d86edbe (6.3).
+- Modified Files: `lib/src/core/background_service.dart`, `lib/src/core/notification_service.dart`, `lib/src/core/translations.dart`
+- Open Problems: None. Run Club now handles background taps directly and triggers state changes correctly via isolate streams.
+- System Status: Build passing, zero analyze errors.
 
 ## Session Handoff
 - Completed:
-    - Phase 6.2: Background isolate now signals main via `onRunClubStateChanged`. BleService.updateAdvertisingMode() restarts advertising with correct manufacturerId (0xFF01 run / 0xFFFF normal).
-    - Phase 6.3: LiveRunCard stripped of neon glow/pulse — static GlassCard, JetBrains Mono, zap icon, SIGNAL DETECTED label.
-    - Phase 6.3: RadarPainter + RadarAnimation wired with signalPulseKey → one-shot 500ms expanding ring on new run encounter.
-    - Phase 6.3: HapticFeedback.mediumImpact() on run partner detection in BleService.
-- In Progress: Waiting for physical device test.
-- Blocked: None (BLOCKER-003 RevenueCat still open, unrelated).
+    - Implemented background notification action handler (`runClubNotificationTapBackground`) as a top-level function.
+    - Added Action Categories for iOS in `NotificationService.dart` (`RUN_CLUB_ACTIVATION_CATEGORY` & `RUN_CLUB_DEACTIVATION_CATEGORY`).
+    - Refactored `background_service.dart` to trigger actionable prompts instead of blunt auto-activation:
+      - **5 min run:** Prompt "🏃‍♂️ Zaznali smo tek - Vklopi/Prezri"
+      - **15 min stationary:** Prompt "⏸️ Si končal s tekom? - Izklopi/Pusti aktivno"
+      - **20 min stationary:** Auto-deactivate with "💤 Samodejni izklop" notification.
+    - Added `notify_incoming_wave_run_body` into `translations.dart` for Mid-Run Active Wave interception.
+- In Progress: Active Wave UI adjustments (F4) for Trembling Window.
+- Blocked: None.
 - Next Action:
-    - Physical device test on two phones: verify BLE manufacturerId switch, LiveRunCard display, signal pulse, haptic.
+    - Update the UI logic in `F4 (Trembling Window)` if any specific rendering adjustments are needed for Run Club waves.
+    - Physical device test to ensure actionable notifications open and perform actions gracefully.
 
 ---
 

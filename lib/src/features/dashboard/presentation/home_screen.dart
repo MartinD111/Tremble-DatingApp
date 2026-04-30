@@ -65,6 +65,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _showTutorial = false;
+  // Prevents duplicate recap prompts for the same run session transition.
+  bool _runRecapShown = false;
 
   @override
   void initState() {
@@ -157,6 +159,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     FlutterBackgroundService().on('onRunClubStateChanged').listen((event) {
       if (event == null) return;
       BleService().updateAdvertisingMode();
+      final isActive = event['active'] as bool? ?? true;
+      if (isActive) {
+        _runRecapShown = false; // New run started — reset flag
+      } else if (!_runRecapShown && mounted) {
+        _runRecapShown = true;
+        _showRunRecapPrompt();
+      }
     });
 
     // ── Dev Simulation → Radar Ping bridge ─────────────────────────────────
@@ -806,6 +815,125 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // see the main Stack above the LiquidNavBar. This keeps it visible
         // across Radar / Map / People / Settings tabs.
       ],
+    );
+  }
+
+  void _showRunRecapPrompt() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 60),
+        child: GlassCard(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          borderColor: Colors.white.withValues(alpha: 0.12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: TrembleTheme.rose.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      LucideIcons.zap,
+                      color: TrembleTheme.rose,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'TEK ZAKLJUČEN',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 10,
+                            color: TrembleTheme.rose.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Lep tek je bil. Poglej, če se je kje zaiskrilo.',
+                          style: TrembleTheme.displayFont(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        context.push('/run-recap');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: TrembleTheme.rose.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(LucideIcons.heart,
+                                  color: Colors.white, size: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Poglej koga si srečal',
+                                style: GoogleFonts.jetBrainsMono(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Dismiss',
+                        style: GoogleFonts.jetBrainsMono(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

@@ -66,7 +66,8 @@
       "Bash(flutter pub *)",
       "Bash(./gradlew :app:processDevDebugManifest --quiet)",
       "Bash(python -c \"from PIL import Image; img = Image.open\\('c:/Users/marti/AMS d.o.o/Tremble-DatingApp/Logo/tremble_icon_clean_transparent.png'\\); print\\(img.size, img.mode\\)\")",
-      "Bash(where python *)"
+      "Bash(where python *)",
+      "Skill(gsd:next)"
     ]
   }
 }

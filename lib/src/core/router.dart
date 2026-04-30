@@ -10,6 +10,7 @@ import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/auth/presentation/permission_gate_screen.dart';
 import '../features/auth/data/auth_repository.dart';
 import '../features/dashboard/presentation/home_screen.dart';
+import '../features/dashboard/presentation/run_recap_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/matches/data/match_repository.dart';
 import '../features/profile/presentation/profile_detail_screen.dart';
@@ -167,6 +168,16 @@ Future<void> handleNotificationNavigation(
 }) async {
   final type = data['type'] as String?;
   final actionId = data['actionId'] as String?;
+
+  // 0. Run Club intercept — tap opens the RunRecapScreen
+  if (type == 'RUN_INTERCEPT') {
+    if (delay > Duration.zero) await Future.delayed(delay);
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx != null && ctx.mounted) {
+      ctx.push('/run-recap');
+    }
+    return;
+  }
 
   // 1. Handle "Wave" action button from Proximity Notification
   if (actionId == 'NEARBY_WAVE_ACTION') {
@@ -387,6 +398,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/blocked-users',
         builder: (context, state) => const BlockedUsersScreen(),
+      ),
+      GoRoute(
+        path: '/run-recap',
+        builder: (context, state) =>
+            const GradientScaffold(child: RunRecapScreen()),
       ),
       GoRoute(
         path: '/match-reveal',

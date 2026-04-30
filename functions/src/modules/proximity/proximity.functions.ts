@@ -716,6 +716,25 @@ export const onRunEncounter = onDocumentCreated(
             return;
         }
 
+        // 2. Check for Repeat Encounter (Different Hours)
+        const historyKey = `run_history:${[fromUid, toUid].sort().join("_")}`;
+        const prevTimestampStr = await redis.get(historyKey);
+        const now = Date.now();
+        
+        let isRepeatEncounter = false;
+        if (prevTimestampStr) {
+            const prevTimestamp = parseInt(prevTimestampStr, 10);
+            // If previous encounter was more than 1 hour ago (different hours)
+            if (now - prevTimestamp > 3600000) {
+                isRepeatEncounter = true;
+            }
+        }
+        
+        // Update history timestamp for future checks (24h TTL)
+        await redis.set(historyKey, now.toString(), {
+            ex: 24 * 60 * 60,
+        });
+
         // Upsert mutual encounter document for the Live Run Card
         // This is what the UI listens to for the [Send Wave] action
         const matchId = [fromUid, toUid].sort().join("_");
@@ -730,7 +749,13 @@ export const onRunEncounter = onDocumentCreated(
             }
         }, { merge: true });
 
-        // Send High Priority Notification
+        // SILENT MODE by default
+        if (!isRepeatEncounter) {
+            console.log(`[RUN_CLUB] SILENT MODE: Encounter between ${fromUid.substring(0, 8)}... and ${toUid.substring(0, 8)}...`);
+            return;
+        }
+
+        // Send High Priority Notification ONLY for repeat encounters
         if (!fcmToken) return;
 
         const name = fromUserData.displayName || "Nekdo";
@@ -744,12 +769,12 @@ export const onRunEncounter = onDocumentCreated(
             }
         }
 
-        // Rule #51: Mid-Run Intercept (overrides silent mode)
+        // Rule #51: Mid-Run Intercept (overrides silent mode for repeat encounters)
         await getMessaging().send({
             token: fcmToken,
             notification: {
-                title: "Run Club 🏃",
-                body: `Pravkar šla mimo: ${name}, ${age}. Pošlji Wave! 👀`,
+                title: "🏃 Ponovno srečanje",
+                body: `${name} (${age}) je v bližini. Poglej nazaj.`,
             },
             data: {
                 type: "RUN_INTERCEPT",
@@ -775,7 +800,7 @@ export const onRunEncounter = onDocumentCreated(
             },
         });
 
-        console.log(`[RUN_CLUB] MID-RUN INTERCEPT → ${toUid.substring(0, 8)}... from ${fromUid.substring(0, 8)}...`);
+        console.log(`[RUN_CLUB] MID-RUN INTERCEPT (Repeat) → ${toUid.substring(0, 8)}... from ${fromUid.substring(0, 8)}...`);
     }
 );
 

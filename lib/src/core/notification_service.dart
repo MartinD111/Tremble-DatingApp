@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'background_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Background Message Handler — MUST be a top-level function.
@@ -119,6 +120,24 @@ class NotificationService {
           ),
         ],
       ),
+      DarwinNotificationCategory(
+        'RUN_CLUB_ACTIVATION_CATEGORY',
+        actions: <DarwinNotificationAction>[
+          DarwinNotificationAction.plain('RUN_CLUB_ACTIVATE', 'Vklopi',
+              options: <DarwinNotificationActionOption>{
+                DarwinNotificationActionOption.foreground
+              }),
+          DarwinNotificationAction.plain('RUN_CLUB_IGNORE', 'Prezri'),
+        ],
+      ),
+      DarwinNotificationCategory(
+        'RUN_CLUB_DEACTIVATION_CATEGORY',
+        actions: <DarwinNotificationAction>[
+          DarwinNotificationAction.plain('RUN_CLUB_DEACTIVATE', 'Izklopi'),
+          DarwinNotificationAction.plain(
+              'RUN_CLUB_KEEP_ACTIVE', 'Pusti aktivno'),
+        ],
+      ),
     ];
 
     final iosSettings = DarwinInitializationSettings(
@@ -130,7 +149,15 @@ class NotificationService {
 
     await notifications.initialize(
       InitializationSettings(android: androidSettings, iOS: iosSettings),
+      onDidReceiveBackgroundNotificationResponse:
+          runClubNotificationTapBackground,
       onDidReceiveNotificationResponse: (details) {
+        if (details.actionId != null &&
+            details.actionId!.startsWith('RUN_CLUB_')) {
+          runClubNotificationTapBackground(details);
+          return;
+        }
+
         if (details.payload != null && onNotificationTap != null) {
           try {
             final data =

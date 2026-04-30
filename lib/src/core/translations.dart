@@ -380,6 +380,8 @@ const Map<String, Map<String, String>> _translations = {
     'notify_nearby_body_rich': '{name}, {age} is nearby. Want to send a wave?',
     'notify_incoming_wave_title': '%s waved',
     'notify_incoming_wave_body': 'Wave back?',
+    'notify_incoming_wave_run_body':
+        '%s (%s), who just ran by, is sending you a Wave! Look back 👀',
     'notify_match_title': '%s waved back!',
     'notify_match_body': 'Open radar?',
     'action_wave_back': 'Wave back',
@@ -911,6 +913,8 @@ const Map<String, Map<String, String>> _translations = {
     'notify_nearby_body_rich': '{name}, {age} je v bližini. Boš pomahal-a?',
     'notify_incoming_wave_title': '%s ti je pomahal-a',
     'notify_incoming_wave_body': 'Pomahaš nazaj?',
+    'notify_incoming_wave_run_body':
+        '%s (%s), ki je pravkar pritekel/la mimo, ti pošilja Wave! Poglej nazaj 👀',
     'notify_match_title': '%s ti je pomahal-a nazaj!',
     'notify_match_body': 'Odpremo radar?',
     'action_wave_back': 'Pomahaj nazaj',
@@ -1318,6 +1322,8 @@ const Map<String, Map<String, String>> _translations = {
         '{name}, {age} ist in der Nähe. Willst du winken?',
     'notify_incoming_wave_title': '%s hat gewinkt',
     'notify_incoming_wave_body': 'Zurückwinken?',
+    'notify_incoming_wave_run_body':
+        '%s (%s), der gerade vorbeigelaufen ist, schickt dir eine Wave! Schau zurück 👀',
     'notify_match_title': '%s hat zurückgewinkt!',
     'notify_match_body': 'Radar öffnen?',
     'action_wave_back': 'Zurückwinken',
@@ -1604,6 +1610,8 @@ const Map<String, Map<String, String>> _translations = {
         '{name}, {age} è nelle vicinanze. Vuoi fare un cenno?',
     'notify_incoming_wave_title': '%s ha fatto un cenno',
     'notify_incoming_wave_body': 'Ricambiare?',
+    'notify_incoming_wave_run_body':
+        '%s (%s), che ti è appena passato accanto correndo, ti manda un Wave! Guardati indietro 👀',
     'notify_match_title': '%s ha ricambiato!',
     'notify_match_body': 'Aprire il radar?',
     'action_wave_back': 'Ricambia',
@@ -1819,6 +1827,8 @@ const Map<String, Map<String, String>> _translations = {
         '{name}, {age} est à proximité. Voulez-vous faire un signe ?',
     'notify_incoming_wave_title': '%s vous a fait signe',
     'notify_incoming_wave_body': 'Lui répondre ?',
+    'notify_incoming_wave_run_body':
+        '%s (%s), qui vient de passer en courant, vous fait signe ! Regardez en arrière 👀',
     'notify_match_title': '%s vous a répondu !',
     'notify_match_body': 'Ouvrir le radar ?',
     'action_wave_back': 'Répondre',
@@ -2031,6 +2041,8 @@ const Map<String, Map<String, String>> _translations = {
     'notify_nearby_body_rich': '{name}, {age} je u blizini. Želiš mahnuti?',
     'notify_incoming_wave_title': '%s ti maše',
     'notify_incoming_wave_body': 'Mahni natrag?',
+    'notify_incoming_wave_run_body':
+        '%s (%s), koji je upravo protrčao, šalje ti Wave! Pogledaj nazad 👀',
     'notify_match_title': '%s je mahnuo/la natrag!',
     'notify_match_body': 'Otvori radar?',
     'action_wave_back': 'Mahni natrag',
@@ -2249,6 +2261,8 @@ const Map<String, Map<String, String>> _translations = {
     'notify_nearby_body_rich': '{name}, {age} je u blizini. Želiš mahnuti?',
     'notify_incoming_wave_title': '%s ti maše',
     'notify_incoming_wave_body': 'Mahni nazad?',
+    'notify_incoming_wave_run_body':
+        '%s (%s), koji je upravo protrčao, šalje ti Wave! Pogledaj nazad 👀',
     'notify_match_title': '%s je mahnuo/la nazad!',
     'notify_match_body': 'Otvori radar?',
     'action_wave_back': 'Mahni nazad',
@@ -2456,6 +2470,8 @@ const Map<String, Map<String, String>> _translations = {
     'notify_nearby_body_rich': '{name}, {age} a közelben van. Integetsz neki?',
     'notify_incoming_wave_title': '%s integetett',
     'notify_incoming_wave_body': 'Integetsz vissza?',
+    'notify_incoming_wave_run_body':
+        '%s (%s), aki most futott el melletted, egy Wave-et küld! Nézz vissza 👀',
     'notify_match_title': '%s visszaintegetett!',
     'notify_match_body': 'Radar megnyitása?',
     'action_wave_back': 'Visszaintegetés',
