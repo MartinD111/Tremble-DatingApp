@@ -16,7 +16,9 @@ Tremble App Structure
 └── lib/src/shared/               ← Reusable Glassmorphism, Buttons, Hooks, LucideIcons (primary UI icons)
 
 Infrastructure:
-- Platforms: iOS (Swift base + ImageNotification extension), Android (Kotlin base)
+- Platforms: iOS (Swift base), Android (Kotlin base)
+- Secret Manager: 40 items (Secret Manager, not hardcoded)
+- CI/CD: GitHub Actions (Base64 secret injection, flutter stable channel)
 - Backend:   Firebase (Auth, Firestore, Cloud Functions - Node 22 runtime)
 - Redis:     Upstash Redis (Deduplication, Global Rate Limiting, Cooldowns)
 - Storage:   Cloudflare R2 (for media) / Firebase Storage

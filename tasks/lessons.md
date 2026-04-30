@@ -1,5 +1,9 @@
 # Permanent Project Knowledge (Lessons)
 
+**Rule #48 — Staged files modified by pre-commit hooks must be re-added.**
+[2026-04-29] If a pre-commit hook runs `dart format .` or any other auto-formatter, it may modify files in the commit. These modifications stay in the working directory unstaged, causing the commit to fail. Always run `git add <file>` to re-stage the newly formatted files before committing again.
+Source: Git Hook Troubleshooting, April 2026.
+
 **Rule #47 — Use matchType for distinct product tiers in matching UI.**
 [2026-04-29] Distinct proximity scenarios (e.g., Event Mode vs Gym Mode) require separate UI visibility rules. For Event Mode, all users receive temporary Premium access (full profile cards unlocked) to drive engagement. For Gym Mode, Basic users remain locked (pill UI) while Do Not Disturb (DND) prevents intrusive push notifications during workout sessions.
 Source: Proximity Engine Refinement, April 2026.

@@ -22,7 +22,7 @@
 | Features | 11 (F1–F11) + addons |
 | Faze | 4 |
 | Est. skupaj | ~16 tednov |
-| Founder required | F7, F5 (Strava), F10 (Info.plist), F11 (legal review) (F8 Postponed) |
+| Founder required | F7, F10 (Info.plist), F11 (legal review) (F8 Postponed) |
 
 ---
 
@@ -47,15 +47,14 @@
 *Opomba: F8 (Pricing) je začasno umaknjen iz Faze A in prestavljen na čas, ko bo uradno ustanovljeno podjetje AMS Solutions.*
 
 ### Faza B — Teden 4–8
-4. **F11** — Smoking preferences (profil field + filter)
+4. **F11** — Smoking preferences (profil field + filter) ✅
 5. **F3** — Match categories + history filters
 6. **F2** — Event mode matching
 7. **F10** — Gym Mode (zahteva F1)
 
-### Faza C — Teden 9–13
+### Faza C — Teden 9–11
 8. **F4** — Hot/Cold navigation (pure Flutter, brez infra)
-9. **F5** — Fitness integrations (zahteva DPIA update pred kodo)
-10. **F6** — Run Club (zahteva F5)
+9. **F6** — Run Club (native activity detection, ephemeral proximity)
 
 ### Faza D — Teden 14–16
 11. **F7** — Valentine Promo (time-gated, deploy pred 1. februarjem)
@@ -71,10 +70,8 @@
 | Maps API ključi z restrikcijami | F1 | GCP → Credentials → Create + restrict | Martin/Dev |
 | RevenueCat — novi Product IDs v App Store Connect | F8 | ASC → In-App Purchases → New | Founder |
 | RevenueCat — lifetime Non-Consumable product | F8 | ASC → Non-Consumable type | Founder |
-| Strava API Developer Account | F5 | strava.com/settings/api → Create App | Founder |
 | DPIA posodobitev — GPS ephemeral processing | F9 | Posodobi DPIA dokument | Founder |
-| DPIA posodobitev — activity routes | F5, F6 | Posodobi DPIA dokument | Founder |
-| Privacy Policy update — GPS + activity data | F5, F9 | Posodobi PP na trembledating.com | Founder |
+| Privacy Policy update — GPS processing | F9 | Posodobi PP na trembledating.com | Founder |
 | Apple Developer — Background Modes: Location | F10 | Info.plist + Capabilities | Founder + Dev |
 | Legal review — smoking/cannabis profil field | F11 | Pravni vidik za SI/HR trg | Founder |
 | Upstash — preveri plan limits (TTL support) | F6, F10 | Upstash dashboard | Martin/Dev |
@@ -399,172 +396,52 @@ Widget _warmthIndicator(WarmthDirection direction) => switch (direction) {
 
 ---
 
-## F5 — Fitness Integrations
+## F6 — Run Club (In-Motion Handshake)
 
-**Effort:** XL · **Founder required:** Strava API, DPIA, Info.plist
+**Effort:** L · **Status:** Planned
 
-### GDPR — pred vsako kodo
+### Philosophy
+Strictly ephemeral. No GPS maps. No historical tracks. No Strava. Tremble detected in the moment only.
 
-Aktivnostne poti so nova kategorija podatkov. Preden se Martin dotakne tega:
+### Technology Stack
+1. **Motion Detection:** `CMMotionActivityManager` (iOS) & `Activity Recognition API` (Android). Zero GPS dependency for detection.
+2. **Bluetooth:** BLE Advertisement with `Run Mode Flag (0x01)` in manufacturer data.
+3. **Infrastructure:** Firebase Cloud Functions for handshake verification + Firestore TTL (10-minute expiry).
 
-1. DPIA posodobiti (Google Drive folder) — dodaj sekcijo za activity route processing
-2. Privacy Policy update na trembledating.com — GPS route processing, subsampling, 30-day retention
-3. Ločen consent flow v applikaciji — ne bundlaj z BLE consentom
-4. Implementirati opt-out ki trajno zbriše vse activity data (GDPR Art. 17 cascade)
-5. Default: **off** — user mora eksplicitno vklopiti
+### Battery & Cloud Efficiency
+*   **Battery:** ~0.5-1% per activity hour. Uses low-power motion co-processors.
+*   **Cloud:** Minimal. Costs generated only on successful handshakes. Auto-cleanup via TTL is free.
 
-### Apple Health (iOS)
-```yaml
-# pubspec.yaml
-health: ^10.2.0
-```
+### Implementation Logic
+1.  **Smart Activation:** Detect `running` state via native sensors. After **5 minutes**, prompt: *"🔔 Zaznali smo tek. Želiš vklopiti Run Club za diskretno skeniranje bližine?"* (Vklopi / Prezri). Never auto-starts.
+2.  **Matching:** Use **55% threshold** (RSSI ~ -85dBm) for high-speed crossings.
+3.  **Smart Deactivation:** After **15 minutes** of `stationary` state, prompt: *"🔔 Si končal s tekom? Run Club je še vedno aktiven."* (Gumba: Izklopi / Pusti aktivno).
+4.  **Auto-Close:** System kills activity after 20 minutes of total inactivity. Prompt: *"🔔 Run Club se bo kmalu samodejno izklopil."* (Gumba: V redu).
 
-```swift
-// Info.plist (founder approval)
-NSHealthShareUsageDescription: "Tremble reads workout routes to show activity heatmaps."
-NSHealthUpdateUsageDescription: "..."  // dodaj, čeprav ne pišemo
-```
-
-```dart
-final health = Health();
-await health.requestAuthorization([
-  HealthDataType.WORKOUT,
-  HealthDataType.DISTANCE_WALKING_RUNNING,
-]);
-// OPOMBA: HKWorkoutRoute zahteva platform channel — health paket ga ne podpira direktno
-// ~2 dni native iOS dela za pravilno route reading
-```
-
-### Google Fit / Health Connect (Android)
-```xml
-<!-- AndroidManifest.xml (founder approval) -->
-<uses-permission android:name="android.permission.health.READ_EXERCISE_ROUTES"/>
-<!-- Android 14+ Health Connect — za starejše: com.google.android.gms.permission.ACTIVITY_RECOGNITION -->
-```
-
-### Strava OAuth2
-```bash
-# Founder action: strava.com/settings/api → Create App
-# Shrani client_id + client_secret v Firebase Secret Manager
-gcloud secrets create STRAVA_CLIENT_ID --data-file=- <<< "12345"
-gcloud secrets create STRAVA_CLIENT_SECRET --data-file=- <<< "abc..."
-```
-
-```dart
-// OAuth flow — flutter_web_auth_2
-final result = await FlutterWebAuth2.authenticate(
-  url: "https://www.strava.com/oauth/authorize"
-      "?client_id=CLIENT_ID"
-      "&response_type=code"
-      "&redirect_uri=tremble://strava-callback"
-      "&scope=activity:read",       // MINIMAL scope — ne zahtevaj več
-  callbackUrlScheme: "tremble",
-);
-// Zamenjaj code za access_token prek Cloud Function (ne client-side — client_secret mora ostati server-side)
-```
-
-```javascript
-// Cloud Function — token exchange
-exports.stravaTokenExchange = onCall(async (req) => {
-  const { code } = req.data;
-  const clientId = await getSecret('STRAVA_CLIENT_ID');
-  const clientSecret = await getSecret('STRAVA_CLIENT_SECRET');
-  
-  const response = await fetch('https://www.strava.com/oauth/token', {
-    method: 'POST',
-    body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code, grant_type: 'authorization_code' })
-  });
-  
-  const { access_token, refresh_token, expires_at } = await response.json();
-  
-  // Shrani encrypted v Firestore — NE vrni access_token klientu
-  await db.collection('users').doc(req.auth.uid).collection('integrations').doc('strava').set({
-    refreshToken: encrypt(refresh_token), // AES-256
-    expiresAt: Timestamp.fromMillis(expires_at * 1000)
-  });
-  
-  return { success: true };
-});
-```
-
-### Komoot — odloži
-Komoot nima javnega API-ja. Zahteva partnerski dostop (partnerships@komoot.com). Dodaj **GPX file import** kot fallback — deluje z eksportom iz Komoot, Garmin, Suunto.
-
-```dart
-// GPX import — xml paket
-import 'package:xml/xml.dart';
-
-List<LatLng> parseGpx(String gpxContent) {
-  final doc = XmlDocument.parse(gpxContent);
-  return doc.findAllElements('trkpt').map((e) => LatLng(
-    double.parse(e.getAttribute('lat')!),
-    double.parse(e.getAttribute('lon')!),
-  )).toList();
-}
-```
+### User Experience (Physical-First)
+1. **Smart Activation:** After 5 min running: *"🔔 Zaznali smo tek. Želiš vklopiti Run Club?"* (Vklopi / Prezri).
+2. **Silent Mode (Real-World Intuition):** No notifications during the run. System silently logs proximity. You rely purely on your physical senses (The Spark). If you feel the vibe and open the app, your recent cross appears as a **Live Run Card** (e.g., *"Pravkar šla mimo: Ana, 24"*).
+3. **Mid-Run Intercept (Active Wave):** If User A opens the app and sends a Wave to a Live Run Card, this overrides Silent Mode for User B. User B receives: *"Ana (24), ki je pravkar pritekla mimo, ti pošilja Wave! Poglej nazaj 👀"*. If accepted, F4 (Trembling Window) opens.
+4. **Smart Deactivation:** After 15 min stationary: *"🔔 Si končal s tekom? Run Club je še vedno aktiven."* (Izklopi / Pusti aktivno).
+5. **Auto-Close:** After 20 min inactivity: *"🔔 Run Club se bo kmalu samodejno izklopil."* (V redu).
+6. **Post-Run Recap:** Immediate after-run: *"Hej, med tekom si bil potential match z uporabniki. Preveri!"* (Only shows users crossed in the last 10 minutes).
+7. **Re-Encounter:** When a confirmed run-match is nearby at a later date: *"Tvoj run-match od prejšnjič je spet blizu! Želiš aktivirati Trembling Window?"* (Aktiviraj / Prezri).
+8. **Context Wave:** 
+    - For stationary user: *"Tvoj match s teka (Ana, 24) je blizu! Pošlji Wave?"* 
+    - For receiver: *"Marko (run-match) ti pošilja Wave. Vklopi Trembling window?"*
+* **NO CHATROOM:** Mutual likes result in a **"Pulse Confirmed"** status only.
+* **The Expiry (Jebiga Rule):** Data purged after **10 minutes** of inactivity/no-interaction. If you miss the moment, it's gone.
 
 ### Firestore Schema
 ```javascript
-// users/{uid}/activityData/{activityId}
+// matches/{matchId}
+// tip: "run_cross" - uporablja 55% logic
 {
-  source: "apple_health" | "google_fit" | "strava" | "gpx",
-  activityType: "running" | "cycling" | "hiking",
-  date: Timestamp,
-  heatmapPoints: [           // SUBSAMPLED — 1 točka na 50m, ne raw GPS
-    { lat: 46.051, lng: 14.503 },
-    // brez user identifiers v točkah
-  ],
-  consentVersion: "2.0",
-  expiresAt: Timestamp       // date + 30 dni — auto cleanup
-}
-
-// heatmapAggregates/{geohash} — Cloud Function agregat
-{
-  geohash: "u2xk...",
-  count: 47,
-  activityTypes: { running: 32, cycling: 15 },
-  lastUpdated: Timestamp
-}
-```
-
-### Upstash Redis — heatmap cache
-```
-hm:tile:{zoom}:{geohash}        → JSON array [{lat, lng, weight}]   TTL: 300s
-hm:filter:running:{geohash}     → JSON array (samo running)          TTL: 300s
-hm:filter:events:{geohash}      → JSON array (samo events)           TTL: 300s
-```
-
----
-
-## F6 — Run Club Logic
-
-**Effort:** L · **Zahteva F5**
-
-### Activity Detection
-```dart
-// iOS: CMMotionActivityManager prek platform channel
-// Android: Activity Recognition API
-// Paket: sensors_plus za accelerometer fallback
-
-// Trigger: confidence >= 70% → Run Mode ON
-// Deaktivira: 5 minut brez running signala → Run Mode OFF
-```
-
-### BLE Advertisement Flag
-```dart
-// Ko je Run Mode aktiven, dodaj 0x01 v manufacturer data (1. byte po Service UUID)
-// Backward compatible — stari klienti ignorirajo manufacturer data
-final manufacturerData = Uint8List.fromList([0x01]); // runMode flag
-```
-
-### Firestore Schema
-```javascript
-// users/{uid} — ephemeral
-runMode: {
-  active: true,
-  startedAt: Timestamp,
-  expiresAt: Timestamp,     // startedAt + 30 min
-  cityGeohash: "u2xk"
+  users: ["uid1", "uid2"],
+  type: "run_cross",
+  timestamp: ServerTimestamp,
+  expiresAt: Timestamp, // now + 10 minutes (TTL)
+  seenBy: []
 }
 ```
 
@@ -577,7 +454,7 @@ runners:nearby:{userId}          → sorted set of runner uids     TTL: 60s
 ### Matching — Run Mode
 ```javascript
 // Ko sta oba userja v Run Mode in BLE ju zazna skupaj
-matchThreshold: 0.60  // med standard (0.70) in event (0.55)
+matchThreshold: 0.55  // 55% threshold za visoke hitrosti
 matchType: "activity"
 matchContext.activityType: "running"
 ```
@@ -1071,8 +948,6 @@ Dodaj v Privacy Policy pod "What data we collect": *"Lifestyle preferences inclu
 | API Key iOS (restricted) | Credentials → Create | dev + prod |
 | Secret: MAPS_KEY_ANDROID | Secret Manager → Create | dev + prod |
 | Secret: MAPS_KEY_IOS | Secret Manager → Create | dev + prod |
-| Secret: STRAVA_CLIENT_ID | Secret Manager → Create | dev + prod |
-| Secret: STRAVA_CLIENT_SECRET | Secret Manager → Create | dev + prod |
 | Billing Alert $50/mesec | Billing → Budgets & Alerts | prod |
 
 ---
@@ -1087,7 +962,6 @@ Dodaj v Privacy Policy pod "What data we collect": *"Lifestyle preferences inclu
 | Places API (z session tokeni) | ~$200–500 |
 | Upstash Redis | ~$30 |
 | Cloudflare R2 (avatarji) | ~$5 |
-| Strava API | $0 (brezplačen za branje) |
 | **Skupaj** | **~$335–635/mesec** |
 
 Revenue pri 50k DAU, 8% payer conversion, €4.99/mes ≈ **$16.000/mesec**
