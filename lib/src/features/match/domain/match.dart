@@ -101,19 +101,21 @@ class Match {
 
   factory Match.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    // serverTimestamp() resolves null in the local cache before the write
+    // round-trips. Fall back to "now" so the stream doesn't error mid-rebuild
+    // and paint Flutter's red ErrorWidget.
+    final createdAt = (data['createdAt'] as Timestamp?)?.toDate() ??
+        DateTime.now();
     return Match(
       id: doc.id,
       userIds: List<String>.from(data['userIds'] ?? []),
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      createdAt: createdAt,
       seenBy: List<String>.from(data['seenBy'] ?? []),
       status: data['status'] ?? 'pending',
       isFound: data['isFound'] ?? false,
       gestures: Map<String, bool>.from(data['gestures'] ?? {}),
-      expiresAt: data['expiresAt'] != null
-          ? (data['expiresAt'] as Timestamp).toDate()
-          : (data['createdAt'] as Timestamp)
-              .toDate()
-              .add(const Duration(minutes: 30)),
+      expiresAt: (data['expiresAt'] as Timestamp?)?.toDate() ??
+          createdAt.add(const Duration(minutes: 30)),
       matchType: MatchType.fromString(data['matchType'] as String?),
       matchContext: data['matchContext'] != null
           ? MatchContext.fromMap(

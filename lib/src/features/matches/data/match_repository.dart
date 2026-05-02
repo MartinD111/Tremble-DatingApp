@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api_client.dart';
 import '../../dashboard/application/dev_mock_matches_provider.dart';
 import '../../match/data/wave_repository.dart';
+import '../../../core/hobby_utils.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MatchContext — context that created the match (event, gym, activity, etc.)
@@ -36,7 +37,7 @@ class MatchProfile {
   final String name;
   final int age;
   final String imageUrl;
-  final List<String> hobbies;
+  final List<Map<String, dynamic>> hobbies;
   final String bio;
 
   // Extended fields
@@ -118,7 +119,7 @@ class MatchProfile {
       imageUrl:
           urls.isNotEmpty ? urls.first : 'https://via.placeholder.com/150',
       photoUrls: urls,
-      hobbies: List<String>.from(data['hobbies'] ?? []),
+      hobbies: HobbyUtils.parseHobbies(data['hobbies']),
       bio: '', // Bio not stored server-side; derived from prompts
       height: data['height'] as int?,
       politicalAffiliation: data['politicalAffiliation'] as String?,

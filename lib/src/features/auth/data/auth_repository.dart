@@ -5,6 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/api_client.dart';
+import '../../../core/hobby_utils.dart';
+
+// Sentinel marking "argument not provided" — distinguishes from explicit null
+// in copyWith. Use to allow callers to clear a nullable field by passing null.
+const Object _unset = Object();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AuthUser — data model (password field REMOVED for security)
@@ -58,7 +63,7 @@ class AuthUser {
   final String? partnerChildrenPreference;
   final List<String> lookingFor;
   final List<String> languages;
-  final List<String> hobbies;
+  final List<Map<String, dynamic>> hobbies;
   final Map<String, String> prompts;
   final bool isEmailVerified;
   final bool isAdmin;
@@ -312,7 +317,7 @@ class AuthUser {
       partnerChildrenPreference: data['partnerChildrenPreference'] as String?,
       lookingFor: List<String>.from(data['lookingFor'] ?? []),
       languages: List<String>.from(data['languages'] ?? []),
-      hobbies: List<String>.from(data['hobbies'] ?? []),
+      hobbies: HobbyUtils.parseHobbies(data['hobbies']),
       prompts: Map<String, String>.from(data['prompts'] ?? {}),
       isAdmin: data['isAdmin'] as bool? ?? false,
       isPremium: data['isPremium'] as bool? ?? false,
@@ -354,35 +359,35 @@ class AuthUser {
     String? gender,
     List<String>? interestedIn,
     List<String>? nicotineUse,
-    String? nicotineFilter,
+    Object? nicotineFilter = _unset,
     String? jobStatus,
     String? occupation,
-    String? drinkingHabit,
+    Object? drinkingHabit = _unset,
     int? introvertScale,
     int? selfIntrovertMin,
     int? selfIntrovertMax,
-    String? partnerIntrovertPreference,
-    String? exerciseHabit,
-    String? sleepSchedule,
-    String? petPreference,
-    String? childrenPreference,
+    Object? partnerIntrovertPreference = _unset,
+    Object? exerciseHabit = _unset,
+    Object? sleepSchedule = _unset,
+    Object? petPreference = _unset,
+    Object? childrenPreference = _unset,
     String? location,
     String? religion,
-    String? religionPreference,
+    Object? religionPreference = _unset,
     String? ethnicity,
-    String? ethnicityPreference,
+    Object? ethnicityPreference = _unset,
     String? hairColor,
-    String? hairColorPreference,
+    Object? hairColorPreference = _unset,
     String? politicalAffiliation,
-    String? politicalAffiliationPreference,
-    String? partnerExerciseHabit,
-    String? partnerDrinkingHabit,
-    String? partnerSleepSchedule,
-    String? partnerPetPreference,
-    String? partnerChildrenPreference,
+    Object? politicalAffiliationPreference = _unset,
+    Object? partnerExerciseHabit = _unset,
+    Object? partnerDrinkingHabit = _unset,
+    Object? partnerSleepSchedule = _unset,
+    Object? partnerPetPreference = _unset,
+    Object? partnerChildrenPreference = _unset,
     List<String>? lookingFor,
     List<String>? languages,
-    List<String>? hobbies,
+    List<Map<String, dynamic>>? hobbies,
     Map<String, String>? prompts,
     bool? isOnboarded,
     int? onboardingCheckpoint,
@@ -424,35 +429,65 @@ class AuthUser {
       gender: gender ?? this.gender,
       interestedIn: interestedIn ?? this.interestedIn,
       nicotineUse: nicotineUse ?? this.nicotineUse,
-      nicotineFilter: nicotineFilter ?? this.nicotineFilter,
+      nicotineFilter: identical(nicotineFilter, _unset)
+          ? this.nicotineFilter
+          : nicotineFilter as String?,
       jobStatus: jobStatus ?? this.jobStatus,
       occupation: occupation ?? this.occupation,
-      drinkingHabit: drinkingHabit ?? this.drinkingHabit,
+      drinkingHabit: identical(drinkingHabit, _unset)
+          ? this.drinkingHabit
+          : drinkingHabit as String?,
       introvertScale: introvertScale ?? this.introvertScale,
       selfIntrovertMin: selfIntrovertMin ?? this.selfIntrovertMin,
       selfIntrovertMax: selfIntrovertMax ?? this.selfIntrovertMax,
-      partnerIntrovertPreference:
-          partnerIntrovertPreference ?? this.partnerIntrovertPreference,
-      exerciseHabit: exerciseHabit ?? this.exerciseHabit,
-      sleepSchedule: sleepSchedule ?? this.sleepSchedule,
-      petPreference: petPreference ?? this.petPreference,
-      childrenPreference: childrenPreference ?? this.childrenPreference,
+      partnerIntrovertPreference: identical(partnerIntrovertPreference, _unset)
+          ? this.partnerIntrovertPreference
+          : partnerIntrovertPreference as String?,
+      exerciseHabit: identical(exerciseHabit, _unset)
+          ? this.exerciseHabit
+          : exerciseHabit as String?,
+      sleepSchedule: identical(sleepSchedule, _unset)
+          ? this.sleepSchedule
+          : sleepSchedule as String?,
+      petPreference: identical(petPreference, _unset)
+          ? this.petPreference
+          : petPreference as String?,
+      childrenPreference: identical(childrenPreference, _unset)
+          ? this.childrenPreference
+          : childrenPreference as String?,
       location: location ?? this.location,
       religion: religion ?? this.religion,
-      religionPreference: religionPreference ?? this.religionPreference,
+      religionPreference: identical(religionPreference, _unset)
+          ? this.religionPreference
+          : religionPreference as String?,
       ethnicity: ethnicity ?? this.ethnicity,
-      ethnicityPreference: ethnicityPreference ?? this.ethnicityPreference,
+      ethnicityPreference: identical(ethnicityPreference, _unset)
+          ? this.ethnicityPreference
+          : ethnicityPreference as String?,
       hairColor: hairColor ?? this.hairColor,
-      hairColorPreference: hairColorPreference ?? this.hairColorPreference,
+      hairColorPreference: identical(hairColorPreference, _unset)
+          ? this.hairColorPreference
+          : hairColorPreference as String?,
       politicalAffiliation: politicalAffiliation ?? this.politicalAffiliation,
       politicalAffiliationPreference:
-          politicalAffiliationPreference ?? this.politicalAffiliationPreference,
-      partnerExerciseHabit: partnerExerciseHabit ?? this.partnerExerciseHabit,
-      partnerDrinkingHabit: partnerDrinkingHabit ?? this.partnerDrinkingHabit,
-      partnerSleepSchedule: partnerSleepSchedule ?? this.partnerSleepSchedule,
-      partnerPetPreference: partnerPetPreference ?? this.partnerPetPreference,
-      partnerChildrenPreference:
-          partnerChildrenPreference ?? this.partnerChildrenPreference,
+          identical(politicalAffiliationPreference, _unset)
+              ? this.politicalAffiliationPreference
+              : politicalAffiliationPreference as String?,
+      partnerExerciseHabit: identical(partnerExerciseHabit, _unset)
+          ? this.partnerExerciseHabit
+          : partnerExerciseHabit as String?,
+      partnerDrinkingHabit: identical(partnerDrinkingHabit, _unset)
+          ? this.partnerDrinkingHabit
+          : partnerDrinkingHabit as String?,
+      partnerSleepSchedule: identical(partnerSleepSchedule, _unset)
+          ? this.partnerSleepSchedule
+          : partnerSleepSchedule as String?,
+      partnerPetPreference: identical(partnerPetPreference, _unset)
+          ? this.partnerPetPreference
+          : partnerPetPreference as String?,
+      partnerChildrenPreference: identical(partnerChildrenPreference, _unset)
+          ? this.partnerChildrenPreference
+          : partnerChildrenPreference as String?,
       lookingFor: lookingFor ?? this.lookingFor,
       languages: languages ?? this.languages,
       hobbies: hobbies ?? this.hobbies,

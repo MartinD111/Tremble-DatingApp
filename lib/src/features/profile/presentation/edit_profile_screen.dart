@@ -68,7 +68,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _schoolController = TextEditingController();
   final _companyController = TextEditingController();
   bool? _hasChildren;
-  List<String> _hobbies = [];
+  List<Map<String, dynamic>> _hobbies = [];
   List<String> _lookingFor = [];
   List<String> _languages = [];
   double _politicalAffiliationValue = 3.0; // 1-5 spectrum left→right
@@ -190,38 +190,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _introversionLevel = rawIntrovert > 5
           ? (rawIntrovert / 100.0).clamp(0.0, 1.0)
           : ((rawIntrovert - 1) / 4.0).clamp(0.0, 1.0);
-      _hobbies = user.hobbies
-          .map((h) => _normalizeLegacyValue(h, {
-                'Fitnes': 'hobby_fitness',
-                'Pilates': 'hobby_pilates',
-                'Sprehodi': 'hobby_walking',
-                'Tek': 'hobby_running',
-                'Smučanje': 'hobby_skiing',
-                'Snowboarding': 'hobby_snowboarding',
-                'Plezanje': 'hobby_climbing',
-                'Plavanje': 'hobby_swimming',
-                'Branje': 'hobby_reading',
-                'Kava': 'hobby_coffee',
-                'Čaj': 'hobby_tea',
-                'Kuhanje': 'hobby_cooking',
-                'Filmi': 'hobby_movies',
-                'Serije': 'hobby_series',
-                'Videoigre': 'hobby_video_games',
-                'Glasba': 'hobby_music',
-                'Slikanje': 'hobby_painting',
-                'Fotografija': 'hobby_photography',
-                'Pisanje': 'hobby_writing',
-                'Muzeji': 'hobby_museums',
-                'Gledališče': 'hobby_theater',
-                'Izleti': 'hobby_trips',
-                'Narava': 'hobby_nature',
-                'Gore': 'hobby_mountains',
-                'Morje': 'hobby_sea',
-                'Mestna potepanja': 'hobby_city_walks',
-                'Kampiranje': 'hobby_camping',
-              }))
-          .whereType<String>()
-          .toList();
+      _hobbies = List.from(user.hobbies);
       _languages = List.from(user.languages);
       _distancePreference = user.maxDistance.toDouble();
       _isPremium = user.isPremium;
@@ -351,54 +320,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return mapping[value] ?? value;
   }
 
-  String _formatHobby(String hobby, String lang) {
-    // If it's already a key (starts with hobby_), translate it
-    if (hobby.startsWith('hobby_')) {
-      final translated = t(hobby, lang);
-      return translated == hobby
-          ? _titleCase(hobby.replaceAll('hobby_', '').replaceAll('_', ' '))
-          : translated;
-    }
-
-    // Otherwise, it might be a legacy Slovenian string
-    final mapping = {
-      'Fitnes': 'hobby_fitness',
-      'Pilates': 'hobby_pilates',
-      'Sprehodi': 'hobby_walking',
-      'Tek': 'hobby_running',
-      'Smučanje': 'hobby_skiing',
-      'Snowboarding': 'hobby_snowboarding',
-      'Plezanje': 'hobby_climbing',
-      'Plavanje': 'hobby_swimming',
-      'Branje': 'hobby_reading',
-      'Kava': 'hobby_coffee',
-      'Čaj': 'hobby_tea',
-      'Kuhanje': 'hobby_cooking',
-      'Filmi': 'hobby_movies',
-      'Serije': 'hobby_series',
-      'Videoigre': 'hobby_video_games',
-      'Glasba': 'hobby_music',
-      'Slikanje': 'hobby_painting',
-      'Fotografija': 'hobby_photography',
-      'Pisanje': 'hobby_writing',
-      'Muzeji': 'hobby_museums',
-      'Gledališče': 'hobby_theater',
-      'Izleti': 'hobby_trips',
-      'Narava': 'hobby_nature',
-      'Gore': 'hobby_mountains',
-      'Morje': 'hobby_sea',
-      'Mestna potepanja': 'hobby_city_walks',
-      'Kampiranje': 'hobby_camping',
-    };
-
-    final key = mapping[hobby];
-    if (key != null) {
-      return t(key, lang);
-    }
-
-    // Fallback for custom hobbies
-    return hobby;
-  }
 
   String _titleCase(String s) {
     if (s.isEmpty) return s;
@@ -529,7 +450,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   /// Opens the full hobbies selector as a bottom sheet — identical to the
   /// registration flow. Changes are committed only when the user taps Continue.
   void _showHobbiesModal() {
-    final tempHobbies = List<String>.from(_hobbies);
+    final tempHobbies = List<Map<String, dynamic>>.from(_hobbies);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -538,9 +459,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) => DraggableScrollableSheet(
-            initialChildSize: 0.5,
+            initialChildSize: 0.85,
             minChildSize: 0.4,
-            maxChildSize: 0.92,
+            maxChildSize: 0.95,
             builder: (context, scrollController) => HobbiesStep(
               isModal: true,
               selectedHobbies: tempHobbies,
@@ -739,6 +660,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 textColor,
                                 fillColor,
                               ),
+                              if (_jobStatus == 'student') ...[
+                                const SizedBox(height: 12),
+                                _buildTextField(
+                                  _schoolController,
+                                  t('school_hint', lang),
+                                  textColor,
+                                  fillColor,
+                                ),
+                              ],
                             ],
                             const SizedBox(height: 16),
                             // ── Details ───────────────────────────────────────────
@@ -747,6 +677,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               label: t('religion', lang),
                               values: [_religion],
                               formatter: (v) => _formatValue(v, lang),
+                              iconMapper: IconUtils.getReligionIcon,
                               onEdit: () => showPreferenceEditModal(
                                 context: context,
                                 title: t('religion', lang),
@@ -806,6 +737,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               label: t('ethnicity', lang),
                               values: [_ethnicity],
                               formatter: (v) => _formatValue(v, lang),
+                              iconMapper: (_) => LucideIcons.user,
                               onEdit: () => showPreferenceEditModal(
                                 context: context,
                                 title: t('ethnicity', lang),
@@ -842,6 +774,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               label: t('hair_color', lang),
                               values: [_hairColor],
                               formatter: (v) => _formatValue(v, lang),
+                              iconMapper: (_) => Icons.circle,
                               onEdit: () => showPreferenceEditModal(
                                 context: context,
                                 title: t('hair_color', lang),
@@ -1157,6 +1090,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     onTap: () => showMultiSelectModal(
                                           context: context,
                                           title: t('looking_for', lang),
+                                          rowIcon: LucideIcons.heart,
                                           options: [
                                             {
                                               'label':
@@ -1226,6 +1160,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     onTap: () => showMultiSelectModal(
                                           context: context,
                                           title: t('i_speak', lang),
+                                          rowIcon: LucideIcons.languages,
                                           options: [
                                             {
                                               'label':
@@ -1280,23 +1215,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             Divider(color: borderColor, height: 28),
 
                             // ── Hobbies ───────────────────────────────────────────
-                            Center(
-                              child: Text(
-                                t('hobbies', lang),
-                                style: GoogleFonts.instrumentSans(
-                                    color: textColor,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold),
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  t('hobbies', lang),
+                                  style: GoogleFonts.instrumentSans(
+                                      color: textColor,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 10),
+                                _editCircle(isDark, borderColor, fillColor,
+                                    onTap: _showHobbiesModal),
+                              ],
                             ),
                             const SizedBox(height: 12),
                             _buildCategorizedHobbies(lang, isDark, textColor,
                                 fillColor, borderColor),
-                            const SizedBox(height: 16),
-                            Center(
-                              child: _editCircle(isDark, borderColor, fillColor,
-                                  onTap: _showHobbiesModal),
-                            ),
 
                             const SizedBox(height: 30),
 
@@ -1732,16 +1668,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Widget _buildOccupationChips(String lang, bool isDark, Color textColor) {
     final options = [
-      {'label': t('student', lang), 'value': 'student'},
-      {'label': t('employed', lang), 'value': 'employed'},
+      {'label': t('student', lang), 'value': 'student', 'icon': LucideIcons.graduationCap},
+      {'label': t('employed', lang), 'value': 'employed', 'icon': LucideIcons.briefcase},
     ];
     return Wrap(
       spacing: 10,
       children: options.map((opt) {
-        final label = opt['label']!;
-        final value = opt['value']!;
+        final label = opt['label'] as String;
+        final value = opt['value'] as String;
+        final icon = opt['icon'] as IconData;
         final sel = _jobStatus == value;
         return ChoiceChip(
+          avatar: Icon(icon,
+              size: 16,
+              color: sel ? Colors.black : (isDark ? Colors.white70 : Colors.black54)),
           label: Text(label),
           selected: sel,
           onSelected: (s) {
@@ -2155,16 +2095,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    t('date_of_birth', _lang).isNotEmpty &&
-                            t('date_of_birth', _lang) != 'date_of_birth'
-                        ? t('date_of_birth', _lang)
-                        : 'Date of Birth',
-                    style: GoogleFonts.instrumentSans(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: titleColor,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(LucideIcons.cake, size: 20, color: titleColor.withValues(alpha: 0.7)),
+                      const SizedBox(width: 10),
+                      Text(
+                        t('date_of_birth', _lang).isNotEmpty &&
+                                t('date_of_birth', _lang) != 'date_of_birth'
+                            ? t('date_of_birth', _lang)
+                            : 'Date of Birth',
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: titleColor,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
                   // ── Drum pickers (Month / Day / Year) ─────────────────────
@@ -2292,43 +2239,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  static const Map<String, List<String>> _hobbyCategories = {
-    'hobby_cat_active': [
-      'hobby_fitness',
-      'hobby_pilates',
-      'hobby_walking',
-      'hobby_running',
-      'hobby_skiing',
-      'hobby_snowboarding',
-      'hobby_climbing',
-      'hobby_swimming'
-    ],
-    'hobby_cat_leisure': [
-      'hobby_reading',
-      'hobby_coffee',
-      'hobby_tea',
-      'hobby_cooking',
-      'hobby_movies',
-      'hobby_series',
-      'hobby_video_games'
-    ],
-    'hobby_cat_art': [
-      'hobby_painting',
-      'hobby_photography',
-      'hobby_writing',
-      'hobby_museums',
-      'hobby_theater',
-      'hobby_music'
-    ],
-    'hobby_cat_travel': [
-      'hobby_trips',
-      'hobby_nature',
-      'hobby_mountains',
-      'hobby_sea',
-      'hobby_city_walks',
-      'hobby_camping'
-    ],
-  };
 
   IconData _getCategoryIcon(String categoryKey) {
     switch (categoryKey) {
@@ -2345,112 +2255,35 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
   }
 
-  String _getHobbyKey(String hobby) {
-    if (hobby.startsWith('hobby_')) return hobby;
-    final mapping = {
-      'Fitnes': 'hobby_fitness',
-      'Pilates': 'hobby_pilates',
-      'Sprehodi': 'hobby_walking',
-      'Tek': 'hobby_running',
-      'Smučanje': 'hobby_skiing',
-      'Snowboarding': 'hobby_snowboarding',
-      'Plezanje': 'hobby_climbing',
-      'Plavanje': 'hobby_swimming',
-      'Branje': 'hobby_reading',
-      'Kava': 'hobby_coffee',
-      'Čaj': 'hobby_tea',
-      'Kuhanje': 'hobby_cooking',
-      'Filmi': 'hobby_movies',
-      'Serije': 'hobby_series',
-      'Video igre': 'hobby_video_games',
-      'Slikanje': 'hobby_painting',
-      'Fotografija': 'hobby_photography',
-      'Pisanje': 'hobby_writing',
-      'Muzeji': 'hobby_museums',
-      'Gledališče': 'hobby_theater',
-      'Glasba': 'hobby_music',
-      'Izleti': 'hobby_trips',
-      'Narava': 'hobby_nature',
-      'Gore': 'hobby_mountains',
-      'Morje': 'hobby_sea',
-      'Sprehodi po mestu': 'hobby_city_walks',
-      'Kampiranje': 'hobby_camping',
-    };
-    return mapping[hobby] ?? hobby;
-  }
-
   Widget _buildCategorizedHobbies(String lang, bool isDark, Color textColor,
       Color fillColor, Color borderColor) {
     if (_hobbies.isEmpty) return const SizedBox.shrink();
 
-    // Normalize hobbies to keys for categorization
-    final normalizedHobbies = _hobbies.map((h) => _getHobbyKey(h)).toList();
+    // Group all hobbies by category
+    final Map<String, List<Map<String, dynamic>>> grouped = {};
 
-    final categorizedHobbies = <String>{};
-    for (var group in _hobbyCategories.values) {
-      categorizedHobbies.addAll(group);
+    for (final h in _hobbies) {
+      final cat = h['category'] as String? ?? 'Custom';
+      grouped.putIfAbsent(cat, () => []).add(h);
     }
-
-    final customHobbies = normalizedHobbies
-        .where((h) => !categorizedHobbies.contains(h))
-        .toList();
 
     return Column(
       children: [
-        for (final entry in _hobbyCategories.entries)
-          if (normalizedHobbies.any((h) => entry.value.contains(h))) ...[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    _getCategoryIcon(entry.key),
-                    size: 12,
-                    color: (isDark ? Colors.white : Colors.black)
-                        .withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    t(entry.key, lang).toUpperCase(),
-                    style: GoogleFonts.instrumentSans(
-                      color: (isDark ? Colors.white : Colors.black)
-                          .withValues(alpha: 0.5),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              alignment: WrapAlignment.center,
-              children: normalizedHobbies
-                  .where((h) => entry.value.contains(h))
-                  .map((h) => _smallHobbyChip(
-                      h, lang, isDark, textColor, fillColor, borderColor))
-                  .toList(),
-            ),
-            const SizedBox(height: 24),
-          ],
-        if (customHobbies.isNotEmpty) ...[
+        for (final entry in grouped.entries) ...[
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  LucideIcons.sparkles,
+                  _getCategoryIcon(entry.key),
                   size: 12,
                   color: (isDark ? Colors.white : Colors.black)
                       .withValues(alpha: 0.5),
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  t('hobby_other', lang).toUpperCase(),
+                  t(entry.key, lang).toUpperCase(),
                   style: GoogleFonts.instrumentSans(
                     color: (isDark ? Colors.white : Colors.black)
                         .withValues(alpha: 0.5),
@@ -2466,17 +2299,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             spacing: 6,
             runSpacing: 6,
             alignment: WrapAlignment.center,
-            children: customHobbies
+            children: entry.value
                 .map((h) => _smallHobbyChip(
                     h, lang, isDark, textColor, fillColor, borderColor))
                 .toList(),
           ),
+          const SizedBox(height: 24),
         ],
       ],
     );
   }
 
-  Widget _smallHobbyChip(String hobby, String lang, bool isDark,
+  Widget _smallHobbyChip(Map<String, dynamic> hobby, String lang, bool isDark,
       Color textColor, Color fillColor, Color borderColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -2488,8 +2322,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Text(hobby['emoji'] as String, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 4),
           Text(
-            _formatHobby(hobby, lang),
+            hobby['name'] as String,
             style: TextStyle(
               color: textColor,
               fontSize: 11,
@@ -2499,7 +2335,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           const SizedBox(width: 4),
           GestureDetector(
             onTap: () => setState(() {
-              _hobbies.remove(hobby);
+              _hobbies.removeWhere((h) => h['name'] == hobby['name']);
               _hasChanges = true;
             }),
             child: Icon(LucideIcons.x,

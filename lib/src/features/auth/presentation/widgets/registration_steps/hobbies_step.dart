@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
+import '../../../../../core/hobby_data.dart';
 
 class HobbiesStep extends StatefulWidget {
   const HobbiesStep({
@@ -16,9 +17,9 @@ class HobbiesStep extends StatefulWidget {
     this.isModal = false,
   });
 
-  final List<String> selectedHobbies;
-  final void Function(String hobby) onAddHobby;
-  final void Function(String hobby) onRemoveHobby;
+  final List<Map<String, dynamic>> selectedHobbies;
+  final void Function(Map<String, dynamic> hobby) onAddHobby;
+  final void Function(Map<String, dynamic> hobby) onRemoveHobby;
   final VoidCallback? onBack;
   final VoidCallback onContinue;
   final String Function(String) tr;
@@ -29,97 +30,100 @@ class HobbiesStep extends StatefulWidget {
 }
 
 class _HobbiesStepState extends State<HobbiesStep> {
-  final Map<String, ExpansibleController> _tileControllers = {};
+  String? _openCategory;
 
-  static const Map<String, IconData> _catIcons = {
-    'hobby_cat_active': LucideIcons.dumbbell,
-    'hobby_cat_leisure': LucideIcons.coffee,
-    'hobby_cat_art': LucideIcons.palette,
-    'hobby_cat_travel': LucideIcons.plane,
-  };
-
-  static const Map<String, List<String>> _cats = {
-    'hobby_cat_active': [
-      'hobby_fitness',
-      'hobby_pilates',
-      'hobby_walking',
-      'hobby_running',
-      'hobby_skiing',
-      'hobby_snowboarding',
-      'hobby_climbing',
-      'hobby_swimming',
-    ],
-    'hobby_cat_leisure': [
-      'hobby_reading',
-      'hobby_coffee',
-      'hobby_tea',
-      'hobby_cooking',
-      'hobby_movies',
-      'hobby_series',
-      'hobby_video_games',
-      'hobby_music',
-    ],
-    'hobby_cat_art': [
-      'hobby_painting',
-      'hobby_photography',
-      'hobby_writing',
-      'hobby_museums',
-      'hobby_theater',
-    ],
-    'hobby_cat_travel': [
-      'hobby_trips',
-      'hobby_camping',
-      'hobby_city_walks',
-      'hobby_nature',
-    ],
-  };
-
-  ExpansibleController _tileController(String key) {
-    return _tileControllers.putIfAbsent(key, ExpansibleController.new);
+  IconData _getCategoryIcon(String categoryKey) {
+    switch (categoryKey) {
+      case 'hobby_cat_active':
+        return LucideIcons.zap;
+      case 'hobby_cat_leisure':
+        return LucideIcons.coffee;
+      case 'hobby_cat_art':
+        return LucideIcons.palette;
+      case 'hobby_cat_travel':
+        return LucideIcons.map;
+      default:
+        return LucideIcons.sparkles;
+    }
   }
 
-  void _showAddHobbyDialog() {
+  void _showAddHobbyDialog(String categoryKey, String categoryLabel) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final ctrl = TextEditingController();
+    final nameCtrl = TextEditingController();
+    final emojiCtrl = TextEditingController();
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        title: Text(widget.tr('add_hobby'),
+        title: Text('${widget.tr('hobby_other')} - $categoryLabel',
             style: GoogleFonts.instrumentSans(
-                color: isDark ? Colors.white : Colors.black)),
-        content: TextField(
-            controller: ctrl,
-            style: GoogleFonts.instrumentSans(
-                color: isDark ? Colors.white : Colors.black),
-            autofocus: true),
+                color: isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+                controller: nameCtrl,
+                decoration: InputDecoration(
+                  labelText: widget.tr('name'),
+                  labelStyle: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54),
+                ),
+                style: GoogleFonts.instrumentSans(
+                    color: isDark ? Colors.white : Colors.black),
+                autofocus: true),
+            const SizedBox(height: 12),
+            TextField(
+                controller: emojiCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Emoji',
+                  labelStyle: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54),
+                ),
+                style: GoogleFonts.instrumentSans(
+                    color: isDark ? Colors.white : Colors.black)),
+          ],
+        ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(widget.tr('cancel'))),
           TextButton(
               onPressed: () {
-                if (ctrl.text.isNotEmpty) {
-                  widget.onAddHobby(ctrl.text);
+                if (nameCtrl.text.isNotEmpty) {
+                  final newHobby = {
+                    'name': nameCtrl.text.trim(),
+                    'emoji': emojiCtrl.text.trim().isNotEmpty
+                        ? emojiCtrl.text.trim()
+                        : '✨',
+                    'category': categoryKey,
+                    'custom': true,
+                  };
+                  widget.onAddHobby(newHobby);
                   Navigator.pop(ctx);
                 }
               },
               child: Text(widget.tr('add'),
                   style: GoogleFonts.instrumentSans(
-                      color: Theme.of(context).colorScheme.primary))),
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold))),
         ],
       ),
     );
   }
 
+  bool _isSelected(Map<String, dynamic> hobby) {
+    return widget.selectedHobbies.any((h) => h['name'] == hobby['name']);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final grouped = HobbyData.groupedHobbies;
 
-    final predefinedHobbies = _cats.values.expand((e) => e).toSet();
-    final customHobbies = widget.selectedHobbies
-        .where((h) => !predefinedHobbies.contains(h))
-        .toList();
+    final customHobbies =
+        widget.selectedHobbies.where((h) => h['custom'] == true).toList();
 
     return Container(
       decoration: widget.isModal
@@ -175,158 +179,153 @@ class _HobbiesStepState extends State<HobbiesStep> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (customHobbies.isNotEmpty) ...[
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Text(widget.tr('my_hobbies_custom'),
-                            style: GoogleFonts.instrumentSans(
-                                color: isDark ? Colors.white : Colors.black87,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: customHobbies.map((hobby) {
-                          return FilterChip(
-                            label: Text(
-                              hobby,
-                              style: GoogleFonts.instrumentSans(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            selected: true,
-                            onSelected: (_) => widget.onRemoveHobby(hobby),
-                            selectedColor:
-                                Theme.of(context).colorScheme.primary,
-                            backgroundColor: isDark
-                                ? Colors.white12
-                                : Colors.black.withValues(alpha: 0.05),
-                            shape: StadiumBorder(
-                              side: BorderSide(
-                                  color: isDark
-                                      ? Colors.white12
-                                      : Colors.black.withValues(alpha: 0.1)),
-                            ),
-                            checkmarkColor: Colors.black,
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    ..._cats.entries.map((e) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          dividerColor: Colors.transparent,
-                          expansionTileTheme: ExpansionTileThemeData(
-                            iconColor: Theme.of(context).colorScheme.primary,
-                            collapsedIconColor:
-                                isDark ? Colors.white : Colors.black54,
-                          ),
+                    ...grouped.entries.map((e) {
+                      final catKey = e.key;
+                      final translatedName = widget.tr(catKey);
+                      final isOpen = _openCategory == catKey;
+
+                      // Merge predefined and custom hobbies for this category
+                      final categoryHobbies = [...e.value];
+                      categoryHobbies.addAll(
+                          customHobbies.where((h) => h['category'] == catKey));
+
+                      final selectedCount =
+                          categoryHobbies.where((h) => _isSelected(h)).length;
+                      final titleText = selectedCount > 0
+                          ? '$translatedName ($selectedCount)'
+                          : translatedName;
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: ExpansionTile(
-                          controller: _tileController(e.key),
-                          expansionAnimationStyle: AnimationStyle(
-                            duration: const Duration(milliseconds: 350),
-                            curve: Curves.easeInOut,
-                          ),
-                          onExpansionChanged: (expanded) {
-                            if (expanded) {
-                              for (final key in _cats.keys) {
-                                if (key != e.key) {
-                                  _tileController(key).collapse();
-                                }
-                              }
-                            }
-                          },
-                          title: Row(
-                            children: [
-                              if (_catIcons[e.key] != null)
-                                Icon(
-                                  _catIcons[e.key],
-                                  size: 18,
-                                  color:
-                                      isDark ? Colors.white70 : Colors.black54,
-                                ),
-                              if (_catIcons[e.key] != null)
-                                const SizedBox(width: 8),
-                              Text(
-                                '${widget.tr(e.key)} (${e.value.where((h) => widget.selectedHobbies.contains(h)).length})',
-                                style: GoogleFonts.instrumentSans(
-                                    color:
-                                        isDark ? Colors.white : Colors.black87,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              width: double.infinity,
-                              child: Wrap(
-                                alignment: WrapAlignment.start,
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  ...e.value.map((hobby) {
-                                    final sel =
-                                        widget.selectedHobbies.contains(hobby);
-                                    return FilterChip(
-                                      label: Text(
-                                        widget.tr(hobby),
-                                        style: GoogleFonts.instrumentSans(
-                                          color: sel
-                                              ? Colors.black
-                                              : (isDark
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (_openCategory == catKey) {
+                                    _openCategory = null;
+                                  } else {
+                                    _openCategory = catKey;
+                                  }
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 16),
+                                child: Row(
+                                  children: [
+                                    Icon(_getCategoryIcon(catKey),
+                                        size: 20,
+                                        color: isDark
+                                            ? Colors.white70
+                                            : Colors.black87),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(titleText,
+                                          style: GoogleFonts.instrumentSans(
+                                              color: isDark
                                                   ? Colors.white
-                                                  : Colors.black87),
-                                          fontWeight: sel
-                                              ? FontWeight.bold
-                                              : FontWeight.w500,
-                                        ),
-                                      ),
-                                      selected: sel,
-                                      onSelected: (s) => s
-                                          ? widget.onAddHobby(hobby)
-                                          : widget.onRemoveHobby(hobby),
-                                      selectedColor:
-                                          Theme.of(context).colorScheme.primary,
-                                      backgroundColor:
-                                          Theme.of(context).brightness ==
-                                                  Brightness.dark
-                                              ? Colors.white12
-                                              : Colors.black12,
-                                      shape: StadiumBorder(
-                                        side: BorderSide(
-                                          color: sel
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                              : (Theme.of(context).brightness ==
-                                                      Brightness.dark
-                                                  ? Colors.white24
-                                                  : Colors.black26),
-                                        ),
-                                      ),
-                                      checkmarkColor: Colors.black,
-                                    );
-                                  }),
-                                  ActionChip(
-                                    label: Text(widget.tr('add_own'),
-                                        style: GoogleFonts.instrumentSans(
-                                            color: Colors.black)),
-                                    backgroundColor:
-                                        Theme.of(context).colorScheme.primary,
-                                    shape: const StadiumBorder(),
-                                    onPressed: _showAddHobbyDialog,
-                                  ),
-                                ],
+                                                  : Colors.black87,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                    AnimatedRotation(
+                                      turns: isOpen ? 0.5 : 0.0,
+                                      duration:
+                                          const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                      child: Icon(LucideIcons.chevronDown,
+                                          size: 20,
+                                          color: isDark
+                                              ? Colors.white54
+                                              : Colors.black54),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              alignment: Alignment.topCenter,
+                              child: isOpen
+                                  ? Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          16, 0, 16, 16),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Wrap(
+                                            spacing: 8,
+                                            runSpacing: 8,
+                                            children:
+                                                categoryHobbies.map((hobby) {
+                                              final sel = _isSelected(hobby);
+                                              return _buildPill(
+                                                  hobby, sel, isDark);
+                                            }).toList(),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          GestureDetector(
+                                            onTap: () => _showAddHobbyDialog(
+                                                catKey, translatedName),
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 8),
+                                              decoration: BoxDecoration(
+                                                border: Border.all(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary),
+                                                borderRadius:
+                                                    BorderRadius.circular(100),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(Icons.add,
+                                                      size: 16,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary),
+                                                  const SizedBox(width: 6),
+                                                  Text(widget.tr('hobby_other'),
+                                                      style: GoogleFonts
+                                                          .instrumentSans(
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .colorScheme
+                                                                  .primary,
+                                                              fontSize: 13,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold)),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : const SizedBox(
+                                      width: double.infinity, height: 0),
+                            ),
                           ],
                         ),
                       );
                     }),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -337,6 +336,50 @@ class _HobbiesStepState extends State<HobbiesStep> {
                 enabled: true,
                 onTap: widget.onContinue,
                 label: widget.tr(widget.isModal ? 'save' : 'continue_btn'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPill(Map<String, dynamic> hobby, bool selected, bool isDark) {
+    return GestureDetector(
+      onTap: () {
+        if (selected) {
+          widget.onRemoveHobby(hobby);
+        } else {
+          widget.onAddHobby(hobby);
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected
+              ? Theme.of(context).colorScheme.primary
+              : (isDark ? Colors.white12 : Colors.black12),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: selected
+                ? Theme.of(context).colorScheme.primary
+                : (isDark ? Colors.white24 : Colors.black26),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(hobby['emoji'] as String,
+                style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 6),
+            Text(
+              hobby['name'] as String,
+              style: GoogleFonts.instrumentSans(
+                color: selected
+                    ? Colors.black
+                    : (isDark ? Colors.white : Colors.black87),
+                fontWeight: selected ? FontWeight.bold : FontWeight.w500,
               ),
             ),
           ],

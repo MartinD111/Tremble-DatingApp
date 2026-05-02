@@ -425,17 +425,25 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     String greetText = t('greet', lang);
     bool isSent = false;
     VoidCallback onGreet = () async {
-      if (matchDoc != null) {
-        await ref.read(waveRepositoryProvider).sendGesture(matchDoc.id);
-      } else {
-        // Fallback or initial creation if no match doc yet (unlikely in this view)
-        await ref.read(matchControllerProvider.notifier).greet();
-      }
-
-      if (context.mounted) {
-        final sentMsg = "${t('greet', lang)} ${t('sent', lang)} ${match.name}!";
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(sentMsg)));
+      try {
+        if (matchDoc != null) {
+          await ref.read(waveRepositoryProvider).sendGesture(matchDoc.id);
+        } else {
+          await ref.read(matchControllerProvider.notifier).greet();
+        }
+        if (context.mounted) {
+          final sentMsg =
+              "${t('greet', lang)} ${t('sent', lang)} ${match.name}!";
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(sentMsg)));
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Napaka: $e'),
+            backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+          ));
+        }
       }
     };
 
@@ -529,44 +537,6 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     );
   }
 
-  static const Map<String, List<String>> _hobbyCategories = {
-    'hobby_cat_active': [
-      'hobby_fitness',
-      'hobby_pilates',
-      'hobby_walking',
-      'hobby_running',
-      'hobby_skiing',
-      'hobby_snowboarding',
-      'hobby_climbing',
-      'hobby_swimming'
-    ],
-    'hobby_cat_leisure': [
-      'hobby_reading',
-      'hobby_coffee',
-      'hobby_tea',
-      'hobby_cooking',
-      'hobby_movies',
-      'hobby_series',
-      'hobby_video_games'
-    ],
-    'hobby_cat_art': [
-      'hobby_painting',
-      'hobby_photography',
-      'hobby_writing',
-      'hobby_museums',
-      'hobby_theater',
-      'hobby_music'
-    ],
-    'hobby_cat_travel': [
-      'hobby_trips',
-      'hobby_nature',
-      'hobby_mountains',
-      'hobby_sea',
-      'hobby_city_walks',
-      'hobby_camping'
-    ],
-  };
-
   IconData _getCategoryIcon(String categoryKey) {
     switch (categoryKey) {
       case 'hobby_cat_active':
@@ -582,74 +552,18 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     }
   }
 
-  String _getHobbyKey(String hobby) {
-    switch (hobby) {
-      case 'Fitnes':
-        return 'hobby_fitness';
-      case 'Pilates':
-        return 'hobby_pilates';
-      case 'Sprehodi':
-        return 'hobby_walking';
-      case 'Tek':
-        return 'hobby_running';
-      case 'Smučanje':
-        return 'hobby_skiing';
-      case 'Snowboarding':
-        return 'hobby_snowboarding';
-      case 'Plezanje':
-        return 'hobby_climbing';
-      case 'Plavanje':
-        return 'hobby_swimming';
-      case 'Branje':
-        return 'hobby_reading';
-      case 'Kava':
-        return 'hobby_coffee';
-      case 'Čaj':
-        return 'hobby_tea';
-      case 'Kuhanje':
-        return 'hobby_cooking';
-      case 'Filmi':
-        return 'hobby_movies';
-      case 'Serije':
-        return 'hobby_series';
-      case 'Videoigre':
-        return 'hobby_video_games';
-      case 'Glasba':
-        return 'hobby_music';
-      case 'Slikanje':
-        return 'hobby_painting';
-      case 'Fotografija':
-        return 'hobby_photography';
-      case 'Pisanje':
-        return 'hobby_writing';
-      case 'Muzeji':
-        return 'hobby_museums';
-      case 'Gledališče':
-        return 'hobby_theater';
-      case 'Izleti':
-        return 'hobby_trips';
-      case 'Narava':
-        return 'hobby_nature';
-      case 'Gore':
-        return 'hobby_mountains';
-      case 'Morje':
-        return 'hobby_sea';
-      case 'Mestna potepanja':
-        return 'hobby_city_walks';
-      case 'Kampiranje':
-        return 'hobby_camping';
-      default:
-        return hobby;
-    }
-  }
-
   Widget _buildHobbySection(
       MatchProfile match, bool isDark, Color textColor, Color subColor) {
     final lang = ref.watch(appLanguageProvider);
-    final userHobbies = match.hobbies.map((h) => _getHobbyKey(h)).toList();
-    final categorizedHobbies = _hobbyCategories.values.expand((e) => e).toSet();
-    final customHobbies =
-        userHobbies.where((h) => !categorizedHobbies.contains(h)).toList();
+    final userHobbies = match.hobbies;
+
+    // Group all hobbies by category
+    final Map<String, List<Map<String, dynamic>>> grouped = {};
+
+    for (final h in userHobbies) {
+      final cat = h['category'] as String? ?? 'Custom';
+      grouped.putIfAbsent(cat, () => []).add(h);
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -660,57 +574,20 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
         const SizedBox(height: 16),
         Column(
           children: [
-            for (final entry in _hobbyCategories.entries)
-              if (userHobbies.any((h) => entry.value.contains(h))) ...[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        _getCategoryIcon(entry.key),
-                        size: 12,
-                        color: subColor.withValues(alpha: 0.5),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        t(entry.key, lang).toUpperCase(),
-                        style: GoogleFonts.instrumentSans(
-                          color: subColor.withValues(alpha: 0.5),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  alignment: WrapAlignment.center,
-                  children: entry.value
-                      .where((h) => userHobbies.contains(h))
-                      .map((h) => _PreferencePill(
-                          label: _formatChipText(t(_getHobbyKey(h), lang))))
-                      .toList(),
-                ),
-                const SizedBox(height: 24),
-              ],
-            if (customHobbies.isNotEmpty) ...[
+            for (final entry in grouped.entries) ...[
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      LucideIcons.sparkles,
+                      _getCategoryIcon(entry.key),
                       size: 12,
                       color: subColor.withValues(alpha: 0.5),
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      t('hobby_other', lang).toUpperCase(),
+                      t(entry.key, lang).toUpperCase(),
                       style: GoogleFonts.instrumentSans(
                         color: subColor.withValues(alpha: 0.5),
                         fontSize: 10,
@@ -725,11 +602,12 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                 spacing: 6,
                 runSpacing: 6,
                 alignment: WrapAlignment.center,
-                children: customHobbies
+                children: entry.value
                     .map((h) => _PreferencePill(
-                        label: _formatChipText(t(_getHobbyKey(h), lang))))
+                        label: '${h['emoji']} ${h['name']}'))
                     .toList(),
               ),
+              const SizedBox(height: 24),
             ],
           ],
         ),

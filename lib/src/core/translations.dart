@@ -342,6 +342,7 @@ const Map<String, Map<String, String>> _translations = {
     'employed': 'Employed',
     'course_of_study': 'Course of Study (Optional)',
     'job_title': 'Job Title (Optional)',
+    'save_changes': 'Save changes',
     'introvert_extrovert': 'Introvert / Extrovert',
     'introvert': 'Introvert',
     'extrovert': 'Extrovert',
@@ -590,6 +591,27 @@ const Map<String, Map<String, String>> _translations = {
     'matches_help_body':
         'Everyone who waved at you (one-way or mutual) appears here.',
 
+    // Matches dropdown sections
+    'section_your_gym': 'Your Gym',
+    'section_your_event': 'Your Event',
+    'section_your_run': 'Your Run',
+    'section_your_matches': 'Your Matches',
+    'section_your_gym_desc':
+        'People you crossed paths with while at your gym. Active when Gym Mode is on.',
+    'section_your_event_desc':
+        'People you met at a shared event. Active when Event Mode is on.',
+    'section_your_run_desc':
+        'Runners you encountered during an active run session.',
+    'section_your_matches_desc':
+        'All your matches — from gym, events, runs, and radar sessions.',
+    'gym_mode_inactive': 'Gym mode inactive',
+    'no_gym_selected': 'No gym selected',
+    'change_gym': 'Change gym',
+    'your_gyms': 'Your gyms',
+    'filter_period': 'Filter by period',
+    'gym_mode_nav_hint':
+        'People tab (👥) is set to My Gym — matches from your current gym appear there.',
+
     // F3 — Match category tabs
     'match_tab_all': 'All',
     'match_tab_standard': 'Standard',
@@ -604,6 +626,39 @@ const Map<String, Map<String, String>> _translations = {
     'history_last_3months': 'Last 3 months',
     'history_last_12months': 'Last 12 months',
     'history_all': 'All time',
+
+    // Gym/Run/Event mode — radar button
+    'gym_mode_tap_hint':
+        'Gym Mode is active. Your matches appear in the People tab under My Gym.',
+    'gym_mode_inactive_hint':
+        'Tap to see info about Gym Mode.',
+    'run_mode_label': 'Run Mode',
+    'event_mode_label': 'Event Mode',
+    'gym_mode_label': 'Gym Mode',
+    'mode_picker_title': 'Activate mode',
+    'mode_picker_subtitle':
+        'Select a mode to start. Tap the icon again to confirm.',
+
+    // Gym mode activated popup
+    'gym_activated_title': 'Gym Mode active',
+    'gym_activated_gym': 'You\'re checked in at',
+    'gym_activated_body':
+        'People who are also at this gym right now will appear in the People tab (👥) under Your Gym. The mode stays active until you leave or deactivate it manually.',
+    'gym_activated_cta': 'Got it',
+
+    // Mode info popup (single tap on mode icon)
+    'gym_mode_info_title': 'Gym Mode',
+    'gym_mode_info_body':
+        'When Gym Mode is on, people at your gym right now will appear in Your Gym under the People tab. Mode stays active until you leave or turn it off.',
+    'gym_mode_info_activate': 'Activate',
+    'gym_mode_info_deactivate': 'Deactivate',
+    'run_mode_info_title': 'Run Mode',
+    'run_mode_info_body':
+        'Run Mode connects you with runners nearby. Your matches appear in Your Run under the People tab while the session is active.',
+    'event_mode_info_title': 'Event Mode',
+    'event_mode_info_body':
+        'Event Mode connects you with people at the same event. Your matches appear in Your Event under the People tab.',
+    'mode_info_dont_show': 'Don\'t show this again',
 
     // --- Radar search overlay ---
     'time_remaining': 'Time remaining',
@@ -823,8 +878,8 @@ const Map<String, Map<String, String>> _translations = {
     'no': 'Ne',
     'dont_care': 'Vseeno',
     'personality_type': 'Tip osebnosti (Introvert/Ekstrovert)',
-    'hobby_cat_active': 'Aktivno',
-    'hobby_cat_leisure': 'Prosti čas',
+    'hobby_cat_active': 'Aktivni',
+    'hobby_cat_leisure': 'Sprostitev',
     'hobby_cat_art': 'Umetnost',
     'hobby_cat_travel': 'Potovanja',
     'hobby_fitness': 'Fitnes',
@@ -1189,6 +1244,27 @@ const Map<String, Map<String, String>> _translations = {
     'matches_help_body':
         'Tukaj se pojavijo vsi, ki so ti pomahali (enosmerno ali vzajemno).',
 
+    // Sekcije spustnega menija
+    'section_your_gym': 'Tvoj fitnes',
+    'section_your_event': 'Tvoj dogodek',
+    'section_your_run': 'Tvoj tek',
+    'section_your_matches': 'Tvoji matchi',
+    'section_your_gym_desc':
+        'Ljudje, ki si jih srečal v fitnesu. Aktivno med Gym Mode.',
+    'section_your_event_desc':
+        'Ljudje, ki si jih srečal na skupnem dogodku. Aktivno med Event Mode.',
+    'section_your_run_desc':
+        'Tekači, ki si jih srečal med aktivno teko sejo.',
+    'section_your_matches_desc':
+        'Vsi tvoji matchi — iz fitnesa, dogodkov, tekov in radar sej.',
+    'gym_mode_inactive': 'Gym mode ni aktiven',
+    'no_gym_selected': 'Noben fitnes ni izbran',
+    'change_gym': 'Zamenjaj fitnes',
+    'your_gyms': 'Tvoji fitnesi',
+    'filter_period': 'Filtriraj po obdobju',
+    'gym_mode_nav_hint':
+        'Zavihek Ljudje (👥) je nastavljen na Moj fitnes — matchi iz tvojega fitnesa se pojavijo tam.',
+
     // F3 — Zavihki kategorij
     'match_tab_all': 'Vsi',
     'match_tab_standard': 'Standardno',
@@ -1203,6 +1279,39 @@ const Map<String, Map<String, String>> _translations = {
     'history_last_3months': 'Zadnje 3 mesece',
     'history_last_12months': 'Zadnje 12 mesecev',
     'history_all': 'Vsi časi',
+
+    // Gym/Run/Event mode — gumb na radarju
+    'gym_mode_tap_hint':
+        'Gym Mode je aktiven. Tvoji matchi se pojavijo v zavihku Ljudje pod Moj fitnes.',
+    'gym_mode_inactive_hint':
+        'Tapni za informacije o Gym Mode.',
+    'run_mode_label': 'Run Mode',
+    'event_mode_label': 'Event Mode',
+    'gym_mode_label': 'Gym Mode',
+    'mode_picker_title': 'Aktiviraj način',
+    'mode_picker_subtitle':
+        'Izberi način in nato še enkrat tapni ikono za potrditev.',
+
+    // Gym mode activated popup
+    'gym_activated_title': 'Gym Mode aktiven',
+    'gym_activated_gym': 'Prijavljen si v',
+    'gym_activated_body':
+        'Ljudje, ki so trenutno v istem fitnesu, se bodo prikazali v zavihku Ljudje (👥) pod Tvoj fitnes. Način ostane aktiven, dokler ne zapustiš fitnesa ali ga ročno deaktiviraš.',
+    'gym_activated_cta': 'Razumem',
+
+    // Mode info popup (single tap na ikono načina)
+    'gym_mode_info_title': 'Gym Mode',
+    'gym_mode_info_body':
+        'Ko je Gym Mode aktiven, se ti v zavihku Tvoj fitnes prikažejo ljudje, ki so trenutno v istem fitnesu. Način ostane aktiven, dokler ne zapustiš fitnesa ali ga ročno izklopiš.',
+    'gym_mode_info_activate': 'Aktiviraj',
+    'gym_mode_info_deactivate': 'Deaktiviraj',
+    'run_mode_info_title': 'Run Mode',
+    'run_mode_info_body':
+        'Run Mode te poveže s tekači v bližini. Matchi se pojavijo v Tvojem teku pod zavihkom Ljudje.',
+    'event_mode_info_title': 'Event Mode',
+    'event_mode_info_body':
+        'Event Mode te poveže z ljudmi na istem dogodku. Matchi se pojavijo v Tvojem dogodku pod zavihkom Ljudje.',
+    'mode_info_dont_show': 'Ne prikazuj več',
 
     // --- Radar search overlay ---
     'time_remaining': 'Preostali čas',

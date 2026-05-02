@@ -37,35 +37,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
     super.dispose();
   }
 
-  IconData _getHobbyIcon(String hobby) {
-    switch (hobby.toLowerCase()) {
-      case 'music':
-      case 'glasba':
-        return LucideIcons.music;
-      case 'art':
-      case 'umetnost':
-      case 'slikanje':
-        return LucideIcons.palette;
-      case 'travel':
-      case 'potovanja':
-        return LucideIcons.plane;
-      case 'sport':
-      case 'šport':
-      case 'fitnes':
-        return LucideIcons.dumbbell;
-      case 'reading':
-      case 'branje':
-        return LucideIcons.book;
-      case 'movies':
-      case 'filmi':
-        return LucideIcons.film;
-      case 'gaming':
-      case 'videoigre':
-        return LucideIcons.gamepad2;
-      default:
-        return LucideIcons.star;
-    }
-  }
+
 
   Future<void> _sendGreet() async {
     if (_isGreeting) return;
@@ -315,12 +287,11 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(_getHobbyIcon(h),
-                                              size: 14,
-                                              color: const Color(0xFFF4436C)),
+                                          Text(h['emoji'] as String,
+                                              style: const TextStyle(fontSize: 14)),
                                           const SizedBox(width: 6),
                                           Text(
-                                            h,
+                                            h['name'] as String,
                                             style: GoogleFonts.instrumentSans(
                                               color: Colors.white70,
                                               fontSize: 12,

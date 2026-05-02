@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/hobby_utils.dart';
 
 class PublicProfile {
   final String id;
   final String name;
   final int age;
   final List<String> photoUrls;
-  final List<String> hobbies;
+  final List<Map<String, dynamic>> hobbies;
   final String? lookingFor;
 
   PublicProfile({
@@ -24,7 +25,7 @@ class PublicProfile {
       name: data['name'] ?? 'Neznano',
       age: data['age'] ?? 18,
       photoUrls: List<String>.from(data['photoUrls'] ?? []),
-      hobbies: List<String>.from(data['hobbies'] ?? []),
+      hobbies: HobbyUtils.parseHobbies(data['hobbies']),
       lookingFor: data['lookingFor'],
     );
   }

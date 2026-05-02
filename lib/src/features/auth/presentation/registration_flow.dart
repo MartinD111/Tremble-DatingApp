@@ -193,7 +193,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // What to meet
   final List<String> _wantToMeet = [];
   // Hobbies
-  final List<String> _selectedHobbies = [];
+  final List<Map<String, dynamic>> _selectedHobbies = [];
 
   // Photos
   final List<File?> _photos = [null, null, null, null, null, null];

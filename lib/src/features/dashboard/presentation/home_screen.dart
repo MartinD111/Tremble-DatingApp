@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'dart:ui';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -957,56 +958,393 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 // like /profile-preview or /edit-profile.
 final navIndexProvider = StateProvider<int>((ref) => 0);
 
-/// Dumbbell icon button (top-left of Radar tab) that opens the Gym Mode sheet.
-/// Shows a small green dot when gym mode is active.
-class _GymModeButton extends ConsumerWidget {
+/// Dumbbell icon button (top-left of Radar tab).
+/// Tap → mode info popup (Activate / Cancel / Don't show again).
+/// When gym mode is active: animated gold ring + gold icon.
+class _GymModeButton extends ConsumerStatefulWidget {
   const _GymModeButton();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_GymModeButton> createState() => _GymModeButtonState();
+}
+
+class _GymModeButtonState extends ConsumerState<_GymModeButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseCtrl;
+  late final Animation<double> _pulseAnim;
+
+  static const _gold = Color(0xFFF5C842);
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    _pulseAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    super.dispose();
+  }
+
+  void _syncAnimation(bool isActive) {
+    if (isActive && !_pulseCtrl.isAnimating) {
+      _pulseCtrl.repeat(reverse: true);
+    } else if (!isActive && _pulseCtrl.isAnimating) {
+      _pulseCtrl.stop();
+      _pulseCtrl.reset();
+    }
+  }
+
+  void _onTap() {
+    final gymState = ref.read(gymModeControllerProvider);
+    final lang = ref.read(appLanguageProvider);
+    showModeInfoDialog(
+      context: context,
+      ref: ref,
+      mode: RadarModeKind.gym,
+      lang: lang,
+      isActive: gymState.isActive,
+      onActivate: () => _activateGym(lang),
+      onDeactivate: () =>
+          ref.read(gymModeControllerProvider.notifier).deactivate(),
+    );
+  }
+
+  void _activateGym(String lang) {
+    GymModeSheet.show(context).then((_) {
+      if (!mounted) return;
+      final gymState = ref.read(gymModeControllerProvider);
+      if (gymState.isActive) {
+        // Navigate to People tab + switch to Your Gym section
+        final isPremium = ref.read(authStateProvider)?.isPremium == true;
+        ref.read(navIndexProvider.notifier).state = isPremium ? 2 : 1;
+        ref.read(matchSectionProvider.notifier).state = MatchSection.gym;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final gymState = ref.watch(gymModeControllerProvider);
     final isActive = gymState.isActive;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => GymModeSheet.show(context),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(
-                LucideIcons.dumbbell,
-                size: 22,
-                color: isActive
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.7),
-              ),
-              if (isActive)
-                Positioned(
-                  top: -2,
-                  right: -2,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.greenAccent,
-                      shape: BoxShape.circle,
+    _syncAnimation(isActive);
+
+    return GestureDetector(
+      onTap: _onTap,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            // Animated frosted-glass ring — only when active
+            if (isActive)
+              AnimatedBuilder(
+                animation: _pulseAnim,
+                builder: (_, __) => Transform.scale(
+                  scale: _pulseAnim.value,
+                  child: ClipOval(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isDark
+                              ? _gold.withValues(alpha: 0.18)
+                              : _gold.withValues(alpha: 0.12),
+                          border: Border.all(
+                            color: _gold.withValues(alpha: 0.65),
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-            ],
-          ),
+              ),
+
+            // Icon — gold when active
+            Icon(
+              LucideIcons.dumbbell,
+              size: 20,
+              color: isActive
+                  ? _gold
+                  : Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
+            ),
+
+            // Small gold dot (active indicator)
+            if (isActive)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: _gold,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark
+                          ? const Color(0xFF1A1A18)
+                          : Colors.white,
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
+}
+
+// ── Mode kinds (for info popup) ───────────────────────────────────────────────
+enum RadarModeKind { gym, run, event }
+
+/// Shows the mode info popup for gym / run / event.
+/// [onActivate] is called when the user taps Activate.
+/// [onDeactivate] is called when the mode is already active and user deactivates.
+Future<void> showModeInfoDialog({
+  required BuildContext context,
+  required WidgetRef ref,
+  required RadarModeKind mode,
+  required String lang,
+  required bool isActive,
+  required VoidCallback onActivate,
+  VoidCallback? onDeactivate,
+}) async {
+  final (titleKey, bodyKey, icon) = switch (mode) {
+    RadarModeKind.gym => ('gym_mode_info_title', 'gym_mode_info_body', LucideIcons.dumbbell),
+    RadarModeKind.run => ('run_mode_info_title', 'run_mode_info_body', LucideIcons.personStanding),
+    RadarModeKind.event => ('event_mode_info_title', 'event_mode_info_body', LucideIcons.calendar),
+  };
+
+  final dontShowNotifier = ValueNotifier<bool>(false);
+
+  final primary = Theme.of(context).colorScheme.primary;
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  const gold = Color(0xFFF5C842);
+  final ringColor = isActive ? gold : primary;
+
+  await showDialog<void>(
+    context: context,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (ctx) => Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1E1E1C).withValues(alpha: 0.97)
+                    : Colors.white.withValues(alpha: 0.94),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: ringColor.withValues(alpha: 0.30),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: ringColor.withValues(alpha: 0.12),
+                    blurRadius: 40,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(28),
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon ring
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: ringColor.withValues(alpha: 0.12),
+                        border: Border.all(
+                          color: ringColor.withValues(alpha: 0.45),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Icon(icon, color: ringColor, size: 24),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Title
+                    Text(
+                      t(titleKey, lang),
+                      style: TrembleTheme.displayFont(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Body
+                    Text(
+                      t(bodyKey, lang),
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.instrumentSans(
+                        fontSize: 13,
+                        color: isDark
+                            ? Colors.white60
+                            : const Color(0xFF1A1A18).withValues(alpha: 0.6),
+                        height: 1.55,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Don't show again checkbox
+                    ValueListenableBuilder<bool>(
+                      valueListenable: dontShowNotifier,
+                      builder: (_, val, __) => GestureDetector(
+                        onTap: () => dontShowNotifier.value = !val,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 120),
+                              width: 18,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                color: val
+                                    ? primary.withValues(alpha: 0.9)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: val
+                                      ? primary
+                                      : Colors.white.withValues(alpha: 0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: val
+                                  ? const Icon(Icons.check,
+                                      size: 12, color: Colors.white)
+                                  : null,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              t('mode_info_dont_show', lang),
+                              style: GoogleFonts.instrumentSans(
+                                fontSize: 12,
+                                color: Colors.white38,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Buttons row
+                    Row(
+                      children: [
+                        // Cancel
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(ctx),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(100),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                ),
+                              ),
+                              child: Text(
+                                t('cancel', lang),
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.instrumentSans(
+                                  color: Colors.white60,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // Activate / Deactivate
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              if (isActive) {
+                                onDeactivate?.call();
+                              } else {
+                                onActivate();
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? Colors.redAccent.withValues(alpha: 0.85)
+                                    : primary,
+                                borderRadius: BorderRadius.circular(100),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isActive ? Colors.redAccent : primary)
+                                        .withValues(alpha: 0.30),
+                                    blurRadius: 14,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                isActive
+                                    ? t('gym_mode_info_deactivate', lang)
+                                        .toUpperCase()
+                                    : t('gym_mode_info_activate', lang)
+                                        .toUpperCase(),
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.instrumentSans(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// Amber animated pill shown on the Radar screen when the background engine

@@ -269,13 +269,22 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
               ),
               const SizedBox(height: 20),
               // Title
-              Text(
-                widget.title,
-                style: GoogleFonts.instrumentSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.rowIcon != null) ...[
+                    Icon(widget.rowIcon, size: 20, color: textColor.withValues(alpha: 0.7)),
+                    const SizedBox(width: 10),
+                  ],
+                  Text(
+                    widget.title,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
               // Regular options — show rowIcon if provided, or per-option icon
@@ -629,6 +638,7 @@ Future<void> showMultiSelectModal({
   required List<Map<String, dynamic>> options,
   required List<String> currentValues,
   required ValueChanged<List<String>> onSave,
+  IconData? rowIcon,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -638,6 +648,7 @@ Future<void> showMultiSelectModal({
       title: title,
       options: options,
       currentValues: currentValues,
+      rowIcon: rowIcon,
       onSave: (v) {
         onSave(v);
         Navigator.pop(ctx);
@@ -651,12 +662,14 @@ class _MultiSelectSheet extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>> options;
   final List<String> currentValues;
   final ValueChanged<List<String>> onSave;
+  final IconData? rowIcon;
 
   const _MultiSelectSheet({
     required this.title,
     required this.options,
     required this.currentValues,
     required this.onSave,
+    this.rowIcon,
   });
 
   @override
@@ -684,6 +697,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
     required bool isDark,
     required Color textColor,
     IconData? icon,
+    Color? iconColor,
   }) {
     final brandRose = Theme.of(context).colorScheme.primary;
     return GestureDetector(
@@ -713,7 +727,8 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
                 size: 20,
                 color: isSelected
                     ? brandRose
-                    : (isDark ? Colors.white : Colors.black87),
+                    : (iconColor ??
+                        (isDark ? Colors.white : Colors.black87)),
               ),
               const SizedBox(width: 12),
             ],
@@ -775,13 +790,22 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
             ),
             const SizedBox(height: 20),
             // Title
-            Text(
-              widget.title,
-              style: GoogleFonts.instrumentSans(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: textColor,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (widget.rowIcon != null) ...[
+                  Icon(widget.rowIcon, size: 20, color: textColor.withValues(alpha: 0.7)),
+                  const SizedBox(width: 10),
+                ],
+                Text(
+                  widget.title,
+                  style: GoogleFonts.instrumentSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             // Options
@@ -791,6 +815,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
               return _optionPill(
                 label: opt['label']!,
                 icon: opt['icon'] as IconData?,
+                iconColor: opt['iconColor'] as Color?,
                 isSelected: isSelected,
                 onTap: () {
                   setState(() {
