@@ -5,14 +5,11 @@ class LiquidNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
   final List<LiquidNavItem> items;
-  final bool isPremium;
-
   const LiquidNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
     required this.items,
-    this.isPremium = false,
   });
 
   @override
@@ -101,15 +98,10 @@ class LiquidNavBar extends StatelessWidget {
                           child: Icon(
                             item.icon,
                             color: isSelected
-                                ? (isPremium
-                                    ? Colors.amber
-                                    : (Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withValues(alpha: 1.0)))
+                                ? (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Theme.of(context).colorScheme.onSurface)
                                 : (Theme.of(context).brightness ==
                                         Brightness.dark
                                     ? Colors.white.withValues(alpha: 0.4)

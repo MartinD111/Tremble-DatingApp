@@ -71,6 +71,30 @@ class GymRepository {
   Future<void> deactivateGymMode() async {
     await _api.call('onGymModeDeactivate');
   }
+
+  /// Activates event mode for the current user.
+  Future<Map<String, dynamic>> activateEventMode({
+    required String eventId,
+    required String eventName,
+  }) async {
+    return _api.call('onEventModeActivate', data: {
+      'eventId': eventId,
+      'eventName': eventName,
+    });
+  }
+
+  Future<void> deactivateEventMode() async {
+    await _api.call('onEventModeDeactivate');
+  }
+
+  /// Activates run mode for the current user.
+  Future<Map<String, dynamic>> activateRunMode() async {
+    return _api.call('onRunModeActivate');
+  }
+
+  Future<void> deactivateRunMode() async {
+    await _api.call('onRunModeDeactivate');
+  }
 }
 
 final gymRepositoryProvider = Provider<GymRepository>((ref) => GymRepository());

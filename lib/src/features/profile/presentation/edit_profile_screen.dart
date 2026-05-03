@@ -20,7 +20,7 @@ import '../../../shared/ui/top_notification.dart';
 import '../../../shared/ui/discard_changes_modal.dart';
 import '../../../core/upload_service.dart';
 import '../../../core/utils/icon_utils.dart';
-import '../../../core/theme.dart';
+
 
 import '../../../shared/ui/tremble_circle_button.dart';
 
@@ -49,6 +49,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final FocusNode _locationFocus = FocusNode();
 
   List<String> _photoUrls = [];
+  final ValueNotifier<double> _titleOpacity = ValueNotifier(1.0);
   final ValueNotifier<double> _buttonsOpacity = ValueNotifier(1.0);
   String? _gender;
   List<String> _interestedIn = [];
@@ -233,6 +234,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _occupationController.dispose();
     _schoolController.dispose();
     _companyController.dispose();
+    _titleOpacity.dispose();
     _buttonsOpacity.dispose();
     _locationDebounce?.cancel();
     _locationFocus.dispose();
@@ -245,12 +247,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final delta = offset - _lastScrollOffset;
 
     if (offset <= 0) {
+      _titleOpacity.value = 1.0;
       _buttonsOpacity.value = 1.0;
     } else if (delta > 2) {
-      // Scrolling down -> fade out
+      _titleOpacity.value = 0.0;
       _buttonsOpacity.value = 0.0;
     } else if (delta < -2) {
-      // Scrolling up -> fade in
+      _titleOpacity.value = 0.0;
       _buttonsOpacity.value = 1.0;
     }
 
@@ -406,7 +409,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       icon: LucideIcons.checkCircle,
     );
     setState(() => _hasChanges = false);
-    context.pop();
+    if (context.mounted) {
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/profile-preview');
+      }
+    }
   }
 
   Future<void> _pickImage() async {
@@ -476,6 +485,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 Navigator.pop(ctx);
               },
               tr: (key) => t(key, _lang),
+              scrollController: scrollController,
             ),
           ),
         );
@@ -557,16 +567,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(
-                              child: Text(
-                                t('edit_profile', lang),
-                                style: TrembleTheme.displayFont(
-                                  color: textColor,
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
                             const SizedBox(height: 32),
 
                             // ── Photos ────────────────────────────────────────────
@@ -1216,8 +1216,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
                             // ── Hobbies ───────────────────────────────────────────
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                const Spacer(),
                                 Text(
                                   t('hobbies', lang),
                                   style: GoogleFonts.instrumentSans(
@@ -1225,9 +1225,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                const SizedBox(width: 10),
-                                _editCircle(isDark, borderColor, fillColor,
-                                    onTap: _showHobbiesModal),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: _editCircle(isDark, borderColor, fillColor,
+                                        onTap: _showHobbiesModal),
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 12),
@@ -1265,13 +1269,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ],
                 ),
               ),
-              ValueListenableBuilder<double>(
-                valueListenable: _buttonsOpacity,
-                builder: (context, opacity, child) {
+              ListenableBuilder(
+                listenable: Listenable.merge([_titleOpacity, _buttonsOpacity]),
+                builder: (context, child) {
                   return TrembleHeader(
-                    title: '', // Title is in scrollable content
-                    titleOpacity: 0.0,
-                    buttonsOpacity: opacity,
+                    title: t('edit_profile', lang),
+                    titleOpacity: _titleOpacity.value,
+                    buttonsOpacity: _buttonsOpacity.value,
                     onBack: () async {
                       if (_hasChanges) {
                         final should = await _onWillPop();

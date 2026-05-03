@@ -40,8 +40,8 @@ class GymModeController extends StateNotifier<GymModeState> {
 
   GymModeController(this._repo) : super(const GymModeState());
 
-  /// Fetches current device location, then calls the backend to validate
-  /// proximity and activate gym mode.
+  /// Fetches current device location, calls onGymModeActivate, then updates
+  /// both local gym state and the auth user profile atomically.
   Future<void> activate({
     required String gymId,
     required String gymName,
@@ -70,14 +70,16 @@ class GymModeController extends StateNotifier<GymModeState> {
     }
   }
 
-  /// Manually deactivates gym mode.
+  /// Calls onGymModeDeactivate, then immediately clears local Riverpod state
+  /// so the UI reverts to "No gym selected" without needing a full refresh.
   Future<void> deactivate() async {
-    state = state.copyWith(status: GymModeStatus.loading);
+    // Optimistic: clear state immediately so UI is instant.
+    state = const GymModeState();
 
     try {
       await _repo.deactivateGymMode();
-      state = const GymModeState();
     } on Exception catch (e) {
+      // Revert on failure so the user knows deactivation didn't land.
       state = GymModeState(
         status: GymModeStatus.error,
         errorMessage: _friendlyError(e),
@@ -85,7 +87,6 @@ class GymModeController extends StateNotifier<GymModeState> {
     }
   }
 
-  /// Ensures location permission is granted and returns the current position.
   Future<Position> _requireLocation() async {
     var permission = await Geolocator.checkPermission();
 
@@ -108,7 +109,6 @@ class GymModeController extends StateNotifier<GymModeState> {
   String _friendlyError(Exception e) {
     final msg = e.toString();
     if (msg.contains('failed-precondition') || msg.contains('away from')) {
-      // Surface the distance message from the backend
       final match = RegExp(r'You are .+').firstMatch(msg);
       return match?.group(0) ?? 'You are not at this gym location.';
     }
@@ -122,4 +122,130 @@ class GymModeController extends StateNotifier<GymModeState> {
 final gymModeControllerProvider =
     StateNotifierProvider<GymModeController, GymModeState>(
   (ref) => GymModeController(ref.watch(gymRepositoryProvider)),
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RadarModeKind-agnostic activation state — shared by Event and Run controllers.
+// ─────────────────────────────────────────────────────────────────────────────
+enum SimpleModeStatus { inactive, loading, active, error }
+
+class SimpleModeState {
+  final SimpleModeStatus status;
+  final String? activeName;
+  final String? activeId;
+  final String? errorMessage;
+
+  const SimpleModeState({
+    this.status = SimpleModeStatus.inactive,
+    this.activeName,
+    this.activeId,
+    this.errorMessage,
+  });
+
+  bool get isActive => status == SimpleModeStatus.active;
+  bool get isLoading => status == SimpleModeStatus.loading;
+
+  SimpleModeState copyWith({
+    SimpleModeStatus? status,
+    String? activeName,
+    String? activeId,
+    String? errorMessage,
+  }) =>
+      SimpleModeState(
+        status: status ?? this.status,
+        activeName: activeName ?? this.activeName,
+        activeId: activeId ?? this.activeId,
+        errorMessage: errorMessage ?? this.errorMessage,
+      );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EventModeController — calls onEventModeActivate / onEventModeDeactivate
+// ─────────────────────────────────────────────────────────────────────────────
+class EventModeController extends StateNotifier<SimpleModeState> {
+  final GymRepository _repo;
+
+  EventModeController(this._repo) : super(const SimpleModeState());
+
+  Future<void> activate({
+    required String eventId,
+    required String eventName,
+  }) async {
+    state = state.copyWith(
+        status: SimpleModeStatus.loading, errorMessage: null);
+
+    try {
+      await _repo.activateEventMode(eventId: eventId, eventName: eventName);
+      state = SimpleModeState(
+        status: SimpleModeStatus.active,
+        activeId: eventId,
+        activeName: eventName,
+      );
+    } on Exception catch (e) {
+      state = SimpleModeState(
+        status: SimpleModeStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  Future<void> deactivate() async {
+    // Optimistic clear.
+    state = const SimpleModeState();
+    try {
+      await _repo.deactivateEventMode();
+    } on Exception catch (e) {
+      state = SimpleModeState(
+        status: SimpleModeStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+}
+
+final eventModeControllerProvider =
+    StateNotifierProvider<EventModeController, SimpleModeState>(
+  (ref) => EventModeController(ref.watch(gymRepositoryProvider)),
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RunModeController — calls onRunModeActivate / onRunModeDeactivate
+// No gym/event selection UI; activation is immediate (no args needed).
+// ─────────────────────────────────────────────────────────────────────────────
+class RunModeController extends StateNotifier<SimpleModeState> {
+  final GymRepository _repo;
+
+  RunModeController(this._repo) : super(const SimpleModeState());
+
+  Future<void> activate() async {
+    state = state.copyWith(
+        status: SimpleModeStatus.loading, errorMessage: null);
+
+    try {
+      await _repo.activateRunMode();
+      state = const SimpleModeState(status: SimpleModeStatus.active);
+    } on Exception catch (e) {
+      state = SimpleModeState(
+        status: SimpleModeStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  Future<void> deactivate() async {
+    state = const SimpleModeState();
+    try {
+      await _repo.deactivateRunMode();
+    } on Exception catch (e) {
+      state = SimpleModeState(
+        status: SimpleModeStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+}
+
+final runModeControllerProvider =
+    StateNotifierProvider<RunModeController, SimpleModeState>(
+  (ref) => RunModeController(ref.watch(gymRepositoryProvider)),
 );

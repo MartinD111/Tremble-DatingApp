@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../../../shared/ui/tremble_logo.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
@@ -63,10 +62,6 @@ class IntroSlideStep extends StatelessWidget {
               const SizedBox(height: 12),
             ] else
               const SizedBox(height: 60),
-            if (index == 0) ...[
-              const TrembleLogo(size: 56),
-              const SizedBox(height: 40),
-            ],
             Container(
               width: 96,
               height: 96,

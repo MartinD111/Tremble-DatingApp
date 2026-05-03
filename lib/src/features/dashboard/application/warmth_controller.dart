@@ -15,42 +15,48 @@ class WarmthController extends _$WarmthController {
 
   @override
   WarmthDirection build() {
-    final search = ref.watch(currentSearchProvider);
     final devSim = ref.watch(devSimulationControllerProvider);
 
-    // Identify the current session to detect resets
-    final sessionId = devSim.isMutualWaveActive
-        ? 'dev_${state.hashCode}' // Dev mode is a distinct session
-        : search?.id;
-
-    if (sessionId != _lastSessionId) {
-      _rssiBuffer.clear();
-      _lastSessionId = sessionId;
-    }
-
-    // Scenario A: Dev Mode Simulation
+    // Scenario A: Dev Mode Simulation — no network dependency.
     if (devSim.isMutualWaveActive) {
-      // Map pingDistance (0.9 -> 0.1) to fake RSSI (-90 -> -45)
+      const sessionId = 'dev_sim';
+      if (sessionId != _lastSessionId) {
+        _rssiBuffer.clear();
+        _lastSessionId = sessionId;
+      }
       final fakeRssi = (-90 + (1.0 - devSim.pingDistance) * 50).toInt();
       return _computeWarmthFromNewRssi(fakeRssi);
     }
 
-    // Scenario B: Real BLE Search
-    if (search != null) {
-      final ble = ref.watch(bleServiceProvider);
-      final partnerId =
-          search.getPartnerId(ref.read(authStateProvider)?.id ?? '');
+    // Scenario B: Real BLE — guard against loading/error state from Firestore.
+    // Use .asData to avoid throwing when the stream hasn't resolved yet.
+    final matchAsyncValue = ref.watch(activeMatchesStreamProvider);
+    final search = matchAsyncValue.asData != null
+        ? ref.watch(currentSearchProvider)
+        : null;
 
-      // We listen to the proximity stream and update the state
-      final subscription = ble.proximityStream.listen((rssiMap) {
-        if (rssiMap.containsKey(partnerId)) {
-          final rssi = rssiMap[partnerId]!;
-          state = _computeWarmthFromNewRssi(rssi);
-        }
-      });
-
-      ref.onDispose(() => subscription.cancel());
+    if (search == null) {
+      _rssiBuffer.clear();
+      _lastSessionId = null;
+      return WarmthDirection.neutral;
     }
+
+    if (search.id != _lastSessionId) {
+      _rssiBuffer.clear();
+      _lastSessionId = search.id;
+    }
+
+    final ble = ref.watch(bleServiceProvider);
+    final partnerId =
+        search.getPartnerId(ref.read(authStateProvider)?.id ?? '');
+
+    final subscription = ble.proximityStream.listen((rssiMap) {
+      if (rssiMap.containsKey(partnerId)) {
+        state = _computeWarmthFromNewRssi(rssiMap[partnerId]!);
+      }
+    });
+
+    ref.onDispose(subscription.cancel);
 
     return WarmthDirection.neutral;
   }
@@ -64,16 +70,11 @@ class WarmthController extends _$WarmthController {
     if (_rssiBuffer.length < 3) return WarmthDirection.neutral;
 
     final recent = _rssiBuffer.last;
-    // Compare with a point 2-3 steps back to filter noise
     final prev = _rssiBuffer[_rssiBuffer.length - 3];
     final delta = recent - prev;
 
-    // Threshold ±3 dBm — below this is noise.
     if (delta > 3) return WarmthDirection.warmer;
     if (delta < -3) return WarmthDirection.colder;
-
-    // If we have a neutral trend but we are very close, keep neutral or last known?
-    // User requested: warmer, colder, neutral.
     return WarmthDirection.neutral;
   }
 }

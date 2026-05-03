@@ -6,7 +6,7 @@ part of 'warmth_controller.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$warmthControllerHash() => r'b25aa9967151e8a6c0f866eca6f671cf38eb2202';
+String _$warmthControllerHash() => r'2fd3517fbb3603748c2852acb5e47de833a9d56f';
 
 /// See also [WarmthController].
 @ProviderFor(WarmthController)

@@ -1,26 +1,22 @@
-## Session State — 2026-05-02
-- Active Task: Matches screen & Radar mode button redesign
+## Session State — 2026-05-03 15:08
+- Active Task: Cleaning Up Matches Screen UI
 - Environment: Dev
 - Modified Files:
-  - `lib/src/features/matches/presentation/matches_screen.dart` — full rewrite: dropdown title, section picker, filter popup, help dialog
-  - `lib/src/features/dashboard/presentation/home_screen.dart` — _GymModeButton: tap=toast, long-press=mode picker sheet
-  - `lib/src/core/translations.dart` — new keys: section_your_gym/event/run/matches, gym_mode_*_hint, mode_picker_*, filter_period, no_gym_selected, your_gyms, gym_mode_nav_hint (EN + SL)
-- Open Problems: Run Mode / Event Mode activation in _ModePickerSheet shows snackbar only — real backend hookup pending when those features are built.
-- System Status: Zero analysis warnings. Build passing.
+  - `lib/src/features/matches/presentation/matches_screen.dart` — Removed redundant "Your Run" and "Your Event" sub-header labels.
+  - `lib/src/features/profile/presentation/edit_profile_screen.dart` — Fixed unused import warning.
+- Open Problems: None.
+- System Status: Zero analysis errors. Build passing.
 
 ## Session Handoff
 - Completed:
-    - **Matches dropdown**: Title replaced with borderless "Section ▾" trigger. Dropdown shows 4 rows: Your Gym (active gym pill + "Your gyms" button), Your Event, Your Run, Your Matches. Tapping a row filters the list and syncs the tab bar.
-    - **Filter popup**: Horizontal chip row removed. Filter icon (⧉) opens a `showMenu` popup above the button with period options. Active filter shown as a dismissible pill below the header.
-    - **Help dialog**: Redesigned with per-section icon + title + description rows.
-    - **Gym Mode Button (radar)**: Single tap → SnackBar info toast. Long press → `_ModePickerSheet` bottom sheet. Sheet uses two-tap confirm: tap once to select (highlighted + "Tap again"), tap again to activate.
+    - **MatchesScreen Cleanup**: Removed redundant sub-header labels ("Your Run", "Your Event") that repeated the main title.
+    - **Conditional Context Bar**: `_SectionContextBar` now only renders for the "Your Gym" section to provide dynamic check-in info.
+    - **Vertical Space Optimization**: Adjusted `MatchesScreen` layout to hide the context bar padding entirely when in Event or Run modes.
+    - **Analysis Fix**: Cleaned up unused import in `edit_profile_screen.dart` to maintain zero-warning status.
 - In Progress: None.
-- Blocked: Run Mode / Event Mode backend not yet built — mode picker activates Gym via GymModeSheet; Run/Event show confirmation toast only.
-- Next Action:
-    - On-device test: People tab → "Your Matches ▾" → open dropdown → verify all 4 sections render.
-    - On-device test: Gym section row → tap empty pill → GymModeSheet opens.
-    - On-device test: Radar → long-press dumbbell → mode picker → select Run → second tap → snackbar.
-    - On-device test: Radar → single tap dumbbell → info toast appears.
+- Blocked: None.
+- Next Action: Review layout spacing on physical device to ensure the list position feels natural without the sub-header.
+
 
 ---
 

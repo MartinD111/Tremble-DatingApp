@@ -89,11 +89,6 @@ class PreferenceRangeSlider extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (isPremium) ...[
-                        const SizedBox(width: 8),
-                        const Icon(LucideIcons.lock,
-                            size: 13, color: Colors.amber),
-                      ],
                     ],
                   ),
                   const SizedBox(height: 4),

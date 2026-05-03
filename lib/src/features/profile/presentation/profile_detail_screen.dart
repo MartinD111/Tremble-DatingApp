@@ -167,47 +167,77 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                       }),
                                     ),
                                   ),
+                                // ── Name + Age + Zodiac overlay ──────────────────
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.transparent,
+                                          Color(0xCC000000),
+                                        ],
+                                      ),
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                '${match.name}, ${match.age}',
+                                                style: GoogleFonts.instrumentSans(
+                                                  color: Colors.white,
+                                                  fontSize: 26,
+                                                  fontWeight: FontWeight.bold,
+                                                  shadows: [
+                                                    const Shadow(
+                                                      blurRadius: 8,
+                                                      color: Colors.black54,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              if (match.birthDate != null) ...[
+                                                const SizedBox(height: 4),
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      ZodiacUtils.getZodiacIcon(
+                                                        ZodiacUtils.getZodiacSign(match.birthDate),
+                                                      ),
+                                                      size: 16,
+                                                      color: Colors.white70,
+                                                    ),
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      t('zodiac_${ZodiacUtils.getZodiacSign(match.birthDate)}', lang),
+                                                      style: GoogleFonts.instrumentSans(
+                                                        color: Colors.white70,
+                                                        fontSize: 15,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ── Name + Age ─────────────────────────────────────────────
-                        Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                '${match.name}, ${match.age}',
-                                style: GoogleFonts.instrumentSans(
-                                  color: textColor,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (match.birthDate != null) ...[
-                                const SizedBox(width: 12),
-                                Icon(
-                                  ZodiacUtils.getZodiacIcon(
-                                    ZodiacUtils.getZodiacSign(match.birthDate),
-                                  ),
-                                  size: 20,
-                                  color: textColor.withValues(alpha: 0.6),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  t('zodiac_${ZodiacUtils.getZodiacSign(match.birthDate)}',
-                                      lang),
-                                  style: GoogleFonts.instrumentSans(
-                                    color: textColor.withValues(alpha: 0.8),
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ],
                           ),
                         ),
 
@@ -359,7 +389,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                 titleOpacity: 0.0,
                 buttonsOpacity: opacity,
                 onBack: () {
-                  ref.read(matchControllerProvider.notifier).dismiss();
+                  if (widget.showActions) {
+                    ref.read(matchControllerProvider.notifier).dismiss();
+                  }
                   if (context.canPop()) context.pop();
                 },
                 actions: [
@@ -695,8 +727,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
             alignment: WrapAlignment.center,
             children: pills,
           ),
-          const SizedBox(height: 32),
-          _buildSpectrumIndicator(
+          const SizedBox(height: 24),
+          _buildGlassSpectrumCard(
             icon: LucideIcons.brain,
             label: t('personality_type', lang),
             value: match.introvertLevel?.toDouble() ?? 50.0,
@@ -711,7 +743,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                 : '',
             isDark: isDark,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 12),
           Builder(builder: (context) {
             final val = _getPoliticalValue(match.politicalAffiliation);
             String currentText = match.politicalAffiliation != null
@@ -720,8 +752,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
             if (val > 0 && match.politicalAffiliation != null) {
               currentText = _politicsLabelReg(val, lang);
             }
-
-            return _buildSpectrumIndicator(
+            return _buildGlassSpectrumCard(
               icon: LucideIcons.flag,
               label: t('political_affiliation', lang),
               value: val <= 0 ? 3.0 : val,
@@ -771,7 +802,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     ][idx];
   }
 
-  Widget _buildSpectrumIndicator({
+  Widget _buildGlassSpectrumCard({
     required IconData icon,
     required String label,
     required double value,
@@ -783,95 +814,122 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     required bool isDark,
     bool hideThumb = false,
   }) {
-    final trackColor =
-        isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
     final accentColor = Theme.of(context).primaryColor;
-    final textColor = isDark ? Colors.white70 : Colors.black54;
+    final cardBg = isDark
+        ? Colors.white.withValues(alpha: 0.07)
+        : Colors.white.withValues(alpha: 0.6);
+    final cardBorder = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.black.withValues(alpha: 0.08);
+    final trackColor = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.black.withValues(alpha: 0.07);
+    final labelColor = isDark ? Colors.white54 : Colors.black45;
+    final titleColor = isDark ? Colors.white : Colors.black87;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Centered Header (Match Edit Profile style)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: accentColor.withValues(alpha: 0.7)),
-            const SizedBox(width: 8),
-            Text(
-              label,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 15, color: accentColor.withValues(alpha: 0.8)),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  style: GoogleFonts.instrumentSans(
+                    color: titleColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(leftLabel,
+                  style: TextStyle(color: labelColor, fontSize: 10)),
+              Text(rightLabel,
+                  style: TextStyle(color: labelColor, fontSize: 10)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                height: 3,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: trackColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              LayoutBuilder(builder: (context, constraints) {
+                if (hideThumb) return const SizedBox.shrink();
+                final percent = (value - min) / (max - min);
+                const thumbSize = 10.0;
+                final leftOffset =
+                    (constraints.maxWidth - thumbSize) * percent;
+                return Container(
+                  margin: EdgeInsets.only(left: leftOffset),
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: thumbSize,
+                    height: thumbSize,
+                    decoration: BoxDecoration(
+                      color: accentColor,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: accentColor.withValues(alpha: 0.45),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+          const SizedBox(height: 10),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: Text(
+              currentText,
               style: GoogleFonts.instrumentSans(
-                color: isDark ? Colors.white : Colors.black87,
-                fontSize: 16,
+                color: accentColor,
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        // Range Labels
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(leftLabel, style: TextStyle(color: textColor, fontSize: 12)),
-            Text(rightLabel, style: TextStyle(color: textColor, fontSize: 12)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        // Progress Track
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              height: 4,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: trackColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            LayoutBuilder(builder: (context, constraints) {
-              final percent = (value - min) / (max - min);
-              final thumbSize = 12.0;
-              final leftOffset = (constraints.maxWidth - thumbSize) * percent;
-
-              if (hideThumb) return const SizedBox.shrink();
-
-              return Container(
-                margin: EdgeInsets.only(left: leftOffset),
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  width: thumbSize,
-                  height: thumbSize,
-                  decoration: BoxDecoration(
-                    color: accentColor,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: accentColor.withValues(alpha: 0.4),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // Selected Value Text (Bold)
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            currentText,
-            style: GoogleFonts.instrumentSans(
-              color: accentColor,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+              textAlign: TextAlign.center,
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -15,6 +15,7 @@ class HobbiesStep extends StatefulWidget {
     required this.onContinue,
     required this.tr,
     this.isModal = false,
+    this.scrollController,
   });
 
   final List<Map<String, dynamic>> selectedHobbies;
@@ -24,6 +25,7 @@ class HobbiesStep extends StatefulWidget {
   final VoidCallback onContinue;
   final String Function(String) tr;
   final bool isModal;
+  final ScrollController? scrollController;
 
   @override
   State<HobbiesStep> createState() => _HobbiesStepState();
@@ -31,6 +33,7 @@ class HobbiesStep extends StatefulWidget {
 
 class _HobbiesStepState extends State<HobbiesStep> {
   String? _openCategory;
+  final Map<String, GlobalKey> _categoryKeys = {};
 
   IconData _getCategoryIcon(String categoryKey) {
     switch (categoryKey) {
@@ -195,7 +198,9 @@ class _HobbiesStepState extends State<HobbiesStep> {
                           ? '$translatedName ($selectedCount)'
                           : translatedName;
 
+                      final containerKey = _categoryKeys.putIfAbsent(catKey, () => GlobalKey());
                       return Container(
+                        key: containerKey,
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: isDark
@@ -208,13 +213,30 @@ class _HobbiesStepState extends State<HobbiesStep> {
                           children: [
                             InkWell(
                               onTap: () {
+                                final wasOpen = _openCategory == catKey;
                                 setState(() {
-                                  if (_openCategory == catKey) {
-                                    _openCategory = null;
-                                  } else {
-                                    _openCategory = catKey;
-                                  }
+                                  _openCategory = wasOpen ? null : catKey;
                                 });
+                                if (!wasOpen) {
+                                  final key = _categoryKeys[catKey];
+                                  if (key != null) {
+                                    // Wait for AnimatedSize to finish (300ms) then scroll
+                                    Future.delayed(const Duration(milliseconds: 320), () {
+                                      final sc = widget.scrollController;
+                                      final ctx = key.currentContext;
+                                      if (sc == null || !sc.hasClients || ctx == null) return;
+                                      final box = ctx.findRenderObject() as RenderBox?;
+                                      if (box == null) return;
+                                      final offset = box.localToGlobal(Offset.zero).dy;
+                                      final scrollOffset = sc.offset + offset - MediaQuery.of(context).padding.top - 16;
+                                      sc.animateTo(
+                                        scrollOffset.clamp(0.0, sc.position.maxScrollExtent),
+                                        duration: const Duration(milliseconds: 350),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    });
+                                  }
+                                }
                               },
                               borderRadius: BorderRadius.circular(16),
                               child: Padding(

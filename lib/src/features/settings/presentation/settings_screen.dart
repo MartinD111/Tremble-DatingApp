@@ -635,28 +635,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           ),
                         ],
                         const SizedBox(height: 10),
-                        Text(
-                          user.isPremium ? "Premium Member ✨" : "Free Plan",
-                          style: GoogleFonts.instrumentSans(
-                            color: user.isPremium
-                                ? const Color(0xFFFFD700)
-                                : subColor,
-                            fontWeight: user.isPremium
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                          ),
-                        ),
-                        if (!user.isPremium) ...[
-                          const SizedBox(height: 10),
-                          PrimaryButton(
-                            text: "Nadgradnja",
-                            width: 120,
-                            height: 36,
-                            onPressed: () {
-                              PremiumPaywallBottomSheet.show(context);
-                            },
-                          )
-                        ]
+                        const SizedBox(height: 10),
                       ],
                     ),
                   ),

@@ -116,10 +116,6 @@ class PreferencePillRow extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (isPremium) ...[
-                  const SizedBox(width: 6),
-                  const Icon(LucideIcons.lock, size: 13, color: Colors.amber),
-                ],
               ],
             ),
           ),

@@ -50,7 +50,7 @@ class PremiumPaywallBottomSheet extends StatelessWidget {
             const Center(
               child: Icon(
                 LucideIcons.crown,
-                color: Color(0xFFFFD700), // Gold
+                color: Color(0xFFF4436C), // Rose
                 size: 48,
               ),
             ),
@@ -156,10 +156,10 @@ class PremiumPaywallBottomSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.15),
+              color: const Color(0xFFF4436C).withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: const Color(0xFFFFD700), size: 20),
+            child: Icon(icon, color: const Color(0xFFF4436C), size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(

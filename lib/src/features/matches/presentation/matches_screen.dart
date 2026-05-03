@@ -101,11 +101,34 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
   }
 
   // ── Section picker — bottom sheet ────────────────────────────────────────
+  /// Resolves the gym pill accent color based on gender-based mode setting.
+  /// male → blue, female → rose, other/null → theme primary.
+  /// Always returns a color with sufficient contrast on the pill background.
+  static Color _resolveGymPillColor({
+    required BuildContext context,
+    required String? gender,
+    required bool isGenderBased,
+    required Color fallback,
+  }) {
+    if (!isGenderBased) return fallback;
+    return switch (gender?.toLowerCase()) {
+      'male' => const Color(0xFF4A9EFF),
+      'female' => const Color(0xFFF4436C),
+      _ => fallback,
+    };
+  }
+
   void _showSectionPicker() {
     final lang = ref.read(appLanguageProvider);
-    final gymState = ref.read(gymModeControllerProvider);
     final primary = Theme.of(context).primaryColor;
     final activeSection = ref.read(matchSectionProvider);
+    final user = ref.read(authStateProvider);
+    final gymPillColor = _resolveGymPillColor(
+      context: context,
+      gender: user?.gender,
+      isGenderBased: user?.isGenderBasedColor ?? false,
+      fallback: primary,
+    );
 
     showModalBottomSheet<void>(
       context: context,
@@ -114,7 +137,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
       builder: (sheetCtx) => _SectionPickerSheet(
         lang: lang,
         primary: primary,
-        gymState: gymState,
+        gymPillColor: gymPillColor,
         activeSection: activeSection,
         onSelect: (section) {
           ref.read(matchSectionProvider.notifier).state = section;
@@ -140,62 +163,92 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
     );
   }
 
-  // ── Filter popup ─────────────────────────────────────────────────────────
-  void _showFilterMenu(BuildContext ctx) async {
-    final RenderBox button = ctx.findRenderObject() as RenderBox;
-    final RenderBox overlay =
-        Navigator.of(ctx).overlay!.context.findRenderObject() as RenderBox;
-    final RelativeRect position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        button.localToGlobal(Offset.zero, ancestor: overlay),
-        button.localToGlobal(
-            button.size.bottomRight(Offset.zero), ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
-
+  // ── Filter bottom sheet ───────────────────────────────────────────────────
+  void _showFilterMenu(BuildContext ctx) {
     final lang = ref.read(appLanguageProvider);
     final activeFilter = ref.read(matchFilterProvider).historyFilter;
+    final primary = Theme.of(ctx).primaryColor;
+    final isDark = Theme.of(ctx).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white60 : Colors.black54;
+    final dividerColor = isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.1);
 
-    await showMenu<HistoryFilter>(
+    showModalBottomSheet<void>(
       context: ctx,
-      position: position,
-      color: const Color(0xFF222220),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      items: HistoryFilter.values.map((filter) {
-        final selected = activeFilter == filter;
-        return PopupMenuItem<HistoryFilter>(
-          value: filter,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            children: [
-              Icon(
-                selected ? LucideIcons.checkCircle : LucideIcons.circle,
-                size: 14,
-                color: selected ? Theme.of(ctx).primaryColor : Colors.white38,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                t(_historyKey(filter), lang),
-                style: GoogleFonts.instrumentSans(
-                  fontSize: 14,
-                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                  color: selected ? Theme.of(ctx).primaryColor : Colors.white70,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF1A1A18).withValues(alpha: 0.97)
+                  : Colors.white.withValues(alpha: 0.96),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(24)),
+              border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06)),
+            ),
+            padding: EdgeInsets.fromLTRB(
+                0, 12, 0, MediaQuery.of(sheetCtx).padding.bottom + 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: dividerColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-            ],
+                ListView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: HistoryFilter.values.map((filter) {
+                    final selected = activeFilter == filter;
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 2),
+                      leading: Icon(
+                        selected
+                            ? LucideIcons.checkCircle
+                            : LucideIcons.circle,
+                        size: 16,
+                        color: selected ? primary : subtextColor,
+                      ),
+                      title: Text(
+                        t(_historyKey(filter), lang),
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 15,
+                          fontWeight:
+                              selected ? FontWeight.bold : FontWeight.w500,
+                          color: selected ? textColor : subtextColor,
+                        ),
+                      ),
+                      onTap: () {
+                        _setHistoryFilter(filter);
+                        Navigator.pop(sheetCtx);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
           ),
-        );
-      }).toList(),
-    ).then((selected) {
-      if (selected != null) _setHistoryFilter(selected);
-    });
+        ),
+      ),
+    );
   }
 
   // ── Help dialog ───────────────────────────────────────────────────────────
   void _showHelpDialog() {
     final lang = ref.read(appLanguageProvider);
     final primary = Theme.of(context).primaryColor;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white54 : Colors.black54;
 
     final sections = [
       (LucideIcons.dumbbell, 'section_your_gym', 'section_your_gym_desc'),
@@ -211,6 +264,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
         elevation: 0,
         child: GlassCard(
           padding: const EdgeInsets.all(24),
+          opacity: isDark ? 0.2 : 0.5,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,7 +278,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                     style: GoogleFonts.instrumentSans(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: textColor,
                     ),
                   ),
                 ],
@@ -253,7 +307,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                 style: GoogleFonts.instrumentSans(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: textColor,
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -261,7 +315,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                 t(s.$3, lang),
                                 style: GoogleFonts.instrumentSans(
                                   fontSize: 12,
-                                  color: Colors.white54,
+                                  color: subtextColor,
                                   height: 1.4,
                                 ),
                               ),
@@ -306,6 +360,16 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
     final subtextColor = isDark ? Colors.white70 : Colors.black54;
     final dimColor = isDark ? Colors.white24 : Colors.black26;
     final primary = Theme.of(context).primaryColor;
+
+    // Gender-based pill color: when enabled, derive from the user's gender so
+    // the "Your Gym" pill stays readable across dark, light, and themed modes.
+    // Falls back to the standard theme primary when the feature is off.
+    final Color gymPillColor = _resolveGymPillColor(
+      context: context,
+      gender: user?.gender,
+      isGenderBased: user?.isGenderBasedColor ?? false,
+      fallback: primary,
+    );
 
     final sectionLabel = switch (activeSection) {
       MatchSection.gym => t('section_your_gym', lang),
@@ -360,9 +424,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                 // Mode activation icon — matches current section
                 _ModeIconButton(
                   section: activeSection,
-                  gymState: gymState,
                   lang: lang,
-                  ref: ref,
                 ),
 
                 IconButton(
@@ -456,7 +518,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                     .toList(),
               ),
             )
-          else
+          else if (activeSection == MatchSection.gym)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
               child: _SectionContextBar(
@@ -464,6 +526,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                 gymState: gymState,
                 lang: lang,
                 primary: primary,
+                gymPillColor: gymPillColor,
                 onChangeGym: () => GymModeSheet.show(context),
               ),
             ),
@@ -706,41 +769,67 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
 // mode info popup for the current section (gym/event/run).
 // Hidden when in the Matches section (no mode to activate).
 // ─────────────────────────────────────────────────────────────────────────────
-class _ModeIconButton extends StatelessWidget {
+class _ModeIconButton extends ConsumerWidget {
   final MatchSection section;
-  final GymModeState gymState;
   final String lang;
-  final WidgetRef ref;
 
   const _ModeIconButton({
     required this.section,
-    required this.gymState,
     required this.lang,
-    required this.ref,
   });
 
   static const _gold = Color(0xFFF5C842);
+  static const _rose = Color(0xFFF4436C);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (section == MatchSection.matches) return const SizedBox.shrink();
+
+    final gymState = ref.watch(gymModeControllerProvider);
+    final runState = ref.watch(runModeControllerProvider);
+    final eventState = ref.watch(eventModeControllerProvider);
 
     final (icon, modeKind) = switch (section) {
       MatchSection.gym => (LucideIcons.dumbbell, RadarModeKind.gym),
       MatchSection.event => (LucideIcons.calendar, RadarModeKind.event),
-      MatchSection.run => (LucideIcons.personStanding, RadarModeKind.run),
+      MatchSection.run => (LucideIcons.footprints, RadarModeKind.run),
       MatchSection.matches => (LucideIcons.users, RadarModeKind.gym),
     };
 
-    final isActive = section == MatchSection.gym && gymState.isActive;
+    final isActive = switch (section) {
+      MatchSection.gym => gymState.isActive,
+      MatchSection.run => runState.isActive,
+      MatchSection.event => eventState.isActive,
+      MatchSection.matches => false,
+    };
+
+    final activeColor = switch (section) {
+      MatchSection.gym || MatchSection.event => _gold,
+      MatchSection.run => _rose,
+      MatchSection.matches => _gold,
+    };
+
     final iconColor = isActive
-        ? _gold
+        ? activeColor
         : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55);
 
     return IconButton(
       icon: Stack(
         clipBehavior: Clip.none,
         children: [
+          // Active circular border around icon
+          if (isActive)
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: activeColor.withValues(alpha: 0.65),
+                  width: 1.5,
+                ),
+              ),
+            ),
           Icon(icon, size: 20, color: iconColor),
           if (isActive)
             Positioned(
@@ -750,7 +839,7 @@ class _ModeIconButton extends StatelessWidget {
                 width: 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: _gold,
+                  color: activeColor,
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: Theme.of(context).brightness == Brightness.dark
@@ -771,13 +860,32 @@ class _ModeIconButton extends StatelessWidget {
           lang: lang,
           isActive: isActive,
           onActivate: () {
-            if (section == MatchSection.gym) {
-              GymModeSheet.show(context);
+            switch (section) {
+              case MatchSection.gym:
+                GymModeSheet.show(context);
+              case MatchSection.run:
+                ref.read(runModeControllerProvider.notifier).activate();
+              case MatchSection.event:
+                ref.read(eventModeControllerProvider.notifier).activate(
+                  eventId: 'default',
+                  eventName: t('section_your_event', lang),
+                );
+              case MatchSection.matches:
+                break;
             }
           },
-          onDeactivate: section == MatchSection.gym
-              ? () => ref.read(gymModeControllerProvider.notifier).deactivate()
-              : null,
+          onDeactivate: () {
+            switch (section) {
+              case MatchSection.gym:
+                ref.read(gymModeControllerProvider.notifier).deactivate();
+              case MatchSection.run:
+                ref.read(runModeControllerProvider.notifier).deactivate();
+              case MatchSection.event:
+                ref.read(eventModeControllerProvider.notifier).deactivate();
+              case MatchSection.matches:
+                break;
+            }
+          },
         );
       },
       padding: const EdgeInsets.all(8),
@@ -789,10 +897,10 @@ class _ModeIconButton extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // _SectionPickerSheet — bottom sheet with 4 section options
 // ─────────────────────────────────────────────────────────────────────────────
-class _SectionPickerSheet extends StatelessWidget {
+class _SectionPickerSheet extends ConsumerWidget {
   final String lang;
   final Color primary;
-  final GymModeState gymState;
+  final Color gymPillColor;
   final MatchSection activeSection;
   final ValueChanged<MatchSection> onSelect;
   final VoidCallback onOpenGymSheet;
@@ -800,19 +908,23 @@ class _SectionPickerSheet extends StatelessWidget {
   const _SectionPickerSheet({
     required this.lang,
     required this.primary,
-    required this.gymState,
+    required this.gymPillColor,
     required this.activeSection,
     required this.onSelect,
     required this.onOpenGymSheet,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gymState = ref.watch(gymModeControllerProvider);
+    final runState = ref.watch(runModeControllerProvider);
+    final eventState = ref.watch(eventModeControllerProvider);
+
     final items = [
       (MatchSection.gym, LucideIcons.dumbbell, 'section_your_gym',
           gymState.isActive),
-      (MatchSection.event, LucideIcons.calendar, 'section_your_event', false),
-      (MatchSection.run, LucideIcons.personStanding, 'section_your_run', false),
+      (MatchSection.event, LucideIcons.calendar, 'section_your_event', eventState.isActive),
+      (MatchSection.run, LucideIcons.footprints, 'section_your_run', runState.isActive),
       (MatchSection.matches, LucideIcons.users, 'section_your_matches', false),
     ];
 
@@ -923,7 +1035,10 @@ class _SectionPickerSheet extends StatelessWidget {
                                   ? _GymActivePill(
                                       gymName: gymState.activeGymName ?? '')
                                   : _GymEmptyPill(
-                                      lang: lang, onTap: onOpenGymSheet),
+                                      lang: lang,
+                                      onTap: onOpenGymSheet,
+                                      accentColor: gymPillColor,
+                                    ),
                             ),
                             const SizedBox(width: 8),
                             GestureDetector(
@@ -975,6 +1090,7 @@ class _SectionContextBar extends StatelessWidget {
   final GymModeState gymState;
   final String lang;
   final Color primary;
+  final Color gymPillColor;
   final VoidCallback onChangeGym;
 
   const _SectionContextBar({
@@ -982,6 +1098,7 @@ class _SectionContextBar extends StatelessWidget {
     required this.gymState,
     required this.lang,
     required this.primary,
+    required this.gymPillColor,
     required this.onChangeGym,
   });
 
@@ -993,7 +1110,11 @@ class _SectionContextBar extends StatelessWidget {
           Expanded(
             child: gymState.isActive
                 ? _GymActivePill(gymName: gymState.activeGymName ?? '')
-                : _GymEmptyPill(lang: lang, onTap: onChangeGym),
+                : _GymEmptyPill(
+                    lang: lang,
+                    onTap: onChangeGym,
+                    accentColor: gymPillColor,
+                  ),
           ),
           const SizedBox(width: 8),
           GestureDetector(
@@ -1015,10 +1136,11 @@ class _SectionContextBar extends StatelessWidget {
       );
     }
 
+    if (section == MatchSection.event || section == MatchSection.run) {
+      return const SizedBox.shrink();
+    }
+
     final (icon, labelKey) = switch (section) {
-      MatchSection.event => (LucideIcons.calendar, 'section_your_event'),
-      MatchSection.run =>
-        (LucideIcons.personStanding, 'section_your_run'),
       _ => (LucideIcons.users, 'section_your_matches'),
     };
 
@@ -1085,27 +1207,58 @@ class _GymActivePill extends StatelessWidget {
 class _GymEmptyPill extends StatelessWidget {
   final String lang;
   final VoidCallback onTap;
-  const _GymEmptyPill({required this.lang, required this.onTap});
+  // When isGenderBasedColor is on, caller passes the resolved gender color.
+  // Falls back to a neutral theme-aware appearance when null.
+  final Color? accentColor;
+
+  const _GymEmptyPill({
+    required this.lang,
+    required this.onTap,
+    this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final cs = Theme.of(context).colorScheme;
+    final accent = accentColor;
+
+    final bgColor = accent != null
+        ? accent.withValues(alpha: 0.10)
+        : cs.surfaceContainerHighest.withValues(alpha: 0.6);
+    final borderColor = accent != null
+        ? accent.withValues(alpha: 0.35)
+        : cs.onSurface.withValues(alpha: 0.15);
+    final iconColor = accent != null
+        ? accent.withValues(alpha: 0.8)
+        : cs.onSurface.withValues(alpha: 0.5);
+    final textColor = accent != null
+        ? accent
+        : cs.onSurface.withValues(alpha: 0.6);
+
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
+          color: bgColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: Colors.white.withValues(alpha: 0.12), width: 1),
+          border: Border.all(color: borderColor, width: 1),
         ),
-        child: Text(
-          t('no_gym_selected', lang),
-          style: GoogleFonts.instrumentSans(
-            fontSize: 12,
-            color: Colors.white38,
-            fontWeight: FontWeight.w500,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(LucideIcons.mapPin, size: 11, color: iconColor),
+            const SizedBox(width: 5),
+            Text(
+              t('no_gym_selected', lang),
+              style: GoogleFonts.instrumentSans(
+                fontSize: 12,
+                color: textColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
     );

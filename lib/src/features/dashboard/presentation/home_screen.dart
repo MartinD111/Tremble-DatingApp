@@ -335,7 +335,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           right: 0,
           child: LiquidNavBar(
             currentIndex: navIndex,
-            isPremium: isPremium,
             items: navItems,
             onTap: (index) {
               ref.read(navIndexProvider.notifier).state = index;
@@ -958,9 +957,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 // like /profile-preview or /edit-profile.
 final navIndexProvider = StateProvider<int>((ref) => 0);
 
-/// Dumbbell icon button (top-left of Radar tab).
-/// Tap → mode info popup (Activate / Cancel / Don't show again).
-/// When gym mode is active: animated gold ring + gold icon.
+/// Tracks which radar mode icon is selected in the top-left button.
+/// Persists across sessions within the same app run.
+final selectedRadarModeProvider =
+    StateProvider<RadarModeKind>((ref) => RadarModeKind.gym);
+
+/// Top-left radar mode button.
+/// Tap → directly activates/deactivates the selected mode (no info dialog).
+/// Long-press → bottom sheet to switch between Gym / Event / Run modes.
+/// Active mode shows an animated gold circular border around the icon.
 class _GymModeButton extends ConsumerStatefulWidget {
   const _GymModeButton();
 
@@ -974,6 +979,7 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
   late final Animation<double> _pulseAnim;
 
   static const _gold = Color(0xFFF5C842);
+  static const _rose = Color(0xFFF4436C);
 
   @override
   void initState() {
@@ -1003,26 +1009,131 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
   }
 
   void _onTap() {
-    final gymState = ref.read(gymModeControllerProvider);
+    final mode = ref.read(selectedRadarModeProvider);
+    switch (mode) {
+      case RadarModeKind.gym:
+        final gymState = ref.read(gymModeControllerProvider);
+        if (gymState.isActive) {
+          ref.read(gymModeControllerProvider.notifier).deactivate();
+        } else {
+          _activateGym();
+        }
+      case RadarModeKind.run:
+        final runState = ref.read(runModeControllerProvider);
+        if (runState.isActive) {
+          ref.read(runModeControllerProvider.notifier).deactivate();
+        } else {
+          ref.read(runModeControllerProvider.notifier).activate();
+        }
+      case RadarModeKind.event:
+        // Event activation requires picking an event — no standalone sheet yet.
+        // Tapping navigates to the People > Event section so the user can
+        // initiate activation from there.
+        final isPremium = ref.read(authStateProvider)?.isPremium == true;
+        ref.read(navIndexProvider.notifier).state = isPremium ? 2 : 1;
+        ref.read(matchSectionProvider.notifier).state = MatchSection.event;
+    }
+  }
+
+  void _onLongPress() {
     final lang = ref.read(appLanguageProvider);
-    showModeInfoDialog(
+    final selectedMode = ref.read(selectedRadarModeProvider);
+
+    showModalBottomSheet<void>(
       context: context,
-      ref: ref,
-      mode: RadarModeKind.gym,
-      lang: lang,
-      isActive: gymState.isActive,
-      onActivate: () => _activateGym(lang),
-      onDeactivate: () =>
-          ref.read(gymModeControllerProvider.notifier).deactivate(),
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final items = [
+          (RadarModeKind.gym, LucideIcons.dumbbell, t('gym_mode_info_title', lang)),
+          (RadarModeKind.event, LucideIcons.calendar, t('event_mode_info_title', lang)),
+          (RadarModeKind.run, LucideIcons.footprints, t('run_mode_info_title', lang)),
+        ];
+
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        final primary = Theme.of(ctx).colorScheme.primary;
+
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1A1A18).withValues(alpha: 0.97)
+                    : Colors.white.withValues(alpha: 0.96),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+                border:
+                    Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              padding: EdgeInsets.fromLTRB(
+                  0, 12, 0, MediaQuery.of(ctx).padding.bottom + 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  ...items.map((item) {
+                    final (kind, icon, label) = item;
+                    final isSelected = kind == selectedMode;
+                    return ListTile(
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? primary.withValues(alpha: 0.15)
+                              : Colors.white.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(icon,
+                            size: 18,
+                            color: isSelected ? primary : Colors.white38),
+                      ),
+                      title: Text(
+                        label,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 16,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: isSelected ? Colors.white : Colors.white60,
+                        ),
+                      ),
+                      trailing: isSelected
+                          ? Icon(LucideIcons.check,
+                              size: 16, color: primary)
+                          : null,
+                      onTap: () {
+                        ref.read(selectedRadarModeProvider.notifier).state =
+                            kind;
+                        Navigator.pop(ctx);
+                      },
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  void _activateGym(String lang) {
+  void _activateGym() {
     GymModeSheet.show(context).then((_) {
       if (!mounted) return;
       final gymState = ref.read(gymModeControllerProvider);
       if (gymState.isActive) {
-        // Navigate to People tab + switch to Your Gym section
         final isPremium = ref.read(authStateProvider)?.isPremium == true;
         ref.read(navIndexProvider.notifier).state = isPremium ? 2 : 1;
         ref.read(matchSectionProvider.notifier).state = MatchSection.gym;
@@ -1033,13 +1144,27 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
   @override
   Widget build(BuildContext context) {
     final gymState = ref.watch(gymModeControllerProvider);
-    final isActive = gymState.isActive;
+    final runState = ref.watch(runModeControllerProvider);
+    final eventState = ref.watch(eventModeControllerProvider);
+    final selectedMode = ref.watch(selectedRadarModeProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    _syncAnimation(isActive);
+    final isAnyActive = switch (selectedMode) {
+      RadarModeKind.gym => gymState.isActive,
+      RadarModeKind.run => runState.isActive,
+      RadarModeKind.event => eventState.isActive,
+    };
+    _syncAnimation(isAnyActive);
+
+    final (icon, activeColor) = switch (selectedMode) {
+      RadarModeKind.gym => (LucideIcons.dumbbell, _gold),
+      RadarModeKind.run => (LucideIcons.footprints, _rose),
+      RadarModeKind.event => (LucideIcons.calendar, _gold),
+    };
 
     return GestureDetector(
       onTap: _onTap,
+      onLongPress: _onLongPress,
       child: SizedBox(
         width: 48,
         height: 48,
@@ -1047,8 +1172,8 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            // Animated frosted-glass ring — only when active
-            if (isActive)
+            // Animated frosted-glass circular border — only when active
+            if (isAnyActive)
               AnimatedBuilder(
                 animation: _pulseAnim,
                 builder: (_, __) => Transform.scale(
@@ -1062,10 +1187,10 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: isDark
-                              ? _gold.withValues(alpha: 0.18)
-                              : _gold.withValues(alpha: 0.12),
+                              ? activeColor.withValues(alpha: 0.18)
+                              : activeColor.withValues(alpha: 0.12),
                           border: Border.all(
-                            color: _gold.withValues(alpha: 0.65),
+                            color: activeColor.withValues(alpha: 0.65),
                             width: 1.5,
                           ),
                         ),
@@ -1075,20 +1200,20 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
                 ),
               ),
 
-            // Icon — gold when active
+            // Mode icon — colored when active
             Icon(
-              LucideIcons.dumbbell,
+              icon,
               size: 20,
-              color: isActive
-                  ? _gold
+              color: isAnyActive
+                  ? activeColor
                   : Theme.of(context)
                       .colorScheme
                       .onSurface
                       .withValues(alpha: 0.7),
             ),
 
-            // Small gold dot (active indicator)
-            if (isActive)
+            // Small colored dot (active indicator)
+            if (isAnyActive)
               Positioned(
                 top: 6,
                 right: 6,
@@ -1096,12 +1221,10 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
                   width: 7,
                   height: 7,
                   decoration: BoxDecoration(
-                    color: _gold,
+                    color: activeColor,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDark
-                          ? const Color(0xFF1A1A18)
-                          : Colors.white,
+                      color: isDark ? const Color(0xFF1A1A18) : Colors.white,
                       width: 1,
                     ),
                   ),

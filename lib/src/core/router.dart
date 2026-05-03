@@ -376,8 +376,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           final showActions =
               state.uri.queryParameters['showActions'] != 'false';
           if (match == null) {
-            return const Scaffold(
-                body: Center(child: Text("Profile not found")));
+            return const _ProfileNotFoundRedirect();
           }
           return ProfileDetailScreen(match: match, showActions: showActions);
         },
@@ -461,3 +460,35 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return router;
 });
+
+// Shown when /profile is reached without a MatchProfile extra (e.g. deep link,
+// hot reload). Pops back on first frame so the user never sees a broken screen.
+class _ProfileNotFoundRedirect extends StatefulWidget {
+  const _ProfileNotFoundRedirect();
+
+  @override
+  State<_ProfileNotFoundRedirect> createState() =>
+      _ProfileNotFoundRedirectState();
+}
+
+class _ProfileNotFoundRedirectState extends State<_ProfileNotFoundRedirect> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          router.pop();
+        } else {
+          router.go('/');
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+}

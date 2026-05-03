@@ -9,6 +9,7 @@ import '../domain/match.dart';
 import 'widgets/match_background_animation.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../matches/data/match_repository.dart';
+import '../application/match_service.dart';
 import '../../../core/translations.dart';
 import '../../../core/upload_service.dart';
 import 'package:image_picker/image_picker.dart';
@@ -40,7 +41,27 @@ class MatchRevealScreen extends ConsumerWidget {
       );
     }
 
-    final partnerId = match.getPartnerId(myUid);
+    // Use live stream so we pick up the match document once Firestore finishes
+    // writing both userIds — avoids the race condition where the snapshot passed
+    // via `extra` had an empty or incomplete userIds list.
+    final liveMatch = ref
+            .watch(activeMatchesStreamProvider)
+            .value
+            ?.firstWhere((m) => m.id == match.id, orElse: () => match) ??
+        match;
+
+    final partnerId = liveMatch.getPartnerId(myUid);
+
+    // Still propagating — wait for the live document to have both userIds.
+    if (partnerId.isEmpty) {
+      return const Scaffold(
+        backgroundColor: _deepGraphite,
+        body: Center(
+          child: CircularProgressIndicator(color: _rose, strokeWidth: 2),
+        ),
+      );
+    }
+
     final partnerProfileAsync = ref.watch(publicProfileProvider(partnerId));
 
     return Scaffold(
