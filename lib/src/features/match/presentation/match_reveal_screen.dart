@@ -121,38 +121,57 @@ class MatchRevealScreen extends ConsumerWidget {
                     const SizedBox(height: 56),
 
                     // Partner avatar with rose glow
-                    Hero(
-                      tag: 'match_avatar_${profile.id}',
-                      child: Container(
-                        width: 180,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _rose.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _rose.withValues(alpha: 0.15),
-                              blurRadius: 40,
-                              spreadRadius: 4,
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: profile.primaryPhotoUrl.isNotEmpty
-                              ? Image.network(
-                                  profile.primaryPhotoUrl,
-                                  fit: BoxFit.cover,
-                                )
-                              : Container(
-                                  color: Colors.grey[900],
-                                  child: const Icon(Icons.person,
-                                      size: 80, color: Colors.white10),
+                    Stack(
+                      children: [
+                        Hero(
+                          tag: 'match_avatar_${profile.id}',
+                          child: Container(
+                            width: 180,
+                            height: 180,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: _rose.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _rose.withValues(alpha: 0.15),
+                                  blurRadius: 40,
+                                  spreadRadius: 4,
                                 ),
+                              ],
+                            ),
+                            child: ClipOval(
+                              child: profile.primaryPhotoUrl.isNotEmpty
+                                  ? Image.network(
+                                      profile.primaryPhotoUrl,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Container(
+                                      color: Colors.grey[900],
+                                      child: const Icon(Icons.person,
+                                          size: 80, color: Colors.white10),
+                                    ),
+                            ),
+                          ),
                         ),
-                      ),
+                        if (profile.isTraveler)
+                          Positioned(
+                            bottom: 8,
+                            right: 8,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: _deepGraphite.withValues(alpha: 0.85),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white12),
+                              ),
+                              child: const Text('🌴',
+                                  style: TextStyle(fontSize: 14)),
+                            ),
+                          ),
+                      ],
                     ),
 
                     const SizedBox(height: 32),

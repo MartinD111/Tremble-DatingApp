@@ -65,6 +65,7 @@ export const updateProfileSchema = z
         heightRangeStart: z.number().int().min(100).max(250).optional(),
         heightRangeEnd: z.number().int().min(100).max(250).optional(),
         maxDistance: z.number().int().min(1).max(500).optional(),
+        isTraveler: z.boolean().optional(),
     })
     .strict(); // Reject unknown fields — prevents injection of isAdmin/isPremium
 

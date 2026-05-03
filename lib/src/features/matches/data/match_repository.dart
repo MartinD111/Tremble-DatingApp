@@ -72,6 +72,7 @@ class MatchProfile {
   final List<String> lookingFor;
   final DateTime? birthDate;
   final DateTime? matchedAt;
+  final bool isTraveler;
 
   const MatchProfile({
     required this.id,
@@ -107,6 +108,7 @@ class MatchProfile {
     this.lookingFor = const [],
     this.birthDate,
     this.matchedAt,
+    this.isTraveler = false,
   });
 
   /// Create a MatchProfile from Cloud Functions response data.
@@ -150,6 +152,7 @@ class MatchProfile {
             )
           : null,
       matchedAt: _parseDateTime(data['matchedAt']),
+      isTraveler: data['isTraveler'] as bool? ?? false,
     );
   }
 

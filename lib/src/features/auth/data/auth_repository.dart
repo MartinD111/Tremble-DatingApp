@@ -91,6 +91,7 @@ class AuthUser {
   // null = user has not been asked yet; true/false = explicit choice
   final bool? gymNotificationsEnabled;
   final String? phoneNumber;
+  final bool isTraveler;
 
   const AuthUser({
     required this.id,
@@ -161,6 +162,7 @@ class AuthUser {
     this.lastWaveFoundAt,
     this.gymNotificationsEnabled,
     this.phoneNumber,
+    this.isTraveler = false,
   });
 
   // ── Serialization for Cloud Functions API ─────────────────────────────────
@@ -237,6 +239,7 @@ class AuthUser {
       if (gymNotificationsEnabled != null)
         'gymNotificationsEnabled': gymNotificationsEnabled,
       if (phoneNumber != null) 'phoneNumber': phoneNumber,
+      'isTraveler': isTraveler,
     };
   }
 
@@ -342,6 +345,7 @@ class AuthUser {
       lastWaveFoundAt: _parseDateTime(data['lastWaveFoundAt']),
       gymNotificationsEnabled: data['gymNotificationsEnabled'] as bool?,
       phoneNumber: data['phoneNumber'] as String?,
+      isTraveler: data['isTraveler'] as bool? ?? false,
       isEmailVerified: emailVerified,
     );
   }
@@ -415,6 +419,7 @@ class AuthUser {
     DateTime? lastWaveFoundAt,
     bool? gymNotificationsEnabled,
     String? phoneNumber,
+    bool? isTraveler,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -521,6 +526,7 @@ class AuthUser {
       gymNotificationsEnabled:
           gymNotificationsEnabled ?? this.gymNotificationsEnabled,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      isTraveler: isTraveler ?? this.isTraveler,
     );
   }
 }

@@ -706,6 +706,12 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                                   primary: primary,
                                                 ),
                                               ],
+                                              if (profile.isTraveler) ...[
+                                                const SizedBox(width: 6),
+                                                const Text('🌴',
+                                                    style: TextStyle(
+                                                        fontSize: 12)),
+                                              ],
                                             ],
                                           ),
                                         ],

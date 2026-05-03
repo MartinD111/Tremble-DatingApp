@@ -858,6 +858,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
+          title: Row(children: [
+            const Text('🌴', style: TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            Text('Traveler Mode', style: TextStyle(color: textColor)),
+          ]),
+          subtitle: Text("I'm visiting — show 🌴 on my profile",
+              style: TextStyle(color: subColor, fontSize: 12)),
+          value: user.isTraveler,
+          activeThumbColor: Theme.of(context).colorScheme.primary,
+          activeTrackColor: isDark ? Colors.white24 : Colors.black12,
+          inactiveTrackColor: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.05),
+          onChanged: (val) => _ctrl.toggleTravelerMode(val),
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
           title:
               Text('Hide Navigation bar', style: TextStyle(color: textColor)),
           subtitle: Text('Auto-hide on scroll',

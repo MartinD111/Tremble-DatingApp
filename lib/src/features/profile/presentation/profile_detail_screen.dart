@@ -167,6 +167,24 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                       }),
                                     ),
                                   ),
+                                // Traveler status badge
+                                if (match.isTraveler)
+                                  Positioned(
+                                    top: 12,
+                                    left: 12,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(
+                                            alpha: 0.6),
+                                        borderRadius:
+                                            BorderRadius.circular(20),
+                                      ),
+                                      child: const Text('🌴',
+                                          style: TextStyle(fontSize: 16)),
+                                    ),
+                                  ),
                                 // ── Name + Age + Zodiac overlay ──────────────────
                                 Positioned(
                                   left: 0,

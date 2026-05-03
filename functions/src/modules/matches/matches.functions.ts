@@ -279,6 +279,7 @@ export const getMatches = onCall(
                     matchedAt: matchData.createdAt != null
                         ? (matchData.createdAt as FirebaseFirestore.Timestamp).toDate().toISOString()
                         : null,
+                    isTraveler: (pData.isTraveler as boolean | undefined) ?? false,
                 };
             })
         );

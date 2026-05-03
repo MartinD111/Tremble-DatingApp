@@ -8,6 +8,7 @@ class PublicProfile {
   final List<String> photoUrls;
   final List<Map<String, dynamic>> hobbies;
   final String? lookingFor;
+  final bool isTraveler;
 
   PublicProfile({
     required this.id,
@@ -16,6 +17,7 @@ class PublicProfile {
     required this.photoUrls,
     required this.hobbies,
     this.lookingFor,
+    this.isTraveler = false,
   });
 
   factory PublicProfile.fromFirestore(DocumentSnapshot doc) {
@@ -27,6 +29,7 @@ class PublicProfile {
       photoUrls: List<String>.from(data['photoUrls'] ?? []),
       hobbies: HobbyUtils.parseHobbies(data['hobbies']),
       lookingFor: data['lookingFor'],
+      isTraveler: data['isTraveler'] as bool? ?? false,
     );
   }
 

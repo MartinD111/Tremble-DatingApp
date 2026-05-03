@@ -59,6 +59,10 @@ class SettingsController {
     updateUser((u) => u.copyWith(gymNotificationsEnabled: enabled));
   }
 
+  void toggleTravelerMode(bool enabled) {
+    updateUser((u) => u.copyWith(isTraveler: enabled));
+  }
+
   // ── Toggle: gender-based color theming ────────────────────────────────────
 
   void toggleGenderBasedColor(bool enabled) {
