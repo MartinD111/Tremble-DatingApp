@@ -83,6 +83,19 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>app.tremble.radar.toggle</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Radar</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Toggle radar on/off</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeSearch</string>
+		</dict>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>

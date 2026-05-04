@@ -25,7 +25,7 @@ import '../../../core/translations.dart';
 import '../../match/application/match_service.dart';
 import '../../match/data/wave_repository.dart';
 import '../../match/domain/match.dart' as wave_match;
-import '../../../core/android_integration_service.dart';
+import '../../../core/radar_integration_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'widgets/radar_search_overlay.dart';
 import 'widgets/radar_schedule_modal.dart';
@@ -118,26 +118,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // match_notification_pill.dart and DevSimPhase mapping below in
     // _phaseToPillState().
 
-    // Listen for Radar state changes pushed from native tile / widget (Android).
-    // When the user toggles via QS tile or home-screen widget, this fires and
+    // Listen for Radar state changes pushed from native tile / widget (Android/iOS).
+    // When the user toggles via QS tile / quick action / lock screen widget, this fires and
     // starts/stops the background service to match.
-    AndroidIntegrationService.instance.radarStateChanges.listen((active) {
+    RadarIntegrationService.instance.radarStateChanges.listen((active) {
       if (!mounted) return;
       final current = ref.read(isScanningProvider);
       if (active == current) return; // already in sync
       ref.read(isScanningProvider.notifier).state = active;
       if (active) {
         // Android: trampoline service satisfies the 5s startForeground
-        // deadline before relay-starting the plugin. iOS: pluginsko pot.
+        // deadline before relay-starting the plugin. iOS: no-op.
         if (Platform.isAndroid) {
-          AndroidIntegrationService.instance.startRadarService();
+          RadarIntegrationService.instance.startRadarService();
         } else {
           FlutterBackgroundService().startService();
         }
       } else {
         BleService().stop();
         if (Platform.isAndroid) {
-          AndroidIntegrationService.instance.stopRadarService();
+          RadarIntegrationService.instance.stopRadarService();
         } else {
           FlutterBackgroundService().invoke('stopService', null);
         }
@@ -625,7 +625,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             // the original plugin path. Same NOTIF_ID 888 +
                             // channel tremble_radar_v2 → no flicker on swap.
                             if (Platform.isAndroid) {
-                              await AndroidIntegrationService.instance
+                              await RadarIntegrationService.instance
                                   .startRadarService();
                             } else {
                               FlutterBackgroundService().startService();
@@ -635,7 +635,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             // is broadcast. Notif builder is identical to the
                             // one our trampoline already posted, so this is a
                             // no-op repaint.
-                            await AndroidIntegrationService.instance
+                            await RadarIntegrationService.instance
                                 .setRadarActive(true);
                             // BleService must run in the main isolate — flutter_blue_plus
                             // requires an Android Activity which the background isolate
@@ -664,11 +664,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             }
                           } else {
                             // Stop BLE in main isolate and signal background service.
-                            await AndroidIntegrationService.instance
+                            await RadarIntegrationService.instance
                                 .setRadarActive(false);
                             BleService().stop();
                             if (Platform.isAndroid) {
-                              await AndroidIntegrationService.instance
+                              await RadarIntegrationService.instance
                                   .stopRadarService();
                             } else {
                               FlutterBackgroundService()

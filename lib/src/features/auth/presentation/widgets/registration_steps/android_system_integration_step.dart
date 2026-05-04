@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/android_integration_service.dart';
+import '../../../../../core/radar_integration_service.dart';
 import 'step_shared.dart';
 
 /// Android-only registration step that appears immediately before ConsentStep.
@@ -38,7 +38,7 @@ class _AndroidSystemIntegrationStepState
   Future<void> _onContinue() async {
     setState(() => _loading = true);
     try {
-      final svc = AndroidIntegrationService.instance;
+      final svc = RadarIntegrationService.instance;
       if (_addQsTile) await svc.requestAddQsTile();
       if (_addWidget) await svc.requestPinWidget();
     } finally {
