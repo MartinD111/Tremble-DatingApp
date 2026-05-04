@@ -70,7 +70,8 @@
       "Skill(gsd:next)",
       "Bash(dart analyze *)",
       "Bash(flutter run *)",
-      "Bash(grep -E \"\\\\.\\(dart\\)$\")"
+      "Bash(grep -E \"\\\\.\\(dart\\)$\")",
+      "Bash(git restore *)"
     ]
   }
 }

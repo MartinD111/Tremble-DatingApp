@@ -20,6 +20,99 @@ class IntroSlideStep extends StatelessWidget {
   final VoidCallback? onLogout;
   final String Function(String) tr;
 
+  void _showCancelConfirmation(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1A1A2E) : Colors.white;
+    final titleColor = isDark ? Colors.white : Colors.black87;
+    final bodyColor = isDark ? Colors.white60 : Colors.black54;
+    final borderColor = isDark ? Colors.white12 : Colors.black12;
+    final handleColor = isDark ? Colors.white24 : Colors.black26;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
+          decoration: BoxDecoration(
+            color: sheetBg.withValues(alpha: 0.9),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(top: BorderSide(color: borderColor)),
+          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: handleColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 28),
+            Text(
+              tr('cancel_registration'),
+              style: GoogleFonts.instrumentSans(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: titleColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'You will be sent back to the landing page.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.instrumentSans(
+                color: bodyColor,
+                fontSize: 15,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 28),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(ctx);
+                onLogout?.call();
+              },
+              child: Container(
+                width: double.infinity,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Center(
+                  child: Text(
+                    'YES, CANCEL',
+                    style: GoogleFonts.instrumentSans(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Colors.black,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'NO, GO BACK',
+                style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.black54,
+                  letterSpacing: 1.2,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final titles = [
@@ -51,17 +144,20 @@ class IntroSlideStep extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (index > 0) ...[
-              Align(
-                alignment: Alignment.topLeft,
-                child: TrembleBackButton(
-                  label: tr('back'),
-                  onPressed: onBack,
-                ),
+            Align(
+              alignment: Alignment.topLeft,
+              child: TrembleBackButton(
+                label: tr('back'),
+                onPressed: () {
+                  if (index == 0) {
+                    _showCancelConfirmation(context);
+                  } else {
+                    onBack();
+                  }
+                },
               ),
-              const SizedBox(height: 12),
-            ] else
-              const SizedBox(height: 60),
+            ),
+            const SizedBox(height: 12),
             Container(
               width: 96,
               height: 96,
@@ -131,20 +227,6 @@ class IntroSlideStep extends StatelessWidget {
               onTap: onNext,
               label: tr('continue_btn'),
             ),
-            if (index == 0 && onLogout != null) ...[
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: onLogout,
-                child: Text(
-                  tr('cancel_registration'),
-                  style: GoogleFonts.instrumentSans(
-                    color: isDark ? Colors.white38 : Colors.black38,
-                    fontWeight: FontWeight.w500,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ],
             const SizedBox(height: 16),
           ],
         ),

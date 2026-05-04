@@ -60,7 +60,7 @@ class NicotineStep extends StatelessWidget {
           children: [
             const SizedBox(height: 24),
             TrembleBackButton(label: tr('back'), onPressed: onBack),
-            const Spacer(),
+            const SizedBox(height: 24),
             StepHeader(
               tr('nicotine_title'),
               subtitle: tr('nicotine_subtitle'),

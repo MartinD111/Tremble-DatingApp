@@ -318,7 +318,7 @@ class BirthdayStep extends StatelessWidget {
               isDark: isDark,
             ),
           ]),
-          const SizedBox(height: 24),
+          const Spacer(),
           ContinueButton(
             enabled: true,
             label: tr('continue_btn'),
