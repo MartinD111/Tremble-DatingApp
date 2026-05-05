@@ -568,12 +568,12 @@ exports.revertExpiredPromos = onSchedule('every 60 minutes', async () => {
 ### Produkt konfiguracija
 ```
 App Store Connect:
-tremble_pro_monthly_499   → Auto-Renewable Subscription → €4.99/mes
+tremble_pro_monthly_799   → Auto-Renewable Subscription → €7.99/mes
 tremble_pro_annual_45     → Auto-Renewable Subscription → €45.00/leto
 tremble_pro_lifetime_80   → Non-Consumable (NE Subscription) → €80.00
 
 Play Console:
-tremble_pro_monthly_499   → Subscription → Base Plan → €4.99/mes
+tremble_pro_monthly_799   → Subscription → Base Plan → €7.99/mes
 tremble_pro_annual_45     → Subscription → Base Plan → €45.00/leto  
 tremble_pro_lifetime_80   → Managed Product (One-time) → €80.00
 ```
@@ -1014,7 +1014,7 @@ phoneNumber: "+386..." | null
 | Cloudflare R2 (avatarji) | ~$5 |
 | **Skupaj** | **~$335–635/mesec** |
 
-Revenue pri 50k DAU, 8% payer conversion, €4.99/mes ≈ **$16.000/mesec**
+Revenue pri 50k DAU, 8% payer conversion, €7.99/mes ≈ **$25.000/mesec**
 
 Infrastruktura = ~4% revenue. Zdravo — SaaS benchmark je pod 20%.
 

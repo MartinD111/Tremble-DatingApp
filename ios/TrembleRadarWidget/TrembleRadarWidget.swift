@@ -1,159 +1,119 @@
 import WidgetKit
 import SwiftUI
+import AppIntents
 
-// MARK: - Shared State
-/// Access radar state from App Group UserDefaults (shared with main app)
-struct RadarStateManager {
-  private static let appGroup: String = {
-    #if FLAVOR_DEV
-      return "group.com.pulse.radar"
-    #else
-      return "group.tremble.dating.app.radar"
-    #endif
-  }()
-
-  private static let key = "radarActive"
-
-  static var isActive: Bool {
-    get {
-      let defaults = UserDefaults(suiteName: appGroup) ?? UserDefaults.standard
-      return defaults.bool(forKey: key)
-    }
-    set {
-      let defaults = UserDefaults(suiteName: appGroup) ?? UserDefaults.standard
-      defaults.set(newValue, forKey: key)
-      defaults.synchronize()
-      // Notify main app via Darwin notification
-      CFNotificationCenterPostNotification(
-        CFNotificationCenterGetDarwinNotifyCenter(),
-        CFNotificationName("app.tremble.radar.changed" as NSString),
-        nil,
-        nil,
-        true
-      )
-      // Reload widget
-      WidgetCenter.shared.reloadAllTimelines()
-    }
-  }
-}
-
-// MARK: - App Intent (Lock Screen Widget Toggle)
+/// The AppIntent that handles the radar toggle from the lock screen or home screen widget.
+/// Updates the shared RadarStateBridge and triggers a widget timeline refresh.
+@available(iOS 17.0, *)
 struct RadarToggleIntent: AppIntent {
-  static var title: LocalizedStringResource = "Toggle Radar"
-  static var openAppWhenRun = false
+    static var title: LocalizedStringResource = "Toggle Radar"
+    static var description = IntentDescription("Turns the proximity radar on or off.")
 
-  func perform() async throws -> some IntentResult {
-    RadarStateManager.isActive = !RadarStateManager.isActive
-    return .result()
-  }
+    func perform() async throws -> some IntentResult {
+        // Toggle the state in shared UserDefaults via the bridge
+        RadarStateBridge.isActive = !RadarStateBridge.isActive
+        
+        // Refresh the widget timeline so the UI updates immediately
+        WidgetCenter.shared.reloadAllTimelines()
+        
+        return .result()
+    }
 }
 
-// MARK: - Timeline Entry
 struct RadarEntry: TimelineEntry {
-  let date: Date
-  let isActive: Bool
+    let date: Date
+    let isActive: Bool
 }
 
-// MARK: - Timeline Provider
-struct RadarProvider: TimelineProvider {
-  func placeholder(in context: Context) -> RadarEntry {
-    RadarEntry(date: Date(), isActive: false)
-  }
+struct RadarTimelineProvider: TimelineProvider {
+    func placeholder(in context: Context) -> RadarEntry {
+        RadarEntry(date: Date(), isActive: false)
+    }
 
-  func getSnapshot(in context: Context, completion: @escaping (RadarEntry) -> Void) {
-    let entry = RadarEntry(date: Date(), isActive: RadarStateManager.isActive)
-    completion(entry)
-  }
+    func getSnapshot(in context: Context, completion: @escaping (RadarEntry) -> ()) {
+        let entry = RadarEntry(date: Date(), isActive: RadarStateBridge.isActive)
+        completion(entry)
+    }
 
-  func getTimelines(completion: @escaping (Timeline<RadarEntry>) -> Void) {
-    let entry = RadarEntry(date: Date(), isActive: RadarStateManager.isActive)
-    // Single entry; reload when main app changes state
-    let timeline = Timeline(entries: [entry], policy: .never)
-    completion(timeline)
-  }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
+        let entry = RadarEntry(date: Date(), isActive: RadarStateBridge.isActive)
+        // We don't need periodic refreshes; RadarStateBridge.isActive setter 
+        // and RadarToggleIntent will trigger manual reloads.
+        let timeline = Timeline(entries: [entry], policy: .atEnd)
+        completion(timeline)
+    }
 }
 
-// MARK: - Widget Views
-struct RadarWidgetEntryView: View {
-  var entry: RadarProvider.Entry
+struct TrembleRadarWidgetView: View {
+    var entry: RadarEntry
 
-  var body: some View {
-    ZStack {
-      // Background
-      ContainerRelativeShape()
-        .fill(Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.12, alpha: 1) : UIColor(white: 0.96, alpha: 1) }))
-
-      // Content
-      VStack(spacing: 0) {
-        // Lock screen (accessory families)
-        if #available(iOSApplicationExtension 16.1, *) {
-          accessoryContent
-        } else {
-          // Fallback for iOS 16.0
-          standardContent
+    var body: some View {
+        VStack(spacing: 8) {
+            // Radar Icon with Pulse effect
+            ZStack {
+                Circle()
+                    .fill(Color(hex: "F4436C").opacity(entry.isActive ? 0.2 : 0.05))
+                    .frame(width: 44, height: 44)
+                
+                if entry.isActive {
+                    Circle()
+                        .stroke(Color(hex: "F4436C").opacity(0.5), lineWidth: 1)
+                        .frame(width: 54, height: 54)
+                }
+                
+                Image(systemName: entry.isActive ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(Color(hex: "F4436C"))
+            }
+            
+            Text(entry.isActive ? "Radar On" : "Radar Off")
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundColor(.primary)
         }
-      }
+        .containerBackground(for: .widget) {
+            Color.clear // Uses system default or parent background
+        }
     }
-  }
-
-  @ViewBuilder
-  private var accessoryContent: some View {
-    Button(intent: RadarToggleIntent()) {
-      ZStack {
-        // Outer ring
-        Circle()
-          .fill(Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.2, alpha: 1) : UIColor(white: 0.9, alpha: 1) }))
-
-        // Inner circle with icon
-        Circle()
-          .fill(entry.isActive ? Color(#colorLiteral(red: 0.957, green: 0.263, blue: 0.424, alpha: 1.0)) : Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.4, alpha: 1) : UIColor(white: 0.7, alpha: 1) }))
-          .padding(3)
-
-        Image(systemName: "dot.radiowaves.left.and.right")
-          .font(.system(size: 10, weight: .semibold))
-          .foregroundColor(.white)
-      }
-    }
-    .buttonStyle(.plain)
-  }
-
-  @ViewBuilder
-  private var standardContent: some View {
-    // Home screen widget (systemSmall for iOS 16.0)
-    VStack(spacing: 8) {
-      Image(systemName: "dot.radiowaves.left.and.right")
-        .font(.system(size: 20, weight: .semibold))
-        .foregroundColor(entry.isActive ? Color(#colorLiteral(red: 0.957, green: 0.263, blue: 0.424, alpha: 1.0)) : Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.4, alpha: 1) : UIColor(white: 0.7, alpha: 1) }))
-
-      Text(entry.isActive ? "Radar On" : "Radar Off")
-        .font(.system(size: 12, weight: .semibold))
-        .foregroundColor(Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.9, alpha: 1) : UIColor(white: 0.1, alpha: 1) }))
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .containerBackground(for: .widget) {
-      Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.12, alpha: 1) : UIColor(white: 0.96, alpha: 1) })
-    }
-  }
 }
 
-// MARK: - Widget Definition
-struct TrembleRadarWidget: Widget {
-  let kind: String = "TrembleRadarWidget"
-
-  var body: some WidgetConfiguration {
-    StaticConfiguration(kind: kind, provider: RadarProvider()) { entry in
-      RadarWidgetEntryView(entry: entry)
-    }
-    .configurationDisplayName("Radar Toggle")
-    .description("Quick access to turn your radar on or off")
-    .supportedFamilies([.systemSmall, .accessoryCircular, .accessoryRectangular])
-  }
-}
-
-// MARK: - Widget Bundle
 @main
-struct TrembleRadarWidgetBundle: WidgetBundle {
-  var body: some Widget {
-    TrembleRadarWidget()
-  }
+struct TrembleRadarWidget: Widget {
+    let kind: String = "TrembleRadarWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: RadarTimelineProvider()) { entry in
+            if #available(iOS 17.0, *) {
+                Button(intent: RadarToggleIntent()) {
+                    TrembleRadarWidgetView(entry: entry)
+                }
+                .buttonStyle(.plain)
+            } else {
+                TrembleRadarWidgetView(entry: entry)
+            }
+        }
+        .configurationDisplayName("Tremble Radar")
+        .description("Quickly toggle your proximity radar.")
+        .supportedFamilies([.accessoryCircular, .systemSmall])
+    }
+}
+
+// MARK: - Helpers
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        self.init(.sRGB, red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255, opacity: Double(a) / 255)
+    }
 }

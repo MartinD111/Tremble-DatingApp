@@ -90,7 +90,7 @@ class PremiumPaywallBottomSheet extends StatelessWidget {
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: '9,99 €',
+                      text: '7,99 €',
                       style: GoogleFonts.instrumentSans(
                         fontSize: 32,
                         fontWeight: FontWeight.w800,

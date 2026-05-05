@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(Flutter)
 import Flutter
+#endif
 
 /// Shared state bridge between the main app and WidgetKit extension via App Group UserDefaults.
 /// Persists radar active/inactive state and broadcasts state changes via Darwin NotificationCenter.
@@ -32,15 +34,19 @@ class RadarStateBridge {
     }
   }
 
+  #if canImport(Flutter)
   static var eventSink: FlutterEventSink?
+  #endif
 
   /// Post Darwin notification so AppDelegate can relay state to Flutter EventChannel.
   /// Called whenever state changes (from app logic, quick action, or widget).
   static func notifyFlutter(_ active: Bool) {
     // Push event to Flutter EventChannel if sink is active
+    #if canImport(Flutter)
     DispatchQueue.main.async {
       eventSink?(active)
     }
+    #endif
     // Post Darwin notification for inter-process signaling
     // (WidgetKit extension → main app when widget taps toggle)
     CFNotificationCenterPostNotification(
