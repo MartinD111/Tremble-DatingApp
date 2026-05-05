@@ -412,8 +412,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return EventRecapScreen(
             eventName: extra?['eventName'] as String? ?? '',
             eventId: extra?['eventId'] as String? ?? '',
-            pulseSecondsRemaining:
-                extra?['pulseSecondsRemaining'] as int?,
+            pulseSecondsRemaining: extra?['pulseSecondsRemaining'] as int?,
           );
         },
       ),

@@ -284,7 +284,8 @@ const Map<String, Map<String, String>> _translations = {
     'send_last_pulse': 'Send Last Pulse',
     'pulse_sent': 'Pulse sent! ✓',
     'pulse_expired': 'Window closed',
-    'event_recap_free_hint': 'Go Pro to send a last Pulse to people you crossed',
+    'event_recap_free_hint':
+        'Go Pro to send a last Pulse to people you crossed',
 
     // --- Account ---
     'email_verified': 'Email Verified',
@@ -874,7 +875,8 @@ const Map<String, Map<String, String>> _translations = {
     'taste_of_premium': 'Pro za nocoj',
     'taste_of_premium_sub': 'Ker si na eventu — vse je odprto.',
     'share_event_invite': 'Povabi nekoga',
-    'event_share_text': 'Nocoj sem na {name}. Najdi me na Tremble. 📍 {location}',
+    'event_share_text':
+        'Nocoj sem na {name}. Najdi me na Tremble. 📍 {location}',
     'event_ends_soon': 'Event se kmalu konča',
     'heatmap_locked': 'Heatmap — samo Pro',
     'upgrade_to_pro': 'Postani Pro',
@@ -886,7 +888,8 @@ const Map<String, Map<String, String>> _translations = {
     'send_last_pulse': 'Pošlji zadnji Pulse',
     'pulse_sent': 'Pulse poslan! ✓',
     'pulse_expired': 'Okno zaprto',
-    'event_recap_free_hint': 'Postani Pro in pošlji zadnji Pulse osebam, ki si jih srečal',
+    'event_recap_free_hint':
+        'Postani Pro in pošlji zadnji Pulse osebam, ki si jih srečal',
 
     // --- UGC Safety ---
     'report_user': 'Prijavi {name}',

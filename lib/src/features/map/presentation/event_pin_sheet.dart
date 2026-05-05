@@ -44,8 +44,7 @@ class EventPinSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surfaceColor =
-        isDark ? const Color(0xFF1E1E2E) : Colors.white;
+    final surfaceColor = isDark ? const Color(0xFF1E1E2E) : Colors.white;
     final textPrimary = isDark ? Colors.white : TrembleTheme.textColor;
     final dividerColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
@@ -108,8 +107,7 @@ class EventPinSheet extends StatelessWidget {
                           event.isActive
                               ? t('active_now', lang)
                               : t('coming_at', lang)
-                                  .replaceAll(
-                                      '{time}', event.startsAt ?? ''),
+                                  .replaceAll('{time}', event.startsAt ?? ''),
                           style: TrembleTheme.uiFont(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -139,8 +137,8 @@ class EventPinSheet extends StatelessWidget {
                       lang: lang,
                     )
                   : _LockedFeatureRow(
-                      label: t('pulsing_here', lang)
-                          .replaceAll('{count}', '??'),
+                      label:
+                          t('pulsing_here', lang).replaceAll('{count}', '??'),
                       sublabel: t('pro_feature_locked', lang),
                       isDark: isDark,
                     ),
@@ -166,8 +164,7 @@ class EventPinSheet extends StatelessWidget {
 
             // ── Action buttons ───────────────────────────────────────
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -262,8 +259,7 @@ class _EventStatusDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isActive ? TrembleTheme.rose : TrembleTheme.accentYellow;
+    final color = isActive ? TrembleTheme.rose : TrembleTheme.accentYellow;
     return Container(
       width: 44,
       height: 44,
@@ -295,8 +291,7 @@ class _PeopleCountRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.favorite_rounded,
-            color: TrembleTheme.rose, size: 18),
+        Icon(Icons.favorite_rounded, color: TrembleTheme.rose, size: 18),
         const SizedBox(width: 10),
         Text(
           t('pulsing_here', lang).replaceAll('{count}', '$count'),
@@ -321,8 +316,7 @@ class _HeatmapActiveRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.layers_rounded,
-            color: TrembleTheme.rose, size: 18),
+        Icon(Icons.layers_rounded, color: TrembleTheme.rose, size: 18),
         const SizedBox(width: 10),
         Text(
           'Heatmap aktiven',
@@ -334,8 +328,7 @@ class _HeatmapActiveRow extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
           decoration: BoxDecoration(
             color: TrembleTheme.rose.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(100),
@@ -360,9 +353,7 @@ class _LockedFeatureRow extends StatelessWidget {
   final bool isDark;
 
   const _LockedFeatureRow(
-      {required this.label,
-      required this.sublabel,
-      required this.isDark});
+      {required this.label, required this.sublabel, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -387,14 +378,12 @@ class _LockedFeatureRow extends StatelessWidget {
           ),
         ),
         Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
             color: TrembleTheme.accentYellow.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(100),
             border: Border.all(
-                color:
-                    TrembleTheme.accentYellow.withValues(alpha: 0.4)),
+                color: TrembleTheme.accentYellow.withValues(alpha: 0.4)),
           ),
           child: Text(
             sublabel,
@@ -437,8 +426,7 @@ class _ShareButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.ios_share_rounded,
-                color: Colors.white, size: 18),
+            const Icon(Icons.ios_share_rounded, color: Colors.white, size: 18),
             const SizedBox(width: 8),
             Text(
               t('share_event_invite', lang),
@@ -508,9 +496,7 @@ class _DevGeofenceControls extends StatelessWidget {
   final bool isDark;
 
   const _DevGeofenceControls(
-      {required this.event,
-      required this.inGeofence,
-      required this.isDark});
+      {required this.event, required this.inGeofence, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -521,13 +507,11 @@ class _DevGeofenceControls extends StatelessWidget {
             ? Colors.yellow.withValues(alpha: 0.08)
             : Colors.yellow.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-            color: Colors.yellow.withValues(alpha: 0.4)),
+        border: Border.all(color: Colors.yellow.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.bug_report_rounded,
-              color: Colors.yellow, size: 16),
+          const Icon(Icons.bug_report_rounded, color: Colors.yellow, size: 16),
           const SizedBox(width: 8),
           Text(
             'DEV: ${inGeofence ? 'In geofence' : 'Outside geofence'}',

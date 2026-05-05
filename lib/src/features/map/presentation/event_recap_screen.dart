@@ -196,8 +196,7 @@ class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
@@ -212,8 +211,8 @@ class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
                   isDark: isDark,
                   lang: lang,
                   onPulse: effectivePremium && countdown > 0
-                      ? () => setState(
-                          () => _pulseSent.add(_mockProfiles[i].id))
+                      ? () =>
+                          setState(() => _pulseSent.add(_mockProfiles[i].id))
                       : null,
                 ),
               ),
@@ -263,8 +262,8 @@ class _PulseCountdownBanner extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              t('pulse_expires_in', lang).replaceAll(
-                  '{time}', _format(secondsLeft)),
+              t('pulse_expires_in', lang)
+                  .replaceAll('{time}', _format(secondsLeft)),
               style: TrembleTheme.uiFont(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -298,8 +297,7 @@ class _FreeUpgradeBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.lock_rounded,
-              color: TrembleTheme.accentYellow, size: 18),
+          Icon(Icons.lock_rounded, color: TrembleTheme.accentYellow, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -369,8 +367,7 @@ class _ProfileCard extends StatelessWidget {
 
           // ── Name + age ─────────────────────────────────────────────
           Padding(
-            padding:
-                const EdgeInsets.fromLTRB(12, 10, 12, 4),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
             child: effectivePremium
                 ? Text(
                     '${profile.name}, ${profile.age}',
@@ -434,7 +431,7 @@ class _PhotoSlot extends StatelessWidget {
         0.2126, 0.7152, 0.0722, 0, 0, // R
         0.2126, 0.7152, 0.0722, 0, 0, // G
         0.2126, 0.7152, 0.0722, 0, 0, // B
-        0,      0,      0,      1, 0, // A
+        0, 0, 0, 1, 0, // A
       ]),
       child: photo,
     );
@@ -502,10 +499,7 @@ class _PulseButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.lock_rounded,
-                  size: 14,
-                  color: isDark
-                      ? Colors.white38
-                      : Colors.black38),
+                  size: 14, color: isDark ? Colors.white38 : Colors.black38),
               const SizedBox(width: 4),
               Text(
                 'Pulse',

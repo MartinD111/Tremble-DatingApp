@@ -22,6 +22,7 @@ enum _MapZoom { city, nearby, national }
 class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
+
   /// Pre-generated mock heatmap circles. Only rendered when the user has
   /// effective premium access (real Pro or Taste of Premium via event geofence).
   late final Set<Circle> _heatmapCircles;
@@ -74,8 +75,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   @override
   void initState() {
     super.initState();
-    _heatmapCircles =
-        _isDev ? _generateMockHeatmapCircles() : const <Circle>{};
+    _heatmapCircles = _isDev ? _generateMockHeatmapCircles() : const <Circle>{};
 
     // Register event locations with the geofence service so real GPS
     // proximity checks start immediately (if location permission is granted).
@@ -161,8 +161,8 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final geofenceService = ref.read(eventGeofenceServiceProvider);
-    final isTasteOfPremium =
-        geofenceService.inEventGeofence && !ref.read(authStateProvider)!.isPremium;
+    final isTasteOfPremium = geofenceService.inEventGeofence &&
+        !ref.read(authStateProvider)!.isPremium;
 
     showModalBottomSheet(
       context: context,
@@ -179,7 +179,8 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
     );
   }
 
-  void _centerToEvent(TrembleEventData event, bool effectivePremium, String lang) {
+  void _centerToEvent(
+      TrembleEventData event, bool effectivePremium, String lang) {
     final location = _eventLocations[event.id]!;
     _mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
@@ -242,7 +243,8 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                               Navigator.pop(context);
                               Future.delayed(
                                   const Duration(milliseconds: 300),
-                                  () => _centerToEvent(e, effectivePremium, lang));
+                                  () => _centerToEvent(
+                                      e, effectivePremium, lang));
                             },
                           ),
                         ),
@@ -259,7 +261,8 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                               Navigator.pop(context);
                               Future.delayed(
                                   const Duration(milliseconds: 300),
-                                  () => _centerToEvent(e, effectivePremium, lang));
+                                  () => _centerToEvent(
+                                      e, effectivePremium, lang));
                             },
                           ),
                         ),
@@ -338,8 +341,9 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
     final isGenderBased = user?.isGenderBasedColor ?? false;
     final gender = user?.gender;
     final geofenceService = ref.watch(eventGeofenceServiceProvider);
-    final effectivePremium =
-        user?.effectiveIsPremium(inEventGeofence: geofenceService.inEventGeofence) ?? false;
+    final effectivePremium = user?.effectiveIsPremium(
+            inEventGeofence: geofenceService.inEventGeofence) ??
+        false;
 
     final eventMarkers = _buildEventMarkers(effectivePremium, lang);
 
@@ -420,8 +424,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                         target: _ljubljanaCenter,
                         zoom: 13.5,
                       ),
-                      onMapCreated: (controller) =>
-                          _mapController = controller,
+                      onMapCreated: (controller) => _mapController = controller,
                       myLocationEnabled: true,
                       myLocationButtonEnabled: false,
                       zoomControlsEnabled: false,
@@ -482,8 +485,7 @@ class _MapZoomToggle extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: isActive
                     ? Theme.of(context).primaryColor
@@ -640,21 +642,18 @@ class _EventTile extends StatelessWidget {
                     style: TrembleTheme.uiFont(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color:
-                          isDark ? Colors.white54 : TrembleTheme.warmGray,
+                      color: isDark ? Colors.white54 : TrembleTheme.warmGray,
                     ),
                   ),
                 ],
               ),
             ),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: statusColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(100),
-                border:
-                    Border.all(color: statusColor.withValues(alpha: 0.35)),
+                border: Border.all(color: statusColor.withValues(alpha: 0.35)),
               ),
               child: Text(
                 statusText,
