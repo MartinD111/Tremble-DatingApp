@@ -17,9 +17,24 @@ const List<MatchProfile> kMockNearbyUsers = [
     imageUrl:
         'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&q=80',
     hobbies: [
-      {'name': 'Potovanja', 'emoji': '✈️', 'category': 'hobby_cat_travel', 'custom': false},
-      {'name': 'Glasba', 'emoji': '🎵', 'category': 'hobby_cat_art', 'custom': false},
-      {'name': 'Fitnes', 'emoji': '💪', 'category': 'hobby_cat_active', 'custom': false},
+      {
+        'name': 'Potovanja',
+        'emoji': '✈️',
+        'category': 'hobby_cat_travel',
+        'custom': false
+      },
+      {
+        'name': 'Glasba',
+        'emoji': '🎵',
+        'category': 'hobby_cat_art',
+        'custom': false
+      },
+      {
+        'name': 'Fitnes',
+        'emoji': '💪',
+        'category': 'hobby_cat_active',
+        'custom': false
+      },
     ],
     bio:
         'Rada potavam in spoznavam nove ljudi. Iščem nekoga, ki ceni fine pogovore in dobre kave.',
@@ -58,9 +73,24 @@ const List<MatchProfile> kMockNearbyUsers = [
     imageUrl:
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
     hobbies: [
-      {'name': 'Branje', 'emoji': '📚', 'category': 'hobby_cat_leisure', 'custom': false},
-      {'name': 'Videoigre', 'emoji': '🎮', 'category': 'hobby_cat_leisure', 'custom': false},
-      {'name': 'Filmi', 'emoji': '🎬', 'category': 'hobby_cat_leisure', 'custom': false},
+      {
+        'name': 'Branje',
+        'emoji': '📚',
+        'category': 'hobby_cat_leisure',
+        'custom': false
+      },
+      {
+        'name': 'Videoigre',
+        'emoji': '🎮',
+        'category': 'hobby_cat_leisure',
+        'custom': false
+      },
+      {
+        'name': 'Filmi',
+        'emoji': '🎬',
+        'category': 'hobby_cat_leisure',
+        'custom': false
+      },
     ],
     bio:
         'Software engineer po dnevu, gamer po noči. Ljubim kavo, minimalizem in knjige, ki te nehote premislijo.',
@@ -99,9 +129,24 @@ const List<MatchProfile> kMockNearbyUsers = [
     imageUrl:
         'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&q=80',
     hobbies: [
-      {'name': 'Umetnost', 'emoji': '🎨', 'category': 'hobby_cat_art', 'custom': false},
-      {'name': 'Šport', 'emoji': '🏃‍♀️', 'category': 'hobby_cat_active', 'custom': false},
-      {'name': 'Potovanja', 'emoji': '✈️', 'category': 'hobby_cat_travel', 'custom': false},
+      {
+        'name': 'Umetnost',
+        'emoji': '🎨',
+        'category': 'hobby_cat_art',
+        'custom': false
+      },
+      {
+        'name': 'Šport',
+        'emoji': '🏃‍♀️',
+        'category': 'hobby_cat_active',
+        'custom': false
+      },
+      {
+        'name': 'Potovanja',
+        'emoji': '✈️',
+        'category': 'hobby_cat_travel',
+        'custom': false
+      },
     ],
     bio:
         'UX designerka, ki verjame, da so detajli tisto, kar loči povprečno od izjemnega — v dizajnu in v življenju.',

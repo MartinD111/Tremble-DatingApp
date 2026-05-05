@@ -21,7 +21,6 @@ import '../../../shared/ui/discard_changes_modal.dart';
 import '../../../core/upload_service.dart';
 import '../../../core/utils/icon_utils.dart';
 
-
 import '../../../shared/ui/tremble_circle_button.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -322,7 +321,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (value == null || value.isEmpty) return null;
     return mapping[value] ?? value;
   }
-
 
   String _titleCase(String s) {
     if (s.isEmpty) return s;
@@ -1228,7 +1226,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 Expanded(
                                   child: Align(
                                     alignment: Alignment.centerRight,
-                                    child: _editCircle(isDark, borderColor, fillColor,
+                                    child: _editCircle(
+                                        isDark, borderColor, fillColor,
                                         onTap: _showHobbiesModal),
                                   ),
                                 ),
@@ -1672,8 +1671,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Widget _buildOccupationChips(String lang, bool isDark, Color textColor) {
     final options = [
-      {'label': t('student', lang), 'value': 'student', 'icon': LucideIcons.graduationCap},
-      {'label': t('employed', lang), 'value': 'employed', 'icon': LucideIcons.briefcase},
+      {
+        'label': t('student', lang),
+        'value': 'student',
+        'icon': LucideIcons.graduationCap
+      },
+      {
+        'label': t('employed', lang),
+        'value': 'employed',
+        'icon': LucideIcons.briefcase
+      },
     ];
     return Wrap(
       spacing: 10,
@@ -1685,7 +1692,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         return ChoiceChip(
           avatar: Icon(icon,
               size: 16,
-              color: sel ? Colors.black : (isDark ? Colors.white70 : Colors.black54)),
+              color: sel
+                  ? Colors.black
+                  : (isDark ? Colors.white70 : Colors.black54)),
           label: Text(label),
           selected: sel,
           onSelected: (s) {
@@ -2102,7 +2111,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(LucideIcons.cake, size: 20, color: titleColor.withValues(alpha: 0.7)),
+                      Icon(LucideIcons.cake,
+                          size: 20, color: titleColor.withValues(alpha: 0.7)),
                       const SizedBox(width: 10),
                       Text(
                         t('date_of_birth', _lang).isNotEmpty &&
@@ -2242,7 +2252,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       },
     );
   }
-
 
   IconData _getCategoryIcon(String categoryKey) {
     switch (categoryKey) {

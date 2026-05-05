@@ -171,8 +171,8 @@ class EventModeController extends StateNotifier<SimpleModeState> {
     required String eventId,
     required String eventName,
   }) async {
-    state = state.copyWith(
-        status: SimpleModeStatus.loading, errorMessage: null);
+    state =
+        state.copyWith(status: SimpleModeStatus.loading, errorMessage: null);
 
     try {
       await _repo.activateEventMode(eventId: eventId, eventName: eventName);
@@ -218,8 +218,8 @@ class RunModeController extends StateNotifier<SimpleModeState> {
   RunModeController(this._repo) : super(const SimpleModeState());
 
   Future<void> activate() async {
-    state = state.copyWith(
-        status: SimpleModeStatus.loading, errorMessage: null);
+    state =
+        state.copyWith(status: SimpleModeStatus.loading, errorMessage: null);
 
     try {
       await _repo.activateRunMode();

@@ -273,7 +273,8 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (widget.rowIcon != null) ...[
-                    Icon(widget.rowIcon, size: 20, color: textColor.withValues(alpha: 0.7)),
+                    Icon(widget.rowIcon,
+                        size: 20, color: textColor.withValues(alpha: 0.7)),
                     const SizedBox(width: 10),
                   ],
                   Text(
@@ -727,8 +728,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
                 size: 20,
                 color: isSelected
                     ? brandRose
-                    : (iconColor ??
-                        (isDark ? Colors.white : Colors.black87)),
+                    : (iconColor ?? (isDark ? Colors.white : Colors.black87)),
               ),
               const SizedBox(width: 12),
             ],
@@ -794,7 +794,8 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (widget.rowIcon != null) ...[
-                  Icon(widget.rowIcon, size: 20, color: textColor.withValues(alpha: 0.7)),
+                  Icon(widget.rowIcon,
+                      size: 20, color: textColor.withValues(alpha: 0.7)),
                   const SizedBox(width: 10),
                 ],
                 Text(

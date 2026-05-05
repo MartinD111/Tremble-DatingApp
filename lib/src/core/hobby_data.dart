@@ -1,113 +1,618 @@
 class HobbyData {
   static const List<Map<String, dynamic>> predefinedHobbies = [
     // Aktivni hobiji
-    {'name': 'Pohodništvo', 'emoji': '🥾', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Hiking', 'emoji': '⛰️', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Kolesarjenje', 'emoji': '🚴', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Plavanje', 'emoji': '🏊', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Tek', 'emoji': '🏃', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Plezanje', 'emoji': '🧗', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Joga', 'emoji': '🧘', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Pilates', 'emoji': '🤸', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Fitnes', 'emoji': '🏋️', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Kalistenika', 'emoji': '💪', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Tenis', 'emoji': '🎾', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Skvoš', 'emoji': '🏸', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Ples', 'emoji': '💃', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'BJJ', 'emoji': '🥋', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Karate', 'emoji': '🥋', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Taekwondo', 'emoji': '🥋', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Judo', 'emoji': '🥋', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Mixed martial arts', 'emoji': '🥊', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Boks', 'emoji': '🥊', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Smučanje', 'emoji': '⛷️', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Bordanje', 'emoji': '🏂', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Rolanje', 'emoji': '🛼', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Drsanje', 'emoji': '⛸️', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Kajak', 'emoji': '🛶', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'SUP', 'emoji': '🏄', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Jadranje', 'emoji': '⛵', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Nogomet', 'emoji': '⚽', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Košarka', 'emoji': '🏀', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Odbojka', 'emoji': '🏐', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Skateboarding', 'emoji': '🛹', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Ping pong', 'emoji': '🏓', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Bowling', 'emoji': '🎳', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Biljard', 'emoji': '🎱', 'category': 'hobby_cat_active', 'custom': false},
-    {'name': 'Ribolov', 'emoji': '🎣', 'category': 'hobby_cat_active', 'custom': false},
+    {
+      'name': 'Pohodništvo',
+      'emoji': '🥾',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Hiking',
+      'emoji': '⛰️',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Kolesarjenje',
+      'emoji': '🚴',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Plavanje',
+      'emoji': '🏊',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Tek',
+      'emoji': '🏃',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Plezanje',
+      'emoji': '🧗',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Joga',
+      'emoji': '🧘',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Pilates',
+      'emoji': '🤸',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Fitnes',
+      'emoji': '🏋️',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Kalistenika',
+      'emoji': '💪',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Tenis',
+      'emoji': '🎾',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Skvoš',
+      'emoji': '🏸',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Ples',
+      'emoji': '💃',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'BJJ',
+      'emoji': '🥋',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Karate',
+      'emoji': '🥋',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Taekwondo',
+      'emoji': '🥋',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Judo',
+      'emoji': '🥋',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Mixed martial arts',
+      'emoji': '🥊',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Boks',
+      'emoji': '🥊',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Smučanje',
+      'emoji': '⛷️',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Bordanje',
+      'emoji': '🏂',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Rolanje',
+      'emoji': '🛼',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Drsanje',
+      'emoji': '⛸️',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Kajak',
+      'emoji': '🛶',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'SUP',
+      'emoji': '🏄',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Jadranje',
+      'emoji': '⛵',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Nogomet',
+      'emoji': '⚽',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Košarka',
+      'emoji': '🏀',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Odbojka',
+      'emoji': '🏐',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Skateboarding',
+      'emoji': '🛹',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Ping pong',
+      'emoji': '🏓',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Bowling',
+      'emoji': '🎳',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Biljard',
+      'emoji': '🎱',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
+    {
+      'name': 'Ribolov',
+      'emoji': '🎣',
+      'category': 'hobby_cat_active',
+      'custom': false
+    },
 
     // Leisure / Sprostitev
-    {'name': 'Knjige', 'emoji': '📚', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Stripi', 'emoji': '🦸‍♂️', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Videoigre', 'emoji': '🎮', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Podcasts', 'emoji': '🎧', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Audiobooks', 'emoji': '📖', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Vrtnarjenje', 'emoji': '🪴', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'House plants', 'emoji': '🌿', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Kuhanje', 'emoji': '🍳', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Baking', 'emoji': '🧁', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Board games', 'emoji': '🎲', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Šah', 'emoji': '♟️', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Domino', 'emoji': '🁣', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Puzzles', 'emoji': '🧩', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Lego', 'emoji': '🧱', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Meditacija', 'emoji': '🧘‍♀️', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Collecting', 'emoji': '🖼️', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Journaling', 'emoji': '📓', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Astronomija', 'emoji': '🔭', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Reševanje križank', 'emoji': '📝', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Sudoku', 'emoji': '🔢', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Rubik\'s cube', 'emoji': '🧊', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Učenje novega jezika', 'emoji': '🗣️', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Grozljivke', 'emoji': '🧟', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Komedije', 'emoji': '😂', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Trilerji', 'emoji': '🕵️', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Drame', 'emoji': '🎭', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Romantični filmi', 'emoji': '❤️', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Dokumentarci', 'emoji': '🎞️', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Historical films', 'emoji': '🏛️', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Serije', 'emoji': '📺', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Specialty coffee', 'emoji': '☕', 'category': 'hobby_cat_leisure', 'custom': false},
-    {'name': 'Specialty tea', 'emoji': '🍵', 'category': 'hobby_cat_leisure', 'custom': false},
+    {
+      'name': 'Knjige',
+      'emoji': '📚',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Stripi',
+      'emoji': '🦸‍♂️',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Videoigre',
+      'emoji': '🎮',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Podcasts',
+      'emoji': '🎧',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Audiobooks',
+      'emoji': '📖',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Vrtnarjenje',
+      'emoji': '🪴',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'House plants',
+      'emoji': '🌿',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Kuhanje',
+      'emoji': '🍳',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Baking',
+      'emoji': '🧁',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Board games',
+      'emoji': '🎲',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Šah',
+      'emoji': '♟️',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Domino',
+      'emoji': '🁣',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Puzzles',
+      'emoji': '🧩',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Lego',
+      'emoji': '🧱',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Meditacija',
+      'emoji': '🧘‍♀️',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Collecting',
+      'emoji': '🖼️',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Journaling',
+      'emoji': '📓',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Astronomija',
+      'emoji': '🔭',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Reševanje križank',
+      'emoji': '📝',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Sudoku',
+      'emoji': '🔢',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Rubik\'s cube',
+      'emoji': '🧊',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Učenje novega jezika',
+      'emoji': '🗣️',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Grozljivke',
+      'emoji': '🧟',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Komedije',
+      'emoji': '😂',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Trilerji',
+      'emoji': '🕵️',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Drame',
+      'emoji': '🎭',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Romantični filmi',
+      'emoji': '❤️',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Dokumentarci',
+      'emoji': '🎞️',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Historical films',
+      'emoji': '🏛️',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Serije',
+      'emoji': '📺',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Specialty coffee',
+      'emoji': '☕',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
+    {
+      'name': 'Specialty tea',
+      'emoji': '🍵',
+      'category': 'hobby_cat_leisure',
+      'custom': false
+    },
 
     // Umetnost / Art
-    {'name': 'Slikanje', 'emoji': '🎨', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Risanje', 'emoji': '✏️', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Fotografija', 'emoji': '📸', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Oblikovanje gline', 'emoji': '🏺', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Kitara', 'emoji': '🎸', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Klavir', 'emoji': '🎹', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Bobni', 'emoji': '🥁', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Violina', 'emoji': '🎻', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Harmonika', 'emoji': '🪗', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Saksofon', 'emoji': '🎷', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Klarinet', 'emoji': '🎵', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Flavta', 'emoji': '🎶', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Pletenje', 'emoji': '🧶', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Kvačkanje', 'emoji': '🧵', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Šivanje', 'emoji': '🪡', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Grafični dizajn', 'emoji': '💻', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': '3D modeliranje', 'emoji': '🧊', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Poezija', 'emoji': '✒️', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Blog', 'emoji': '✍️', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Izdelovanje nakita', 'emoji': '💍', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Obdelava lesa', 'emoji': '🪚', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Kaligrafija', 'emoji': '🖋️', 'category': 'hobby_cat_art', 'custom': false},
-    {'name': 'Origami', 'emoji': '🕊️', 'category': 'hobby_cat_art', 'custom': false},
+    {
+      'name': 'Slikanje',
+      'emoji': '🎨',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Risanje',
+      'emoji': '✏️',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Fotografija',
+      'emoji': '📸',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Oblikovanje gline',
+      'emoji': '🏺',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Kitara',
+      'emoji': '🎸',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Klavir',
+      'emoji': '🎹',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Bobni',
+      'emoji': '🥁',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Violina',
+      'emoji': '🎻',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Harmonika',
+      'emoji': '🪗',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Saksofon',
+      'emoji': '🎷',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Klarinet',
+      'emoji': '🎵',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Flavta',
+      'emoji': '🎶',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Pletenje',
+      'emoji': '🧶',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Kvačkanje',
+      'emoji': '🧵',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Šivanje',
+      'emoji': '🪡',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Grafični dizajn',
+      'emoji': '💻',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': '3D modeliranje',
+      'emoji': '🧊',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Poezija',
+      'emoji': '✒️',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Blog',
+      'emoji': '✍️',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Izdelovanje nakita',
+      'emoji': '💍',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Obdelava lesa',
+      'emoji': '🪚',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Kaligrafija',
+      'emoji': '🖋️',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
+    {
+      'name': 'Origami',
+      'emoji': '🕊️',
+      'category': 'hobby_cat_art',
+      'custom': false
+    },
 
     // Potovanja / Travel
-    {'name': 'Backpacking', 'emoji': '🎒', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Road trips', 'emoji': '🚗', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Kampiranje', 'emoji': '⛺', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Kulinarični turizem', 'emoji': '🍽️', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Solo potovanja', 'emoji': '🚶', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Živalski vrtovi', 'emoji': '🦁', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Nacionalni parki', 'emoji': '🌲', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Geocaching', 'emoji': '🧭', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Muzeji', 'emoji': '🏛️', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Ruševine', 'emoji': '🗿', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Galerije', 'emoji': '🖼️', 'category': 'hobby_cat_travel', 'custom': false},
-    {'name': 'Slow travel', 'emoji': '🐌', 'category': 'hobby_cat_travel', 'custom': false},
+    {
+      'name': 'Backpacking',
+      'emoji': '🎒',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Road trips',
+      'emoji': '🚗',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Kampiranje',
+      'emoji': '⛺',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Kulinarični turizem',
+      'emoji': '🍽️',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Solo potovanja',
+      'emoji': '🚶',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Živalski vrtovi',
+      'emoji': '🦁',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Nacionalni parki',
+      'emoji': '🌲',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Geocaching',
+      'emoji': '🧭',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Muzeji',
+      'emoji': '🏛️',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Ruševine',
+      'emoji': '🗿',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Galerije',
+      'emoji': '🖼️',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
+    {
+      'name': 'Slow travel',
+      'emoji': '🐌',
+      'category': 'hobby_cat_travel',
+      'custom': false
+    },
   ];
 
   static Map<String, List<Map<String, dynamic>>> get groupedHobbies {

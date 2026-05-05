@@ -198,7 +198,8 @@ class _HobbiesStepState extends State<HobbiesStep> {
                           ? '$translatedName ($selectedCount)'
                           : translatedName;
 
-                      final containerKey = _categoryKeys.putIfAbsent(catKey, () => GlobalKey());
+                      final containerKey =
+                          _categoryKeys.putIfAbsent(catKey, () => GlobalKey());
                       return Container(
                         key: containerKey,
                         margin: const EdgeInsets.only(bottom: 12),
@@ -221,17 +222,27 @@ class _HobbiesStepState extends State<HobbiesStep> {
                                   final key = _categoryKeys[catKey];
                                   if (key != null) {
                                     // Wait for AnimatedSize to finish (300ms) then scroll
-                                    Future.delayed(const Duration(milliseconds: 320), () {
+                                    Future.delayed(
+                                        const Duration(milliseconds: 320), () {
                                       final sc = widget.scrollController;
                                       final ctx = key.currentContext;
-                                      if (sc == null || !sc.hasClients || ctx == null) return;
-                                      final box = ctx.findRenderObject() as RenderBox?;
+                                      if (sc == null ||
+                                          !sc.hasClients ||
+                                          ctx == null) return;
+                                      final box =
+                                          ctx.findRenderObject() as RenderBox?;
                                       if (box == null) return;
-                                      final offset = box.localToGlobal(Offset.zero).dy;
-                                      final scrollOffset = sc.offset + offset - MediaQuery.of(context).padding.top - 16;
+                                      final offset =
+                                          box.localToGlobal(Offset.zero).dy;
+                                      final scrollOffset = sc.offset +
+                                          offset -
+                                          MediaQuery.of(context).padding.top -
+                                          16;
                                       sc.animateTo(
-                                        scrollOffset.clamp(0.0, sc.position.maxScrollExtent),
-                                        duration: const Duration(milliseconds: 350),
+                                        scrollOffset.clamp(
+                                            0.0, sc.position.maxScrollExtent),
+                                        duration:
+                                            const Duration(milliseconds: 350),
                                         curve: Curves.easeInOut,
                                       );
                                     });

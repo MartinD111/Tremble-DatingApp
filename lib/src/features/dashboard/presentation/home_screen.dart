@@ -1044,9 +1044,21 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         final items = [
-          (RadarModeKind.gym, LucideIcons.dumbbell, t('gym_mode_info_title', lang)),
-          (RadarModeKind.event, LucideIcons.calendar, t('event_mode_info_title', lang)),
-          (RadarModeKind.run, LucideIcons.footprints, t('run_mode_info_title', lang)),
+          (
+            RadarModeKind.gym,
+            LucideIcons.dumbbell,
+            t('gym_mode_info_title', lang)
+          ),
+          (
+            RadarModeKind.event,
+            LucideIcons.calendar,
+            t('event_mode_info_title', lang)
+          ),
+          (
+            RadarModeKind.run,
+            LucideIcons.footprints,
+            t('run_mode_info_title', lang)
+          ),
         ];
 
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
@@ -1063,8 +1075,7 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
                     : Colors.white.withValues(alpha: 0.96),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(24)),
-                border:
-                    Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
               ),
               padding: EdgeInsets.fromLTRB(
                   0, 12, 0, MediaQuery.of(ctx).padding.bottom + 20),
@@ -1084,8 +1095,8 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
                     final (kind, icon, label) = item;
                     final isSelected = kind == selectedMode;
                     return ListTile(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 4),
                       leading: Container(
                         width: 40,
                         height: 40,
@@ -1103,15 +1114,13 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
                         label,
                         style: GoogleFonts.instrumentSans(
                           fontSize: 16,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
                           color: isSelected ? Colors.white : Colors.white60,
                         ),
                       ),
                       trailing: isSelected
-                          ? Icon(LucideIcons.check,
-                              size: 16, color: primary)
+                          ? Icon(LucideIcons.check, size: 16, color: primary)
                           : null,
                       onTap: () {
                         ref.read(selectedRadarModeProvider.notifier).state =
@@ -1253,9 +1262,21 @@ Future<void> showModeInfoDialog({
   VoidCallback? onDeactivate,
 }) async {
   final (titleKey, bodyKey, icon) = switch (mode) {
-    RadarModeKind.gym => ('gym_mode_info_title', 'gym_mode_info_body', LucideIcons.dumbbell),
-    RadarModeKind.run => ('run_mode_info_title', 'run_mode_info_body', LucideIcons.personStanding),
-    RadarModeKind.event => ('event_mode_info_title', 'event_mode_info_body', LucideIcons.calendar),
+    RadarModeKind.gym => (
+        'gym_mode_info_title',
+        'gym_mode_info_body',
+        LucideIcons.dumbbell
+      ),
+    RadarModeKind.run => (
+        'run_mode_info_title',
+        'run_mode_info_body',
+        LucideIcons.personStanding
+      ),
+    RadarModeKind.event => (
+        'event_mode_info_title',
+        'event_mode_info_body',
+        LucideIcons.calendar
+      ),
   };
 
   final dontShowNotifier = ValueNotifier<bool>(false);
@@ -1433,8 +1454,9 @@ Future<void> showModeInfoDialog({
                                 borderRadius: BorderRadius.circular(100),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (isActive ? Colors.redAccent : primary)
-                                        .withValues(alpha: 0.30),
+                                    color:
+                                        (isActive ? Colors.redAccent : primary)
+                                            .withValues(alpha: 0.30),
                                     blurRadius: 14,
                                     spreadRadius: 1,
                                   ),

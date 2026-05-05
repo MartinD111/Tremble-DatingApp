@@ -171,7 +171,9 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
     final isDark = Theme.of(ctx).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtextColor = isDark ? Colors.white60 : Colors.black54;
-    final dividerColor = isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.1);
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.2)
+        : Colors.black.withValues(alpha: 0.1);
 
     showModalBottomSheet<void>(
       context: ctx,
@@ -187,7 +189,10 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                   : Colors.white.withValues(alpha: 0.96),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(24)),
-              border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06)),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.06)),
             ),
             padding: EdgeInsets.fromLTRB(
                 0, 12, 0, MediaQuery.of(sheetCtx).padding.bottom + 20),
@@ -212,9 +217,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 24, vertical: 2),
                       leading: Icon(
-                        selected
-                            ? LucideIcons.checkCircle
-                            : LucideIcons.circle,
+                        selected ? LucideIcons.checkCircle : LucideIcons.circle,
                         size: 16,
                         color: selected ? primary : subtextColor,
                       ),
@@ -469,8 +472,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(100),
-                    border:
-                        Border.all(color: primary.withValues(alpha: 0.25)),
+                    border: Border.all(color: primary.withValues(alpha: 0.25)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -513,9 +515,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                     fontSize: 13, fontWeight: FontWeight.bold),
                 unselectedLabelStyle: GoogleFonts.instrumentSans(
                     fontSize: 13, fontWeight: FontWeight.w500),
-                tabs: _tabs
-                    .map((tab) => Tab(text: t(tab.$1, lang)))
-                    .toList(),
+                tabs: _tabs.map((tab) => Tab(text: t(tab.$1, lang))).toList(),
               ),
             )
           else if (activeSection == MatchSection.gym)
@@ -539,8 +539,8 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: filteredAsync.when(
                 loading: () => Center(
-                  child: CircularProgressIndicator(
-                      color: primary, strokeWidth: 2),
+                  child:
+                      CircularProgressIndicator(color: primary, strokeWidth: 2),
                 ),
                 error: (err, _) => Center(
                   child: Column(
@@ -553,8 +553,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                               color: subtextColor, fontSize: 16)),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: () =>
-                            ref.invalidate(matchesStreamProvider),
+                        onPressed: () => ref.invalidate(matchesStreamProvider),
                         child: Text(t('try_again', lang),
                             style: TextStyle(color: primary)),
                       ),
@@ -590,8 +589,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                   }
 
                   final visibleItems = matchesToDisplay
-                      .where(
-                          (item) => !_removedIds.contains(item.profile.id))
+                      .where((item) => !_removedIds.contains(item.profile.id))
                       .toList();
 
                   if (visibleItems.isEmpty) {
@@ -873,9 +871,9 @@ class _ModeIconButton extends ConsumerWidget {
                 ref.read(runModeControllerProvider.notifier).activate();
               case MatchSection.event:
                 ref.read(eventModeControllerProvider.notifier).activate(
-                  eventId: 'default',
-                  eventName: t('section_your_event', lang),
-                );
+                      eventId: 'default',
+                      eventName: t('section_your_event', lang),
+                    );
               case MatchSection.matches:
                 break;
             }
@@ -927,10 +925,24 @@ class _SectionPickerSheet extends ConsumerWidget {
     final eventState = ref.watch(eventModeControllerProvider);
 
     final items = [
-      (MatchSection.gym, LucideIcons.dumbbell, 'section_your_gym',
-          gymState.isActive),
-      (MatchSection.event, LucideIcons.calendar, 'section_your_event', eventState.isActive),
-      (MatchSection.run, LucideIcons.footprints, 'section_your_run', runState.isActive),
+      (
+        MatchSection.gym,
+        LucideIcons.dumbbell,
+        'section_your_gym',
+        gymState.isActive
+      ),
+      (
+        MatchSection.event,
+        LucideIcons.calendar,
+        'section_your_event',
+        eventState.isActive
+      ),
+      (
+        MatchSection.run,
+        LucideIcons.footprints,
+        'section_your_run',
+        runState.isActive
+      ),
       (MatchSection.matches, LucideIcons.users, 'section_your_matches', false),
     ];
 
@@ -941,8 +953,7 @@ class _SectionPickerSheet extends ConsumerWidget {
         child: Container(
           decoration: BoxDecoration(
             color: const Color(0xFF1A1A18).withValues(alpha: 0.97),
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           ),
           padding: EdgeInsets.fromLTRB(
@@ -991,8 +1002,7 @@ class _SectionPickerSheet extends ConsumerWidget {
                               child: Icon(
                                 icon,
                                 size: 18,
-                                color:
-                                    isSelected ? primary : Colors.white38,
+                                color: isSelected ? primary : Colors.white38,
                               ),
                             ),
                             const SizedBox(width: 14),
@@ -1023,8 +1033,7 @@ class _SectionPickerSheet extends ConsumerWidget {
                               ),
                             // Selected checkmark
                             if (isSelected)
-                              Icon(LucideIcons.check,
-                                  size: 16, color: primary),
+                              Icon(LucideIcons.check, size: 16, color: primary),
                           ],
                         ),
                       ),
@@ -1053,12 +1062,11 @@ class _SectionPickerSheet extends ConsumerWidget {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color:
-                                      Colors.white.withValues(alpha: 0.05),
+                                  color: Colors.white.withValues(alpha: 0.05),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                      color: Colors.white
-                                          .withValues(alpha: 0.10)),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.10)),
                                 ),
                                 child: const Icon(LucideIcons.listFilter,
                                     size: 13, color: Colors.white38),
@@ -1131,8 +1139,7 @@ class _SectionContextBar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
-                border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
               ),
               child: const Icon(LucideIcons.listFilter,
                   size: 14, color: Colors.white38),
@@ -1237,9 +1244,8 @@ class _GymEmptyPill extends StatelessWidget {
     final iconColor = accent != null
         ? accent.withValues(alpha: 0.8)
         : cs.onSurface.withValues(alpha: 0.5);
-    final textColor = accent != null
-        ? accent
-        : cs.onSurface.withValues(alpha: 0.6);
+    final textColor =
+        accent != null ? accent : cs.onSurface.withValues(alpha: 0.6);
 
     return InkWell(
       onTap: onTap,

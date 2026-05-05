@@ -37,8 +37,6 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
     super.dispose();
   }
 
-
-
   Future<void> _sendGreet() async {
     if (_isGreeting) return;
     setState(() => _isGreeting = true);
@@ -288,7 +286,8 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(h['emoji'] as String,
-                                              style: const TextStyle(fontSize: 14)),
+                                              style: const TextStyle(
+                                                  fontSize: 14)),
                                           const SizedBox(width: 6),
                                           Text(
                                             h['name'] as String,

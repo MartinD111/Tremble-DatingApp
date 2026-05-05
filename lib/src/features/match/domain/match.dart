@@ -104,8 +104,8 @@ class Match {
     // serverTimestamp() resolves null in the local cache before the write
     // round-trips. Fall back to "now" so the stream doesn't error mid-rebuild
     // and paint Flutter's red ErrorWidget.
-    final createdAt = (data['createdAt'] as Timestamp?)?.toDate() ??
-        DateTime.now();
+    final createdAt =
+        (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now();
     return Match(
       id: doc.id,
       userIds: List<String>.from(data['userIds'] ?? []),

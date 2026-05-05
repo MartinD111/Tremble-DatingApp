@@ -165,10 +165,9 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withValues(
-                                            alpha: 0.6),
-                                        borderRadius:
-                                            BorderRadius.circular(20),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.6),
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: const Text('🌴',
                                           style: TextStyle(fontSize: 16)),
@@ -392,7 +391,6 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     );
   }
 
-
   String _formatChipText(String text) {
     if (text.isEmpty) return text;
     // Replace underscores with spaces
@@ -548,8 +546,6 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     ][idx];
   }
 
-
-
   Widget _buildGlassSpectrumCard({
     required IconData icon,
     required String label,
@@ -638,8 +634,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                 if (hideThumb) return const SizedBox.shrink();
                 final percent = (value - min) / (max - min);
                 const thumbSize = 10.0;
-                final leftOffset =
-                    (constraints.maxWidth - thumbSize) * percent;
+                final leftOffset = (constraints.maxWidth - thumbSize) * percent;
                 return Container(
                   margin: EdgeInsets.only(left: leftOffset),
                   alignment: Alignment.centerLeft,
@@ -747,8 +742,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                 runSpacing: 6,
                 alignment: WrapAlignment.center,
                 children: entry.value
-                    .map((h) => _PreferencePill(
-                        label: '${h['emoji']} ${h['name']}'))
+                    .map((h) =>
+                        _PreferencePill(label: '${h['emoji']} ${h['name']}'))
                     .toList(),
               ),
               const SizedBox(height: 24),

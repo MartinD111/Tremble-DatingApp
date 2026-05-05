@@ -630,8 +630,7 @@ const Map<String, Map<String, String>> _translations = {
     // Gym/Run/Event mode — radar button
     'gym_mode_tap_hint':
         'Gym Mode is active. Your matches appear in the People tab under My Gym.',
-    'gym_mode_inactive_hint':
-        'Tap to see info about Gym Mode.',
+    'gym_mode_inactive_hint': 'Tap to see info about Gym Mode.',
     'run_mode_label': 'Run Mode',
     'event_mode_label': 'Event Mode',
     'gym_mode_label': 'Gym Mode',
@@ -1253,8 +1252,7 @@ const Map<String, Map<String, String>> _translations = {
         'Ljudje, ki si jih srečal v fitnesu. Aktivno med Gym Mode.',
     'section_your_event_desc':
         'Ljudje, ki si jih srečal na skupnem dogodku. Aktivno med Event Mode.',
-    'section_your_run_desc':
-        'Tekači, ki si jih srečal med aktivno teko sejo.',
+    'section_your_run_desc': 'Tekači, ki si jih srečal med aktivno teko sejo.',
     'section_your_matches_desc':
         'Vsi tvoji matchi — iz fitnesa, dogodkov, tekov in radar sej.',
     'gym_mode_inactive': 'Gym mode ni aktiven',
@@ -1283,8 +1281,7 @@ const Map<String, Map<String, String>> _translations = {
     // Gym/Run/Event mode — gumb na radarju
     'gym_mode_tap_hint':
         'Gym Mode je aktiven. Tvoji matchi se pojavijo v zavihku Ljudje pod Moj fitnes.',
-    'gym_mode_inactive_hint':
-        'Tapni za informacije o Gym Mode.',
+    'gym_mode_inactive_hint': 'Tapni za informacije o Gym Mode.',
     'run_mode_label': 'Run Mode',
     'event_mode_label': 'Event Mode',
     'gym_mode_label': 'Gym Mode',

@@ -176,10 +176,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withValues(
-                                            alpha: 0.6),
-                                        borderRadius:
-                                            BorderRadius.circular(20),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.6),
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: const Text('🌴',
                                           style: TextStyle(fontSize: 16)),
@@ -191,7 +190,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                   right: 0,
                                   bottom: 0,
                                   child: Container(
-                                    padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
+                                    padding: const EdgeInsets.fromLTRB(
+                                        16, 48, 16, 16),
                                     decoration: const BoxDecoration(
                                       gradient: LinearGradient(
                                         begin: Alignment.topCenter,
@@ -203,16 +203,19 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                       ),
                                     ),
                                     child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
                                       children: [
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Text(
                                                 '${match.name}, ${match.age}',
-                                                style: GoogleFonts.instrumentSans(
+                                                style:
+                                                    GoogleFonts.instrumentSans(
                                                   color: Colors.white,
                                                   fontSize: 26,
                                                   fontWeight: FontWeight.bold,
@@ -230,18 +233,23 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                                   children: [
                                                     Icon(
                                                       ZodiacUtils.getZodiacIcon(
-                                                        ZodiacUtils.getZodiacSign(match.birthDate),
+                                                        ZodiacUtils
+                                                            .getZodiacSign(match
+                                                                .birthDate),
                                                       ),
                                                       size: 16,
                                                       color: Colors.white70,
                                                     ),
                                                     const SizedBox(width: 5),
                                                     Text(
-                                                      t('zodiac_${ZodiacUtils.getZodiacSign(match.birthDate)}', lang),
-                                                      style: GoogleFonts.instrumentSans(
+                                                      t('zodiac_${ZodiacUtils.getZodiacSign(match.birthDate)}',
+                                                          lang),
+                                                      style: GoogleFonts
+                                                          .instrumentSans(
                                                         color: Colors.white70,
                                                         fontSize: 15,
-                                                        fontWeight: FontWeight.w500,
+                                                        fontWeight:
+                                                            FontWeight.w500,
                                                       ),
                                                     ),
                                                   ],
@@ -653,8 +661,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                 runSpacing: 6,
                 alignment: WrapAlignment.center,
                 children: entry.value
-                    .map((h) => _PreferencePill(
-                        label: '${h['emoji']} ${h['name']}'))
+                    .map((h) =>
+                        _PreferencePill(label: '${h['emoji']} ${h['name']}'))
                     .toList(),
               ),
               const SizedBox(height: 24),
@@ -908,8 +916,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                 if (hideThumb) return const SizedBox.shrink();
                 final percent = (value - min) / (max - min);
                 const thumbSize = 10.0;
-                final leftOffset =
-                    (constraints.maxWidth - thumbSize) * percent;
+                final leftOffset = (constraints.maxWidth - thumbSize) * percent;
                 return Container(
                   margin: EdgeInsets.only(left: leftOffset),
                   alignment: Alignment.centerLeft,
