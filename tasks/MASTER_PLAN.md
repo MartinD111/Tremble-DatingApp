@@ -53,7 +53,7 @@
 7. **F10** — Gym Mode (zahteva F1) ✅
 
 ### Faza C — Teden 9–11
-8. **F4** — Hot/Cold navigation (pure Flutter, brez infra)
+8. **F4** — Hot/Cold navigation (pure Flutter, brez infra) ✅
 9. **F6** — Run Club (native activity detection, ephemeral proximity) ✅
 
 ### Faza D — Teden 14–16

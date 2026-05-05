@@ -11,6 +11,7 @@ import '../features/auth/presentation/permission_gate_screen.dart';
 import '../features/auth/data/auth_repository.dart';
 import '../features/dashboard/presentation/home_screen.dart';
 import '../features/dashboard/presentation/run_recap_screen.dart';
+import '../features/map/presentation/event_recap_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/matches/data/match_repository.dart';
 import '../features/profile/presentation/profile_detail_screen.dart';
@@ -402,6 +403,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/run-recap',
         builder: (context, state) =>
             const GradientScaffold(child: RunRecapScreen()),
+      ),
+      GoRoute(
+        path: '/event-recap',
+        name: 'event_recap',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return EventRecapScreen(
+            eventName: extra?['eventName'] as String? ?? '',
+            eventId: extra?['eventId'] as String? ?? '',
+            pulseSecondsRemaining:
+                extra?['pulseSecondsRemaining'] as int?,
+          );
+        },
       ),
       GoRoute(
         path: '/match-reveal',

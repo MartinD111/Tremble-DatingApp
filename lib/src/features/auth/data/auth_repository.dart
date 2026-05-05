@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/api_client.dart';
+import '../../../core/event_geofence_service.dart';
 import '../../../core/hobby_utils.dart';
 
 // Sentinel marking "argument not provided" — distinguishes from explicit null
@@ -92,6 +93,12 @@ class AuthUser {
   final bool? gymNotificationsEnabled;
   final String? phoneNumber;
   final bool isTraveler;
+
+  /// Returns true if user has real Premium OR is inside an active event
+  /// geofence (Taste of Premium). The [inEventGeofence] flag comes from
+  /// EventGeofenceService — it is runtime-only and never persisted.
+  bool effectiveIsPremium({bool inEventGeofence = false}) =>
+      isPremium || inEventGeofence;
 
   const AuthUser({
     required this.id,
@@ -898,6 +905,20 @@ class AuthRepository {
     return _auth.currentUser?.emailVerified ?? false;
   }
 }
+
+/// Derived provider that combines [authStateProvider] and
+/// [eventGeofenceServiceProvider] into a single boolean. Widgets that need
+/// effective-premium status can watch this instead of computing it inline.
+///
+/// Returns true when the user has real Premium OR is inside an active event
+/// geofence (Taste of Premium). Updates reactively on both auth and geofence
+/// state changes — no app restart required.
+final effectiveIsPremiumProvider = Provider<bool>((ref) {
+  final user = ref.watch(authStateProvider);
+  final geofence = ref.watch(eventGeofenceServiceProvider);
+  return user?.effectiveIsPremium(inEventGeofence: geofence.inEventGeofence) ??
+      false;
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AuthNotifier — Riverpod StateNotifier
