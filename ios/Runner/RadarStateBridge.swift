@@ -28,7 +28,6 @@ class RadarStateBridge {
     set {
       let defaults = UserDefaults(suiteName: appGroup) ?? UserDefaults.standard
       defaults.set(newValue, forKey: key)
-      defaults.synchronize()
       // Broadcast to any listeners (AppDelegate EventChannel, widget refresh)
       notifyFlutter(newValue)
     }
