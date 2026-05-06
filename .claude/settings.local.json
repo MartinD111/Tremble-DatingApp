@@ -71,7 +71,8 @@
       "Bash(dart analyze *)",
       "Bash(flutter run *)",
       "Bash(grep -E \"\\\\.\\(dart\\)$\")",
-      "Bash(git restore *)"
+      "Bash(git restore *)",
+      "Bash(npm install *)"
     ]
   }
 }

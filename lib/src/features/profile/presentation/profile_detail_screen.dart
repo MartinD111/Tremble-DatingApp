@@ -229,30 +229,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                               ),
                                               if (match.birthDate != null) ...[
                                                 const SizedBox(height: 4),
-                                                Row(
-                                                  children: [
-                                                    Icon(
-                                                      ZodiacUtils.getZodiacIcon(
-                                                        ZodiacUtils
-                                                            .getZodiacSign(match
-                                                                .birthDate),
-                                                      ),
-                                                      size: 16,
-                                                      color: Colors.white70,
-                                                    ),
-                                                    const SizedBox(width: 5),
-                                                    Text(
-                                                      t('zodiac_${ZodiacUtils.getZodiacSign(match.birthDate)}',
-                                                          lang),
-                                                      style: GoogleFonts
-                                                          .instrumentSans(
-                                                        color: Colors.white70,
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                  ],
+                                                Text(
+                                                  ZodiacUtils.getZodiacEmoji(match.birthDate) ?? '',
+                                                  style: const TextStyle(fontSize: 18),
                                                 ),
                                               ],
                                             ],

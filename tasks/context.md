@@ -1,29 +1,20 @@
-## Session State — [2026-05-05 23:56]
-- Active Task: F2 — Event Mode (COMPLETED)
+## Session State — [2026-05-06 10:30]
+- Active Task: Profile card zodiac emoji display
 - Environment: Dev
 - Modified Files: 
-    - `lib/src/core/event_geofence_service.dart`
-    - `lib/src/features/map/presentation/event_pin_sheet.dart`
-    - `lib/src/features/map/presentation/event_recap_screen.dart`
-    - `lib/src/features/auth/data/auth_repository.dart`
-    - `lib/src/core/router.dart`
-    - `lib/src/core/translations.dart`
-- Open Problems: iOS App Groups blocked by Free Apple ID (Widget is visual-only)
+    - `lib/src/features/profile/presentation/profile_card_preview.dart`
+    - `lib/src/features/profile/presentation/profile_detail_screen.dart`
+- Open Problems: None
 - System Status: Build passing, flutter analyze 0 issues.
 
 ## Session Handoff
 - Completed:
-    - **F2 (Event Mode)** fully implemented:
-        - Real GPS Geofencing via Geolocator.
-        - "Taste of Premium" logic for live events (effectiveIsPremiumProvider).
-        - Map Pinpoint differentiation (Free vs Pro).
-        - Event Recap Screen with grayscale/blur for Free and 10m TTL for Pro.
-        - SMS Share template verified and implemented.
-    - Updated Premium price to 7.99€ and Product IDs.
-    - Fixed iOS Radar Widget fallback for standard UserDefaults.
-- In Progress:
-    - Ready for F10 (Gym Mode) live testing or F7 (Valentine Promo) preparation.
-- Blocked:
-    - App Groups (requires paid Apple Developer license).
-- Next Action:
-    - Physical device testing of the Geofence trigger.
+    - **Profile Card Zodiac Display** updated:
+        - Replaced Lucide icon + translated zodiac name text with platform-native emoji
+        - `profile_card_preview.dart`: Changed from `Icon(getZodiacIcon(...)) + Text(t('zodiac_...'))` to `Text(getZodiacEmoji(...))` with fontSize 22
+        - `profile_detail_screen.dart`: Same replacement in photo card overlay, with fontSize 18
+        - Platform emoji rendering: iOS uses Apple Color Emoji, Android uses Noto Color Emoji (automatic native rendering)
+    - No changes to `matches_screen.dart` (uses icon only, not requested to change)
+- In Progress: Ready for visual verification on iOS and Android devices
+- Blocked: None
+- Next Action: Test on physical iOS/Android devices to verify platform emoji rendering

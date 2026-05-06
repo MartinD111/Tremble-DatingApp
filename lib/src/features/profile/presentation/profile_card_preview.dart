@@ -194,23 +194,10 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                                 ),
                               ),
                               if (user.birthDate != null) ...[
-                                const SizedBox(width: 12),
-                                Icon(
-                                  ZodiacUtils.getZodiacIcon(
-                                    ZodiacUtils.getZodiacSign(user.birthDate),
-                                  ),
-                                  size: 20,
-                                  color: textColor.withValues(alpha: 0.6),
-                                ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 8),
                                 Text(
-                                  t('zodiac_${ZodiacUtils.getZodiacSign(user.birthDate)}',
-                                      lang),
-                                  style: GoogleFonts.instrumentSans(
-                                    color: textColor.withValues(alpha: 0.8),
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  ZodiacUtils.getZodiacEmoji(user.birthDate) ?? '',
+                                  style: const TextStyle(fontSize: 22),
                                 ),
                               ],
                             ],
