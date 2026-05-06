@@ -69,6 +69,7 @@ export {
 // ── Events Module ────────────────────────────────────────
 export {
     onEventModeActivate,
+    onEventModeDeactivate,
     expireEventModes,
 } from "./modules/events/events.functions";
 
@@ -77,4 +78,7 @@ export {
     onGymModeActivate,
     onGymModeDeactivate,
     expireGymSessions,
+    onRunModeActivate,
+    onRunModeDeactivate,
+    expireRunModes,
 } from "./modules/gym/gym.functions";

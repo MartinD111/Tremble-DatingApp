@@ -1,20 +1,28 @@
-## Session State — [2026-05-06 10:30]
-- Active Task: Profile card zodiac emoji display
+## Session State — [2026-05-06 18:30]
+- Active Task: Fix manual run mode activation by adding missing Cloud Functions (COMPLETED)
 - Environment: Dev
-- Modified Files: 
-    - `lib/src/features/profile/presentation/profile_card_preview.dart`
-    - `lib/src/features/profile/presentation/profile_detail_screen.dart`
+- Modified Files:
+    - `functions/src/modules/gym/gym.functions.ts` — added `onRunModeActivate`, `onRunModeDeactivate`, `expireRunModes`
+    - `functions/src/modules/events/events.functions.ts` — added `onEventModeDeactivate`
+    - `functions/src/index.ts` — exported all 4 new Cloud Functions
 - Open Problems: None
-- System Status: Build passing, flutter analyze 0 issues.
+- System Status: Cloud Functions build passing (tsc), ready for Firebase deploy.
 
 ## Session Handoff
 - Completed:
-    - **Profile Card Zodiac Display** updated:
-        - Replaced Lucide icon + translated zodiac name text with platform-native emoji
-        - `profile_card_preview.dart`: Changed from `Icon(getZodiacIcon(...)) + Text(t('zodiac_...'))` to `Text(getZodiacEmoji(...))` with fontSize 22
-        - `profile_detail_screen.dart`: Same replacement in photo card overlay, with fontSize 18
-        - Platform emoji rendering: iOS uses Apple Color Emoji, Android uses Noto Color Emoji (automatic native rendering)
-    - No changes to `matches_screen.dart` (uses icon only, not requested to change)
-- In Progress: Ready for visual verification on iOS and Android devices
+    - **Fixed Manual Run Mode Activation — Missing Cloud Functions**:
+        - Root cause: `onRunModeActivate`, `onRunModeDeactivate`, and `onEventModeDeactivate` Cloud Functions were completely missing from codebase, causing silent failures when user tapped activation buttons
+        - **Added to `functions/src/modules/gym/gym.functions.ts`:**
+          - `onRunModeActivate` — writes `isRunModeActive: true` and `runModeUntil` (+4h) to user doc
+          - `onRunModeDeactivate` — clears `isRunModeActive: false` and `runModeUntil: null`
+          - `expireRunModes` — scheduled hourly to auto-expire stale sessions (mirrors gym pattern)
+        - **Added to `functions/src/modules/events/events.functions.ts`:**
+          - `onEventModeDeactivate` — clears `activeEventId: null` and `eventModeUntil: null`
+        - **Updated `functions/src/index.ts`:**
+          - Exported `onRunModeActivate`, `onRunModeDeactivate`, `expireRunModes` from gym module
+          - Exported `onEventModeDeactivate` from events module
+        - Cloud Functions TypeScript build passes (tsc) with 0 errors
+        - **Next action:** Deploy with `firebase deploy --only functions --project tremble-dev` and test on device
+- In Progress: None
 - Blocked: None
-- Next Action: Test on physical iOS/Android devices to verify platform emoji rendering
+- Next Action: Deploy Cloud Functions to dev Firebase, then test run mode activation on device

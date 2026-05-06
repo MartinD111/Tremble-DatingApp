@@ -70,6 +70,26 @@ export const onEventModeActivate = onCall(
     }
 );
 
+/**
+ * onEventModeDeactivate — manual deactivation.
+ *
+ * User taps deactivate in the event mode section. Clears session immediately.
+ */
+export const onEventModeDeactivate = onCall(
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+    async (request) => {
+        const uid = requireAuth(request);
+
+        await db.collection('users').doc(uid).update({
+            activeEventId: null,
+            eventModeUntil: null,
+        });
+
+        console.log(`[EVENTS] Deactivated event mode for ${uid}`);
+        return { success: true };
+    }
+);
+
 // Scheduled — expire event modes every hour
 export const expireEventModes = onSchedule(
     { schedule: 'every 60 minutes', region: "europe-west1" },

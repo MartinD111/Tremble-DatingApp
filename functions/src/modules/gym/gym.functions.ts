@@ -128,3 +128,84 @@ export const expireGymSessions = onSchedule(
         }
     }
 );
+
+/** Hard limit for run mode session duration. Auto-expire clears after this. */
+const RUN_SESSION_HOURS = 4;
+
+/**
+ * onRunModeActivate — manual activation.
+ *
+ * Called when the user taps "Activate Run Mode" in My Run section or via radar.
+ * No location validation needed (unlike gym mode). Sets isRunModeActive and
+ * runModeUntil (+4h hard limit) on the user doc.
+ */
+export const onRunModeActivate = onCall(
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+    async (request) => {
+        const uid = requireAuth(request);
+
+        const runModeUntil = Timestamp.fromDate(
+            new Date(Date.now() + RUN_SESSION_HOURS * 60 * 60 * 1000)
+        );
+
+        await db.collection("users").doc(uid).update({
+            isRunModeActive: true,
+            runModeUntil,
+        });
+
+        console.log(`[RUN] Activated run mode for ${uid}`);
+        return { success: true };
+    }
+);
+
+/**
+ * onRunModeDeactivate — manual deactivation.
+ *
+ * User taps deactivate in the run mode section. Clears session immediately.
+ */
+export const onRunModeDeactivate = onCall(
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+    async (request) => {
+        const uid = requireAuth(request);
+
+        await db.collection("users").doc(uid).update({
+            isRunModeActive: false,
+            runModeUntil: null,
+        });
+
+        console.log(`[RUN] Deactivated run mode for ${uid}`);
+        return { success: true };
+    }
+);
+
+/**
+ * expireRunModes — scheduled hourly.
+ *
+ * Clears runModeUntil + isRunModeActive for users whose session has expired.
+ * Mirrors the events module's expireEventModes pattern.
+ */
+export const expireRunModes = onSchedule(
+    { schedule: "every 60 minutes", region: "europe-west1" },
+    async () => {
+        const expired = await db.collection("users")
+            .where("runModeUntil", "<", Timestamp.now())
+            .get();
+
+        if (expired.empty) return;
+
+        const batch = db.batch();
+        let count = 0;
+
+        expired.docs.forEach((doc) => {
+            if (doc.data().isRunModeActive) {
+                batch.update(doc.ref, { isRunModeActive: false, runModeUntil: null });
+                count++;
+            }
+        });
+
+        if (count > 0) {
+            await batch.commit();
+            console.log(`[RUN] Expired run modes for ${count} users.`);
+        }
+    }
+);
