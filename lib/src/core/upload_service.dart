@@ -1,5 +1,6 @@
+import 'dart:io' show HttpClient;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 import 'package:image_picker/image_picker.dart';
 import 'api_client.dart';
 
@@ -45,24 +46,29 @@ class UploadService {
     final uploadUrl = result['uploadUrl'] as String;
     final publicUrl = result['publicUrl'] as String;
 
-    // Step 2: PUT directly to R2 (no Firebase involved)
-    final response = await http.put(
-      Uri.parse(uploadUrl),
-      headers: {
-        'Content-Type': mimeType,
-        'Content-Length': fileSize.toString(),
-      },
-      body: bytes,
-    );
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw TrembleApiException(
-        code: 'internal',
-        message: 'Upload failed (HTTP ${response.statusCode}).',
+    // Step 2: PUT directly to R2 via IOClient (resolves TLS handshake issues with R2)
+    final ioHttpClient = HttpClient();
+    final client = IOClient(ioHttpClient);
+    try {
+      final response = await client.put(
+        Uri.parse(uploadUrl),
+        headers: {
+          'Content-Type': mimeType,
+        },
+        body: bytes,
       );
-    }
 
-    return publicUrl;
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw TrembleApiException(
+          code: 'internal',
+          message: 'Upload failed (HTTP ${response.statusCode}).',
+        );
+      }
+
+      return publicUrl;
+    } finally {
+      client.close();
+    }
   }
 
   /// Upload a photo from a file path (for profile editing).

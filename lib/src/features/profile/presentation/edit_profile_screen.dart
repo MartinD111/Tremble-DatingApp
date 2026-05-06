@@ -1421,7 +1421,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
             );
           }),
-          if (_photoUrls.length < 4)
+          if (_photoUrls.length < 6)
             GestureDetector(
               onTap: _isUploading ? null : _pickImage,
               child: Container(
