@@ -541,6 +541,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         : Colors.black.withValues(alpha: 0.04);
     final brandRose = Theme.of(context).primaryColor;
     final lang = _lang;
+    final user = ref.read(authStateProvider);
+    final isGenderBasedColor = user?.isGenderBasedColor ?? false;
+    final gender = user?.gender ?? 'default';
 
     return PopScope(
       canPop: !_hasChanges,
@@ -676,57 +679,63 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               values: [_religion],
                               formatter: (v) => _formatValue(v, lang),
                               iconMapper: IconUtils.getReligionIcon,
-                              onEdit: () => showPreferenceEditModal(
-                                context: context,
-                                title: t('religion', lang),
-                                rowIcon: LucideIcons.book,
-                                options: [
-                                  {
-                                    'label': t('christianity', lang),
-                                    'value': 'christianity',
-                                    'icon': IconUtils.getReligionIcon(
-                                        'christianity')
-                                  },
-                                  {
-                                    'label': t('islam', lang),
-                                    'value': 'islam',
-                                    'icon': IconUtils.getReligionIcon('islam')
-                                  },
-                                  {
-                                    'label': t('hinduism', lang),
-                                    'value': 'hinduism',
-                                    'icon':
-                                        IconUtils.getReligionIcon('hinduism')
-                                  },
-                                  {
-                                    'label': t('buddhism', lang),
-                                    'value': 'buddhism',
-                                    'icon':
-                                        IconUtils.getReligionIcon('buddhism')
-                                  },
-                                  {
-                                    'label': t('judaism', lang),
-                                    'value': 'judaism',
-                                    'icon': IconUtils.getReligionIcon('judaism')
-                                  },
-                                  {
-                                    'label': t('agnostic', lang),
-                                    'value': 'agnostic',
-                                    'icon':
-                                        IconUtils.getReligionIcon('agnostic')
-                                  },
-                                  {
-                                    'label': t('atheist', lang),
-                                    'value': 'atheist',
-                                    'icon': IconUtils.getReligionIcon('atheist')
-                                  },
-                                ],
-                                currentValue: _religion,
-                                onUpdate: (v) => setState(() {
-                                  _religion = v;
-                                  _hasChanges = true;
-                                }),
-                              ),
+                              isGenderBasedColor: isGenderBasedColor,
+                              gender: gender,
+                              onEdit: () {
+                                if (user == null) return;
+                                showPreferenceEditModal(
+                                  context: context,
+                                  title: t('religion', lang),
+                                  user: user,
+                                  rowIcon: LucideIcons.book,
+                                  options: [
+                                    {
+                                      'label': t('christianity', lang),
+                                      'value': 'christianity',
+                                      'icon': IconUtils.getReligionIcon(
+                                          'christianity')
+                                    },
+                                    {
+                                      'label': t('islam', lang),
+                                      'value': 'islam',
+                                      'icon': IconUtils.getReligionIcon('islam')
+                                    },
+                                    {
+                                      'label': t('hinduism', lang),
+                                      'value': 'hinduism',
+                                      'icon':
+                                          IconUtils.getReligionIcon('hinduism')
+                                    },
+                                    {
+                                      'label': t('buddhism', lang),
+                                      'value': 'buddhism',
+                                      'icon':
+                                          IconUtils.getReligionIcon('buddhism')
+                                    },
+                                    {
+                                      'label': t('judaism', lang),
+                                      'value': 'judaism',
+                                      'icon': IconUtils.getReligionIcon('judaism')
+                                    },
+                                    {
+                                      'label': t('agnostic', lang),
+                                      'value': 'agnostic',
+                                      'icon':
+                                          IconUtils.getReligionIcon('agnostic')
+                                    },
+                                    {
+                                      'label': t('atheist', lang),
+                                      'value': 'atheist',
+                                      'icon': IconUtils.getReligionIcon('atheist')
+                                    },
+                                  ],
+                                  currentValue: _religion,
+                                  onUpdate: (v) => setState(() {
+                                    _religion = v;
+                                    _hasChanges = true;
+                                  }),
+                                );
+                              },
                             ),
                             const SizedBox(height: 12),
 
@@ -736,11 +745,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               values: [_ethnicity],
                               formatter: (v) => _formatValue(v, lang),
                               iconMapper: (_) => LucideIcons.user,
-                              onEdit: () => showPreferenceEditModal(
-                                context: context,
-                                title: t('ethnicity', lang),
-                                rowIcon: LucideIcons.user,
-                                options: [
+                              isGenderBasedColor: isGenderBasedColor,
+                              gender: gender,
+                              onEdit: () {
+                                if (user == null) return;
+                                showPreferenceEditModal(
+                                  context: context,
+                                  title: t('ethnicity', lang),
+                                  user: user,
+                                  rowIcon: LucideIcons.user,
+                                  options: [
                                   {
                                     'label': t('ethnicity_white', lang),
                                     'value': 'ethnicity_white'
@@ -763,7 +777,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   _ethnicity = v;
                                   _hasChanges = true;
                                 }),
-                              ),
+                                );
+                              },
                             ),
                             const SizedBox(height: 12),
 
@@ -773,60 +788,66 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               values: [_hairColor],
                               formatter: (v) => _formatValue(v, lang),
                               iconMapper: (_) => Icons.circle,
-                              onEdit: () => showPreferenceEditModal(
-                                context: context,
-                                title: t('hair_color', lang),
-                                rowIcon: LucideIcons.scissors,
-                                options: [
-                                  {
-                                    'label': t('hair_blonde', lang),
-                                    'value': 'hair_blonde',
-                                    'icon': Icons.circle,
-                                    'iconColor':
-                                        IconUtils.getHairColor('hair_blonde')
-                                  },
-                                  {
-                                    'label': t('hair_brunette', lang),
-                                    'value': 'hair_brunette',
-                                    'icon': Icons.circle,
-                                    'iconColor':
-                                        IconUtils.getHairColor('hair_brunette')
-                                  },
-                                  {
-                                    'label': t('hair_black', lang),
-                                    'value': 'hair_black',
-                                    'icon': Icons.circle,
-                                    'iconColor':
-                                        IconUtils.getHairColor('hair_black')
-                                  },
-                                  {
-                                    'label': t('hair_red', lang),
-                                    'value': 'hair_red',
-                                    'icon': Icons.circle,
-                                    'iconColor':
-                                        IconUtils.getHairColor('hair_red')
-                                  },
-                                  {
-                                    'label': t('hair_gray_white', lang),
-                                    'value': 'hair_gray_white',
-                                    'icon': Icons.circle,
-                                    'iconColor': IconUtils.getHairColor(
-                                        'hair_gray_white')
-                                  },
-                                  {
-                                    'label': t('hair_other', lang),
-                                    'value': 'hair_other',
-                                    'icon': Icons.circle,
-                                    'iconColor':
-                                        IconUtils.getHairColor('hair_other')
-                                  },
-                                ],
-                                currentValue: _hairColor,
-                                onUpdate: (v) => setState(() {
-                                  _hairColor = v;
-                                  _hasChanges = true;
-                                }),
-                              ),
+                              isGenderBasedColor: isGenderBasedColor,
+                              gender: gender,
+                              onEdit: () {
+                                if (user == null) return;
+                                showPreferenceEditModal(
+                                  context: context,
+                                  title: t('hair_color', lang),
+                                  user: user,
+                                  rowIcon: LucideIcons.scissors,
+                                  options: [
+                                    {
+                                      'label': t('hair_blonde', lang),
+                                      'value': 'hair_blonde',
+                                      'icon': Icons.circle,
+                                      'iconColor':
+                                          IconUtils.getHairColor('hair_blonde')
+                                    },
+                                    {
+                                      'label': t('hair_brunette', lang),
+                                      'value': 'hair_brunette',
+                                      'icon': Icons.circle,
+                                      'iconColor':
+                                          IconUtils.getHairColor('hair_brunette')
+                                    },
+                                    {
+                                      'label': t('hair_black', lang),
+                                      'value': 'hair_black',
+                                      'icon': Icons.circle,
+                                      'iconColor':
+                                          IconUtils.getHairColor('hair_black')
+                                    },
+                                    {
+                                      'label': t('hair_red', lang),
+                                      'value': 'hair_red',
+                                      'icon': Icons.circle,
+                                      'iconColor':
+                                          IconUtils.getHairColor('hair_red')
+                                    },
+                                    {
+                                      'label': t('hair_gray_white', lang),
+                                      'value': 'hair_gray_white',
+                                      'icon': Icons.circle,
+                                      'iconColor': IconUtils.getHairColor(
+                                          'hair_gray_white')
+                                    },
+                                    {
+                                      'label': t('hair_other', lang),
+                                      'value': 'hair_other',
+                                      'icon': Icons.circle,
+                                      'iconColor':
+                                          IconUtils.getHairColor('hair_other')
+                                    },
+                                  ],
+                                  currentValue: _hairColor,
+                                  onUpdate: (v) => setState(() {
+                                    _hairColor = v;
+                                    _hasChanges = true;
+                                  }),
+                                );
+                              },
                             ),
                             const SizedBox(height: 24),
 
@@ -857,33 +878,39 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               values: [_exerciseHabit],
                               formatter: (v) => _formatValue(v, lang),
                               iconMapper: IconUtils.getLifestyleIcon,
-                              onEdit: () => showPreferenceEditModal(
-                                context: context,
-                                title: t('exercise', lang),
-                                rowIcon: LucideIcons.zap,
-                                options: [
-                                  {
-                                    'label': t('exercise_active', lang),
-                                    'value': 'active',
-                                    'icon': LucideIcons.zap,
-                                  },
-                                  {
-                                    'label': t('exercise_sometimes', lang),
-                                    'value': 'sometimes',
-                                    'icon': LucideIcons.activity,
-                                  },
-                                  {
-                                    'label': t('almost_never', lang),
-                                    'value': 'almost_never',
-                                    'icon': LucideIcons.moon,
-                                  },
-                                ],
-                                currentValue: _exerciseHabit,
-                                onUpdate: (val) => setState(() {
-                                  _exerciseHabit = val;
-                                  _hasChanges = true;
-                                }),
-                              ),
+                              isGenderBasedColor: isGenderBasedColor,
+                              gender: gender,
+                              onEdit: () {
+                                if (user == null) return;
+                                showPreferenceEditModal(
+                                  context: context,
+                                  title: t('exercise', lang),
+                                  user: user,
+                                  rowIcon: LucideIcons.zap,
+                                  options: [
+                                    {
+                                      'label': t('exercise_active', lang),
+                                      'value': 'active',
+                                      'icon': LucideIcons.zap,
+                                    },
+                                    {
+                                      'label': t('exercise_sometimes', lang),
+                                      'value': 'sometimes',
+                                      'icon': LucideIcons.activity,
+                                    },
+                                    {
+                                      'label': t('almost_never', lang),
+                                      'value': 'almost_never',
+                                      'icon': LucideIcons.moon,
+                                    },
+                                  ],
+                                  currentValue: _exerciseHabit,
+                                  onUpdate: (val) => setState(() {
+                                    _exerciseHabit = val;
+                                    _hasChanges = true;
+                                  }),
+                                );
+                              },
                             ),
                             const SizedBox(height: 12),
 
@@ -893,33 +920,39 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               values: [_drinkingHabit],
                               formatter: (v) => _formatValue(v, lang),
                               iconMapper: IconUtils.getLifestyleIcon,
-                              onEdit: () => showPreferenceEditModal(
-                                context: context,
-                                title: t('alcohol', lang),
-                                rowIcon: LucideIcons.wine,
-                                options: [
-                                  {
-                                    'label': t('drink_never', lang),
-                                    'value': 'never',
-                                    'icon': LucideIcons.ban,
-                                  },
-                                  {
-                                    'label': t('drink_socially', lang),
-                                    'value': 'socially',
-                                    'icon': LucideIcons.users,
-                                  },
-                                  {
-                                    'label': t('drink_frequently', lang),
-                                    'value': 'frequently',
-                                    'icon': LucideIcons.trendingUp,
-                                  },
-                                ],
-                                currentValue: _drinkingHabit,
-                                onUpdate: (val) => setState(() {
-                                  _drinkingHabit = val;
-                                  _hasChanges = true;
-                                }),
-                              ),
+                              isGenderBasedColor: isGenderBasedColor,
+                              gender: gender,
+                              onEdit: () {
+                                if (user == null) return;
+                                showPreferenceEditModal(
+                                  context: context,
+                                  title: t('alcohol', lang),
+                                  user: user,
+                                  rowIcon: LucideIcons.wine,
+                                  options: [
+                                    {
+                                      'label': t('drink_never', lang),
+                                      'value': 'never',
+                                      'icon': LucideIcons.ban,
+                                    },
+                                    {
+                                      'label': t('drink_socially', lang),
+                                      'value': 'socially',
+                                      'icon': LucideIcons.users,
+                                    },
+                                    {
+                                      'label': t('drink_frequently', lang),
+                                      'value': 'frequently',
+                                      'icon': LucideIcons.trendingUp,
+                                    },
+                                  ],
+                                  currentValue: _drinkingHabit,
+                                  onUpdate: (val) => setState(() {
+                                    _drinkingHabit = val;
+                                    _hasChanges = true;
+                                  }),
+                                );
+                              },
                             ),
                             const SizedBox(height: 12),
 
@@ -929,28 +962,34 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               values: [_sleepSchedule],
                               formatter: (v) => _formatValue(v, lang),
                               iconMapper: IconUtils.getLifestyleIcon,
-                              onEdit: () => showPreferenceEditModal(
-                                context: context,
-                                title: t('sleep', lang),
-                                rowIcon: LucideIcons.moon,
-                                options: [
-                                  {
-                                    'label': t('night_owl', lang),
-                                    'value': 'night_owl',
-                                    'icon': LucideIcons.moon,
-                                  },
-                                  {
-                                    'label': t('early_bird', lang),
-                                    'value': 'early_bird',
-                                    'icon': LucideIcons.sun,
-                                  },
-                                ],
-                                currentValue: _sleepSchedule,
-                                onUpdate: (val) => setState(() {
-                                  _sleepSchedule = val;
-                                  _hasChanges = true;
-                                }),
-                              ),
+                              isGenderBasedColor: isGenderBasedColor,
+                              gender: gender,
+                              onEdit: () {
+                                if (user == null) return;
+                                showPreferenceEditModal(
+                                  context: context,
+                                  title: t('sleep', lang),
+                                  user: user,
+                                  rowIcon: LucideIcons.moon,
+                                  options: [
+                                    {
+                                      'label': t('night_owl', lang),
+                                      'value': 'night_owl',
+                                      'icon': LucideIcons.moon,
+                                    },
+                                    {
+                                      'label': t('early_bird', lang),
+                                      'value': 'early_bird',
+                                      'icon': LucideIcons.sun,
+                                    },
+                                  ],
+                                  currentValue: _sleepSchedule,
+                                  onUpdate: (val) => setState(() {
+                                    _sleepSchedule = val;
+                                    _hasChanges = true;
+                                  }),
+                                );
+                              },
                             ),
                             const SizedBox(height: 12),
 
@@ -962,29 +1001,35 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               values: [_petPreference],
                               formatter: (v) => _formatValue(v, lang),
                               iconMapper: IconUtils.getLifestyleIcon,
-                              onEdit: () => showPreferenceEditModal(
-                                context: context,
-                                title: t('pets', lang),
-                                rowIcon: LucideIcons.dog,
-                                options: [
-                                  {
-                                    'label': t('dog_person', lang),
-                                    'value': 'dog',
-                                    'icon': LucideIcons.dog
-                                  },
-                                  {
-                                    'label': t('cat_person', lang),
-                                    'value': 'cat',
-                                    'icon': LucideIcons.cat
-                                  },
-                                ],
-                                currentValue: _petPreference,
-                                onUpdate: (val) => setState(() {
-                                  _petPreference = val;
-                                  _hasChanges = true;
-                                }),
-                                allowOther: true,
-                              ),
+                              isGenderBasedColor: isGenderBasedColor,
+                              gender: gender,
+                              onEdit: () {
+                                if (user == null) return;
+                                showPreferenceEditModal(
+                                  context: context,
+                                  title: t('pets', lang),
+                                  user: user,
+                                  rowIcon: LucideIcons.dog,
+                                  options: [
+                                    {
+                                      'label': t('dog_person', lang),
+                                      'value': 'dog',
+                                      'icon': LucideIcons.dog
+                                    },
+                                    {
+                                      'label': t('cat_person', lang),
+                                      'value': 'cat',
+                                      'icon': LucideIcons.cat
+                                    },
+                                  ],
+                                  currentValue: _petPreference,
+                                  onUpdate: (val) => setState(() {
+                                    _petPreference = val;
+                                    _hasChanges = true;
+                                  }),
+                                  allowOther: true,
+                                );
+                              },
                             ),
                             const SizedBox(height: 12),
 
@@ -994,46 +1039,52 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               values: [_childrenPreference],
                               formatter: (v) => _formatValue(v, lang),
                               iconMapper: IconUtils.getLifestyleIcon,
-                              onEdit: () => showPreferenceEditModal(
-                                context: context,
-                                title: t('children', lang),
-                                rowIcon: LucideIcons.baby,
-                                options: [
-                                  {
-                                    'label': t('children_want_someday', lang),
-                                    'value': 'want_someday',
-                                    'icon': LucideIcons.heart,
-                                  },
-                                  {
-                                    'label': t('children_dont_want', lang),
-                                    'value': 'dont_want',
-                                    'icon': LucideIcons.ban,
-                                  },
-                                  {
-                                    'label':
-                                        t('children_have_and_want_more', lang),
-                                    'value': 'have_and_want_more',
-                                    'icon': LucideIcons.users,
-                                  },
-                                  {
-                                    'label': t(
-                                        'children_have_and_dont_want_more',
-                                        lang),
-                                    'value': 'have_and_dont_want_more',
-                                    'icon': LucideIcons.userCheck,
-                                  },
-                                  {
-                                    'label': t('children_not_sure', lang),
-                                    'value': 'not_sure',
-                                    'icon': LucideIcons.helpCircle,
-                                  },
-                                ],
-                                currentValue: _childrenPreference,
-                                onUpdate: (val) => setState(() {
-                                  _childrenPreference = val;
-                                  _hasChanges = true;
-                                }),
-                              ),
+                              isGenderBasedColor: isGenderBasedColor,
+                              gender: gender,
+                              onEdit: () {
+                                if (user == null) return;
+                                showPreferenceEditModal(
+                                  context: context,
+                                  title: t('children', lang),
+                                  user: user,
+                                  rowIcon: LucideIcons.baby,
+                                  options: [
+                                    {
+                                      'label': t('children_want_someday', lang),
+                                      'value': 'want_someday',
+                                      'icon': LucideIcons.heart,
+                                    },
+                                    {
+                                      'label': t('children_dont_want', lang),
+                                      'value': 'dont_want',
+                                      'icon': LucideIcons.ban,
+                                    },
+                                    {
+                                      'label':
+                                          t('children_have_and_want_more', lang),
+                                      'value': 'have_and_want_more',
+                                      'icon': LucideIcons.users,
+                                    },
+                                    {
+                                      'label': t(
+                                          'children_have_and_dont_want_more',
+                                          lang),
+                                      'value': 'have_and_dont_want_more',
+                                      'icon': LucideIcons.userCheck,
+                                    },
+                                    {
+                                      'label': t('children_not_sure', lang),
+                                      'value': 'not_sure',
+                                      'icon': LucideIcons.helpCircle,
+                                    },
+                                  ],
+                                  currentValue: _childrenPreference,
+                                  onUpdate: (val) => setState(() {
+                                    _childrenPreference = val;
+                                    _hasChanges = true;
+                                  }),
+                                );
+                              },
                             ),
 
                             Divider(color: borderColor, height: 28),

@@ -175,6 +175,7 @@ class SettingsController {
       options: options,
       currentValue: currentValue,
       onUpdate: onUpdate,
+      user: user,
       rowIcon: rowIcon,
       allOptions: allOptions,
       onCustom: onCustom,

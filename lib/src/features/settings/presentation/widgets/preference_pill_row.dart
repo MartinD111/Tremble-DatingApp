@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../../../core/theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PreferencePillRow — unified row widget for enum-style preferences.
@@ -22,6 +23,8 @@ class PreferencePillRow extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback? onTap;
   final bool isPremium;
+  final bool isGenderBasedColor;
+  final String gender;
 
   const PreferencePillRow({
     super.key,
@@ -33,6 +36,8 @@ class PreferencePillRow extends StatelessWidget {
     required this.onEdit,
     this.onTap,
     this.isPremium = false,
+    this.isGenderBasedColor = false,
+    this.gender = 'default',
   });
 
   @override
@@ -41,12 +46,12 @@ class PreferencePillRow extends StatelessWidget {
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A18);
     final subColor =
         isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black54;
-    final pillBg = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.04);
-    final pillBorder = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.black.withValues(alpha: 0.08);
+    final pillBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: isGenderBasedColor,
+      gender: gender,
+    );
+    final pillBorder = isDark ? const Color(0xFF3A3A3E) : const Color(0xFFD8DCE0);
     final iconColor =
         isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black45;
 
@@ -148,19 +153,12 @@ class PreferencePillRow extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isDark
-                        ? Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.25)
-                        : Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.12),
+                        ? const Color(0xFF2A2A2E)
+                        : const Color(0xFFE8ECF0),
                     border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.4),
+                      color: isDark
+                          ? const Color(0xFF3A3A3E)
+                          : const Color(0xFFD8DCE0),
                     ),
                   ),
                   child: Icon(

@@ -73,6 +73,22 @@ class TrembleTheme {
     return [const Color(0xFFF0F4F8), const Color(0xFFD9E2EC)];
   }
 
+  static Color getPillColor({
+    required bool isDark,
+    required bool isGenderBased,
+    required String? gender,
+  }) {
+    if (isGenderBased) {
+      final isMale = gender == 'male';
+      if (isDark) {
+        return isMale ? const Color(0xFF003366) : const Color(0xFF3D1520);
+      } else {
+        return isMale ? const Color(0xFFD6E9FF) : const Color(0xFFFFD6DF);
+      }
+    }
+    return isDark ? const Color(0xFF2A2A2E) : const Color(0xFFE8ECF0);
+  }
+
   static TextTheme _buildTextTheme(Color baseTextColor) {
     return TextTheme(
       // Display & Headlines — Playfair Display (serif, impactful)

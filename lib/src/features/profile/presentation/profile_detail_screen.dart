@@ -364,7 +364,14 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
                         // ── Lifestyle Preferences ─────────────────────────
                         _buildLifestylePreferences(
-                            match, isDark, textColor, subColor, lang),
+                          match,
+                          isDark,
+                          textColor,
+                          subColor,
+                          lang,
+                          isGenderBasedColor: isGenderBasedColor,
+                          gender: gender,
+                        ),
 
                         const SizedBox(height: 24),
 
@@ -667,8 +674,15 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     return processed[0].toUpperCase() + processed.substring(1);
   }
 
-  Widget _buildLifestylePreferences(MatchProfile match, bool isDark,
-      Color textColor, Color subColor, String lang) {
+  Widget _buildLifestylePreferences(
+    MatchProfile match,
+    bool isDark,
+    Color textColor,
+    Color subColor,
+    String lang, {
+    bool isGenderBasedColor = false,
+    String? gender,
+  }) {
     final pills = <Widget>[];
 
     // 1. Basic Lifestyle Traits (Pills)
@@ -676,42 +690,56 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon(match.exerciseHabit!),
         label: _formatChipText(t(match.exerciseHabit!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     if (match.drinkingHabit != null) {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon(match.drinkingHabit!),
         label: _formatChipText(t(match.drinkingHabit!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     for (final product in match.nicotineUse) {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon('nicotine_$product'),
         label: _formatChipText(t('nicotine_$product', lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     if (match.sleepSchedule != null) {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon(match.sleepSchedule!),
         label: _formatChipText(t(match.sleepSchedule!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     if (match.petPreference != null) {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon(match.petPreference!),
         label: _formatChipText(t(match.petPreference!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     if (match.childrenPreference != null) {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon(match.childrenPreference!),
         label: _formatChipText(t(match.childrenPreference!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     if (match.religion != null) {
       pills.add(_PreferencePill(
         icon: IconUtils.getReligionIcon(match.religion!),
         label: _formatChipText(t(match.religion!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
 
@@ -747,6 +775,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                     : '${match.introvertLevel!}% ${t('extrovert', lang)}')
                 : '',
             isDark: isDark,
+            isGenderBasedColor: isGenderBasedColor,
+            gender: gender,
           ),
           const SizedBox(height: 12),
           Builder(builder: (context) {
@@ -768,6 +798,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
               currentText: currentText,
               isDark: isDark,
               hideThumb: val <= 0,
+              isGenderBasedColor: isGenderBasedColor,
+              gender: gender,
             );
           }),
         ],
@@ -818,11 +850,15 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     required String currentText,
     required bool isDark,
     bool hideThumb = false,
+    bool isGenderBasedColor = false,
+    String? gender,
   }) {
     final accentColor = Theme.of(context).primaryColor;
-    final cardBg = isDark
-        ? Colors.white.withValues(alpha: 0.07)
-        : Colors.white.withValues(alpha: 0.6);
+    final cardBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: isGenderBasedColor,
+      gender: gender,
+    );
     final cardBorder = isDark
         ? Colors.white.withValues(alpha: 0.12)
         : Colors.black.withValues(alpha: 0.08);
@@ -941,17 +977,26 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 class _PreferencePill extends StatelessWidget {
   final IconData? icon;
   final String label;
+  final bool isGenderBased;
+  final String? gender;
 
-  const _PreferencePill({this.icon, required this.label});
+  const _PreferencePill({
+    this.icon,
+    required this.label,
+    this.isGenderBased = false,
+    this.gender,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pillBg = isDark
-        ? Colors.white.withValues(alpha: 0.1)
-        : Colors.black.withValues(alpha: 0.06);
-    final pillBorder = isDark ? Colors.white24 : Colors.black12;
-    final textColor = isDark ? Colors.white70 : Colors.black87;
+    final pillBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: isGenderBased,
+      gender: gender,
+    );
+    final pillBorder = pillBg.withValues(alpha: isDark ? 0.6 : 0.4);
+    final textColor = isDark ? Colors.white : Colors.black87;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -964,7 +1009,7 @@ class _PreferencePill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: textColor.withValues(alpha: 0.7)),
+            Icon(icon, size: 14, color: textColor.withValues(alpha: 0.5)),
             const SizedBox(width: 6),
           ],
           Text(label,

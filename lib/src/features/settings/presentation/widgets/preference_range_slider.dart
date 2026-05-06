@@ -114,10 +114,12 @@ class PreferenceRangeSlider extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: isDark
-                      ? brandRose.withValues(alpha: 0.15)
-                      : brandRose.withValues(alpha: 0.1),
+                      ? const Color(0xFF2A2A2E)
+                      : const Color(0xFFE8ECF0),
                   border: Border.all(
-                    color: brandRose.withValues(alpha: 0.3),
+                    color: isDark
+                        ? const Color(0xFF2A2A2E).withValues(alpha: 0.6)
+                        : const Color(0xFFE8ECF0).withValues(alpha: 0.4),
                   ),
                 ),
                 child: Icon(

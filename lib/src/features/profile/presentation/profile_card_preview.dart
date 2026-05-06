@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/translations.dart';
+import '../../../core/theme.dart';
 import '../../../core/utils/icon_utils.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
@@ -333,14 +334,28 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
 
                         // ── Info badges ────────────────────────────────────────────
                         Center(
-                            child: _buildInfoBadges(
-                                user, isDark, subColor, iconColor)),
+                          child: _buildInfoBadges(
+                            user,
+                            isDark,
+                            subColor,
+                            iconColor,
+                            isGenderBasedColor: user.isGenderBasedColor,
+                            gender: user.gender,
+                          ),
+                        ),
 
                         const SizedBox(height: 24),
 
                         // ── Lifestyle Preferences ─────────────────────────
                         _buildLifestylePreferences(
-                            user, isDark, textColor, subColor, lang),
+                          user,
+                          isDark,
+                          textColor,
+                          subColor,
+                          lang,
+                          isGenderBasedColor: user.isGenderBasedColor,
+                          gender: user.gender,
+                        ),
 
                         const SizedBox(height: 24),
 
@@ -393,8 +408,15 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     return processed[0].toUpperCase() + processed.substring(1);
   }
 
-  Widget _buildLifestylePreferences(AuthUser user, bool isDark, Color textColor,
-      Color subColor, String lang) {
+  Widget _buildLifestylePreferences(
+    AuthUser user,
+    bool isDark,
+    Color textColor,
+    Color subColor,
+    String lang, {
+    bool isGenderBasedColor = false,
+    String? gender,
+  }) {
     final pills = <Widget>[];
 
     // 1. Basic Lifestyle Traits (Pills)
@@ -402,42 +424,56 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon(user.exerciseHabit!),
         label: _formatChipText(t(user.exerciseHabit!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     if (user.drinkingHabit != null) {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon(user.drinkingHabit!),
         label: _formatChipText(t(user.drinkingHabit!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     for (final product in user.nicotineUse) {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon('nicotine_$product'),
         label: _formatChipText(t('nicotine_$product', lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     if (user.sleepSchedule != null) {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon(user.sleepSchedule!),
         label: _formatChipText(t(user.sleepSchedule!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     if (user.petPreference != null) {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon(user.petPreference!),
         label: _formatChipText(t(user.petPreference!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     if (user.childrenPreference != null) {
       pills.add(_PreferencePill(
         icon: IconUtils.getLifestyleIcon(user.childrenPreference!),
         label: _formatChipText(t(user.childrenPreference!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
     if (user.religion != null) {
       pills.add(_PreferencePill(
         icon: IconUtils.getReligionIcon(user.religion!),
         label: _formatChipText(t(user.religion!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
 
@@ -473,6 +509,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                     : '${user.introvertScale!}% ${t('extrovert', lang)}')
                 : '',
             isDark: isDark,
+            isGenderBasedColor: isGenderBasedColor,
+            gender: gender,
           ),
           const SizedBox(height: 12),
           Builder(builder: (context) {
@@ -494,6 +532,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
               currentText: currentText,
               isDark: isDark,
               hideThumb: val <= 0,
+              isGenderBasedColor: isGenderBasedColor,
+              gender: gender,
             );
           }),
         ],
@@ -544,14 +584,16 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     required String currentText,
     required bool isDark,
     bool hideThumb = false,
+    bool isGenderBasedColor = false,
+    String? gender,
   }) {
     final accentColor = Theme.of(context).primaryColor;
-    final cardBg = isDark
-        ? Colors.white.withValues(alpha: 0.07)
-        : Colors.white.withValues(alpha: 0.6);
-    final cardBorder = isDark
-        ? Colors.white.withValues(alpha: 0.12)
-        : Colors.black.withValues(alpha: 0.08);
+    final cardBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: isGenderBasedColor,
+      gender: gender,
+    );
+    final cardBorder = cardBg.withValues(alpha: isDark ? 0.6 : 0.4);
     final trackColor = isDark
         ? Colors.white.withValues(alpha: 0.12)
         : Colors.black.withValues(alpha: 0.07);
@@ -742,21 +784,48 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
   }
 
   Widget _buildInfoBadges(
-      AuthUser user, bool isDark, Color subColor, Color iconColor) {
+    AuthUser user,
+    bool isDark,
+    Color subColor,
+    Color iconColor, {
+    bool isGenderBasedColor = false,
+    String? gender,
+  }) {
     final badges = <Widget>[];
     final lang = user.appLanguage;
 
     if (user.gender != null) {
-      badges.add(
-          _badge(LucideIcons.user, user.gender!, isDark, subColor, iconColor));
+      badges.add(_badge(
+        LucideIcons.user,
+        t('gender_${user.gender}', lang),
+        isDark,
+        subColor,
+        iconColor,
+        isGenderBasedColor: isGenderBasedColor,
+        userGender: gender,
+      ));
     }
     if (user.hairColor != null) {
-      badges.add(_badge(Icons.circle, _formatChipText(t(user.hairColor!, lang)),
-          isDark, subColor, IconUtils.getHairColor(user.hairColor!)));
+      badges.add(_badge(
+        Icons.circle,
+        _formatChipText(t(user.hairColor!, lang)),
+        isDark,
+        subColor,
+        IconUtils.getHairColor(user.hairColor!),
+        isGenderBasedColor: isGenderBasedColor,
+        userGender: gender,
+      ));
     }
     if (user.ethnicity != null) {
-      badges.add(_badge(LucideIcons.users,
-          t('ethnicity_${user.ethnicity}', lang), isDark, subColor, iconColor));
+      badges.add(_badge(
+        LucideIcons.users,
+        t('ethnicity_${user.ethnicity}', lang),
+        isDark,
+        subColor,
+        iconColor,
+        isGenderBasedColor: isGenderBasedColor,
+        userGender: gender,
+      ));
     }
 
     return Wrap(
@@ -767,26 +836,42 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     );
   }
 
-  Widget _badge(IconData icon, String text, bool isDark, Color subColor,
-      Color iconColor) {
+  Widget _badge(
+    IconData icon,
+    String text,
+    bool isDark,
+    Color subColor,
+    Color iconColor, {
+    bool isGenderBasedColor = false,
+    String? userGender,
+  }) {
+    final badgeBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: isGenderBasedColor,
+      gender: userGender,
+    );
+    final badgeBorder = badgeBg.withValues(alpha: isDark ? 0.6 : 0.4);
+    final badgeTextColor = isDark ? Colors.white : Colors.black87;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
+        color: badgeBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color:
-                (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15)),
+        border: Border.all(color: badgeBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: iconColor),
+          Icon(icon, size: 12, color: badgeTextColor.withValues(alpha: 0.5)),
           const SizedBox(width: 4),
           Flexible(
             child: Text(text,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: subColor, fontSize: 12)),
+                style: TextStyle(
+                    color: badgeTextColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -797,17 +882,26 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
 class _PreferencePill extends StatelessWidget {
   final IconData? icon;
   final String label;
+  final bool isGenderBased;
+  final String? gender;
 
-  const _PreferencePill({this.icon, required this.label});
+  const _PreferencePill({
+    this.icon,
+    required this.label,
+    this.isGenderBased = false,
+    this.gender,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pillBg = isDark
-        ? Colors.white.withValues(alpha: 0.1)
-        : Colors.black.withValues(alpha: 0.06);
-    final pillBorder = isDark ? Colors.white24 : Colors.black12;
-    final textColor = isDark ? Colors.white70 : Colors.black87;
+    final pillBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: isGenderBased,
+      gender: gender,
+    );
+    final pillBorder = pillBg.withValues(alpha: isDark ? 0.6 : 0.4);
+    final textColor = isDark ? Colors.white : Colors.black87;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -820,7 +914,7 @@ class _PreferencePill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: textColor.withValues(alpha: 0.7)),
+            Icon(icon, size: 14, color: textColor.withValues(alpha: 0.5)),
             const SizedBox(width: 6),
           ],
           Text(label,

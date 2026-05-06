@@ -20,6 +20,7 @@ Future<void> showPreferenceEditModal({
   required List<Map<String, dynamic>> options,
   required String? currentValue,
   required ValueChanged<String?> onUpdate,
+  required AuthUser user,
   IconData? rowIcon,
   List<Map<String, dynamic>>? allOptions,
   ValueChanged<String>? onCustom,
@@ -41,6 +42,7 @@ Future<void> showPreferenceEditModal({
       onCustom: onCustom,
       allowOther: allowOther,
       otherValue: otherValue,
+      user: user,
     ),
   );
 }
@@ -56,6 +58,7 @@ class _PreferenceEditSheet extends ConsumerStatefulWidget {
   final ValueChanged<String>? onCustom;
   final bool allowOther;
   final String? otherValue;
+  final AuthUser user;
 
   const _PreferenceEditSheet({
     required this.title,
@@ -63,6 +66,7 @@ class _PreferenceEditSheet extends ConsumerStatefulWidget {
     required this.currentValue,
     required this.outerContext,
     required this.onUpdate,
+    required this.user,
     this.rowIcon,
     this.allOptions,
     this.onCustom,
@@ -155,23 +159,25 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? brandRose.withValues(alpha: 0.15)
+              ? brandRose.withValues(alpha: 0.2)
               : isMuted
                   ? (isDark
-                      ? Colors.white.withValues(alpha: 0.04)
-                      : Colors.black.withValues(alpha: 0.02))
+                      ? const Color(0xFF2A2A2E)
+                      : const Color(0xFFE8ECF0))
                   : (isDark
-                      ? Colors.white.withValues(alpha: 0.07)
-                      : Colors.black.withValues(alpha: 0.04)),
+                      ? const Color(0xFF2A2A2E)
+                      : const Color(0xFFE8ECF0)),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: isSelected
                 ? brandRose
                 : isMuted
                     ? (isDark
-                        ? Colors.white12
-                        : Colors.black.withValues(alpha: 0.06))
-                    : (isDark ? Colors.white24 : Colors.black12),
+                        ? const Color(0xFF3A3A3E)
+                        : const Color(0xFFD8DCE0))
+                    : (isDark
+                        ? const Color(0xFF3A3A3E)
+                        : const Color(0xFFD8DCE0)),
           ),
         ),
         child: Row(
@@ -709,15 +715,17 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? brandRose.withValues(alpha: 0.15)
+              ? brandRose.withValues(alpha: 0.2)
               : (isDark
-                  ? Colors.white.withValues(alpha: 0.07)
-                  : Colors.black.withValues(alpha: 0.04)),
+                  ? const Color(0xFF2A2A2E)
+                  : const Color(0xFFE8ECF0)),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: isSelected
                 ? brandRose
-                : (isDark ? Colors.white24 : Colors.black12),
+                : (isDark
+                    ? const Color(0xFF3A3A3E)
+                    : const Color(0xFFD8DCE0)),
           ),
         ),
         child: Row(
@@ -1002,15 +1010,17 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? brandRose.withValues(alpha: 0.15)
+                          ? brandRose.withValues(alpha: 0.2)
                           : (isDark
-                              ? Colors.white.withValues(alpha: 0.07)
-                              : Colors.black.withValues(alpha: 0.04)),
+                              ? const Color(0xFF2A2A2E)
+                              : const Color(0xFFE8ECF0)),
                       borderRadius: BorderRadius.circular(100),
                       border: Border.all(
                         color: isSelected
                             ? brandRose
-                            : (isDark ? Colors.white24 : Colors.black12),
+                            : (isDark
+                                ? const Color(0xFF3A3A3E)
+                                : const Color(0xFFD8DCE0)),
                       ),
                     ),
                     child: Row(
@@ -1158,24 +1168,27 @@ Future<void> showSelectedItemsModal({
                     shrinkWrap: true,
                     itemCount: items.length,
                     itemBuilder: (context, index) {
+                      final itemBg = isDark
+                          ? const Color(0xFF2A2A2E)
+                          : const Color(0xFFE8ECF0);
+                      final itemBorder = itemBg.withValues(alpha: isDark ? 0.6 : 0.4);
+                      final itemTextColor = isDark ? Colors.white : Colors.black87;
+
                       return Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
                             vertical: 14, horizontal: 20),
                         margin: const EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.black.withValues(alpha: 0.03),
+                          color: itemBg,
                           borderRadius: BorderRadius.circular(100),
-                          border: Border.all(
-                              color: isDark ? Colors.white12 : Colors.black12),
+                          border: Border.all(color: itemBorder),
                         ),
                         child: Text(
                           formatter(items[index]),
                           style: GoogleFonts.instrumentSans(
-                            color: textColor,
-                            fontWeight: FontWeight.w500,
+                            color: itemTextColor,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       );
