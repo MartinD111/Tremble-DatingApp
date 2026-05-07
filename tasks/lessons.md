@@ -249,3 +249,15 @@ The repository review was conducted on 2026-03-14 according to the user's 8-step
 [2026-04-29] Hardcoded API keys, access tokens, or private credentials MUST NEVER be placed in documentation, todo lists, or code files committed to git. Use `.env` files, Secret Managers, or compile-time flags like `--dart-define`. Leaked secrets must be rotated and revoked instantly.
 Source: Google Places API Leak in todo.md, April 2026.
 
+**Rule #58 — GDPR Neutral Naming for Safe Zones.**
+[2026-05-08] To prevent location fingerprinting and adhere to strict GDPR standards, Safe Zones MUST use neutral, indexed naming (e.g., "Zone 1", "Zone 2") rather than dynamic names based on timestamps or addresses. This prevents identifying the purpose of a location (e.g., "Home", "Office") even if data were theoretically compromised.
+Source: F13 Stealth & Safety Implementation, May 2026.
+
+**Rule #59 — Mandatory Confirmation for Disabling Privacy Shields.**
+[2026-05-08] Any UI action that disables a privacy protection feature (e.g., toggling a Safe Zone to "Inactive") MUST be gated behind a confirmation modal. This prevents accidental exposure in sensitive locations and ensures the user is conscious of the transition from "Hidden" to "Visible".
+Source: F13 Stealth & Safety Implementation, May 2026.
+
+**Rule #60 — Performance-Safe Contact Hashing.**
+[2026-05-08] Processing large contact lists (1000+ entries) for SHA-256 hashing must be performed in a background isolate (using Flutter's `compute` or manual `Isolate`) to prevent UI jank. Normalization to E.164 must occur before hashing to ensure consistent matching across different device contact formats.
+Source: F13 Stealth & Safety Implementation, May 2026.
+

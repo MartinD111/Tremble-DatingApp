@@ -20,6 +20,9 @@ import '../../../core/theme.dart';
 import '../../dashboard/application/radar_schedule_controller.dart';
 import '../../dashboard/presentation/widgets/radar_schedule_modal.dart';
 import '../../../core/contact_service.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../map/domain/safe_zone_model.dart';
+import '../../map/domain/safe_zone_repository.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
 
@@ -495,6 +498,310 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         const Text('OK', style: TextStyle(color: Colors.blue)),
                   )
                 ]
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showSafeZonesDialog(BuildContext context) {
+    final safeZoneRepo = ref.read(safeZoneRepositoryProvider);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final textColor = isDark ? Colors.white : Colors.black87;
+            final subTextColor = isDark ? Colors.white70 : Colors.black54;
+
+            return FutureBuilder<List<SafeZone>>(
+              future: safeZoneRepo.getSafeZones(),
+              builder: (context, snapshot) {
+                final zones = snapshot.data ?? [];
+                final isLoading =
+                    snapshot.connectionState == ConnectionState.waiting;
+
+                return AlertDialog(
+                  backgroundColor:
+                      isDark ? const Color(0xFF1E1E2E) : Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  title: Row(children: [
+                    Icon(LucideIcons.mapPin,
+                        color: TrembleTheme.rose, size: 22),
+                    const SizedBox(width: 10),
+                    Text(_t('safe_zones'),
+                        style: GoogleFonts.instrumentSans(
+                            color: textColor, fontWeight: FontWeight.bold)),
+                  ]),
+                  content: SizedBox(
+                    width: double.maxFinite,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isLoading)
+                          const Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: CircularProgressIndicator(),
+                          )
+                        else if (zones.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Text(
+                              _t('safe_zone_disclaimer'),
+                              textAlign: TextAlign.center,
+                              style:
+                                  TextStyle(color: subTextColor, fontSize: 13),
+                            ),
+                          )
+                        else
+                          Flexible(
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: zones.length,
+                              itemBuilder: (context, index) {
+                                final zone = zones[index];
+                                return ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    zone.name,
+                                    style: TextStyle(
+                                        color: textColor, fontSize: 14),
+                                  ),
+                                  subtitle: Text(
+                                    _t('safe_zone_radius').replaceAll(
+                                        '{radius}',
+                                        zone.radiusMeters.round().toString()),
+                                    style: TextStyle(
+                                        color: subTextColor, fontSize: 12),
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Switch(
+                                        value: zone.isActive,
+                                        activeTrackColor: TrembleTheme.rose,
+                                        activeThumbColor: Colors.white,
+                                        onChanged: (val) async {
+                                          if (!val) {
+                                            // Show confirmation modal
+                                            final confirm =
+                                                await showDialog<bool>(
+                                              context: context,
+                                              builder: (ctx) => AlertDialog(
+                                                backgroundColor: isDark
+                                                    ? const Color(0xFF1E1E2E)
+                                                    : Colors.white,
+                                                title: Text(_t('warning'),
+                                                    style: TextStyle(
+                                                        color: textColor)),
+                                                content: Text(
+                                                    _t('safe_zone_confirm_off'),
+                                                    style: TextStyle(
+                                                        color: subTextColor)),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            ctx, false),
+                                                    child: Text(_t('cancel'),
+                                                        style: TextStyle(
+                                                            color:
+                                                                subTextColor)),
+                                                  ),
+                                                  ElevatedButton(
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                            backgroundColor:
+                                                                TrembleTheme
+                                                                    .rose),
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            ctx, true),
+                                                    child: Text(_t('continue'),
+                                                        style: const TextStyle(
+                                                            color:
+                                                                Colors.white)),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                            if (confirm != true) return;
+                                          }
+                                          final updatedZone =
+                                              zone.copyWith(isActive: val);
+                                          // Update logic needs a small addition to repo to update, but we can just remove and add
+                                          await safeZoneRepo
+                                              .removeSafeZone(zone.id);
+                                          await safeZoneRepo
+                                              .addSafeZone(updatedZone);
+                                          setDialogState(() {});
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(LucideIcons.trash2,
+                                            color: Colors.redAccent, size: 18),
+                                        onPressed: () async {
+                                          await safeZoneRepo
+                                              .removeSafeZone(zone.id);
+                                          setDialogState(() {});
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                TrembleTheme.rose.withValues(alpha: 0.1),
+                            foregroundColor: TrembleTheme.rose,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: BorderSide(
+                                    color: TrembleTheme.rose
+                                        .withValues(alpha: 0.2))),
+                          ),
+                          onPressed: () => _showAddSafeZoneDialog(
+                              context, () => setDialogState(() {})),
+                          icon: const Icon(LucideIcons.plus, size: 18),
+                          label: Text(_t('safe_zone_add')),
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(_t('close'),
+                          style: TextStyle(color: TrembleTheme.rose)),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAddSafeZoneDialog(BuildContext context, VoidCallback onAdded) {
+    double selectedRadius = 500; // Default
+    bool isAdding = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final textColor = isDark ? Colors.white : Colors.black87;
+
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Text(_t('safe_zone_add'),
+                  style: GoogleFonts.instrumentSans(
+                      color: textColor, fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Choose radius for this safe zone:',
+                    style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black54),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [100.0, 250.0, 500.0].map((r) {
+                      final isSelected = selectedRadius == r;
+                      return ChoiceChip(
+                        label: Text('${r.round()}m'),
+                        selected: isSelected,
+                        selectedColor: TrembleTheme.rose,
+                        onSelected: (val) {
+                          if (val) setDialogState(() => selectedRadius = r);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isAdding ? null : () => Navigator.pop(context),
+                  child: Text(_t('cancel'),
+                      style: TextStyle(
+                          color: isDark ? Colors.white38 : Colors.black38)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: TrembleTheme.rose,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: isAdding
+                      ? null
+                      : () async {
+                          setDialogState(() => isAdding = true);
+                          try {
+                            final pos = await Geolocator.getCurrentPosition(
+                              locationSettings: const LocationSettings(
+                                accuracy: LocationAccuracy.high,
+                                timeLimit: Duration(seconds: 10),
+                              ),
+                            );
+                            // Query repo to get current count for neutral naming
+                            final currentZones = await ref
+                                .read(safeZoneRepositoryProvider)
+                                .getSafeZones();
+                            final zoneName = 'Zone ${currentZones.length + 1}';
+
+                            final zone = SafeZone(
+                              id: DateTime.now()
+                                  .millisecondsSinceEpoch
+                                  .toString(),
+                              name: zoneName,
+                              latitude: pos.latitude,
+                              longitude: pos.longitude,
+                              radiusMeters: selectedRadius,
+                            );
+                            await ref
+                                .read(safeZoneRepositoryProvider)
+                                .addSafeZone(zone);
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              onAdded();
+                            }
+                          } catch (e) {
+                            setDialogState(() => isAdding = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error: $e')),
+                              );
+                            }
+                          }
+                        },
+                  child: isAdding
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Text('Add Current Location',
+                          style: TextStyle(color: Colors.white)),
+                ),
               ],
             );
           },
@@ -1542,6 +1849,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           trailing: Icon(LucideIcons.chevronRight,
               color: isDark ? Colors.white30 : Colors.black26),
           onTap: () => _showAnonymityDialog(context),
+        ),
+        Divider(color: dividerColor),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(LucideIcons.mapPin,
+              color: isDark ? Colors.white70 : Colors.black45),
+          title: Text(_t('safe_zones'), style: TextStyle(color: textColor)),
+          subtitle: Text(_t('safe_zones_sub'),
+              style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.black54,
+                  fontSize: 12)),
+          trailing: Icon(LucideIcons.chevronRight,
+              color: isDark ? Colors.white30 : Colors.black26),
+          onTap: () => _showSafeZonesDialog(context),
         ),
         Divider(color: dividerColor),
         Consumer(builder: (context, ref, _) {
