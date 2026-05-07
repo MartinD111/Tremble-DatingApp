@@ -145,6 +145,7 @@ const Map<String, Map<String, String>> _translations = {
     'add': 'Add',
     'continue_with_google': 'Continue with Google',
     'continue_with_apple': 'Continue with Apple',
+    'select_radar_mode': 'Select Mode',
 
     // --- Settings sections ---
     'profile_card_view': 'View profile card',
@@ -836,7 +837,6 @@ const Map<String, Map<String, String>> _translations = {
     'tab_map': 'Zemljevid',
     'tab_people': 'Ljudje',
     'tab_settings': 'Nastavitve',
-
     'next': 'Naprej',
     'back': 'Nazaj',
     'finish': 'Zaključi',
@@ -852,6 +852,7 @@ const Map<String, Map<String, String>> _translations = {
     'add': 'Dodaj',
     'continue_with_google': 'Nadaljuj z Googlom',
     'continue_with_apple': 'Nadaljuj z Applom',
+    'select_radar_mode': 'Izberi način',
     'profile_card_view': 'Ogled profilne kartice',
     'my_card': 'Moja kartica',
     'my_profile': 'Moj profil',
@@ -1338,15 +1339,15 @@ const Map<String, Map<String, String>> _translations = {
     'gym_activated_cta': 'Razumem',
 
     // Mode info popup (single tap na ikono načina)
-    'gym_mode_info_title': 'Gym Mode',
+    'gym_mode_info_title': 'Način za fitnes',
     'gym_mode_info_body':
         'Ko je Gym Mode aktiven, se ti v zavihku Tvoj fitnes prikažejo ljudje, ki so trenutno v istem fitnesu. Način ostane aktiven, dokler ne zapustiš fitnesa ali ga ročno izklopiš.',
     'gym_mode_info_activate': 'Aktiviraj',
     'gym_mode_info_deactivate': 'Deaktiviraj',
-    'run_mode_info_title': 'Run Mode',
+    'run_mode_info_title': 'Način za tek',
     'run_mode_info_body':
         'Run Mode te poveže s tekači v bližini. Matchi se pojavijo v Tvojem teku pod zavihkom Ljudje.',
-    'event_mode_info_title': 'Event Mode',
+    'event_mode_info_title': 'Način za dogodke',
     'event_mode_info_body':
         'Event Mode te poveže z ljudmi na istem dogodku. Matchi se pojavijo v Tvojem dogodku pod zavihkom Ljudje.',
     'mode_info_dont_show': 'Ne prikazuj več',

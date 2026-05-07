@@ -36,6 +36,7 @@ import '../application/radar_search_session.dart';
 import '../../match/presentation/widgets/match_notification_pill.dart';
 import '../../../shared/ui/premium_paywall.dart';
 import '../../gym/application/gym_mode_controller.dart';
+import '../../gym/presentation/gym_mode_sheet.dart';
 import '../../gym/application/gym_dwell_service.dart';
 import '../data/run_club_repository.dart';
 import 'widgets/live_run_card.dart';
@@ -498,61 +499,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final bool isSearchActive = activeMatch != null || isDevSearchActive;
     return Stack(
       children: [
-        // ── Radar Header ─────────────────────────────────────────
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 20,
-          left: 0,
-          right: 0,
-          child: SizedBox(
-            height: 50,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Dumbbell icon (left) — long press to select mode
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onLongPress: () => _showModeSelector(context),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          LucideIcons.dumbbell,
-                          size: 20,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Radar text (center)
-                  Text(
-                    t('tab_radar', lang),
-                    style: TrembleTheme.displayFont(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  // Empty space on right (schedule icon is positioned absolutely below)
-                  const SizedBox(width: 44, height: 44),
-                ],
-              ),
-            ),
-          ),
-        ),
-
         // Radar View (Conditional)
         canAccessRadar
             ? Stack(
@@ -811,14 +757,130 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-        // ── Schedule Radar Clock Icon (top-right, top of stack) ───
-        // Placed last so it sits above RadarAnimation's full-bleed canvas
-        // and remains tappable. Wrapped in Material for the InkWell ripple.
+        // ── Radar Header ─────────────────────────────────────────
+        // Placed AFTER the radar view so it renders on top of
+        // RadarAnimation's full-bleed canvas and receives gestures.
         Positioned(
-          top: MediaQuery.of(context).padding.top + 24,
-          right: 20,
-          child: const _RadarTopControls(),
+          top: MediaQuery.of(context).padding.top + 20,
+          left: 0,
+          right: 0,
+          child: SizedBox(
+            height: 50,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Left balance spacer (equal to right button width to ensure center alignment)
+                  const SizedBox(width: 44),
+
+                  // Center: Grouped Logo + Text
+                  Expanded(
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final selectedMode = ref.watch(selectedRadarModeProvider);
+                        final gymState = ref.watch(gymModeControllerProvider);
+                        final runState = ref.watch(runModeControllerProvider);
+                        final eventState = ref.watch(eventModeControllerProvider);
+                        final lang = ref.watch(appLanguageProvider);
+
+                        final isActive = switch (selectedMode) {
+                          RadarModeKind.gym => gymState.isActive,
+                          RadarModeKind.run => runState.isActive,
+                          RadarModeKind.event => eventState.isActive,
+                        };
+
+                        final (modeIcon, modeColor) = switch (selectedMode) {
+                          RadarModeKind.gym => (
+                              LucideIcons.dumbbell,
+                              const Color(0xFFF5C842)
+                            ),
+                          RadarModeKind.run => (
+                              LucideIcons.footprints,
+                              const Color(0xFFF4436C)
+                            ),
+                          RadarModeKind.event => (
+                              LucideIcons.calendar,
+                              const Color(0xFFF5C842)
+                            ),
+                        };
+
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _PulseIcon(
+                              icon: modeIcon,
+                              color: modeColor,
+                              isActive: isActive,
+                              onTap: () {
+                                if (isActive) {
+                                  // Deactivate directly
+                                  switch (selectedMode) {
+                                    case RadarModeKind.gym:
+                                      ref
+                                          .read(gymModeControllerProvider.notifier)
+                                          .deactivate();
+                                      break;
+                                    case RadarModeKind.run:
+                                      ref
+                                          .read(runModeControllerProvider.notifier)
+                                          .deactivate();
+                                      break;
+                                    case RadarModeKind.event:
+                                      ref
+                                          .read(eventModeControllerProvider.notifier)
+                                          .deactivate();
+                                      break;
+                                  }
+                                } else {
+                                  // Show info dialog to allow activation/selection
+                                  showModeInfoDialog(
+                                    context: context,
+                                    ref: ref,
+                                    mode: selectedMode,
+                                    lang: lang,
+                                    isActive: false,
+                                    onActivate: () {
+                                      if (selectedMode == RadarModeKind.run) {
+                                        ref
+                                            .read(runModeControllerProvider.notifier)
+                                            .activate();
+                                      } else if (selectedMode == RadarModeKind.gym) {
+                                        Navigator.pop(context); // Close info dialog
+                                        GymModeSheet.show(context);
+                                      } else {
+                                        // For Event, stay simple for now or show sheet if it exists
+                                        Navigator.pop(context);
+                                      }
+                                    },
+                                  );
+                                }
+                              },
+                              onLongPress: () => _showModeSelector(context),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Tremble',
+                              style: TrembleTheme.displayFont(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+
+                  // Right: Schedule icon
+                  const _RadarScheduleButton(),
+                ],
+              ),
+            ),
+          ),
         ),
+
 
         // Match notification pill is rendered globally in HomeScreen.build —
         // see the main Stack above the LiquidNavBar. This keeps it visible
@@ -961,75 +1023,182 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _showModeSelector(BuildContext context) {
     final lang = ref.read(appLanguageProvider);
-    final selectedMode = ref.read(selectedRadarModeProvider);
+
+    // Mode configuration
     final items = [
-      (RadarModeKind.gym, LucideIcons.dumbbell, t('gym_mode_info_title', lang)),
-      (RadarModeKind.event, LucideIcons.calendar, t('event_mode_info_title', lang)),
-      (RadarModeKind.run, LucideIcons.footprints, t('run_mode_info_title', lang)),
+      (
+        RadarModeKind.gym,
+        LucideIcons.dumbbell,
+        t('gym_mode_info_title', lang),
+        const Color(0xFFF5C842)
+      ),
+      (
+        RadarModeKind.event,
+        LucideIcons.calendar,
+        t('event_mode_info_title', lang),
+        const Color(0xFFF5C842)
+      ),
+      (
+        RadarModeKind.run,
+        LucideIcons.footprints,
+        t('run_mode_info_title', lang),
+        const Color(0xFFF4436C)
+      ),
     ];
 
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       builder: (ctx) {
         final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        final primary = Theme.of(ctx).colorScheme.primary;
+
         return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
             child: Container(
               decoration: BoxDecoration(
                 color: isDark
-                    ? const Color(0xFF1A1A18).withValues(alpha: 0.97)
-                    : Colors.white.withValues(alpha: 0.96),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    ? const Color(0xFF1A1A18).withValues(alpha: 0.95)
+                    : Colors.white.withValues(alpha: 0.95),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(32)),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.05),
+                  width: 1.5,
+                ),
               ),
-              padding: EdgeInsets.fromLTRB(0, 12, 0, MediaQuery.of(ctx).padding.bottom + 20),
+              padding: EdgeInsets.fromLTRB(
+                  24, 12, 24, MediaQuery.of(ctx).padding.bottom + 32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Handle
                   Container(
-                    width: 36,
+                    width: 40,
                     height: 4,
-                    margin: const EdgeInsets.only(bottom: 20),
+                    margin: const EdgeInsets.only(bottom: 24),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.15)
+                          : Colors.black.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  ...items.map((item) {
-                    final (kind, icon, label) = item;
-                    final isSelected = kind == selectedMode;
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                      leading: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? primary.withValues(alpha: 0.15)
-                              : Colors.white.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(icon, size: 18, color: isSelected ? primary : Colors.white38),
-                      ),
-                      title: Text(
-                        label,
-                        style: GoogleFonts.instrumentSans(
-                          fontSize: 16,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected ? Colors.white : Colors.white60,
-                        ),
-                      ),
-                      trailing: isSelected ? Icon(LucideIcons.check, size: 16, color: primary) : null,
-                      onTap: () {
-                        ref.read(selectedRadarModeProvider.notifier).state = kind;
-                        Navigator.pop(ctx);
-                      },
-                    );
-                  }),
+
+                  // Title
+                  Text(
+                    t('select_radar_mode', lang),
+                    style: TrembleTheme.displayFont(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Mode List
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final currentSelected = ref.watch(selectedRadarModeProvider);
+                      return Column(
+                        children: items.map((item) {
+                          final (kind, icon, label, color) = item;
+                          final isSelected = kind == currentSelected;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: GestureDetector(
+                              onTap: () {
+                                ref.read(selectedRadarModeProvider.notifier).state = kind;
+                                Navigator.pop(ctx);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? color.withValues(alpha: 0.15)
+                                      : (isDark
+                                          ? Colors.white.withValues(alpha: 0.05)
+                                          : Colors.black.withValues(alpha: 0.03)),
+                                  borderRadius: BorderRadius.circular(100),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? color.withValues(alpha: 0.5)
+                                        : (isDark
+                                            ? Colors.white.withValues(alpha: 0.1)
+                                            : Colors.black.withValues(alpha: 0.08)),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: color.withValues(alpha: 0.2),
+                                            blurRadius: 15,
+                                            spreadRadius: -2,
+                                          )
+                                        ]
+                                      : [],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? color.withValues(alpha: 0.25)
+                                            : (isDark
+                                                ? Colors.white.withValues(alpha: 0.08)
+                                                : Colors.black.withValues(alpha: 0.05)),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        icon,
+                                        size: 22,
+                                        color: isSelected
+                                            ? color
+                                            : (isDark
+                                                ? Colors.white60
+                                                : Colors.black54),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Text(
+                                        label,
+                                        style: GoogleFonts.instrumentSans(
+                                          fontSize: 17,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w700
+                                              : FontWeight.w600,
+                                          color: isSelected
+                                              ? (isDark ? Colors.white : color)
+                                              : (isDark
+                                                  ? Colors.white
+                                                  : Colors.black87),
+                                        ),
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      Icon(
+                                        Icons.check_circle_rounded,
+                                        color: color,
+                                        size: 20,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -1051,136 +1220,144 @@ final navIndexProvider = StateProvider<int>((ref) => 0);
 final selectedRadarModeProvider =
     StateProvider<RadarModeKind>((ref) => RadarModeKind.gym);
 
-/// Unified top-right control for Radar Mode (Gym/Run/Event) and Schedule.
-/// Main icon (Clock) -> Opens Schedule Modal.
-/// Corner badge (Mode Icon) -> Toggle Mode (tap) / Select Mode (long-press).
-class _RadarTopControls extends ConsumerStatefulWidget {
-  const _RadarTopControls();
+class _RadarScheduleButton extends StatelessWidget {
+  const _RadarScheduleButton();
 
   @override
-  ConsumerState<_RadarTopControls> createState() => _RadarTopControlsState();
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.black.withValues(alpha: 0.08),
+          width: 1.5,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => showRadarScheduleModal(context),
+          child: const Center(
+            child: Icon(
+              LucideIcons.clock,
+              size: 20,
+              color: Colors.white70,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _RadarTopControlsState extends ConsumerState<_RadarTopControls>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulseCtrl;
-  late final Animation<double> _pulseAnim;
+/// A pulsing icon button used for the Radar Mode indicator.
+class _PulseIcon extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+  final bool isActive;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
-  static const _gold = Color(0xFFF5C842);
-  static const _rose = Color(0xFFF4436C);
+  const _PulseIcon({
+    required this.icon,
+    required this.color,
+    required this.isActive,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  State<_PulseIcon> createState() => _PulseIconState();
+}
+
+class _PulseIconState extends State<_PulseIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _pulse;
 
   @override
   void initState() {
     super.initState();
-    _pulseCtrl = AnimationController(
+    _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     );
-    _pulseAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    _pulse = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
+
+    if (widget.isActive) _ctrl.repeat(reverse: true);
   }
 
   @override
-  void dispose() {
-    _pulseCtrl.dispose();
-    super.dispose();
-  }
-
-  void _syncAnimation(bool isActive) {
-    if (isActive && !_pulseCtrl.isAnimating) {
-      _pulseCtrl.repeat(reverse: true);
-    } else if (!isActive && _pulseCtrl.isAnimating) {
-      _pulseCtrl.stop();
-      _pulseCtrl.reset();
+  void didUpdateWidget(_PulseIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive != oldWidget.isActive) {
+      if (widget.isActive) {
+        _ctrl.repeat(reverse: true);
+      } else {
+        _ctrl.stop();
+        _ctrl.animateTo(0.0, duration: const Duration(milliseconds: 300));
+      }
     }
   }
 
   @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final gymState = ref.watch(gymModeControllerProvider);
-    final runState = ref.watch(runModeControllerProvider);
-    final eventState = ref.watch(eventModeControllerProvider);
-    final selectedMode = ref.watch(selectedRadarModeProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final isAnyActive = switch (selectedMode) {
-      RadarModeKind.gym => gymState.isActive,
-      RadarModeKind.run => runState.isActive,
-      RadarModeKind.event => eventState.isActive,
-    };
-    _syncAnimation(isAnyActive);
-
-    final (modeIcon, activeColor) = switch (selectedMode) {
-      RadarModeKind.gym => (LucideIcons.dumbbell, _gold),
-      RadarModeKind.run => (LucideIcons.footprints, _rose),
-      RadarModeKind.event => (LucideIcons.calendar, _gold),
-    };
-
-    return SizedBox(
-      width: 54,
-      height: 54,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          // Frosted background circle
-          Positioned(
-            width: 46,
-            height: 46,
-            child: AnimatedBuilder(
-              animation: _pulseAnim,
-              builder: (_, __) => Transform.scale(
-                scale: isAnyActive ? _pulseAnim.value : 1.0,
-                child: ClipOval(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isAnyActive
-                            ? activeColor.withValues(alpha: 0.15)
-                            : (isDark
-                                ? Colors.white.withValues(alpha: 0.05)
-                                : Colors.black.withValues(alpha: 0.05)),
-                        border: Border.all(
-                          color: isAnyActive
-                              ? activeColor.withValues(alpha: 0.6)
-                              : (isDark
-                                  ? Colors.white.withValues(alpha: 0.15)
-                                  : Colors.black.withValues(alpha: 0.1)),
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                  ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
+      child: AnimatedBuilder(
+        animation: _pulse,
+        builder: (context, child) {
+          return Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: widget.color.withValues(alpha: widget.isActive ? 0.2 : 0.12),
+              border: Border.all(
+                color: widget.color.withValues(alpha: widget.isActive ? 0.6 : 0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.color.withValues(alpha: widget.isActive ? 0.2 : 0.1),
+                  blurRadius: widget.isActive ? 12 * _pulse.value : 8,
+                  spreadRadius: widget.isActive ? 2 * _pulse.value : 0,
+                ),
+              ],
+            ),
+            child: Transform.scale(
+              scale: widget.isActive ? _pulse.value : 1.0,
+              child: Center(
+                child: Icon(
+                  widget.icon,
+                  size: 20,
+                  color: widget.color,
                 ),
               ),
             ),
-          ),
-
-          // Main Action: Schedule Radar (Clock)
-          Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => showRadarScheduleModal(context),
-              child: const SizedBox(
-                width: 46,
-                height: 46,
-                child: Center(
-                  child: Icon(
-                    LucideIcons.clock,
-                    size: 18,
-                    color: Colors.white70,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-        ],
+          );
+        },
       ),
     );
   }

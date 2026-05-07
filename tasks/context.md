@@ -1,21 +1,15 @@
-## Session State — [2026-05-07 20:30]
-- Active Task: Fix Radar Screen UI (COMPLETED)
+## Session State — [2026-05-07 21:04]
+- Active Task: Dynamic Radar Mode Icon & Pill Selector Refinement
 - Environment: Dev
-- Modified Files:
-    - `lib/src/features/dashboard/presentation/home_screen.dart` — Fixed header UI, implemented mode selection popup on dumbbell long-press.
+- Modified Files: [lib/src/features/dashboard/presentation/home_screen.dart]
 - Open Problems: None
-- System Status: Build passing (flutter analyze: no issues), long-press interaction working.
+- System Status: Implementation complete, verified with flutter analyze.
 
 ## Session Handoff
-- Completed:
-    - **Fixed Radar Screen UI & Implemented Mode Selection Popup**:
-        - Removed inline schedule icon from header that was creating visual duplication on the right side.
-        - Left dumbbell icon now has exclusive long-press interaction to show mode selection popup (Gym/Event/Run).
-        - Right clock icon rendered clean and isolated via `_RadarTopControls` positioned absolutely with no overlapping badge.
-        - Dumbbell long-press shows bottom sheet with three mode options: Gym, Event, Run (with selection indicator).
-        - Removed unused GymModeSheet import and cleaned up unused methods.
-        - Header layout: dumbbell (left, long-press for mode selection) | "Radar" text (center) | clock icon (right, tap for schedule).
-        - Schedule clock icon now appears as a single 54×54 frosted glass circle with no overlapping elements.
+- Completed: 
+    - Grouped the dynamic radar mode icon with the "Tremble" text in the header for a cohesive brand look.
+    - Implemented instant icon switching (dumbbell, footprints, calendar) when changing radar modes.
+    - Hooked up "Gym Mode" activation in the header to the existing GymModeSheet.
+    - Redesigned the mode selector as a premium vertical list of pill-shaped items.
 - In Progress: None
-- Blocked: None
-- Next Action: Test on device; long-press on dumbbell should now show mode selection popup.
+- Next Action: User verification of the unified header and mode switching behavior.
