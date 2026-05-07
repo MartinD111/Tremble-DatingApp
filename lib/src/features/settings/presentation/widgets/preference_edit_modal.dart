@@ -6,6 +6,7 @@ import '../../../../shared/ui/discard_changes_modal.dart';
 import '../../../../shared/ui/top_notification.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../../core/translations.dart';
+import '../../../../core/theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // showPreferenceEditModal — unified bottom-sheet modal for single-select
@@ -43,6 +44,8 @@ Future<void> showPreferenceEditModal({
       allowOther: allowOther,
       otherValue: otherValue,
       user: user,
+      isGenderBased: user.isGenderBasedColor,
+      gender: user.gender,
     ),
   );
 }
@@ -59,6 +62,8 @@ class _PreferenceEditSheet extends ConsumerStatefulWidget {
   final bool allowOther;
   final String? otherValue;
   final AuthUser user;
+  final bool isGenderBased;
+  final String? gender;
 
   const _PreferenceEditSheet({
     required this.title,
@@ -72,6 +77,8 @@ class _PreferenceEditSheet extends ConsumerStatefulWidget {
     this.onCustom,
     this.allowOther = false,
     this.otherValue,
+    this.isGenderBased = false,
+    this.gender,
   });
 
   @override
@@ -144,6 +151,11 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
     Color? iconColor,
   }) {
     final brandRose = Theme.of(context).colorScheme.primary;
+    final pillBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: widget.isGenderBased,
+      gender: widget.gender,
+    );
     final labelColor = isRoseLabel
         ? brandRose
         : isSelected
@@ -159,25 +171,15 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? brandRose.withValues(alpha: 0.2)
-              : isMuted
-                  ? (isDark
-                      ? const Color(0xFF2A2A2E)
-                      : const Color(0xFFE8ECF0))
-                  : (isDark
-                      ? const Color(0xFF2A2A2E)
-                      : const Color(0xFFE8ECF0)),
+              ? brandRose.withValues(alpha: 0.15)
+              : pillBg,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: isSelected
                 ? brandRose
-                : isMuted
-                    ? (isDark
-                        ? const Color(0xFF3A3A3E)
-                        : const Color(0xFFD8DCE0))
-                    : (isDark
-                        ? const Color(0xFF3A3A3E)
-                        : const Color(0xFFD8DCE0)),
+                : (isDark
+                    ? const Color(0xFF3A3A3E)
+                    : const Color(0xFFD8DCE0)),
           ),
         ),
         child: Row(
@@ -646,6 +648,8 @@ Future<void> showMultiSelectModal({
   required List<String> currentValues,
   required ValueChanged<List<String>> onSave,
   IconData? rowIcon,
+  bool isGenderBased = false,
+  String? gender,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -656,6 +660,8 @@ Future<void> showMultiSelectModal({
       options: options,
       currentValues: currentValues,
       rowIcon: rowIcon,
+      isGenderBased: isGenderBased,
+      gender: gender,
       onSave: (v) {
         onSave(v);
         Navigator.pop(ctx);
@@ -670,6 +676,8 @@ class _MultiSelectSheet extends ConsumerStatefulWidget {
   final List<String> currentValues;
   final ValueChanged<List<String>> onSave;
   final IconData? rowIcon;
+  final bool isGenderBased;
+  final String? gender;
 
   const _MultiSelectSheet({
     required this.title,
@@ -677,6 +685,8 @@ class _MultiSelectSheet extends ConsumerStatefulWidget {
     required this.currentValues,
     required this.onSave,
     this.rowIcon,
+    this.isGenderBased = false,
+    this.gender,
   });
 
   @override
@@ -707,6 +717,11 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
     Color? iconColor,
   }) {
     final brandRose = Theme.of(context).colorScheme.primary;
+    final pillBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: widget.isGenderBased,
+      gender: widget.gender,
+    );
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -715,10 +730,8 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? brandRose.withValues(alpha: 0.2)
-              : (isDark
-                  ? const Color(0xFF2A2A2E)
-                  : const Color(0xFFE8ECF0)),
+              ? brandRose.withValues(alpha: 0.15)
+              : pillBg,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: isSelected
@@ -896,6 +909,8 @@ Future<void> showLanguageEditModal({
   required List<Map<String, String>> options,
   required String? currentValue,
   required ValueChanged<String> onSave,
+  bool isGenderBased = false,
+  String? gender,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -905,6 +920,8 @@ Future<void> showLanguageEditModal({
       title: title,
       options: options,
       currentValue: currentValue,
+      isGenderBased: isGenderBased,
+      gender: gender,
       onSave: (val) {
         onSave(val);
         Navigator.pop(ctx);
@@ -920,6 +937,8 @@ class _LanguageEditSheet extends ConsumerStatefulWidget {
   final String? currentValue;
   final ValueChanged<String> onSave;
   final VoidCallback onCancel;
+  final bool isGenderBased;
+  final String? gender;
 
   const _LanguageEditSheet({
     required this.title,
@@ -927,6 +946,8 @@ class _LanguageEditSheet extends ConsumerStatefulWidget {
     required this.currentValue,
     required this.onSave,
     required this.onCancel,
+    this.isGenderBased = false,
+    this.gender,
   });
 
   @override
@@ -1001,6 +1022,11 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
               // Options — tap selects as pending; does NOT apply until Save
               ...widget.options.map((opt) {
                 final isSelected = opt['value'] == _selected;
+                final pillBg = TrembleTheme.getPillColor(
+                  isDark: isDark,
+                  isGenderBased: widget.isGenderBased,
+                  gender: widget.gender,
+                );
                 return GestureDetector(
                   onTap: () => setState(() => _selected = opt['value']),
                   child: Container(
@@ -1010,10 +1036,8 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? brandRose.withValues(alpha: 0.2)
-                          : (isDark
-                              ? const Color(0xFF2A2A2E)
-                              : const Color(0xFFE8ECF0)),
+                          ? brandRose.withValues(alpha: 0.15)
+                          : pillBg,
                       borderRadius: BorderRadius.circular(100),
                       border: Border.all(
                         color: isSelected

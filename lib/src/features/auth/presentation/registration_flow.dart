@@ -107,11 +107,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       final appUser = ref.read(authStateProvider);
       if (appUser != null && appUser.onboardingCheckpoint > 0) {
         _currentPage = appUser.onboardingCheckpoint;
-        _restoreStateFromUser(appUser);
+        _restoreStateFromUser(appUser, isGoogleUser: isGoogleUser);
       } else {
         _emailController.text = currentUser.email ?? '';
         if (isGoogleUser) {
-          _nameController.text = currentUser.displayName ?? '';
+          _nameController.text = currentUser.displayName?.split(' ').first ?? '';
         }
         _currentPage = 0;
       }
@@ -213,9 +213,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return result;
   }
 
-  void _restoreStateFromUser(AuthUser appUser) {
+  void _restoreStateFromUser(AuthUser appUser, {bool isGoogleUser = false}) {
     _emailController.text = appUser.email ?? '';
-    _nameController.text = appUser.name ?? '';
+    // For Google users, only use the first name — the stored value may be the
+    // full displayName ("First Last") from a previous session before this fix.
+    final restoredName = appUser.name ?? '';
+    _nameController.text = (isGoogleUser && restoredName.contains(' '))
+        ? restoredName.split(' ').first
+        : restoredName;
     _phoneController.text = appUser.phoneNumber ?? '';
     if (appUser.birthDate != null) {
       _birthDate = appUser.birthDate;

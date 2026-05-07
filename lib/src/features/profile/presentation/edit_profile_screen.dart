@@ -20,6 +20,7 @@ import '../../../shared/ui/top_notification.dart';
 import '../../../shared/ui/discard_changes_modal.dart';
 import '../../../core/upload_service.dart';
 import '../../../core/utils/icon_utils.dart';
+import '../../../core/theme.dart';
 
 import '../../../shared/ui/tremble_circle_button.dart';
 
@@ -346,15 +347,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final res = await showDiscardChangesModal(context, ref);
 
     if (res == 'save') {
-      _saveChanges();
-      return false; // _saveChanges will pop the screen
+      _saveChanges(navigateToProfile: true);
+      return false; // Don't pop, navigation handled in _saveChanges
     } else if (res == 'discard') {
       return true;
     }
     return false;
   }
 
-  void _saveChanges() {
+  void _saveChanges({bool navigateToProfile = false}) {
     final user = ref.read(authStateProvider);
     if (user == null) return;
     ref.read(authStateProvider.notifier).updateProfile(user.copyWith(
@@ -408,10 +409,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
     setState(() => _hasChanges = false);
     if (context.mounted) {
-      if (context.canPop()) {
-        context.pop();
-      } else {
+      if (navigateToProfile) {
+        // When coming from back button + save in modal, go to My Profile
         context.go('/profile-preview');
+      } else {
+        // When clicking save button directly, just stay on edit profile
+        // (no navigation needed)
       }
     }
   }
@@ -1140,6 +1143,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                           context: context,
                                           title: t('looking_for', lang),
                                           rowIcon: LucideIcons.heart,
+                                          isGenderBased: isGenderBasedColor,
+                                          gender: gender,
                                           options: [
                                             {
                                               'label':
@@ -1210,6 +1215,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                           context: context,
                                           title: t('i_speak', lang),
                                           rowIcon: LucideIcons.languages,
+                                          isGenderBased: isGenderBasedColor,
+                                          gender: gender,
                                           options: [
                                             {
                                               'label':
@@ -1773,7 +1780,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildNicotineSelector(String lang, bool isDark, Color textColor) {
+    final user = ref.watch(authStateProvider);
+    final isGenderBasedColor = user?.isGenderBasedColor ?? false;
+    final gender = user?.gender;
     final primary = Theme.of(context).colorScheme.primary;
+    final pillBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: isGenderBasedColor,
+      gender: gender,
+    );
     const products = [
       'cigarettes',
       'vape',
@@ -1801,10 +1816,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
               color: _nicotineUse.isEmpty
-                  ? primary.withValues(alpha: 0.18)
-                  : (isDark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : Colors.black.withValues(alpha: 0.04)),
+                  ? primary.withValues(alpha: 0.15)
+                  : pillBg,
               borderRadius: BorderRadius.circular(100),
               border: Border.all(
                 color: _nicotineUse.isEmpty
@@ -1844,10 +1857,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                 decoration: BoxDecoration(
                   color: sel
-                      ? primary.withValues(alpha: 0.18)
-                      : (isDark
-                          ? Colors.white.withValues(alpha: 0.06)
-                          : Colors.black.withValues(alpha: 0.04)),
+                      ? primary.withValues(alpha: 0.15)
+                      : pillBg,
                   borderRadius: BorderRadius.circular(100),
                   border: Border.all(
                     color: sel
