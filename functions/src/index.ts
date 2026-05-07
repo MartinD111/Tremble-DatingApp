@@ -64,6 +64,7 @@ export {
     blockUser,
     unblockUser,
     reportUser,
+    onContactAnonymityCheck,
 } from "./modules/safety/safety.functions";
 
 // ── Events Module ────────────────────────────────────────

@@ -28,6 +28,11 @@ export const reportUserSchema = z.object({
     explanation: z.string().max(500).optional(),
 });
 
+export const checkAnonymitySchema = z.object({
+    hashedContacts: z.array(z.string()).max(10000), // Protect against overly large payloads
+});
+
 export type BlockUserData = z.infer<typeof blockUserSchema>;
 export type UnblockUserData = z.infer<typeof unblockUserSchema>;
 export type ReportUserData = z.infer<typeof reportUserSchema>;
+export type CheckAnonymityData = z.infer<typeof checkAnonymitySchema>;

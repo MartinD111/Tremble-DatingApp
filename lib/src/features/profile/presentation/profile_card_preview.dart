@@ -197,7 +197,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                               if (user.birthDate != null) ...[
                                 const SizedBox(width: 8),
                                 Text(
-                                  ZodiacUtils.getZodiacEmoji(user.birthDate) ?? '',
+                                  ZodiacUtils.getZodiacEmoji(user.birthDate) ??
+                                      '',
                                   style: const TextStyle(fontSize: 22),
                                 ),
                               ],

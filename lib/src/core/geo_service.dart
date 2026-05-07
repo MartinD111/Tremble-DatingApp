@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:battery_plus/battery_plus.dart';
+import '../features/map/domain/safe_zone_repository.dart';
 
 /// Geo Service — uploads minimized location data to Firestore periodically.
 ///
@@ -135,6 +136,29 @@ class GeoService {
           timeLimit: Duration(seconds: 10),
         ),
       );
+
+      // F13: Geofencing Safe Zones
+      // If the user's exact current location falls within any local Safe Zone,
+      // completely abort the geo-upload (proximity matching is disabled here).
+      final safeZoneRepo = SafeZoneRepository();
+      final safeZones = await safeZoneRepo.getSafeZones();
+      for (final zone in safeZones) {
+        final distance = Geolocator.distanceBetween(
+          pos.latitude,
+          pos.longitude,
+          zone.latitude,
+          zone.longitude,
+        );
+        if (distance <= zone.radiusMeters) {
+          // Inside a safe zone: ensure radar appears inactive server-side
+          await _firestore.collection('proximity').doc(uid).set({
+            'radarActive': false,
+            'isActive': false,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+          return;
+        }
+      }
 
       // GDPR Art. 5 — Data Minimization:
       // Only encode as Geohash at precision 7 (~150m × 75m cell).

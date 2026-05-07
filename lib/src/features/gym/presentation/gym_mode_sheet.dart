@@ -166,10 +166,14 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.97),
+            color:
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.97),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             border: Border.all(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.12),
             ),
           ),
           child: Column(
@@ -239,7 +243,9 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
                     : Text(
                         'Select your gym to connect with others working out there right now.',
                         style: GoogleFonts.instrumentSans(
-                          color: isDark ? Colors.white.withValues(alpha: 0.55) : Colors.black54,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.55)
+                              : Colors.black54,
                           fontSize: 13,
                           height: 1.5,
                         ),
@@ -403,7 +409,8 @@ class _GymTile extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final subtextColor = isDark ? Colors.white.withValues(alpha: 0.45) : Colors.black54;
+    final subtextColor =
+        isDark ? Colors.white.withValues(alpha: 0.45) : Colors.black54;
     return GlassCard(
       opacity: isActive ? 0.22 : 0.08,
       padding: EdgeInsets.zero,
@@ -421,7 +428,11 @@ class _GymTile extends StatelessWidget {
           child: Icon(
             LucideIcons.dumbbell,
             size: 20,
-            color: isActive ? primary : (isDark ? Colors.white.withValues(alpha: 0.55) : Colors.black54),
+            color: isActive
+                ? primary
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.55)
+                    : Colors.black54),
           ),
         ),
         title: Text(
@@ -457,7 +468,9 @@ class _GymTile extends StatelessWidget {
                   )
                 : Icon(
                     LucideIcons.chevronRight,
-                    color: isDark ? Colors.white.withValues(alpha: 0.35) : Colors.black26,
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.35)
+                        : Colors.black26,
                     size: 18,
                   ),
         onTap: (isLoading || isActive) ? null : onTap,

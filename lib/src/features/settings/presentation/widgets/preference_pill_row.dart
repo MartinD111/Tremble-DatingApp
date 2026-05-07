@@ -51,7 +51,8 @@ class PreferencePillRow extends StatelessWidget {
       isGenderBased: isGenderBasedColor,
       gender: gender,
     );
-    final pillBorder = isDark ? const Color(0xFF3A3A3E) : const Color(0xFFD8DCE0);
+    final pillBorder =
+        isDark ? const Color(0xFF3A3A3E) : const Color(0xFFD8DCE0);
     final iconColor =
         isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black45;
 

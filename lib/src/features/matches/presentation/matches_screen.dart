@@ -267,9 +267,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
         elevation: 0,
         child: Container(
           decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF2A2A2E)
-                : const Color(0xFFF5F5F5),
+            color: isDark ? const Color(0xFF2A2A2E) : const Color(0xFFF5F5F5),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isDark
@@ -952,143 +950,141 @@ class _SectionPickerSheet extends ConsumerWidget {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: Container(
-      padding: EdgeInsets.fromLTRB(
-          24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Flexible(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(items.length, (i) {
-                  final (section, icon, labelKey, modeActive) = items[i];
-                  final isSelected = section == activeSection;
-                  final isGym = section == MatchSection.gym;
-
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Section pill button
-                      GestureDetector(
-                        onTap: () => onSelect(section),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14, horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? primary.withValues(alpha: 0.15)
-                                : Colors.white.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(100),
-                            border: Border.all(
-                              color: isSelected
-                                  ? primary
-                                  : Colors.white.withValues(alpha: 0.15),
-                              width: isSelected ? 2 : 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(icon,
-                                  size: 18,
-                                  color: isSelected
-                                      ? primary
-                                      : Colors.white.withValues(alpha: 0.5)),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  t(labelKey, lang),
-                                  style: GoogleFonts.instrumentSans(
-                                    fontSize: 15,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.white.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                              ),
-                              if (modeActive)
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.greenAccent,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              if (isSelected)
-                                Icon(LucideIcons.check,
-                                    size: 16, color: primary),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Gym sub-pills (only for gym section)
-                      if (isGym)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: gymState.isActive
-                                    ? _GymActivePill(
-                                        gymName:
-                                            gymState.activeGymName ?? '')
-                                    : _GymEmptyPill(
-                                        lang: lang,
-                                        onTap: onOpenGymSheet,
-                                        accentColor: gymPillColor,
-                                      ),
-                              ),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: onOpenGymSheet,
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.06),
-                                    borderRadius: BorderRadius.circular(100),
-                                    border: Border.all(
-                                        color: Colors.white.withValues(
-                                            alpha: 0.15)),
-                                  ),
-                                  child: const Icon(LucideIcons.listFilter,
-                                      size: 16,
-                                      color: Colors.white54),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      if (i < items.length - 1)
-                        const SizedBox(height: 8),
-                    ],
-                  );
-                }),
+        padding: EdgeInsets.fromLTRB(
+            24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A2E),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: 20),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(items.length, (i) {
+                    final (section, icon, labelKey, modeActive) = items[i];
+                    final isSelected = section == activeSection;
+                    final isGym = section == MatchSection.gym;
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Section pill button
+                        GestureDetector(
+                          onTap: () => onSelect(section),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? primary.withValues(alpha: 0.15)
+                                  : Colors.white.withValues(alpha: 0.06),
+                              borderRadius: BorderRadius.circular(100),
+                              border: Border.all(
+                                color: isSelected
+                                    ? primary
+                                    : Colors.white.withValues(alpha: 0.15),
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(icon,
+                                    size: 18,
+                                    color: isSelected
+                                        ? primary
+                                        : Colors.white.withValues(alpha: 0.5)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    t(labelKey, lang),
+                                    style: GoogleFonts.instrumentSans(
+                                      fontSize: 15,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.white.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ),
+                                if (modeActive)
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.greenAccent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                if (isSelected)
+                                  Icon(LucideIcons.check,
+                                      size: 16, color: primary),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Gym sub-pills (only for gym section)
+                        if (isGym)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: gymState.isActive
+                                      ? _GymActivePill(
+                                          gymName: gymState.activeGymName ?? '')
+                                      : _GymEmptyPill(
+                                          lang: lang,
+                                          onTap: onOpenGymSheet,
+                                          accentColor: gymPillColor,
+                                        ),
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: onOpenGymSheet,
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.06),
+                                      borderRadius: BorderRadius.circular(100),
+                                      border: Border.all(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.15)),
+                                    ),
+                                    child: const Icon(LucideIcons.listFilter,
+                                        size: 16, color: Colors.white54),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        if (i < items.length - 1) const SizedBox(height: 8),
+                      ],
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

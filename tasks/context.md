@@ -1,15 +1,12 @@
-## Session State — [2026-05-07 21:04]
-- Active Task: Dynamic Radar Mode Icon & Pill Selector Refinement
+## Session State — [2026-05-08 00:38]
+- Active Task: F13 Stealth & Safety Implementation (Anonymity Mode & Geofencing Safe Zones)
 - Environment: Dev
-- Modified Files: [lib/src/features/dashboard/presentation/home_screen.dart]
+- Modified Files: `lib/src/core/contact_service.dart`, `lib/src/features/settings/presentation/settings_screen.dart`, `functions/src/modules/safety/safety.functions.ts`, `lib/src/core/geo_service.dart`, `lib/src/features/map/domain/safe_zone_repository.dart`, `functions/src/modules/proximity/proximity.functions.ts`
 - Open Problems: None
-- System Status: Implementation complete, verified with flutter analyze.
+- System Status: flutter analyze passing, formatted correctly
 
 ## Session Handoff
-- Completed: 
-    - Grouped the dynamic radar mode icon with the "Tremble" text in the header for a cohesive brand look.
-    - Implemented instant icon switching (dumbbell, footprints, calendar) when changing radar modes.
-    - Hooked up "Gym Mode" activation in the header to the existing GymModeSheet.
-    - Redesigned the mode selector as a premium vertical list of pill-shaped items.
+- Completed: Anonymity Mode backend + UI (ContactService, Settings), Geofencing Safe Zones (GeoService, proximity.functions.ts)
 - In Progress: None
-- Next Action: User verification of the unified header and mode switching behavior.
+- Blocked: None
+- Next Action: Ready for QA / next feature phase

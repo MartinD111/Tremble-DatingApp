@@ -130,7 +130,10 @@ class _ConsentView extends StatelessWidget {
           Text(
             'Tremble needs access to two features on your device to detect nearby users. Here is exactly what we use and why.',
             style: textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.7),
               height: 1.5,
             ),
           ).animate().fadeIn(delay: 100.ms, duration: 500.ms),
@@ -155,7 +158,9 @@ class _ConsentView extends StatelessWidget {
                   ),
                   child: Icon(
                     LucideIcons.bluetooth,
-                    color: user != null && user!.isGenderBasedColor && user!.gender == 'male'
+                    color: user != null &&
+                            user!.isGenderBasedColor &&
+                            user!.gender == 'male'
                         ? TrembleTheme.azure
                         : TrembleTheme.rose,
                     size: 22,
@@ -168,17 +173,22 @@ class _ConsentView extends StatelessWidget {
                     children: [
                       Text(
                         'Bluetooth',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Detects other Tremble users physically nearby. No messages or data are sent over Bluetooth — only an anonymous signal.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
                               height: 1.45,
                             ),
                       ),
@@ -221,17 +231,22 @@ class _ConsentView extends StatelessWidget {
                     children: [
                       Text(
                         'Location',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Used as a fallback for proximity when Bluetooth is unavailable. Your precise coordinates are never stored or shared.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
                               height: 1.45,
                             ),
                       ),
@@ -249,7 +264,10 @@ class _ConsentView extends StatelessWidget {
           Text(
             'You can withdraw this consent at any time in Settings. Your data is processed under GDPR Article 6(1)(a) — consent.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.4),
                   height: 1.5,
                 ),
           ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
@@ -321,7 +339,10 @@ class _DeclinedView extends StatelessWidget {
             child: Text(
               'Without Bluetooth and Location access, Tremble cannot detect anyone nearby. The core feature — finding people around you — will not work.\n\nNo other part of the app uses these permissions. You can change your mind at any time in Settings.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.7),
                     height: 1.6,
                   ),
             ),

@@ -111,7 +111,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       } else {
         _emailController.text = currentUser.email ?? '';
         if (isGoogleUser) {
-          _nameController.text = currentUser.displayName?.split(' ').first ?? '';
+          _nameController.text =
+              currentUser.displayName?.split(' ').first ?? '';
         }
         _currentPage = 0;
       }

@@ -19,6 +19,7 @@ import '../../../shared/ui/tremble_header.dart';
 import '../../../core/theme.dart';
 import '../../dashboard/application/radar_schedule_controller.dart';
 import '../../dashboard/presentation/widgets/radar_schedule_modal.dart';
+import '../../../core/contact_service.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
 
@@ -389,6 +390,112 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   ),
                 ),
               ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAnonymityDialog(BuildContext context) {
+    bool isProcessing = false;
+    int? hiddenCount;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final textColor = isDark ? Colors.white : Colors.black87;
+            final subTextColor = isDark ? Colors.white70 : Colors.black54;
+
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Row(children: [
+                Icon(LucideIcons.shieldOff, color: TrembleTheme.rose, size: 22),
+                const SizedBox(width: 10),
+                Text(_t('anonymity_mode'),
+                    style: GoogleFonts.instrumentSans(
+                        color: textColor, fontWeight: FontWeight.bold)),
+              ]),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (hiddenCount != null) ...[
+                    Text(
+                      _t('anonymity_active')
+                          .replaceAll('{count}', hiddenCount.toString()),
+                      style: TextStyle(
+                          color: Colors.green, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  Text(
+                    _t('anonymity_disclaimer'),
+                    style: TextStyle(color: subTextColor, height: 1.5),
+                  ),
+                ],
+              ),
+              actions: [
+                if (hiddenCount == null) ...[
+                  TextButton(
+                    onPressed:
+                        isProcessing ? null : () => Navigator.pop(context),
+                    child: Text(_t('cancel'),
+                        style: TextStyle(
+                            color: isDark ? Colors.white54 : Colors.black45)),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: TrembleTheme.rose,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: isProcessing
+                        ? null
+                        : () async {
+                            setDialogState(() => isProcessing = true);
+                            try {
+                              // We use +386 as default, or fetch from user's actual phone if available.
+                              // For MVP: +386.
+                              final count =
+                                  await ContactService.secureAndSyncContacts(
+                                      '+386');
+                              setDialogState(() {
+                                hiddenCount = count;
+                                isProcessing = false;
+                              });
+                            } catch (e) {
+                              setDialogState(() => isProcessing = false);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text('Failed: ${e.toString()}')),
+                                );
+                              }
+                            }
+                          },
+                    child: isProcessing
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : Text(_t('anonymity_grant_permission'),
+                            style: const TextStyle(color: Colors.white)),
+                  ),
+                ] else ...[
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child:
+                        const Text('OK', style: TextStyle(color: Colors.blue)),
+                  )
+                ]
+              ],
             );
           },
         );
@@ -1421,6 +1528,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           onTap: () {
             context.push('/blocked-users');
           },
+        ),
+        Divider(color: dividerColor),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(LucideIcons.shieldOff,
+              color: isDark ? Colors.white70 : Colors.black45),
+          title: Text(_t('anonymity_mode'), style: TextStyle(color: textColor)),
+          subtitle: Text(_t('anonymity_mode_sub'),
+              style: TextStyle(
+                  color: isDark ? Colors.white54 : Colors.black54,
+                  fontSize: 12)),
+          trailing: Icon(LucideIcons.chevronRight,
+              color: isDark ? Colors.white30 : Colors.black26),
+          onTap: () => _showAnonymityDialog(context),
         ),
         Divider(color: dividerColor),
         Consumer(builder: (context, ref, _) {

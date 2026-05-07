@@ -170,16 +170,12 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? brandRose.withValues(alpha: 0.15)
-              : pillBg,
+          color: isSelected ? brandRose.withValues(alpha: 0.15) : pillBg,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: isSelected
                 ? brandRose
-                : (isDark
-                    ? const Color(0xFF3A3A3E)
-                    : const Color(0xFFD8DCE0)),
+                : (isDark ? const Color(0xFF3A3A3E) : const Color(0xFFD8DCE0)),
           ),
         ),
         child: Row(
@@ -545,7 +541,10 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
           padding: EdgeInsets.fromLTRB(
               24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
           decoration: BoxDecoration(
-            color: isDark ? TrembleTheme.getPillColor(isDark: true, isGenderBased: false, gender: null) : Colors.white,
+            color: isDark
+                ? TrembleTheme.getPillColor(
+                    isDark: true, isGenderBased: false, gender: null)
+                : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
@@ -639,7 +638,8 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
                       ),
                       onPressed: () => widget.onSave(_values),
                       child: Text(t('save', lang),
-                          style: GoogleFonts.instrumentSans(fontWeight: FontWeight.bold)),
+                          style: GoogleFonts.instrumentSans(
+                              fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -744,16 +744,12 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? brandRose.withValues(alpha: 0.15)
-              : pillBg,
+          color: isSelected ? brandRose.withValues(alpha: 0.15) : pillBg,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: isSelected
                 ? brandRose
-                : (isDark
-                    ? const Color(0xFF3A3A3E)
-                    : const Color(0xFFD8DCE0)),
+                : (isDark ? const Color(0xFF3A3A3E) : const Color(0xFFD8DCE0)),
           ),
         ),
         child: Row(
@@ -908,7 +904,8 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
                     ),
                     onPressed: () => widget.onSave(_selected),
                     child: Text(t('save', lang),
-                        style: GoogleFonts.instrumentSans(fontWeight: FontWeight.bold)),
+                        style: GoogleFonts.instrumentSans(
+                            fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -1131,7 +1128,8 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
                           ? () => widget.onSave(_selected!)
                           : null,
                       child: Text(t('save', lang),
-                          style: GoogleFonts.instrumentSans(fontWeight: FontWeight.bold)),
+                          style: GoogleFonts.instrumentSans(
+                              fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -1166,7 +1164,10 @@ Future<void> showSelectedItemsModal({
       constraints:
           BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
       decoration: BoxDecoration(
-        color: isDark ? TrembleTheme.getPillColor(isDark: true, isGenderBased: false, gender: null) : Colors.white,
+        color: isDark
+            ? TrembleTheme.getPillColor(
+                isDark: true, isGenderBased: false, gender: null)
+            : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
@@ -1226,8 +1227,10 @@ Future<void> showSelectedItemsModal({
                       final itemBg = isDark
                           ? const Color(0xFF2A2A2E)
                           : const Color(0xFFE8ECF0);
-                      final itemBorder = itemBg.withValues(alpha: isDark ? 0.6 : 0.4);
-                      final itemTextColor = isDark ? Colors.white : Colors.black87;
+                      final itemBorder =
+                          itemBg.withValues(alpha: isDark ? 0.6 : 0.4);
+                      final itemTextColor =
+                          isDark ? Colors.white : Colors.black87;
 
                       return Container(
                         width: double.infinity,

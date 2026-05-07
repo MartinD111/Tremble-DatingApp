@@ -61,6 +61,7 @@
 
 ### Faza E — Next (Expansion)
 12. **F12** — Pulse Intercept (Phone & Ephemeral Photo) ✅ DONE
+13. **F13** — Stealth & Safety (Anonymity Mode + Geofencing Safe Zones) ⏳ Planning
 
 ---
 
@@ -73,8 +74,8 @@
 | Maps API ključi z restrikcijami | F1 | GCP → Credentials → Create + restrict | Martin/Dev |
 | RevenueCat — novi Product IDs v App Store Connect | F8 | ASC → In-App Purchases → New | Founder |
 | RevenueCat — lifetime Non-Consumable product | F8 | ASC → Non-Consumable type | Founder |
-| DPIA posodobitev — GPS ephemeral processing | F9 | Posodobi DPIA dokument | Founder |
-| Privacy Policy update — GPS processing | F9 | Posodobi PP na trembledating.com | Founder |
+| DPIA posodobitev — GPS ephemeral processing & Contact Hashing | F9, F13 | Posodobi DPIA dokument | Founder |
+| Privacy Policy update — GPS processing & Anonymity Mode | F9, F13 | Posodobi PP na trembledating.com | Founder |
 | Apple Developer — Background Modes: Location | F10 | Info.plist + Capabilities | Founder + Dev |
 | Legal review — smoking/cannabis profil field | F11 | Pravni vidik za SI/HR trg | Founder |
 | Upstash — preveri plan limits (TTL support) | F6, F10 | Upstash dashboard | Martin/Dev |

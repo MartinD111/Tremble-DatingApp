@@ -230,8 +230,11 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                               if (match.birthDate != null) ...[
                                                 const SizedBox(height: 4),
                                                 Text(
-                                                  ZodiacUtils.getZodiacEmoji(match.birthDate) ?? '',
-                                                  style: const TextStyle(fontSize: 18),
+                                                  ZodiacUtils.getZodiacEmoji(
+                                                          match.birthDate) ??
+                                                      '',
+                                                  style: const TextStyle(
+                                                      fontSize: 18),
                                                 ),
                                               ],
                                             ],
@@ -331,9 +334,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
                         // ── Info badges ────────────────────────────────────────────
                         Center(
-                            child: _buildInfoBadges(
-                                match, isDark, subColor, iconColor, lang,
-                                isGenderBasedColor, gender)),
+                            child: _buildInfoBadges(match, isDark, subColor,
+                                iconColor, lang, isGenderBasedColor, gender)),
 
                         const SizedBox(height: 24),
 
@@ -508,14 +510,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     );
   }
 
-  Widget _buildInfoBadges(
-      MatchProfile match,
-      bool isDark,
-      Color subColor,
-      Color iconColor,
-      String lang,
-      bool isGenderBasedColor,
-      String? gender) {
+  Widget _buildInfoBadges(MatchProfile match, bool isDark, Color subColor,
+      Color iconColor, String lang, bool isGenderBasedColor, String? gender) {
     final items = <Widget>[];
 
     void addBadge(IconData icon, String text, [Color? color]) {

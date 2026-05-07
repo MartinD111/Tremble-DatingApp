@@ -41,5 +41,14 @@
 - [ ] **F6 Interaction:** Implement **Mid-Run Intercept** notification override.
 - [ ] **F6 History:** Add "Run Club" tags and context to match history cards.
 
+### 7. Phase F13 Execution (Stealth & Safety) ⏳ PLANNING
+- [ ] **F13 Architecture:** Draft ADR for local SHA-256 contact hashing.
+- [ ] **F13 Localization:** Implement SLO/EN/DE translations with Brand ID voice.
+- [ ] **F13 Backend:** Create `onContactAnonymityCheck` Cloud Function (Zero-Data logic).
+- [ ] **F13 Anonymity:** Implement client-side `ContactService` with local encryption.
+- [ ] **F13 Safe Zones:** Build `SafeZoneRepository` and map-based Zone Picker UI.
+- [ ] **F13 Logic:** Update `DiscoveryService` with Safe Zone masking.
+- [ ] **F13 UX:** Implement confirmation modals and independent zone toggles.
+
 ---
-*Last Updated: 2026-04-30* — Build: ✅ passing | flutter analyze: ✅ 0 issues | F6 Design ✅ | F6 Implementation ⏳
+*Last Updated: 2026-05-08* — Build: ✅ passing | flutter analyze: ✅ 0 issues | F13 Planning ⏳

@@ -240,6 +240,7 @@ export const findNearby = onCall(
         const myMinAge = requesterData.ageRangeStart ?? 18;
         const myMaxAge = requesterData.ageRangeEnd ?? 100;
         const blockedUsers: string[] = requesterData.blockedUserIds ?? [];
+        const blockedGeohashes: string[] = requesterData.blockedGeohashes ?? [];
 
         // F11: Nicotine preferences
         const myNicotineUse: string[] = requesterData.nicotineUse ?? [];
@@ -273,6 +274,9 @@ export const findNearby = onCall(
 
             const geohash = doc.data().geohash as string | undefined;
             if (!geohash) continue;
+
+            // F13: Geofencing Safe Zones (Backend Geohash check)
+            if (blockedGeohashes.some(bg => geohash.startsWith(bg))) continue;
 
             const center = decodeGeohash(geohash);
             const distM = haversineMeters(data.latitude, data.longitude, center.lat, center.lng);
@@ -407,6 +411,7 @@ export const getProximityMatchCandidates = onCall(
         const radiusM = isPremium ? RADIUS_PRO_M : RADIUS_FREE_M;
         const radiusTier = isPremium ? "pro" : "free";
         const blockedUsers: string[] = requesterData.blockedUserIds ?? [];
+        const blockedGeohashes: string[] = requesterData.blockedGeohashes ?? [];
 
         // F11: Nicotine preferences
         const myNicotineUse: string[] = requesterData.nicotineUse ?? [];
@@ -432,6 +437,9 @@ export const getProximityMatchCandidates = onCall(
 
             const geohash = doc.data().geohash as string | undefined;
             if (!geohash) continue;
+
+            // F13: Geofencing Safe Zones (Backend Geohash check)
+            if (blockedGeohashes.some(bg => geohash.startsWith(bg))) continue;
 
             // Decode geohash to cell center for haversine.
             // lat/lng is NEVER stored — computed transiently for this query.

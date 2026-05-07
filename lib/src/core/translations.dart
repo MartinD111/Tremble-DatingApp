@@ -762,6 +762,22 @@ const Map<String, Map<String, String>> _translations = {
     'missed': 'MISSED',
     'history_subtitle': 'List of people who matched your criteria.',
     'no_encounters_history': 'Nothing moved here.',
+
+    // --- Anonymity & Safe Zones (F13) ---
+    'anonymity_mode': 'Anonymity Mode',
+    'anonymity_mode_sub': 'Hide from people in your phone contacts.',
+    'anonymity_grant_permission': 'Grant contact access',
+    'anonymity_processing': 'Securing contacts locally...',
+    'anonymity_active': 'Anonymity active. {count} contacts hidden.',
+    'anonymity_disclaimer':
+        'Your contacts are hashed locally on your device. We never upload your raw phone numbers. Total privacy.',
+    'safe_zones': 'Safe Zones',
+    'safe_zones_sub': 'Select areas where you remain completely invisible.',
+    'safe_zone_add': 'Add Safe Zone',
+    'safe_zone_radius': 'Radius: {radius}m',
+    'safe_zone_disclaimer':
+        'We do not ask for names. You are just invisible here.',
+    'safe_zone_delete': 'Delete zone',
   },
 
   // ═══════════════════════════════════════════
@@ -1411,6 +1427,23 @@ const Map<String, Map<String, String>> _translations = {
     'missed': 'ZAMUJENO',
     'history_subtitle': 'Seznam oseb, ki so ustrezale tvojim kriterijem.',
     'no_encounters_history': 'Nič se ni premaknilo.',
+
+    // --- Anonymity & Safe Zones (F13) ---
+    'anonymity_mode': 'Anonimni Način',
+    'anonymity_mode_sub': 'Skrij se pred ljudmi iz imenika.',
+    'anonymity_grant_permission': 'Dovoli dostop do imenika',
+    'anonymity_processing': 'Lokalno varovanje stikov...',
+    'anonymity_active': 'Anonimnost aktivna. {count} stikov skritih.',
+    'anonymity_disclaimer':
+        'Stiki so lokalno kriptirani na napravi. Surovih številk nikoli ne pošljemo na strežnik. Popolna zasebnost.',
+    'safe_zones': 'Varna Območja',
+    'safe_zones_sub':
+        'Izberi območja, kjer želiš ostati popolnoma neviden/-na.',
+    'safe_zone_add': 'Dodaj varno območje',
+    'safe_zone_radius': 'Radij: {radius}m',
+    'safe_zone_disclaimer':
+        'Ne sprašujemo po imenih. Tukaj si preprosto neviden/-na.',
+    'safe_zone_delete': 'Izbriši območje',
   },
 
   // ═══════════════════════════════════════════
@@ -1760,6 +1793,23 @@ const Map<String, Map<String, String>> _translations = {
     'missed': 'MISSED',
     'history_subtitle': 'List of people who matched your criteria.',
     'no_encounters_history': 'Nothing moved here.',
+
+    // --- Anonymity & Safe Zones (F13) ---
+    'anonymity_mode': 'Anonymitätsmodus',
+    'anonymity_mode_sub': 'Verstecke dich vor Personen in deinen Kontakten.',
+    'anonymity_grant_permission': 'Kontakte freigeben',
+    'anonymity_processing': 'Kontakte werden lokal gesichert...',
+    'anonymity_active': 'Anonymität aktiv. {count} Kontakte versteckt.',
+    'anonymity_disclaimer':
+        'Deine Kontakte werden lokal auf deinem Gerät gehasht. Wir laden niemals deine echten Telefonnummern hoch. Absolute Privatsphäre.',
+    'safe_zones': 'Sichere Zonen',
+    'safe_zones_sub':
+        'Wähle Gebiete aus, in denen du völlig unsichtbar bleibst.',
+    'safe_zone_add': 'Sichere Zone hinzufügen',
+    'safe_zone_radius': 'Radius: {radius}m',
+    'safe_zone_disclaimer':
+        'Wir fragen nicht nach Namen. Du bist hier einfach unsichtbar.',
+    'safe_zone_delete': 'Zone löschen',
   },
 
   // ═══════════════════════════════════════════

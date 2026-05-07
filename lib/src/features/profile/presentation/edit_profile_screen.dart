@@ -717,7 +717,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     {
                                       'label': t('judaism', lang),
                                       'value': 'judaism',
-                                      'icon': IconUtils.getReligionIcon('judaism')
+                                      'icon':
+                                          IconUtils.getReligionIcon('judaism')
                                     },
                                     {
                                       'label': t('agnostic', lang),
@@ -728,7 +729,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     {
                                       'label': t('atheist', lang),
                                       'value': 'atheist',
-                                      'icon': IconUtils.getReligionIcon('atheist')
+                                      'icon':
+                                          IconUtils.getReligionIcon('atheist')
                                     },
                                   ],
                                   currentValue: _religion,
@@ -757,28 +759,28 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   user: user,
                                   rowIcon: LucideIcons.user,
                                   options: [
-                                  {
-                                    'label': t('ethnicity_white', lang),
-                                    'value': 'ethnicity_white'
-                                  },
-                                  {
-                                    'label': t('ethnicity_black', lang),
-                                    'value': 'ethnicity_black'
-                                  },
-                                  {
-                                    'label': t('ethnicity_mixed', lang),
-                                    'value': 'ethnicity_mixed'
-                                  },
-                                  {
-                                    'label': t('ethnicity_asian', lang),
-                                    'value': 'ethnicity_asian'
-                                  },
-                                ],
-                                currentValue: _ethnicity,
-                                onUpdate: (v) => setState(() {
-                                  _ethnicity = v;
-                                  _hasChanges = true;
-                                }),
+                                    {
+                                      'label': t('ethnicity_white', lang),
+                                      'value': 'ethnicity_white'
+                                    },
+                                    {
+                                      'label': t('ethnicity_black', lang),
+                                      'value': 'ethnicity_black'
+                                    },
+                                    {
+                                      'label': t('ethnicity_mixed', lang),
+                                      'value': 'ethnicity_mixed'
+                                    },
+                                    {
+                                      'label': t('ethnicity_asian', lang),
+                                      'value': 'ethnicity_asian'
+                                    },
+                                  ],
+                                  currentValue: _ethnicity,
+                                  onUpdate: (v) => setState(() {
+                                    _ethnicity = v;
+                                    _hasChanges = true;
+                                  }),
                                 );
                               },
                             ),
@@ -811,8 +813,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       'label': t('hair_brunette', lang),
                                       'value': 'hair_brunette',
                                       'icon': Icons.circle,
-                                      'iconColor':
-                                          IconUtils.getHairColor('hair_brunette')
+                                      'iconColor': IconUtils.getHairColor(
+                                          'hair_brunette')
                                     },
                                     {
                                       'label': t('hair_black', lang),
@@ -1062,8 +1064,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       'icon': LucideIcons.ban,
                                     },
                                     {
-                                      'label':
-                                          t('children_have_and_want_more', lang),
+                                      'label': t(
+                                          'children_have_and_want_more', lang),
                                       'value': 'have_and_want_more',
                                       'icon': LucideIcons.users,
                                     },
@@ -1134,7 +1136,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600)),
                                 const Spacer(),
-                                _multiPill(_lookingFor, lang, isDark, subColor, pillBg,
+                                _multiPill(
+                                    _lookingFor, lang, isDark, subColor, pillBg,
                                     iconMapper: IconUtils.getLookingForIcon),
                                 const SizedBox(width: 8),
                                 _editCircle(isDark, borderColor, pillBg,
@@ -1207,7 +1210,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600)),
                                 const Spacer(),
-                                _multiPill(_languages, lang, isDark, subColor, pillBg),
+                                _multiPill(
+                                    _languages, lang, isDark, subColor, pillBg),
                                 const SizedBox(width: 8),
                                 _editCircle(isDark, borderColor, pillBg,
                                     onTap: () => showMultiSelectModal(
@@ -1223,31 +1227,38 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                               'value': 'Slovenščina'
                                             },
                                             {
-                                              'label': '🇬🇧 ${t('lang_english', lang)}',
+                                              'label':
+                                                  '🇬🇧 ${t('lang_english', lang)}',
                                               'value': 'Angleščina'
                                             },
                                             {
-                                              'label': '🇩🇪 ${t('lang_german', lang)}',
+                                              'label':
+                                                  '🇩🇪 ${t('lang_german', lang)}',
                                               'value': 'Nemščina'
                                             },
                                             {
-                                              'label': '🇮🇹 ${t('lang_italian', lang)}',
+                                              'label':
+                                                  '🇮🇹 ${t('lang_italian', lang)}',
                                               'value': 'Italijanščina'
                                             },
                                             {
-                                              'label': '🇫🇷 ${t('lang_french', lang)}',
+                                              'label':
+                                                  '🇫🇷 ${t('lang_french', lang)}',
                                               'value': 'Francoščina'
                                             },
                                             {
-                                              'label': '🇪🇸 ${t('lang_spanish', lang)}',
+                                              'label':
+                                                  '🇪🇸 ${t('lang_spanish', lang)}',
                                               'value': 'Španščina'
                                             },
                                             {
-                                              'label': '🇭🇷 ${t('lang_croatian', lang)}',
+                                              'label':
+                                                  '🇭🇷 ${t('lang_croatian', lang)}',
                                               'value': 'Hrvaščina'
                                             },
                                             {
-                                              'label': '🇷🇸 ${t('lang_serbian', lang)}',
+                                              'label':
+                                                  '🇷🇸 ${t('lang_serbian', lang)}',
                                               'value': 'Srbščina'
                                             },
                                             {
@@ -1291,8 +1302,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            _buildCategorizedHobbies(lang, isDark, textColor,
-                                pillBg, borderColor),
+                            _buildCategorizedHobbies(
+                                lang, isDark, textColor, pillBg, borderColor),
 
                             const SizedBox(height: 30),
 
@@ -1876,8 +1887,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             color: sel
                                 ? (isDark ? Colors.white : Colors.black)
                                 : textColor,
-                            fontWeight:
-                                sel ? FontWeight.bold : FontWeight.w500,
+                            fontWeight: sel ? FontWeight.bold : FontWeight.w500,
                             fontSize: 13,
                           )),
                     ],
@@ -1992,8 +2002,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   /// Pill showing count/value for multi-select rows.
-  Widget _multiPill(
-      List<String> values, String lang, bool isDark, Color subColor, Color pillBg,
+  Widget _multiPill(List<String> values, String lang, bool isDark,
+      Color subColor, Color pillBg,
       {IconData? Function(String)? iconMapper}) {
     final String display;
     IconData? icon;
@@ -2245,7 +2255,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     isDark: isDark,
                     pillBg: TrembleTheme.getPillColor(
                       isDark: isDark,
-                      isGenderBased: ref.watch(authStateProvider)?.isGenderBasedColor ?? false,
+                      isGenderBased:
+                          ref.watch(authStateProvider)?.isGenderBasedColor ??
+                              false,
                       gender: ref.watch(authStateProvider)?.gender,
                     ),
                   ),
@@ -2429,9 +2441,10 @@ class _AgePill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: pillBg ?? (isDark
-            ? Colors.white.withValues(alpha: 0.12)
-            : Colors.black.withValues(alpha: 0.06)),
+        color: pillBg ??
+            (isDark
+                ? Colors.white.withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.06)),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
             color:
