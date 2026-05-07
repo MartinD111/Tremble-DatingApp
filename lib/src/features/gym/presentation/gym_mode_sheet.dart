@@ -155,6 +155,9 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
   Widget build(BuildContext context) {
     final gymState = ref.watch(gymModeControllerProvider);
     final controller = ref.read(gymModeControllerProvider.notifier);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final handleColor = isDark ? Colors.white24 : Colors.black26;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.62,
@@ -180,7 +183,7 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: handleColor,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -205,6 +208,7 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
                       style: TrembleTheme.displayFont(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        color: textColor,
                       ),
                     ),
                     const Spacer(),
@@ -235,7 +239,7 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
                     : Text(
                         'Select your gym to connect with others working out there right now.',
                         style: GoogleFonts.instrumentSans(
-                          color: Colors.white.withValues(alpha: 0.55),
+                          color: isDark ? Colors.white.withValues(alpha: 0.55) : Colors.black54,
                           fontSize: 13,
                           height: 1.5,
                         ),
@@ -290,20 +294,26 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
     }
 
     if (_loadError != null) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return Center(
         child: Text(
           'Failed to load gyms.',
-          style: GoogleFonts.instrumentSans(color: Colors.white54),
+          style: GoogleFonts.instrumentSans(
+            color: isDark ? Colors.white54 : Colors.black54,
+          ),
         ),
       );
     }
 
     final gyms = _gyms ?? [];
     if (gyms.isEmpty) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return Center(
         child: Text(
           'No gyms available yet.',
-          style: GoogleFonts.instrumentSans(color: Colors.white54),
+          style: GoogleFonts.instrumentSans(
+            color: isDark ? Colors.white54 : Colors.black54,
+          ),
         ),
       );
     }
@@ -346,6 +356,8 @@ class _ActiveBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
     return GlassCard(
       opacity: 0.15,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -361,7 +373,7 @@ class _ActiveBanner extends StatelessWidget {
             child: Text(
               'Active at $gymName',
               style: GoogleFonts.instrumentSans(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -389,6 +401,9 @@ class _GymTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white.withValues(alpha: 0.45) : Colors.black54;
     return GlassCard(
       opacity: isActive ? 0.22 : 0.08,
       padding: EdgeInsets.zero,
@@ -406,13 +421,13 @@ class _GymTile extends StatelessWidget {
           child: Icon(
             LucideIcons.dumbbell,
             size: 20,
-            color: isActive ? primary : Colors.white.withValues(alpha: 0.55),
+            color: isActive ? primary : (isDark ? Colors.white.withValues(alpha: 0.55) : Colors.black54),
           ),
         ),
         title: Text(
           gym.name,
           style: GoogleFonts.instrumentSans(
-            color: Colors.white,
+            color: textColor,
             fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
             fontSize: 15,
           ),
@@ -421,7 +436,7 @@ class _GymTile extends StatelessWidget {
             ? Text(
                 gym.address,
                 style: GoogleFonts.instrumentSans(
-                  color: Colors.white.withValues(alpha: 0.45),
+                  color: subtextColor,
                   fontSize: 12,
                 ),
                 maxLines: 1,
@@ -442,7 +457,7 @@ class _GymTile extends StatelessWidget {
                   )
                 : Icon(
                     LucideIcons.chevronRight,
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: isDark ? Colors.white.withValues(alpha: 0.35) : Colors.black26,
                     size: 18,
                   ),
         onTap: (isLoading || isActive) ? null : onTap,

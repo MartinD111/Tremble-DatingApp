@@ -7,6 +7,8 @@ class GlassCard extends StatelessWidget {
   final double borderRadius;
   final EdgeInsetsGeometry padding;
   final Color? borderColor;
+  final bool useGlassEffect;
+  final Color? solidDarkBg;
 
   const GlassCard({
     super.key,
@@ -15,6 +17,8 @@ class GlassCard extends StatelessWidget {
     this.borderRadius = 28.0,
     this.padding = const EdgeInsets.all(20),
     this.borderColor,
+    this.useGlassEffect = true,
+    this.solidDarkBg,
   });
 
   @override
@@ -28,19 +32,36 @@ class GlassCard extends StatelessWidget {
             ? Colors.white.withValues(alpha: 0.3)
             : Colors.black.withValues(alpha: 0.15));
 
+    // For dark mode with solid background, use the provided color or default
+    final bgColor = useGlassEffect
+        ? glassColor
+        : (isDark
+            ? (solidDarkBg ?? const Color(0xFF2A2A2E))
+            : Colors.white);
+
+    final container = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(color: borderColorValue),
+      ),
+      child: child,
+    );
+
+    // Only apply glass effect (backdrop blur) when useGlassEffect is true
+    if (!useGlassEffect) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: container,
+      );
+    }
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: glassColor,
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: borderColorValue),
-          ),
-          child: child,
-        ),
+        child: container,
       ),
     );
   }

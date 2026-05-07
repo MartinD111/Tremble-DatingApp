@@ -152,9 +152,7 @@ class PreferencePillRow extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isDark
-                        ? const Color(0xFF2A2A2E)
-                        : const Color(0xFFE8ECF0),
+                    color: pillBg,
                     border: Border.all(
                       color: isDark
                           ? const Color(0xFF3A3A3E)

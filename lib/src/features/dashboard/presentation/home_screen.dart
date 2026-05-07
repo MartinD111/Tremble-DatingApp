@@ -18,7 +18,7 @@ import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
 import '../../../core/ble_service.dart'; // BLE must run in main isolate
-import '../../../shared/ui/tremble_logo.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/consent_service.dart'; // gdprConsentProvider
 import 'package:flutter_animate/flutter_animate.dart'; // Animations
 import '../../../core/translations.dart';
@@ -37,7 +37,6 @@ import '../../match/presentation/widgets/match_notification_pill.dart';
 import '../../../shared/ui/premium_paywall.dart';
 import '../../gym/application/gym_mode_controller.dart';
 import '../../gym/application/gym_dwell_service.dart';
-import '../../gym/presentation/gym_mode_sheet.dart';
 import '../data/run_club_repository.dart';
 import 'widgets/live_run_card.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -506,14 +505,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           right: 0,
           child: SizedBox(
             height: 50,
-            child: Center(
-              child: Text(
-                t('tab_radar', lang),
-                style: TrembleTheme.displayFont(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Dumbbell icon (left) — long press to select mode
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onLongPress: () => _showModeSelector(context),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          LucideIcons.dumbbell,
+                          size: 20,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Radar text (center)
+                  Text(
+                    t('tab_radar', lang),
+                    style: TrembleTheme.displayFont(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  // Empty space on right (schedule icon is positioned absolutely below)
+                  const SizedBox(width: 44, height: 44),
+                ],
               ),
             ),
           ),
@@ -782,33 +816,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // and remains tappable. Wrapped in Material for the InkWell ripple.
         Positioned(
           top: MediaQuery.of(context).padding.top + 24,
-          right: 12,
-          child: Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => showRadarScheduleModal(context),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Icon(
-                  LucideIcons.clock,
-                  size: 22,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.7),
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        // ── Gym Mode Button (top-left, top of stack) ─────────────────
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 24,
-          left: 12,
-          child: const _GymModeButton(),
+          right: 20,
+          child: const _RadarTopControls(),
         ),
 
         // Match notification pill is rendered globally in HomeScreen.build —
@@ -949,6 +958,86 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return PillState.waitingForAction;
     }
   }
+
+  void _showModeSelector(BuildContext context) {
+    final lang = ref.read(appLanguageProvider);
+    final selectedMode = ref.read(selectedRadarModeProvider);
+    final items = [
+      (RadarModeKind.gym, LucideIcons.dumbbell, t('gym_mode_info_title', lang)),
+      (RadarModeKind.event, LucideIcons.calendar, t('event_mode_info_title', lang)),
+      (RadarModeKind.run, LucideIcons.footprints, t('run_mode_info_title', lang)),
+    ];
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        final primary = Theme.of(ctx).colorScheme.primary;
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF1A1A18).withValues(alpha: 0.97)
+                    : Colors.white.withValues(alpha: 0.96),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              ),
+              padding: EdgeInsets.fromLTRB(0, 12, 0, MediaQuery.of(ctx).padding.bottom + 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  ...items.map((item) {
+                    final (kind, icon, label) = item;
+                    final isSelected = kind == selectedMode;
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? primary.withValues(alpha: 0.15)
+                              : Colors.white.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(icon, size: 18, color: isSelected ? primary : Colors.white38),
+                      ),
+                      title: Text(
+                        label,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 16,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected ? Colors.white : Colors.white60,
+                        ),
+                      ),
+                      trailing: isSelected ? Icon(LucideIcons.check, size: 16, color: primary) : null,
+                      onTap: () {
+                        ref.read(selectedRadarModeProvider.notifier).state = kind;
+                        Navigator.pop(ctx);
+                      },
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 // navIndexProvider is intentionally defined here (after HomeScreen) so it is
@@ -962,18 +1051,17 @@ final navIndexProvider = StateProvider<int>((ref) => 0);
 final selectedRadarModeProvider =
     StateProvider<RadarModeKind>((ref) => RadarModeKind.gym);
 
-/// Top-left radar mode button.
-/// Tap → directly activates/deactivates the selected mode (no info dialog).
-/// Long-press → bottom sheet to switch between Gym / Event / Run modes.
-/// Active mode shows an animated gold circular border around the icon.
-class _GymModeButton extends ConsumerStatefulWidget {
-  const _GymModeButton();
+/// Unified top-right control for Radar Mode (Gym/Run/Event) and Schedule.
+/// Main icon (Clock) -> Opens Schedule Modal.
+/// Corner badge (Mode Icon) -> Toggle Mode (tap) / Select Mode (long-press).
+class _RadarTopControls extends ConsumerStatefulWidget {
+  const _RadarTopControls();
 
   @override
-  ConsumerState<_GymModeButton> createState() => _GymModeButtonState();
+  ConsumerState<_RadarTopControls> createState() => _RadarTopControlsState();
 }
 
-class _GymModeButtonState extends ConsumerState<_GymModeButton>
+class _RadarTopControlsState extends ConsumerState<_RadarTopControls>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseCtrl;
   late final Animation<double> _pulseAnim;
@@ -1008,148 +1096,6 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
     }
   }
 
-  void _onTap() {
-    final mode = ref.read(selectedRadarModeProvider);
-    switch (mode) {
-      case RadarModeKind.gym:
-        final gymState = ref.read(gymModeControllerProvider);
-        if (gymState.isActive) {
-          ref.read(gymModeControllerProvider.notifier).deactivate();
-        } else {
-          _activateGym();
-        }
-      case RadarModeKind.run:
-        final runState = ref.read(runModeControllerProvider);
-        if (runState.isActive) {
-          ref.read(runModeControllerProvider.notifier).deactivate();
-        } else {
-          ref.read(runModeControllerProvider.notifier).activate();
-        }
-      case RadarModeKind.event:
-        // Event activation requires picking an event — no standalone sheet yet.
-        // Tapping navigates to the People > Event section so the user can
-        // initiate activation from there.
-        final isPremium = ref.read(authStateProvider)?.isPremium == true;
-        ref.read(navIndexProvider.notifier).state = isPremium ? 2 : 1;
-        ref.read(matchSectionProvider.notifier).state = MatchSection.event;
-    }
-  }
-
-  void _onLongPress() {
-    final lang = ref.read(appLanguageProvider);
-    final selectedMode = ref.read(selectedRadarModeProvider);
-
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        final items = [
-          (
-            RadarModeKind.gym,
-            LucideIcons.dumbbell,
-            t('gym_mode_info_title', lang)
-          ),
-          (
-            RadarModeKind.event,
-            LucideIcons.calendar,
-            t('event_mode_info_title', lang)
-          ),
-          (
-            RadarModeKind.run,
-            LucideIcons.footprints,
-            t('run_mode_info_title', lang)
-          ),
-        ];
-
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        final primary = Theme.of(ctx).colorScheme.primary;
-
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: Container(
-              decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF1A1A18).withValues(alpha: 0.97)
-                    : Colors.white.withValues(alpha: 0.96),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              ),
-              padding: EdgeInsets.fromLTRB(
-                  0, 12, 0, MediaQuery.of(ctx).padding.bottom + 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  ...items.map((item) {
-                    final (kind, icon, label) = item;
-                    final isSelected = kind == selectedMode;
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 4),
-                      leading: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? primary.withValues(alpha: 0.15)
-                              : Colors.white.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(icon,
-                            size: 18,
-                            color: isSelected ? primary : Colors.white38),
-                      ),
-                      title: Text(
-                        label,
-                        style: GoogleFonts.instrumentSans(
-                          fontSize: 16,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected ? Colors.white : Colors.white60,
-                        ),
-                      ),
-                      trailing: isSelected
-                          ? Icon(LucideIcons.check, size: 16, color: primary)
-                          : null,
-                      onTap: () {
-                        ref.read(selectedRadarModeProvider.notifier).state =
-                            kind;
-                        Navigator.pop(ctx);
-                      },
-                    );
-                  }),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _activateGym() {
-    GymModeSheet.show(context).then((_) {
-      if (!mounted) return;
-      final gymState = ref.read(gymModeControllerProvider);
-      if (gymState.isActive) {
-        final isPremium = ref.read(authStateProvider)?.isPremium == true;
-        ref.read(navIndexProvider.notifier).state = isPremium ? 2 : 1;
-        ref.read(matchSectionProvider.notifier).state = MatchSection.gym;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final gymState = ref.watch(gymModeControllerProvider);
@@ -1165,82 +1111,76 @@ class _GymModeButtonState extends ConsumerState<_GymModeButton>
     };
     _syncAnimation(isAnyActive);
 
-    final (icon, activeColor) = switch (selectedMode) {
+    final (modeIcon, activeColor) = switch (selectedMode) {
       RadarModeKind.gym => (LucideIcons.dumbbell, _gold),
       RadarModeKind.run => (LucideIcons.footprints, _rose),
       RadarModeKind.event => (LucideIcons.calendar, _gold),
     };
 
-    return GestureDetector(
-      onTap: _onTap,
-      onLongPress: _onLongPress,
-      child: SizedBox(
-        width: 48,
-        height: 48,
-        child: Stack(
-          alignment: Alignment.center,
-          clipBehavior: Clip.none,
-          children: [
-            // Animated frosted-glass circular border — only when active
-            if (isAnyActive)
-              AnimatedBuilder(
-                animation: _pulseAnim,
-                builder: (_, __) => Transform.scale(
-                  scale: _pulseAnim.value,
-                  child: ClipOval(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isDark
-                              ? activeColor.withValues(alpha: 0.18)
-                              : activeColor.withValues(alpha: 0.12),
-                          border: Border.all(
-                            color: activeColor.withValues(alpha: 0.65),
-                            width: 1.5,
-                          ),
+    return SizedBox(
+      width: 54,
+      height: 54,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          // Frosted background circle
+          Positioned(
+            width: 46,
+            height: 46,
+            child: AnimatedBuilder(
+              animation: _pulseAnim,
+              builder: (_, __) => Transform.scale(
+                scale: isAnyActive ? _pulseAnim.value : 1.0,
+                child: ClipOval(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isAnyActive
+                            ? activeColor.withValues(alpha: 0.15)
+                            : (isDark
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.black.withValues(alpha: 0.05)),
+                        border: Border.all(
+                          color: isAnyActive
+                              ? activeColor.withValues(alpha: 0.6)
+                              : (isDark
+                                  ? Colors.white.withValues(alpha: 0.15)
+                                  : Colors.black.withValues(alpha: 0.1)),
+                          width: 1.5,
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-
-            // Mode icon — colored when active
-            Icon(
-              icon,
-              size: 20,
-              color: isAnyActive
-                  ? activeColor
-                  : Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.7),
             ),
+          ),
 
-            // Small colored dot (active indicator)
-            if (isAnyActive)
-              Positioned(
-                top: 6,
-                right: 6,
-                child: Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: activeColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isDark ? const Color(0xFF1A1A18) : Colors.white,
-                      width: 1,
-                    ),
+          // Main Action: Schedule Radar (Clock)
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => showRadarScheduleModal(context),
+              child: const SizedBox(
+                width: 46,
+                height: 46,
+                child: Center(
+                  child: Icon(
+                    LucideIcons.clock,
+                    size: 18,
+                    color: Colors.white70,
                   ),
                 ),
               ),
-          ],
-        ),
+            ),
+          ),
+
+        ],
       ),
     );
   }
@@ -1646,14 +1586,25 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
                 );
               }),
 
-            GlassCard(
-              opacity: 0.15,
-              borderRadius: 100,
-              padding: const EdgeInsets.all(20),
-              child: TrembleLogo(
-                key: const ValueKey('logo'),
-                size: 90,
-                isAnimated: widget.isScanning,
+            Container(
+              width: 130,
+              height: 130,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFF4436C),
+              ),
+              child: Center(
+                child: SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: SvgPicture.asset(
+                    'Logo/SVG za radar.svg',
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

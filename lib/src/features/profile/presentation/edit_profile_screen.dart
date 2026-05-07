@@ -16,7 +16,7 @@ import '../../settings/presentation/widgets/preference_pill_row.dart';
 import '../../auth/presentation/widgets/registration_steps/hobbies_step.dart';
 import '../../auth/presentation/widgets/registration_steps/step_shared.dart'
     show DrumPicker;
-import '../../../shared/ui/top_notification.dart';
+import '../../../shared/ui/center_notification.dart';
 import '../../../shared/ui/discard_changes_modal.dart';
 import '../../../core/upload_service.dart';
 import '../../../core/utils/icon_utils.dart';
@@ -60,6 +60,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   String? _occupation;
   final _occupationController = TextEditingController();
   final List<String> _nicotineUse = [];
+  bool _nicotineUseToggle = false;
   String? _drinkingHabit;
   String? _exerciseHabit;
   String? _sleepSchedule;
@@ -129,6 +130,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _nicotineUse
         ..clear()
         ..addAll(user.nicotineUse);
+      _nicotineUseToggle = user.nicotineUse.isNotEmpty;
       _occupation = user.occupation;
       _occupationController.text = user.occupation ?? '';
       _schoolController.text = user.school ?? '';
@@ -402,10 +404,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ][_politicalAffiliationValue.toInt() - 1],
           maxDistance: _distancePreference.round(),
         ));
-    TopNotification.show(
+    CenterNotification.show(
       context: context,
       message: t('profile_updated', _lang),
-      icon: LucideIcons.checkCircle,
     );
     setState(() => _hasChanges = false);
     if (context.mounted) {
@@ -547,6 +548,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final user = ref.read(authStateProvider);
     final isGenderBasedColor = user?.isGenderBasedColor ?? false;
     final gender = user?.gender ?? 'default';
+    final pillBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: isGenderBasedColor,
+      gender: gender,
+    );
 
     return PopScope(
       canPop: !_hasChanges,
@@ -602,18 +608,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 children: [
                                   if (_birthDate != null) ...[
                                     _AgePill(
-                                      '${ZodiacUtils.calcAge(_birthDate!)}',
+                                      '${ZodiacUtils.calcAge(_birthDate!)}  ${ZodiacUtils.getZodiacEmoji(_birthDate) ?? ''} ${t('zodiac_${ZodiacUtils.getZodiacSign(_birthDate!)}', lang)}',
                                       icon: LucideIcons.cake,
                                       isDark: isDark,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _AgePill(
-                                      t('zodiac_${ZodiacUtils.getZodiacSign(_birthDate!)}',
-                                          lang),
-                                      icon: ZodiacUtils.getZodiacIcon(
-                                        ZodiacUtils.getZodiacSign(_birthDate!),
-                                      ),
-                                      isDark: isDark,
+                                      pillBg: pillBg,
                                     ),
                                   ] else
                                     _AgePill(
@@ -624,6 +622,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                           : 'Set birthday',
                                       icon: LucideIcons.calendar,
                                       isDark: isDark,
+                                      pillBg: pillBg,
                                     ),
                                   const SizedBox(width: 8),
                                   Icon(LucideIcons.pencil,
@@ -1135,10 +1134,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600)),
                                 const Spacer(),
-                                _multiPill(_lookingFor, lang, isDark, subColor,
+                                _multiPill(_lookingFor, lang, isDark, subColor, pillBg,
                                     iconMapper: IconUtils.getLookingForIcon),
                                 const SizedBox(width: 8),
-                                _editCircle(isDark, borderColor, fillColor,
+                                _editCircle(isDark, borderColor, pillBg,
                                     onTap: () => showMultiSelectModal(
                                           context: context,
                                           title: t('looking_for', lang),
@@ -1208,9 +1207,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600)),
                                 const Spacer(),
-                                _multiPill(_languages, lang, isDark, subColor),
+                                _multiPill(_languages, lang, isDark, subColor, pillBg),
                                 const SizedBox(width: 8),
-                                _editCircle(isDark, borderColor, fillColor,
+                                _editCircle(isDark, borderColor, pillBg,
                                     onTap: () => showMultiSelectModal(
                                           context: context,
                                           title: t('i_speak', lang),
@@ -1220,40 +1219,40 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                           options: [
                                             {
                                               'label':
-                                                  t('lang_slovenian', lang),
+                                                  '🇸🇮 ${t('lang_slovenian', lang)}',
                                               'value': 'Slovenščina'
                                             },
                                             {
-                                              'label': t('lang_english', lang),
+                                              'label': '🇬🇧 ${t('lang_english', lang)}',
                                               'value': 'Angleščina'
                                             },
                                             {
-                                              'label': t('lang_german', lang),
+                                              'label': '🇩🇪 ${t('lang_german', lang)}',
                                               'value': 'Nemščina'
                                             },
                                             {
-                                              'label': t('lang_italian', lang),
+                                              'label': '🇮🇹 ${t('lang_italian', lang)}',
                                               'value': 'Italijanščina'
                                             },
                                             {
-                                              'label': t('lang_french', lang),
+                                              'label': '🇫🇷 ${t('lang_french', lang)}',
                                               'value': 'Francoščina'
                                             },
                                             {
-                                              'label': t('lang_spanish', lang),
+                                              'label': '🇪🇸 ${t('lang_spanish', lang)}',
                                               'value': 'Španščina'
                                             },
                                             {
-                                              'label': t('lang_croatian', lang),
+                                              'label': '🇭🇷 ${t('lang_croatian', lang)}',
                                               'value': 'Hrvaščina'
                                             },
                                             {
-                                              'label': t('lang_serbian', lang),
+                                              'label': '🇷🇸 ${t('lang_serbian', lang)}',
                                               'value': 'Srbščina'
                                             },
                                             {
                                               'label':
-                                                  t('lang_hungarian', lang),
+                                                  '🇭🇺 ${t('lang_hungarian', lang)}',
                                               'value': 'Madžarščina'
                                             },
                                           ],
@@ -1285,7 +1284,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   child: Align(
                                     alignment: Alignment.centerRight,
                                     child: _editCircle(
-                                        isDark, borderColor, fillColor,
+                                        isDark, borderColor, pillBg,
                                         onTap: _showHobbiesModal),
                                   ),
                                 ),
@@ -1293,7 +1292,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             ),
                             const SizedBox(height: 12),
                             _buildCategorizedHobbies(lang, isDark, textColor,
-                                fillColor, borderColor),
+                                pillBg, borderColor),
 
                             const SizedBox(height: 30),
 
@@ -1479,7 +1478,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
             );
           }),
-          if (_photoUrls.length < 6)
+          if (_photoUrls.length < 4)
             GestureDetector(
               onTap: _isUploading ? null : _pickImage,
               child: Container(
@@ -1797,88 +1796,96 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       'shisha',
       'cannabis',
     ];
+
+    final productIcons = {
+      'cigarettes': LucideIcons.cigarette,
+      'vape': LucideIcons.wind,
+      'iqos': LucideIcons.zap,
+      'zyn': LucideIcons.square,
+      'shisha': LucideIcons.flame,
+      'cannabis': LucideIcons.leaf,
+    };
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(t('nicotine_title', lang),
-            style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 12),
-        // "None" pill
-        GestureDetector(
-          onTap: () => setState(() {
-            _nicotineUse.clear();
+        // Toggle switch
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(t('nicotine_title', lang),
+              style: TextStyle(color: textColor, fontWeight: FontWeight.w600)),
+          value: _nicotineUseToggle,
+          activeThumbColor: primary,
+          activeTrackColor: primary.withValues(alpha: 0.3),
+          inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+          onChanged: (val) => setState(() {
+            _nicotineUseToggle = val;
+            if (!val) {
+              _nicotineUse.clear();
+            }
             _hasChanges = true;
           }),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            margin: const EdgeInsets.only(bottom: 10),
-            decoration: BoxDecoration(
-              color: _nicotineUse.isEmpty
-                  ? primary.withValues(alpha: 0.15)
-                  : pillBg,
-              borderRadius: BorderRadius.circular(100),
-              border: Border.all(
-                color: _nicotineUse.isEmpty
-                    ? primary
-                    : (isDark ? Colors.white24 : Colors.black12),
-                width: _nicotineUse.isEmpty ? 2 : 1,
-              ),
-            ),
-            child: Text(t('nicotine_none', lang),
-                style: TextStyle(
-                  color: _nicotineUse.isEmpty
-                      ? (isDark ? Colors.white : Colors.black)
-                      : textColor,
-                  fontWeight:
-                      _nicotineUse.isEmpty ? FontWeight.bold : FontWeight.w500,
-                )),
-          ),
         ),
-        // Product chips
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: products.map((key) {
-            final sel = _nicotineUse.contains(key);
-            return GestureDetector(
-              onTap: () => setState(() {
-                if (sel) {
-                  _nicotineUse.remove(key);
-                } else {
-                  _nicotineUse.add(key);
-                }
-                _hasChanges = true;
-              }),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-                decoration: BoxDecoration(
-                  color: sel
-                      ? primary.withValues(alpha: 0.15)
-                      : pillBg,
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(
-                    color: sel
-                        ? primary
-                        : (isDark ? Colors.white24 : Colors.black12),
-                    width: sel ? 2 : 1,
+        const SizedBox(height: 8),
+        // Product pills shown only if toggle is ON
+        if (_nicotineUseToggle)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: products.map((key) {
+              final sel = _nicotineUse.contains(key);
+              final icon = productIcons[key];
+              return GestureDetector(
+                onTap: () => setState(() {
+                  if (sel) {
+                    _nicotineUse.remove(key);
+                  } else {
+                    _nicotineUse.add(key);
+                  }
+                  _hasChanges = true;
+                }),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: sel ? primary.withValues(alpha: 0.15) : pillBg,
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(
+                      color: sel
+                          ? primary
+                          : (isDark ? Colors.white24 : Colors.black12),
+                      width: sel ? 2 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (icon != null) ...[
+                        Icon(
+                          icon,
+                          size: 14,
+                          color: sel
+                              ? (isDark ? Colors.white : Colors.black)
+                              : textColor,
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      Text(t('nicotine_$key', lang),
+                          style: TextStyle(
+                            color: sel
+                                ? (isDark ? Colors.white : Colors.black)
+                                : textColor,
+                            fontWeight:
+                                sel ? FontWeight.bold : FontWeight.w500,
+                            fontSize: 13,
+                          )),
+                    ],
                   ),
                 ),
-                child: Text(t('nicotine_$key', lang),
-                    style: TextStyle(
-                      color: sel
-                          ? (isDark ? Colors.white : Colors.black)
-                          : textColor,
-                      fontWeight: sel ? FontWeight.bold : FontWeight.w500,
-                      fontSize: 13,
-                    )),
-              ),
-            );
-          }).toList(),
-        ),
+              );
+            }).toList(),
+          ),
       ],
     );
   }
@@ -1986,7 +1993,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   /// Pill showing count/value for multi-select rows.
   Widget _multiPill(
-      List<String> values, String lang, bool isDark, Color subColor,
+      List<String> values, String lang, bool isDark, Color subColor, Color pillBg,
       {IconData? Function(String)? iconMapper}) {
     final String display;
     IconData? icon;
@@ -2003,9 +2010,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.black.withValues(alpha: 0.06),
+          color: pillBg,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
         ),
@@ -2030,9 +2035,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _editCircle(bool isDark, Color borderColor, Color fillColor,
+  Widget _editCircle(bool isDark, Color borderColor, Color pillBg,
       {required VoidCallback onTap}) {
-    final primary = Theme.of(context).primaryColor;
+    final primary = Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -2040,7 +2045,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isDark ? primary.withValues(alpha: 0.2) : fillColor,
+          color: pillBg,
           border: Border.all(
               color: isDark ? primary.withValues(alpha: 0.3) : borderColor),
         ),
@@ -2234,25 +2239,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   // ── Age + Zodiac chips ─────────────────────────────────────
-                  Row(
-                    children: [
-                      _AgePill(
-                        '${ZodiacUtils.calcAge(DateTime(year, month, validDay))}',
-                        icon: LucideIcons.cake,
-                        isDark: isDark,
-                      ),
-                      const SizedBox(width: 8),
-                      _AgePill(
-                        t('zodiac_${ZodiacUtils.getZodiacSign(DateTime(year, month, validDay))}',
-                            _lang),
-                        icon: ZodiacUtils.getZodiacIcon(
-                          ZodiacUtils.getZodiacSign(
-                            DateTime(year, month, validDay),
-                          ),
-                        ),
-                        isDark: isDark,
-                      ),
-                    ],
+                  _AgePill(
+                    '${ZodiacUtils.calcAge(DateTime(year, month, validDay))}  ${ZodiacUtils.getZodiacEmoji(DateTime(year, month, validDay)) ?? ''} ${t('zodiac_${ZodiacUtils.getZodiacSign(DateTime(year, month, validDay))}', _lang)}',
+                    icon: LucideIcons.cake,
+                    isDark: isDark,
+                    pillBg: TrembleTheme.getPillColor(
+                      isDark: isDark,
+                      isGenderBased: ref.watch(authStateProvider)?.isGenderBasedColor ?? false,
+                      gender: ref.watch(authStateProvider)?.gender,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   // ── Save / Cancel buttons at bottom ───────────────────────
@@ -2280,12 +2275,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       child: Text(
                         t('save', _lang).isNotEmpty &&
                                 t('save', _lang) != 'save'
-                            ? t('save', _lang).toUpperCase()
-                            : 'SAVE',
+                            ? t('save', _lang)
+                            : 'Save',
                         style: GoogleFonts.instrumentSans(
                           fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          letterSpacing: 1.2,
+                          fontSize: 16,
                         ),
                       ),
                     ),
@@ -2331,7 +2325,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildCategorizedHobbies(String lang, bool isDark, Color textColor,
-      Color fillColor, Color borderColor) {
+      Color pillBg, Color borderColor) {
     if (_hobbies.isEmpty) return const SizedBox.shrink();
 
     // Group all hobbies by category
@@ -2376,7 +2370,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             alignment: WrapAlignment.center,
             children: entry.value
                 .map((h) => _smallHobbyChip(
-                    h, lang, isDark, textColor, fillColor, borderColor))
+                    h, lang, isDark, textColor, pillBg, borderColor))
                 .toList(),
           ),
           const SizedBox(height: 24),
@@ -2386,11 +2380,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _smallHobbyChip(Map<String, dynamic> hobby, String lang, bool isDark,
-      Color textColor, Color fillColor, Color borderColor) {
+      Color textColor, Color pillBg, Color borderColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: fillColor,
+        color: pillBg,
         borderRadius: BorderRadius.circular(100),
         border: Border.all(color: borderColor),
       ),
@@ -2424,19 +2418,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
 // ── Small age/zodiac pill ─────────────────────────────────────────────────────
 class _AgePill extends StatelessWidget {
-  const _AgePill(this.label, {required this.isDark, this.icon});
+  const _AgePill(this.label, {required this.isDark, this.icon, this.pillBg});
   final String label;
   final bool isDark;
   final IconData? icon;
+  final Color? pillBg;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: isDark
+        color: pillBg ?? (isDark
             ? Colors.white.withValues(alpha: 0.12)
-            : Colors.black.withValues(alpha: 0.06),
+            : Colors.black.withValues(alpha: 0.06)),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
             color:

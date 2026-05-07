@@ -530,8 +530,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     final subColor = isDark ? Colors.white70 : Colors.black54;
     final hasPhotos = user.photoUrls.isNotEmpty;
     final photoCount = user.photoUrls.length;
+    final authUser = ref.watch(authStateProvider);
+
+    // Dark mode profile section uses pill color as background
+    final solidDarkBg = isDark
+        ? TrembleTheme.getPillColor(
+            isDark: true,
+            isGenderBased: authUser?.isGenderBasedColor ?? false,
+            gender: authUser?.gender,
+          )
+        : null;
 
     return GlassCard(
+      useGlassEffect: !isDark, // Disable glass effect in dark mode
+      solidDarkBg: solidDarkBg,
       child: Column(
         children: [
           // Hero image with PageView gallery
@@ -702,10 +714,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     final isExpanded = _expandedSection == sectionKey;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A18);
+    final user = ref.watch(authStateProvider);
+
+    // Dark mode expandable sections use pill color as background
+    final solidDarkBg = isDark
+        ? TrembleTheme.getPillColor(
+            isDark: true,
+            isGenderBased: user?.isGenderBasedColor ?? false,
+            gender: user?.gender,
+          )
+        : null;
 
     return GlassCard(
       key: _sectionKeys[sectionKey],
       padding: EdgeInsets.zero, // Padding handled by internal slots
+      useGlassEffect: !isDark, // Disable glass effect in dark mode
+      solidDarkBg: solidDarkBg,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -83,6 +83,7 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
   Widget build(BuildContext context) {
     const primaryRose = Color(0xFFF4436C);
     const warmCream = Color(0xFFFAFAF7);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // waveReceived expands vertically — rounder top corners, pill-like bottom.
     final bool isExpanded = widget.pillState == PillState.waveReceived;
@@ -108,6 +109,8 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
               child: GlassCard(
                 opacity: 0.35,
                 borderRadius: radius,
+                useGlassEffect: !isDark,
+                solidDarkBg: const Color(0xFF2A2A2E),
                 padding: EdgeInsets.symmetric(
                   horizontal: 18,
                   vertical: isExpanded ? 16 : 12,

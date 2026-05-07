@@ -265,72 +265,75 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        child: GlassCard(
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF2A2A2E)
+                : const Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.black.withValues(alpha: 0.08),
+            ),
+          ),
           padding: const EdgeInsets.all(24),
-          opacity: isDark ? 0.2 : 0.5,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(LucideIcons.helpCircle, color: primary, size: 22),
-                  const SizedBox(width: 10),
-                  Text(
-                    t('matches_help_title', lang),
-                    style: GoogleFonts.instrumentSans(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  ),
-                ],
+              Center(
+                child: Icon(LucideIcons.helpCircle, color: primary, size: 22),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                t('matches_help_title', lang),
+                style: GoogleFonts.instrumentSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
               ...sections.map((s) => Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Column(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(s.$1, size: 14, color: primary),
                           ),
-                          child: Icon(s.$1, size: 14, color: primary),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                t(s.$2, lang),
-                                style: GoogleFonts.instrumentSans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: textColor,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                t(s.$3, lang),
-                                style: GoogleFonts.instrumentSans(
-                                  fontSize: 12,
-                                  color: subtextColor,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
+                        const SizedBox(height: 10),
+                        Text(
+                          t(s.$2, lang),
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
                           ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          t(s.$3, lang),
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 12,
+                            color: subtextColor,
+                            height: 1.4,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
                   )),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
+              const SizedBox(height: 16),
+              Center(
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: Text(
@@ -947,150 +950,145 @@ class _SectionPickerSheet extends ConsumerWidget {
     ];
 
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A18).withValues(alpha: 0.97),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: Container(
+      padding: EdgeInsets.fromLTRB(
+          24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A2E),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-          padding: EdgeInsets.fromLTRB(
-              0, 12, 0, MediaQuery.of(context).padding.bottom + 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Drag handle
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+          const SizedBox(height: 20),
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(items.length, (i) {
+                  final (section, icon, labelKey, modeActive) = items[i];
+                  final isSelected = section == activeSection;
+                  final isGym = section == MatchSection.gym;
 
-              ...List.generate(items.length, (i) {
-                final (section, icon, labelKey, modeActive) = items[i];
-                final isSelected = section == activeSection;
-                final isGym = section == MatchSection.gym;
-                final isLast = i == items.length - 1;
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTap: () => onSelect(section),
-                      child: Container(
-                        color: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 16),
-                        child: Row(
-                          children: [
-                            // Icon badge
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? primary.withValues(alpha: 0.15)
-                                    : Colors.white.withValues(alpha: 0.06),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                icon,
-                                size: 18,
-                                color: isSelected ? primary : Colors.white38,
-                              ),
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Section pill button
+                      GestureDetector(
+                        onTap: () => onSelect(section),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 14, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? primary.withValues(alpha: 0.15)
+                                : Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                              color: isSelected
+                                  ? primary
+                                  : Colors.white.withValues(alpha: 0.15),
+                              width: isSelected ? 2 : 1,
                             ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Text(
-                                t(labelKey, lang),
-                                style: GoogleFonts.instrumentSans(
-                                  fontSize: 16,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(icon,
+                                  size: 18,
                                   color: isSelected
-                                      ? Colors.white
-                                      : Colors.white60,
+                                      ? primary
+                                      : Colors.white.withValues(alpha: 0.5)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  t(labelKey, lang),
+                                  style: GoogleFonts.instrumentSans(
+                                    fontSize: 15,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.6),
+                                  ),
                                 ),
                               ),
-                            ),
-                            // Active green dot
-                            if (modeActive)
-                              Container(
-                                width: 8,
-                                height: 8,
-                                margin: const EdgeInsets.only(right: 10),
-                                decoration: const BoxDecoration(
-                                  color: Colors.greenAccent,
-                                  shape: BoxShape.circle,
+                              if (modeActive)
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.greenAccent,
+                                    shape: BoxShape.circle,
+                                  ),
                                 ),
-                              ),
-                            // Selected checkmark
-                            if (isSelected)
-                              Icon(LucideIcons.check, size: 16, color: primary),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Gym sub-row: shown only under gym option
-                    if (isGym)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(78, 0, 24, 10),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: gymState.isActive
-                                  ? _GymActivePill(
-                                      gymName: gymState.activeGymName ?? '')
-                                  : _GymEmptyPill(
-                                      lang: lang,
-                                      onTap: onOpenGymSheet,
-                                      accentColor: gymPillColor,
-                                    ),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: onOpenGymSheet,
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.05),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.10)),
-                                ),
-                                child: const Icon(LucideIcons.listFilter,
-                                    size: 13, color: Colors.white38),
-                              ),
-                            ),
-                          ],
+                              if (isSelected)
+                                Icon(LucideIcons.check,
+                                    size: 16, color: primary),
+                            ],
+                          ),
                         ),
                       ),
 
-                    // Divider (except last)
-                    if (!isLast)
-                      Divider(
-                        height: 0,
-                        thickness: 0.5,
-                        color: Colors.white.withValues(alpha: 0.06),
-                        indent: 24,
-                        endIndent: 24,
-                      ),
-                  ],
-                );
-              }),
-            ],
+                      // Gym sub-pills (only for gym section)
+                      if (isGym)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: gymState.isActive
+                                    ? _GymActivePill(
+                                        gymName:
+                                            gymState.activeGymName ?? '')
+                                    : _GymEmptyPill(
+                                        lang: lang,
+                                        onTap: onOpenGymSheet,
+                                        accentColor: gymPillColor,
+                                      ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: onOpenGymSheet,
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.06),
+                                    borderRadius: BorderRadius.circular(100),
+                                    border: Border.all(
+                                        color: Colors.white.withValues(
+                                            alpha: 0.15)),
+                                  ),
+                                  child: const Icon(LucideIcons.listFilter,
+                                      size: 16,
+                                      color: Colors.white54),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      if (i < items.length - 1)
+                        const SizedBox(height: 8),
+                    ],
+                  );
+                }),
+              ),
+            ),
           ),
-        ),
+        ],
+      ),
       ),
     );
   }

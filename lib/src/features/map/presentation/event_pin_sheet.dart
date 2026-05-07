@@ -418,10 +418,10 @@ class _ShareButton extends StatelessWidget {
         Share.share(text);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         decoration: BoxDecoration(
           color: TrembleTheme.rose,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(100),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -455,12 +455,12 @@ class _UnlockButton extends StatelessWidget {
       // Paywall is blocked (BLOCKER-003). Button is a no-op placeholder.
       onTap: () {},
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         decoration: BoxDecoration(
           color: isDark
               ? Colors.white.withValues(alpha: 0.06)
               : Colors.black.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: isDark
                 ? Colors.white.withValues(alpha: 0.12)

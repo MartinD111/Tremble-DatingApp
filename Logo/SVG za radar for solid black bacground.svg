@@ -1,0 +1,79 @@
+<style>
+    @keyframes liquid-pulse {
+        0% { 
+            opacity: 0.06;
+            stroke-width: 9;
+        }
+        30% { 
+            opacity: 1; 
+            stroke-width: 10;
+            filter: url(#bloom);
+        }
+        60%, 100% { 
+            opacity: 0.06;
+            stroke-width: 9;
+        }
+    }
+
+    .wave-inner { 
+        animation: liquid-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+        animation-delay: 0s;
+    }
+
+    .wave-mid { 
+        animation: liquid-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+        animation-delay: 0.35s;
+    }
+
+    .wave-outer { 
+        animation: liquid-pulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+        animation-delay: 0.7s;
+    }
+</style>
+
+<filter id="bloom" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="1.1" result="blur"/>
+    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+</filter>
+
+<!-- LEFT HEART CURVE -->
+<path 
+    d="M -4,70 C -34,60 -64,30 -64,0 C -64,-35 -34,-50 -4,-20"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="10"
+    stroke-linecap="round"
+/>
+
+<!-- RIGHT OUTER WAVE -->
+<path 
+    class="wave-outer"
+    d="M 12,-20 C 42,-50 72,-35 72,0 C 72,30 42,60 12,70"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="10"
+    stroke-linecap="round"
+    opacity="0.06"
+/>
+
+<!-- RIGHT MIDDLE WAVE -->
+<path 
+    class="wave-mid"
+    d="M 12,5 C 29,-15 46,-5 46,12 C 46,28 29,42 12,50"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="10"
+    stroke-linecap="round"
+    opacity="0.06"
+/>
+
+<!-- RIGHT INNER WAVE -->
+<path 
+    class="wave-inner"
+    d="M 12,22 C 16,12 26,15 26,21 C 26,27 16,32 12,37"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="10"
+    stroke-linecap="round"
+    opacity="0.06"
+/>

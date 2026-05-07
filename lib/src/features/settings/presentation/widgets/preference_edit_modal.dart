@@ -167,7 +167,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: isSelected
@@ -194,20 +194,21 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                           (isDark ? Colors.white : Colors.black87))),
               const SizedBox(width: 12),
             ],
-            Text(
-              label,
-              style: GoogleFonts.instrumentSans(
-                color: labelColor,
-                fontWeight: isSelected || isRoseLabel
-                    ? FontWeight.bold
-                    : isMuted
-                        ? FontWeight.w400
-                        : FontWeight.w500,
-                // Never italic — removed per design spec
-                fontStyle: FontStyle.normal,
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.instrumentSans(
+                  color: labelColor,
+                  fontWeight: isSelected || isRoseLabel
+                      ? FontWeight.bold
+                      : isMuted
+                          ? FontWeight.w400
+                          : FontWeight.w500,
+                  // Never italic — removed per design spec
+                  fontStyle: FontStyle.normal,
+                ),
               ),
             ),
-            const Spacer(),
             if (isSelected)
               Icon(LucideIcons.checkCircle, color: brandRose, size: 20),
             if (showArrow)
@@ -233,6 +234,14 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
     final textColor = isDark ? Colors.white : Colors.black87;
     final brandRose = Theme.of(context).colorScheme.primary;
     final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
+
+    // Dark mode container background — use pill color (consistent with profile pills)
+    final containerBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: widget.isGenderBased,
+      gender: widget.gender,
+    );
+    final bgColor = isDark ? containerBg : Colors.white;
 
     final hasChanges = _hasChanges();
     return PopScope(
@@ -260,7 +269,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
           padding: EdgeInsets.fromLTRB(
               24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            color: bgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
@@ -296,7 +305,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                 ],
               ),
               const SizedBox(height: 20),
-              // Regular options — show rowIcon if provided, or per-option icon
+              // Regular options — full-width list
               ...widget.options.map((opt) => _optionPill(
                     label: opt['label'] as String,
                     isSelected: opt['value'] == _pending,
@@ -307,7 +316,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                     icon: opt['icon'] as IconData? ?? widget.rowIcon,
                     iconColor: opt['iconColor'] as Color?,
                   )),
-              // "Vseeno mi je" — clears the preference (no icon, no italic)
+              // "Vseeno mi je" — clears the preference
               _optionPill(
                 label: t('partner_pref_idc', lang),
                 isSelected: _pending == _none,
@@ -379,7 +388,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                       onPressed: () => Navigator.pop(context),
                       child: Text(
                         t('cancel', lang),
-                        style: TextStyle(
+                        style: GoogleFonts.instrumentSans(
                             color: isDark ? Colors.white70 : Colors.black54,
                             fontWeight: FontWeight.bold),
                       ),
@@ -402,10 +411,16 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                                 ? _otherController.text
                                 : _pending);
                         widget.onUpdate(finalVal);
+                        TopNotification.show(
+                          context: widget.outerContext,
+                          message: t('profile_updated', lang),
+                          icon: LucideIcons.checkCircle,
+                        );
                         Navigator.pop(context);
                       },
                       child: Text(t('save', lang),
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                          style: GoogleFonts.instrumentSans(
+                              fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -530,7 +545,7 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
           padding: EdgeInsets.fromLTRB(
               24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            color: isDark ? TrembleTheme.getPillColor(isDark: true, isGenderBased: false, gender: null) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
@@ -624,7 +639,7 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
                       ),
                       onPressed: () => widget.onSave(_values),
                       child: Text(t('save', lang),
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                          style: GoogleFonts.instrumentSans(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -776,6 +791,14 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
     final brandRose = Theme.of(context).colorScheme.primary;
     final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
 
+    // Dark mode container background — use pill color (consistent with profile pills)
+    final containerBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: widget.isGenderBased,
+      gender: widget.gender,
+    );
+    final bgColor = isDark ? containerBg : Colors.white;
+
     final hasChanges = _hasChanges();
 
     return PopScope(
@@ -794,7 +817,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
         padding: EdgeInsets.fromLTRB(
             24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+          color: bgColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
@@ -885,7 +908,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
                     ),
                     onPressed: () => widget.onSave(_selected),
                     child: Text(t('save', lang),
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                        style: GoogleFonts.instrumentSans(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -972,6 +995,14 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
     final brandRose = Theme.of(context).colorScheme.primary;
     final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
 
+    // Dark mode container background — use pill color (consistent with profile pills)
+    final containerBg = TrembleTheme.getPillColor(
+      isDark: isDark,
+      isGenderBased: widget.isGenderBased,
+      gender: widget.gender,
+    );
+    final bgColor = isDark ? containerBg : Colors.white;
+
     final hasChanges = _hasChanges();
     return PopScope(
       canPop: !hasChanges,
@@ -995,7 +1026,7 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
           padding: EdgeInsets.fromLTRB(
               24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            color: bgColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
@@ -1100,7 +1131,7 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
                           ? () => widget.onSave(_selected!)
                           : null,
                       child: Text(t('save', lang),
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                          style: GoogleFonts.instrumentSans(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -1135,7 +1166,7 @@ Future<void> showSelectedItemsModal({
       constraints:
           BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        color: isDark ? TrembleTheme.getPillColor(isDark: true, isGenderBased: false, gender: null) : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(

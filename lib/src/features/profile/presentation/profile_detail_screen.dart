@@ -316,37 +316,11 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                                       item != 'friendship' &&
                                       item != 'meeting' &&
                                       item != 'spontaneous_meeting')
-                                  .map((item) => Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: (isDark
-                                                  ? Colors.white
-                                                  : Colors.black)
-                                              .withValues(alpha: 0.08),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          border: Border.all(
-                                              color: (isDark
-                                                      ? Colors.white
-                                                      : Colors.black)
-                                                  .withValues(alpha: 0.15)),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                                IconUtils.getLookingForIcon(
-                                                    item),
-                                                size: 12,
-                                                color: iconColor),
-                                            const SizedBox(width: 4),
-                                            Text(t(item, lang),
-                                                style: TextStyle(
-                                                    color: subColor,
-                                                    fontSize: 12)),
-                                          ],
-                                        ),
+                                  .map((item) => _PreferencePill(
+                                        icon: IconUtils.getLookingForIcon(item),
+                                        label: t(item, lang),
+                                        isGenderBased: isGenderBasedColor,
+                                        gender: gender,
                                       ))
                                   .toList(),
                             ),
@@ -358,7 +332,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                         // ── Info badges ────────────────────────────────────────────
                         Center(
                             child: _buildInfoBadges(
-                                match, isDark, subColor, iconColor, lang)),
+                                match, isDark, subColor, iconColor, lang,
+                                isGenderBasedColor, gender)),
 
                         const SizedBox(height: 24),
 
@@ -533,8 +508,14 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     );
   }
 
-  Widget _buildInfoBadges(MatchProfile match, bool isDark, Color subColor,
-      Color iconColor, String lang) {
+  Widget _buildInfoBadges(
+      MatchProfile match,
+      bool isDark,
+      Color subColor,
+      Color iconColor,
+      String lang,
+      bool isGenderBasedColor,
+      String? gender) {
     final items = <Widget>[];
 
     void addBadge(IconData icon, String text, [Color? color]) {
@@ -566,11 +547,20 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       addBadge(LucideIcons.graduationCap, match.school!);
     }
     if (match.hairColor != null) {
-      addBadge(Icons.circle, _formatChipText(t(match.hairColor!, lang)),
-          IconUtils.getHairColor(match.hairColor!));
+      items.add(_PreferencePill(
+        icon: Icons.circle,
+        label: _formatChipText(t(match.hairColor!, lang)),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
+      ));
     }
     if (match.ethnicity != null) {
-      addBadge(LucideIcons.users, t('ethnicity_${match.ethnicity}', lang));
+      items.add(_PreferencePill(
+        icon: LucideIcons.users,
+        label: t('ethnicity_${match.ethnicity}', lang),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
+      ));
     }
 
     return Wrap(
