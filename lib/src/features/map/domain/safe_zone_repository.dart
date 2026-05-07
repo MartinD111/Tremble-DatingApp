@@ -51,6 +51,7 @@ class SafeZoneRepository {
 
     final Set<String> blockedGeohashes = {};
     for (final zone in zones) {
+      if (!zone.isActive) continue;
       // Precision 6 is ~1.2km x 600m. Center + 8 neighbors provides a large enough
       // blanket to cover small radiuses (e.g. 500m) with 0 exact-location leakage.
       final geoHash = GeoHash.fromDecimalDegrees(zone.longitude, zone.latitude,
