@@ -143,6 +143,7 @@ class GeoService {
       final safeZoneRepo = SafeZoneRepository();
       final safeZones = await safeZoneRepo.getSafeZones();
       for (final zone in safeZones) {
+        if (!zone.isActive) continue;
         final distance = Geolocator.distanceBetween(
           pos.latitude,
           pos.longitude,
