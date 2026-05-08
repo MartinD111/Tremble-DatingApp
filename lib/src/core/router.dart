@@ -18,6 +18,8 @@ import '../features/profile/presentation/profile_detail_screen.dart';
 import '../features/profile/presentation/profile_card_preview.dart';
 import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/safety/presentation/blocked_users_screen.dart';
+import '../features/safety/presentation/anonymous_mode_screen.dart';
+import '../features/safety/presentation/safe_zones_screen.dart';
 import '../features/match/presentation/match_reveal_screen.dart';
 import '../features/match/domain/match.dart';
 import '../shared/ui/gradient_scaffold.dart';
@@ -398,6 +400,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/blocked-users',
         builder: (context, state) => const BlockedUsersScreen(),
+      ),
+      GoRoute(
+        path: '/anonymous-mode',
+        builder: (context, state) => const AnonymousModeScreen(),
+      ),
+      GoRoute(
+        path: '/safe-zones',
+        builder: (context, state) => const SafeZonesScreen(),
       ),
       GoRoute(
         path: '/run-recap',

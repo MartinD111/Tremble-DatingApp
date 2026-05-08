@@ -48,11 +48,11 @@ class TrembleHeader extends StatelessWidget {
                   child: Text(
                     title,
                     textAlign: TextAlign.center,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TrembleTheme.displayFont(
                       color: textColor,
-                      fontSize: 32, // Standardized to 32px
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

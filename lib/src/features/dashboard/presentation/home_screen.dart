@@ -771,113 +771,95 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Left balance spacer (equal to right button width to ensure center alignment)
-                  const SizedBox(width: 44),
+                  // Left: Mode icon
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final selectedMode =
+                          ref.watch(selectedRadarModeProvider);
+                      final gymState = ref.watch(gymModeControllerProvider);
+                      final runState = ref.watch(runModeControllerProvider);
+                      final eventState =
+                          ref.watch(eventModeControllerProvider);
+                      final lang = ref.watch(appLanguageProvider);
 
-                  // Center: Grouped Logo + Text
-                  Expanded(
-                    child: Consumer(
-                      builder: (context, ref, child) {
-                        final selectedMode =
-                            ref.watch(selectedRadarModeProvider);
-                        final gymState = ref.watch(gymModeControllerProvider);
-                        final runState = ref.watch(runModeControllerProvider);
-                        final eventState =
-                            ref.watch(eventModeControllerProvider);
-                        final lang = ref.watch(appLanguageProvider);
+                      final isActive = switch (selectedMode) {
+                        RadarModeKind.gym => gymState.isActive,
+                        RadarModeKind.run => runState.isActive,
+                        RadarModeKind.event => eventState.isActive,
+                      };
 
-                        final isActive = switch (selectedMode) {
-                          RadarModeKind.gym => gymState.isActive,
-                          RadarModeKind.run => runState.isActive,
-                          RadarModeKind.event => eventState.isActive,
-                        };
+                      final (modeIcon, modeColor) = switch (selectedMode) {
+                        RadarModeKind.gym => (
+                            LucideIcons.dumbbell,
+                            const Color(0xFFF5C842)
+                          ),
+                        RadarModeKind.run => (
+                            LucideIcons.footprints,
+                            const Color(0xFFF4436C)
+                          ),
+                        RadarModeKind.event => (
+                            LucideIcons.calendar,
+                            const Color(0xFFF5C842)
+                          ),
+                      };
 
-                        final (modeIcon, modeColor) = switch (selectedMode) {
-                          RadarModeKind.gym => (
-                              LucideIcons.dumbbell,
-                              const Color(0xFFF5C842)
-                            ),
-                          RadarModeKind.run => (
-                              LucideIcons.footprints,
-                              const Color(0xFFF4436C)
-                            ),
-                          RadarModeKind.event => (
-                              LucideIcons.calendar,
-                              const Color(0xFFF5C842)
-                            ),
-                        };
-
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _PulseIcon(
-                              icon: modeIcon,
-                              color: modeColor,
-                              isActive: isActive,
-                              onTap: () {
-                                if (isActive) {
-                                  // Deactivate directly
-                                  switch (selectedMode) {
-                                    case RadarModeKind.gym:
-                                      ref
-                                          .read(gymModeControllerProvider
-                                              .notifier)
-                                          .deactivate();
-                                      break;
-                                    case RadarModeKind.run:
-                                      ref
-                                          .read(runModeControllerProvider
-                                              .notifier)
-                                          .deactivate();
-                                      break;
-                                    case RadarModeKind.event:
-                                      ref
-                                          .read(eventModeControllerProvider
-                                              .notifier)
-                                          .deactivate();
-                                      break;
-                                  }
+                      return _PulseIcon(
+                        icon: modeIcon,
+                        color: modeColor,
+                        isActive: isActive,
+                        onTap: () {
+                          if (isActive) {
+                            switch (selectedMode) {
+                              case RadarModeKind.gym:
+                                ref
+                                    .read(gymModeControllerProvider.notifier)
+                                    .deactivate();
+                                break;
+                              case RadarModeKind.run:
+                                ref
+                                    .read(runModeControllerProvider.notifier)
+                                    .deactivate();
+                                break;
+                              case RadarModeKind.event:
+                                ref
+                                    .read(eventModeControllerProvider.notifier)
+                                    .deactivate();
+                                break;
+                            }
+                          } else {
+                            showModeInfoDialog(
+                              context: context,
+                              ref: ref,
+                              mode: selectedMode,
+                              lang: lang,
+                              isActive: false,
+                              onActivate: () {
+                                if (selectedMode == RadarModeKind.run) {
+                                  ref
+                                      .read(runModeControllerProvider.notifier)
+                                      .activate();
+                                } else if (selectedMode == RadarModeKind.gym) {
+                                  Navigator.pop(context);
+                                  GymModeSheet.show(context);
                                 } else {
-                                  // Show info dialog to allow activation/selection
-                                  showModeInfoDialog(
-                                    context: context,
-                                    ref: ref,
-                                    mode: selectedMode,
-                                    lang: lang,
-                                    isActive: false,
-                                    onActivate: () {
-                                      if (selectedMode == RadarModeKind.run) {
-                                        ref
-                                            .read(runModeControllerProvider
-                                                .notifier)
-                                            .activate();
-                                      } else if (selectedMode ==
-                                          RadarModeKind.gym) {
-                                        Navigator.pop(
-                                            context); // Close info dialog
-                                        GymModeSheet.show(context);
-                                      } else {
-                                        // For Event, stay simple for now or show sheet if it exists
-                                        Navigator.pop(context);
-                                      }
-                                    },
-                                  );
+                                  Navigator.pop(context);
                                 }
                               },
-                              onLongPress: () => _showModeSelector(context),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Tremble',
-                              style: TrembleTheme.displayFont(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
+                            );
+                          }
+                        },
+                        onLongPress: () => _showModeSelector(context),
+                      );
+                    },
+                  ),
+
+                  // Center: Tremble text
+                  Text(
+                    'Tremble',
+                    style: TrembleTheme.displayFont(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
 
@@ -1192,7 +1174,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                               ? FontWeight.w700
                                               : FontWeight.w600,
                                           color: isSelected
-                                              ? (isDark ? Colors.white : color)
+                                              ? (isDark
+                                                  ? Colors.white
+                                                  : TrembleTheme.rose)
                                               : (isDark
                                                   ? Colors.white
                                                   : Colors.black87),
@@ -1336,6 +1320,14 @@ class _PulseIconState extends State<_PulseIcon>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inactiveIconColor =
+        isDark ? Colors.white38 : Colors.black26;
+    final inactiveBorderColor =
+        isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.08);
+    final inactiveBgColor =
+        isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04);
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: widget.onTap,
@@ -1348,21 +1340,24 @@ class _PulseIconState extends State<_PulseIcon>
             height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color:
-                  widget.color.withValues(alpha: widget.isActive ? 0.2 : 0.12),
+              color: widget.isActive
+                  ? widget.color.withValues(alpha: 0.2)
+                  : inactiveBgColor,
               border: Border.all(
-                color:
-                    widget.color.withValues(alpha: widget.isActive ? 0.6 : 0.3),
+                color: widget.isActive
+                    ? widget.color.withValues(alpha: 0.6)
+                    : inactiveBorderColor,
                 width: 1.5,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.color
-                      .withValues(alpha: widget.isActive ? 0.2 : 0.1),
-                  blurRadius: widget.isActive ? 12 * _pulse.value : 8,
-                  spreadRadius: widget.isActive ? 2 * _pulse.value : 0,
-                ),
-              ],
+              boxShadow: widget.isActive
+                  ? [
+                      BoxShadow(
+                        color: widget.color.withValues(alpha: 0.2),
+                        blurRadius: 12 * _pulse.value,
+                        spreadRadius: 2 * _pulse.value,
+                      ),
+                    ]
+                  : [],
             ),
             child: Transform.scale(
               scale: widget.isActive ? _pulse.value : 1.0,
@@ -1370,7 +1365,7 @@ class _PulseIconState extends State<_PulseIcon>
                 child: Icon(
                   widget.icon,
                   size: 20,
-                  color: widget.color,
+                  color: widget.isActive ? widget.color : inactiveIconColor,
                 ),
               ),
             ),
