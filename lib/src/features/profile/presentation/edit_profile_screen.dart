@@ -1712,9 +1712,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         return ChoiceChip(
           avatar: Icon(icon,
               size: 16,
-              color: sel
-                  ? brandRose
-                  : (isDark ? Colors.white70 : Colors.black54)),
+              color:
+                  sel ? brandRose : (isDark ? Colors.white70 : Colors.black54)),
           label: Text(label),
           selected: sel,
           onSelected: (s) {
@@ -1734,9 +1733,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ? Colors.white.withValues(alpha: 0.1)
               : Colors.black.withValues(alpha: 0.06),
           labelStyle: TextStyle(
-              color: sel
-                  ? brandRose
-                  : (isDark ? Colors.white : Colors.black87),
+              color: sel ? brandRose : (isDark ? Colors.white : Colors.black87),
               fontWeight: FontWeight.bold),
           shape: StadiumBorder(
               side: BorderSide(
@@ -1773,9 +1770,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         return ChoiceChip(
           avatar: Icon(icon,
               size: 16,
-              color: sel
-                  ? brandRose
-                  : (isDark ? Colors.white70 : Colors.black54)),
+              color:
+                  sel ? brandRose : (isDark ? Colors.white70 : Colors.black54)),
           label: Text(label),
           selected: sel,
           onSelected: (s) {
@@ -1789,9 +1785,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ? Colors.white.withValues(alpha: 0.1)
               : Colors.black.withValues(alpha: 0.06),
           labelStyle: TextStyle(
-              color: sel
-                  ? brandRose
-                  : (isDark ? Colors.white : Colors.black87),
+              color: sel ? brandRose : (isDark ? Colors.white : Colors.black87),
               fontWeight: FontWeight.bold),
           shape: StadiumBorder(
               side: BorderSide(
@@ -2293,20 +2287,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(
-                                color: isDark
-                                    ? Colors.white38
-                                    : Colors.black26),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 16),
+                                color:
+                                    isDark ? Colors.white38 : Colors.black26),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: const StadiumBorder(),
                           ),
                           onPressed: () => Navigator.pop(ctx),
                           child: Text(
                             t('cancel', _lang),
                             style: GoogleFonts.instrumentSans(
-                                color: isDark
-                                    ? Colors.white70
-                                    : Colors.black54,
+                                color: isDark ? Colors.white70 : Colors.black54,
                                 fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -2317,8 +2307,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: brandRose,
                             foregroundColor: Colors.white,
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(28)),
                           ),
@@ -2335,8 +2324,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           child: Text(
                             t('save', _lang),
                             style: GoogleFonts.instrumentSans(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16),
+                                fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                         ),
                       ),

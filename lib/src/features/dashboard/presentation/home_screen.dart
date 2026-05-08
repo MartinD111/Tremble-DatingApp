@@ -774,12 +774,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // Left: Mode icon
                   Consumer(
                     builder: (context, ref, child) {
-                      final selectedMode =
-                          ref.watch(selectedRadarModeProvider);
+                      final selectedMode = ref.watch(selectedRadarModeProvider);
                       final gymState = ref.watch(gymModeControllerProvider);
                       final runState = ref.watch(runModeControllerProvider);
-                      final eventState =
-                          ref.watch(eventModeControllerProvider);
+                      final eventState = ref.watch(eventModeControllerProvider);
                       final lang = ref.watch(appLanguageProvider);
 
                       final isActive = switch (selectedMode) {
@@ -1321,12 +1319,13 @@ class _PulseIconState extends State<_PulseIcon>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final inactiveIconColor =
-        isDark ? Colors.white38 : Colors.black26;
-    final inactiveBorderColor =
-        isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.08);
-    final inactiveBgColor =
-        isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04);
+    final inactiveIconColor = isDark ? Colors.white38 : Colors.black26;
+    final inactiveBorderColor = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.black.withValues(alpha: 0.08);
+    final inactiveBgColor = isDark
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.black.withValues(alpha: 0.04);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

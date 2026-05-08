@@ -354,8 +354,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
                         // ── Hobbies ────────────────────────────────────────────────
                         if (match.hobbies.isNotEmpty)
-                          _buildHobbySection(
-                              match, isDark, textColor, subColor, isGenderBasedColor, gender),
+                          _buildHobbySection(match, isDark, textColor, subColor,
+                              isGenderBasedColor, gender),
 
                         const SizedBox(height: 24),
 
@@ -582,8 +582,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     }
   }
 
-  Widget _buildHobbySection(
-      MatchProfile match, bool isDark, Color textColor, Color subColor, bool isGenderBasedColor, String? gender) {
+  Widget _buildHobbySection(MatchProfile match, bool isDark, Color textColor,
+      Color subColor, bool isGenderBasedColor, String? gender) {
     final lang = ref.watch(appLanguageProvider);
     final userHobbies = match.hobbies;
 
@@ -633,8 +633,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
                 runSpacing: 6,
                 alignment: WrapAlignment.center,
                 children: entry.value
-                    .map((h) =>
-                        _PreferencePill(
+                    .map((h) => _PreferencePill(
                           label: '${h['emoji']} ${h['name']}',
                           isGenderBased: isGenderBasedColor,
                           gender: gender,

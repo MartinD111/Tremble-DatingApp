@@ -1,5 +1,5 @@
 # TREMBLE — CONSOLIDATED MASTER IMPLEMENTATION PLAN
-**Last Updated:** 2026-04-29
+**Last Updated:** 2026-05-08
 > This document is the single source of truth for the remaining Tremble features, technical implementation details, store submission phases, metadata, and strict project policies. It replaces all fragmented implementation plans and policy files.
 
 ---
@@ -49,19 +49,20 @@
 ### Faza B — Teden 4–8
 4. **F11** — Smoking preferences (profil field + filter) ✅
 5. **F3** — Match categories + history filters ✅
-6. **F2** — Event mode matching ✅
-7. **F10** — Gym Mode (zahteva F1) ✅
+*   **F2** — Event mode matching ✅
+*   **F10** — Gym Mode (zahteva F1) ✅
 
 ### Faza C — Teden 9–11
 8. **F4** — Hot/Cold navigation (pure Flutter, brez infra) ✅
 9. **F6** — Run Club (native activity detection, ephemeral proximity) ✅
+10. **F10** — Gym Mode (zahteva F1) ✅
 
 ### Faza D — Teden 14–16
 11. **F7** — Valentine Promo (time-gated, deploy pred 1. februarjem)
 
 ### Faza E — Next (Expansion)
 12. **F12** — Pulse Intercept (Phone & Ephemeral Photo) ✅ DONE
-13. **F13** — Stealth & Safety (Anonymity Mode + Geofencing Safe Zones) ⏳ Planning
+13. **F13** — Stealth & Safety (Anonymity Mode + Geofencing Safe Zones) ✅ DONE
 
 ---
 

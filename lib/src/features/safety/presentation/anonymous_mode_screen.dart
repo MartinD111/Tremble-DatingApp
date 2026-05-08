@@ -33,8 +33,7 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      final opacity =
-          (1.0 - (_scrollController.offset / 60)).clamp(0.0, 1.0);
+      final opacity = (1.0 - (_scrollController.offset / 60)).clamp(0.0, 1.0);
       if (_titleOpacity.value != opacity) _titleOpacity.value = opacity;
     });
   }
@@ -84,7 +83,6 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
                 _InfoBlock(
                   icon: LucideIcons.eyeOff,
                   title: 'What Anonymous Mode does',
@@ -95,7 +93,6 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
                   cardBg: cardBg,
                 ),
                 const SizedBox(height: 12),
-
                 _InfoBlock(
                   icon: LucideIcons.lock,
                   title: 'Your contacts stay on your device',
@@ -106,7 +103,6 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
                   cardBg: cardBg,
                 ),
                 const SizedBox(height: 12),
-
                 _InfoBlock(
                   icon: LucideIcons.server,
                   title: 'No storage, no logs',
@@ -117,7 +113,6 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
                   cardBg: cardBg,
                 ),
                 const SizedBox(height: 12),
-
                 _InfoBlock(
                   icon: LucideIcons.userX,
                   title: 'Mutual — they cannot find you either',
@@ -127,9 +122,7 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
                   subColor: subColor,
                   cardBg: cardBg,
                 ),
-
                 Divider(color: dividerColor, height: 40),
-
                 if (_hiddenCount != null) ...[
                   Container(
                     width: double.infinity,
@@ -147,8 +140,8 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            _t('anonymity_active').replaceAll(
-                                '{count}', _hiddenCount.toString()),
+                            _t('anonymity_active')
+                                .replaceAll('{count}', _hiddenCount.toString()),
                             style: GoogleFonts.instrumentSans(
                               color: Colors.green,
                               fontWeight: FontWeight.w600,
@@ -161,7 +154,6 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
                   ),
                   const SizedBox(height: 24),
                 ],
-
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -213,7 +205,6 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
               ],
             ),
           ),
-
           ValueListenableBuilder<double>(
             valueListenable: _titleOpacity,
             builder: (context, opacity, _) => TrembleHeader(

@@ -1,18 +1,16 @@
-## Session State — [2026-05-08 14:41]
-- Active Task: UI Polish — Modal style unification
+## Session State — 2026-05-08 22:55
+- Active Task: Roadmap Sync & Safety Finalization
 - Environment: Dev
-- Modified Files:
-  - `lib/src/features/auth/presentation/widgets/registration_steps/hobbies_step.dart`
-  - `lib/src/features/profile/presentation/edit_profile_screen.dart`
-- Open Problems: None
-- System Status: Zero analyze errors. Ready for device test.
+- Modified Files: tasks/MASTER_PLAN.md, tasks/todo.md, tasks/context.md
+- Open Problems: LEGAL (Blocks RevenueCat)
+- System Status: Build passing / Analyze clean
 
 ## Session Handoff
 - Completed:
-  - **Modal style unification** — All edit pop-up modals now share the exact same visual style as `showPreferenceEditModal` (the "Looking for" reference):
-    - **Custom Hobby dialog** (`_showAddHobbyDialog`): Replaced `AlertDialog` (hardcoded dark bg, floating dialog) with a `showModalBottomSheet` that has: `TrembleTheme.getPillColor` background, drag handle, icon+title row, pill-shaped text fields, standard OutlinedButton Cancel + rose ElevatedButton Add row.
-    - **Date of Birth picker** (`_showAgePickerModal`): Replaced hardcoded `Color(0xFF1A1A2E)` bg with `TrembleTheme.getPillColor` (theme + gender-aware). Replaced the stacked TextButton/ElevatedButton layout with the standard `Row(OutlinedButton Cancel, ElevatedButton Save)` pattern.
-  - **Previous session also completed** (Hobby edit pop-up style, hobby pill color match, category dropdown pill shape — all already done).
-- In Progress: None
-- Blocked: None
-- Next Action: Physical device verification of modal styles across dark/light/gender-based themes.
+    - Synced documentation (MASTER_PLAN, todo) with real codebase state.
+    - Verified F6 (Run Club) implementation.
+    - Verified F10 (Gym Mode) implementation.
+    - Finalized F13 (Stealth & Safety) implementation and verified logic.
+- In Progress: Phase D (Valentine Promo)
+- Blocked: F8 (Pricing) due to LEGAL.
+- Next Action: Implement Valentine Promo (F7) logic and UI.

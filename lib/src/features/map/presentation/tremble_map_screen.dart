@@ -513,12 +513,12 @@ Offset _latLngToPixel(LatLng point, LatLngBounds bounds, Size canvasSize) {
   final lngRange = bounds.northeast.longitude - bounds.southwest.longitude;
   if (latRange == 0 || lngRange == 0) return Offset.zero;
 
-  final x =
-      (point.longitude - bounds.southwest.longitude) / lngRange * canvasSize.width;
+  final x = (point.longitude - bounds.southwest.longitude) /
+      lngRange *
+      canvasSize.width;
   // Latitude increases upward; canvas y increases downward.
-  final y =
-      (1.0 - (point.latitude - bounds.southwest.latitude) / latRange) *
-          canvasSize.height;
+  final y = (1.0 - (point.latitude - bounds.southwest.latitude) / latRange) *
+      canvasSize.height;
   return Offset(x, y);
 }
 
@@ -579,8 +579,7 @@ class _FogPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_FogPainter oldDelegate) {
-    return oldDelegate.bounds != bounds ||
-        oldDelegate.canvasSize != canvasSize;
+    return oldDelegate.bounds != bounds || oldDelegate.canvasSize != canvasSize;
   }
 }
 
@@ -657,7 +656,8 @@ class _MapPill extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isDark;
 
-  const _MapPill({super.key, required this.text, required this.isDark, this.onTap});
+  const _MapPill(
+      {super.key, required this.text, required this.isDark, this.onTap});
 
   @override
   Widget build(BuildContext context) {

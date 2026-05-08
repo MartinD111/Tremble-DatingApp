@@ -1,6 +1,6 @@
 # Tremble - Project TODOs
 
-## Active Focus: Milestone v2.0 — Foundation & Phase A
+## Active Focus: Milestone v2.0 — Phase D & Launch Polish
 
 ### 1. Planning & Consolidation ✅ COMPLETE (2026-04-29)
 - [x] Consolidate fragmented plans (`tremble-impl-plan-v2`, `store_submission`, `handoff_ios_radar`, etc.) into `MASTER_PLAN.md`.
@@ -25,6 +25,7 @@
 - [ ] **F1 Verifikacija:** Zaženi z `--dart-define=PLACES_KEY_DEV=[REDACTED]` in testiraj na napravi.
 - [x] **F11 (Nicotine):** Migrated legacy smoking boolean to flexible multi-select nicotine list logic. ✅ COMPLETE
 - [x] **F3 (Match Categories):** Implemented Event, Activity, Gym tabs + history date filters. ✅ COMPLETE
+- [x] **F10 (Gym Mode):** Native Geofencing, GymModeSheet, and Dwell Service. ✅ COMPLETE
 
 ### 5. Infrastructure & Business Blockers
 - [ ] **LEGAL:** Company registration and legal status for RevenueCat (Blocks F8).
@@ -34,21 +35,21 @@
 - [ ] **MARTIN:** Register Martin's debug token in Firebase App Check (tremble-dev) before testing Cloud Functions.
 
 ### 6. Phase F6 Execution (Run Club) ⏳ NEXT
-- [ ] **F6 Native:** Bridge `CMMotionActivityManager` (iOS) & `Activity Recognition` (Android).
-- [ ] **F6 Logic:** Implement 10-min TTL in Firestore handshake function.
-- [ ] **F6 UI:** Build **Live Run Card** for Dashboard (blur/pulse effect).
-- [ ] **F6 UI:** Implement **Post-Run Recap** screen with 10-min countdown.
-- [ ] **F6 Interaction:** Implement **Mid-Run Intercept** notification override.
-- [ ] **F6 History:** Add "Run Club" tags and context to match history cards.
+- [x] **F6 Native:** Bridge `CMMotionActivityManager` (iOS) & `Activity Recognition` (Android). ✅
+- [x] **F6 Logic:** Implement 10-min TTL in Firestore handshake function. ✅
+- [x] **F6 UI:** Build **Live Run Card** for Dashboard (blur/pulse effect). ✅
+- [x] **F6 UI:** Implement **Post-Run Recap** screen with 10-min countdown. ✅
+- [x] **F6 Interaction:** Implement **Mid-Run Intercept** notification override. ✅
+- [x] **F6 History:** Add "Run Club" tags and context to match history cards. ✅
 
 ### 7. Phase F13 Execution (Stealth & Safety) ⏳ PLANNING
-- [ ] **F13 Architecture:** Draft ADR for local SHA-256 contact hashing.
-- [ ] **F13 Localization:** Implement SLO/EN/DE translations with Brand ID voice.
-- [ ] **F13 Backend:** Create `onContactAnonymityCheck` Cloud Function (Zero-Data logic).
-- [ ] **F13 Anonymity:** Implement client-side `ContactService` with local encryption.
-- [ ] **F13 Safe Zones:** Build `SafeZoneRepository` and map-based Zone Picker UI.
-- [ ] **F13 Logic:** Update `DiscoveryService` with Safe Zone masking.
-- [ ] **F13 UX:** Implement confirmation modals and independent zone toggles.
+- [x] **F13 Architecture:** Draft ADR for local SHA-256 contact hashing. ✅
+- [x] **F13 Localization:** Implement SLO/EN/DE translations with Brand ID voice. ✅
+- [x] **F13 Backend:** Create `onContactAnonymityCheck` Cloud Function (Zero-Data logic). ✅
+- [x] **F13 Anonymity:** Implement client-side `ContactService` with local encryption. ✅
+- [x] **F13 Safe Zones:** Build `SafeZoneRepository` and map-based Zone Picker UI. ✅
+- [x] **F13 Logic:** Update `DiscoveryService` with Safe Zone masking. ✅
+- [x] **F13 UX:** Implement confirmation modals and independent zone toggles. ✅
 
 ---
 *Last Updated: 2026-05-08* — Build: ✅ passing | flutter analyze: ✅ 0 issues | F13 Planning ⏳

@@ -103,10 +103,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
               return ListView.builder(
                 controller: _scrollController,
                 padding: EdgeInsets.fromLTRB(
-                    16,
-                    MediaQuery.of(context).padding.top + 80,
-                    16,
-                    40),
+                    16, MediaQuery.of(context).padding.top + 80, 16, 40),
                 itemCount: blockedUsers.length,
                 itemBuilder: (context, index) {
                   final blockedUser = blockedUsers[index];

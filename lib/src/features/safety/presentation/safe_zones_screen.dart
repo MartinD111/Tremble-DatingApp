@@ -35,8 +35,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
     super.initState();
     _loadZones();
     _scrollController.addListener(() {
-      final opacity =
-          (1.0 - (_scrollController.offset / 60)).clamp(0.0, 1.0);
+      final opacity = (1.0 - (_scrollController.offset / 60)).clamp(0.0, 1.0);
       if (_titleOpacity.value != opacity) _titleOpacity.value = opacity;
     });
   }
@@ -82,8 +81,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
-              backgroundColor:
-                  isDark ? const Color(0xFF1E1E2E) : Colors.white,
+              backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24)),
               title: Text(
@@ -124,8 +122,8 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(
-                              color: TrembleTheme.rose, width: 1.5),
+                          borderSide:
+                              BorderSide(color: TrembleTheme.rose, width: 1.5),
                         ),
                       ),
                     ),
@@ -143,16 +141,13 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                       children: [100.0, 250.0, 500.0].map((r) {
                         final isSelected = selectedRadius == r;
                         return GestureDetector(
-                          onTap: () =>
-                              setDialogState(() => selectedRadius = r),
+                          onTap: () => setDialogState(() => selectedRadius = r),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 150),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 20, vertical: 10),
                             decoration: BoxDecoration(
-                              color: isSelected
-                                  ? TrembleTheme.rose
-                                  : inputFill,
+                              color: isSelected ? TrembleTheme.rose : inputFill,
                               borderRadius: BorderRadius.circular(100),
                               border: Border.all(
                                 color: isSelected
@@ -166,9 +161,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                               style: GoogleFonts.instrumentSans(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: isSelected
-                                    ? Colors.white
-                                    : subColor,
+                                color: isSelected ? Colors.white : subColor,
                               ),
                             ),
                           ),
@@ -205,8 +198,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                         controller: addressController,
                         style: TextStyle(color: textColor, fontSize: 14),
                         decoration: InputDecoration(
-                          hintText:
-                              'Enter a nearby address (not exact)',
+                          hintText: 'Enter a nearby address (not exact)',
                           hintStyle: TextStyle(
                               color: subColor.withValues(alpha: 0.6),
                               fontSize: 13),
@@ -244,8 +236,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
               ),
               actions: [
                 TextButton(
-                  onPressed:
-                      isAdding ? null : () => Navigator.pop(ctx),
+                  onPressed: isAdding ? null : () => Navigator.pop(ctx),
                   child: Text(
                     _t('cancel'),
                     style: TextStyle(
@@ -273,10 +264,8 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                               // geocoding requires an API key not in scope.
                               // The address is stored as the zone name so the
                               // user still sees what they typed.
-                              final pos =
-                                  await Geolocator.getCurrentPosition(
-                                locationSettings:
-                                    const LocationSettings(
+                              final pos = await Geolocator.getCurrentPosition(
+                                locationSettings: const LocationSettings(
                                   accuracy: LocationAccuracy.medium,
                                   timeLimit: Duration(seconds: 10),
                                 ),
@@ -284,10 +273,8 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                               lat = pos.latitude;
                               lng = pos.longitude;
                             } else {
-                              final pos =
-                                  await Geolocator.getCurrentPosition(
-                                locationSettings:
-                                    const LocationSettings(
+                              final pos = await Geolocator.getCurrentPosition(
+                                locationSettings: const LocationSettings(
                                   accuracy: LocationAccuracy.high,
                                   timeLimit: Duration(seconds: 10),
                                 ),
@@ -335,9 +322,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
                       : Text(
-                          useAddress
-                              ? 'Add Zone'
-                              : 'Add Current Location',
+                          useAddress ? 'Add Zone' : 'Add Current Location',
                           style: const TextStyle(color: Colors.white),
                         ),
                 ),
@@ -358,17 +343,14 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
       final confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor:
-              isDark ? const Color(0xFF1E1E2E) : Colors.white,
-          title:
-              Text(_t('warning'), style: TextStyle(color: textColor)),
+          backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+          title: Text(_t('warning'), style: TextStyle(color: textColor)),
           content: Text(_t('safe_zone_confirm_off'),
               style: TextStyle(color: subColor)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(_t('cancel'),
-                  style: TextStyle(color: subColor)),
+              child: Text(_t('cancel'), style: TextStyle(color: subColor)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -504,8 +486,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       zone.name,
@@ -518,9 +499,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                                     Text(
                                       _t('safe_zone_radius').replaceAll(
                                           '{radius}',
-                                          zone.radiusMeters
-                                              .round()
-                                              .toString()),
+                                          zone.radiusMeters.round().toString()),
                                       style: GoogleFonts.instrumentSans(
                                           color: subColor, fontSize: 12),
                                     ),
@@ -531,8 +510,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                                 value: zone.isActive,
                                 activeTrackColor: TrembleTheme.rose,
                                 activeThumbColor: Colors.white,
-                                onChanged: (val) =>
-                                    _toggleZone(zone, val),
+                                onChanged: (val) => _toggleZone(zone, val),
                               ),
                               IconButton(
                                 icon: const Icon(LucideIcons.trash2,
@@ -555,16 +533,14 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          TrembleTheme.rose.withValues(alpha: 0.1),
+                      backgroundColor: TrembleTheme.rose.withValues(alpha: 0.1),
                       foregroundColor: TrembleTheme.rose,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(100),
                           side: BorderSide(
-                              color:
-                                  TrembleTheme.rose.withValues(alpha: 0.3))),
+                              color: TrembleTheme.rose.withValues(alpha: 0.3))),
                     ),
                     onPressed: _addZone,
                     icon: const Icon(LucideIcons.plus, size: 18),
@@ -578,7 +554,6 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
               ],
             ),
           ),
-
           ValueListenableBuilder<double>(
             valueListenable: _titleOpacity,
             builder: (context, opacity, _) => TrembleHeader(

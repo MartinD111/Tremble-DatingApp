@@ -102,8 +102,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(LucideIcons.sparkles,
-                      size: 20,
-                      color: textColor.withValues(alpha: 0.7)),
+                      size: 20, color: textColor.withValues(alpha: 0.7)),
                   const SizedBox(width: 10),
                   Flexible(
                     child: Text(
@@ -139,8 +138,8 @@ class _HobbiesStepState extends State<HobbiesStep> {
                     borderRadius: BorderRadius.circular(100),
                     borderSide: BorderSide(color: brandRose, width: 2),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 14),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 ),
               ),
               const SizedBox(height: 10),
@@ -163,8 +162,8 @@ class _HobbiesStepState extends State<HobbiesStep> {
                     borderRadius: BorderRadius.circular(100),
                     borderSide: BorderSide(color: brandRose, width: 2),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 14),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 ),
               ),
               const SizedBox(height: 20),
@@ -493,15 +492,18 @@ class _HobbiesStepState extends State<HobbiesStep> {
                           child: OutlinedButton(
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(
-                                  color: isDark ? Colors.white38 : Colors.black26),
+                                  color:
+                                      isDark ? Colors.white38 : Colors.black26),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: const StadiumBorder(),
                             ),
-                            onPressed: widget.onBack ?? () => Navigator.maybePop(context),
+                            onPressed: widget.onBack ??
+                                () => Navigator.maybePop(context),
                             child: Text(
                               widget.tr('cancel'),
                               style: GoogleFonts.instrumentSans(
-                                  color: isDark ? Colors.white70 : Colors.black54,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black54,
                                   fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -510,7 +512,8 @@ class _HobbiesStepState extends State<HobbiesStep> {
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
@@ -557,9 +560,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected
-              ? brandRose.withValues(alpha: 0.15)
-              : pillBg,
+          color: selected ? brandRose.withValues(alpha: 0.15) : pillBg,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: selected
@@ -588,4 +589,3 @@ class _HobbiesStepState extends State<HobbiesStep> {
     );
   }
 }
-

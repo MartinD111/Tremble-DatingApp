@@ -722,8 +722,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     }
   }
 
-  Widget _buildHobbySection(
-      AuthUser user, bool isDark, Color textColor, Color subColor, bool isGenderBasedColor, String? gender) {
+  Widget _buildHobbySection(AuthUser user, bool isDark, Color textColor,
+      Color subColor, bool isGenderBasedColor, String? gender) {
     final lang = user.appLanguage;
     final userHobbies = user.hobbies;
 
@@ -773,8 +773,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                 runSpacing: 6,
                 alignment: WrapAlignment.center,
                 children: entry.value
-                    .map((h) =>
-                        _PreferencePill(
+                    .map((h) => _PreferencePill(
                           label: '${h['emoji']} ${h['name']}',
                           isGenderBased: isGenderBasedColor,
                           gender: gender,
