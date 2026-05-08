@@ -462,6 +462,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   /// registration flow. Changes are committed only when the user taps Continue.
   void _showHobbiesModal() {
     final tempHobbies = List<Map<String, dynamic>>.from(_hobbies);
+    final user = ref.read(authStateProvider);
+    final isGenderBasedColor = user?.isGenderBasedColor ?? false;
+    final gender = user?.gender ?? 'default';
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -475,6 +479,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             maxChildSize: 0.95,
             builder: (context, scrollController) => HobbiesStep(
               isModal: true,
+              isGenderBased: isGenderBasedColor,
+              gender: gender,
               selectedHobbies: tempHobbies,
               onAddHobby: (h) => setModalState(() => tempHobbies.add(h)),
               onRemoveHobby: (h) => setModalState(() => tempHobbies.remove(h)),
@@ -1615,6 +1621,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildGenderChips(String lang, bool isDark, Color textColor) {
+    final brandRose = Theme.of(context).colorScheme.primary;
     final options = [
       {'label': t('gender_male', lang), 'value': 'male', 'icon': Icons.male},
       {
@@ -1635,7 +1642,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             avatar: Icon(options[i]['icon'] as IconData,
                 size: 16,
                 color: _gender == options[i]['value']
-                    ? Colors.black
+                    ? brandRose
                     : (isDark ? Colors.white70 : Colors.black54)),
             label: Text(options[i]['label'] as String),
             selected: _gender == options[i]['value'],
@@ -1662,17 +1669,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 }
               }
             },
-            selectedColor: Theme.of(context).primaryColor,
+            selectedColor: brandRose.withValues(alpha: 0.15),
             backgroundColor: isDark
                 ? Colors.white.withValues(alpha: 0.1)
                 : Colors.black.withValues(alpha: 0.06),
             labelStyle: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
+                color: _gender == options[i]['value']
+                    ? brandRose
+                    : (isDark ? Colors.white : Colors.black87),
                 fontWeight: FontWeight.bold),
             shape: StadiumBorder(
                 side: BorderSide(
                     color: _gender == options[i]['value']
-                        ? Theme.of(context).primaryColor
+                        ? brandRose
                         : (isDark ? Colors.white24 : Colors.black12))),
             showCheckmark: false,
           ),
@@ -1683,6 +1692,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildInterestChips(String lang, bool isDark, Color textColor) {
+    final brandRose = Theme.of(context).colorScheme.primary;
     final options = [
       {'label': t('male', lang), 'value': 'male', 'icon': Icons.male},
       {'label': t('female', lang), 'value': 'female', 'icon': Icons.female},
@@ -1703,7 +1713,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           avatar: Icon(icon,
               size: 16,
               color: sel
-                  ? Colors.black
+                  ? brandRose
                   : (isDark ? Colors.white70 : Colors.black54)),
           label: Text(label),
           selected: sel,
@@ -1719,17 +1729,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             });
             _markChanged();
           },
-          selectedColor: Theme.of(context).primaryColor,
+          selectedColor: brandRose.withValues(alpha: 0.15),
           backgroundColor: isDark
               ? Colors.white.withValues(alpha: 0.1)
               : Colors.black.withValues(alpha: 0.06),
           labelStyle: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
+              color: sel
+                  ? brandRose
+                  : (isDark ? Colors.white : Colors.black87),
               fontWeight: FontWeight.bold),
           shape: StadiumBorder(
               side: BorderSide(
                   color: sel
-                      ? Theme.of(context).primaryColor
+                      ? brandRose
                       : (isDark ? Colors.white24 : Colors.black12))),
           showCheckmark: false,
         );
@@ -1738,6 +1750,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildOccupationChips(String lang, bool isDark, Color textColor) {
+    final brandRose = Theme.of(context).colorScheme.primary;
     final options = [
       {
         'label': t('student', lang),
@@ -1761,7 +1774,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           avatar: Icon(icon,
               size: 16,
               color: sel
-                  ? Colors.black
+                  ? brandRose
                   : (isDark ? Colors.white70 : Colors.black54)),
           label: Text(label),
           selected: sel,
@@ -1771,17 +1784,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               _hasChanges = true;
             });
           },
-          selectedColor: Theme.of(context).primaryColor,
+          selectedColor: brandRose.withValues(alpha: 0.15),
           backgroundColor: isDark
               ? Colors.white.withValues(alpha: 0.1)
               : Colors.black.withValues(alpha: 0.06),
           labelStyle: TextStyle(
-              color: isDark ? Colors.white : Colors.black87,
+              color: sel
+                  ? brandRose
+                  : (isDark ? Colors.white : Colors.black87),
               fontWeight: FontWeight.bold),
           shape: StadiumBorder(
               side: BorderSide(
                   color: sel
-                      ? Theme.of(context).primaryColor
+                      ? brandRose
                       : (isDark ? Colors.white24 : Colors.black12))),
           showCheckmark: false,
         );
@@ -2128,6 +2143,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final now = DateTime.now();
     final maxYear = now.year - 18;
     final minYear = now.year - 100;
+    final user = ref.read(authStateProvider);
+    final isGenderBased = user?.isGenderBasedColor ?? false;
+    final gender = user?.gender;
 
     final initial = _birthDate ?? DateTime(2000, 1, 1);
     int month = initial.month;
@@ -2149,7 +2167,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       'December'
     ];
 
-    final sheetBg = isDark ? const Color(0xFF1A1A2E) : Colors.white;
+    final sheetBg = isDark
+        ? TrembleTheme.getPillColor(
+            isDark: true,
+            isGenderBased: isGenderBased,
+            gender: gender,
+          )
+        : Colors.white;
     final titleColor = isDark ? Colors.white : Colors.black87;
     final handleColor = isDark ? Colors.white24 : Colors.black26;
     final brandRose = Theme.of(context).primaryColor;
@@ -2262,56 +2286,63 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // ── Save / Cancel buttons at bottom ───────────────────────
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final d = DateTime(year, month, validDay);
-                        final age = ZodiacUtils.calcAge(d);
-                        if (age < 18) return;
-                        setState(() {
-                          _birthDate = d;
-                          _hasChanges = true;
-                        });
-                        Navigator.pop(ctx);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: brandRose,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                  // ── Save / Cancel — standard two-button row ────────────────
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                                color: isDark
+                                    ? Colors.white38
+                                    : Colors.black26),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 16),
+                            shape: const StadiumBorder(),
+                          ),
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(
+                            t('cancel', _lang),
+                            style: GoogleFonts.instrumentSans(
+                                color: isDark
+                                    ? Colors.white70
+                                    : Colors.black54,
+                                fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
-                      child: Text(
-                        t('save', _lang).isNotEmpty &&
-                                t('save', _lang) != 'save'
-                            ? t('save', _lang)
-                            : 'Save',
-                        style: GoogleFonts.instrumentSans(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: brandRose,
+                            foregroundColor: Colors.white,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28)),
+                          ),
+                          onPressed: () {
+                            final d = DateTime(year, month, validDay);
+                            final age = ZodiacUtils.calcAge(d);
+                            if (age < 18) return;
+                            setState(() {
+                              _birthDate = d;
+                              _hasChanges = true;
+                            });
+                            Navigator.pop(ctx);
+                          },
+                          child: Text(
+                            t('save', _lang),
+                            style: GoogleFonts.instrumentSans(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: Text(
-                      t('cancel', _lang).isNotEmpty &&
-                              t('cancel', _lang) != 'cancel'
-                          ? t('cancel', _lang).toUpperCase()
-                          : 'CANCEL',
-                      style: TextStyle(
-                        color: isDark ? Colors.white54 : Colors.black54,
-                        letterSpacing: 1.2,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: MediaQuery.of(ctx).padding.bottom + 8),
+                  SizedBox(height: MediaQuery.of(ctx).padding.bottom + 16),
                 ],
               ),
             );

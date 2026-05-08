@@ -1,15 +1,18 @@
-## Session State — [2026-05-08 01:00]
-- Active Task: F13 Stealth & Safety Implementation — COMPLETED
+## Session State — [2026-05-08 14:41]
+- Active Task: UI Polish — Modal style unification
 - Environment: Dev
-- Modified Files: `lib/src/core/contact_service.dart`, `lib/src/features/settings/presentation/settings_screen.dart`, `functions/src/modules/safety/safety.functions.ts`, `lib/src/core/geo_service.dart`, `lib/src/features/map/domain/safe_zone_repository.dart`, `functions/src/modules/proximity/proximity.functions.ts`, `lib/src/core/translations.dart`, `lib/src/features/map/domain/safe_zone_model.dart`
+- Modified Files:
+  - `lib/src/features/auth/presentation/widgets/registration_steps/hobbies_step.dart`
+  - `lib/src/features/profile/presentation/edit_profile_screen.dart`
 - Open Problems: None
-- System Status: Build passing, zero-data architecture fully integrated.
+- System Status: Zero analyze errors. Ready for device test.
 
 ## Session Handoff
-- Completed: 
-    - **Anonymity Mode:** Implemented local SHA-256 contact hashing in worker isolates, E.164 normalization, and ephmeral cloud function matching.
-    - **Geofencing Safe Zones:** Integrated map-based zone creation with 100/250/500m fixed radii, neutral naming (Zone 1, 2), and background location suppression logic.
-    - **UI/UX & Security:** Added mandatory confirmation modals for disabling shields, updated translations for SLO/EN/DE, and ensured strict neutral brand tone.
+- Completed:
+  - **Modal style unification** — All edit pop-up modals now share the exact same visual style as `showPreferenceEditModal` (the "Looking for" reference):
+    - **Custom Hobby dialog** (`_showAddHobbyDialog`): Replaced `AlertDialog` (hardcoded dark bg, floating dialog) with a `showModalBottomSheet` that has: `TrembleTheme.getPillColor` background, drag handle, icon+title row, pill-shaped text fields, standard OutlinedButton Cancel + rose ElevatedButton Add row.
+    - **Date of Birth picker** (`_showAgePickerModal`): Replaced hardcoded `Color(0xFF1A1A2E)` bg with `TrembleTheme.getPillColor` (theme + gender-aware). Replaced the stacked TextButton/ElevatedButton layout with the standard `Row(OutlinedButton Cancel, ElevatedButton Save)` pattern.
+  - **Previous session also completed** (Hobby edit pop-up style, hobby pill color match, category dropdown pill shape — all already done).
 - In Progress: None
 - Blocked: None
-- Next Action: Physical device verification of location suppression and contact filter efficacy.
+- Next Action: Physical device verification of modal styles across dark/light/gender-based themes.
