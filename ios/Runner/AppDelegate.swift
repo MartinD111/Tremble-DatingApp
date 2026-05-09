@@ -76,7 +76,7 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
             center,
             Unmanaged.passUnretained(self).toOpaque(),
             callback,
-            CFNotificationName(rawValue: "app.tremble.radar.changed" as CFString),
+            "app.tremble.radar.changed" as CFString,
             nil,
             .deliverImmediately
         )
@@ -143,7 +143,7 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
             name: "app.tremble/radar/events",
             binaryMessenger: binaryMessenger
         )
-        radarEventChannel.setStreamHandler(object: RadarEventStreamHandler())
+        radarEventChannel.setStreamHandler(RadarEventStreamHandler())
 
         // MethodChannel: receives setRadarActive / getRadarActive / etc from Flutter
         let radarMethodChannel = FlutterMethodChannel(

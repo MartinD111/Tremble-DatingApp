@@ -1,16 +1,16 @@
-## Session State — 2026-05-08 22:55
-- Active Task: Roadmap Sync & Safety Finalization
+## Session State — 2026-05-09
+- Active Task: iOS Physical Device Deployment
 - Environment: Dev
-- Modified Files: tasks/MASTER_PLAN.md, tasks/todo.md, tasks/context.md
-- Open Problems: LEGAL (Blocks RevenueCat)
-- System Status: Build passing / Analyze clean
+- Modified Files: ios/Runner.xcodeproj/project.pbxproj, ios/Runner/AppDelegate.swift
+- Open Problems: None for deployment. LEGAL (Blocks RevenueCat)
+- System Status: Build passing / Device deployment ready
 
 ## Session Handoff
 - Completed:
-    - Synced documentation (MASTER_PLAN, todo) with real codebase state.
-    - Verified F6 (Run Club) implementation.
-    - Verified F10 (Gym Mode) implementation.
-    - Finalized F13 (Stealth & Safety) implementation and verified logic.
-- In Progress: Phase D (Valentine Promo)
-- Blocked: F8 (Pricing) due to LEGAL.
-- Next Action: Implement Valentine Promo (F7) logic and UI.
+    - Added dev and prod flavors to Xcode Build Configurations.
+    - Updated Ruby script to dynamically manage Firebase config per flavor.
+    - Synchronized all iOS target Bundle Identifiers (Runner, ImageNotification, TrembleRadarWidgetExtension) for dev provisioning profiles (`com.pulse.dev.aleks`).
+    - Resolved Swift compiler errors in `AppDelegate.swift` for `CFNotificationName`.
+- In Progress: iOS Physical Device Testing
+- Blocked: None for current task.
+- Next Action: Run application on physical device and test Radar / Gym Mode.
