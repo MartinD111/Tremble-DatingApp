@@ -73,7 +73,9 @@
       "Bash(grep -E \"\\\\.\\(dart\\)$\")",
       "Bash(git restore *)",
       "Bash(npm install *)",
-      "Read(//c/flutter/packages/flutter_tools/gradle/**)"
+      "Read(//c/flutter/packages/flutter_tools/gradle/**)",
+      "Bash(/Users/aleksandarbojic/flutter/bin/dart format:*)",
+      "Bash(/Users/aleksandarbojic/flutter/bin/flutter pub:*)"
     ]
   }
 }

@@ -1,6 +1,5 @@
 import Flutter
 import UIKit
-import GoogleMaps
 import CoreMotion
 import WidgetKit
 import flutter_background_service_ios
@@ -232,11 +231,6 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        if let mapsApiKey = Bundle.main.object(forInfoDictionaryKey: "MAPS_API_KEY") as? String,
-           !mapsApiKey.isEmpty {
-            GMSServices.provideAPIKey(mapsApiKey)
-        }
-
         SwiftFlutterBackgroundServicePlugin.taskIdentifier = "app.tremble.radar"
 
         GeneratedPluginRegistrant.register(with: self)

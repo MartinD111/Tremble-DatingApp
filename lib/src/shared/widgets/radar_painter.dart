@@ -56,9 +56,10 @@ class RadarPainter extends CustomPainter {
         endAngle: sweepAngle,
         colors: [
           Colors.transparent,
+          brandColor.withValues(alpha: 0.0),
           brandColor.withValues(alpha: 0.3),
         ],
-        stops: const [0.0, 1.0],
+        stops: const [0.0, 0.05, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: maxRadius))
       ..style = PaintingStyle.fill;
 

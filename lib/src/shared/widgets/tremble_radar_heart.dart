@@ -85,10 +85,10 @@ class _RadarHeartPainter extends CustomPainter {
     final centerY = size.height / 2;
 
     // We draw a liquid heart shape
-    final scale = (size.width / 220.0) * 1.12;
+    final scale = (size.width / 220.0) * 1.25;
 
     canvas.save();
-    canvas.translate(centerX - (3.5 * scale), centerY - (20.0 * scale));
+    canvas.translate(centerX - (3.5 * scale), centerY - (16.0 * scale));
     canvas.scale(scale);
 
     // Core paint
