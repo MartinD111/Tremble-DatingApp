@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 class TrembleRadarHeart extends StatefulWidget {
@@ -90,14 +91,6 @@ class _RadarHeartPainter extends CustomPainter {
     canvas.translate(centerX - (3.5 * scale), centerY - (20.0 * scale));
     canvas.scale(scale);
 
-    // Glow paint
-    final glowPaint = Paint()
-      ..color = color.withValues(alpha: 0.6 * animationValue)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 9 + (4 * animationValue)
-      ..strokeCap = StrokeCap.round
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8.0 * animationValue);
-
     // Core paint
     final corePaint = Paint()
       ..color = color
@@ -130,32 +123,55 @@ class _RadarHeartPainter extends CustomPainter {
       ..cubicTo(16, 11, 26, 14, 26, 20)
       ..cubicTo(26, 26, 16, 31, 12, 36);
 
-    // Draw glow first
-    if (animationValue > 0) {
-      canvas.drawPath(pathBase, glowPaint);
-      canvas.drawPath(pathOuter, glowPaint);
-      canvas.drawPath(pathMid, glowPaint);
-      canvas.drawPath(pathInner, glowPaint);
-    }
+    // Draw glow first — use a smoothed sine curve so the glow never blinks
+    // at the animation endpoints (avoids the hard cut when animationValue = 0).
+    final glowStrength = (math.sin(animationValue * math.pi)).clamp(0.0, 1.0);
+    final smoothGlowPaint = Paint()
+      ..color = color.withValues(alpha: 0.6 * glowStrength)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 9 + (4 * glowStrength)
+      ..strokeCap = StrokeCap.round
+      ..maskFilter =
+          MaskFilter.blur(BlurStyle.normal, 8.0 * glowStrength + 0.01);
 
-    // Draw core over glow
+    canvas.drawPath(pathBase, smoothGlowPaint);
+    canvas.drawPath(pathOuter, smoothGlowPaint);
+    canvas.drawPath(pathMid, smoothGlowPaint);
+    canvas.drawPath(pathInner, smoothGlowPaint);
+
+    // Draw core over glow — use separate Paint instances to avoid mutation.
     canvas.drawPath(pathBase, corePaint);
 
-    // Animate outer waves based on animationValue
-    // Outer wave
+    // Animate outer waves based on animationValue.
     final outerAlpha = 0.4 + (0.6 * animationValue);
     canvas.drawPath(
-        pathOuter, corePaint..color = color.withValues(alpha: outerAlpha));
+      pathOuter,
+      Paint()
+        ..color = color.withValues(alpha: outerAlpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 9
+        ..strokeCap = StrokeCap.round,
+    );
 
-    // Mid wave
     final midAlpha = 0.6 + (0.4 * animationValue);
     canvas.drawPath(
-        pathMid, corePaint..color = color.withValues(alpha: midAlpha));
+      pathMid,
+      Paint()
+        ..color = color.withValues(alpha: midAlpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 9
+        ..strokeCap = StrokeCap.round,
+    );
 
-    // Inner wave
     final innerAlpha = 0.8 + (0.2 * animationValue);
     canvas.drawPath(
-        pathInner, corePaint..color = color.withValues(alpha: innerAlpha));
+      pathInner,
+      Paint()
+        ..color = color.withValues(alpha: innerAlpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 9
+        ..strokeCap = StrokeCap.round,
+    );
 
     canvas.restore();
   }

@@ -1784,11 +1784,11 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
               ),
               child: Center(
                 child: SizedBox(
-                  width: 80,
-                  height: 80,
+                  width: 100,
+                  height: 100,
                   child: TrembleRadarHeart(
                     isScanning: widget.isScanning,
-                    size: 80,
+                    size: 100,
                     color: Colors.white,
                   ),
                 ),

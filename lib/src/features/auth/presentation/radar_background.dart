@@ -161,12 +161,10 @@ class RadarPainter extends CustomPainter {
       canvas.drawCircle(center, radius, strokePaint);
     }
 
-    // Draw rotating scanning line
+    // Draw rotating scanning line.
+    // We rotate the canvas so the line always points right in local space,
+    // keeping the gradient (transparent→opaque) consistently from center to tip.
     final angle = rotation * 2 * math.pi;
-    final lineEnd = Offset(
-      center.dx + maxRadius * math.cos(angle),
-      center.dy + maxRadius * math.sin(angle),
-    );
 
     final linePaint = Paint()
       ..shader = LinearGradient(
@@ -177,12 +175,16 @@ class RadarPainter extends CustomPainter {
           primaryColor.withValues(alpha: 0.2),
           primaryColor.withValues(alpha: 0.4),
         ],
-      ).createShader(Rect.fromPoints(center, lineEnd))
+      ).createShader(Rect.fromLTWH(0, -4, maxRadius, 8))
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
-    canvas.drawLine(center, lineEnd, linePaint);
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(angle);
+    canvas.drawLine(Offset.zero, Offset(maxRadius, 0), linePaint);
+    canvas.restore();
 
     // Draw pulsing dots
     for (final dot in dots) {

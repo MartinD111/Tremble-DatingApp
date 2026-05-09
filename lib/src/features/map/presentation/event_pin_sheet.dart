@@ -411,11 +411,16 @@ class _ShareButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        final box = context.findRenderObject() as RenderBox?;
         final location = event.locationLabel ?? event.name;
         final text = t('event_share_text', lang)
             .replaceAll('{name}', event.name)
             .replaceAll('{location}', location);
-        Share.share(text);
+        Share.share(
+          text,
+          sharePositionOrigin:
+              box == null ? null : box.localToGlobal(Offset.zero) & box.size,
+        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),

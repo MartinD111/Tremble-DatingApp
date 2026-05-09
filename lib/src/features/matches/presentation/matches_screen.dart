@@ -262,6 +262,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
 
     showDialog(
       context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.4),
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
