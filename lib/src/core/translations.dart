@@ -1,27 +1,43 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/data/auth_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Lightweight i18n system — all translations stored as Map<langCode, Map<key, value>>
 
 class AppLanguageNotifier extends Notifier<String> {
+  final String? _initialValue;
+  AppLanguageNotifier([this._initialValue]);
+
   @override
   String build() {
     ref.listen<AuthUser?>(authStateProvider, (prev, next) {
       if (next != null && next.appLanguage.isNotEmpty) {
         state = next.appLanguage;
+        _saveToPrefs(next.appLanguage);
       }
-      // If next user has no language (e.g. during registration), preserve current state
     });
+
+    if (_initialValue != null) return _initialValue;
+
     final user = ref.read(authStateProvider);
     if (user != null && user.appLanguage.isNotEmpty) return user.appLanguage;
+
     return 'sl';
   }
 
-  void setLanguage(String code) => state = code;
+  void setLanguage(String code) {
+    state = code;
+    _saveToPrefs(code);
+  }
+
+  Future<void> _saveToPrefs(String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('appLanguage', code);
+  }
 }
 
 final appLanguageProvider =
-    NotifierProvider<AppLanguageNotifier, String>(AppLanguageNotifier.new);
+    NotifierProvider<AppLanguageNotifier, String>(() => AppLanguageNotifier());
 
 String t(String key, String lang) {
   return _translations[lang]?[key] ?? _translations['en']?[key] ?? key;
@@ -592,8 +608,10 @@ const Map<String, Map<String, String>> _translations = {
 
     'distance': 'Distance',
     'battery_warning': 'This function uses {percent}% more battery than usual.',
+    'select_language': 'Select Language',
+    'search': 'Search...',
     'auto_hide_nav': 'Auto hide navigation bar',
-    'are_you_new': 'Are you new',
+    'are_you_new': "Don't have an account?",
     'forgot_password': 'Forgot password?',
     'login': 'Login',
     'premium_account_activated': 'Premium account activated',
@@ -873,6 +891,9 @@ const Map<String, Map<String, String>> _translations = {
     'add': 'Dodaj',
     'continue_with_google': 'Nadaljuj z Googlom',
     'continue_with_apple': 'Nadaljuj z Applom',
+    'are_you_new': 'Nimaš računa?',
+    'forgot_password': 'Si pozabil/-a geslo?',
+    'login': 'Prijava',
     'select_radar_mode': 'Izberi način',
     'profile_card_view': 'Ogled profilne kartice',
     'my_card': 'Moja kartica',
@@ -1272,10 +1293,9 @@ const Map<String, Map<String, String>> _translations = {
     'distance': 'Razdalja',
     'battery_warning':
         'Ta funkcija porablja {percent}% več baterije kot običajno.',
+    'select_language': 'Izberi jezik',
+    'search': 'Išči...',
     'auto_hide_nav': 'Samodejno skrij navigacijsko vrstico',
-    'are_you_new': 'Are you new',
-    'forgot_password': 'Pozabljeno geslo',
-    'login': 'Prijava',
     'premium_account_activated': 'Premium račun aktiviran',
 
     // --- Politična pripadnost ---

@@ -18,7 +18,7 @@ import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
 import '../../../core/ble_service.dart'; // BLE must run in main isolate
-import 'package:flutter_svg/flutter_svg.dart';
+import '../../../shared/widgets/tremble_radar_heart.dart';
 import '../../../core/consent_service.dart'; // gdprConsentProvider
 import 'package:flutter_animate/flutter_animate.dart'; // Animations
 import '../../../core/translations.dart';
@@ -1786,12 +1786,10 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
                 child: SizedBox(
                   width: 80,
                   height: 80,
-                  child: SvgPicture.asset(
-                    'Logo/SVG za radar.svg',
-                    colorFilter: const ColorFilter.mode(
-                      Colors.white,
-                      BlendMode.srcIn,
-                    ),
+                  child: TrembleRadarHeart(
+                    isScanning: widget.isScanning,
+                    size: 80,
+                    color: Colors.white,
                   ),
                 ),
               ),

@@ -76,7 +76,10 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
                 Text(
                   'Te obvestimo, ko 10 minut prebivaš v bližini fitnesa?',
                   style: GoogleFonts.instrumentSans(
-                    color: Colors.white.withValues(alpha: 0.75),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.75),
                     fontSize: 14,
                     height: 1.5,
                   ),
@@ -89,9 +92,13 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.25),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.25),
                           ),
-                          foregroundColor: Colors.white70,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface,
                         ),
                         onPressed: () {
                           Navigator.pop(dialogContext);
@@ -226,7 +233,10 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
                               },
                         child: const Text(
                           'Deactivate',
-                          style: TextStyle(color: Colors.redAccent),
+                          style: TextStyle(
+                            color: TrembleTheme.rose,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                   ],

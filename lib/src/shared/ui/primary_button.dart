@@ -26,8 +26,8 @@ class PrimaryButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: isSecondary
             ? (isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.04))
+                ? Colors.white.withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.08))
             : Theme.of(context).colorScheme.primary,
         foregroundColor: isSecondary
             ? Theme.of(context).colorScheme.onSurface

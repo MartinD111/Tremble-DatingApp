@@ -112,7 +112,7 @@ class _ConsentView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 48),
+          const SizedBox(height: 80),
 
           // Headline
           Text(

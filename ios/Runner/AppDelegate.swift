@@ -3,7 +3,116 @@ import UIKit
 import GoogleMaps
 import CoreMotion
 import WidgetKit
+import flutter_background_service_ios
 
+public class TrembleNativePlugin: NSObject, FlutterPlugin {
+    private var radarMethodChannel: FlutterMethodChannel?
+    private var radarEventChannel: FlutterEventChannel?
+    private var geofenceChannel: FlutterMethodChannel?
+    private var motionMethodChannel: FlutterMethodChannel?
+    private var motionEventChannel: FlutterEventChannel?
+
+    public static func register(with registrar: FlutterPluginRegistrar) {
+        let instance = TrembleNativePlugin()
+        instance.setupChannels(with: registrar)
+        registrar.addMethodCallDelegate(instance, channel: instance.radarMethodChannel!)
+        // Note: we only need to add delegate to one channel if they share the same instance,
+        // but it's cleaner to just set handlers directly as before, but keeping references.
+    }
+
+    private func setupChannels(with registrar: FlutterPluginRegistrar) {
+        let binaryMessenger = registrar.messenger()
+        
+        // ── Radar state sync ──────────────────────────────────────────────────
+        radarEventChannel = FlutterEventChannel(
+            name: "app.tremble/radar/events",
+            binaryMessenger: binaryMessenger
+        )
+        radarEventChannel?.setStreamHandler(RadarEventStreamHandler())
+
+        radarMethodChannel = FlutterMethodChannel(
+            name: "app.tremble/radar",
+            binaryMessenger: binaryMessenger
+        )
+        radarMethodChannel?.setMethodCallHandler { call, result in
+            switch call.method {
+            case "setRadarActive":
+                if let active = call.arguments as? [String: Any],
+                   let isActive = active["active"] as? Bool {
+                    RadarStateBridge.isActive = isActive
+                    WidgetKit.WidgetCenter.shared.reloadAllTimelines()
+                    result(nil)
+                } else {
+                    result(FlutterError(code: "INVALID_ARGS", message: nil, details: nil))
+                }
+            case "startRadarService", "stopRadarService":
+                result(nil)
+            case "getRadarActive":
+                result(RadarStateBridge.isActive)
+            case "requestAddQsTile":
+                result(-1)
+            case "requestPinWidget":
+                result(false)
+            default:
+                result(FlutterMethodNotImplemented)
+            }
+        }
+
+        // ── Gym Mode — native OS geofencing ──────────────────────────────────
+        geofenceChannel = FlutterMethodChannel(
+            name: "tremble.dating.app/geofence",
+            binaryMessenger: binaryMessenger
+        )
+        geofenceChannel?.setMethodCallHandler { call, result in
+            switch call.method {
+            case "startMonitoring":
+                guard let gyms = call.arguments as? [[String: Any]] else {
+                    result(FlutterError(
+                        code: "INVALID_ARGS",
+                        message: "Expected [[String: Any]] for gym list",
+                        details: nil
+                    ))
+                    return
+                }
+                GymGeofenceManager.shared.startMonitoring(gyms: gyms)
+                result(nil)
+            case "stopMonitoring":
+                GymGeofenceManager.shared.stopMonitoring()
+                result(nil)
+            default:
+                result(FlutterMethodNotImplemented)
+            }
+        }
+        
+        // ── Motion Service — native Activity Recognition ─────────────────────
+        motionEventChannel = FlutterEventChannel(
+            name: "app.tremble/motion/events",
+            binaryMessenger: binaryMessenger
+        )
+        motionEventChannel?.setStreamHandler(MotionService.shared)
+        
+        motionMethodChannel = FlutterMethodChannel(
+            name: "app.tremble/motion",
+            binaryMessenger: binaryMessenger
+        )
+        motionMethodChannel?.setMethodCallHandler { call, result in
+            switch call.method {
+            case "startMonitoring":
+                MotionService.shared.startMonitoring()
+                result(nil)
+            case "stopMonitoring":
+                MotionService.shared.stopMonitoring()
+                result(nil)
+            default:
+                result(FlutterMethodNotImplemented)
+            }
+        }
+    }
+
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        // Handled via closures in setupChannels
+    }
+}
 class MotionService: NSObject, FlutterStreamHandler {
     static let shared = MotionService()
     
@@ -128,114 +237,17 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
             GMSServices.provideAPIKey(mapsApiKey)
         }
 
+        SwiftFlutterBackgroundServicePlugin.taskIdentifier = "app.tremble.radar"
+        SwiftFlutterBackgroundServicePlugin.setPluginRegistrantCallback { registry in
+            GeneratedPluginRegistrant.register(with: registry)
+            if let registrar = registry.registrar(forPlugin: "TrembleNativePlugin") {
+                TrembleNativePlugin.register(with: registrar)
+            }
+        }
+
         GeneratedPluginRegistrant.register(with: self)
-
-        guard let controller = window?.rootViewController as? FlutterViewController else {
-            return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-        }
-        let binaryMessenger = controller.binaryMessenger
-
-        
-
-        // ── Radar state sync (tile/widget/quick action ↔ Flutter) ───────────────
-        // EventChannel: broadcasts radar state changes to Flutter
-        let radarEventChannel = FlutterEventChannel(
-            name: "app.tremble/radar/events",
-            binaryMessenger: binaryMessenger
-        )
-        radarEventChannel.setStreamHandler(RadarEventStreamHandler())
-
-        // MethodChannel: receives setRadarActive / getRadarActive / etc from Flutter
-        let radarMethodChannel = FlutterMethodChannel(
-            name: "app.tremble/radar",
-            binaryMessenger: binaryMessenger
-        )
-        radarMethodChannel.setMethodCallHandler { call, result in
-            switch call.method {
-            case "setRadarActive":
-                if let active = call.arguments as? [String: Any],
-                   let isActive = active["active"] as? Bool {
-                    RadarStateBridge.isActive = isActive
-                    // Trigger widget timeline reload so lock screen widget re-renders
-                    WidgetKit.WidgetCenter.shared.reloadAllTimelines()
-                    result(nil)
-                } else {
-                    result(FlutterError(code: "INVALID_ARGS", message: nil, details: nil))
-                }
-            case "startRadarService":
-                // iOS doesn't use foreground service — background modes handle this
-                result(nil)
-            case "stopRadarService":
-                // iOS doesn't use foreground service
-                result(nil)
-            case "getRadarActive":
-                result(RadarStateBridge.isActive)
-            case "requestAddQsTile":
-                // Quick Settings tiles are Android-only
-                result(-1)
-            case "requestPinWidget":
-                // Widget pinning is handled via Settings → Customize Lock Screen
-                result(false)
-            default:
-                result(FlutterMethodNotImplemented)
-            }
-        }
-
-        // ── Gym Mode — native OS geofencing ──────────────────────────────────
-        // startMonitoring: registers CLCircularRegion for each gym. The OS
-        //   schedules a UNTimeIntervalNotificationTrigger (10 min) on region
-        //   entry — fires even if the app is killed (0 % battery cost).
-        // stopMonitoring: removes all regions and cancels pending notifications.
-        let geofenceChannel = FlutterMethodChannel(
-            name: "tremble.dating.app/geofence",
-            binaryMessenger: binaryMessenger
-        )
-
-        geofenceChannel.setMethodCallHandler { call, result in
-            switch call.method {
-            case "startMonitoring":
-                guard let gyms = call.arguments as? [[String: Any]] else {
-                    result(FlutterError(
-                        code: "INVALID_ARGS",
-                        message: "Expected [[String: Any]] for gym list",
-                        details: nil
-                    ))
-                    return
-                }
-                GymGeofenceManager.shared.startMonitoring(gyms: gyms)
-                result(nil)
-
-            case "stopMonitoring":
-                GymGeofenceManager.shared.stopMonitoring()
-                result(nil)
-
-            default:
-                result(FlutterMethodNotImplemented)
-            }
-        }
-        
-        // ── Motion Service — native Activity Recognition ─────────────────────
-        let motionEventChannel = FlutterEventChannel(
-            name: "app.tremble/motion/events",
-            binaryMessenger: binaryMessenger
-        )
-        motionEventChannel.setStreamHandler(MotionService.shared)
-        
-        let motionMethodChannel = FlutterMethodChannel(
-            name: "app.tremble/motion",
-            binaryMessenger: binaryMessenger
-        )
-        motionMethodChannel.setMethodCallHandler { call, result in
-            switch call.method {
-            case "startMonitoring":
-                MotionService.shared.startMonitoring()
-                result(nil)
-            case "stopMonitoring":
-                MotionService.shared.stopMonitoring()
-                result(nil)
-            default:
-                result(FlutterMethodNotImplemented)
-            }
+        if let registrar = self.registrar(forPlugin: "TrembleNativePlugin") {
+            TrembleNativePlugin.register(with: registrar)
         }
 
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)

@@ -16,9 +16,23 @@ import 'src/core/firebase_options_dev.dart';
 import 'src/core/firebase_options_prod.dart';
 import 'src/core/theme_provider.dart';
 import 'src/core/notification_service.dart';
+import 'src/core/translations.dart';
+
+import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Ensure system navigation bar is transparent and consistent
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   // Determine environment flavor, defaulting to 'dev'.
   const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
@@ -68,6 +82,7 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final isDark = prefs.getBool('themeMode');
   final initialTheme = isDark == true ? ThemeMode.dark : ThemeMode.light;
+  final initialLang = prefs.getString('appLanguage');
 
   runApp(
     ProviderScope(
@@ -76,6 +91,10 @@ void main() async {
         // avoids the async gap that caused the Light→Dark flash.
         themeModeProvider.overrideWith(
           (ref) => ThemeModeNotifier.withInitial(initialTheme),
+        ),
+        // Seed language provider to avoid 'sl' flash on startup
+        appLanguageProvider.overrideWith(
+          () => AppLanguageNotifier(initialLang),
         ),
       ],
       child: const TrembleApp(),
