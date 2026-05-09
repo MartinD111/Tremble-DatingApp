@@ -76,7 +76,7 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
             center,
             Unmanaged.passUnretained(self).toOpaque(),
             callback,
-            "app.tremble.radar.changed" as CFString,
+            CFNotificationName(rawValue: "app.tremble.radar.changed" as CFString),
             nil,
             .deliverImmediately
         )
@@ -89,7 +89,7 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
         CFNotificationCenterRemoveObserver(
             center,
             Unmanaged.passUnretained(self).toOpaque(),
-            "app.tremble.radar.changed" as CFString,
+            CFNotificationName(rawValue: "app.tremble.radar.changed" as CFString),
             nil
         )
         return nil
@@ -97,21 +97,9 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
 }
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+@objc class AppDelegate: FlutterAppDelegate {
 
-    override func application(
-        _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-    ) -> Bool {
-        // Google Maps SDK — key stored in Info.plist as MAPS_API_KEY.
-        // Local dev: set MAPS_API_KEY in ios/Flutter/Debug.xcconfig.
-        // CI/CD: inject MAPS_API_KEY as an xcconfig variable before build.
-        if let mapsApiKey = Bundle.main.object(forInfoDictionaryKey: "MAPS_API_KEY") as? String,
-           !mapsApiKey.isEmpty {
-            GMSServices.provideAPIKey(mapsApiKey)
-        }
-        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-    }
+
 
     override func application(
         _ application: UIApplication,
@@ -129,21 +117,38 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
         }
     }
 
-    func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
-        GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
+
+    override func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        if let mapsApiKey = Bundle.main.object(forInfoDictionaryKey: "MAPS_API_KEY") as? String,
+           !mapsApiKey.isEmpty {
+            GMSServices.provideAPIKey(mapsApiKey)
+        }
+
+        GeneratedPluginRegistrant.register(with: self)
+
+        guard let controller = window?.rootViewController as? FlutterViewController else {
+            return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+        }
+        let binaryMessenger = controller.binaryMessenger
+
+        
 
         // ── Radar state sync (tile/widget/quick action ↔ Flutter) ───────────────
         // EventChannel: broadcasts radar state changes to Flutter
         let radarEventChannel = FlutterEventChannel(
             name: "app.tremble/radar/events",
-            binaryMessenger: engineBridge.binaryMessenger
+            binaryMessenger: binaryMessenger
         )
         radarEventChannel.setStreamHandler(object: RadarEventStreamHandler())
 
         // MethodChannel: receives setRadarActive / getRadarActive / etc from Flutter
         let radarMethodChannel = FlutterMethodChannel(
             name: "app.tremble/radar",
-            binaryMessenger: engineBridge.binaryMessenger
+            binaryMessenger: binaryMessenger
         )
         radarMethodChannel.setMethodCallHandler { call, result in
             switch call.method {
@@ -183,7 +188,7 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
         // stopMonitoring: removes all regions and cancels pending notifications.
         let geofenceChannel = FlutterMethodChannel(
             name: "tremble.dating.app/geofence",
-            binaryMessenger: engineBridge.binaryMessenger
+            binaryMessenger: binaryMessenger
         )
 
         geofenceChannel.setMethodCallHandler { call, result in
@@ -212,13 +217,13 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
         // ── Motion Service — native Activity Recognition ─────────────────────
         let motionEventChannel = FlutterEventChannel(
             name: "app.tremble/motion/events",
-            binaryMessenger: engineBridge.binaryMessenger
+            binaryMessenger: binaryMessenger
         )
         motionEventChannel.setStreamHandler(MotionService.shared)
         
         let motionMethodChannel = FlutterMethodChannel(
             name: "app.tremble/motion",
-            binaryMessenger: engineBridge.binaryMessenger
+            binaryMessenger: binaryMessenger
         )
         motionMethodChannel.setMethodCallHandler { call, result in
             switch call.method {
@@ -232,5 +237,7 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
                 result(FlutterMethodNotImplemented)
             }
         }
+
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 }
