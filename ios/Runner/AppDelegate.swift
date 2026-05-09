@@ -238,12 +238,6 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
         }
 
         SwiftFlutterBackgroundServicePlugin.taskIdentifier = "app.tremble.radar"
-        SwiftFlutterBackgroundServicePlugin.setPluginRegistrantCallback { registry in
-            GeneratedPluginRegistrant.register(with: registry)
-            if let registrar = registry.registrar(forPlugin: "TrembleNativePlugin") {
-                TrembleNativePlugin.register(with: registrar)
-            }
-        }
 
         GeneratedPluginRegistrant.register(with: self)
         if let registrar = self.registrar(forPlugin: "TrembleNativePlugin") {
