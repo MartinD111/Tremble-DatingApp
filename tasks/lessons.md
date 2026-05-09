@@ -261,3 +261,20 @@ Source: F13 Stealth & Safety Implementation, May 2026.
 [2026-05-08] Processing large contact lists (1000+ entries) for SHA-256 hashing must be performed in a background isolate (using Flutter's `compute` or manual `Isolate`) to prevent UI jank. Normalization to E.164 must occur before hashing to ensure consistent matching across different device contact formats.
 Source: F13 Stealth & Safety Implementation, May 2026.
 
+**Rule #61 — Brand-Accurate Icon Assets.**
+[2026-05-09] To avoid "brown-pink" artifacts in launcher icons, the `adaptive_icon_background` in `flutter_launcher_icons.yaml` MUST match the official Tremble Rose hex (#F4436C) and use `tremble_icon_clean.png`. Avoid using transparent variants for background layers.
+Source: Branding Stabilization, May 2026.
+
+**Rule #62 — Native Splash Background Matching.**
+[2026-05-09] To prevent the "white box" regression during app startup, both the `color` and `android_12: color` in `flutter_native_splash.yaml` MUST be set to the official Graphite brand color (#1A1A18). This ensures a seamless transition from the OS splash to the Flutter app's dark theme.
+Source: Branding Stabilization, May 2026.
+
+**Rule #63 — Seamless Radar Sweeps.**
+[2026-05-09] `SweepGradient` implementation for radar scanners (RadarPainter) must include a slight buffer stop (e.g., color stop at 0.99 instead of 1.0) to prevent a hard vertical "seam" or flicker at the 3 o'clock position where the gradient wrap-around occurs.
+Source: UI Polish, May 2026.
+
+**Rule #64 — Manual Native Cleanup for SDK Removal.**
+[2026-05-09] Removing a package from `pubspec.yaml` (e.g., Google Maps) is insufficient. Native keys (API Keys) and SDK initializers MUST be manually purged from `Info.plist` (iOS) and `AndroidManifest.xml` (Android) to prevent runtime crashes or "Missing API Key" errors during the platform's app boot-up sequence.
+Source: OSM Migration, May 2026.
+
+

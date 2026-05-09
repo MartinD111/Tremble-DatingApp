@@ -119,7 +119,7 @@
             android:name=".radar.RadarTileService"
             android:exported="true"
             android:label="@string/qs_tile_label"
-            android:icon="@drawable/ic_tremble_qs_tile"
+            android:icon="@mipmap/launcher_icon"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />

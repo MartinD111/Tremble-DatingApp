@@ -23,8 +23,18 @@ Infrastructure:
 - Redis:     Upstash Redis (Deduplication, Global Rate Limiting, Cooldowns)
 - Storage:   Cloudflare R2 (for media) / Firebase Storage
 - Flavors:   Dev (com.pulse) | Prod (tremble.dating.app)
+- Maps:      Cloudflare R2 + Protomaps Workers (maps.trembledating.com)
+
 
 ## Data Flows & PII (SEC-005)
 - **Onboarding PII:** Collected via `completeOnboarding` (Firebase Function). Includes: Email (encrypted at rest), Birthdate (converted to age), Gender, InterestedIn, Hobbies, Location (ephemeral/obfuscated).
 - **Proximity Data:** BLE RSSI and discovery logs are ephemeral and stored in memory only. No permanent disk storage for local device sightings.
 - **Retention:** All PII follows deletion jobs defined in `functions/src/modules/gdpr`.
+
+## Maps Infrastructure (OSM/Protomaps)
+- **Data Source:** Planet PMTiles (Global OSM snapshot)
+- **Hosting:** Cloudflare R2 (`tremble-maps` bucket)
+- **Edge Routing:** Cloudflare Worker serving vector tiles at `maps.trembledating.com`.
+- **Client:** `flutter_map` + `VectorTileLayer`. Fallback to raster tiles via Protomaps rasterization if needed.
+- **Gym Mode:** Uses REST-based Google Places API (New) for location discovery (Search only, no SDK).
+
