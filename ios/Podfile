@@ -41,7 +41,7 @@ target 'ImageNotification' do
   pod 'Firebase/Messaging'
 end
 
-target 'TrembleRadarWidget' do
+target 'TrembleRadarWidgetExtension' do
   use_frameworks!
 end
 
