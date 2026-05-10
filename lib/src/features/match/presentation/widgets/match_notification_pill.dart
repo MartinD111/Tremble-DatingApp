@@ -48,6 +48,7 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
   late Animation<double> _swipeOpacity;
   late Animation<Offset> _swipeSlide;
   bool _isDismissing = false;
+  double _swipeDirection = 1.0; // +1 = right, -1 = left
 
   @override
   void initState() {
@@ -59,8 +60,14 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
     _swipeOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(parent: _swipeController, curve: Curves.easeInOutCubic),
     );
-    _swipeSlide =
-        Tween<Offset>(begin: Offset.zero, end: const Offset(1.5, 0)).animate(
+    _swipeSlide = _buildSwipeSlide();
+  }
+
+  Animation<Offset> _buildSwipeSlide() {
+    return Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset(_swipeDirection * 1.5, 0),
+    ).animate(
       CurvedAnimation(parent: _swipeController, curve: Curves.easeInCubic),
     );
   }
@@ -71,9 +78,13 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
     super.dispose();
   }
 
-  void _onSwipeDismiss() {
+  void _onSwipeDismiss({double direction = 1.0}) {
     if (_isDismissing) return;
     _isDismissing = true;
+    setState(() {
+      _swipeDirection = direction;
+      _swipeSlide = _buildSwipeSlide();
+    });
     _swipeController.forward().then((_) {
       widget.onIgnore();
     });
@@ -94,7 +105,9 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
       onHorizontalDragEnd: (details) {
         if (details.primaryVelocity != null &&
             details.primaryVelocity!.abs() > 200) {
-          _onSwipeDismiss();
+          _onSwipeDismiss(
+            direction: (details.primaryVelocity! < 0) ? -1.0 : 1.0,
+          );
         }
       },
       child: SlideTransition(

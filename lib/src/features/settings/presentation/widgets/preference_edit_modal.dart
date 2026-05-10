@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/ui/discard_changes_modal.dart';
-import '../../../../shared/ui/top_notification.dart';
+import '../../../../shared/ui/center_notification.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../../core/translations.dart';
 import '../../../../core/theme.dart';
@@ -231,13 +231,7 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
     final brandRose = Theme.of(context).colorScheme.primary;
     final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
 
-    // Dark mode container background — use pill color (consistent with profile pills)
-    final containerBg = TrembleTheme.getPillColor(
-      isDark: isDark,
-      isGenderBased: widget.isGenderBased,
-      gender: widget.gender,
-    );
-    final bgColor = isDark ? containerBg : Colors.white;
+    final bgColor = isDark ? const Color(0xFF2A2A2E) : Colors.white;
 
     final hasChanges = _hasChanges();
     return PopScope(
@@ -251,10 +245,9 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
               : (_pending == _somethingElse ? _otherController.text : _pending);
           widget.onUpdate(changedValue);
           final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
-          TopNotification.show(
+          CenterNotification.show(
             context: context,
-            message: t('profile_updated', lang),
-            icon: LucideIcons.checkCircle,
+            message: t('Profile updated', lang),
           );
           if (context.mounted) Navigator.pop(context);
         } else if (res == 'discard') {
@@ -407,10 +400,9 @@ class _PreferenceEditSheetState extends ConsumerState<_PreferenceEditSheet> {
                                 ? _otherController.text
                                 : _pending);
                         widget.onUpdate(finalVal);
-                        TopNotification.show(
-                          context: widget.outerContext,
-                          message: t('profile_updated', lang),
-                          icon: LucideIcons.checkCircle,
+                        CenterNotification.show(
+                          context: context,
+                          message: t('Profile updated', lang),
                         );
                         Navigator.pop(context);
                       },
@@ -444,6 +436,9 @@ Future<void> showSliderEditModal({
   String? endLabel,
   String Function(double)? labelMapper,
   String? unit,
+  bool isGenderBased = false,
+  String? gender,
+  IconData? rowIcon,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -459,6 +454,9 @@ Future<void> showSliderEditModal({
       endLabel: endLabel,
       labelMapper: labelMapper,
       unit: unit,
+      isGenderBased: isGenderBased,
+      gender: gender,
+      rowIcon: rowIcon,
       onSave: (v) {
         onSave(v);
         Navigator.pop(ctx);
@@ -478,6 +476,9 @@ class _SliderEditSheet extends ConsumerStatefulWidget {
   final String Function(double)? labelMapper;
   final String? unit;
   final ValueChanged<RangeValues> onSave;
+  final bool isGenderBased;
+  final String? gender;
+  final IconData? rowIcon;
 
   const _SliderEditSheet({
     required this.title,
@@ -490,6 +491,9 @@ class _SliderEditSheet extends ConsumerStatefulWidget {
     this.endLabel,
     this.labelMapper,
     this.unit,
+    this.isGenderBased = false,
+    this.gender,
+    this.rowIcon,
   });
 
   @override
@@ -527,10 +531,9 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
         if (res == 'save') {
           widget.onSave(_values);
           final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
-          TopNotification.show(
+          CenterNotification.show(
             context: context,
-            message: t('profile_updated', lang),
-            icon: LucideIcons.checkCircle,
+            message: t('Profile updated', lang),
           );
           if (context.mounted) Navigator.pop(context);
         } else if (res == 'discard') {
@@ -541,10 +544,7 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
           padding: EdgeInsets.fromLTRB(
               24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
           decoration: BoxDecoration(
-            color: isDark
-                ? TrembleTheme.getPillColor(
-                    isDark: true, isGenderBased: false, gender: null)
-                : Colors.white,
+            color: isDark ? const Color(0xFF2A2A2E) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
@@ -560,13 +560,23 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
                 ),
               ),
               const SizedBox(height: 24),
-              Text(
-                widget.title,
-                style: GoogleFonts.instrumentSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.rowIcon != null) ...[
+                    Icon(widget.rowIcon, size: 20,
+                        color: textColor.withValues(alpha: 0.7)),
+                    const SizedBox(width: 10),
+                  ],
+                  Text(
+                    widget.title,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               // Live range display
@@ -787,13 +797,7 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
     final brandRose = Theme.of(context).colorScheme.primary;
     final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
 
-    // Dark mode container background — use pill color (consistent with profile pills)
-    final containerBg = TrembleTheme.getPillColor(
-      isDark: isDark,
-      isGenderBased: widget.isGenderBased,
-      gender: widget.gender,
-    );
-    final bgColor = isDark ? containerBg : Colors.white;
+    final bgColor = isDark ? const Color(0xFF2A2A2E) : Colors.white;
 
     final hasChanges = _hasChanges();
 
@@ -992,13 +996,7 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
     final brandRose = Theme.of(context).colorScheme.primary;
     final lang = ref.watch(authStateProvider)?.appLanguage ?? 'en';
 
-    // Dark mode container background — use pill color (consistent with profile pills)
-    final containerBg = TrembleTheme.getPillColor(
-      isDark: isDark,
-      isGenderBased: widget.isGenderBased,
-      gender: widget.gender,
-    );
-    final bgColor = isDark ? containerBg : Colors.white;
+    final bgColor = isDark ? const Color(0xFF2A2A2E) : Colors.white;
 
     final hasChanges = _hasChanges();
     return PopScope(
@@ -1009,10 +1007,9 @@ class _LanguageEditSheetState extends ConsumerState<_LanguageEditSheet> {
         if (res == 'save') {
           widget.onSave(_selected!);
           final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
-          TopNotification.show(
+          CenterNotification.show(
             context: context,
-            message: t('profile_updated', lang),
-            icon: LucideIcons.checkCircle,
+            message: t('Profile updated', lang),
           );
           if (context.mounted) Navigator.pop(context);
         } else if (res == 'discard') {

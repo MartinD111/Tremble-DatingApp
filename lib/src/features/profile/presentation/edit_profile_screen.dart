@@ -69,6 +69,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   double _introversionLevel = 0.5;
   final _schoolController = TextEditingController();
   final _companyController = TextEditingController();
+  final _graduatedUniversityController = TextEditingController();
+  bool? _lookingForNewJob;
   bool? _hasChildren;
   List<Map<String, dynamic>> _hobbies = [];
   List<String> _lookingFor = [];
@@ -135,6 +137,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _occupationController.text = user.occupation ?? '';
       _schoolController.text = user.school ?? '';
       _companyController.text = user.company ?? '';
+      _graduatedUniversityController.text = user.graduatedUniversity ?? '';
+      _lookingForNewJob = user.lookingForNewJob;
       _hasChildren = user.hasChildren;
 
       // Backward compatibility: if jobStatus is missing, infer it from occupation
@@ -223,6 +227,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _occupationController.addListener(_markChanged);
     _schoolController.addListener(_markChanged);
     _companyController.addListener(_markChanged);
+    _graduatedUniversityController.addListener(_markChanged);
   }
 
   void _markChanged() {
@@ -236,6 +241,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _occupationController.dispose();
     _schoolController.dispose();
     _companyController.dispose();
+    _graduatedUniversityController.dispose();
     _titleOpacity.dispose();
     _buttonsOpacity.dispose();
     _locationDebounce?.cancel();
@@ -378,6 +384,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           company: _companyController.text.isNotEmpty
               ? _companyController.text
               : null,
+          graduatedUniversity:
+              _graduatedUniversityController.text.isNotEmpty
+                  ? _graduatedUniversityController.text
+                  : null,
+          lookingForNewJob: _lookingForNewJob,
           hasChildren: _hasChildren,
           nicotineUse: _nicotineUse,
           drinkingHabit: _drinkingHabit,
@@ -406,7 +417,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ));
     CenterNotification.show(
       context: context,
-      message: t('profile_updated', _lang),
+      message: t('Profile updated', _lang),
     );
     setState(() => _hasChanges = false);
     if (context.mounted) {
@@ -676,6 +687,40 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                   t('school_hint', lang),
                                   textColor,
                                   fillColor,
+                                ),
+                              ],
+                              if (_jobStatus == 'employed') ...[
+                                const SizedBox(height: 12),
+                                _buildTextField(
+                                  _graduatedUniversityController,
+                                  t('graduated_university_hint', lang),
+                                  textColor,
+                                  fillColor,
+                                ),
+                                const SizedBox(height: 4),
+                                SwitchListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(
+                                    t('looking_for_new_job', lang),
+                                    style: TextStyle(
+                                        color: textColor,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  value: _lookingForNewJob ?? false,
+                                  activeThumbColor: Theme.of(context)
+                                      .colorScheme
+                                      .primary,
+                                  activeTrackColor: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.3),
+                                  inactiveTrackColor: isDark
+                                      ? Colors.white24
+                                      : Colors.black12,
+                                  onChanged: (val) => setState(() {
+                                    _lookingForNewJob = val;
+                                    _hasChanges = true;
+                                  }),
                                 ),
                               ],
                             ],

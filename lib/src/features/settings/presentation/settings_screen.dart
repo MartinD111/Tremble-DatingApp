@@ -19,8 +19,6 @@ import '../../../shared/ui/tremble_header.dart';
 import '../../../core/theme.dart';
 import '../../dashboard/application/radar_schedule_controller.dart';
 import '../../dashboard/presentation/widgets/radar_schedule_modal.dart';
-import '../../gym/presentation/gym_search_widget.dart';
-import '../../gym/application/gym_selection_notifier.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
 
@@ -50,7 +48,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   final Map<String, GlobalKey> _sectionKeys = {
     'preferences': GlobalKey(),
     'lifestyle': GlobalKey(),
-    'gyms': GlobalKey(),
     'appearance': GlobalKey(),
     'account': GlobalKey(),
   };
@@ -191,13 +188,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   sectionKey: 'lifestyle',
                   icon: LucideIcons.heart,
                   content: _buildLifestyleContent(user),
-                ),
-                const SizedBox(height: 20),
-                _buildExpandableSection(
-                  title: 'My Gyms',
-                  sectionKey: 'gyms',
-                  icon: LucideIcons.dumbbell,
-                  content: _buildMyGymsContent(user),
                 ),
                 const SizedBox(height: 20),
                 _buildExpandableSection(
@@ -803,15 +793,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     );
   }
 
-  Widget _buildMyGymsContent(AuthUser user) {
-    return GymSearchWidget(
-      selectedGyms: user.selectedGyms,
-      onAdd: (gym) async => ref.read(gymSelectionProvider.notifier).addGym(gym),
-      onRemove: (placeId) =>
-          ref.read(gymSelectionProvider.notifier).removeGym(placeId),
-    );
-  }
-
   Widget _buildAppSettingsContent(AuthUser user) {
     final lang = user.appLanguage;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -974,6 +955,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             current: RangeValues(
                 user.ageRangeStart.toDouble(), user.ageRangeEnd.toDouble()),
             onUpdate: _ctrl.updateAgeRange,
+            rowIcon: LucideIcons.calendar,
           ),
         ),
         const SizedBox(height: 16),
@@ -1002,6 +984,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             unit: ' cm',
             isPremium: !user.isPremium,
             onUpdate: _ctrl.updateHeightRange,
+            rowIcon: LucideIcons.ruler,
           ),
         ),
         const SizedBox(height: 16),
@@ -1033,6 +1016,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             endLabel: _t('politics_right'),
             labelMapper: _politicalLabel,
             onUpdate: _ctrl.updatePartnerPoliticalRange,
+            rowIcon: LucideIcons.landmark,
           ),
         ),
         const SizedBox(height: 16),
@@ -1064,6 +1048,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             endLabel: _t('full_extrovert'),
             labelMapper: (v) => '${v.round()}%',
             onUpdate: _ctrl.updatePartnerIntrovertRange,
+            rowIcon: LucideIcons.smile,
           ),
         ),
 
@@ -1277,6 +1262,95 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     );
   }
 
+  Widget _nicotinePrefRow({
+    required BuildContext context,
+    required AuthUser user,
+  }) {
+    final label = _t('nicotine_title');
+    final options = [
+      {
+        'label': _t('nicotine_pref_no_preference'),
+        'value': 'no_preference',
+        'icon': LucideIcons.helpCircle,
+      },
+      {
+        'label': _t('nicotine_pref_none_only'),
+        'value': 'none_only',
+        'icon': LucideIcons.ban,
+      },
+    ];
+    final customOptions = [
+      {
+        'label': _t('nicotine_cigarettes'),
+        'value': 'cigarettes',
+        'icon': LucideIcons.cigarette,
+      },
+      {
+        'label': _t('nicotine_vape'),
+        'value': 'vape',
+        'icon': LucideIcons.wind,
+      },
+      {
+        'label': _t('nicotine_iqos'),
+        'value': 'iqos',
+        'icon': LucideIcons.zap,
+      },
+      {
+        'label': _t('nicotine_zyn'),
+        'value': 'zyn',
+        'icon': LucideIcons.square,
+      },
+      {
+        'label': _t('nicotine_shisha'),
+        'value': 'shisha',
+        'icon': LucideIcons.flame,
+      },
+      {
+        'label': _t('nicotine_cannabis'),
+        'value': 'cannabis',
+        'icon': LucideIcons.leaf,
+      },
+    ];
+    final allDisplayOptions = [...options, ...customOptions];
+    final currentValue = user.nicotineFilter;
+    final formatter = (String v) {
+      if (v.contains(',')) {
+        final parts = v.split(',');
+        return parts
+            .map((p) =>
+                allDisplayOptions
+                    .where((o) => o['value'] == p)
+                    .map((o) => o['label']! as String)
+                    .firstOrNull ??
+                p)
+            .join(', ');
+      }
+      return allDisplayOptions
+              .where((o) => o['value'] == v)
+              .map((o) => o['label']! as String)
+              .firstOrNull ??
+          v;
+    };
+    return PreferencePillRow(
+      icon: LucideIcons.wind,
+      label: label,
+      values: [currentValue],
+      formatter: formatter,
+      onEdit: () => _ctrl.openPillEditModal(
+        context: context,
+        title: label,
+        options: options,
+        currentValue: currentValue,
+        onUpdate: (val) =>
+            _ctrl.updateUser((u) => u.copyWith(nicotineFilter: val)),
+        rowIcon: LucideIcons.wind,
+        allOptions: customOptions,
+        onCustom: (val) =>
+            _ctrl.updateUser((u) => u.copyWith(nicotineFilter: val)),
+      ),
+    );
+  }
+
   /// Opens the Looking For multi-select modal.
   /// Options match the registration DatingPreferencesStep keys exactly.
   /// Legacy stored values (old English / Slovenian text) remain selectable
@@ -1344,6 +1418,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       ],
       currentValues: user.interestedIn,
       onUpdate: (vals) => _ctrl.updateInterestedIn(vals),
+      rowIcon: LucideIcons.users,
     );
   }
 
@@ -1464,6 +1539,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         Divider(color: dividerColor),
         Consumer(builder: (context, ref, _) {
           final isActivated = ref.watch(radarScheduleProvider).isActivated;
+
           final statusColor = isActivated
               ? TrembleTheme.rose
               : (isDark ? Colors.white54 : Colors.black45);
@@ -1492,6 +1568,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             onTap: () => showRadarScheduleModal(context),
           );
         }),
+        Divider(color: dividerColor),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(LucideIcons.dumbbell,
+              color: isDark ? Colors.white70 : Colors.black45),
+          title: Text('My Gyms', style: TextStyle(color: textColor)),
+          trailing: Icon(LucideIcons.chevronRight,
+              color: isDark ? Colors.white30 : Colors.black26),
+          onTap: () => context.push('/my-gyms'),
+        ),
         const SizedBox(height: 24),
         PrimaryButton(
             text: _t('change_password'),
@@ -1570,31 +1656,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               _ctrl.updateUser((u) => u.copyWith(drinkingHabit: val)),
         ),
         const SizedBox(height: 16),
-        _prefPillRow(
-          context: context,
-          label: _t('nicotine_title'),
-          icon: LucideIcons.wind,
-          currentValue: user.nicotineFilter,
-          options: [
-            {
-              'label': _t('nicotine_pref_no_preference'),
-              'value': 'no_preference',
-              'icon': LucideIcons.helpCircle,
-            },
-            {
-              'label': _t('nicotine_pref_none_only'),
-              'value': 'none_only',
-              'icon': LucideIcons.ban,
-            },
-            {
-              'label': _t('nicotine_pref_any'),
-              'value': 'any',
-              'icon': LucideIcons.heart,
-            },
-          ],
-          onUpdate: (val) =>
-              _ctrl.updateUser((u) => u.copyWith(nicotineFilter: val)),
-        ),
+        _nicotinePrefRow(context: context, user: user),
         const SizedBox(height: 16),
         _prefPillRow(
           context: context,

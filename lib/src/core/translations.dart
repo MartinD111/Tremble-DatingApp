@@ -111,6 +111,7 @@ const Map<String, Map<String, String>> _translations = {
     // --- General ---
     'settings': 'Settings',
     'save': 'Save',
+    'Profile updated': 'Profile updated',
     'cancel': 'Cancel',
     'schedule_radar': 'Schedule radar',
     'schedule_radar_sub':
@@ -318,6 +319,8 @@ const Map<String, Map<String, String>> _translations = {
     'location_hint': 'e.g. Koper, Slovenia',
     'school': 'School',
     'school_hint': 'e.g. University of Ljubljana',
+    'graduated_university_hint': 'Graduated university (Optional)',
+    'looking_for_new_job': 'Currently looking for a new job',
     'company': 'Company',
     'company_hint': 'e.g. Google',
     'has_children': 'Do you have children?',
@@ -809,6 +812,7 @@ const Map<String, Map<String, String>> _translations = {
   'sl': {
     'settings': 'Nastavitve',
     'save': 'Shrani',
+    'Profile updated': 'Profil posodobljen',
     'cancel': 'Prekliči',
     'pulse_intercept': 'Pulse Intercept',
     'share_phone': 'Deli telefonsko številko',
@@ -1042,12 +1046,13 @@ const Map<String, Map<String, String>> _translations = {
     'location_hint': 'npr. Ljubljana, Slovenija',
     'school': 'Šola',
     'school_hint': 'npr. Univerza v Ljubljani',
+    'graduated_university_hint': 'Zaključena univerza (Opcijsko)',
+    'looking_for_new_job': 'Trenutno iščem novo zaposlitev',
     'company': 'Podjetje',
     'company_hint': 'npr. Google',
     'has_children': 'Ali imaš otroke?',
     'no_hobbies_yet': 'Še nisi dodal/-a hobijev.',
     'save_changes': 'Shrani spremembe',
-    'profile_updated': 'Profil posodobljen!',
     'upload_failed': 'Nalaganje ni uspelo',
 
     'add_hobby': 'Dodaj hobi',
@@ -1481,6 +1486,7 @@ const Map<String, Map<String, String>> _translations = {
   'de': {
     'settings': 'Einstellungen',
     'save': 'Speichern',
+    'Profile updated': 'Profil aktualisiert',
     'cancel': 'Abbrechen',
     'schedule_radar': 'Radar-Zeitplan',
     'schedule_radar_sub':
@@ -1569,7 +1575,6 @@ const Map<String, Map<String, String>> _translations = {
     'hobbies': 'Hobbys',
     'no_hobbies_yet': 'Noch keine Hobbys hinzugefügt.',
     'save_changes': 'Änderungen speichern',
-    'profile_updated': 'Profil aktualisiert!',
     'add_hobby': 'Hobby hinzufügen',
     'hobby_name': 'Hobby-Name',
     'icon_emoji': 'Symbol (Emoji)',
@@ -1851,6 +1856,7 @@ const Map<String, Map<String, String>> _translations = {
   'it': {
     'settings': 'Impostazioni',
     'save': 'Salva',
+    'Profile updated': 'Profilo aggiornato',
     'cancel': 'Annulla',
     'schedule_radar': 'Programma radar',
     'schedule_radar_sub':
@@ -1939,7 +1945,6 @@ const Map<String, Map<String, String>> _translations = {
     'hobbies': 'Hobby',
     'no_hobbies_yet': 'Nessun hobby aggiunto.',
     'save_changes': 'Salva modifiche',
-    'profile_updated': 'Profilo aggiornato!',
     'add_hobby': 'Aggiungi hobby',
     'hobby_name': 'Nome hobby',
     'icon_emoji': 'Icona (Emoji)',
@@ -2149,6 +2154,7 @@ const Map<String, Map<String, String>> _translations = {
   'fr': {
     'settings': 'Paramètres',
     'save': 'Enregistrer',
+    'Profile updated': 'Profil mis à jour',
     'cancel': 'Annuler',
     'schedule_radar': 'Planifier le radar',
     'schedule_radar_sub':
@@ -2228,7 +2234,6 @@ const Map<String, Map<String, String>> _translations = {
     'location_hint': 'ex. Paris, France',
     'hobbies': 'Loisirs',
     'save_changes': 'Enregistrer les modifications',
-    'profile_updated': 'Profil mis à jour!',
     'looking_for': 'Je cherche',
     'scanning': 'Scan en cours...',
     'radar_locked': 'Radar verrouillé.',
@@ -2398,6 +2403,7 @@ const Map<String, Map<String, String>> _translations = {
   'hr': {
     'settings': 'Postavke',
     'save': 'Spremi',
+    'Profile updated': 'Profil ažuriran',
     'cancel': 'Odustani',
     'schedule_radar': 'Raspored radara',
     'schedule_radar_sub':
@@ -2473,7 +2479,6 @@ const Map<String, Map<String, String>> _translations = {
     'location': 'Lokacija',
     'hobbies': 'Hobiji',
     'save_changes': 'Spremi promjene',
-    'profile_updated': 'Profil ažuriran!',
     'looking_for': 'Tražim',
     'scanning': 'Skeniranje...',
     'radar_locked': 'Radar je zaključan.',
@@ -2637,6 +2642,7 @@ const Map<String, Map<String, String>> _translations = {
   'sr': {
     'settings': 'Podešavanja',
     'save': 'Sačuvaj',
+    'Profile updated': 'Profil ažuriran',
     'cancel': 'Otkaži',
     'schedule_radar': 'Raspored radara',
     'schedule_radar_sub':
@@ -2709,7 +2715,6 @@ const Map<String, Map<String, String>> _translations = {
     'location': 'Lokacija',
     'hobbies': 'Hobiji',
     'save_changes': 'Sačuvaj promene',
-    'profile_updated': 'Profil ažuriran!',
 
     // --- Politička pripadnost (SR) ---
     'political_affiliation': 'Politička pripadnost',
@@ -2890,6 +2895,7 @@ const Map<String, Map<String, String>> _translations = {
   'hu': {
     'settings': 'Beállítások',
     'save': 'Mentés',
+    'Profile updated': 'Profil frissítve',
     'cancel': 'Mégse',
     'schedule_radar': 'Radar ütemezése',
     'schedule_radar_sub':
@@ -2962,7 +2968,6 @@ const Map<String, Map<String, String>> _translations = {
     'location': 'Helyszín',
     'hobbies': 'Hobbik',
     'save_changes': 'Változtatások mentése',
-    'profile_updated': 'Profil frissítve!',
     'looking_for': 'Keresem',
     'scanning': 'Keresés...',
     'radar_locked': 'Radar zárolva.',

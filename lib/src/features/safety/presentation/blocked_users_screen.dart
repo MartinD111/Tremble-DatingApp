@@ -88,13 +88,21 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(LucideIcons.userCheck,
-                          size: 64, color: Colors.white24),
+                      Icon(LucideIcons.userCheck,
+                          size: 64,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.35)),
                       const SizedBox(height: 16),
                       Text(
                         t('no_blocked_users', lang),
                         style: GoogleFonts.instrumentSans(
-                            color: Colors.white54, fontSize: 18),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
+                            fontSize: 18),
                       ),
                     ],
                   ),

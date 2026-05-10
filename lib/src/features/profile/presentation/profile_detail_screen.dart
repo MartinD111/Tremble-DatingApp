@@ -514,33 +514,30 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
       Color iconColor, String lang, bool isGenderBasedColor, String? gender) {
     final items = <Widget>[];
 
-    void addBadge(IconData icon, String text, [Color? color]) {
-      items.add(Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: 0.1)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: color ?? iconColor),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(text,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: subColor, fontSize: 12)),
-            )
-          ],
-        ),
+    if (match.school != null) {
+      items.add(_PreferencePill(
+        icon: LucideIcons.graduationCap,
+        label: match.school!,
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
       ));
     }
-
-    if (match.school != null) {
-      addBadge(LucideIcons.graduationCap, match.school!);
+    if (match.graduatedUniversity != null &&
+        match.graduatedUniversity!.isNotEmpty) {
+      items.add(_PreferencePill(
+        icon: LucideIcons.graduationCap,
+        label: match.graduatedUniversity!,
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
+      ));
+    }
+    if (match.lookingForNewJob == true) {
+      items.add(_PreferencePill(
+        icon: LucideIcons.search,
+        label: t('looking_for_new_job', lang),
+        isGenderBased: isGenderBasedColor,
+        gender: gender,
+      ));
     }
     if (match.hairColor != null) {
       items.add(_PreferencePill(

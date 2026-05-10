@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Build
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -34,8 +33,6 @@ const val NOTIF_ID = 888
  *   - setOngoing(true)               → user cannot swipe-dismiss; survives "Clear all"
  *   - foreground service backed      → OS keeps it alive as long as service runs
  *   - DecoratedCustomViewStyle       → custom body within standard system chrome
- *   - setColorized + brand colour    → rose tinted background on lock-screen and
- *                                      heads-up surfaces (when channel allows it)
  *   - explicit Stop action           → routes to RadarToggleReceiver with
  *                                      force_state=false → flips RadarStateBridge
  *                                      → cancels notif + syncs Dart UI + tile + widget
@@ -99,15 +96,7 @@ object RadarNotificationBuilder {
             context.packageName,
             R.layout.notification_radar_collapsed
         )
-        val expanded = RemoteViews(
-            context.packageName,
-            R.layout.notification_radar_expanded
-        )
         collapsed.setTextViewText(R.id.notif_body, body)
-        expanded.setTextViewText(R.id.notif_expanded_body, body)
-        // Bind the inline Stop affordance inside the expanded layout to the
-        // same PendingIntent the addAction Stop button uses.
-        expanded.setOnClickPendingIntent(R.id.notif_action_stop, stopPending)
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_tremble_qs_tile)
@@ -120,11 +109,8 @@ object RadarNotificationBuilder {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setColor(Color.parseColor("#F4436C"))
-            .setColorized(true)
             .setStyle(NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(collapsed)
-            .setCustomBigContentView(expanded)
             .addAction(
                 NotificationCompat.Action.Builder(
                     R.drawable.ic_tremble_qs_tile,

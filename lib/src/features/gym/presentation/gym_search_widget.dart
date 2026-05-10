@@ -20,6 +20,7 @@ class GymSearchWidget extends ConsumerStatefulWidget {
     required this.selectedGyms,
     required this.onAdd,
     required this.onRemove,
+    this.onSearchFocused,
   });
 
   /// Current selection (read-only; owned by parent state).
@@ -32,6 +33,9 @@ class GymSearchWidget extends ConsumerStatefulWidget {
   /// Called when the user removes a selected gym.
   final void Function(String placeId) onRemove;
 
+  /// Called when the search field gains focus — used to scroll it into view.
+  final VoidCallback? onSearchFocused;
+
   @override
   ConsumerState<GymSearchWidget> createState() => _GymSearchWidgetState();
 }
@@ -41,6 +45,7 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
   static const _debounceMs = 300;
 
   final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
   late final PlacesService _places;
   Timer? _debounce;
   List<PlacePrediction> _predictions = [];
@@ -51,12 +56,18 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
     super.initState();
     _places = ref.read(placesServiceProvider);
     _places.startSession();
+    _searchFocus.addListener(() {
+      if (_searchFocus.hasFocus) {
+        widget.onSearchFocused?.call();
+      }
+    });
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -115,9 +126,6 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.05);
     final borderColor = isDark ? Colors.white24 : Colors.black12;
     final textColor = isDark ? Colors.white : Colors.black;
     final hintColor = isDark ? Colors.white38 : Colors.black38;
@@ -126,41 +134,35 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Search field ─────────────────────────────────────────────────
-        Container(
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: borderColor),
-          ),
-          child: TextField(
-            controller: _searchController,
-            onChanged: _onSearchChanged,
-            style: GoogleFonts.instrumentSans(color: textColor, fontSize: 15),
-            decoration: InputDecoration(
-              hintText: 'Search for your gym...',
-              hintStyle: GoogleFonts.instrumentSans(
-                color: hintColor,
-                fontSize: 15,
-              ),
-              prefixIcon: Icon(LucideIcons.search, color: hintColor, size: 18),
-              suffixIcon: _isSearching
-                  ? Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: _brandRose,
-                        ),
+        TextField(
+          controller: _searchController,
+          focusNode: _searchFocus,
+          onChanged: _onSearchChanged,
+          style: GoogleFonts.instrumentSans(color: textColor, fontSize: 15),
+          decoration: InputDecoration(
+            hintText: 'Search for your gym...',
+            hintStyle: GoogleFonts.instrumentSans(
+              color: hintColor,
+              fontSize: 15,
+            ),
+            prefixIcon: Icon(LucideIcons.search, color: hintColor, size: 18),
+            suffixIcon: _isSearching
+                ? Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: _brandRose,
                       ),
-                    )
-                  : null,
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+                    ),
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
             ),
           ),
         ),

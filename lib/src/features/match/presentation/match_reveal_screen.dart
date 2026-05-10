@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -247,6 +248,21 @@ class MatchRevealScreen extends ConsumerWidget {
                       color: _warmCream.withValues(alpha: 0.6),
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  // Visible in debug builds only — surfaces the real Firestore error
+                  // (e.g. permission-denied) so it can be diagnosed without logcat.
+                  if (kDebugMode)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        err.toString(),
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.jetBrainsMono(
+                          color: _rose.withValues(alpha: 0.7),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 24),
                   TextButton(
                     onPressed: () => context.pop(),

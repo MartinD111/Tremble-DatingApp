@@ -294,21 +294,22 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                                               item != 'meeting' &&
                                               item != 'spontaneous_meeting')
                                           .toList())
-                                  .map((item) => Container(
+                                  .map((item) {
+                                    final pillBg = TrembleTheme.getPillColor(
+                                      isDark: isDark,
+                                      isGenderBased: user.isGenderBasedColor,
+                                      gender: user.gender,
+                                    );
+                                    return Container(
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 10, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: (isDark
-                                                  ? Colors.white
-                                                  : Colors.black)
-                                              .withValues(alpha: 0.08),
+                                          color: pillBg,
                                           borderRadius:
                                               BorderRadius.circular(20),
                                           border: Border.all(
-                                              color: (isDark
-                                                      ? Colors.white
-                                                      : Colors.black)
-                                                  .withValues(alpha: 0.15)),
+                                              color: pillBg.withValues(
+                                                  alpha: isDark ? 0.6 : 0.4)),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -325,7 +326,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                                                     fontSize: 12)),
                                           ],
                                         ),
-                                      ))
+                                      );
+                                  })
                                   .toList(),
                             ),
                           ),

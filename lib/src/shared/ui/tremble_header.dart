@@ -30,7 +30,7 @@ class TrembleHeader extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(
           24, MediaQuery.of(context).padding.top + 12, 24, 0),
-      height: MediaQuery.of(context).padding.top + 70,
+      height: MediaQuery.of(context).padding.top + 90,
       width: double.infinity,
       child: Stack(
         alignment: Alignment.center,

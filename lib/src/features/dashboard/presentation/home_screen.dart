@@ -330,7 +330,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         AnimatedPositioned(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
-          bottom: isNavBarVisible ? 30 : -100,
+          bottom: (isNavBarVisible &&
+                  MediaQuery.of(context).viewInsets.bottom == 0)
+              ? 30
+              : -100,
           left: 0,
           right: 0,
           child: LiquidNavBar(
@@ -1017,13 +1020,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         RadarModeKind.gym,
         LucideIcons.dumbbell,
         t('gym_mode_info_title', lang),
-        const Color(0xFFF5C842)
+        const Color(0xFFF4436C)
       ),
       (
         RadarModeKind.event,
         LucideIcons.calendar,
         t('event_mode_info_title', lang),
-        const Color(0xFFF5C842)
+        const Color(0xFFF4436C)
       ),
       (
         RadarModeKind.run,
@@ -1544,17 +1547,23 @@ Future<void> showModeInfoDialog({
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 13),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.05),
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.05)
+                                    : Colors.black.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(100),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.12),
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.12)
+                                      : Colors.black.withValues(alpha: 0.15),
                                 ),
                               ),
                               child: Text(
                                 t('cancel', lang),
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.instrumentSans(
-                                  color: Colors.white60,
+                                  color: isDark
+                                      ? Colors.white60
+                                      : Colors.black54,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),

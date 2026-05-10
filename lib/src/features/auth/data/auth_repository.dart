@@ -87,6 +87,8 @@ class AuthUser {
   final String? school;
   final String? company;
   final bool? hasChildren;
+  final String? graduatedUniversity;
+  final bool? lookingForNewJob;
   final bool isPingVibrationEnabled;
   final bool isGenderBasedColor;
   final DateTime? lastWaveFoundAt;
@@ -169,6 +171,8 @@ class AuthUser {
     this.school,
     this.company,
     this.hasChildren,
+    this.graduatedUniversity,
+    this.lookingForNewJob,
     this.isPingVibrationEnabled = true,
     this.isGenderBasedColor = false,
     this.lastWaveFoundAt,
@@ -247,6 +251,8 @@ class AuthUser {
       'isGenderBasedColor': isGenderBasedColor,
       'school': school,
       'company': company,
+      'graduatedUniversity': graduatedUniversity,
+      'lookingForNewJob': lookingForNewJob,
       'isPingVibrationEnabled': isPingVibrationEnabled,
       'hasChildren': hasChildren,
       if (gymNotificationsEnabled != null)
@@ -353,6 +359,8 @@ class AuthUser {
       isGenderBasedColor: data['isGenderBasedColor'] as bool? ?? false,
       school: data['school'] as String?,
       company: data['company'] as String?,
+      graduatedUniversity: data['graduatedUniversity'] as String?,
+      lookingForNewJob: data['lookingForNewJob'] as bool?,
       isPingVibrationEnabled: data['isPingVibrationEnabled'] as bool? ?? true,
       hasChildren: data['hasChildren'] as bool?,
       lastWaveFoundAt: _parseDateTime(data['lastWaveFoundAt']),
@@ -433,6 +441,8 @@ class AuthUser {
     String? company,
     bool? isPingVibrationEnabled,
     bool? hasChildren,
+    Object? graduatedUniversity = _unset,
+    Object? lookingForNewJob = _unset,
     DateTime? lastWaveFoundAt,
     bool? gymNotificationsEnabled,
     String? phoneNumber,
@@ -540,6 +550,12 @@ class AuthUser {
       isPingVibrationEnabled:
           isPingVibrationEnabled ?? this.isPingVibrationEnabled,
       hasChildren: hasChildren ?? this.hasChildren,
+      graduatedUniversity: identical(graduatedUniversity, _unset)
+          ? this.graduatedUniversity
+          : graduatedUniversity as String?,
+      lookingForNewJob: identical(lookingForNewJob, _unset)
+          ? this.lookingForNewJob
+          : lookingForNewJob as bool?,
       lastWaveFoundAt: lastWaveFoundAt ?? this.lastWaveFoundAt,
       gymNotificationsEnabled:
           gymNotificationsEnabled ?? this.gymNotificationsEnabled,

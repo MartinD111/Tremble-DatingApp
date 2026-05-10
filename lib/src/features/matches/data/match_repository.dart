@@ -49,6 +49,8 @@ class MatchProfile {
   final String? occupation;
   final String? company;
   final String? school;
+  final String? graduatedUniversity;
+  final bool? lookingForNewJob;
   final List<String> nicotineUse;
   final String? drinkingHabit;
   final int? introvertLevel;
@@ -90,6 +92,8 @@ class MatchProfile {
     this.occupation,
     this.company,
     this.school,
+    this.graduatedUniversity,
+    this.lookingForNewJob,
     this.nicotineUse = const [],
     this.drinkingHabit,
     this.introvertLevel,
@@ -143,6 +147,8 @@ class MatchProfile {
       hasChildren: data['hasChildren'] as bool?,
       company: data['company'] as String?,
       school: data['school'] as String?,
+      graduatedUniversity: data['graduatedUniversity'] as String?,
+      lookingForNewJob: data['lookingForNewJob'] as bool?,
       lookingFor: List<String>.from(data['lookingFor'] ?? []),
       birthDate: _parseDateTime(data['birthDate']),
       matchType: data['matchType'] as String? ?? 'standard',

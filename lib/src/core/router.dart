@@ -20,6 +20,7 @@ import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/safety/presentation/blocked_users_screen.dart';
 import '../features/safety/presentation/anonymous_mode_screen.dart';
 import '../features/safety/presentation/safe_zones_screen.dart';
+import '../features/gym/presentation/my_gyms_screen.dart';
 import '../features/match/presentation/match_reveal_screen.dart';
 import '../features/match/domain/match.dart';
 import '../shared/ui/gradient_scaffold.dart';
@@ -408,6 +409,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/safe-zones',
         builder: (context, state) => const SafeZonesScreen(),
+      ),
+      GoRoute(
+        path: '/my-gyms',
+        builder: (context, state) => const MyGymsScreen(),
       ),
       GoRoute(
         path: '/run-recap',

@@ -62,7 +62,7 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
         children: [
           SingleChildScrollView(
             controller: _scrollController,
-            padding: EdgeInsets.fromLTRB(24, topPad + 80, 24, 40),
+            padding: EdgeInsets.fromLTRB(24, topPad + 100, 24, 40),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

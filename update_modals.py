@@ -80,44 +80,40 @@ def inject_popscope_and_save(class_name, has_changes_expr, save_expr):
             new_on_pressed = """() {
                     widget.onUpdate(_pending == '__none__' ? null : _pending);
                     final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
-                    TopNotification.show(
-                      context: context,
-                      message: t('profile_updated', lang),
-                      icon: LucideIcons.checkCircle,
-                    );
+                    CenterNotification.show(
+            context: context,
+            message: t('Profile updated', lang),
+          );
                     Navigator.pop(context);
                   }"""
         elif class_name == "_SliderEditSheet":
             new_on_pressed = """() {
                     widget.onSave(_values);
                     final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
-                    TopNotification.show(
-                      context: context,
-                      message: t('profile_updated', lang),
-                      icon: LucideIcons.checkCircle,
-                    );
+                    CenterNotification.show(
+            context: context,
+            message: t('Profile updated', lang),
+          );
                     Navigator.pop(context);
                   }"""
         elif class_name == "_MultiSelectEditSheet":
             new_on_pressed = """() {
                     widget.onSave(_selected);
                     final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
-                    TopNotification.show(
-                      context: context,
-                      message: t('profile_updated', lang),
-                      icon: LucideIcons.checkCircle,
-                    );
+                    CenterNotification.show(
+            context: context,
+            message: t('Profile updated', lang),
+          );
                     Navigator.pop(context);
                   }"""
         elif class_name == "_LanguageEditSheet":
             new_on_pressed = """_selected != null ? () {
                     widget.onSave(_selected!);
                     final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
-                    TopNotification.show(
-                      context: context,
-                      message: t('profile_updated', lang),
-                      icon: LucideIcons.checkCircle,
-                    );
+                    CenterNotification.show(
+            context: context,
+            message: t('Profile updated', lang),
+          );
                     Navigator.pop(context);
                   } : null"""
                   
@@ -133,7 +129,7 @@ inject_popscope_and_save(
           final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
           TopNotification.show(
             context: context,
-            message: t('profile_updated', lang),
+            message: t('Profile updated', lang),
             icon: LucideIcons.checkCircle,
           );
           if (context.mounted) Navigator.pop(context);"""
@@ -146,7 +142,7 @@ inject_popscope_and_save(
           final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
           TopNotification.show(
             context: context,
-            message: t('profile_updated', lang),
+            message: t('Profile updated', lang),
             icon: LucideIcons.checkCircle,
           );
           if (context.mounted) Navigator.pop(context);"""
@@ -165,7 +161,7 @@ inject_popscope_and_save(
           final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
           TopNotification.show(
             context: context,
-            message: t('profile_updated', lang),
+            message: t('Profile updated', lang),
             icon: LucideIcons.checkCircle,
           );
           if (context.mounted) Navigator.pop(context);"""
@@ -178,7 +174,7 @@ inject_popscope_and_save(
           final lang = ref.read(authStateProvider)?.appLanguage ?? 'en';
           TopNotification.show(
             context: context,
-            message: t('profile_updated', lang),
+            message: t('Profile updated', lang),
             icon: LucideIcons.checkCircle,
           );
           if (context.mounted) Navigator.pop(context);"""

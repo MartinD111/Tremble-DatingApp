@@ -47,22 +47,30 @@ class _TopNotificationWidget extends StatefulWidget {
 }
 
 class _TopNotificationWidgetState extends State<_TopNotificationWidget>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
+  late Animation<double> _opacityAnimation;
   bool _dismissed = false;
+
+  double _dragX = 0.0;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
     );
+
     _offsetAnimation = Tween<Offset>(
       begin: const Offset(0, -1.0),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
 
     _controller.forward();
 
@@ -74,12 +82,38 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget>
   }
 
   void _dismiss() {
+    if (_dismissed) return;
     _dismissed = true;
     _controller.reverse().then((_) {
       if (mounted) {
         widget.onDismissed();
       }
     });
+  }
+
+  void _dismissHorizontal(double toX) {
+    if (_dismissed) return;
+    _dismissed = true;
+    // Animate the card off-screen in the swipe direction then remove
+    final screenWidth = MediaQuery.of(context).size.width;
+    final target = toX > 0 ? screenWidth + 200.0 : -(screenWidth + 200.0);
+
+    // Use a simple animation from current drag position to off-screen
+    final slideOut = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    final tween = Tween<double>(begin: _dragX, end: target);
+    slideOut.addListener(() {
+      if (mounted) setState(() => _dragX = tween.evaluate(slideOut));
+    });
+    slideOut.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        slideOut.dispose();
+        if (mounted) widget.onDismissed();
+      }
+    });
+    slideOut.forward();
   }
 
   @override
@@ -92,72 +126,79 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final topPadding = MediaQuery.of(context).padding.top;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Positioned(
-      top: topPadding + 10,
-      left: 16,
-      right: 16,
+      top: topPadding + 20,
+      left: 24,
+      right: 24,
       child: Material(
-        color: Colors.transparent,
+        type: MaterialType.transparency,
         child: SlideTransition(
           position: _offsetAnimation,
-          child: Dismissible(
-            key: UniqueKey(),
-            direction: DismissDirection.vertical,
-            onDismissed: (direction) {
-              if (direction == DismissDirection.up) {
-                _dismissed = true;
-                widget.onDismissed();
-              }
-            },
-            child: Dismissible(
-              key: UniqueKey(),
-              direction: DismissDirection.horizontal,
-              onDismissed: (_) {
-                _dismissed = true;
-                widget.onDismissed();
+          child: FadeTransition(
+            opacity: _opacityAnimation,
+            child: GestureDetector(
+              onTap: _dismiss,
+              onHorizontalDragUpdate: (details) {
+                if (_dismissed) return;
+                setState(() => _dragX += details.delta.dx);
               },
-              child: GestureDetector(
-                onTap: _dismiss,
+              onHorizontalDragEnd: (details) {
+                if (_dismissed) return;
+                final velocity = details.primaryVelocity ?? 0;
+                final threshold = MediaQuery.of(context).size.width * 0.35;
+                if (_dragX.abs() > threshold || velocity.abs() > 600) {
+                  _dismissHorizontal(_dragX);
+                } else {
+                  // Snap back
+                  setState(() => _dragX = 0.0);
+                }
+              },
+              child: Transform.translate(
+                offset: Offset(_dragX, 0),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF2C2C3E) : Colors.white,
-                    borderRadius: BorderRadius.circular(100),
+                    color: isDark ? const Color(0xFF2A2A2E) : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        blurRadius: 30,
+                        offset: const Offset(0, 10),
                       ),
                     ],
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.black.withValues(alpha: 0.05),
-                    ),
                   ),
-                  child: Row(
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (widget.icon != null) ...[
-                        Icon(
-                          widget.icon,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 20,
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: primary.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(width: 12),
-                      ],
-                      Expanded(
+                        child: Center(
+                          child: Icon(
+                            widget.icon ?? Icons.check,
+                            size: 32,
+                            color: primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Material(
+                        type: MaterialType.transparency,
                         child: Text(
                           widget.message,
+                          textAlign: TextAlign.center,
                           style: GoogleFonts.instrumentSans(
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontSize: 15,
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                            decoration: TextDecoration.none,
                           ),
                         ),
                       ),
@@ -172,3 +213,4 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget>
     );
   }
 }
+

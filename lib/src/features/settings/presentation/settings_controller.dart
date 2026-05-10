@@ -197,6 +197,7 @@ class SettingsController {
     String Function(double)? labelMapper,
     String? unit,
     bool isPremium = false,
+    IconData? rowIcon,
   }) async {
     final user = _user;
     if (user == null) return;
@@ -222,6 +223,9 @@ class SettingsController {
       labelMapper: labelMapper,
       unit: unit,
       onSave: onUpdate,
+      isGenderBased: user.isGenderBasedColor,
+      gender: user.gender,
+      rowIcon: rowIcon,
     );
   }
 
@@ -233,14 +237,17 @@ class SettingsController {
     required List<Map<String, dynamic>> options,
     required List<String> currentValues,
     required ValueChanged<List<String>> onUpdate,
+    IconData? rowIcon,
   }) async {
-    // Directly open the multi-select editing modal as requested by the user.
     await showMultiSelectModal(
       context: context,
       title: title,
       options: options,
       currentValues: currentValues,
       onSave: onUpdate,
+      isGenderBased: _user?.isGenderBasedColor ?? false,
+      gender: _user?.gender,
+      rowIcon: rowIcon,
     );
   }
 
@@ -258,6 +265,8 @@ class SettingsController {
       options: options,
       currentValue: _lang,
       onSave: setLanguage,
+      isGenderBased: _user?.isGenderBasedColor ?? false,
+      gender: _user?.gender,
     );
   }
 }

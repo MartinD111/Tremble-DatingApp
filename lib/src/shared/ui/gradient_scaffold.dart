@@ -44,6 +44,7 @@ class GradientScaffold extends ConsumerWidget {
 
     return Scaffold(
       extendBody: extendBody,
+      resizeToAvoidBottomInset: false,
       appBar: appBar,
       bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: floatingActionButton,
