@@ -36,7 +36,9 @@ import 'widgets/registration_steps/what_to_meet_step.dart';
 import 'widgets/registration_steps/email_location_step.dart';
 import 'widgets/registration_steps/hobbies_step.dart';
 import 'widgets/registration_steps/photos_step.dart';
+import 'widgets/registration_steps/gym_step.dart';
 import 'widgets/registration_steps/consent_step.dart';
+import '../../../features/gym/domain/selected_gym.dart';
 import 'widgets/registration_steps/ritual_step.dart';
 import 'widgets/registration_steps/android_system_integration_step.dart';
 import 'widgets/ping_overlay.dart';
@@ -73,9 +75,10 @@ import '../../../shared/ui/tremble_logo.dart';
 // 24 : What to meet
 // 25 : Hobbies
 // 26 : Photos
-// 27 : Android System Integration (Android only — skipped on iOS)
-// 27 : Consent                    (iOS) / 28 : Consent (Android)
-// 28 : Ritual                     (iOS) / 29 : Ritual  (Android)
+// 27 : My Gyms (optional — has Skip button)
+// 28 : Android System Integration (Android only — skipped on iOS)
+// 28 : Consent                    (iOS) / 29 : Consent (Android)
+// 29 : Ritual                     (iOS) / 30 : Ritual  (Android)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class RegistrationFlow extends ConsumerStatefulWidget {
@@ -199,6 +202,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // Photos
   final List<File?> _photos = [null, null, null, null, null, null];
   final ImagePicker _picker = ImagePicker();
+
+  // Gyms selected during registration (written to Firestore after completeOnboarding)
+  final List<SelectedGym> _selectedGymsForRegistration = [];
 
   // Ping overlay key — used to trigger animation on page transitions
   final _pingKey = GlobalKey<PingOverlayState>();
@@ -549,7 +555,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ────── PROGRESS BAR ──────
   Widget _buildProgressBar() {
     // Android has one extra step (AndroidSystemIntegrationStep) before ConsentStep.
-    final totalSteps = Platform.isAndroid ? 28 : 27;
+    final totalSteps = Platform.isAndroid ? 29 : 28;
     final progress = (_currentPage + 1) / totalSteps;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return TweenAnimationBuilder<double>(
@@ -992,7 +998,26 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     onContinue: _nextPage,
                     tr: tr,
                   ),
-                  // Android-only: Quick Settings tile + widget opt-in (index 26 on Android).
+                  // My Gyms — optional step (index 27). Has "Skip" button.
+                  GymStep(
+                    selectedGyms: _selectedGymsForRegistration,
+                    onAdd: (gym) async {
+                      if (_selectedGymsForRegistration.length >= 3)
+                        return false;
+                      if (_selectedGymsForRegistration
+                          .any((g) => g.placeId == gym.placeId)) return true;
+                      setState(() => _selectedGymsForRegistration.add(gym));
+                      return true;
+                    },
+                    onRemove: (placeId) => setState(
+                      () => _selectedGymsForRegistration
+                          .removeWhere((g) => g.placeId == placeId),
+                    ),
+                    onContinue: _nextPage,
+                    onBack: () => _goToPage(_currentPage - 1),
+                    tr: tr,
+                  ),
+                  // Android-only: Quick Settings tile + widget opt-in (index 28 on Android).
                   // Platform.isAndroid guard keeps the PageView children list
                   // length consistent per platform — iOS never sees this widget.
                   if (Platform.isAndroid)
@@ -1765,6 +1790,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       // isOnboarded is still set to true locally.
       await ref.read(authStateProvider.notifier).completeOnboarding(user);
 
+      // Step 3: Persist selected gyms directly to Firestore (bypasses Cloud Function
+      // strict Zod schema — selectedGyms is not part of the completeOnboarding payload).
+      if (_selectedGymsForRegistration.isNotEmpty) {
+        await ref
+            .read(authStateProvider.notifier)
+            .updateSelectedGyms(_selectedGymsForRegistration);
+      }
+
       // Reset GDPR consent so the permission gate always shows after fresh registration.
       await ref.read(gdprConsentProvider.notifier).resetConsent();
 
@@ -1774,7 +1807,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         if (mounted) {
           setState(() => _isHardLocking = false);
           _goToPage(
-              Platform.isAndroid ? 29 : 28); // RitualStep — "SIGNAL LOCKED"
+              Platform.isAndroid ? 30 : 29); // RitualStep — "SIGNAL LOCKED"
         }
       }
     } catch (e) {

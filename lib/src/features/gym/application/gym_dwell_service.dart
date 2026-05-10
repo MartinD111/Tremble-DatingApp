@@ -89,6 +89,27 @@ final gymDwellServiceProvider = Provider.autoDispose<GymDwellService?>((ref) {
   if (user?.gymNotificationsEnabled != true) return null;
   if (gymState.isActive) return null;
 
+  // Priority: personal gyms > global Firestore gym list.
+  final personalGyms = user?.selectedGyms ?? const [];
+  if (personalGyms.isNotEmpty) {
+    final gyms = personalGyms
+        .map(
+          (g) => Gym(
+            id: g.placeId,
+            name: g.name,
+            address: g.address,
+            location: GymLocation(lat: g.lat, lng: g.lng),
+            radiusMeters: 80, // default dwell radius
+          ),
+        )
+        .toList();
+    final service = GymDwellService(gyms: gyms);
+    ref.onDispose(service.dispose);
+    service.start();
+    return service;
+  }
+
+  // Fall back to the global Firestore gym list.
   final gymsAsync = ref.watch(gymsListProvider);
   return gymsAsync.maybeWhen(
     data: (gyms) {

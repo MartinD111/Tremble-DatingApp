@@ -19,6 +19,8 @@ import '../../../shared/ui/tremble_header.dart';
 import '../../../core/theme.dart';
 import '../../dashboard/application/radar_schedule_controller.dart';
 import '../../dashboard/presentation/widgets/radar_schedule_modal.dart';
+import '../../gym/presentation/gym_search_widget.dart';
+import '../../gym/application/gym_selection_notifier.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
 
@@ -48,6 +50,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   final Map<String, GlobalKey> _sectionKeys = {
     'preferences': GlobalKey(),
     'lifestyle': GlobalKey(),
+    'gyms': GlobalKey(),
     'appearance': GlobalKey(),
     'account': GlobalKey(),
   };
@@ -188,6 +191,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   sectionKey: 'lifestyle',
                   icon: LucideIcons.heart,
                   content: _buildLifestyleContent(user),
+                ),
+                const SizedBox(height: 20),
+                _buildExpandableSection(
+                  title: 'My Gyms',
+                  sectionKey: 'gyms',
+                  icon: LucideIcons.dumbbell,
+                  content: _buildMyGymsContent(user),
                 ),
                 const SizedBox(height: 20),
                 _buildExpandableSection(
@@ -790,6 +800,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMyGymsContent(AuthUser user) {
+    return GymSearchWidget(
+      selectedGyms: user.selectedGyms,
+      onAdd: (gym) async => ref.read(gymSelectionProvider.notifier).addGym(gym),
+      onRemove: (placeId) =>
+          ref.read(gymSelectionProvider.notifier).removeGym(placeId),
     );
   }
 

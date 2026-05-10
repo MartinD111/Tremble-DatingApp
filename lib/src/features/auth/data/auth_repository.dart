@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/api_client.dart';
 import '../../../core/event_geofence_service.dart';
 import '../../../core/hobby_utils.dart';
+import '../../gym/domain/selected_gym.dart';
 
 // Sentinel marking "argument not provided" — distinguishes from explicit null
 // in copyWith. Use to allow callers to clear a nullable field by passing null.
@@ -94,6 +95,10 @@ class AuthUser {
   final String? phoneNumber;
   final bool isTraveler;
 
+  /// Gyms selected by the user via Google Places search.
+  /// Written directly to Firestore — NOT sent via Cloud Function API (strict Zod schema).
+  final List<SelectedGym> selectedGyms;
+
   /// Returns true if user has real Premium OR is inside an active event
   /// geofence (Taste of Premium). The [inEventGeofence] flag comes from
   /// EventGeofenceService — it is runtime-only and never persisted.
@@ -170,6 +175,7 @@ class AuthUser {
     this.gymNotificationsEnabled,
     this.phoneNumber,
     this.isTraveler = false,
+    this.selectedGyms = const [],
   });
 
   // ── Serialization for Cloud Functions API ─────────────────────────────────
@@ -353,6 +359,10 @@ class AuthUser {
       gymNotificationsEnabled: data['gymNotificationsEnabled'] as bool?,
       phoneNumber: data['phoneNumber'] as String?,
       isTraveler: data['isTraveler'] as bool? ?? false,
+      selectedGyms: (data['selectedGyms'] as List<dynamic>? ?? [])
+          .whereType<Map<String, dynamic>>()
+          .map(SelectedGym.fromMap)
+          .toList(),
       isEmailVerified: emailVerified,
     );
   }
@@ -427,6 +437,7 @@ class AuthUser {
     bool? gymNotificationsEnabled,
     String? phoneNumber,
     bool? isTraveler,
+    List<SelectedGym>? selectedGyms,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -534,6 +545,7 @@ class AuthUser {
           gymNotificationsEnabled ?? this.gymNotificationsEnabled,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       isTraveler: isTraveler ?? this.isTraveler,
+      selectedGyms: selectedGyms ?? this.selectedGyms,
     );
   }
 }
@@ -850,6 +862,14 @@ class AuthRepository {
     await _api.call('updateProfile', data: user.toApiPayload());
   }
 
+  // ── Update selected gyms (direct Firestore — bypasses strict CF schema) ──
+  Future<void> updateSelectedGyms(
+      String uid, List<SelectedGym> gyms) async {
+    await _users.doc(uid).update({
+      'selectedGyms': gyms.map((g) => g.toMap()).toList(),
+    });
+  }
+
   // ── Logout ────────────────────────────────────────────────────────────────
   Future<void> logout() async {
     await _googleSignIn.signOut();
@@ -1002,6 +1022,14 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
 
   Future<void> changePassword(String oldPassword, String newPassword) async {
     await _repository.changePassword(oldPassword, newPassword);
+  }
+
+  Future<void> updateSelectedGyms(List<SelectedGym> gyms) async {
+    final uid = state?.id;
+    if (uid == null) return;
+    // Optimistic update
+    state = state?.copyWith(selectedGyms: gyms);
+    await _repository.updateSelectedGyms(uid, gyms);
   }
 
   Future<bool> reloadVerification() async {
