@@ -96,7 +96,8 @@ class PlacesService {
   Future<List<PlacePrediction>> autocomplete(String input) async {
     if (input.trim().isEmpty) return [];
     if (_apiKey.isEmpty) {
-      debugPrint('[PlacesService] ⚠️ No API key — pass --dart-define=PLACES_KEY_DEV=AIza...');
+      debugPrint(
+          '[PlacesService] ⚠️ No API key — pass --dart-define=PLACES_KEY_DEV=AIza...');
       return [];
     }
 
@@ -126,7 +127,8 @@ class PlacesService {
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode != 200) {
-        debugPrint('[PlacesService] API error ${response.statusCode}: ${response.body}');
+        debugPrint(
+            '[PlacesService] API error ${response.statusCode}: ${response.body}');
         return [];
       }
 
@@ -175,7 +177,8 @@ class PlacesService {
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode != 200) {
-        debugPrint('[PlacesService] Gym autocomplete error ${response.statusCode}');
+        debugPrint(
+            '[PlacesService] Gym autocomplete error ${response.statusCode}');
         return [];
       }
 
@@ -217,7 +220,8 @@ class PlacesService {
       ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode != 200) {
-        debugPrint('[PlacesService] Place details error ${response.statusCode}');
+        debugPrint(
+            '[PlacesService] Place details error ${response.statusCode}');
         return null;
       }
 

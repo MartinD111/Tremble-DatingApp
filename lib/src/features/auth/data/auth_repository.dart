@@ -863,8 +863,7 @@ class AuthRepository {
   }
 
   // ── Update selected gyms (direct Firestore — bypasses strict CF schema) ──
-  Future<void> updateSelectedGyms(
-      String uid, List<SelectedGym> gyms) async {
+  Future<void> updateSelectedGyms(String uid, List<SelectedGym> gyms) async {
     await _users.doc(uid).update({
       'selectedGyms': gyms.map((g) => g.toMap()).toList(),
     });
