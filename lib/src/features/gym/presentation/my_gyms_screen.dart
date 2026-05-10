@@ -25,8 +25,7 @@ class _MyGymsScreenState extends ConsumerState<MyGymsScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      final opacity =
-          (1.0 - (_scrollController.offset / 60)).clamp(0.0, 1.0);
+      final opacity = (1.0 - (_scrollController.offset / 60)).clamp(0.0, 1.0);
       if (_titleOpacity.value != opacity) _titleOpacity.value = opacity;
     });
   }
@@ -91,8 +90,9 @@ class _MyGymsScreenState extends ConsumerState<MyGymsScreen> {
                     selectedGyms: selectedGyms,
                     onAdd: (gym) async =>
                         ref.read(gymSelectionProvider.notifier).addGym(gym),
-                    onRemove: (placeId) =>
-                        ref.read(gymSelectionProvider.notifier).removeGym(placeId),
+                    onRemove: (placeId) => ref
+                        .read(gymSelectionProvider.notifier)
+                        .removeGym(placeId),
                   ),
                 ),
 

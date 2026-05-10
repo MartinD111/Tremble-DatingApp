@@ -330,10 +330,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         AnimatedPositioned(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
-          bottom: (isNavBarVisible &&
-                  MediaQuery.of(context).viewInsets.bottom == 0)
-              ? 30
-              : -100,
+          bottom:
+              (isNavBarVisible && MediaQuery.of(context).viewInsets.bottom == 0)
+                  ? 30
+                  : -100,
           left: 0,
           right: 0,
           child: LiquidNavBar(
@@ -1561,9 +1561,8 @@ Future<void> showModeInfoDialog({
                                 t('cancel', lang),
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.instrumentSans(
-                                  color: isDark
-                                      ? Colors.white60
-                                      : Colors.black54,
+                                  color:
+                                      isDark ? Colors.white60 : Colors.black54,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),

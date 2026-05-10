@@ -327,7 +327,8 @@ class _HobbiesStepState extends State<HobbiesStep> {
                           color: isDark
                               ? Colors.white.withValues(alpha: 0.05)
                               : Colors.black.withValues(alpha: 0.03),
-                          borderRadius: BorderRadius.circular(isOpen ? 28 : 100),
+                          borderRadius:
+                              BorderRadius.circular(isOpen ? 28 : 100),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +370,8 @@ class _HobbiesStepState extends State<HobbiesStep> {
                                   }
                                 }
                               },
-                              borderRadius: BorderRadius.circular(isOpen ? 28 : 100),
+                              borderRadius:
+                                  BorderRadius.circular(isOpen ? 28 : 100),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16, vertical: 16),

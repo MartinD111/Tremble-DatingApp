@@ -295,40 +295,34 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                                               item != 'spontaneous_meeting')
                                           .toList())
                                   .map((item) {
-                                    final pillBg = TrembleTheme.getPillColor(
-                                      isDark: isDark,
-                                      isGenderBased: user.isGenderBasedColor,
-                                      gender: user.gender,
-                                    );
-                                    return Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: pillBg,
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          border: Border.all(
-                                              color: pillBg.withValues(
-                                                  alpha: isDark ? 0.6 : 0.4)),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                                IconUtils.getLookingForIcon(
-                                                    item),
-                                                size: 12,
-                                                color: iconColor),
-                                            const SizedBox(width: 4),
-                                            Text(t(item, lang),
-                                                style: TextStyle(
-                                                    color: subColor,
-                                                    fontSize: 12)),
-                                          ],
-                                        ),
-                                      );
-                                  })
-                                  .toList(),
+                                final pillBg = TrembleTheme.getPillColor(
+                                  isDark: isDark,
+                                  isGenderBased: user.isGenderBasedColor,
+                                  gender: user.gender,
+                                );
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: pillBg,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                        color: pillBg.withValues(
+                                            alpha: isDark ? 0.6 : 0.4)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(IconUtils.getLookingForIcon(item),
+                                          size: 12, color: iconColor),
+                                      const SizedBox(width: 4),
+                                      Text(t(item, lang),
+                                          style: TextStyle(
+                                              color: subColor, fontSize: 12)),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           ),
                         ],

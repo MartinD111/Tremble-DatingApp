@@ -9,12 +9,40 @@ import '../../auth/data/auth_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../data/run_club_repository.dart';
 import '../../../core/translations.dart';
+import '../../safety/screen_protection_service.dart';
 
-class RunRecapScreen extends ConsumerWidget {
+class RunRecapScreen extends ConsumerStatefulWidget {
   const RunRecapScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RunRecapScreen> createState() => _RunRecapScreenState();
+}
+
+class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
+  bool _isRecording = false;
+  late final void Function(bool) _recordingListener;
+
+  @override
+  void initState() {
+    super.initState();
+    _recordingListener = (isRecording) {
+      if (mounted) setState(() => _isRecording = isRecording);
+    };
+    ScreenProtectionService.enable();
+    ScreenProtectionService.addRecordingListener(_recordingListener);
+  }
+
+  @override
+  void dispose() {
+    ScreenProtectionService.removeRecordingListener();
+    ScreenProtectionService.disable();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isRecording) return const RecordingShield();
+
     final user = ref.watch(authStateProvider);
     final lang = ref.watch(appLanguageProvider);
     if (user == null) return const SizedBox.shrink();

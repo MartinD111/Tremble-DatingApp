@@ -564,8 +564,8 @@ class _SliderEditSheetState extends ConsumerState<_SliderEditSheet> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (widget.rowIcon != null) ...[
-                    Icon(widget.rowIcon, size: 20,
-                        color: textColor.withValues(alpha: 0.7)),
+                    Icon(widget.rowIcon,
+                        size: 20, color: textColor.withValues(alpha: 0.7)),
                     const SizedBox(width: 10),
                   ],
                   Text(

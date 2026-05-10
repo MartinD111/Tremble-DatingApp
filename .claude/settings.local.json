@@ -75,7 +75,8 @@
       "Bash(npm install *)",
       "Read(//c/flutter/packages/flutter_tools/gradle/**)",
       "Bash(/Users/aleksandarbojic/flutter/bin/dart format:*)",
-      "Bash(/Users/aleksandarbojic/flutter/bin/flutter pub:*)"
+      "Bash(/Users/aleksandarbojic/flutter/bin/flutter pub:*)",
+      "Bash(/Users/aleksandarbojic/flutter/bin/flutter test:*)"
     ]
   }
 }

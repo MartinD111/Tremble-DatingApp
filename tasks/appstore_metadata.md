@@ -1,0 +1,1 @@
+Users can report inappropriate behavior directly from any profile.

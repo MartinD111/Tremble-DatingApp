@@ -14,6 +14,7 @@ import '../../../core/utils/icon_utils.dart';
 import '../../../shared/ui/tremble_circle_button.dart';
 import '../../../core/theme.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../safety/screen_protection_service.dart';
 
 class ProfileDetailScreen extends ConsumerStatefulWidget {
   final MatchProfile match;
@@ -35,9 +36,23 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
   int _currentPhotoPage = 0;
   final ValueNotifier<double> _buttonsOpacity = ValueNotifier(1.0);
   double _lastScrollOffset = 0;
+  bool _isRecording = false;
+  late final void Function(bool) _recordingListener;
+
+  @override
+  void initState() {
+    super.initState();
+    _recordingListener = (isRecording) {
+      if (mounted) setState(() => _isRecording = isRecording);
+    };
+    ScreenProtectionService.enable();
+    ScreenProtectionService.addRecordingListener(_recordingListener);
+  }
 
   @override
   void dispose() {
+    ScreenProtectionService.removeRecordingListener();
+    ScreenProtectionService.disable();
     _photoPageController.dispose();
     _buttonsOpacity.dispose();
     super.dispose();
@@ -88,6 +103,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     final bottomBgColor = bgColors.isNotEmpty
         ? bgColors.last
         : Theme.of(context).scaffoldBackgroundColor;
+
+    if (_isRecording) return const RecordingShield();
 
     return GradientScaffold(
       child: Stack(

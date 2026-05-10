@@ -144,7 +144,8 @@ class _CenterNotificationWidgetState extends State<_CenterNotificationWidget>
                         style: GoogleFonts.instrumentSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF1A1A18),
                           decoration: TextDecoration.none,
                         ),
                       ),

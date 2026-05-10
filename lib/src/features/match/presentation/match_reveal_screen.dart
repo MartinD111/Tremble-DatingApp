@@ -16,8 +16,9 @@ import '../../../core/upload_service.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../features/auth/data/auth_repository.dart';
 import '../../../shared/ui/primary_button.dart';
+import '../../../features/safety/screen_protection_service.dart';
 
-class MatchRevealScreen extends ConsumerWidget {
+class MatchRevealScreen extends ConsumerStatefulWidget {
   final Match match;
   const MatchRevealScreen({super.key, required this.match});
 
@@ -26,7 +27,39 @@ class MatchRevealScreen extends ConsumerWidget {
   static const Color _warmCream = Color(0xFFFAFAF7);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MatchRevealScreen> createState() => _MatchRevealScreenState();
+}
+
+class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen> {
+  static const _rose = MatchRevealScreen._rose;
+  static const _deepGraphite = MatchRevealScreen._deepGraphite;
+  static const _warmCream = MatchRevealScreen._warmCream;
+
+  bool _isRecording = false;
+  late final void Function(bool) _recordingListener;
+
+  @override
+  void initState() {
+    super.initState();
+    _recordingListener = (isRecording) {
+      if (mounted) setState(() => _isRecording = isRecording);
+    };
+    ScreenProtectionService.enable();
+    ScreenProtectionService.addRecordingListener(_recordingListener);
+  }
+
+  @override
+  void dispose() {
+    ScreenProtectionService.removeRecordingListener();
+    ScreenProtectionService.disable();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isRecording) return const RecordingShield();
+
+    final match = widget.match;
     final myUid = FirebaseAuth.instance.currentUser?.uid;
     final lang = ref.watch(appLanguageProvider);
 

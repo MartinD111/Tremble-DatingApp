@@ -384,10 +384,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           company: _companyController.text.isNotEmpty
               ? _companyController.text
               : null,
-          graduatedUniversity:
-              _graduatedUniversityController.text.isNotEmpty
-                  ? _graduatedUniversityController.text
-                  : null,
+          graduatedUniversity: _graduatedUniversityController.text.isNotEmpty
+              ? _graduatedUniversityController.text
+              : null,
           lookingForNewJob: _lookingForNewJob,
           hasChildren: _hasChildren,
           nicotineUse: _nicotineUse,
@@ -707,16 +706,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         fontWeight: FontWeight.w600),
                                   ),
                                   value: _lookingForNewJob ?? false,
-                                  activeThumbColor: Theme.of(context)
-                                      .colorScheme
-                                      .primary,
+                                  activeThumbColor:
+                                      Theme.of(context).colorScheme.primary,
                                   activeTrackColor: Theme.of(context)
                                       .colorScheme
                                       .primary
                                       .withValues(alpha: 0.3),
-                                  inactiveTrackColor: isDark
-                                      ? Colors.white24
-                                      : Colors.black12,
+                                  inactiveTrackColor:
+                                      isDark ? Colors.white24 : Colors.black12,
                                   onChanged: (val) => setState(() {
                                     _lookingForNewJob = val;
                                     _hasChanges = true;

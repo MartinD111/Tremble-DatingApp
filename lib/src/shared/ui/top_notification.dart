@@ -197,7 +197,8 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget>
                           style: GoogleFonts.instrumentSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                            color:
+                                isDark ? Colors.white : const Color(0xFF1A1A18),
                             decoration: TextDecoration.none,
                           ),
                         ),
@@ -213,4 +214,3 @@ class _TopNotificationWidgetState extends State<_TopNotificationWidget>
     );
   }
 }
-
