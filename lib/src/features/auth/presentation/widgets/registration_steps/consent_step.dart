@@ -22,12 +22,14 @@ class _ConsentStepState extends State<ConsentStep> {
   bool _consentTerms = false;
   bool _consentPrivacy = false;
   bool _consentDataProcessing = false;
+  bool _consentAge = false;
   bool _consentLocation = false;
 
   bool get _consentGiven =>
       _consentTerms &&
       _consentPrivacy &&
       _consentDataProcessing &&
+      _consentAge &&
       _consentLocation;
 
   void _toggleAll() {
@@ -36,6 +38,7 @@ class _ConsentStepState extends State<ConsentStep> {
       _consentTerms = newVal;
       _consentPrivacy = newVal;
       _consentDataProcessing = newVal;
+      _consentAge = newVal;
       _consentLocation = newVal;
     });
   }
@@ -166,6 +169,20 @@ class _ConsentStepState extends State<ConsentStep> {
                         '(interests, preferences, religion, ethnicity) for the purpose of matchmaking. '
                         'I understand this data is encrypted, never sold, and I can withdraw consent '
                         'at any time from Settings.'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _consentTile(
+            value: _consentAge,
+            onChanged: (v) => setState(() => _consentAge = v),
+            richText: TextSpan(
+              style: bodyStyle,
+              children: const [
+                TextSpan(
+                  text: 'I confirm I am 18 years of age or older. '
+                      'I understand that Tremble is an adult platform.',
+                ),
               ],
             ),
           ),

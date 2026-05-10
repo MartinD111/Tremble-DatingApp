@@ -8,15 +8,55 @@
  */
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth } from "../../middleware/authGuard";
+import { checkRateLimit } from "../../middleware/rateLimit";
 import { sendMatchNotificationEmail } from "../email/email.functions";
 import { getRedis, waveDedupKey, WAVE_DEDUP_SECS } from "../../core/redis";
 import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
+
+/**
+ * sendWave — Callable: rate-limited wave submission for free users.
+ * Free users: 5 waves per 30 days. Premium users: unlimited.
+ * Writes to waves/ collection which triggers onWaveCreated.
+ */
+export const sendWave = onCall(
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+    async (request) => {
+        const uid = requireAuth(request);
+
+        const { targetUid } = request.data;
+        if (!targetUid || typeof targetUid !== "string") {
+            throw new HttpsError("invalid-argument", "targetUid required");
+        }
+        if (uid === targetUid) {
+            throw new HttpsError("invalid-argument", "Cannot wave at yourself");
+        }
+
+        // Free user rate limit: 5 waves per 30 days
+        const userDoc = await db.collection("users").doc(uid).get();
+        const isPremium = userDoc.data()?.isPremium ?? false;
+
+        if (!isPremium) {
+            await checkRateLimit(uid, "wave_monthly", {
+                maxRequests: 5,
+                windowMs: 30 * 24 * 60 * 60 * 1000,
+            });
+        }
+
+        await db.collection("waves").add({
+            fromUid: uid,
+            toUid: targetUid,
+            createdAt: FieldValue.serverTimestamp(),
+        });
+
+        return { success: true };
+    }
+);
 
 /**
  * onWaveCreated — Firestore trigger on waves/{waveId}

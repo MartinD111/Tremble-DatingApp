@@ -12,6 +12,7 @@ import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https
 import * as admin from "firebase-admin";
 import { getRedis } from "../../core/redis";
 import { requireAuth } from "../../middleware/authGuard";
+import { ENFORCE_APP_CHECK } from "../../config/env";
 import { logger } from "firebase-functions";
 
 const INTERCEPT_TTL_SECS = 600; // 10 minutes
@@ -20,7 +21,9 @@ const INTERCEPT_TTL_SECS = 600; // 10 minutes
  * Request a Pulse Intercept (Phone or Photo).
  * Triggers a push notification to the recipient.
  */
-export const requestPulseIntercept = onCall(async (request: CallableRequest) => {
+export const requestPulseIntercept = onCall(
+  { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+  async (request: CallableRequest) => {
   const senderUid = requireAuth(request);
   const { targetUid, type, data } = request.data;
 
@@ -94,14 +97,17 @@ export const requestPulseIntercept = onCall(async (request: CallableRequest) => 
     }
   }
 
-  return { success: true, expiresAt: Date.now() + (INTERCEPT_TTL_SECS * 1000) };
-});
+    return { success: true, expiresAt: Date.now() + (INTERCEPT_TTL_SECS * 1000) };
+  }
+);
 
 /**
  * Retrieve a Pulse Intercept sent by a match.
  * Deletes from Redis if type is 'photo' (view-once).
  */
-export const getPulseIntercept = onCall(async (request: CallableRequest) => {
+export const getPulseIntercept = onCall(
+  { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+  async (request: CallableRequest) => {
   const myUid = requireAuth(request);
   const { senderUid } = request.data;
 
@@ -125,5 +131,6 @@ export const getPulseIntercept = onCall(async (request: CallableRequest) => {
     await redis.del(redisKey);
   }
 
-  return intercept;
-});
+    return intercept;
+  }
+);

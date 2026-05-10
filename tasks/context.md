@@ -1,21 +1,18 @@
-## Session State — 2026-05-11 (Session 7)
-- Active Task: Merge recovery after git pull conflict — COMPLETE ✅
+## Session State — 2026-05-11 (Session 12)
+- Active Task: Native Splash Regeneration — COMPLETE ✅
 - Environment: Dev
 - Modified Files:
-    - lib/src/features/safety/screen_protection_service.dart ✅ (screen protection — Naloga 2)
-    - lib/src/features/match/presentation/match_reveal_screen.dart ✅ (screen protection)
-    - lib/src/features/profile/presentation/profile_detail_screen.dart ✅ (screen protection)
-    - lib/src/features/dashboard/presentation/run_recap_screen.dart ✅ (screen protection)
-    - pubspec.yaml / pubspec.lock ✅ (flutter_windowmanager, screen_protector)
+    - flutter_native_splash.yaml ✅ (switched from transparent icon to tremble_splash_source.png)
+    - ios/Runner/Base.lproj/LaunchScreen.storyboard ✅ (backgroundColor fixed: white → #1A1A18)
     - tasks/context.md ✅ updated
 - Open Problems: None
-- System Status: flutter analyze — No issues found ✅ | flutter test — 56/56 passed ✅
+- System Status: flutter analyze — No issues found ✅
 
 ## Session Handoff
-- Completed: Martin's remote changes (27 files, my_gyms_screen, settings refactor, match pill, etc.) merged cleanly. Screen protection service (Naloga 2) preserved intact. context.md conflict resolved manually.
+- Completed: Native splash regenerated with correct rose-colored icon (tremble_splash_source.png). LaunchScreen.storyboard background fixed from white to #1A1A18 to eliminate iOS white flash on cold start.
 - In Progress: Nothing
 - Blocked: BLOCKER-003 (RevenueCat/Legal) — Phase 8 on hold
-- Next Action: Run `flutter analyze` to confirm clean state, then commit all pending changes.
+- Next Action: Test on physical iPhone — cold start must show no white flash.
 
 ## What was implemented (My Gyms — Phase 12)
 

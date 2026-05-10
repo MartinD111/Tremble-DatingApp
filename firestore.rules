@@ -13,8 +13,8 @@ service cloud.firestore {
       // (isPremium, isAdmin, activeGymId, gymModeUntil, activeEventId)
       // backend-only regardless of who can read.
       allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == userId && !request.resource.data.keys().hasAny(['isPremium', 'isAdmin', 'activeGymId', 'gymModeUntil', 'activeEventId']);
-      allow update: if request.auth != null && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isPremium', 'isAdmin', 'activeGymId', 'gymModeUntil', 'activeEventId']);
+      allow create: if request.auth != null && request.auth.uid == userId && !request.resource.data.keys().hasAny(['isPremium', 'isAdmin', 'activeGymId', 'gymModeUntil', 'activeEventId', 'ageConfirmed', 'ageConfirmedAt']);
+      allow update: if request.auth != null && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isPremium', 'isAdmin', 'activeGymId', 'gymModeUntil', 'activeEventId', 'ageConfirmed', 'ageConfirmedAt']);
     }
 
     match /drafts/{userId} {

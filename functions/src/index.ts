@@ -29,6 +29,7 @@ export {
     onWaveCreated,
     getMatches,
     migrateMatchTypes,
+    sendWave,
 } from "./modules/matches/matches.functions";
 
 export {
@@ -65,6 +66,7 @@ export {
     unblockUser,
     reportUser,
     onContactAnonymityCheck,
+    onReportCreated,
 } from "./modules/safety/safety.functions";
 
 // ── Events Module ────────────────────────────────────────

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +16,25 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  int _demoPhase = 0;
+  late final Timer _demoTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _demoTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (_currentPage == 0 && mounted) {
+        setState(() => _demoPhase = (_demoPhase + 1).clamp(0, 2));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _demoTimer.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
 
   String get _lang => ref.read(authStateProvider)?.appLanguage ?? 'en';
   String tr(String key) => t(key, _lang);
@@ -86,8 +107,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: slides.length,
-                  onPageChanged: (i) => setState(() => _currentPage = i),
-                  itemBuilder: (ctx, i) => _buildSlide(slides[i]),
+                  onPageChanged: (i) => setState(() {
+                    _currentPage = i;
+                    _demoPhase = 0;
+                  }),
+                  itemBuilder: (ctx, i) => _buildSlide(slides[i], i),
                 ),
               ),
               // Dots + button
@@ -151,7 +175,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  Widget _buildSlide(_OnboardingData data) {
+  Widget _buildSlide(_OnboardingData data, int index) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
@@ -193,6 +217,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   height: 1.6,
                 ),
           ),
+          if (index == 0) ...[
+            const SizedBox(height: 32),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              child: Text(
+                key: ValueKey(_demoPhase),
+                [
+                  'Someone nearby is using Tremble.',
+                  'You wave. They wave back.',
+                  '30 minutes. Find each other.',
+                ][_demoPhase],
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ],
       ),
     );

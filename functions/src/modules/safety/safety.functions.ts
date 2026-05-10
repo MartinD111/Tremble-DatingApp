@@ -1,9 +1,11 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { validateRequest } from "../../middleware/validate";
 import { blockUserSchema, unblockUserSchema, reportUserSchema, checkAnonymitySchema } from "./safety.schema";
+import { sendAdminReportAlert } from "../email/email.functions";
 import * as crypto from "crypto";
 import { getAuth } from "firebase-admin/auth";
 import { ENFORCE_APP_CHECK } from "../../config/env";
@@ -232,5 +234,44 @@ export const onContactAnonymityCheck = onCall(
 
         // Force V8 to garbage collect if possible (hashes fall out of scope here)
         return { success: true, matchesFound: uidsArray.length };
+    }
+);
+
+/**
+ * onReportCreated — Firestore trigger on reports/{reportId}
+ *
+ * Two actions on every new report:
+ * 1. Admin email alert via Resend.
+ * 2. Velocity check — 3+ unique reporters in 48h flags the reported user.
+ */
+export const onReportCreated = onDocumentCreated(
+    { document: "reports/{reportId}", region: "europe-west1" },
+    async (event) => {
+        const report = event.data?.data();
+        if (!report) return;
+
+        const { reporterId, reportedId, reasons } = report;
+        const reportId = event.params.reportId;
+
+        // 1. Send admin email alert
+        await sendAdminReportAlert(reporterId, reportedId, reasons, reportId)
+            .catch(err => console.error("[REPORT] Email failed:", err));
+
+        // 2. Velocity check — 3 unique reporters in 48h = flag for review
+        const since = new Date(Date.now() - 48 * 60 * 60 * 1000);
+        const recentReports = await db.collection("reports")
+            .where("reportedId", "==", reportedId)
+            .where("createdAt", ">=", since)
+            .get();
+
+        const uniqueReporters = new Set(
+            recentReports.docs.map(d => d.data().reporterId as string)
+        );
+
+        if (uniqueReporters.size >= 3) {
+            await db.collection("users").doc(reportedId)
+                .update({ flaggedForReview: true });
+            console.log(`[SAFETY] User ${reportedId} flagged — ${uniqueReporters.size} unique reporters`);
+        }
     }
 );

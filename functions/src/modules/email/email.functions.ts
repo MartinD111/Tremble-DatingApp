@@ -128,6 +128,38 @@ export async function sendDeletionConfirmationEmail(
   console.log('[EMAIL] Deletion confirmation sent successfully');
 }
 
+/**
+ * Send an admin alert email when a new user report is created.
+ * Called internally by onReportCreated trigger — not a public callable.
+ */
+export async function sendAdminReportAlert(
+    reporterId: string,
+    reportedId: string,
+    reasons: string[],
+    reportId: string
+): Promise<void> {
+    const { fromEmail } = getConfig().resend;
+    const resend = getResend();
+
+    await resend.emails.send({
+        from: `Tremble <${fromEmail}>`,
+        to: ["info@trembledating.com"],
+        subject: `[TREMBLE] Nov report — ${reasons.join(", ")}`,
+        html: `
+      <div style='font-family: monospace; padding: 24px;'>
+        <h2 style='color: #F4436C;'>Nov user report</h2>
+        <p><b>Report ID:</b> ${reportId}</p>
+        <p><b>Reporter UID:</b> ${reporterId}</p>
+        <p><b>Reported UID:</b> ${reportedId}</p>
+        <p><b>Razlogi:</b> ${reasons.join(", ")}</p>
+        <p style='color:#888; font-size:12px;'>
+          Preveri v Firebase Console → reports/${reportId}
+        </p>
+      </div>
+    `,
+    });
+}
+
 // ── Public callable: resend verification email ────────────
 
 export const resendVerificationEmail = onCall(

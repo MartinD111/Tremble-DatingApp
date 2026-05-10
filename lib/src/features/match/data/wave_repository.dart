@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -10,16 +11,15 @@ class WaveRepository {
 
   WaveRepository(this._firestore, this._auth);
 
-  /// Zapiše nov wave dokument v Firestore.
+  /// Pošlje wave prek Cloud Function (rate-limited za free userje: 5/30 dni).
   Future<void> sendWave(String targetUid) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) throw Exception('Uporabnik ni prijavljen.');
 
-    await _firestore.collection('waves').add({
-      'fromUid': currentUser.uid,
-      'toUid': targetUid,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    final callable = FirebaseFunctions.instanceFor(region: 'europe-west1')
+        .httpsCallable('sendWave');
+
+    await callable.call({'targetUid': targetUid});
   }
 
   /// Performs a gesture (Greet/Accept) on a match document.

@@ -127,6 +127,8 @@ export const completeOnboarding = onCall(
                     maxDistance: data.maxDistance,
                     jobStatus: data.jobStatus || null,
                     consentGivenAt: FieldValue.serverTimestamp(),
+                    ageConfirmed: true,
+                    ageConfirmedAt: FieldValue.serverTimestamp(),
                     isOnboarded: true,
                     updatedAt: FieldValue.serverTimestamp(),
                 },
