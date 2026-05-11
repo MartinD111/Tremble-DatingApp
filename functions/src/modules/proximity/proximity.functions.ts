@@ -181,6 +181,10 @@ export const updateLocation = onCall(
         });
 
         const data = validateRequest(updateLocationSchema, request.data);
+
+        const userDoc = await db.collection("users").doc(uid).get();
+        assertNotBanned(userDoc.data());
+
         const geohash = encodeGeohash(data.latitude, data.longitude);
 
         await db
@@ -233,6 +237,8 @@ export const findNearby = onCall(
             console.log(`[PROXIMITY] Requester data not found: ${uid.substring(0, 8)}...`);
             return { nearby: [], radiusTier: "free", radiusM: RADIUS_FREE_M };
         }
+
+        assertNotBanned(requesterData);
 
         const myGender = requesterData.gender;
         const myInterest = requesterData.interestedIn;

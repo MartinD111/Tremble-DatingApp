@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
-import { requireAuth } from "../../middleware/authGuard";
+import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
@@ -37,6 +37,10 @@ export const onGymModeActivate = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+
+        const userDoc = await db.collection("users").doc(uid).get();
+        assertNotBanned(userDoc.data());
+
         const { gymId, latitude, longitude } = request.data;
 
         if (!gymId || latitude === undefined || longitude === undefined) {
@@ -86,6 +90,9 @@ export const onGymModeDeactivate = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+
+        const userDoc = await db.collection("users").doc(uid).get();
+        assertNotBanned(userDoc.data());
 
         await db.collection("users").doc(uid).update({
             activeGymId: null,
@@ -144,6 +151,9 @@ export const onRunModeActivate = onCall(
     async (request) => {
         const uid = requireAuth(request);
 
+        const userDoc = await db.collection("users").doc(uid).get();
+        assertNotBanned(userDoc.data());
+
         const runModeUntil = Timestamp.fromDate(
             new Date(Date.now() + RUN_SESSION_HOURS * 60 * 60 * 1000)
         );
@@ -167,6 +177,9 @@ export const onRunModeDeactivate = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+
+        const userDoc = await db.collection("users").doc(uid).get();
+        assertNotBanned(userDoc.data());
 
         await db.collection("users").doc(uid).update({
             isRunModeActive: false,
