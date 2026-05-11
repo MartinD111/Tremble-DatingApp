@@ -1,17 +1,32 @@
-## Session State — 2026-05-11 (Session 14)
-- Active Task: Wave Monthly Rate Limit — COMPLETE ✅
+## Session State — 2026-05-11 (Session 17)
+- Active Task: Sprint 1 — Stabilization complete
 - Environment: Dev
 - Modified Files:
-    - functions/src/modules/matches/matches.functions.ts ✅ (updated sendWave rate limit: Free 5/month, Pro 20/month)
+    - firestore.rules ✅ (rules for active_run_crosses, run_encounters, gyms, proximity_notifications — already done in prior session)
+    - lib/src/features/map/presentation/event_recap_screen.dart ✅ (mock profiles removed, empty state)
+    - lib/src/features/matches/data/match_repository.dart ✅ (watchMatches → Firestore real-time listener, kReleaseMode guard)
+    - .gitignore ✅ (test_output.txt, desktop.ini, *.orig added)
     - tasks/context.md ✅ updated
-- Open Problems: None
-- System Status: npm run build — 0 errors ✅ | flutter analyze — No issues found ✅
+- Deleted (Task 5): connect_script.dart, temp_script.dart, patch_registration.dart, patch_app_delegate.swift, update_modals.py, test_output.txt, desktop.ini
+- Open Problems: BLOCKER-003 (RevenueCat), Protomaps tile server (Martin), translations incomplete for DE/FR/SR/HU
+- System Status: 56/56 tests pass. flutter analyze clean.
 
 ## Session Handoff
-- Completed: Wave rate limiting implemented server-side via `sendWave` callable. Free users: 5 waves/30 days. Premium users: 20 waves/30 days. Logic uses `checkRateLimit` with `maxRequests: isPremium ? 20 : 5`. Previously premium users had no limit (skipped rate check entirely) — now they are also rate-limited at 20/month. index.ts export and wave_repository.dart callable were already correct — no changes needed there.
-- In Progress: Nothing
-- Blocked: BLOCKER-003 (RevenueCat/Legal) — Phase 8 on hold
-- Next Action: Device test — send 5 waves as free user → 6th wave must return rate-limit error from Cloud Function.
+- Completed: All 5 Sprint 1 tasks from PROJECT_STATUS_AUDIT.md
+  - Task 1 (Firestore rules): Already done in prior session — confirmed present
+  - Task 2 (Event Recap mock profiles): Removed _RecapProfile, _mockProfiles, dead card widgets → empty state
+  - Task 3 (Red test): Already fixed by prior router logic — 23/23 router tests pass
+  - Task 4 (watchMatches polling): Replaced while(true) loop with Firestore .snapshots().asyncMap(getMatches), added kReleaseMode guard + uid from authStateProvider
+  - Task 5 (Repo cleanup): Deleted 7 junk files, updated .gitignore
+- In Progress: —
+- Blocked: BLOCKER-003 (RevenueCat/Legal), Task 8 (Protomaps — Martin)
+- Next Action: Sprint 2 — Task 6 RevenueCat integration (requires Apple Dev Account $99 + Google Play Console $25 first)
+
+## Price Decision (2026-05-11)
+- **7,99 € / month** — confirmed by founder
+- `premium_paywall.dart` already shows 7,99 € ✅
+- `tremble-brand-identity.html` updated from 4,99 → 7,99 ✅
+- `Master_Strategy_v6.html` not found in repo (may be external)
 
 ## What was implemented (My Gyms — Phase 12)
 

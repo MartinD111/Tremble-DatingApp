@@ -23,7 +23,7 @@ final profileRepositoryProvider = Provider<ProfileRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ProfileRepositoryRef = ProviderRef<ProfileRepository>;
-String _$publicProfileHash() => r'2dd502da40fd5aed3b7b9c70a1fe1a43ef84e9a9';
+String _$publicProfileHash() => r'51b2bb4b3dc8d7bba9820fa75cbafd769e2728e2';
 
 /// Copied from Dart SDK
 class _SystemHash {

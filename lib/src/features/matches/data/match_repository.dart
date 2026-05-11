@@ -1,7 +1,8 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api_client.dart';
+import '../../auth/data/auth_repository.dart';
 import '../../dashboard/application/dev_mock_matches_provider.dart';
 import '../../match/data/wave_repository.dart';
 import '../../../core/hobby_utils.dart';
@@ -220,20 +221,17 @@ class MatchRepository {
     });
   }
 
-  /// Stream that polls for new matches periodically.
-  /// Replaces the old mock simulateMatches() with real polling.
-  Stream<List<MatchProfile>> watchMatches({
-    Duration interval = const Duration(seconds: 30),
-  }) async* {
-    while (true) {
-      try {
-        final matches = await getMatches();
-        yield matches;
-      } catch (e) {
-        yield []; // Return empty on error, will retry
-      }
-      await Future.delayed(interval);
-    }
+  /// Real-time match stream backed by a Firestore listener.
+  ///
+  /// Fires immediately on first subscription and again whenever the matches
+  /// collection changes for [uid]. Full profile hydration is delegated to
+  /// [getMatches] (Cloud Function) so no additional Firestore reads are needed.
+  Stream<List<MatchProfile>> watchMatches(String uid) {
+    return FirebaseFirestore.instance
+        .collection('matches')
+        .where('userIds', arrayContains: uid)
+        .snapshots()
+        .asyncMap((_) => getMatches());
   }
 
   /// Filters [matches] in-memory according to [filter].
@@ -337,12 +335,22 @@ class MatchFilterState {
 
 final matchRepositoryProvider = Provider((ref) => MatchRepository());
 
-/// Stream of real matches from the server, merged with dev-mode mock matches
-/// produced by completed proximity simulations. Dev mocks are appended to the
-/// front of the list so they appear at the top of the People tab.
+/// Real-time stream of matches from Firestore, merged with dev-mode mock
+/// matches produced by completed proximity simulations.
+/// Dev mocks are prepended so they appear at the top of the People tab.
+/// In release builds the dev mock merge is skipped entirely.
 final matchesStreamProvider = StreamProvider<List<MatchProfile>>((ref) {
+  final uid = ref.watch(authStateProvider)?.id;
+  if (uid == null) return const Stream.empty();
+
+  // In release mode skip the dev-mock merge so the provider has no dependency
+  // on devMockMatchesProvider at all (avoids unnecessary rebuilds in prod).
+  if (kReleaseMode) {
+    return ref.watch(matchRepositoryProvider).watchMatches(uid);
+  }
+
   final devMocks = ref.watch(devMockMatchesProvider);
-  return ref.watch(matchRepositoryProvider).watchMatches().map((real) {
+  return ref.watch(matchRepositoryProvider).watchMatches(uid).map((real) {
     if (devMocks.isEmpty) return real;
     final realIds = real.map((m) => m.id).toSet();
     final unique = devMocks.where((m) => !realIds.contains(m.id));

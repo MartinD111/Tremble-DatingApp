@@ -304,6 +304,8 @@ const Map<String, Map<String, String>> _translations = {
     'pulse_expired': 'Window closed',
     'event_recap_free_hint':
         'Go Pro to send a last Pulse to people you crossed',
+    'no_attendees_yet': 'No attendees yet',
+    'error_loading_attendees': 'Error loading attendees',
 
     // --- Account ---
     'email_verified': 'Email Verified',

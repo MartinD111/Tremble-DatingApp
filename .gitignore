@@ -138,3 +138,8 @@ lib/src/core/firebase_options_prod.dart
 # Orphan firebase options files at lib/ root — untracked since a456f88, keep ignored
 lib/firebase_options.dart
 lib/firebase_options_dev.dart
+
+# Root-level junk files (temp scripts, Windows metadata)
+test_output.txt
+desktop.ini
+*.orig
