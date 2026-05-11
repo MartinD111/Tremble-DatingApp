@@ -101,6 +101,10 @@ class TrembleApiException implements Exception {
   });
 
   factory TrembleApiException.fromFirebase(FirebaseFunctionsException e) {
+    if (e.code == 'permission-denied' &&
+        (e.message?.contains('suspended') ?? false)) {
+      return AccountSuspendedException();
+    }
     return TrembleApiException(
       code: e.code,
       message: _userFriendlyMessage(e.code, e.message),
@@ -133,4 +137,14 @@ class TrembleApiException implements Exception {
 
   @override
   String toString() => 'TrembleApiException($code): $message';
+}
+
+/// Thrown when the backend rejects a request because the account is suspended.
+/// UI layers should navigate to AccountSuspendedScreen on catching this.
+class AccountSuspendedException extends TrembleApiException {
+  AccountSuspendedException()
+      : super(
+          code: 'permission-denied',
+          message: 'Your account has been suspended.',
+        );
 }

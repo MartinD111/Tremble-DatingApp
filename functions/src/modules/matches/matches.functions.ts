@@ -11,7 +11,7 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
-import { requireAuth } from "../../middleware/authGuard";
+import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { sendMatchNotificationEmail } from "../email/email.functions";
 import { getRedis, waveDedupKey, WAVE_DEDUP_SECS } from "../../core/redis";
@@ -39,7 +39,11 @@ export const sendWave = onCall(
 
         // Monthly wave limit: Free = 5, Pro = 20
         const userDoc = await db.collection("users").doc(uid).get();
-        const isPremium = userDoc.data()?.isPremium ?? false;
+        const userData = userDoc.data();
+
+        assertNotBanned(userData);
+
+        const isPremium = userData?.isPremium ?? false;
 
         await checkRateLimit(uid, "wave_monthly", {
             maxRequests: isPremium ? 20 : 5,

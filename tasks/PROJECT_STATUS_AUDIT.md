@@ -38,7 +38,7 @@ Na backendu: 30 Cloud Functions v europe-west1, App Check enforce za prod, rate 
 
 ### Kar je narobe ampak ne ubije alfe
 
-Prevodi so napol prazni. Slovenščina in angleščina sta OK (~580 ključev). Nemščina ima 329, francoščina, srbščina, madžarščina okrog 220. User ki izbere Hungarian vidi večinoma angleščino. Za Ljubljano/Koper/Zagreb to ni blocker za alfó — je pa sramota pred beto.
+Prevodi so večinoma prazni za DE, FR, HU. Angleščina in slovenščina sta OK (~580 ključev). ✅ **Srbščina je zdaj 100 % končana** in usklajena z EN baseline. User ki izbere Hungarian vidi večinoma angleščino. Za Ljubljano/Koper/Zagreb to ni blocker za alfó — je pa sramota pred beto.
 
 `watchMatches` kliče Cloud Function vsake 30 sekund za vsakega prijavljenega userja. Pri 500 aktivnih userjih = 1.000 klicev/minuto = strošek. Firestore ima real-time listener za to — je 3-urni fix ki prihrani mesečne stroške. Ne ubije alfe, bo bolel pri beti.
 

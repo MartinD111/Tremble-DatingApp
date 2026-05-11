@@ -14,7 +14,7 @@ import { onCall } from "firebase-functions/v2/https";
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
-import { requireAuth } from "../../middleware/authGuard";
+import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { z } from "zod";
 import { validateRequest } from "../../middleware/validate";
@@ -294,6 +294,7 @@ export const findNearby = onCall(
             const candidateDoc = userDocs[i];
             const candidateData = candidateDoc.data();
             if (!candidateData) continue;
+            if (candidateData.flaggedForReview === true) continue;
 
             const theirGender = candidateData.gender;
             const theirInterest = candidateData.interestedIn;
@@ -400,12 +401,14 @@ export const getProximityMatchCandidates = onCall(
 
         const data = validateRequest(proximityMatchCandidatesSchema, request.data);
 
-        // Read requester profile for tier + preference filtering
+        // Read requester profile for ban check + tier + preference filtering
         const requesterDoc = await db.collection("users").doc(uid).get();
         const requesterData = requesterDoc.data();
         if (!requesterData) {
             return { candidates: [], radiusTier: "free", radiusM: RADIUS_FREE_M };
         }
+
+        assertNotBanned(requesterData);
 
         const isPremium = requesterData.isPremium === true;
         const radiusM = isPremium ? RADIUS_PRO_M : RADIUS_FREE_M;
@@ -460,6 +463,7 @@ export const getProximityMatchCandidates = onCall(
         for (let i = 0; i < candidates.length; i++) {
             const candidateData = userDocs[i].data();
             if (!candidateData) continue;
+            if (candidateData.flaggedForReview === true) continue;
 
             const theirNicotineUse: string[] = candidateData.nicotineUse ?? [];
             const theirNicotineFilter: string = candidateData.nicotineFilter ?? "any";

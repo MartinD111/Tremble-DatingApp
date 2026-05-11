@@ -6,6 +6,7 @@
  */
 
 import { HttpsError, CallableRequest } from "firebase-functions/v2/https";
+import { DocumentData } from "firebase-admin/firestore";
 import { ENFORCE_APP_CHECK } from "../config/env";
 
 /**
@@ -54,6 +55,27 @@ export function requireAppCheck(request: CallableRequest): void {
         throw new HttpsError(
             "failed-precondition",
             "The function must be called from an App Check verified client."
+        );
+    }
+}
+
+/**
+ * Throws PERMISSION_DENIED if the user is banned.
+ *
+ * Accepts already-fetched Firestore user data to avoid an extra read
+ * in functions that have already loaded the user document.
+ *
+ * Ban is active when:
+ *   - isBanned === true AND
+ *   - bannedUntil is null (permanent) OR bannedUntil > now (temporary)
+ */
+export function assertNotBanned(userData: DocumentData | undefined): void {
+    if (userData?.isBanned !== true) return;
+    const bannedUntil = userData?.bannedUntil;
+    if (!bannedUntil || bannedUntil.toDate() > new Date()) {
+        throw new HttpsError(
+            "permission-denied",
+            "Your account has been suspended."
         );
     }
 }

@@ -11,7 +11,7 @@
 import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { getRedis } from "../../core/redis";
-import { requireAuth } from "../../middleware/authGuard";
+import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { ENFORCE_APP_CHECK } from "../../config/env";
 import { logger } from "firebase-functions";
 
@@ -25,6 +25,11 @@ export const requestPulseIntercept = onCall(
   { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
   async (request: CallableRequest) => {
   const senderUid = requireAuth(request);
+
+  // Ban check — fetch once for ban + use below for match verification
+  const senderDoc = await admin.firestore().collection("users").doc(senderUid).get();
+  assertNotBanned(senderDoc.data());
+
   const { targetUid, type, data } = request.data;
 
   if (!targetUid || !type) {

@@ -186,13 +186,13 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
   final TextEditingController _explanationCtrl = TextEditingController();
   bool _isSubmitting = false;
 
-  final List<String> _availableReasons = [
-    'Spam ali prevara',
-    'Nasilje in grožnje',
-    'Neprimerna golota ali seksualna vsebina',
-    'Lažen profil',
-    'Neprimerno obnašanje',
-  ];
+  List<String> _getReasons(String lang) => [
+        t('report_reason_spam', lang),
+        t('report_reason_violence', lang),
+        t('report_reason_nudity', lang),
+        t('report_reason_fake', lang),
+        t('report_reason_behaviour', lang),
+      ];
 
   @override
   void dispose() {
@@ -258,7 +258,7 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
                 style: GoogleFonts.instrumentSans(color: Colors.white70),
               ),
               const SizedBox(height: 12),
-              ..._availableReasons.map((reason) {
+              ..._getReasons(lang).map((reason) {
                 return CheckboxListTile(
                   title: Text(
                     reason,

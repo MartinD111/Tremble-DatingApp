@@ -1,26 +1,20 @@
-## Session State — 2026-05-11 (Session 17)
-- Active Task: Sprint 1 — Stabilization complete
+## Session State — 2026-05-11 (Session 19)
+- Active Task: Finalizing Hungarian (HU) Localization Parity
 - Environment: Dev
 - Modified Files:
-    - firestore.rules ✅ (rules for active_run_crosses, run_encounters, gyms, proximity_notifications — already done in prior session)
-    - lib/src/features/map/presentation/event_recap_screen.dart ✅ (mock profiles removed, empty state)
-    - lib/src/features/matches/data/match_repository.dart ✅ (watchMatches → Firestore real-time listener, kReleaseMode guard)
-    - .gitignore ✅ (test_output.txt, desktop.ini, *.orig added)
-    - tasks/context.md ✅ updated
-- Deleted (Task 5): connect_script.dart, temp_script.dart, patch_registration.dart, patch_app_delegate.swift, update_modals.py, test_output.txt, desktop.ini
-- Open Problems: BLOCKER-003 (RevenueCat), Protomaps tile server (Martin), translations incomplete for DE/FR/SR/HU
-- System Status: 56/56 tests pass. flutter analyze clean.
+    - lib/src/core/translations.dart ✅ (100% parity for HU, SR, EN)
+- Open Problems: BLOCKER-003 (RevenueCat), Protomaps tile server (Martin)
+- System Status: flutter analyze clean. flutter test passing.
 
 ## Session Handoff
-- Completed: All 5 Sprint 1 tasks from PROJECT_STATUS_AUDIT.md
-  - Task 1 (Firestore rules): Already done in prior session — confirmed present
-  - Task 2 (Event Recap mock profiles): Removed _RecapProfile, _mockProfiles, dead card widgets → empty state
-  - Task 3 (Red test): Already fixed by prior router logic — 23/23 router tests pass
-  - Task 4 (watchMatches polling): Replaced while(true) loop with Firestore .snapshots().asyncMap(getMatches), added kReleaseMode guard + uid from authStateProvider
-  - Task 5 (Repo cleanup): Deleted 7 junk files, updated .gitignore
+- Completed:
+  - **Localization Parity:** Achieved 100% key parity for Hungarian (HU) and Serbian (SR) against the English baseline.
+  - **Key Synchronization:** Added missing Intercept, Safe Zone, and Event Mode keys to HU, SR, and EN blocks.
+  - **Validation:** Final audit via `audit_all_keys.py` confirms zero missing keys for EN, SR, and HU.
+  - **Quality Control:** `flutter analyze` and `flutter test` both passing.
 - In Progress: —
 - Blocked: BLOCKER-003 (RevenueCat/Legal), Task 8 (Protomaps — Martin)
-- Next Action: Sprint 2 — Task 6 RevenueCat integration (requires Apple Dev Account $99 + Google Play Console $25 first)
+- Next Action: Sprint 2 — Task 6 RevenueCat integration or Infrastructure (Protomaps).
 
 ## Price Decision (2026-05-11)
 - **7,99 € / month** — confirmed by founder

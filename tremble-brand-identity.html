@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tremble — Brand Identity System v3</title>
+  <title>Tremble — Brand Identity System v5</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lora:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
@@ -1106,31 +1106,35 @@
     <div class="cover">
       <div class="cover-eyebrow">AMS Solutions d.o.o. — 2026</div>
       <div class="cover-title">Tremble<em>.</em><br>Brand Identity System</div>
-      <div class="cover-sub">v4.0 · Passive Proximity Dating · iOS & Android</div>
+      <div class="cover-sub">v5.0 · Passive Proximity Dating · iOS & Android</div>
     </div>
 
     <!-- CHANGELOG NOTE -->
     <div
       style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; padding: 24px 28px; margin-bottom: 48px;">
-      <div class="changelog-badge"><span class="dot"></span>&nbsp;v4.0 — May 2026</div>
+      <div class="changelog-badge"><span class="dot"></span>&nbsp;v5.0 — May 2026</div>
       <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">Kaj se je
-        spremenilo v v4</div>
+        spremenilo v v5</div>
       <ul style="padding-left: 16px; display: flex; flex-direction: column; gap: 6px;">
-        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Cena posodobljena:</strong> €3.99 →
-          €7.99/mes.</li>
-        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Radius posodobljen:</strong> Free 50m → 100m.
-          Pro 100m → 250m. Paywall trigger: "Bil/a je izven tvojega 100m radiusa."</li>
-        <li style="font-size: 13px; color: var(--text-secondary);"><strong>History Tab spec dodana:</strong> Matches
-          (You/They/Mutual), Recaps (Run/Gym/Event) s 10-min Pro TTL, Near-Miss History (free: 1×/mes, locked; Pro:
-          kadarkoli, read-only).</li>
-        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Event Mode dodan:</strong> Tremble Events —
-          kavarne, klubi, festivali. Geofence-based, brezplačno pridruževanje, prag 0.55.</li>
-        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Manual activation rate limit:</strong> 6h
-          cooldown od konca aktivnosti. Prag zviša na 0.70. Avtomatska detekcija brez limita.</li>
-        <li style="font-size: 13px; color: var(--text-secondary);">Notifikacijska logika razčiščena: vse tiho med
-          aktivnostmi. Izjema: 2. srečanje z isto osebo → "To ni več naključje."</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Cena finalizirana: €7,99/mes</strong> (letno
+          €59,99). Odločitev maja 2026.</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Sprint 1 zaključen:</strong> Firestore rules
+          popravljene, watchMatches → real-time listener, Event Recap mock profili odstranjeni, 56/56 testov zelenih.
+        </li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>F12 Pulse Intercept IMPLEMENTIRAN:</strong>
+          Flutter UI + Cloud Functions backend živa. 2 atomska gumba. 10-min Redis TTL. View-once server delete.</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>F13 Stealth &amp; Safety
+            IMPLEMENTIRAN:</strong> Safe Zones, SHA-256 Contact Anonymity, Block — vse v produkciji.</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Screen Protection IMPLEMENTIRAN:</strong>
+          FLAG_SECURE (Android) + ScreenProtector overlay (iOS). Aktiven na ProfileDetail, MatchReveal, RunRecap,
+          EventRecap.</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Paywall status:</strong> Besedilo
+          lokalizirano, GlassCard → solid brand fix PENDING (pred RevenueCat integracijo).</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Prevajalski gap:</strong> EN/SL ~580 ključev.
+          DE=329, FR/HU/SR=~220. Razrešiti pred odprto beto.</li>
         <li style="font-size: 13px; color: var(--text-secondary);">Vizualni sistem nespremenjen — barve, tipografija,
-          ikone, logo ostajajo enaki.</li>
+          ikone, logo ostajajo enaki. 185 hard-coded HEX vrednosti v kodi (tech debt — ne vpliva na vizualno izkušnjo).
+        </li>
       </ul>
     </div>
 
@@ -1400,8 +1404,8 @@
     <section class="doc-section" id="copy">
       <div class="section-label">02.2 — Key Copy Lines</div>
       <h2 class="section-title">18 ključnih stavkov</h2>
-      <p class="prose">Za direktno uporabo v marketingu, oglasih, onboardingu. v4 dodaja History Tab spec (Near-Miss,
-        Recaps), Event Mode, posodobljene radius/cene in notifikacijsko logiko.</p>
+      <p class="prose">Za direktno uporabo v marketingu, oglasih, onboardingu. v5 posodablja ceno (€7,99/mes), dodaja
+        status zaprte alfe ter dokumentira implementirane F12 Pulse Intercept, F13 Safety in Screen Protection.</p>
 
       <div class="voice-lines">
         <div class="voice-line">
@@ -2504,7 +2508,7 @@
       <h2 class="section-title">Ad Headlines & Struktura</h2>
 
       <div class="spec-block">
-        <h3>Meta / Instagram / TikTok Ad Headlines — v3</h3>
+        <h3>Meta / Instagram / TikTok Ad Headlines — v5</h3>
         <table class="headline-table">
           <thead>
             <tr>
@@ -2710,7 +2714,7 @@
           style="font-family: var(--font-display); font-size: 18px; font-weight: 900; letter-spacing: -0.04em; color: var(--text-primary);">
           tremble<span style="color: var(--rose);">.</span></div>
         <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-disabled); margin-top: 4px;">Brand
-          Identity System v4.0 · April 2026</div>
+          Identity System v5.0 · May 2026</div>
       </div>
       <div style="text-align: right;">
         <div style="font-size: 12px; color: var(--text-disabled);">AMS Solutions d.o.o.</div>

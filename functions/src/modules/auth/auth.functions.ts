@@ -5,7 +5,7 @@
  * All writes go through these functions — never directly from client.
  */
 
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { OAuth2Client } from "google-auth-library";
@@ -86,6 +86,13 @@ export const completeOnboarding = onCall(
         const age = Math.floor(
             (Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
         );
+
+        if (age < 18) {
+            throw new HttpsError(
+                "permission-denied",
+                "Tremble is available to users 18 and older."
+            );
+        }
 
         // Write validated profile data
         await db

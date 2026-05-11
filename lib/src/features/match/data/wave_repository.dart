@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/api_client.dart';
 
 part 'wave_repository.g.dart';
 
@@ -19,7 +20,15 @@ class WaveRepository {
     final callable = FirebaseFunctions.instanceFor(region: 'europe-west1')
         .httpsCallable('sendWave');
 
-    await callable.call({'targetUid': targetUid});
+    try {
+      await callable.call({'targetUid': targetUid});
+    } on FirebaseFunctionsException catch (e) {
+      if (e.code == 'permission-denied' &&
+          (e.message?.contains('suspended') ?? false)) {
+        throw AccountSuspendedException();
+      }
+      rethrow;
+    }
   }
 
   /// Performs a gesture (Greet/Accept) on a match document.
