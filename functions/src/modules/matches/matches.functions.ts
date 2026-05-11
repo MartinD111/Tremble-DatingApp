@@ -20,8 +20,8 @@ import { ENFORCE_APP_CHECK } from "../../config/env";
 const db = getFirestore();
 
 /**
- * sendWave — Callable: rate-limited wave submission for free users.
- * Free users: 5 waves per 30 days. Premium users: unlimited.
+ * sendWave — Callable: rate-limited wave submission.
+ * Free users: 5 waves per 30 days. Premium users: 20 waves per 30 days.
  * Writes to waves/ collection which triggers onWaveCreated.
  */
 export const sendWave = onCall(
@@ -37,16 +37,14 @@ export const sendWave = onCall(
             throw new HttpsError("invalid-argument", "Cannot wave at yourself");
         }
 
-        // Free user rate limit: 5 waves per 30 days
+        // Monthly wave limit: Free = 5, Pro = 20
         const userDoc = await db.collection("users").doc(uid).get();
         const isPremium = userDoc.data()?.isPremium ?? false;
 
-        if (!isPremium) {
-            await checkRateLimit(uid, "wave_monthly", {
-                maxRequests: 5,
-                windowMs: 30 * 24 * 60 * 60 * 1000,
-            });
-        }
+        await checkRateLimit(uid, "wave_monthly", {
+            maxRequests: isPremium ? 20 : 5,
+            windowMs: 30 * 24 * 60 * 60 * 1000, // 30 days
+        });
 
         await db.collection("waves").add({
             fromUid: uid,

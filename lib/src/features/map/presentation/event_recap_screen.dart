@@ -9,6 +9,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme.dart';
 import '../../../core/translations.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../safety/screen_protection_service.dart';
 
 /// Mock profile for event recap. Replace with real Firestore data when
 /// the backend event-crossing pipeline (F2) is wired.
@@ -83,10 +84,18 @@ class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
   final Set<String> _pulseSent = {};
   late int _countdown;
   Timer? _timer;
+  // User safety — ne GDPR. Screenshot protection prevents profile redistribution.
+  bool _isRecording = false;
+  late final void Function(bool) _recordingListener;
 
   @override
   void initState() {
     super.initState();
+    _recordingListener = (isRecording) {
+      if (mounted) setState(() => _isRecording = isRecording);
+    };
+    ScreenProtectionService.enable();
+    ScreenProtectionService.addRecordingListener(_recordingListener);
     // Default to 10 min if caller does not provide remaining seconds.
     _countdown = widget.pulseSecondsRemaining ?? 600;
     if (_countdown > 0) {
@@ -102,12 +111,16 @@ class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
 
   @override
   void dispose() {
+    ScreenProtectionService.removeRecordingListener();
+    ScreenProtectionService.disable();
     _timer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isRecording) return const RecordingShield();
+
     final user = ref.watch(authStateProvider);
     final lang = user?.appLanguage ?? 'sl';
     final effectivePremium = ref.watch(effectiveIsPremiumProvider);

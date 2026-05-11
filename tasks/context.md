@@ -1,18 +1,17 @@
-## Session State — 2026-05-11 (Session 12)
-- Active Task: Native Splash Regeneration — COMPLETE ✅
+## Session State — 2026-05-11 (Session 14)
+- Active Task: Wave Monthly Rate Limit — COMPLETE ✅
 - Environment: Dev
 - Modified Files:
-    - flutter_native_splash.yaml ✅ (switched from transparent icon to tremble_splash_source.png)
-    - ios/Runner/Base.lproj/LaunchScreen.storyboard ✅ (backgroundColor fixed: white → #1A1A18)
+    - functions/src/modules/matches/matches.functions.ts ✅ (updated sendWave rate limit: Free 5/month, Pro 20/month)
     - tasks/context.md ✅ updated
 - Open Problems: None
-- System Status: flutter analyze — No issues found ✅
+- System Status: npm run build — 0 errors ✅ | flutter analyze — No issues found ✅
 
 ## Session Handoff
-- Completed: Native splash regenerated with correct rose-colored icon (tremble_splash_source.png). LaunchScreen.storyboard background fixed from white to #1A1A18 to eliminate iOS white flash on cold start.
+- Completed: Wave rate limiting implemented server-side via `sendWave` callable. Free users: 5 waves/30 days. Premium users: 20 waves/30 days. Logic uses `checkRateLimit` with `maxRequests: isPremium ? 20 : 5`. Previously premium users had no limit (skipped rate check entirely) — now they are also rate-limited at 20/month. index.ts export and wave_repository.dart callable were already correct — no changes needed there.
 - In Progress: Nothing
 - Blocked: BLOCKER-003 (RevenueCat/Legal) — Phase 8 on hold
-- Next Action: Test on physical iPhone — cold start must show no white flash.
+- Next Action: Device test — send 5 waves as free user → 6th wave must return rate-limit error from Cloud Function.
 
 ## What was implemented (My Gyms — Phase 12)
 
