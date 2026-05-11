@@ -77,10 +77,12 @@ class PremiumPaywallBottomSheet extends StatelessWidget {
             const SizedBox(height: 32),
 
             // Feature List
-            _buildFeatureRow(LucideIcons.map, 'Napredni zemljevid in Radar'),
-            _buildFeatureRow(LucideIcons.filter, 'Neomejeni napredni filtri'),
-            _buildFeatureRow(LucideIcons.eye, 'Poglej, komu si všeč'),
-            _buildFeatureRow(LucideIcons.rocket, '1x Boost profil na teden'),
+            _buildFeatureRow(LucideIcons.radar, 'Radar do 250m (namesto 100m)'),
+            _buildFeatureRow(
+                LucideIcons.waves, '20 valov na mesec (namesto 5)'),
+            _buildFeatureRow(LucideIcons.history, 'Zgodovina Run Club'),
+            _buildFeatureRow(
+                LucideIcons.dumbbell, 'Prednostno ujemanje v Gym Mode'),
 
             const SizedBox(height: 36),
 

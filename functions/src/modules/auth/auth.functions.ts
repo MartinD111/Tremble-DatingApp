@@ -48,7 +48,7 @@ export const onUserDocCreated = onDocumentCreated(
         await snap.ref.set(
             {
                 isOnboarded: false,
-                isPremium: true, // Free premium until 10k users
+                isPremium: false,
                 isAdmin: false,
                 createdAt: FieldValue.serverTimestamp(),
                 updatedAt: FieldValue.serverTimestamp(),

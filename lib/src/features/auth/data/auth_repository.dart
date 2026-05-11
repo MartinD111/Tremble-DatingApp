@@ -802,7 +802,7 @@ class AuthRepository {
         {
           'email': email.trim(),
           'isOnboarded': false,
-          'isPremium': true,
+          'isPremium': false,
           'isAdmin': false,
           // onUserDocCreated trigger will add createdAt/updatedAt server timestamps
         },

@@ -11,51 +11,6 @@ import '../../../core/translations.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../safety/screen_protection_service.dart';
 
-/// Mock profile for event recap. Replace with real Firestore data when
-/// the backend event-crossing pipeline (F2) is wired.
-class _RecapProfile {
-  final String id;
-  final String name;
-  final int age;
-  final String photoUrl;
-
-  const _RecapProfile({
-    required this.id,
-    required this.name,
-    required this.age,
-    required this.photoUrl,
-  });
-}
-
-// ── Mock data ────────────────────────────────────────────────────────────────
-
-const List<_RecapProfile> _mockProfiles = [
-  _RecapProfile(
-    id: 'p1',
-    name: 'Maja',
-    age: 24,
-    photoUrl: '',
-  ),
-  _RecapProfile(
-    id: 'p2',
-    name: 'Luka',
-    age: 27,
-    photoUrl: '',
-  ),
-  _RecapProfile(
-    id: 'p3',
-    name: 'Sara',
-    age: 22,
-    photoUrl: '',
-  ),
-  _RecapProfile(
-    id: 'p4',
-    name: 'Blaž',
-    age: 29,
-    photoUrl: '',
-  ),
-];
-
 // (Countdown is managed as local state in _EventRecapScreenState — simpler
 //  and avoids provider initialisation ordering issues.)
 
@@ -81,7 +36,6 @@ class EventRecapScreen extends ConsumerStatefulWidget {
 }
 
 class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
-  final Set<String> _pulseSent = {};
   late int _countdown;
   Timer? _timer;
   // User safety — ne GDPR. Screenshot protection prevents profile redistribution.
@@ -207,26 +161,15 @@ class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
 
             // ── Profile grid ─────────────────────────────────────────────
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.72,
-                ),
-                itemCount: _mockProfiles.length,
-                itemBuilder: (_, i) => _ProfileCard(
-                  profile: _mockProfiles[i],
-                  effectivePremium: effectivePremium,
-                  pulseSent: _pulseSent.contains(_mockProfiles[i].id),
-                  pulseExpired: countdown == 0,
-                  isDark: isDark,
-                  lang: lang,
-                  onPulse: effectivePremium && countdown > 0
-                      ? () =>
-                          setState(() => _pulseSent.add(_mockProfiles[i].id))
-                      : null,
+              child: SizedBox.expand(
+                child: Center(
+                  child: Text(
+                    'Ni srečanj za ta event.',
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 15,
+                      color: Colors.white54,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -323,272 +266,6 @@ class _FreeUpgradeBanner extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ProfileCard extends StatelessWidget {
-  final _RecapProfile profile;
-  final bool effectivePremium;
-  final bool pulseSent;
-  final bool pulseExpired;
-  final bool isDark;
-  final String lang;
-  final VoidCallback? onPulse;
-
-  const _ProfileCard({
-    required this.profile,
-    required this.effectivePremium,
-    required this.pulseSent,
-    required this.pulseExpired,
-    required this.isDark,
-    required this.lang,
-    required this.onPulse,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cardBg = isDark ? const Color(0xFF2A2A2A) : Colors.white;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // ── Photo ──────────────────────────────────────────────────
-          Expanded(
-            child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(18)),
-              child: _PhotoSlot(
-                effectivePremium: effectivePremium,
-                isDark: isDark,
-              ),
-            ),
-          ),
-
-          // ── Name + age ─────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
-            child: effectivePremium
-                ? Text(
-                    '${profile.name}, ${profile.age}',
-                    style: TrembleTheme.uiFont(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : TrembleTheme.textColor,
-                    ),
-                  )
-                : _BlurredName(isDark: isDark),
-          ),
-
-          // ── Pulse button ───────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 4, 10, 12),
-            child: _PulseButton(
-              effectivePremium: effectivePremium,
-              pulseSent: pulseSent,
-              pulseExpired: pulseExpired,
-              isDark: isDark,
-              lang: lang,
-              onTap: onPulse,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PhotoSlot extends StatelessWidget {
-  final bool effectivePremium;
-  final bool isDark;
-
-  const _PhotoSlot({required this.effectivePremium, required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    // Placeholder gradient simulates a profile photo.
-    // Replace with CachedNetworkImage when real photos are available.
-    final photo = Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: effectivePremium
-              ? [const Color(0xFFF4436C), const Color(0xFFFF8C42)]
-              : [const Color(0xFF888888), const Color(0xFF555555)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: const Center(
-        child: Icon(Icons.person_rounded, color: Colors.white54, size: 48),
-      ),
-    );
-
-    if (effectivePremium) return photo;
-
-    // Free tier: desaturate via ColorFilter
-    return ColorFiltered(
-      colorFilter: const ColorFilter.matrix([
-        0.2126, 0.7152, 0.0722, 0, 0, // R
-        0.2126, 0.7152, 0.0722, 0, 0, // G
-        0.2126, 0.7152, 0.0722, 0, 0, // B
-        0, 0, 0, 1, 0, // A
-      ]),
-      child: photo,
-    );
-  }
-}
-
-class _BlurredName extends StatelessWidget {
-  final bool isDark;
-  const _BlurredName({required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 18,
-      width: 80,
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.15)
-            : Colors.black.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
-      ),
-    );
-  }
-}
-
-class _PulseButton extends StatelessWidget {
-  final bool effectivePremium;
-  final bool pulseSent;
-  final bool pulseExpired;
-  final bool isDark;
-  final String lang;
-  final VoidCallback? onTap;
-
-  const _PulseButton({
-    required this.effectivePremium,
-    required this.pulseSent,
-    required this.pulseExpired,
-    required this.isDark,
-    required this.lang,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (!effectivePremium) {
-      // Free: locked button → shows paywall on tap (BLOCKER-003 placeholder)
-      return GestureDetector(
-        onTap: () {
-          // TODO(paywall): wire to RevenueCat paywall when BLOCKER-003 resolves
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 9),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.06)
-                : Colors.black.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.10)
-                  : Colors.black.withValues(alpha: 0.08),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.lock_rounded,
-                  size: 14, color: isDark ? Colors.white38 : Colors.black38),
-              const SizedBox(width: 4),
-              Text(
-                'Pulse',
-                style: TrembleTheme.uiFont(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white38 : Colors.black38,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (pulseSent) {
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        decoration: BoxDecoration(
-          color: TrembleTheme.rose.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Center(
-          child: Text(
-            t('pulse_sent', lang),
-            style: TrembleTheme.uiFont(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: TrembleTheme.rose,
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (pulseExpired) {
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.04)
-              : Colors.black.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Center(
-          child: Text(
-            t('pulse_expired', lang),
-            style: TrembleTheme.uiFont(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white38 : Colors.black38,
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Pro: active send button
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 9),
-        decoration: BoxDecoration(
-          color: TrembleTheme.rose,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Center(
-          child: Text(
-            t('send_last_pulse', lang),
-            style: TrembleTheme.uiFont(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-        ),
       ),
     );
   }
