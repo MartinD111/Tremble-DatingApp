@@ -845,7 +845,8 @@ const Map<String, Map<String, String>> _translations = {
     'cancel': 'Prekliči',
     'pulse_intercept': 'Pulse Intercept',
     'pulse_intercept_title': 'PULSE INTERCEPT',
-    'pulse_intercept_body': 'Zaznan signal. Val je bil poslan v vašo smer. Želite prestreči?',
+    'pulse_intercept_body':
+        'Zaznan signal. Val je bil poslan v vašo smer. Želite prestreči?',
     'intercept_active': 'INTERCEPCIJA AKTIVNA',
     'intercept_shield_on': 'ŠTIT VKLOPLJEN',
     'intercept_shield_off': 'ŠTIT IZKLOPLJEN',
@@ -856,7 +857,8 @@ const Map<String, Map<String, String>> _translations = {
     'intercept_requested': 'Zahteva poslana',
     'safe_zone_active': 'Varna cona aktivna',
     'safe_zone_title': 'Nahajate se v varni coni',
-    'safe_zone_desc': 'Radar je v načinu stealth. Vaša natančna lokacija je skrita zaradi zasebnosti.',
+    'safe_zone_desc':
+        'Radar je v načinu stealth. Vaša natančna lokacija je skrita zaradi zasebnosti.',
     'intercept_received': 'Prejel/-a si Pulse Intercept!',
     'view_intercept': 'Poglej Intercept',
     'intercept_expired': 'Intercept je potekel',
@@ -2194,7 +2196,8 @@ const Map<String, Map<String, String>> _translations = {
     'skip': 'Überspringen',
     'pulse_intercept': 'Pulse Intercept',
     'pulse_intercept_title': 'PULSE INTERCEPT',
-    'pulse_intercept_body': 'Signal erkannt. Eine Wave wurde in deine Richtung gesendet. Möchtest du sie abfangen?',
+    'pulse_intercept_body':
+        'Signal erkannt. Eine Wave wurde in deine Richtung gesendet. Möchtest du sie abfangen?',
     'intercept_active': 'INTERCEPTION AKTIV',
     'intercept_shield_on': 'SCHUTZ AN',
     'intercept_shield_off': 'SCHUTZ AUS',
@@ -2207,7 +2210,8 @@ const Map<String, Map<String, String>> _translations = {
     'intercept_requested': 'Intercept angefordert',
     'safe_zone_active': 'Sicherheitszone aktiv',
     'safe_zone_title': 'Du befindest dich in einer Sicherheitszone',
-    'safe_zone_desc': 'Der Radar ist im Tarnmodus. Dein genauer Standort ist aus Datenschutzgründen verborgen.',
+    'safe_zone_desc':
+        'Der Radar ist im Tarnmodus. Dein genauer Standort ist aus Datenschutzgründen verborgen.',
     'intercept_received': 'Du hast einen Pulse Intercept erhalten!',
     'view_intercept': 'Intercept ansehen',
     'intercept_expired': 'Intercept abgelaufen',
@@ -2258,7 +2262,8 @@ const Map<String, Map<String, String>> _translations = {
     'anonymity_mode': 'Vor Kontakten verbergen',
     'anonymity_mode_sub':
         'Wir speichern keine Kontakte und fragen nicht nach Gründen. Deine Sache bleibt deine Sache.',
-    'anonymity_desc': 'Verbirgt dein profil vor dem Radar, während du andere sehen kannst.',
+    'anonymity_desc':
+        'Verbirgt dein profil vor dem Radar, während du andere sehen kannst.',
     'anonymity_grant_permission': 'Kontakte freigeben',
     'anonymity_processing': 'Kontakte werden lokal gesichert...',
     'anonymity_active': 'Anonymität aktiv. {count} Kontakte versteckt.',
@@ -2930,7 +2935,8 @@ const Map<String, Map<String, String>> _translations = {
     'skip': 'Salta',
     'pulse_intercept': 'Pulse Intercept',
     'pulse_intercept_title': 'PULSE INTERCEPT',
-    'pulse_intercept_body': 'Segnale rilevato. Una Wave è stata inviata nella tua direzione. Vuoi intercettare?',
+    'pulse_intercept_body':
+        'Segnale rilevato. Una Wave è stata inviata nella tua direzione. Vuoi intercettare?',
     'intercept_active': 'INTERCETTAZIONE ATTIVA',
     'intercept_shield_on': 'SCUDO ATTIVO',
     'intercept_shield_off': 'SCUDO DISATTIVO',
@@ -2943,7 +2949,8 @@ const Map<String, Map<String, String>> _translations = {
     'intercept_requested': 'Intercept richiesto',
     'safe_zone_active': 'Zona Sicura Attiva',
     'safe_zone_title': 'Ti trovi in una Zona Sicura',
-    'safe_zone_desc': 'Il radar è in modalità stealth. La tua posizione esatta è nascosta per la privacy.',
+    'safe_zone_desc':
+        'Il radar è in modalità stealth. La tua posizione esatta è nascosta per la privacy.',
     'intercept_received': 'Hai ricevuto un Pulse Intercept!',
     'view_intercept': 'Vedi Intercept',
     'intercept_expired': 'Intercept scaduto',
@@ -2994,7 +3001,8 @@ const Map<String, Map<String, String>> _translations = {
     'anonymity_mode': 'Nascondimi dai contatti',
     'anonymity_mode_sub':
         'Non salviamo i tuoi contatti e non chiediamo il motivo. I tuoi affari sono affari tuoi.',
-    'anonymity_desc': 'Nasconde il tuo profilo dal radar permettendoti di vedere gli altri.',
+    'anonymity_desc':
+        'Nasconde il tuo profilo dal radar permettendoti di vedere gli altri.',
     'anonymity_grant_permission': 'Concedi accesso ai contatti',
     'anonymity_processing': 'Protezione contatti locale...',
     'anonymity_active': 'Anonimato attivo. {count} contatti nascosti.',
@@ -3904,7 +3912,8 @@ const Map<String, Map<String, String>> _translations = {
     'height_ft_in': 'ft/in',
     'whats_your_phone': 'Koji je tvoj broj mobitela?',
     'phone_label': 'Broj mobitela',
-    'phone_subtitle': 'Opcionalno. Dodavanje broja omogućuje ti da ga trenutno podijeliš s matchevima tijekom Trembling Windowa.',
+    'phone_subtitle':
+        'Opcionalno. Dodavanje broja omogućuje ti da ga trenutno podijeliš s matchevima tijekom Trembling Windowa.',
     'skip_tutorial': 'Preskoči tutorial',
     'name_hint': 'Tvoje ime',
     'whats_your_gender': 'Koji je tvoj spol?',
@@ -3987,13 +3996,15 @@ const Map<String, Map<String, String>> _translations = {
     'more_extrovert': 'Više ekstrovert',
     'more_introvert': 'Više introvert',
     'something_else': 'Nešto drugo',
-    'consent_subtitle': 'Nastavkom se slažete s našim Uvjetima pružanja usluge i Politikom privatnosti.',
+    'consent_subtitle':
+        'Nastavkom se slažete s našim Uvjetima pružanja usluge i Politikom privatnosti.',
     'nobody_here': 'Još nikoga nema vani',
     'map_title': 'Tremble Mapa',
     'pulsing_here': '{count} ljudi je vani večeras',
     'events_count': '{count} događaja',
     'share_event_invite': 'Pozovi nekoga',
-    'event_share_text': 'Večeras u {name}. Pronađi me na Trembleu. 📍 {location}',
+    'event_share_text':
+        'Večeras u {name}. Pronađi me na Trembleu. 📍 {location}',
     'pro_feature_locked': 'Samo za Pro',
     'pride_mode': 'Pride Mode 🏳️‍🌈',
     'pulse_expired': 'Vremenski prozor zatvoren',
@@ -4003,7 +4014,8 @@ const Map<String, Map<String, String>> _translations = {
     'graduated_university_hint': 'Završen fakultet (opcionalno)',
     'school': 'Škola/Fakultet',
     'school_hint': 'npr. Sveučilište u Zagrebu',
-    'battery_warning': 'Ova značajka troši {percent}% više baterije nego uobičajeno.',
+    'battery_warning':
+        'Ova značajka troši {percent}% više baterije nego uobičajeno.',
     'loading_error': 'Greška pri učitavanju',
     'error_loading_attendees': 'Greška pri učitavanju sudionika',
     'no_attendees_yet': 'Još nema sudionika',
@@ -4085,8 +4097,10 @@ const Map<String, Map<String, String>> _translations = {
     'hobby_other': 'Drugo',
     'icon_emoji': 'Ikonica (Emoji)',
     'set_birthday': 'Postavi rođendan',
-    'photos_lofi_hint': 'Fotografiraj se na prirodnom svjetlu, onako kako te ljudi vide u stvarnom svijetu. Bez filtera.',
-    'distance_help': 'Maksimalna udaljenost za otkrivanje u km. Veći radijus troši više baterije.',
+    'photos_lofi_hint':
+        'Fotografiraj se na prirodnom svjetlu, onako kako te ljudi vide u stvarnom svijetu. Bez filtera.',
+    'distance_help':
+        'Maksimalna udaljenost za otkrivanje u km. Veći radijus troši više baterije.',
     'forgot_password': 'Zaboravljena lozinka?',
     'are_you_new': 'Novi ste ovdje?',
 
@@ -4135,7 +4149,8 @@ const Map<String, Map<String, String>> _translations = {
     'politics_undisclosed': 'Ne želim reći',
     'politics_match_any': 'Svejedno mi je',
     'politics_popup_title': 'Političko uparivanje',
-    'politics_popup_body': 'Bit ćete upareni s osobama koje imaju slične ili bliske političke stavove.',
+    'politics_popup_body':
+        'Bit ćete upareni s osobama koje imaju slične ili bliske političke stavove.',
 
     // --- Hobbies ---
     'hobby_fitness': 'Fitnes',
@@ -4212,7 +4227,8 @@ const Map<String, Map<String, String>> _translations = {
     'report_reasons_desc': 'Zašto prijavljujete ovog korisnika?',
     'report_explanation': 'Dodatni detalji (opcionalno)',
     'report_explanation_hint': 'Molimo navedite više detalja',
-    'report_auto_block_warning': 'Prijavljivanje korisnika će ga automatski i blokirati.',
+    'report_auto_block_warning':
+        'Prijavljivanje korisnika će ga automatski i blokirati.',
     'blocked_users': 'Blokirani korisnici',
     'unblock': 'Odblokiraj',
     'no_blocked_users': 'Nemate blokiranih korisnika.',
@@ -4251,22 +4267,28 @@ const Map<String, Map<String, String>> _translations = {
     'discard_unsaved_changes': 'Odbaci nespremljene promjene?',
     'accept': 'Prihvati',
     'calib0_title': 'Radi dok ti živiš.',
-    'calib0_body': 'Bez prevlačenja. Bez skrolanja. Tremble tiho radi u tvom džepu dok ti živiš svoj život.',
+    'calib0_body':
+        'Bez prevlačenja. Bez skrolanja. Tremble tiho radi u tvom džepu dok ti živiš svoj život.',
     'calib1_title': 'INICIJALIZACIJA SENZORA',
-    'calib1_body': 'Aktivacija BLE i GPS hibridnog senzora. Tremble gradi lokalnu mrežu blizine uz <2% opterećenja baterije.',
+    'calib1_body':
+        'Aktivacija BLE i GPS hibridnog senzora. Tremble gradi lokalnu mrežu blizine uz <2% opterećenja baterije.',
     'calib2_title': 'ON-DEVICE ARHITEKTURA',
-    'calib2_body': 'Privatnost nije pravilo, to je arhitektura. Blizina se računa lokalno i briše se. Nula pohrane lokacije.',
+    'calib2_body':
+        'Privatnost nije pravilo, to je arhitektura. Blizina se računa lokalno i briše se. Nula pohrane lokacije.',
     'calib3_title': 'KALIBRACIJA DOMETA',
-    'calib3_body': 'Konfiguracija radara za radijus od 40 metara. Samo fizička prisutnost pokreće signal.',
+    'calib3_body':
+        'Konfiguracija radara za radijus od 40 metara. Samo fizička prisutnost pokreće signal.',
     'ritual_header': 'SIGNAL ZAKLJUČAN',
-    'ritual_body': 'Radar je aktivan. Odašiljač radi u pozadini. Odloži telefon. Javit ćemo ti se kad netko bude blizu.',
+    'ritual_body':
+        'Radar je aktivan. Odašiljač radi u pozadini. Odloži telefon. Javit ćemo ti se kad netko bude blizu.',
     'ritual_button': 'RAZUMIJEM',
     'sim_instruction': 'Drži tipku 👋 za slanje pozdrava.',
     'sim_someone_nearby': 'Netko je blizu (20 m)',
     'sim_distance': '~20 m udaljenosti',
     'run_recap': 'Rezime trčanja',
     'momentum_rule': 'Momentum Rule',
-    'momentum_desc': 'Signali istječu 10 minuta nakon susreta. Djeluj sad ili nikad.',
+    'momentum_desc':
+        'Signali istječu 10 minuta nakon susreta. Djeluj sad ili nikad.',
     'active_signals': 'Aktivni signali',
     'run_wave_sent': 'Val poslan',
     'run_wave_received': 'Val primljen',
@@ -4292,7 +4314,8 @@ const Map<String, Map<String, String>> _translations = {
     'skip': 'Preskoči',
     'pulse_intercept': 'Pulse Intercept',
     'pulse_intercept_title': 'PULSE INTERCEPT',
-    'pulse_intercept_body': 'Signal detektiran. Val je poslan u tvom smjeru. Želiš li ga presresti?',
+    'pulse_intercept_body':
+        'Signal detektiran. Val je poslan u tvom smjeru. Želiš li ga presresti?',
     'intercept_active': 'INTERCEPCIJA AKTIVNA',
     'intercept_shield_on': 'ŠTIT UKLJUČEN',
     'intercept_shield_off': 'ŠTIT ISKLJUČEN',
@@ -4307,7 +4330,8 @@ const Map<String, Map<String, String>> _translations = {
     'intercept_viewed': 'Ovaj sadržaj je već pregledan.',
     'intercept_data_deleted': 'Svi prolazni podaci su obrisani.',
     'intercept_loading': 'Sigurno učitavanje sadržaja...',
-    'send_photo_subtitle': 'Fotografija će biti obrisana nakon jednog pregleda ili 10 minuta.',
+    'send_photo_subtitle':
+        'Fotografija će biti obrisana nakon jednog pregleda ili 10 minuta.',
     'signal_emitted': 'Signal emitiran',
     'signal_error': 'Greška signala',
     'upload_failure': 'Prijenos neuspješan',
@@ -4320,7 +4344,8 @@ const Map<String, Map<String, String>> _translations = {
     'both_sent_wave': 'Oboje ste poslali val',
     'safe_zone_active': 'Sigurna zona aktivna',
     'safe_zone_title': 'Nalazite se u sigurnoj zoni',
-    'safe_zone_desc': 'Radar je u stealth modu. Vaša točna lokacija je skrivena radi privatnosti.',
+    'safe_zone_desc':
+        'Radar je u stealth modu. Vaša točna lokacija je skrivena radi privatnosti.',
     'run_mode_action': 'Trčanje',
     'run_mode_info_activate': 'Aktiviraj',
     'run_mode_info_deactivate': 'Deaktiviraj',
@@ -4329,18 +4354,22 @@ const Map<String, Map<String, String>> _translations = {
     'anonymity_desc': 'Skriva vaš profil s radara dok vi vidite druge.',
     'hobby_name': 'Naziv hobija',
     'anonymity_mode': 'Sakrij me od kontakata',
-    'anonymity_mode_sub': 'Ne spremamo vaše kontakte i ne pitamo za razloge. Vaša stvar je vaša stvar.',
+    'anonymity_mode_sub':
+        'Ne spremamo vaše kontakte i ne pitamo za razloge. Vaša stvar je vaša stvar.',
     'anonymity_grant_permission': 'Dozvoli pristup kontaktima',
     'anonymity_processing': 'Lokalna zaštita kontakata...',
     'anonymity_active': 'Anonimnost aktivna. {count} kontakata skriveno.',
-    'anonymity_disclaimer': 'Ne spremamo vaše kontakte i ne pitamo za razloge. Vaša stvar je vaša stvar.',
+    'anonymity_disclaimer':
+        'Ne spremamo vaše kontakte i ne pitamo za razloge. Vaša stvar je vaša stvar.',
     'safe_zones': 'Sigurne zone',
     'safe_zones_sub': 'Definirajte mjesta gdje nećete biti vidljivi nikome.',
     'safe_zone_add': 'Dodaj sigurnu zonu',
     'safe_zone_radius': 'Radijus: {radius}m',
-    'safe_zone_disclaimer': 'Sigurne zone vas potpuno skrivaju u ovom području.',
+    'safe_zone_disclaimer':
+        'Sigurne zone vas potpuno skrivaju u ovom području.',
     'safe_zone_delete': 'Izbriši zonu',
-    'safe_zone_confirm_off': 'Jeste li sigurni? Ovo će vas ponovno učiniti vidljivim na ovoj lokaciji.',
+    'safe_zone_confirm_off':
+        'Jeste li sigurni? Ovo će vas ponovno učiniti vidljivim na ovoj lokaciji.',
     'pulse_expires_in': 'Zadnji puls istječe za {time}',
     'pulse_sent': 'Puls poslan! ✓',
     'match_tab_standard': 'Standardno',
@@ -4348,34 +4377,44 @@ const Map<String, Map<String, String>> _translations = {
     'match_tab_activity': 'Aktivnost',
     'match_tab_gym': 'Teretana',
     'match_tab_all': 'Sve',
-    'gym_mode_nav_hint': 'Kartica Ljudi (👥) je postavljena na "Moja teretana" — matchevi iz tvoje trenutne teretane pojavit će se tamo.',
-    'gym_mode_tap_hint': 'Gym Mode je aktivan. Tvoji matchevi se pojavljuju u kartici Ljudi pod "Moja teretana".',
+    'gym_mode_nav_hint':
+        'Kartica Ljudi (👥) je postavljena na "Moja teretana" — matchevi iz tvoje trenutne teretane pojavit će se tamo.',
+    'gym_mode_tap_hint':
+        'Gym Mode je aktivan. Tvoji matchevi se pojavljuju u kartici Ljudi pod "Moja teretana".',
     'gym_mode_inactive_hint': 'Dodirni za informacije o Gym Modeu.',
     'gym_mode_inactive': 'Gym Mode neaktivan',
     'gym_activated_title': 'Gym Mode aktivan',
     'gym_activated_gym': 'Prijavljeni ste u',
-    'gym_activated_body': 'Osobe koje su sada u ovoj teretani pojavit će se u kartici Ljudi (👥) pod "Tvoja teretana". Način rada ostaje aktivan dok ne odeš ili ga ručno isključiš.',
+    'gym_activated_body':
+        'Osobe koje su sada u ovoj teretani pojavit će se u kartici Ljudi (👥) pod "Tvoja teretana". Način rada ostaje aktivan dok ne odeš ili ga ručno isključiš.',
     'gym_activated_cta': 'Razumijem',
     'gym_mode_info_title': 'Gym Mode',
-    'gym_mode_info_body': 'Kad je Gym Mode uključen, osobe koje su sada u tvojoj teretani pojavljuju se pod "Tvoja teretana". Ostaje aktivan dok ne odeš ili ga isključiš.',
+    'gym_mode_info_body':
+        'Kad je Gym Mode uključen, osobe koje su sada u tvojoj teretani pojavljuju se pod "Tvoja teretana". Ostaje aktivan dok ne odeš ili ga isključiš.',
     'gym_mode_info_activate': 'Aktiviraj',
     'gym_mode_info_deactivate': 'Deaktiviraj',
     'no_gym_selected': 'Nije odabrana teretana',
     'mode_info_dont_show': 'Ne pokazuj više',
     'mode_picker_title': 'Aktiviraj način rada',
-    'mode_picker_subtitle': 'Odaberi način rada. Ponovno dodirni ikonu za potvrdu.',
+    'mode_picker_subtitle':
+        'Odaberi način rada. Ponovno dodirni ikonu za potvrdu.',
     'matches_title': 'Tvoji matchevi',
     'no_matches': 'Još nema matcheva — izađi van i uključi radar!',
     'matches_help_title': 'O matchevima',
-    'matches_help_body': 'Svi koji su ti poslali val (jednostrano ili obostrano) pojavit će se ovdje.',
+    'matches_help_body':
+        'Svi koji su ti poslali val (jednostrano ili obostrano) pojavit će se ovdje.',
     'section_your_gym': 'Tvoja teretana',
-    'section_your_gym_desc': 'Ljudi koje si sreo/la u teretani. Aktivno uz Gym Mode.',
+    'section_your_gym_desc':
+        'Ljudi koje si sreo/la u teretani. Aktivno uz Gym Mode.',
     'section_your_event': 'Tvoj događaj',
-    'section_your_event_desc': 'Ljudi koje si sreo/la na događaju. Aktivno uz Event Mode.',
+    'section_your_event_desc':
+        'Ljudi koje si sreo/la na događaju. Aktivno uz Event Mode.',
     'section_your_run': 'Tvoje trčanje',
-    'section_your_run_desc': 'Trkači koje si sreo/la tijekom aktivne sesije trčanja.',
+    'section_your_run_desc':
+        'Trkači koje si sreo/la tijekom aktivne sesije trčanja.',
     'section_your_matches': 'Tvoji matchevi',
-    'section_your_matches_desc': 'Svi tvoji matchevi — iz teretane, događaja, trčanja i radarskih sesija.',
+    'section_your_matches_desc':
+        'Svi tvoji matchevi — iz teretane, događaja, trčanja i radarskih sesija.',
     'change_gym': 'Promijeni teretanu',
     'filter_period': 'Filtriraj period',
     'time_remaining': 'Preostalo vrijeme',
