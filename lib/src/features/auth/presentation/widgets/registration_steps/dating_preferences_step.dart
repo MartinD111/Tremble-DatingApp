@@ -50,77 +50,80 @@ class DatingPreferencesStep extends StatelessWidget {
       },
     ];
 
-    return ScrollableFormPage(
+    return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              TrembleBackButton(onPressed: onBack, label: tr('back')),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 16),
-          StepHeader(tr('who_looking_for')),
-          const SizedBox(height: 24),
-          ...opts.map((o) => OptionPill(
-                label: o['label'] as String,
-                icon: o['icon'] as IconData?,
-                selected: datingPreference == o['key'],
-                onTap: () => onPreferenceChanged(o['key'] as String),
-              )),
-          const SizedBox(height: 32),
-          StepHeader(tr('age_range')),
-          const SizedBox(height: 16),
-          RangeSlider(
-            values: ageRangePref,
-            min: 18,
-            max: 65,
-            divisions: 47,
-            labels: RangeLabels(
-              '${ageRangePref.start.round()}',
-              '${ageRangePref.end.round()}',
-            ),
-            onChanged: onAgeRangeChanged,
-            activeColor: Theme.of(context).colorScheme.primary,
-            inactiveColor:
-                isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
-          ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${ageRangePref.start.round()}',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                Row(
+                  children: [
+                    TrembleBackButton(onPressed: onBack, label: tr('back')),
+                    const Spacer(),
+                  ],
                 ),
-                Text(
-                  '—',
-                  style: TextStyle(
-                    color: isDark ? Colors.white38 : Colors.black38,
-                  ),
-                ),
-                Text(
-                  '${ageRangePref.end.round()}',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                ),
+                const SizedBox(height: 16),
+                StepHeader(tr('who_looking_for')),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          ContinueButton(
-            enabled: datingPreference != null,
-            onTap: onContinue,
-            label: tr('continue_btn'),
+          const SizedBox(height: 28),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...opts.map((o) => OptionPill(
+                        label: o['label'] as String,
+                        icon: o['icon'] as IconData?,
+                        selected: datingPreference == o['key'],
+                        onTap: () => onPreferenceChanged(o['key'] as String),
+                      )),
+                  const SizedBox(height: 32),
+                  StepHeader(tr('age_range')),
+                  const SizedBox(height: 16),
+                  RangeSlider(
+                    values: ageRangePref,
+                    min: 18,
+                    max: 65,
+                    divisions: 47,
+                    labels: RangeLabels(
+                      '${ageRangePref.start.round()}',
+                      '${ageRangePref.end.round()}',
+                    ),
+                    onChanged: onAgeRangeChanged,
+                    activeColor: Theme.of(context).colorScheme.primary,
+                    inactiveColor: isDark
+                        ? Colors.white12
+                        : Colors.black.withValues(alpha: 0.1),
+                  ),
+                  Center(
+                    child: Text(
+                      '${ageRangePref.start.round()} – ${ageRangePref.end.round()}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
+              enabled: datingPreference != null,
+              onTap: onContinue,
+              label: tr('continue_btn'),
+            ),
+          ),
         ],
       ),
     );

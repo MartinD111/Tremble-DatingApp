@@ -21,6 +21,7 @@ class GymSearchWidget extends ConsumerStatefulWidget {
     required this.onAdd,
     required this.onRemove,
     this.onSearchFocused,
+    this.focusNode,
   });
 
   /// Current selection (read-only; owned by parent state).
@@ -36,6 +37,10 @@ class GymSearchWidget extends ConsumerStatefulWidget {
   /// Called when the search field gains focus — used to scroll it into view.
   final VoidCallback? onSearchFocused;
 
+  /// Optional external focus node. If provided, the widget uses this instead
+  /// of its internal one — allows the parent to programmatically focus the field.
+  final FocusNode? focusNode;
+
   @override
   ConsumerState<GymSearchWidget> createState() => _GymSearchWidgetState();
 }
@@ -45,11 +50,13 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
   static const _debounceMs = 300;
 
   final _searchController = TextEditingController();
-  final _searchFocus = FocusNode();
+  final _internalFocus = FocusNode();
   late final PlacesService _places;
   Timer? _debounce;
   List<PlacePrediction> _predictions = [];
   bool _isSearching = false;
+
+  FocusNode get _searchFocus => widget.focusNode ?? _internalFocus;
 
   @override
   void initState() {
@@ -67,7 +74,7 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
-    _searchFocus.dispose();
+    _internalFocus.dispose();
     super.dispose();
   }
 

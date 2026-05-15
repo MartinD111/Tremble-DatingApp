@@ -22,45 +22,65 @@ class StatusStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScrollableFormPage(
+    return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              TrembleBackButton(onPressed: onBack, label: tr('back')),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 16),
-          StepHeader(tr('status')),
-          const SizedBox(height: 24),
-          OptionPill(
-            label: tr('student'),
-            selected: status == 'student',
-            onTap: () => onStatusSelect('student'),
-          ),
-          OptionPill(
-            label: tr('employed'),
-            selected: status == 'employed',
-            onTap: () => onStatusSelect('employed'),
-          ),
-          if (status != null) ...[
-            const SizedBox(height: 16),
-            RegistrationInputField(
-              label:
-                  status == 'student' ? tr('course_of_study') : tr('job_title'),
-              controller: occupationController,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    TrembleBackButton(onPressed: onBack, label: tr('back')),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StepHeader(tr('status')),
+              ],
             ),
-          ],
-          const Spacer(),
-          const SizedBox(height: 24),
-          ContinueButton(
-            enabled: status != null,
-            onTap: onNext,
-            label: tr('continue_btn'),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 28),
+          Expanded(
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  OptionPill(
+                    label: tr('student'),
+                    selected: status == 'student',
+                    onTap: () => onStatusSelect('student'),
+                  ),
+                  OptionPill(
+                    label: tr('employed'),
+                    selected: status == 'employed',
+                    onTap: () => onStatusSelect('employed'),
+                  ),
+                  if (status != null) ...[
+                    const SizedBox(height: 16),
+                    RegistrationInputField(
+                      label: status == 'student'
+                          ? tr('course_of_study')
+                          : tr('job_title'),
+                      controller: occupationController,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
+              enabled: status != null,
+              onTap: onNext,
+              label: tr('continue_btn'),
+            ),
+          ),
         ],
       ),
     );

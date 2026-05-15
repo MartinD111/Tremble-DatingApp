@@ -1,17 +1,17 @@
-## Session State — 2026-05-11 (Session 20)
-- Active Task: Multi-Language Localization Parity (Finalization)
+## Session State — 2026-05-13 (Session 21)
+- Active Task: Resolve build issue (flutter_windowmanager incompatibility)
 - Environment: Dev
 - Modified Files:
-    - lib/src/core/translations.dart ✅ (100% parity for EN, SR, HU, SL, DE, IT, FR, HR)
+    - pubspec.yaml (removed flutter_windowmanager)
+    - lib/src/features/safety/screen_protection_service.dart (migrated to screen_protector)
 - Open Problems: BLOCKER-003 (RevenueCat), Protomaps tile server (Martin)
-- System Status: flutter analyze clean. dart format applied.
+- System Status: flutter build apk --debug --flavor dev SUCCESS. flutter analyze clean.
 
 ## Session Handoff
 - Completed:
-  - **Universal Localization Parity:** Achieved 100% key parity across all supported languages (EN, SR, HU, SL, DE, IT, FR, HR).
-  - **Final Audit:** `audit_all_keys.py` confirms zero missing keys in the entire project.
-  - **Code Quality:** Resolved `equal_keys_in_const_map` errors in the Croatian block and applied `dart format .` to satisfy pre-commit checks.
-  - **Verification:** `flutter analyze` is clean.
+  - **Removed flutter_windowmanager:** Package was incompatible with modern Flutter (v1 embedding issues).
+  - **Migrated to screen_protector:** Updated `ScreenProtectionService` to use `screen_protector` for both Android and iOS.
+  - **Verification:** `flutter analyze` is clean and `flutter build apk --flavor dev` succeeded.
 - In Progress: —
 - Blocked: BLOCKER-003 (RevenueCat/Legal), Task 8 (Protomaps — Martin)
 - Next Action: Infrastructure migration (Protomaps/Cloudflare R2) or RevenueCat (if legal clears).

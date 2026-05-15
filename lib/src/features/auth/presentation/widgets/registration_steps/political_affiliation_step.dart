@@ -37,77 +37,96 @@ class PoliticalAffiliationStep extends StatelessWidget {
     final idx = value.toInt();
     final isSpecial = value == 0 || value == -1;
 
-    return ScrollableFormPage(
+    return SafeArea(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              TrembleBackButton(label: tr('back'), onPressed: onBack),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 16),
-          StepHeader(tr('political_affiliation')),
-          const SizedBox(height: 48),
-          if (!isSpecial)
-            Center(
-              child: Text(
-                labels[idx - 1],
-                style: GoogleFonts.instrumentSans(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    TrembleBackButton(label: tr('back'), onPressed: onBack),
+                    const Spacer(),
+                  ],
                 ),
-              ),
-            ),
-          const SizedBox(height: 8),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              thumbShape: isSpecial
-                  ? const RoundSliderThumbShape(enabledThumbRadius: 0)
-                  : const RoundSliderThumbShape(enabledThumbRadius: 10),
-            ),
-            child: Slider(
-              value: isSpecial ? 3.0 : value.clamp(1.0, 5.0),
-              min: 1,
-              max: 5,
-              divisions: 4,
-              onChanged: isSpecial ? null : (v) => onChanged(v),
-              activeColor: Theme.of(context).colorScheme.primary,
-              inactiveColor: isDark ? Colors.white12 : Colors.black12,
+                const SizedBox(height: 16),
+                StepHeader(tr('political_affiliation')),
+              ],
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                tr('politics_left'),
-                style: TextStyle(fontSize: 11, color: labelColor),
+          const SizedBox(height: 28),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  if (!isSpecial)
+                    Center(
+                      child: Text(
+                        labels[idx - 1],
+                        style: GoogleFonts.instrumentSans(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      thumbShape: isSpecial
+                          ? const RoundSliderThumbShape(enabledThumbRadius: 0)
+                          : const RoundSliderThumbShape(enabledThumbRadius: 10),
+                    ),
+                    child: Slider(
+                      value: isSpecial ? 3.0 : value.clamp(1.0, 5.0),
+                      min: 1,
+                      max: 5,
+                      divisions: 4,
+                      onChanged: isSpecial ? null : (v) => onChanged(v),
+                      activeColor: Theme.of(context).colorScheme.primary,
+                      inactiveColor: isDark ? Colors.white12 : Colors.black12,
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        tr('politics_left'),
+                        style: TextStyle(fontSize: 11, color: labelColor),
+                      ),
+                      Text(
+                        tr('politics_right'),
+                        style: TextStyle(fontSize: 11, color: labelColor),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  OptionPill(
+                    label: tr('politics_dont_care'),
+                    selected: value == 0,
+                    onTap: () => onChanged(value == 0 ? 3.0 : 0),
+                  ),
+                  OptionPill(
+                    label: tr('politics_undisclosed'),
+                    selected: value == -1,
+                    onTap: () => onChanged(value == -1 ? 3.0 : -1),
+                  ),
+                ],
               ),
-              Text(
-                tr('politics_right'),
-                style: TextStyle(fontSize: 11, color: labelColor),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 32),
-          OptionPill(
-            label: tr('politics_dont_care'),
-            selected: value == 0,
-            onTap: () => onChanged(0),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
+              enabled: true,
+              label: tr('continue_btn'),
+              onTap: onContinueTap,
+            ),
           ),
-          OptionPill(
-            label: tr('politics_undisclosed'),
-            selected: value == -1,
-            onTap: () => onChanged(-1),
-          ),
-          const SizedBox(height: 24),
-          ContinueButton(
-            enabled: true,
-            label: tr('continue_btn'),
-            onTap: onContinueTap,
-          ),
-          const SizedBox(height: 16),
         ],
       ),
     );

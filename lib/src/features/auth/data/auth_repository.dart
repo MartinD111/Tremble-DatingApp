@@ -813,8 +813,19 @@ class AuthRepository {
       // Don't fail the signup — the trigger may still create it
     }
 
-    // Send verification email
-    await cred.user!.sendEmailVerification();
+    // Send verification email — best-effort. A TLS/network failure here must
+    // not roll back a successful account creation, otherwise the user is
+    // stranded: Firebase Auth shows them as registered but the app reports
+    // "Registration failed" and they cannot proceed (and cannot re-register
+    // with the same email — it now fails with email-already-in-use). The user
+    // can request a fresh verification email later from the verification
+    // screen.
+    try {
+      await cred.user!.sendEmailVerification();
+    } catch (e) {
+      debugPrint(
+          "[AUTH] sendEmailVerification failed for $uid (non-fatal): $e");
+    }
 
     return AuthUser(
       id: uid,
@@ -1010,19 +1021,24 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
   Future<void> completeOnboarding(AuthUser user) async {
     try {
       await _repository.completeOnboarding(user);
+    } on TrembleApiException catch (e) {
+      // Network/SSL errors get a Firestore fallback — they're transient and
+      // don't indicate data corruption, so blocking registration is wrong.
+      if (e.code == 'unavailable' || kDebugMode) {
+        debugPrint('[AUTH] completeOnboarding fallback (${e.code}): ${e.message}');
+        await _repository.markOnboardedDirectly(user);
+      } else {
+        rethrow;
+      }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[DEV] completeOnboarding API error (bypassed): $e');
-        // Dev fallback: write isOnboarded directly to Firestore so that the
-        // next cold-start reads the correct value. Without this, the Cloud
-        // Function failure leaves isOnboarded=false in Firestore, causing the
-        // router to route back to /onboarding on every subsequent app open.
+        debugPrint('[DEV] completeOnboarding unexpected error (bypassed): $e');
         await _repository.markOnboardedDirectly(user);
       } else {
         rethrow;
       }
     }
-    // Always update local state — in debug mode this runs even after API failure.
+    // Always update local state regardless of which path succeeded.
     state = user.copyWith(isOnboarded: true);
   }
 

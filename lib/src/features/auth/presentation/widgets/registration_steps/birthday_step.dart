@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
@@ -255,76 +254,111 @@ class BirthdayStep extends StatelessWidget {
     final zodiac = ZodiacUtils.getZodiacSign(d);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return ScrollableFormPage(
+    return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              TrembleBackButton(onPressed: onBack, label: tr('back')),
-              const Spacer(),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    TrembleBackButton(onPressed: onBack, label: tr('back')),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StepHeader(tr('whats_your_birthday')),
+                const SizedBox(height: 6),
+                Builder(builder: (context) {
+                  final isDark =
+                      Theme.of(context).brightness == Brightness.dark;
+                  return Center(
+                    child: Text(
+                      tr('birthday_subtitle'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: isDark ? Colors.white60 : Colors.black54,
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
-          StepHeader(
-            tr('whats_your_birthday'),
-            subtitle: tr('birthday_subtitle'),
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            height: 200,
-            child: Row(children: [
-              Expanded(
-                child: DrumPicker(
-                  items: _months,
-                  selectedIndex: pickerMonth - 1,
-                  looping: true,
-                  onChanged: (i) => onMonthChanged(i + 1),
-                ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 200,
+                    child: Row(children: [
+                      Expanded(
+                        child: DrumPicker(
+                          items: _months,
+                          selectedIndex: pickerMonth - 1,
+                          looping: true,
+                          onChanged: (i) => onMonthChanged(i + 1),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 65,
+                        child: DrumPicker(
+                          items: List.generate(maxDays, (i) => '${i + 1}'),
+                          selectedIndex: validDay - 1,
+                          looping: true,
+                          onChanged: (i) =>
+                              onDayChanged(i + 1 > maxDays ? maxDays : i + 1),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 90,
+                        child: DrumPicker(
+                          items: List.generate(
+                              maxYear - minYear + 1, (i) => '${maxYear - i}'),
+                          selectedIndex: maxYear - pickerYear,
+                          looping: false,
+                          onChanged: (i) => onYearChanged(maxYear - i),
+                        ),
+                      ),
+                    ]),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _BirthdayChip(
+                        label: '$age',
+                        emoji: '🎂',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 8),
+                      _BirthdayChip(
+                        label: tr('zodiac_$zodiac'),
+                        emoji: ZodiacUtils.getZodiacEmoji(d) ?? '⭐',
+                        isDark: isDark,
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              SizedBox(
-                width: 65,
-                child: DrumPicker(
-                  items: List.generate(maxDays, (i) => '${i + 1}'),
-                  selectedIndex: validDay - 1,
-                  looping: true,
-                  onChanged: (i) =>
-                      onDayChanged(i + 1 > maxDays ? maxDays : i + 1),
-                ),
-              ),
-              SizedBox(
-                width: 90,
-                child: DrumPicker(
-                  items: List.generate(
-                      maxYear - minYear + 1, (i) => '${maxYear - i}'),
-                  selectedIndex: maxYear - pickerYear,
-                  looping: false,
-                  onChanged: (i) => onYearChanged(maxYear - i),
-                ),
-              ),
-            ]),
-          ),
-          const SizedBox(height: 20),
-          Row(children: [
-            _BirthdayChip(
-              label: '$age',
-              icon: LucideIcons.cake,
-              isDark: isDark,
             ),
-            const SizedBox(width: 8),
-            _BirthdayChip(
-              label: tr('zodiac_$zodiac'),
-              icon: ZodiacUtils.getZodiacIcon(zodiac),
-              isDark: isDark,
-            ),
-          ]),
-          const Spacer(),
-          ContinueButton(
-            enabled: true,
-            label: tr('continue_btn'),
-            onTap: () => _showConfirmation(context),
           ),
-          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
+              enabled: true,
+              label: tr('continue_btn'),
+              onTap: () => _showConfirmation(context),
+            ),
+          ),
         ],
       ),
     );
@@ -337,12 +371,12 @@ class BirthdayStep extends StatelessWidget {
 class _BirthdayChip extends StatelessWidget {
   const _BirthdayChip({
     required this.label,
-    required this.icon,
+    required this.emoji,
     required this.isDark,
   });
 
   final String label;
-  final IconData icon;
+  final String emoji;
   final bool isDark;
 
   @override
@@ -359,11 +393,7 @@ class _BirthdayChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 14,
-            color: isDark ? Colors.white70 : Colors.black54,
-          ),
+          Text(emoji, style: const TextStyle(fontSize: 14)),
           const SizedBox(width: 6),
           Text(
             label,

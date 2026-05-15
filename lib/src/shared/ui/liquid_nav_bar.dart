@@ -18,6 +18,9 @@ class LiquidNavBar extends StatelessWidget {
     const double navHeight = 72.0;
     const double paddingHorizontal = 16.0;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Center(
       heightFactor: 1,
       child: ClipRRect(
@@ -55,20 +58,13 @@ class LiquidNavBar extends StatelessWidget {
                     width: itemWidth,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white.withValues(alpha: 0.15)
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.05),
+                      color: primary,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.black.withValues(alpha: 0.02),
-                          blurRadius: 10,
-                          spreadRadius: 2,
+                          color: primary.withValues(alpha: 0.45),
+                          blurRadius: 18,
+                          spreadRadius: 1,
                         ),
                       ],
                     ),
@@ -98,12 +94,8 @@ class LiquidNavBar extends StatelessWidget {
                           child: Icon(
                             item.icon,
                             color: isSelected
-                                ? (Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Theme.of(context).colorScheme.onSurface)
-                                : (Theme.of(context).brightness ==
-                                        Brightness.dark
+                                ? Colors.white
+                                : (isDark
                                     ? Colors.white.withValues(alpha: 0.4)
                                     : Theme.of(context)
                                         .colorScheme

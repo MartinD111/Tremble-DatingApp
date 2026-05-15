@@ -25,68 +25,88 @@ class IntroversionStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ScrollableFormPage(
+    return SafeArea(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              TrembleBackButton(onPressed: onBack, label: tr('back')),
-              const Spacer(),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    TrembleBackButton(onPressed: onBack, label: tr('back')),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StepHeader(tr('introversion')),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          StepHeader(tr('introversion')),
-          const SizedBox(height: 48),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                tr('introvert'),
-                style:
-                    TextStyle(color: isDark ? Colors.white70 : Colors.black54),
-              ),
-              Text(
-                tr('extrovert'),
-                style:
-                    TextStyle(color: isDark ? Colors.white70 : Colors.black54),
-              ),
-            ],
-          ),
-          RangeSlider(
-            values: values,
-            onChanged: onChanged,
-            divisions: 20,
-            activeColor: Theme.of(context).colorScheme.primary,
-            inactiveColor:
-                isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1),
-          ),
-          const SizedBox(height: 16),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              () {
-                final startPct = (values.start * 100).toInt();
-                final endPct = (values.end * 100).toInt();
-                final avg = (startPct + endPct) / 2;
-                String label = 'Ambivert';
-                if (avg <= 40) label = tr('introvert');
-                if (avg >= 60) label = tr('extrovert');
-                return '$startPct% – $endPct% $label';
-              }(),
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+          const SizedBox(height: 28),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        tr('introvert'),
+                        style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54),
+                      ),
+                      Text(
+                        tr('extrovert'),
+                        style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54),
+                      ),
+                    ],
+                  ),
+                  RangeSlider(
+                    values: values,
+                    onChanged: onChanged,
+                    divisions: 20,
+                    activeColor: Theme.of(context).colorScheme.primary,
+                    inactiveColor: isDark
+                        ? Colors.white12
+                        : Colors.black.withValues(alpha: 0.1),
+                  ),
+                  const SizedBox(height: 16),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      () {
+                        final startPct = (values.start * 100).toInt();
+                        final endPct = (values.end * 100).toInt();
+                        final avg = (startPct + endPct) / 2;
+                        String label = 'Ambivert';
+                        if (avg <= 40) label = tr('introvert');
+                        if (avg >= 60) label = tr('extrovert');
+                        return '$startPct% – $endPct% $label';
+                      }(),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          ContinueButton(
-            enabled: true,
-            label: tr('continue_btn'),
-            onTap: onContinueTap,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
+              enabled: true,
+              label: tr('continue_btn'),
+              onTap: onContinueTap,
+            ),
           ),
-          const SizedBox(height: 16),
         ],
       ),
     );

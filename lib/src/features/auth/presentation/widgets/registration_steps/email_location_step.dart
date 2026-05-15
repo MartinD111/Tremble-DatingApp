@@ -485,75 +485,94 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
         hasPassword && (currentUser?.emailVerified ?? false);
 
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TrembleBackButton(
-                    label: widget.tr('back'), onPressed: widget.onBack),
-                const Spacer(),
+                Row(
+                  children: [
+                    TrembleBackButton(
+                        label: widget.tr('back'), onPressed: widget.onBack),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StepHeader(widget.tr('basic_info')),
               ],
             ),
-            const SizedBox(height: 16),
-            StepHeader(widget.tr('basic_info')),
-            const SizedBox(height: 32),
-            if (isAlreadyLoggedIn &&
-                (isSocialUser || isVerifiedPasswordUser) &&
-                widget.emailController.text.isNotEmpty)
-              _inputField(widget.tr('email'), widget.emailController,
-                  icon: LucideIcons.mail,
-                  keyboard: TextInputType.emailAddress,
-                  readOnly: true)
-            else
-              _inputField(widget.tr('email'), widget.emailController,
-                  icon: LucideIcons.mail,
-                  keyboard: TextInputType.emailAddress,
-                  readOnly: false),
-            const SizedBox(height: 20),
-            _locationAutocomplete(),
-            if (!isVerifiedPasswordUser && !isSocialUser) ...[
-              const SizedBox(height: 20),
-              _passwordInputField(),
-              const SizedBox(height: 20),
-              _confirmPasswordInputField(),
-              if (widget.passwordController.text.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                _passwordStrengthBar(),
-                const SizedBox(height: 8),
-                _pwReq(widget.tr('pw_min_length'), _hasMinLength),
-                _pwReq(widget.tr('pw_uppercase'), _hasUppercase),
-                _pwReq(widget.tr('pw_digit'), _hasDigit),
-                _pwReq(widget.tr('pw_special'), _hasSpecialChar),
-                _pwReq(
-                    widget.tr('confirm_password'),
-                    widget.passwordController.text ==
-                            _confirmPasswordController.text &&
-                        _confirmPasswordController.text.isNotEmpty),
-              ],
-            ],
-            const SizedBox(height: 32),
-            _buildPremiumPill(),
-            const SizedBox(height: 32),
-            widget.isRegistering
+          ),
+          const SizedBox(height: 28),
+          Expanded(
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!isSocialUser) ...[
+                    if (isAlreadyLoggedIn && isVerifiedPasswordUser)
+                      _inputField(widget.tr('email'), widget.emailController,
+                          icon: LucideIcons.mail,
+                          keyboard: TextInputType.emailAddress,
+                          readOnly: true)
+                    else
+                      _inputField(widget.tr('email'), widget.emailController,
+                          icon: LucideIcons.mail,
+                          keyboard: TextInputType.emailAddress,
+                          readOnly: false),
+                    const SizedBox(height: 20),
+                  ],
+                  _locationAutocomplete(),
+                  if (!isVerifiedPasswordUser && !isSocialUser) ...[
+                    const SizedBox(height: 20),
+                    _passwordInputField(),
+                    const SizedBox(height: 20),
+                    _confirmPasswordInputField(),
+                    if (widget.passwordController.text.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _passwordStrengthBar(),
+                      const SizedBox(height: 8),
+                      _pwReq(widget.tr('pw_min_length'), _hasMinLength),
+                      _pwReq(widget.tr('pw_uppercase'), _hasUppercase),
+                      _pwReq(widget.tr('pw_digit'), _hasDigit),
+                      _pwReq(widget.tr('pw_special'), _hasSpecialChar),
+                      _pwReq(
+                          widget.tr('confirm_password'),
+                          widget.passwordController.text ==
+                                  _confirmPasswordController.text &&
+                              _confirmPasswordController.text.isNotEmpty),
+                    ],
+                  ],
+                  const SizedBox(height: 24),
+                  _buildPremiumPill(),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: widget.isRegistering
                 ? Center(
                     child: CircularProgressIndicator(
                         color: Theme.of(context).colorScheme.primary))
                 : ContinueButton(
-                    enabled: widget.emailController.text.isNotEmpty &&
-                        ((isAlreadyLoggedIn &&
-                                (isSocialUser || isVerifiedPasswordUser)) ||
-                            (_isPasswordValid &&
+                    enabled: widget.locationController.text.isNotEmpty &&
+                        (isSocialUser ||
+                            (isAlreadyLoggedIn && isVerifiedPasswordUser) ||
+                            (widget.emailController.text.isNotEmpty &&
+                                _isPasswordValid &&
                                 widget.passwordController.text ==
                                     _confirmPasswordController.text)),
                     onTap: widget.onContinue,
                     label: widget.tr('continue_btn'),
                   ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

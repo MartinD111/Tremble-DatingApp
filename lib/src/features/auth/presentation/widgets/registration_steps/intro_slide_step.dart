@@ -38,7 +38,8 @@ class IntroSlideStep extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
           decoration: BoxDecoration(
             color: sheetBg.withValues(alpha: 0.9),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(top: BorderSide(color: borderColor)),
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -139,97 +140,110 @@ class IntroSlideStep extends StatelessWidget {
     final bodyColor = isDark ? Colors.white70 : Colors.black54;
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Align(
-              alignment: Alignment.topLeft,
-              child: TrembleBackButton(
-                label: tr('back'),
-                onPressed: () {
-                  if (index == 0) {
-                    _showCancelConfirmation(context);
-                  } else {
-                    onBack();
-                  }
-                },
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Fixed header ────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: TrembleBackButton(
+              label: tr('back'),
+              onPressed: () {
+                if (index == 0) {
+                  _showCancelConfirmation(context);
+                } else {
+                  onBack();
+                }
+              },
             ),
-            const SizedBox(height: 12),
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.22),
-                    blurRadius: 32,
-                    spreadRadius: 4,
+          ),
+
+          // ── Content (top-aligned with top padding) ───────────────────────
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.22),
+                          blurRadius: 32,
+                          spreadRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: Icon(icons[index],
+                        size: 44,
+                        color: Theme.of(context).colorScheme.primary),
+                  ),
+                  const SizedBox(height: 40),
+                  Text(
+                    titles[index],
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: titleColor,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    bodies[index],
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 16,
+                      color: bodyColor,
+                      height: 1.6,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(4, (i) {
+                      final isActive = i == index;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: isActive ? 24 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? Theme.of(context).colorScheme.primary
+                              : (isDark ? Colors.white30 : Colors.black26),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                      );
+                    }),
                   ),
                 ],
               ),
-              child: Icon(icons[index],
-                  size: 44, color: Theme.of(context).colorScheme.primary),
             ),
-            const SizedBox(height: 40),
-            Text(
-              titles[index],
-              textAlign: TextAlign.center,
-              style: GoogleFonts.instrumentSans(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: titleColor,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              bodies[index],
-              textAlign: TextAlign.center,
-              style: GoogleFonts.instrumentSans(
-                fontSize: 16,
-                color: bodyColor,
-                height: 1.6,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(4, (i) {
-                final isActive = i == index;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: isActive ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? Theme.of(context).colorScheme.primary
-                        : (isDark ? Colors.white30 : Colors.black26),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                );
-              }),
-            ),
-            const Spacer(),
-            ContinueButton(
+          ),
+
+          // ── Pinned Continue button ────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
               enabled: true,
               onTap: onNext,
               label: tr('continue_btn'),
             ),
-            const SizedBox(height: 16),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

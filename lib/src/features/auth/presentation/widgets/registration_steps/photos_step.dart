@@ -6,45 +6,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
-/// L-shaped corner brackets drawn at each corner of a photo slot,
-/// giving it a viewfinder / rangefinder aesthetic.
-class _ViewfinderPainter extends CustomPainter {
-  const _ViewfinderPainter({required this.color});
-
-  final Color color;
-
-  static const double _len = 12.0;
-  static const double _thick = 1.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = _thick
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.square;
-
-    final w = size.width;
-    final h = size.height;
-
-    // Top-left
-    canvas.drawLine(Offset(0, _len), Offset.zero, paint);
-    canvas.drawLine(Offset.zero, Offset(_len, 0), paint);
-    // Top-right
-    canvas.drawLine(Offset(w - _len, 0), Offset(w, 0), paint);
-    canvas.drawLine(Offset(w, 0), Offset(w, _len), paint);
-    // Bottom-left
-    canvas.drawLine(Offset(0, h - _len), Offset(0, h), paint);
-    canvas.drawLine(Offset(0, h), Offset(_len, h), paint);
-    // Bottom-right
-    canvas.drawLine(Offset(w - _len, h), Offset(w, h), paint);
-    canvas.drawLine(Offset(w, h), Offset(w, h - _len), paint);
-  }
-
-  @override
-  bool shouldRepaint(_ViewfinderPainter old) => old.color != color;
-}
-
 class PhotosStep extends StatelessWidget {
   const PhotosStep({
     super.key,
@@ -81,14 +42,17 @@ class PhotosStep extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          StepHeader(tr('select_photo_title')),
+          Center(child: StepHeader(tr('select_photo_title'))),
           const SizedBox(height: 8),
-          Text(
-            tr('photos_lofi_hint'),
-            style: GoogleFonts.lora(
-              color: isDark ? Colors.white54 : Colors.black45,
-              fontSize: 14,
-              fontStyle: FontStyle.italic,
+          Center(
+            child: Text(
+              tr('photos_lofi_hint'),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lora(
+                color: isDark ? Colors.white54 : Colors.black45,
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ),
           const SizedBox(height: 32),
@@ -101,7 +65,7 @@ class PhotosStep extends StatelessWidget {
                 onTap: () => onPickImage(i),
                 child: Stack(clipBehavior: Clip.none, children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(20),
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                       child: Container(
@@ -109,7 +73,7 @@ class PhotosStep extends StatelessWidget {
                           color: isDark
                               ? Colors.white.withValues(alpha: 0.07)
                               : Colors.black.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                               color: photos[i] != null
                                   ? Theme.of(context).colorScheme.primary
@@ -121,7 +85,7 @@ class PhotosStep extends StatelessWidget {
                               ? Container(
                                   key: ValueKey(photos[i]!.path),
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(4),
+                                    borderRadius: BorderRadius.circular(20),
                                     image: DecorationImage(
                                       image: FileImage(photos[i]!),
                                       fit: BoxFit.cover,
@@ -140,15 +104,6 @@ class PhotosStep extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Viewfinder brackets on empty slots
-                  if (photos[i] == null)
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: _ViewfinderPainter(
-                          color: isDark ? Colors.white24 : Colors.black12,
-                        ),
-                      ),
-                    ),
                   if (i == 0)
                     Positioned(
                         top: -6,

@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_windowmanager/flutter_windowmanager.dart';
 import 'package:screen_protector/screen_protector.dart';
 
 /// Blocks screenshots and screen recordings on sensitive screens.
@@ -17,10 +16,11 @@ class ScreenProtectionService {
   /// Call from [State.initState]. Fire-and-forget — no need to await.
   static void enable() {
     if (kDebugMode) return;
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      FlutterWindowManager.addFlags(FlutterWindowManager.FLAG_SECURE);
-    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      ScreenProtector.preventScreenshotOn();
+    
+    // Both platforms
+    ScreenProtector.preventScreenshotOn();
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       ScreenProtector.protectDataLeakageWithColor(const Color(0xFF1A1A18));
     }
   }
@@ -29,10 +29,11 @@ class ScreenProtectionService {
   /// Call from [State.dispose]. Fire-and-forget — no need to await.
   static void disable() {
     if (kDebugMode) return;
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      FlutterWindowManager.clearFlags(FlutterWindowManager.FLAG_SECURE);
-    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      ScreenProtector.preventScreenshotOff();
+
+    // Both platforms
+    ScreenProtector.preventScreenshotOff();
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       ScreenProtector.protectDataLeakageWithColorOff();
     }
   }

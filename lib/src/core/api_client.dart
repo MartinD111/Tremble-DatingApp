@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 
@@ -63,10 +64,18 @@ class TrembleApiClient {
         final delayMs = 500 * (1 << (attempt - 1)); // 500, 1000, 2000...
         await Future.delayed(Duration(milliseconds: delayMs));
       } catch (e) {
+        final isNetworkError = e is HandshakeException ||
+            e is SocketException ||
+            e is TlsException;
+        if (kDebugMode) {
+          debugPrint('[API] Non-Firebase error in $name (attempt $attempt): $e');
+        }
         if (attempt > retries) {
           throw TrembleApiException(
-            code: 'unknown',
-            message: 'Unexpected error: $e',
+            code: isNetworkError ? 'unavailable' : 'unknown',
+            message: isNetworkError
+                ? 'Network error. Please check your connection.'
+                : 'Unexpected error: $e',
           );
         }
 

@@ -31,36 +31,55 @@ class WhatToMeetStep extends StatelessWidget {
       },
     ];
 
-    return ScrollableFormPage(
+    return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              TrembleBackButton(onPressed: onBack, label: tr('back')),
-              const Spacer(),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    TrembleBackButton(onPressed: onBack, label: tr('back')),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StepHeader(tr('what_to_meet_title')),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          StepHeader(tr('what_to_meet_title')),
-          const SizedBox(height: 36),
-          ...opts.map((o) {
-            final k = o['key'] as String;
-            final sel = wantToMeet.contains(k);
-            return OptionPill(
-              label: o['label'] as String,
-              selected: sel,
-              icon: o['icon'] as IconData,
-              onTap: () => onToggle(k),
-            );
-          }),
-          const SizedBox(height: 24),
-          ContinueButton(
-            enabled: wantToMeet.isNotEmpty,
-            onTap: onContinue,
-            label: tr('continue_btn'),
+          const SizedBox(height: 28),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...opts.map((o) {
+                    final k = o['key'] as String;
+                    final sel = wantToMeet.contains(k);
+                    return OptionPill(
+                      label: o['label'] as String,
+                      selected: sel,
+                      icon: o['icon'] as IconData,
+                      onTap: () => onToggle(k),
+                    );
+                  }),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
+              enabled: wantToMeet.isNotEmpty,
+              onTap: onContinue,
+              label: tr('continue_btn'),
+            ),
+          ),
         ],
       ),
     );

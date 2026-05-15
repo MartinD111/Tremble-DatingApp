@@ -31,63 +31,82 @@ class GenderStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScrollableFormPage(
+    return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              TrembleBackButton(label: tr('back'), onPressed: onBack),
-              const Spacer(),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    TrembleBackButton(label: tr('back'), onPressed: onBack),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StepHeader(tr('whats_your_gender')),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          StepHeader(tr('whats_your_gender')),
-          const SizedBox(height: 40),
-          OptionPill(
-            label: tr('gender_male'),
-            selected: selectedGender == 'male',
-            icon: Icons.male,
-            onTap: () => onGenderSelect('male'),
+          const SizedBox(height: 28),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  OptionPill(
+                    label: tr('gender_male'),
+                    selected: selectedGender == 'male',
+                    icon: Icons.male,
+                    onTap: () => onGenderSelect('male'),
+                  ),
+                  OptionPill(
+                    label: tr('gender_female'),
+                    selected: selectedGender == 'female',
+                    icon: Icons.female,
+                    onTap: () => onGenderSelect('female'),
+                  ),
+                  OptionPill(
+                    label: tr('non_binary'),
+                    selected: selectedGender == 'non_binary',
+                    icon: LucideIcons.userX,
+                    onTap: () {
+                      onGenderSelect('non_binary');
+                      onNonBinaryTap();
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  StepHeader(tr('app_appearance'), subtitle: ''),
+                  const SizedBox(height: 16),
+                  _toggleRow(
+                    context,
+                    label: 'Classic or gender based',
+                    value: isClassicAppearance,
+                    onChanged: onAppearanceToggle,
+                  ),
+                  const SizedBox(height: 12),
+                  _toggleRow(
+                    context,
+                    label: 'Dark mode',
+                    value: isDark,
+                    onChanged: onDarkModeToggle,
+                  ),
+                ],
+              ),
+            ),
           ),
-          OptionPill(
-            label: tr('gender_female'),
-            selected: selectedGender == 'female',
-            icon: Icons.female,
-            onTap: () => onGenderSelect('female'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
+              enabled: selectedGender != null,
+              onTap: onNext,
+              label: tr('continue_btn'),
+            ),
           ),
-          OptionPill(
-            label: tr('non_binary'),
-            selected: selectedGender == 'non_binary',
-            icon: LucideIcons.userX,
-            onTap: () {
-              onGenderSelect('non_binary');
-              onNonBinaryTap();
-            },
-          ),
-          const SizedBox(height: 32),
-          StepHeader(tr('app_appearance'), subtitle: ''),
-          const SizedBox(height: 16),
-          _toggleRow(
-            context,
-            label: 'Classic or gender based',
-            value: isClassicAppearance,
-            onChanged: onAppearanceToggle,
-          ),
-          const SizedBox(height: 12),
-          _toggleRow(
-            context,
-            label: 'Dark mode',
-            value: isDark,
-            onChanged: onDarkModeToggle,
-          ),
-          const SizedBox(height: 24),
-          ContinueButton(
-            enabled: selectedGender != null,
-            onTap: onNext,
-            label: tr('continue_btn'),
-          ),
-          const SizedBox(height: 16),
         ],
       ),
     );

@@ -24,43 +24,62 @@ class PetsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScrollableFormPage(
+    return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              TrembleBackButton(onPressed: onBack, label: tr('back')),
-              const Spacer(),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    TrembleBackButton(onPressed: onBack, label: tr('back')),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StepHeader(tr('pets')),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          StepHeader(tr('pets')),
-          const SizedBox(height: 24),
-          OptionPill(
-            label: tr('dog_person'),
-            icon: LucideIcons.dog,
-            selected: selected == 'dog',
-            onTap: () => onSelect('dog'),
+          const SizedBox(height: 28),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  OptionPill(
+                    label: tr('dog_person'),
+                    icon: LucideIcons.dog,
+                    selected: selected == 'dog',
+                    onTap: () => onSelect('dog'),
+                  ),
+                  OptionPill(
+                    label: tr('cat_person'),
+                    icon: LucideIcons.cat,
+                    selected: selected == 'cat',
+                    onTap: () => onSelect('cat'),
+                  ),
+                  OptionPill(
+                    label: tr('nothing'),
+                    selected: selected == 'nothing',
+                    onTap: () => onSelect('nothing'),
+                  ),
+                ],
+              ),
+            ),
           ),
-          OptionPill(
-            label: tr('cat_person'),
-            icon: LucideIcons.cat,
-            selected: selected == 'cat',
-            onTap: () => onSelect('cat'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
+              enabled: selected != null,
+              label: tr('continue_btn'),
+              onTap: onContinueTap,
+            ),
           ),
-          OptionPill(
-            label: tr('nothing'),
-            selected: selected == 'nothing',
-            onTap: () => onSelect('nothing'),
-          ),
-          const SizedBox(height: 24),
-          ContinueButton(
-            enabled: selected != null,
-            label: tr('continue_btn'),
-            onTap: onContinueTap,
-          ),
-          const SizedBox(height: 16),
         ],
       ),
     );

@@ -675,6 +675,9 @@ Future<void> showMultiSelectModal({
   IconData? rowIcon,
   bool isGenderBased = false,
   String? gender,
+  bool searchable = false,
+  String searchHint = 'Search…',
+  int? maxSelection,
 }) async {
   await showModalBottomSheet<void>(
     context: context,
@@ -687,6 +690,9 @@ Future<void> showMultiSelectModal({
       rowIcon: rowIcon,
       isGenderBased: isGenderBased,
       gender: gender,
+      searchable: searchable,
+      searchHint: searchHint,
+      maxSelection: maxSelection,
       onSave: (v) {
         onSave(v);
         Navigator.pop(ctx);
@@ -703,6 +709,9 @@ class _MultiSelectSheet extends ConsumerStatefulWidget {
   final IconData? rowIcon;
   final bool isGenderBased;
   final String? gender;
+  final bool searchable;
+  final String searchHint;
+  final int? maxSelection;
 
   const _MultiSelectSheet({
     required this.title,
@@ -712,6 +721,9 @@ class _MultiSelectSheet extends ConsumerStatefulWidget {
     this.rowIcon,
     this.isGenderBased = false,
     this.gender,
+    this.searchable = false,
+    this.searchHint = 'Search…',
+    this.maxSelection,
   });
 
   @override
@@ -720,11 +732,19 @@ class _MultiSelectSheet extends ConsumerStatefulWidget {
 
 class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
   late List<String> _selected;
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
 
   @override
   void initState() {
     super.initState();
     _selected = List.from(widget.currentValues);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   bool _hasChanges() {
@@ -842,37 +862,117 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
                       size: 20, color: textColor.withValues(alpha: 0.7)),
                   const SizedBox(width: 10),
                 ],
-                Text(
-                  widget.title,
-                  style: GoogleFonts.instrumentSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
+                Flexible(
+                  child: Text(
+                    widget.maxSelection != null
+                        ? '${widget.title} (${_selected.length}/${widget.maxSelection})'
+                        : widget.title,
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            if (widget.searchable) ...[
+              TextField(
+                controller: _searchController,
+                onChanged: (v) => setState(() => _query = v),
+                style: GoogleFonts.instrumentSans(
+                  color: textColor,
+                  fontSize: 15,
+                ),
+                decoration: InputDecoration(
+                  hintText: widget.searchHint,
+                  hintStyle: GoogleFonts.instrumentSans(
+                      color: textColor.withValues(alpha: 0.4), fontSize: 15),
+                  prefixIcon: Icon(LucideIcons.search,
+                      color: textColor.withValues(alpha: 0.4), size: 18),
+                  suffixIcon: _query.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(LucideIcons.x,
+                              color: textColor.withValues(alpha: 0.4),
+                              size: 16),
+                          onPressed: () => setState(() {
+                            _query = '';
+                            _searchController.clear();
+                          }),
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.black.withValues(alpha: 0.04),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(100),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             // Options
-            ...widget.options.map((opt) {
-              final value = opt['value']!;
-              final isSelected = _selected.contains(value);
-              return _optionPill(
-                label: opt['label']!,
-                icon: opt['icon'] as IconData?,
-                iconColor: opt['iconColor'] as Color?,
-                isSelected: isSelected,
-                onTap: () {
-                  setState(() {
-                    if (isSelected) {
-                      _selected.remove(value);
-                    } else {
-                      _selected.add(value);
-                    }
-                  });
-                },
-                isDark: isDark,
-                textColor: textColor,
+            Builder(builder: (context) {
+              final filtered = widget.searchable && _query.isNotEmpty
+                  ? widget.options.where((opt) {
+                      final label = (opt['label'] ?? '').toString().toLowerCase();
+                      return label.contains(_query.toLowerCase());
+                    }).toList()
+                  : widget.options;
+              if (filtered.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    'No results',
+                    style: GoogleFonts.instrumentSans(
+                      color: textColor.withValues(alpha: 0.5),
+                      fontSize: 14,
+                    ),
+                  ),
+                );
+              }
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: filtered.map((opt) {
+                      final value = opt['value']!;
+                      final isSelected = _selected.contains(value);
+                      final atLimit = widget.maxSelection != null &&
+                          _selected.length >= widget.maxSelection!;
+                      final disabled = !isSelected && atLimit;
+                      return Opacity(
+                        opacity: disabled ? 0.4 : 1.0,
+                        child: _optionPill(
+                          label: opt['label']!,
+                          icon: opt['icon'] as IconData?,
+                          iconColor: opt['iconColor'] as Color?,
+                          isSelected: isSelected,
+                          onTap: () {
+                            if (disabled) return;
+                            setState(() {
+                              if (isSelected) {
+                                _selected.remove(value);
+                              } else {
+                                _selected.add(value);
+                              }
+                            });
+                          },
+                          isDark: isDark,
+                          textColor: textColor,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
               );
             }),
             const SizedBox(height: 16),

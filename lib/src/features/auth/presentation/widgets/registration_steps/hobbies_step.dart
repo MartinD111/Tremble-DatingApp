@@ -287,11 +287,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: StepHeader(
-                  widget.tr('hobbies'),
-                  subtitle: widget.tr('hobbies_selected').replaceAll(
-                      '{count}', widget.selectedHobbies.length.toString()),
-                ),
+                child: StepHeader(widget.tr('hobbies')),
               ),
             ],
             Expanded(
@@ -543,7 +539,16 @@ class _HobbiesStepState extends State<HobbiesStep> {
   }
 
   Widget _buildPill(Map<String, dynamic> hobby, bool selected, bool isDark) {
-    final brandRose = Theme.of(context).colorScheme.primary;
+    // Derive the accent color from gender-based setting rather than the theme
+    // primary, which may not yet reflect the in-progress registration state.
+    final Color accent;
+    if (widget.isGenderBased && widget.gender == 'male') {
+      accent = TrembleTheme.azure;
+    } else if (widget.isGenderBased) {
+      accent = TrembleTheme.rose;
+    } else {
+      accent = Theme.of(context).colorScheme.primary;
+    }
     final pillBg = TrembleTheme.getPillColor(
       isDark: isDark,
       isGenderBased: widget.isGenderBased,
@@ -562,11 +567,11 @@ class _HobbiesStepState extends State<HobbiesStep> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? brandRose.withValues(alpha: 0.15) : pillBg,
+          color: selected ? accent.withValues(alpha: 0.15) : pillBg,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
             color: selected
-                ? brandRose
+                ? accent
                 : (isDark ? const Color(0xFF3A3A3E) : const Color(0xFFD8DCE0)),
           ),
         ),
@@ -580,7 +585,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
               hobby['name'] as String,
               style: GoogleFonts.instrumentSans(
                 color: selected
-                    ? brandRose
+                    ? accent
                     : (isDark ? Colors.white : Colors.black87),
                 fontWeight: selected ? FontWeight.bold : FontWeight.w500,
               ),

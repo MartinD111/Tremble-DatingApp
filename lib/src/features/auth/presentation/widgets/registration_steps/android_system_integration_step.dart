@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/radar_integration_service.dart';
+import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
 /// Android-only registration step that appears immediately before ConsentStep.
@@ -51,152 +52,149 @@ class _AndroidSystemIntegrationStepState
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return ScrollableFormPage(
+    return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Back ────────────────────────────────────────────────────────
-          Row(
-            children: [
-              GestureDetector(
-                onTap: widget.onBack,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: isDark ? Colors.white70 : Colors.black54,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Back',
-                      style: GoogleFonts.instrumentSans(
-                        color: isDark ? Colors.white70 : Colors.black54,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // ── Hero icon ───────────────────────────────────────────────────
-          Center(
-            child: Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.07)
-                    : Colors.black.withValues(alpha: 0.04),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isDark ? Colors.white12 : Colors.black12,
-                ),
-              ),
-              child: Icon(
-                Icons.radar_rounded,
-                size: 36,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // ── Title & subtitle ────────────────────────────────────────────
-          StepHeader(
-            'Always within reach',
-            subtitle:
-                'Tremble integrates with your phone so you can toggle your Radar '
-                'instantly — no need to open the app.',
-          ),
-          const SizedBox(height: 32),
-
-          // ── Feature cards ───────────────────────────────────────────────
-          _IntegrationToggle(
-            icon: Icons.grid_view_rounded,
-            title: 'Quick Settings tile',
-            subtitle: 'A one-tap toggle in your notification panel. '
-                'Drag it wherever feels natural.',
-            value: _addQsTile,
-            onChanged: (v) => setState(() => _addQsTile = v),
-          ),
-          const SizedBox(height: 12),
-          _IntegrationToggle(
-            icon: Icons.widgets_rounded,
-            title: 'Home screen widget',
-            subtitle: 'Pin a small radar indicator to your home or lock screen '
-                'for instant access.',
-            value: _addWidget,
-            onChanged: (v) => setState(() => _addWidget = v),
-          ),
-          const SizedBox(height: 20),
-
-          // ── Privacy note ────────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : Colors.black.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(14),
-              border:
-                  Border.all(color: isDark ? Colors.white12 : Colors.black12),
-            ),
+          // ── Fixed header ─────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: isDark ? Colors.white38 : Colors.black38,
-                  size: 16,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'You can always remove these from your phone settings. '
-                    'Neither integration accesses your data — they only '
-                    'control whether Radar is scanning.',
-                    style: GoogleFonts.instrumentSans(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.45)
-                          : Colors.black.withValues(alpha: 0.45),
-                      fontSize: 12,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
+                TrembleBackButton(onPressed: widget.onBack, label: 'Back'),
+                const Spacer(),
               ],
             ),
           ),
           const SizedBox(height: 28),
 
-          // ── Continue ────────────────────────────────────────────────────
-          ContinueButton(
-            enabled: !_loading,
-            onTap: _onContinue,
-            label: _loading ? 'Setting up…' : 'Continue',
-          ),
-          const SizedBox(height: 12),
+          // ── Scrollable content ───────────────────────────────────────────
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Hero icon
+                  Center(
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.07)
+                            : Colors.black.withValues(alpha: 0.04),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isDark ? Colors.white12 : Colors.black12,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.radar_rounded,
+                        size: 36,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
-          // Skip link
-          Center(
-            child: GestureDetector(
-              onTap: widget.onContinue,
-              child: Text(
-                'Skip for now',
-                style: GoogleFonts.instrumentSans(
-                  color: isDark ? Colors.white38 : Colors.black38,
-                  fontSize: 13,
-                  decoration: TextDecoration.underline,
+                  // Title & subtitle
+                  StepHeader(
+                    'Always within reach',
+                    subtitle:
+                        'Tremble integrates with your phone so you can toggle your Radar '
+                        'instantly — no need to open the app.',
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Feature cards
+                  _IntegrationToggle(
+                    icon: Icons.grid_view_rounded,
+                    title: 'Quick Settings tile',
+                    subtitle: 'A one-tap toggle in your notification panel. '
+                        'Drag it wherever feels natural.',
+                    value: _addQsTile,
+                    onChanged: (v) => setState(() => _addQsTile = v),
+                  ),
+                  const SizedBox(height: 12),
+                  _IntegrationToggle(
+                    icon: Icons.widgets_rounded,
+                    title: 'Home screen widget',
+                    subtitle:
+                        'Pin a small radar indicator to your home or lock screen '
+                        'for instant access.',
+                    value: _addWidget,
+                    onChanged: (v) => setState(() => _addWidget = v),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Privacy note
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.black.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: isDark ? Colors.white12 : Colors.black12),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.info_outline_rounded,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'You can always remove these from your phone settings. '
+                            'Neither integration accesses your data — they only '
+                            'control whether Radar is scanning.',
+                            style: GoogleFonts.instrumentSans(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.45)
+                                  : Colors.black.withValues(alpha: 0.45),
+                              fontSize: 12,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Pinned bottom: skip + continue ───────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+            child: Center(
+              child: GestureDetector(
+                onTap: widget.onContinue,
+                child: Text(
+                  'Skip for now',
+                  style: GoogleFonts.instrumentSans(
+                    color: isDark ? Colors.white38 : Colors.black38,
+                    fontSize: 13,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
+              enabled: !_loading,
+              onTap: _onContinue,
+              label: _loading ? 'Setting up…' : 'Continue',
+            ),
+          ),
         ],
       ),
     );

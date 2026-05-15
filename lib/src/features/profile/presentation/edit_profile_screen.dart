@@ -1268,53 +1268,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                           rowIcon: LucideIcons.languages,
                                           isGenderBased: isGenderBasedColor,
                                           gender: gender,
-                                          options: [
-                                            {
-                                              'label':
-                                                  '🇸🇮 ${t('lang_slovenian', lang)}',
-                                              'value': 'Slovenščina'
-                                            },
-                                            {
-                                              'label':
-                                                  '🇬🇧 ${t('lang_english', lang)}',
-                                              'value': 'Angleščina'
-                                            },
-                                            {
-                                              'label':
-                                                  '🇩🇪 ${t('lang_german', lang)}',
-                                              'value': 'Nemščina'
-                                            },
-                                            {
-                                              'label':
-                                                  '🇮🇹 ${t('lang_italian', lang)}',
-                                              'value': 'Italijanščina'
-                                            },
-                                            {
-                                              'label':
-                                                  '🇫🇷 ${t('lang_french', lang)}',
-                                              'value': 'Francoščina'
-                                            },
-                                            {
-                                              'label':
-                                                  '🇪🇸 ${t('lang_spanish', lang)}',
-                                              'value': 'Španščina'
-                                            },
-                                            {
-                                              'label':
-                                                  '🇭🇷 ${t('lang_croatian', lang)}',
-                                              'value': 'Hrvaščina'
-                                            },
-                                            {
-                                              'label':
-                                                  '🇷🇸 ${t('lang_serbian', lang)}',
-                                              'value': 'Srbščina'
-                                            },
-                                            {
-                                              'label':
-                                                  '🇭🇺 ${t('lang_hungarian', lang)}',
-                                              'value': 'Madžarščina'
-                                            },
-                                          ],
+                                          searchable: true,
+                                          searchHint: 'Search language…',
+                                          maxSelection: 5,
+                                          options: _buildLanguageOptions(lang),
                                           currentValues: _languages,
                                           onSave: (vals) => setState(() {
                                             _languages = vals.length <= 5
@@ -1469,6 +1426,61 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
+  static const Map<String, String> _languageFlags = {
+    'lang_english': '🇬🇧',
+    'lang_german': '🇩🇪',
+    'lang_french': '🇫🇷',
+    'lang_spanish': '🇪🇸',
+    'lang_italian': '🇮🇹',
+    'lang_portuguese': '🇵🇹',
+    'lang_dutch': '🇳🇱',
+    'lang_polish': '🇵🇱',
+    'lang_czech': '🇨🇿',
+    'lang_slovak': '🇸🇰',
+    'lang_hungarian': '🇭🇺',
+    'lang_romanian': '🇷🇴',
+    'lang_bulgarian': '🇧🇬',
+    'lang_greek': '🇬🇷',
+    'lang_swedish': '🇸🇪',
+    'lang_norwegian': '🇳🇴',
+    'lang_danish': '🇩🇰',
+    'lang_finnish': '🇫🇮',
+    'lang_estonian': '🇪🇪',
+    'lang_latvian': '🇱🇻',
+    'lang_lithuanian': '🇱🇹',
+    'lang_slovenian': '🇸🇮',
+    'lang_croatian': '🇭🇷',
+    'lang_serbian': '🇷🇸',
+    'lang_bosnian': '🇧🇦',
+    'lang_montenegrin': '🇲🇪',
+    'lang_albanian': '🇦🇱',
+    'lang_macedonian': '🇲🇰',
+    'lang_ukrainian': '🇺🇦',
+    'lang_russian': '🇷🇺',
+    'lang_turkish': '🇹🇷',
+    'lang_arabic': '🇸🇦',
+    'lang_chinese': '🇨🇳',
+    'lang_japanese': '🇯🇵',
+    'lang_korean': '🇰🇷',
+    'lang_hindi': '🇮🇳',
+  };
+
+  // Persisted value uses the canonical translation key (e.g. 'lang_english'),
+  // matching what the onboarding flow writes. Legacy profiles may still hold
+  // Slovenian display strings — those simply won't match here, which is the
+  // same behaviour the old edit modal had when its 9-language list didn't
+  // contain the saved value.
+  List<Map<String, dynamic>> _buildLanguageOptions(String lang) {
+    final entries = _languageFlags.entries.toList()
+      ..sort((a, b) => t(a.key, lang).compareTo(t(b.key, lang)));
+    return entries
+        .map((e) => <String, dynamic>{
+              'label': '${e.value} ${t(e.key, lang)}',
+              'value': e.key,
+            })
+        .toList();
+  }
+
   Widget _buildPhotoGrid(bool isDark, Color textColor, Color borderColor) {
     final addBg = isDark
         ? Colors.white.withValues(alpha: 0.05)
@@ -1484,6 +1496,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             return Padding(
               padding: const EdgeInsets.only(right: 10),
               child: Stack(
+                clipBehavior: Clip.none,
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(14),
@@ -1503,23 +1516,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                   if (index == 0)
                     Positioned(
-                      bottom: 4,
-                      left: 4,
+                      top: -6,
+                      right: -6,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(t('main', _lang),
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 10)),
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                            color: Colors.amber, shape: BoxShape.circle),
+                        child: const Icon(LucideIcons.star,
+                            size: 10, color: Colors.black),
                       ),
                     ),
                   Positioned(
                     top: 4,
-                    right: 4,
+                    left: 4,
                     child: GestureDetector(
                       onTap: () => _removePhoto(index),
                       child: Container(

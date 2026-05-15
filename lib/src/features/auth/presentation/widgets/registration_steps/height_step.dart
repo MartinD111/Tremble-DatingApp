@@ -69,77 +69,97 @@ class HeightStep extends StatelessWidget {
     final toggleBgColor =
         isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05);
 
-    return ScrollableFormPage(
+    return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              TrembleBackButton(onPressed: onBack, label: tr('back')),
-              const Spacer(),
-            ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    TrembleBackButton(onPressed: onBack, label: tr('back')),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StepHeader(tr('whats_your_height')),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          StepHeader(tr('whats_your_height')),
-          const SizedBox(height: 48),
-
-          // ── cm / ft toggle ─────────────────────────────────────────────
-          Center(
-            child: Container(
-              decoration: BoxDecoration(
-                color: toggleBgColor,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          const SizedBox(height: 28),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
                 children: [
-                  _ToggleButton(
-                    label: tr('height_cm'),
-                    active: isMetric,
-                    isDark: isDark,
-                    onTap: () => onMetricToggle(true),
+                  // ── cm / ft toggle ──────────────────────────────────────
+                  Center(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: toggleBgColor,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _ToggleButton(
+                            label: tr('height_cm'),
+                            active: isMetric,
+                            isDark: isDark,
+                            onTap: () => onMetricToggle(true),
+                          ),
+                          _ToggleButton(
+                            label: tr('height_ft_in'),
+                            active: !isMetric,
+                            isDark: isDark,
+                            onTap: () => onMetricToggle(false),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  _ToggleButton(
-                    label: tr('height_ft_in'),
-                    active: !isMetric,
-                    isDark: isDark,
-                    onTap: () => onMetricToggle(false),
+                  const SizedBox(height: 40),
+                  // ── drum picker ─────────────────────────────────────────
+                  SizedBox(
+                    height: 200,
+                    child: Center(
+                      child: isMetric
+                          ? DrumPicker(
+                              items: cmItems,
+                              selectedIndex: cmIndex,
+                              onChanged: (i) =>
+                                  onHeightChanged(int.parse(cmItems[i])),
+                            )
+                          : DrumPicker(
+                              items: ftInItems,
+                              selectedIndex: ftInIndex,
+                              onChanged: (i) {
+                                final str = ftInItems[i];
+                                final parts = str.split('\'');
+                                final feet = int.parse(parts[0]);
+                                final inches =
+                                    int.parse(parts[1].replaceAll('"', ''));
+                                onHeightChanged(
+                                    ((feet * 12 + inches) * 2.54).round());
+                              },
+                            ),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 40),
-
-          // ── drum picker ────────────────────────────────────────────────
-          SizedBox(
-            height: 200,
-            child: Center(
-              child: isMetric
-                  ? DrumPicker(
-                      items: cmItems,
-                      selectedIndex: cmIndex,
-                      onChanged: (i) => onHeightChanged(int.parse(cmItems[i])),
-                    )
-                  : DrumPicker(
-                      items: ftInItems,
-                      selectedIndex: ftInIndex,
-                      onChanged: (i) {
-                        final str = ftInItems[i];
-                        final parts = str.split('\'');
-                        final feet = int.parse(parts[0]);
-                        final inches = int.parse(parts[1].replaceAll('"', ''));
-                        onHeightChanged(((feet * 12 + inches) * 2.54).round());
-                      },
-                    ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: ContinueButton(
+              enabled: true,
+              label: tr('continue_btn'),
+              onTap: onContinueTap,
             ),
           ),
-          ContinueButton(
-            enabled: true,
-            label: tr('continue_btn'),
-            onTap: onContinueTap,
-          ),
-          const SizedBox(height: 16),
         ],
       ),
     );
