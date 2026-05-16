@@ -4,15 +4,18 @@ import 'package:flutter_animate/flutter_animate.dart';
 class TrembleLogo extends StatelessWidget {
   final double size;
   final bool isAnimated;
+  final Color? color;
 
   const TrembleLogo({
     super.key,
     this.size = 120.0,
     this.isAnimated = true,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final baseColor = color ?? Theme.of(context).primaryColor;
     return SizedBox(
       width: size,
       height: size,
@@ -29,8 +32,8 @@ class TrembleLogo extends StatelessWidget {
                 center: const Alignment(0, -0.3),
                 radius: 0.8,
                 colors: [
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.9),
-                  Theme.of(context).colorScheme.primary,
+                  baseColor.withValues(alpha: 0.9),
+                  baseColor,
                 ],
               ),
               boxShadow: [

@@ -12,6 +12,7 @@ import '../../../core/translations.dart';
 import '../../../core/api_client.dart';
 import '../../../core/theme_provider.dart';
 import 'settings_controller.dart';
+import 'widgets/phone_edit_modal.dart';
 import 'widgets/preference_pill_row.dart';
 import 'widgets/preference_range_slider.dart';
 import '../../../core/utils/icon_utils.dart';
@@ -1474,6 +1475,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   child: Text(_t('verify')),
                 )
               : null,
+        ),
+        Divider(color: dividerColor),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(LucideIcons.phone,
+              color: isDark ? Colors.white70 : Colors.black45),
+          title: Text(_t('phone_label'), style: TextStyle(color: textColor)),
+          subtitle: Text(
+            (user.phoneNumber == null || user.phoneNumber!.trim().isEmpty)
+                ? '—'
+                : user.phoneNumber!,
+            style: TextStyle(
+                color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
+          ),
+          trailing: Icon(LucideIcons.chevronRight,
+              color: isDark ? Colors.white30 : Colors.black26),
+          onTap: () => showPhoneEditModal(
+            context: context,
+            currentPhone: user.phoneNumber,
+            title: _t('phone_label'),
+            hint: _t('phone_label'),
+            saveLabel: _t('save'),
+            cancelLabel: _t('cancel'),
+            onSave: (newPhone) {
+              _updateProfile(user.copyWith(phoneNumber: newPhone));
+            },
+          ),
         ),
         Divider(color: dividerColor),
         // Admin mode — in debug builds toggleable as local override; in prod read-only.

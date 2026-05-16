@@ -122,13 +122,6 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
     final lang = ref.read(appLanguageProvider);
     final primary = Theme.of(context).primaryColor;
     final activeSection = ref.read(matchSectionProvider);
-    final user = ref.read(authStateProvider);
-    final gymPillColor = _resolveGymPillColor(
-      context: context,
-      gender: user?.gender,
-      isGenderBased: user?.isGenderBasedColor ?? false,
-      fallback: primary,
-    );
 
     showModalBottomSheet<void>(
       context: context,
@@ -137,7 +130,6 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
       builder: (sheetCtx) => _SectionPickerSheet(
         lang: lang,
         primary: primary,
-        gymPillColor: gymPillColor,
         activeSection: activeSection,
         onSelect: (section) {
           ref.read(matchSectionProvider.notifier).state = section;
@@ -154,10 +146,6 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
             matchType: _tabs[tabIndex].$2,
           );
           Navigator.pop(sheetCtx);
-        },
-        onOpenGymSheet: () {
-          Navigator.pop(sheetCtx);
-          GymModeSheet.show(context);
         },
       ),
     );
@@ -296,37 +284,44 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
               const SizedBox(height: 20),
               ...sections.map((s) => Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: Column(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Center(
-                          child: Container(
-                            padding: const EdgeInsets.all(7),
-                            decoration: BoxDecoration(
-                              color: primary.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(s.$1, size: 14, color: primary),
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          child: Icon(s.$1, size: 14, color: primary),
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          t(s.$2, lang),
-                          style: GoogleFonts.instrumentSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  t(s.$2, lang),
+                                  style: GoogleFonts.instrumentSans(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: textColor,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                t(s.$3, lang),
+                                style: GoogleFonts.instrumentSans(
+                                  fontSize: 12,
+                                  color: subtextColor,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          t(s.$3, lang),
-                          style: GoogleFonts.instrumentSans(
-                            fontSize: 12,
-                            color: subtextColor,
-                            height: 1.4,
-                          ),
-                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -906,18 +901,14 @@ class _ModeIconButton extends ConsumerWidget {
 class _SectionPickerSheet extends ConsumerWidget {
   final String lang;
   final Color primary;
-  final Color gymPillColor;
   final MatchSection activeSection;
   final ValueChanged<MatchSection> onSelect;
-  final VoidCallback onOpenGymSheet;
 
   const _SectionPickerSheet({
     required this.lang,
     required this.primary,
-    required this.gymPillColor,
     required this.activeSection,
     required this.onSelect,
-    required this.onOpenGymSheet,
   });
 
   @override
@@ -925,6 +916,23 @@ class _SectionPickerSheet extends ConsumerWidget {
     final gymState = ref.watch(gymModeControllerProvider);
     final runState = ref.watch(runModeControllerProvider);
     final eventState = ref.watch(eventModeControllerProvider);
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1A1A2E) : Colors.white;
+    final pillBg = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.black.withValues(alpha: 0.04);
+    final pillBorder = isDark
+        ? Colors.white.withValues(alpha: 0.15)
+        : Colors.black.withValues(alpha: 0.10);
+    final idleIcon = isDark
+        ? Colors.white.withValues(alpha: 0.5)
+        : Colors.black.withValues(alpha: 0.5);
+    final idleText = isDark
+        ? Colors.white.withValues(alpha: 0.6)
+        : Colors.black.withValues(alpha: 0.6);
+    final selectedText = isDark ? Colors.white : Colors.black87;
+    final grabberColor = isDark ? Colors.white24 : Colors.black26;
 
     final items = [
       (
@@ -954,7 +962,7 @@ class _SectionPickerSheet extends ConsumerWidget {
         padding: EdgeInsets.fromLTRB(
             24, 12, 24, 40 + MediaQuery.of(context).viewInsets.bottom),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
+          color: sheetBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
@@ -964,7 +972,7 @@ class _SectionPickerSheet extends ConsumerWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: grabberColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -976,12 +984,10 @@ class _SectionPickerSheet extends ConsumerWidget {
                   children: List.generate(items.length, (i) {
                     final (section, icon, labelKey, modeActive) = items[i];
                     final isSelected = section == activeSection;
-                    final isGym = section == MatchSection.gym;
 
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Section pill button
                         GestureDetector(
                           onTap: () => onSelect(section),
                           child: Container(
@@ -991,12 +997,10 @@ class _SectionPickerSheet extends ConsumerWidget {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? primary.withValues(alpha: 0.15)
-                                  : Colors.white.withValues(alpha: 0.06),
+                                  : pillBg,
                               borderRadius: BorderRadius.circular(100),
                               border: Border.all(
-                                color: isSelected
-                                    ? primary
-                                    : Colors.white.withValues(alpha: 0.15),
+                                color: isSelected ? primary : pillBorder,
                                 width: isSelected ? 2 : 1,
                               ),
                             ),
@@ -1004,9 +1008,7 @@ class _SectionPickerSheet extends ConsumerWidget {
                               children: [
                                 Icon(icon,
                                     size: 18,
-                                    color: isSelected
-                                        ? primary
-                                        : Colors.white.withValues(alpha: 0.5)),
+                                    color: isSelected ? primary : idleIcon),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
@@ -1016,9 +1018,8 @@ class _SectionPickerSheet extends ConsumerWidget {
                                       fontWeight: isSelected
                                           ? FontWeight.w700
                                           : FontWeight.w500,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.white.withValues(alpha: 0.6),
+                                      color:
+                                          isSelected ? selectedText : idleText,
                                     ),
                                   ),
                                 ),
@@ -1038,45 +1039,6 @@ class _SectionPickerSheet extends ConsumerWidget {
                             ),
                           ),
                         ),
-
-                        // Gym sub-pills (only for gym section)
-                        if (isGym)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: gymState.isActive
-                                      ? _GymActivePill(
-                                          gymName: gymState.activeGymName ?? '')
-                                      : _GymEmptyPill(
-                                          lang: lang,
-                                          onTap: onOpenGymSheet,
-                                          accentColor: gymPillColor,
-                                        ),
-                                ),
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: onOpenGymSheet,
-                                  child: Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.06),
-                                      borderRadius: BorderRadius.circular(100),
-                                      border: Border.all(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.15)),
-                                    ),
-                                    child: const Icon(LucideIcons.listFilter,
-                                        size: 16, color: Colors.white54),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
                         if (i < items.length - 1) const SizedBox(height: 8),
                       ],
                     );

@@ -20,6 +20,7 @@ class MyGymsScreen extends ConsumerStatefulWidget {
 class _MyGymsScreenState extends ConsumerState<MyGymsScreen> {
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<double> _titleOpacity = ValueNotifier(1.0);
+  final FocusNode _searchFocus = FocusNode();
 
   @override
   void initState() {
@@ -34,7 +35,18 @@ class _MyGymsScreenState extends ConsumerState<MyGymsScreen> {
   void dispose() {
     _scrollController.dispose();
     _titleOpacity.dispose();
+    _searchFocus.dispose();
     super.dispose();
+  }
+
+  void _focusSearch() {
+    _searchFocus.requestFocus();
+    // Scroll the search field into a comfortable position.
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -78,22 +90,23 @@ class _MyGymsScreenState extends ConsumerState<MyGymsScreen> {
                 const SizedBox(height: 28),
 
                 // ── Search bar ──────────────────────────────────────────────
-                Container(
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isDark ? Colors.white12 : Colors.black12,
-                    ),
-                  ),
-                  child: GymSearchWidget(
-                    selectedGyms: selectedGyms,
-                    onAdd: (gym) async =>
-                        ref.read(gymSelectionProvider.notifier).addGym(gym),
-                    onRemove: (placeId) => ref
-                        .read(gymSelectionProvider.notifier)
-                        .removeGym(placeId),
-                  ),
+                GymSearchWidget(
+                  focusNode: _searchFocus,
+                  selectedGyms: selectedGyms,
+                  onAdd: (gym) async =>
+                      ref.read(gymSelectionProvider.notifier).addGym(gym),
+                  onRemove: (placeId) => ref
+                      .read(gymSelectionProvider.notifier)
+                      .removeGym(placeId),
+                ),
+
+                // ── + Add button ────────────────────────────────────────────
+                const SizedBox(height: 12),
+                _AddGymButton(
+                  enabled: selectedGyms.length < 3,
+                  onTap: _focusSearch,
+                  textColor: textColor,
+                  subColor: subColor,
                 ),
 
                 // ── Gym Mode explanation ────────────────────────────────────
@@ -139,6 +152,60 @@ class _MyGymsScreenState extends ConsumerState<MyGymsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AddGymButton extends StatelessWidget {
+  const _AddGymButton({
+    required this.enabled,
+    required this.onTap,
+    required this.textColor,
+    required this.subColor,
+  });
+
+  final bool enabled;
+  final VoidCallback onTap;
+  final Color textColor;
+  final Color subColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = enabled ? TrembleTheme.rose : subColor;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: color.withValues(alpha: enabled ? 0.45 : 0.25),
+              width: 1.2,
+            ),
+            color: enabled
+                ? TrembleTheme.rose.withValues(alpha: 0.06)
+                : Colors.transparent,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(LucideIcons.plus, size: 18, color: color),
+              const SizedBox(width: 8),
+              Text(
+                enabled ? 'Add' : 'Max 3 gyms reached',
+                style: GoogleFonts.instrumentSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

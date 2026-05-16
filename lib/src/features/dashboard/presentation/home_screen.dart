@@ -1013,27 +1013,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _showModeSelector(BuildContext context) {
     final lang = ref.read(appLanguageProvider);
+    final accentColor = Theme.of(context).primaryColor;
 
     // Mode configuration
     final items = [
-      (
-        RadarModeKind.gym,
-        LucideIcons.dumbbell,
-        t('gym_mode_info_title', lang),
-        const Color(0xFFF4436C)
-      ),
-      (
-        RadarModeKind.event,
-        LucideIcons.calendar,
-        t('event_mode_info_title', lang),
-        const Color(0xFFF4436C)
-      ),
-      (
-        RadarModeKind.run,
-        LucideIcons.footprints,
-        t('run_mode_info_title', lang),
-        const Color(0xFFF4436C)
-      ),
+      (RadarModeKind.gym, LucideIcons.dumbbell, t('gym_mode_info_title', lang), accentColor),
+      (RadarModeKind.event, LucideIcons.calendar, t('event_mode_info_title', lang), accentColor),
+      (RadarModeKind.run, LucideIcons.footprints, t('run_mode_info_title', lang), accentColor),
     ];
 
     showModalBottomSheet<void>(

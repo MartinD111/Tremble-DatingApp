@@ -184,6 +184,7 @@ class _RadarAnimationState extends State<RadarAnimation>
                 child: TrembleLogo(
                   size: 52,
                   isAnimated: widget.isScanning,
+                  color: widget.brandColor ?? Theme.of(context).primaryColor,
                 ),
               ),
             ),
