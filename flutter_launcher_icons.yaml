@@ -1,6 +1,6 @@
 flutter_launcher_icons:
   android: "launcher_icon"
-  ios: true
+  ios: "AppIcon"
   remove_alpha_ios: true
   image_path_android: "Logo/tremble_icon_clean.png"
   image_path_ios: "Logo/tremble_icon_clean.png"
