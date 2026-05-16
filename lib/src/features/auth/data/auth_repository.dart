@@ -1025,7 +1025,8 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
       // Network/SSL errors get a Firestore fallback — they're transient and
       // don't indicate data corruption, so blocking registration is wrong.
       if (e.code == 'unavailable' || kDebugMode) {
-        debugPrint('[AUTH] completeOnboarding fallback (${e.code}): ${e.message}');
+        debugPrint(
+            '[AUTH] completeOnboarding fallback (${e.code}): ${e.message}');
         await _repository.markOnboardedDirectly(user);
       } else {
         rethrow;

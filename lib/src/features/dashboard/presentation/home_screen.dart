@@ -78,9 +78,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (user != null) {
         NotificationService.saveToken(user.id);
       }
-      // Check whether to show first-launch tutorial
+      // Check whether to show first-launch tutorial (disabled in debug mode as it is outdated)
       hasSeenTutorial().then((seen) {
-        if (!seen && mounted) setState(() => _showTutorial = true);
+        if (!seen && !kDebugMode && mounted) {
+          setState(() => _showTutorial = true);
+        }
       });
     });
   }
@@ -1017,9 +1019,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // Mode configuration
     final items = [
-      (RadarModeKind.gym, LucideIcons.dumbbell, t('gym_mode_info_title', lang), accentColor),
-      (RadarModeKind.event, LucideIcons.calendar, t('event_mode_info_title', lang), accentColor),
-      (RadarModeKind.run, LucideIcons.footprints, t('run_mode_info_title', lang), accentColor),
+      (
+        RadarModeKind.gym,
+        LucideIcons.dumbbell,
+        t('gym_mode_info_title', lang),
+        accentColor
+      ),
+      (
+        RadarModeKind.event,
+        LucideIcons.calendar,
+        t('event_mode_info_title', lang),
+        accentColor
+      ),
+      (
+        RadarModeKind.run,
+        LucideIcons.footprints,
+        t('run_mode_info_title', lang),
+        accentColor
+      ),
     ];
 
     showModalBottomSheet<void>(

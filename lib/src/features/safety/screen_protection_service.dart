@@ -16,7 +16,7 @@ class ScreenProtectionService {
   /// Call from [State.initState]. Fire-and-forget — no need to await.
   static void enable() {
     if (kDebugMode) return;
-    
+
     // Both platforms
     ScreenProtector.preventScreenshotOn();
 

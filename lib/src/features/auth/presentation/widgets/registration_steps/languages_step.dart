@@ -124,11 +124,11 @@ class _LanguagesStepState extends State<LanguagesStep> {
     final hintColor = isDark ? Colors.white38 : Colors.black38;
 
     final filtered = (_query.isEmpty
-            ? List<String>.from(LanguagesStep._opts)
-            : LanguagesStep._opts.where((lang) {
-                final name = widget.tr(lang).toLowerCase();
-                return name.contains(_query.toLowerCase());
-              }).toList())
+        ? List<String>.from(LanguagesStep._opts)
+        : LanguagesStep._opts.where((lang) {
+            final name = widget.tr(lang).toLowerCase();
+            return name.contains(_query.toLowerCase());
+          }).toList())
       ..sort((a, b) => widget.tr(a).compareTo(widget.tr(b)));
 
     return SafeArea(
@@ -147,7 +147,8 @@ class _LanguagesStepState extends State<LanguagesStep> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                StepHeader('How many languages do you speak? (${widget.selectedLanguages.length}/5)'),
+                StepHeader(
+                    'How many languages do you speak? (${widget.selectedLanguages.length}/5)'),
                 const SizedBox(height: 16),
                 // ── Search field ───────────────────────────────────────────
                 TextField(
@@ -165,8 +166,8 @@ class _LanguagesStepState extends State<LanguagesStep> {
                         Icon(LucideIcons.search, color: hintColor, size: 18),
                     suffixIcon: _query.isNotEmpty
                         ? IconButton(
-                            icon: Icon(LucideIcons.x,
-                                color: hintColor, size: 16),
+                            icon:
+                                Icon(LucideIcons.x, color: hintColor, size: 16),
                             onPressed: () => setState(() {
                               _query = '';
                               _searchController.clear();
@@ -215,7 +216,9 @@ class _LanguagesStepState extends State<LanguagesStep> {
                       label: widget.tr(lang),
                       selected: sel,
                       emoji: LanguagesStep._langFlags[lang],
-                      onTap: disabled ? () {} : () => widget.onToggleLanguage(lang),
+                      onTap: disabled
+                          ? () {}
+                          : () => widget.onToggleLanguage(lang),
                     );
                   }),
               ],

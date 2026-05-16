@@ -180,8 +180,8 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                 controller: _searchController,
                 onChanged: _onSearch,
                 autofocus: true,
-                style: GoogleFonts.instrumentSans(
-                    color: textColor, fontSize: 15),
+                style:
+                    GoogleFonts.instrumentSans(color: textColor, fontSize: 15),
                 decoration: InputDecoration(
                   hintText: 'Search country or code…',
                   hintStyle: GoogleFonts.instrumentSans(
@@ -196,8 +196,8 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                     borderRadius: BorderRadius.circular(100),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
             ),
@@ -211,8 +211,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                 itemBuilder: (_, i) {
                   final c = _filtered[i];
                   return ListTile(
-                    leading: Text(c.flag,
-                        style: const TextStyle(fontSize: 24)),
+                    leading: Text(c.flag, style: const TextStyle(fontSize: 24)),
                     title: Text(
                       c.name,
                       style: GoogleFonts.instrumentSans(
@@ -266,8 +265,8 @@ class PhoneStep extends StatefulWidget {
 
 class _PhoneStepState extends State<PhoneStep> {
   // Default to Slovenia (+386)
-  _Country _selected =
-      _kCountries.firstWhere((c) => c.dialCode == '+386' && c.name == 'Slovenia');
+  _Country _selected = _kCountries
+      .firstWhere((c) => c.dialCode == '+386' && c.name == 'Slovenia');
 
   void _openPicker() async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -294,20 +293,16 @@ class _PhoneStepState extends State<PhoneStep> {
                 Row(
                   children: [
                     TrembleBackButton(
-                        onPressed: widget.onBack,
-                        label: widget.tr('back')),
+                        onPressed: widget.onBack, label: widget.tr('back')),
                     const Spacer(),
                     TextButton(
                       onPressed: widget.onSkip,
                       child: Text(
                         widget.tr('skip'),
-                        style:
-                            Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: isDark
-                                      ? Colors.white60
-                                      : Colors.black54,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: isDark ? Colors.white60 : Colors.black54,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                     ),
                   ],
@@ -325,8 +320,7 @@ class _PhoneStepState extends State<PhoneStep> {
           // ── Phone input with country prefix ───────────────────────────────
           Expanded(
             child: SingleChildScrollView(
-              keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior.onDrag,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Container(
                 decoration: BoxDecoration(

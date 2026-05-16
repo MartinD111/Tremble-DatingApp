@@ -17,6 +17,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../../features/auth/data/auth_repository.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../../features/safety/screen_protection_service.dart';
+import '../../../features/profile/domain/public_profile.dart';
+import 'widgets/common_traits_widget.dart';
 
 class MatchRevealScreen extends ConsumerStatefulWidget {
   final Match match;
@@ -97,6 +99,8 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen> {
     }
 
     final partnerProfileAsync = ref.watch(publicProfileProvider(partnerId));
+    final myAuthUser = ref.watch(authStateProvider);
+    final isPremium = myAuthUser?.isPremium ?? false;
 
     return Scaffold(
       backgroundColor: _deepGraphite,
@@ -231,7 +235,47 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 72),
+                    const SizedBox(height: 32),
+
+                    // Skupne lastnosti — free IN pro vidita enako
+                    // Brez score-a, brez %, samo konkretne skupne točke
+                    if (myAuthUser != null) ...[
+                      CommonTraitsWidget(
+                        myProfile: _authUserToMatchProfile(myAuthUser),
+                        partnerProfile: _publicProfileToMatchProfile(profile),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+
+                    // PRO: gumb za celoten profil
+                    if (isPremium) ...[
+                      OutlinedButton(
+                        onPressed: () {
+                          // TODO: odpri ProfileDetailScreen za partnerId
+                          // context.push('/profile/$partnerId');
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _warmCream.withValues(alpha: 0.6),
+                          side: BorderSide(
+                              color: _warmCream.withValues(alpha: 0.15)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(100)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12),
+                        ),
+                        child: Text(
+                          'VIEW FULL PROFILE',
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    const SizedBox(height: 16),
 
                     // Primary CTA — uses shared PrimaryButton for consistency
                     PrimaryButton(
@@ -840,4 +884,36 @@ class __PulseReceiverButtonState extends ConsumerState<_PulseReceiverButton> {
       ),
     );
   }
+}
+
+// Helper: pretvori AuthUser v MatchProfile za CommonTraitsCalculator
+MatchProfile _authUserToMatchProfile(AuthUser user) {
+  return MatchProfile(
+    id: user.id,
+    name: user.name ?? '',
+    age: user.age ?? 18,
+    imageUrl: user.photoUrls.isNotEmpty ? user.photoUrls.first : '',
+    hobbies: user.hobbies,
+    bio: '',
+    nicotineUse: user.nicotineUse,
+    drinkingHabit: user.drinkingHabit,
+    introvertLevel: user.introvertScale,
+    exerciseHabit: user.exerciseHabit,
+    sleepSchedule: user.sleepSchedule,
+    religion: user.religion,
+  );
+}
+
+// Helper: pretvori PublicProfile v MatchProfile za CommonTraitsCalculator
+MatchProfile _publicProfileToMatchProfile(PublicProfile profile) {
+  return MatchProfile(
+    id: profile.id,
+    name: profile.name,
+    age: profile.age,
+    imageUrl: profile.primaryPhotoUrl,
+    hobbies: profile.hobbies,
+    bio: '',
+    // PublicProfile nima lifestyle polj — CommonTraitsCalculator bo
+    // prikazal samo hobby matches (zadostuje za reveal screen)
+  );
 }

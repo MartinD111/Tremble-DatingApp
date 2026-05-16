@@ -643,399 +643,405 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         }
       },
       child: Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [topColor, bottomColor],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+        resizeToAvoidBottomInset: true,
+        body: Stack(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 500),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [topColor, bottomColor],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
-            ),
-            child: DefaultTextStyle(
-              style: GoogleFonts.instrumentSans(
-                color: Colors.white,
-                fontSize: 14,
-              ),
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  IntroSlideStep(
-                    index: 0,
-                    onNext: _nextPage,
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onLogout: _logout,
-                    tr: tr,
-                  ),
-                  IntroSlideStep(
-                    index: 1,
-                    onNext: _nextPage,
-                    onBack: () => _goToPage(_currentPage - 1),
-                    tr: tr,
-                  ),
-                  IntroSlideStep(
-                    index: 2,
-                    onNext: _nextPage,
-                    onBack: () => _goToPage(_currentPage - 1),
-                    tr: tr,
-                  ),
-                  IntroSlideStep(
-                    index: 3,
-                    onNext: _nextPage,
-                    onBack: () => _goToPage(_currentPage - 1),
-                    tr: tr,
-                  ),
-                  // GDPR / ZVOP-2: Age verification FIRST — must confirm 18+
-                  // before any personal data is collected or consent is given.
-                  BirthdayStep(
-                    pickerMonth: _pickerMonth,
-                    pickerDay: _pickerDay,
-                    pickerYear: _pickerYear,
-                    onMonthChanged: (v) => setState(() => _pickerMonth = v),
-                    onDayChanged: (v) => setState(() => _pickerDay = v),
-                    onYearChanged: (v) => setState(() => _pickerYear = v),
-                    onConfirm: (date) {
-                      setState(() => _birthDate = date);
-                      _nextPage();
-                    },
-                    onBack: () => _goToPage(_currentPage - 1),
-                    tr: tr,
-                  ),
-                  EmailLocationStep(
-                    emailController: _emailController,
-                    passwordController: _passwordController,
-                    locationController: _locationController,
-                    isRegistering: _isRegistering,
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onContinue: _nextPage,
-                    tr: tr,
-                  ),
-                  NameStep(
-                    nameController: _nameController,
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    tr: tr,
-                    verificationBanner: (!(FirebaseAuth
-                                    .instance.currentUser?.emailVerified ??
-                                true) &&
-                            (FirebaseAuth.instance.currentUser?.providerData
-                                    .any((p) => p.providerId == 'password') ??
-                                false))
-                        ? _buildEmailVerificationBanner()
-                        : null,
-                  ),
-                  PhoneStep(
-                    phoneController: _phoneController,
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    onSkip: _nextPage,
-                    tr: tr,
-                  ),
-                  GenderStep(
-                    selectedGender: _selectedGender,
-                    onGenderSelect: (g) => setState(() => _selectedGender = g),
-                    isClassicAppearance: _isClassicAppearance,
-                    onAppearanceToggle: (v) =>
-                        setState(() => _isClassicAppearance = v),
-                    isDark: ref.watch(themeModeProvider) == ThemeMode.dark,
-                    onDarkModeToggle: (val) => ref
-                        .read(themeModeProvider.notifier)
-                        .setThemeMode(val ? ThemeMode.dark : ThemeMode.light),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    onNonBinaryTap: _showNonBinaryPopup,
-                    tr: tr,
-                  ),
-                  HeightStep(
-                    heightCm: _heightCm,
-                    isMetric: _isMetric,
-                    onHeightChanged: (v) => setState(() => _heightCm = v),
-                    onMetricToggle: (v) => setState(() => _isMetric = v),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onContinueTap: () => _showPartnerRangeModal(
-                      title: tr('whats_your_height'),
-                      min: 130,
-                      max: 250,
-                      divisions: 120,
-                      labels: ['130 cm', '250 cm'],
-                      onSave: (val) {
-                        if (val == null) {
-                          setState(() => _partnerHeightRange = null);
-                        } else {
-                          setState(() => _partnerHeightRange =
-                              '${val.start.toInt()}-${val.end.toInt()}');
-                        }
+              child: DefaultTextStyle(
+                style: GoogleFonts.instrumentSans(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    IntroSlideStep(
+                      index: 0,
+                      onNext: _nextPage,
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onLogout: _logout,
+                      tr: tr,
+                    ),
+                    IntroSlideStep(
+                      index: 1,
+                      onNext: _nextPage,
+                      onBack: () => _goToPage(_currentPage - 1),
+                      tr: tr,
+                    ),
+                    IntroSlideStep(
+                      index: 2,
+                      onNext: _nextPage,
+                      onBack: () => _goToPage(_currentPage - 1),
+                      tr: tr,
+                    ),
+                    IntroSlideStep(
+                      index: 3,
+                      onNext: _nextPage,
+                      onBack: () => _goToPage(_currentPage - 1),
+                      tr: tr,
+                    ),
+                    // GDPR / ZVOP-2: Age verification FIRST — must confirm 18+
+                    // before any personal data is collected or consent is given.
+                    BirthdayStep(
+                      pickerMonth: _pickerMonth,
+                      pickerDay: _pickerDay,
+                      pickerYear: _pickerYear,
+                      onMonthChanged: (v) => setState(() => _pickerMonth = v),
+                      onDayChanged: (v) => setState(() => _pickerDay = v),
+                      onYearChanged: (v) => setState(() => _pickerYear = v),
+                      onConfirm: (date) {
+                        setState(() => _birthDate = date);
+                        _nextPage();
                       },
+                      onBack: () => _goToPage(_currentPage - 1),
+                      tr: tr,
                     ),
-                    tr: tr,
-                  ),
-                  StatusStep(
-                    status: _status,
-                    onStatusSelect: (k) => setState(() => _status = k),
-                    occupationController: _occupationController,
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    tr: tr,
-                  ),
-                  ExerciseStep(
-                    selected: _exerciseHabit,
-                    onSelect: (k) => setState(() => _exerciseHabit = k),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    onSavePartner: (v) =>
-                        setState(() => _partnerExerciseHabit = v),
-                    tr: tr,
-                  ),
-                  DrinkingStep(
-                    selected: _drinkingHabit,
-                    onSelect: (k) => setState(() => _drinkingHabit = k),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    onSavePartner: (v) =>
-                        setState(() => _partnerDrinkingHabit = v),
-                    tr: tr,
-                  ),
-                  NicotineStep(
-                    selected: _nicotineUse,
-                    onToggle: (key) => setState(() {
-                      if (_nicotineUse.contains(key)) {
-                        _nicotineUse.remove(key);
-                      } else {
-                        _nicotineUse.add(key);
-                      }
-                    }),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    onSavePartner: (v) =>
-                        setState(() => _partnerNicotineFilter = v?.join(',')),
-                    tr: tr,
-                  ),
-                  ChildrenStep(
-                    selected: _childrenPreference,
-                    onSelect: (k) => setState(() => _childrenPreference = k),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    onSavePartner: (v) =>
-                        setState(() => _partnerChildrenPreference = v),
-                    tr: tr,
-                  ),
-                  IntroversionStep(
-                    values: _introversionRange,
-                    onChanged: (v) => setState(() => _introversionRange = v),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onContinueTap: () => _showPartnerRangeModal(
-                      title: tr('introversion'),
-                      min: 0,
-                      max: 1,
-                      divisions: 4,
-                      labels: [tr('introvert'), tr('extrovert')],
-                      onSave: (val) {
-                        if (val == null) {
-                          setState(() => _partnerIntroversionRange = null);
-                        } else {
-                          setState(() => _partnerIntroversionRange =
-                              '${(val.start * 100).toInt()}-${(val.end * 100).toInt()}');
-                        }
-                      },
-                    ),
-                    tr: tr,
-                  ),
-                  SleepStep(
-                    selected: _sleepHabit,
-                    onSelect: (k) => setState(() => _sleepHabit = k),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    onSavePartner: (v) =>
-                        setState(() => _partnerSleepHabit = v),
-                    tr: tr,
-                  ),
-                  PetsStep(
-                    selected: _petPreference,
-                    onSelect: (k) => setState(() => _petPreference = k),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onContinueTap: () {
-                      final pref = _petPreference;
-                      if (pref == null)
-                        return; // defensive — button should already be disabled
-                      _showPartnerPreferenceModal(
-                        title: tr('pets'),
-                        options: [
-                          {'key': 'dog', 'label': tr('dog_person')},
-                          {'key': 'cat', 'label': tr('cat_person')},
-                          {'key': 'nothing', 'label': tr('nothing')},
-                        ],
-                        userSelection: pref,
-                        onSave: (v) =>
-                            setState(() => _partnerPetPreference = v),
-                      );
-                    },
-                    tr: tr,
-                  ),
-                  ReligionStep(
-                    selected: _religion,
-                    onSelect: (v) => setState(() => _religion = v),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    onSavePartner: (v) => setState(() => _partnerReligion = v),
-                    tr: tr,
-                  ),
-                  EthnicityStep(
-                    selected: _ethnicity,
-                    onSelect: (v) => setState(() => _ethnicity = v),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    onSavePartner: (v) => setState(() => _partnerEthnicity = v),
-                    tr: tr,
-                  ),
-                  HairColorStep(
-                    selected: _hairColor,
-                    onSelect: (v) => setState(() => _hairColor = v),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onNext: _nextPage,
-                    onSavePartner: (v) => setState(() => _partnerHairColor = v),
-                    tr: tr,
-                  ),
-                  PoliticalAffiliationStep(
-                    value: _politicalAffiliationValue,
-                    onChanged: (v) =>
-                        setState(() => _politicalAffiliationValue = v),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onContinueTap: () => _showPartnerRangeModal(
-                      title: tr('political_affiliation'),
-                      min: 1,
-                      max: 5,
-                      divisions: 4,
-                      labels: [tr('politics_left'), tr('politics_right')],
-                      onSave: (val) {
-                        if (val == null) {
-                          setState(() =>
-                              _partnerPoliticalAffiliationPreference = null);
-                        } else {
-                          setState(() =>
-                              _partnerPoliticalAffiliationPreference =
-                                  '${val.start.toInt()}-${val.end.toInt()}');
-                        }
-                      },
-                    ),
-                    tr: tr,
-                  ),
-                  LanguagesStep(
-                    selectedLanguages: _selectedLanguages,
-                    showCustom: _showCustomLanguage,
-                    customLanguageController: _customLanguageController,
-                    onToggleLanguage: (lang) => setState(() {
-                      if (_selectedLanguages.contains(lang)) {
-                        _selectedLanguages.remove(lang);
-                      } else {
-                        _selectedLanguages.add(lang);
-                      }
-                    }),
-                    onToggleCustom: () => setState(
-                        () => _showCustomLanguage = !_showCustomLanguage),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onContinue: _nextPage,
-                    tr: tr,
-                  ),
-                  DatingPreferencesStep(
-                    datingPreference: _datingPreference,
-                    ageRangePref: _ageRangePref,
-                    onPreferenceChanged: (v) =>
-                        setState(() => _datingPreference = v),
-                    onAgeRangeChanged: (v) => setState(() => _ageRangePref = v),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onContinue: _nextPage,
-                    tr: tr,
-                  ),
-                  WhatToMeetStep(
-                    wantToMeet: _wantToMeet,
-                    onToggle: (k) => setState(() {
-                      if (_wantToMeet.contains(k)) {
-                        _wantToMeet.remove(k);
-                      } else {
-                        _wantToMeet.add(k);
-                      }
-                    }),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onContinue: _nextPage,
-                    tr: tr,
-                  ),
-                  HobbiesStep(
-                    selectedHobbies: _selectedHobbies,
-                    onAddHobby: (h) => setState(() => _selectedHobbies.add(h)),
-                    onRemoveHobby: (h) =>
-                        setState(() => _selectedHobbies.remove(h)),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onContinue: _nextPage,
-                    tr: tr,
-                    isGenderBased: !_isClassicAppearance,
-                    gender: _selectedGender,
-                  ),
-                  PhotosStep(
-                    photos: _photos,
-                    onPickImage: _pickImage,
-                    onRemovePhoto: (i) => setState(() => _photos[i] = null),
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onContinue: _nextPage,
-                    tr: tr,
-                  ),
-                  // My Gyms — optional step (index 27). Has "Skip" button.
-                  GymStep(
-                    selectedGyms: _selectedGymsForRegistration,
-                    onAdd: (gym) async {
-                      if (_selectedGymsForRegistration.length >= 3)
-                        return false;
-                      if (_selectedGymsForRegistration
-                          .any((g) => g.placeId == gym.placeId)) return true;
-                      setState(() => _selectedGymsForRegistration.add(gym));
-                      return true;
-                    },
-                    onRemove: (placeId) => setState(
-                      () => _selectedGymsForRegistration
-                          .removeWhere((g) => g.placeId == placeId),
-                    ),
-                    onContinue: _nextPage,
-                    onBack: () => _goToPage(_currentPage - 1),
-                    tr: tr,
-                  ),
-                  // Android-only: Quick Settings tile + widget opt-in (index 28 on Android).
-                  // Platform.isAndroid guard keeps the PageView children list
-                  // length consistent per platform — iOS never sees this widget.
-                  if (Platform.isAndroid)
-                    AndroidSystemIntegrationStep(
+                    EmailLocationStep(
+                      emailController: _emailController,
+                      passwordController: _passwordController,
+                      locationController: _locationController,
+                      isRegistering: _isRegistering,
                       onBack: () => _goToPage(_currentPage - 1),
                       onContinue: _nextPage,
+                      tr: tr,
                     ),
-                  ConsentStep(
-                    onBack: () => _goToPage(_currentPage - 1),
-                    onComplete: completeRegistration,
-                    tr: tr,
-                  ),
-                  RitualStep(tr: tr),
-                ],
+                    NameStep(
+                      nameController: _nameController,
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      tr: tr,
+                      verificationBanner: (!(FirebaseAuth
+                                      .instance.currentUser?.emailVerified ??
+                                  true) &&
+                              (FirebaseAuth.instance.currentUser?.providerData
+                                      .any((p) => p.providerId == 'password') ??
+                                  false))
+                          ? _buildEmailVerificationBanner()
+                          : null,
+                    ),
+                    PhoneStep(
+                      phoneController: _phoneController,
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      onSkip: _nextPage,
+                      tr: tr,
+                    ),
+                    GenderStep(
+                      selectedGender: _selectedGender,
+                      onGenderSelect: (g) =>
+                          setState(() => _selectedGender = g),
+                      isClassicAppearance: _isClassicAppearance,
+                      onAppearanceToggle: (v) =>
+                          setState(() => _isClassicAppearance = v),
+                      isDark: ref.watch(themeModeProvider) == ThemeMode.dark,
+                      onDarkModeToggle: (val) => ref
+                          .read(themeModeProvider.notifier)
+                          .setThemeMode(val ? ThemeMode.dark : ThemeMode.light),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      onNonBinaryTap: _showNonBinaryPopup,
+                      tr: tr,
+                    ),
+                    HeightStep(
+                      heightCm: _heightCm,
+                      isMetric: _isMetric,
+                      onHeightChanged: (v) => setState(() => _heightCm = v),
+                      onMetricToggle: (v) => setState(() => _isMetric = v),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onContinueTap: () => _showPartnerRangeModal(
+                        title: tr('whats_your_height'),
+                        min: 130,
+                        max: 250,
+                        divisions: 120,
+                        labels: ['130 cm', '250 cm'],
+                        onSave: (val) {
+                          if (val == null) {
+                            setState(() => _partnerHeightRange = null);
+                          } else {
+                            setState(() => _partnerHeightRange =
+                                '${val.start.toInt()}-${val.end.toInt()}');
+                          }
+                        },
+                      ),
+                      tr: tr,
+                    ),
+                    StatusStep(
+                      status: _status,
+                      onStatusSelect: (k) => setState(() => _status = k),
+                      occupationController: _occupationController,
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      tr: tr,
+                    ),
+                    ExerciseStep(
+                      selected: _exerciseHabit,
+                      onSelect: (k) => setState(() => _exerciseHabit = k),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      onSavePartner: (v) =>
+                          setState(() => _partnerExerciseHabit = v),
+                      tr: tr,
+                    ),
+                    DrinkingStep(
+                      selected: _drinkingHabit,
+                      onSelect: (k) => setState(() => _drinkingHabit = k),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      onSavePartner: (v) =>
+                          setState(() => _partnerDrinkingHabit = v),
+                      tr: tr,
+                    ),
+                    NicotineStep(
+                      selected: _nicotineUse,
+                      onToggle: (key) => setState(() {
+                        if (_nicotineUse.contains(key)) {
+                          _nicotineUse.remove(key);
+                        } else {
+                          _nicotineUse.add(key);
+                        }
+                      }),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      onSavePartner: (v) =>
+                          setState(() => _partnerNicotineFilter = v?.join(',')),
+                      tr: tr,
+                    ),
+                    ChildrenStep(
+                      selected: _childrenPreference,
+                      onSelect: (k) => setState(() => _childrenPreference = k),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      onSavePartner: (v) =>
+                          setState(() => _partnerChildrenPreference = v),
+                      tr: tr,
+                    ),
+                    IntroversionStep(
+                      values: _introversionRange,
+                      onChanged: (v) => setState(() => _introversionRange = v),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onContinueTap: () => _showPartnerRangeModal(
+                        title: tr('introversion'),
+                        min: 0,
+                        max: 1,
+                        divisions: 4,
+                        labels: [tr('introvert'), tr('extrovert')],
+                        onSave: (val) {
+                          if (val == null) {
+                            setState(() => _partnerIntroversionRange = null);
+                          } else {
+                            setState(() => _partnerIntroversionRange =
+                                '${(val.start * 100).toInt()}-${(val.end * 100).toInt()}');
+                          }
+                        },
+                      ),
+                      tr: tr,
+                    ),
+                    SleepStep(
+                      selected: _sleepHabit,
+                      onSelect: (k) => setState(() => _sleepHabit = k),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      onSavePartner: (v) =>
+                          setState(() => _partnerSleepHabit = v),
+                      tr: tr,
+                    ),
+                    PetsStep(
+                      selected: _petPreference,
+                      onSelect: (k) => setState(() => _petPreference = k),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onContinueTap: () {
+                        final pref = _petPreference;
+                        if (pref == null)
+                          return; // defensive — button should already be disabled
+                        _showPartnerPreferenceModal(
+                          title: tr('pets'),
+                          options: [
+                            {'key': 'dog', 'label': tr('dog_person')},
+                            {'key': 'cat', 'label': tr('cat_person')},
+                            {'key': 'nothing', 'label': tr('nothing')},
+                          ],
+                          userSelection: pref,
+                          onSave: (v) =>
+                              setState(() => _partnerPetPreference = v),
+                        );
+                      },
+                      tr: tr,
+                    ),
+                    ReligionStep(
+                      selected: _religion,
+                      onSelect: (v) => setState(() => _religion = v),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      onSavePartner: (v) =>
+                          setState(() => _partnerReligion = v),
+                      tr: tr,
+                    ),
+                    EthnicityStep(
+                      selected: _ethnicity,
+                      onSelect: (v) => setState(() => _ethnicity = v),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      onSavePartner: (v) =>
+                          setState(() => _partnerEthnicity = v),
+                      tr: tr,
+                    ),
+                    HairColorStep(
+                      selected: _hairColor,
+                      onSelect: (v) => setState(() => _hairColor = v),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onNext: _nextPage,
+                      onSavePartner: (v) =>
+                          setState(() => _partnerHairColor = v),
+                      tr: tr,
+                    ),
+                    PoliticalAffiliationStep(
+                      value: _politicalAffiliationValue,
+                      onChanged: (v) =>
+                          setState(() => _politicalAffiliationValue = v),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onContinueTap: () => _showPartnerRangeModal(
+                        title: tr('political_affiliation'),
+                        min: 1,
+                        max: 5,
+                        divisions: 4,
+                        labels: [tr('politics_left'), tr('politics_right')],
+                        onSave: (val) {
+                          if (val == null) {
+                            setState(() =>
+                                _partnerPoliticalAffiliationPreference = null);
+                          } else {
+                            setState(() =>
+                                _partnerPoliticalAffiliationPreference =
+                                    '${val.start.toInt()}-${val.end.toInt()}');
+                          }
+                        },
+                      ),
+                      tr: tr,
+                    ),
+                    LanguagesStep(
+                      selectedLanguages: _selectedLanguages,
+                      showCustom: _showCustomLanguage,
+                      customLanguageController: _customLanguageController,
+                      onToggleLanguage: (lang) => setState(() {
+                        if (_selectedLanguages.contains(lang)) {
+                          _selectedLanguages.remove(lang);
+                        } else {
+                          _selectedLanguages.add(lang);
+                        }
+                      }),
+                      onToggleCustom: () => setState(
+                          () => _showCustomLanguage = !_showCustomLanguage),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onContinue: _nextPage,
+                      tr: tr,
+                    ),
+                    DatingPreferencesStep(
+                      datingPreference: _datingPreference,
+                      ageRangePref: _ageRangePref,
+                      onPreferenceChanged: (v) =>
+                          setState(() => _datingPreference = v),
+                      onAgeRangeChanged: (v) =>
+                          setState(() => _ageRangePref = v),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onContinue: _nextPage,
+                      tr: tr,
+                    ),
+                    WhatToMeetStep(
+                      wantToMeet: _wantToMeet,
+                      onToggle: (k) => setState(() {
+                        if (_wantToMeet.contains(k)) {
+                          _wantToMeet.remove(k);
+                        } else {
+                          _wantToMeet.add(k);
+                        }
+                      }),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onContinue: _nextPage,
+                      tr: tr,
+                    ),
+                    HobbiesStep(
+                      selectedHobbies: _selectedHobbies,
+                      onAddHobby: (h) =>
+                          setState(() => _selectedHobbies.add(h)),
+                      onRemoveHobby: (h) =>
+                          setState(() => _selectedHobbies.remove(h)),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onContinue: _nextPage,
+                      tr: tr,
+                      isGenderBased: !_isClassicAppearance,
+                      gender: _selectedGender,
+                    ),
+                    PhotosStep(
+                      photos: _photos,
+                      onPickImage: _pickImage,
+                      onRemovePhoto: (i) => setState(() => _photos[i] = null),
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onContinue: _nextPage,
+                      tr: tr,
+                    ),
+                    // My Gyms — optional step (index 27). Has "Skip" button.
+                    GymStep(
+                      selectedGyms: _selectedGymsForRegistration,
+                      onAdd: (gym) async {
+                        if (_selectedGymsForRegistration.length >= 3)
+                          return false;
+                        if (_selectedGymsForRegistration
+                            .any((g) => g.placeId == gym.placeId)) return true;
+                        setState(() => _selectedGymsForRegistration.add(gym));
+                        return true;
+                      },
+                      onRemove: (placeId) => setState(
+                        () => _selectedGymsForRegistration
+                            .removeWhere((g) => g.placeId == placeId),
+                      ),
+                      onContinue: _nextPage,
+                      onBack: () => _goToPage(_currentPage - 1),
+                      tr: tr,
+                    ),
+                    // Android-only: Quick Settings tile + widget opt-in (index 28 on Android).
+                    // Platform.isAndroid guard keeps the PageView children list
+                    // length consistent per platform — iOS never sees this widget.
+                    if (Platform.isAndroid)
+                      AndroidSystemIntegrationStep(
+                        onBack: () => _goToPage(_currentPage - 1),
+                        onContinue: _nextPage,
+                      ),
+                    ConsentStep(
+                      onBack: () => _goToPage(_currentPage - 1),
+                      onComplete: completeRegistration,
+                      tr: tr,
+                    ),
+                    RitualStep(tr: tr),
+                  ],
+                ),
               ),
             ),
-          ),
-          // Ping animation — sits above PageView, ignores pointer events
-          Positioned.fill(
-            child: PingOverlay(key: _pingKey),
-          ),
-          Positioned(
-            top: MediaQuery.of(context).padding.top,
-            left: 0,
-            right: 0,
-            child: _buildProgressBar(),
-          ),
-          if (_isHardLocking)
+            // Ping animation — sits above PageView, ignores pointer events
             Positioned.fill(
-              child: _buildHardLockOverlay(),
+              child: PingOverlay(key: _pingKey),
             ),
-        ],
+            Positioned(
+              top: MediaQuery.of(context).padding.top,
+              left: 0,
+              right: 0,
+              child: _buildProgressBar(),
+            ),
+            if (_isHardLocking)
+              Positioned.fill(
+                child: _buildHardLockOverlay(),
+              ),
+          ],
+        ),
       ),
-    ),
     );
   }
 

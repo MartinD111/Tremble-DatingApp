@@ -277,4 +277,9 @@ Source: UI Polish, May 2026.
 [2026-05-09] Removing a package from `pubspec.yaml` (e.g., Google Maps) is insufficient. Native keys (API Keys) and SDK initializers MUST be manually purged from `Info.plist` (iOS) and `AndroidManifest.xml` (Android) to prevent runtime crashes or "Missing API Key" errors during the platform's app boot-up sequence.
 Source: OSM Migration, May 2026.
 
+**Rule #65 — Precise Multi-Level Directory Structure Imports.**
+[2026-05-17] Always double-check relative import path depths when referencing files from different feature domains or core systems (e.g. `../../../core/` instead of `../../../../core/` when moving up 3 directory levels). Always run `flutter analyze` to ensure zero compilation or import resolution errors before starting simulator runs or production builds.
+Source: Compatibility Score (Faza A) Verification, May 2026.
+
+
 

@@ -15,8 +15,7 @@ class RitualStep extends StatefulWidget {
   State<RitualStep> createState() => _RitualStepState();
 }
 
-class _RitualStepState extends State<RitualStep>
-    with TickerProviderStateMixin {
+class _RitualStepState extends State<RitualStep> with TickerProviderStateMixin {
   // ── Master timeline ─────────────────────────────────────────────────────────
   // 0.0–2.5s  : footsteps walk outward, radar pulses gently
   // 2.5–3.0s  : radar hard-pulse + freeze
@@ -500,19 +499,20 @@ class _FootPainter extends CustomPainter {
 
     // Sole (oval)
     final sole = Path()
-      ..addOval(Rect.fromLTWH(
-          size.width * 0.20, size.height * 0.30, size.width * 0.55, size.height * 0.55));
+      ..addOval(Rect.fromLTWH(size.width * 0.20, size.height * 0.30,
+          size.width * 0.55, size.height * 0.55));
     canvas.drawPath(sole, paint);
 
     // Heel circle
-    canvas.drawCircle(
-        Offset(size.width * 0.45, size.height * 0.88), size.width * 0.18, paint);
+    canvas.drawCircle(Offset(size.width * 0.45, size.height * 0.88),
+        size.width * 0.18, paint);
 
     // Toes (4 small dots)
     final toePaint = Paint()..color = Colors.white.withValues(alpha: 0.85);
     for (int i = 0; i < 4; i++) {
       final dx = size.width * (0.25 + i * 0.13);
-      canvas.drawCircle(Offset(dx, size.height * 0.18), size.width * 0.06, toePaint);
+      canvas.drawCircle(
+          Offset(dx, size.height * 0.18), size.width * 0.06, toePaint);
     }
   }
 

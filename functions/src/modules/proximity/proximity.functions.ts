@@ -27,6 +27,7 @@ import {
     GLOBAL_THROTTLE_MAX,
 } from "../../core/redis";
 import { ENFORCE_APP_CHECK } from "../../config/env";
+import { calculateCompatibilityScore } from "../compatibility/compatibility_calculator";
 
 const db = getFirestore();
 
@@ -327,13 +328,45 @@ export const findNearby = onCall(
             const ageMatchesMe = !theirAge || (theirAge >= myMinAge && theirAge <= myMaxAge);
             const ageMatchesThem = !myAge || (myAge >= theirMinAge && myAge <= theirMaxAge);
 
-            // Basic compatibility score (placeholder for Phase 5 ML/Algo)
+            // Compatibility score — interni signal, nikoli se ne shrani ali vrne v UI
+            // KRITIČNO: nearbyUsers.push() spodaj ne sme vsebovati score polja
             let score = 0.0;
             if (iMatchThem && theyMatchMe && ageMatchesMe && ageMatchesThem) {
-                score = 1.0;
+                score = calculateCompatibilityScore(
+                    {
+                        uid,
+                        hobbies: requesterData.hobbies ?? [],
+                        introvertScale: requesterData.introvertScale,
+                        nicotineUse: requesterData.nicotineUse ?? [],
+                        nicotineFilter: requesterData.nicotineFilter ?? "any",
+                        drinkingHabit: requesterData.drinkingHabit,
+                        partnerDrinkingHabit: requesterData.partnerDrinkingHabit,
+                        exerciseHabit: requesterData.exerciseHabit,
+                        sleepSchedule: requesterData.sleepSchedule,
+                        religion: requesterData.religion,
+                        religionPreference: requesterData.religionPreference,
+                        lookingFor: requesterData.lookingFor ?? [],
+                        isPremium: requesterData.isPremium ?? false,
+                    },
+                    {
+                        uid: candidates[i].id,
+                        hobbies: candidateData.hobbies ?? [],
+                        introvertScale: candidateData.introvertScale,
+                        nicotineUse: candidateData.nicotineUse ?? [],
+                        nicotineFilter: candidateData.nicotineFilter ?? "any",
+                        drinkingHabit: candidateData.drinkingHabit,
+                        partnerDrinkingHabit: candidateData.partnerDrinkingHabit,
+                        exerciseHabit: candidateData.exerciseHabit,
+                        sleepSchedule: candidateData.sleepSchedule,
+                        religion: candidateData.religion,
+                        religionPreference: candidateData.religionPreference,
+                        lookingFor: candidateData.lookingFor ?? [],
+                        isPremium: candidateData.isPremium ?? false,
+                    }
+                );
             } else if (iMatchThem && theyMatchMe) {
-                // Partial match if gender matches but age is slightly off
-                score = 0.60;
+                // Age mismatch — nižji baseline, ne 0 ker je gender match validen
+                score = 0.45;
             }
 
             // F2: Event Mode Matching Override

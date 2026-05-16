@@ -911,8 +911,8 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
                     borderRadius: BorderRadius.circular(100),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
               const SizedBox(height: 12),
@@ -921,7 +921,8 @@ class _MultiSelectSheetState extends ConsumerState<_MultiSelectSheet> {
             Builder(builder: (context) {
               final filtered = widget.searchable && _query.isNotEmpty
                   ? widget.options.where((opt) {
-                      final label = (opt['label'] ?? '').toString().toLowerCase();
+                      final label =
+                          (opt['label'] ?? '').toString().toLowerCase();
                       return label.contains(_query.toLowerCase());
                     }).toList()
                   : widget.options;

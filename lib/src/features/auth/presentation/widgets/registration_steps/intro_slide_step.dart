@@ -38,8 +38,7 @@ class IntroSlideStep extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
           decoration: BoxDecoration(
             color: sheetBg.withValues(alpha: 0.9),
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(top: BorderSide(color: borderColor)),
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -186,8 +185,7 @@ class IntroSlideStep extends StatelessWidget {
                       ],
                     ),
                     child: Icon(icons[index],
-                        size: 44,
-                        color: Theme.of(context).colorScheme.primary),
+                        size: 44, color: Theme.of(context).colorScheme.primary),
                   ),
                   const SizedBox(height: 40),
                   Text(

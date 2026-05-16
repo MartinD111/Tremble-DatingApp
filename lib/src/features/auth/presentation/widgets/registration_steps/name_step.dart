@@ -66,10 +66,11 @@ class NameStep extends StatelessWidget {
                     onChanged: (_) {},
                     decoration: InputDecoration(
                       hintText: tr('name_hint'),
-                      hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontSize: 28,
-                            color: isDark ? Colors.white24 : Colors.black26,
-                          ),
+                      hintStyle:
+                          Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontSize: 28,
+                                color: isDark ? Colors.white24 : Colors.black26,
+                              ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(100),
                         borderSide: BorderSide(
@@ -83,8 +84,8 @@ class NameStep extends StatelessWidget {
                           width: 2,
                         ),
                       ),
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 20),
                     ),
                   ),
                 ],

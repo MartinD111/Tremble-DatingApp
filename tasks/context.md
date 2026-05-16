@@ -1,20 +1,24 @@
-## Session State — 2026-05-13 (Session 21)
-- Active Task: Resolve build issue (flutter_windowmanager incompatibility)
+## Session State — 2026-05-17 (Session 23)
+- Active Task: Outdated Tutorial Bypass, Launcher Icon & Code Style Formatting
 - Environment: Dev
 - Modified Files:
-    - pubspec.yaml (removed flutter_windowmanager)
-    - lib/src/features/safety/screen_protection_service.dart (migrated to screen_protector)
-- Open Problems: BLOCKER-003 (RevenueCat), Protomaps tile server (Martin)
-- System Status: flutter build apk --debug --flavor dev SUCCESS. flutter analyze clean.
+    - `flutter_launcher_icons.yaml`
+    - `Logo/tremble_icon_clean_full_bleed.png`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - 16 files reformatted via `dart format`
+- Open Problems: BLOCKER-003 (RevenueCat)
+- System Status: Compile analysis: SUCCESS. Zero warnings. Codebase formatted.
 
 ## Session Handoff
 - Completed:
-  - **Removed flutter_windowmanager:** Package was incompatible with modern Flutter (v1 embedding issues).
-  - **Migrated to screen_protector:** Updated `ScreenProtectionService` to use `screen_protector` for both Android and iOS.
-  - **Verification:** `flutter analyze` is clean and `flutter build apk --flavor dev` succeeded.
-- In Progress: —
-- Blocked: BLOCKER-003 (RevenueCat/Legal), Task 8 (Protomaps — Martin)
-- Next Action: Infrastructure migration (Protomaps/Cloudflare R2) or RevenueCat (if legal clears).
+  - **Outdated Tutorial Bypass:** Disabled the old, static first-launch tutorial (`_showTutorial` popup overlay) from triggering automatically in debug mode (`!kDebugMode` condition). This prevents developer irritation and keeps the workspace clean and focused on live Radar, BLE, and gym interactions.
+  - **Master Icon Resolution:** Created a 1024x1024 full-bleed, brand-accurate launcher icon (`Logo/tremble_icon_clean_full_bleed.png`) with the official radial gradient (`#F95B82` center-ish to `#E12F58` edges) and transparent wave logo overlay.
+  - **White Border Prevention:** Updated `flutter_launcher_icons.yaml` to point to the new full-bleed PNG, eliminating the previous rounded squircle which left white borders on iOS devices.
+- In Progress: None.
+- Blocked: BLOCKER-003 (RevenueCat/Legal)
+- Next Action:
+  1. **How to Run the App (CLI):** Run `flutter run --flavor dev --dart-define=FLAVOR=dev` in terminal to launch the app on your connected device/simulator with the correct development configurations.
+  2. **How to Run the App (Xcode):** Open `ios/Runner.xcworkspace` in Xcode, select the **Runner** scheme + your connected iPhone, and click **Run** (or `Cmd + R`).
 
 ## Price Decision (2026-05-11)
 - **7,99 € / month** — confirmed by founder

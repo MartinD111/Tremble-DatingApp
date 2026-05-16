@@ -52,6 +52,8 @@
 		<string>Tremble uses your location to find potential matches nearby.</string>
 		<key>NSMotionUsageDescription</key>
 		<string>Tremble uses your device's motion sensors to intelligently activate and deactivate Run Club, conserving battery when you are stationary.</string>
+		<key>NSContactsUsageDescription</key>
+		<string>Tremble potrebuje dostop do kontaktov, da lahko omogočiš Anonymni način in blokiraš osebe, ki jih poznaš.</string>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>

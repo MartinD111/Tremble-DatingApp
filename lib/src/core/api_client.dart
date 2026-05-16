@@ -68,7 +68,8 @@ class TrembleApiClient {
             e is SocketException ||
             e is TlsException;
         if (kDebugMode) {
-          debugPrint('[API] Non-Firebase error in $name (attempt $attempt): $e');
+          debugPrint(
+              '[API] Non-Firebase error in $name (attempt $attempt): $e');
         }
         if (attempt > retries) {
           throw TrembleApiException(

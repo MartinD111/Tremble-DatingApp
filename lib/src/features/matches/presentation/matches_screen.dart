@@ -574,15 +574,20 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                       ),
                     );
 
-                    if (isPremium ||
-                        matchData.isFound ||
-                        profile.matchType == 'event') {
-                      matchesToDisplay.add(
-                          _MatchDisplayItem(profile: profile, isLocked: false));
-                    } else if (!matchData.isFound) {
-                      matchesToDisplay.add(
-                          _MatchDisplayItem(profile: profile, isLocked: true));
-                    }
+                    // Lock samo za Recap: nekdo TI je poslal wave, ti nisi odgovoril
+                    // Vse ostalo (wave poslan, mutual, near-miss) = vidno
+                    final myUid = user?.id ?? '';
+                    final partnerId = matchData.getPartnerId(myUid);
+                    final theyWaved = matchData.gestures.containsKey(partnerId);
+                    final iWaved = matchData.gestures.containsKey(myUid);
+                    final isRecapLock = !isPremium && theyWaved && !iWaved;
+
+                    matchesToDisplay.add(
+                      _MatchDisplayItem(
+                        profile: profile,
+                        isLocked: isRecapLock,
+                      ),
+                    );
                   }
 
                   final visibleItems = matchesToDisplay
@@ -660,7 +665,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                       children: [
                                         Text(
                                           isLocked
-                                              ? t('hidden_person', lang)
+                                              ? t('someone_sent_you_wave', lang)
                                               : profile.name,
                                           style: TrembleTheme.displayFont(
                                             fontSize: 20,
@@ -714,8 +719,44 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                     ),
                                   ),
                                   if (isLocked)
-                                    const Icon(LucideIcons.lock,
-                                        color: Colors.white24, size: 16)
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        const Icon(LucideIcons.lock,
+                                            color: Colors.white24, size: 16),
+                                        const SizedBox(height: 4),
+                                        GestureDetector(
+                                          onTap: () {
+                                            // TODO: odpri paywall
+                                            // Navigator.push ali showModalBottomSheet
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 3),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFF4436C)
+                                                  .withValues(alpha: 0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
+                                              border: Border.all(
+                                                  color: const Color(0xFFF4436C)
+                                                      .withValues(alpha: 0.3)),
+                                            ),
+                                            child: Text(
+                                              t('upgrade_to_see', lang),
+                                              style: GoogleFonts.instrumentSans(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w700,
+                                                color: const Color(0xFFF4436C),
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    )
                                   else if (_isEditMode)
                                     GestureDetector(
                                       onTap: () => _removeMatch(

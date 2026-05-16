@@ -332,8 +332,7 @@ class _PhoneEditSheetState extends State<_PhoneEditSheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: brandRose,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        brandRose.withValues(alpha: 0.35),
+                    disabledBackgroundColor: brandRose.withValues(alpha: 0.35),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(28)),
@@ -444,8 +443,8 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                 controller: _searchController,
                 onChanged: _onSearch,
                 autofocus: true,
-                style: GoogleFonts.instrumentSans(
-                    color: textColor, fontSize: 15),
+                style:
+                    GoogleFonts.instrumentSans(color: textColor, fontSize: 15),
                 decoration: InputDecoration(
                   hintText: widget.searchHint,
                   hintStyle: GoogleFonts.instrumentSans(
@@ -460,8 +459,8 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                     borderRadius: BorderRadius.circular(100),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
             ),
@@ -473,8 +472,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                 itemBuilder: (_, i) {
                   final c = _filtered[i];
                   return ListTile(
-                    leading:
-                        Text(c.flag, style: const TextStyle(fontSize: 24)),
+                    leading: Text(c.flag, style: const TextStyle(fontSize: 24)),
                     title: Text(
                       c.name,
                       style: GoogleFonts.instrumentSans(
