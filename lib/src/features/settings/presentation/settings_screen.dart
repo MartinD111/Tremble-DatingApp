@@ -19,6 +19,7 @@ import '../../../core/utils/icon_utils.dart';
 import '../../../shared/ui/tremble_header.dart';
 import '../../../core/theme.dart';
 import '../../dashboard/application/radar_schedule_controller.dart';
+import '../../dashboard/application/tutorial_notifier.dart';
 import '../../dashboard/presentation/widgets/radar_schedule_modal.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
@@ -909,6 +910,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
           onChanged: (val) {
             ref.read(hideNavBarPrefProvider.notifier).state = val;
+          },
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(
+            LucideIcons.helpCircle,
+            color: Color(0xFFF4436C),
+          ),
+          title: Text(
+            'Spoznaj Tremble ponovno',
+            style: TextStyle(color: textColor),
+          ),
+          subtitle: Text(
+            'Ponovni ogled kratkega interaktivnega vodiča',
+            style: TextStyle(color: subColor, fontSize: 12),
+          ),
+          trailing: Icon(
+            LucideIcons.chevronRight,
+            color: textColor.withValues(alpha: 0.35),
+          ),
+          onTap: () async {
+            await ref.read(tutorialProvider.notifier).resetTutorial();
+            if (mounted) context.go('/');
           },
         ),
         Divider(

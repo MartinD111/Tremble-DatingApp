@@ -26,6 +26,13 @@
 **Impact:** Feature permanently removed to align with privacy-first philosophy.
 **Action:** Cleanup code leftovers (D-43) — COMPLETED 2026-04-30.
 
+## BLOCKER-005 — iOS Dev Provisioning for `com.pulse`
+**Date:** 2026-05-17
+**Status:** 🟡 OPEN
+**Impact:** Physical iPhone deploy for dev flavor cannot complete because Xcode cannot register or find an iOS App Development provisioning profile for bundle identifier `com.pulse` under team `K9VCTUX87F`.
+**Evidence:** `flutter run -d 00008120-001618402604201E --flavor dev --dart-define=FLAVOR=dev` fails at signing with “Failed Registering Bundle Identifier” and “No profiles for 'com.pulse' were found.”
+**Action:** In Apple Developer/Xcode, create or select a valid development profile for `com.pulse`, or explicitly approve a local-only dev bundle identifier change before physical-device verification.
+
 ---
 
 *(Historical resolved blockers (SEC-001, FUNCTIONS-DEPLOY, SEC-002, F5, etc.) have been archived to `MASTER_PLAN.md` and `lessons.md` to keep this file actionable).*

@@ -29,10 +29,11 @@ import '../../../core/radar_integration_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'widgets/radar_search_overlay.dart';
 import 'widgets/radar_schedule_modal.dart';
-import 'widgets/wave_simulation_overlay.dart';
+import 'widgets/premium_tutorial_overlay.dart';
 import '../../profile/data/profile_repository.dart';
 import '../application/dev_simulation_controller.dart';
 import '../application/radar_search_session.dart';
+import '../application/tutorial_notifier.dart';
 import '../../match/presentation/widgets/match_notification_pill.dart';
 import '../../../shared/ui/premium_paywall.dart';
 import '../../gym/application/gym_mode_controller.dart';
@@ -65,7 +66,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  bool _showTutorial = false;
   // Prevents duplicate recap prompts for the same run session transition.
   bool _runRecapShown = false;
 
@@ -78,12 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (user != null) {
         NotificationService.saveToken(user.id);
       }
-      // Check whether to show first-launch tutorial (disabled in debug mode as it is outdated)
-      hasSeenTutorial().then((seen) {
-        if (!seen && !kDebugMode && mounted) {
-          setState(() => _showTutorial = true);
-        }
-      });
+      ref.read(tutorialProvider.notifier).checkFirstLaunch();
     });
   }
 
@@ -472,14 +467,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
 
-        // First-launch wave tutorial overlay
-        if (_showTutorial)
-          Positioned.fill(
-            child: WaveSimulationOverlay(
-              tr: (key) => t(key, lang),
-              onDismiss: () => setState(() => _showTutorial = false),
-            ),
-          ),
+        const PremiumTutorialOverlay(),
       ],
     );
   }

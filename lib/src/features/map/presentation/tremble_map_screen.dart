@@ -116,7 +116,8 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
         .map(
           (point) => CircleMarker(
             point: point,
-            radius: 28,
+            radius: 120,
+            useRadiusInMeter: true,
             color: const Color(0xFFF4436C).withValues(alpha: 0.12),
             borderColor: const Color(0xFFF4436C).withValues(alpha: 0.35),
             borderStrokeWidth: 1.5,
@@ -211,7 +212,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                   ),
                   const SizedBox(width: 8),
                   _MapPill(
-                    text: 'Tremble Events — prihaja kmalu',
+                    text: t('tremble_events_coming_soon', lang),
                     isDark: isDark,
                   ),
                 ],
@@ -221,6 +222,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                 current: _zoom,
                 isDark: isDark,
                 onChanged: _setZoom,
+                lang: lang,
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -244,6 +246,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                       options: MapOptions(
                         initialCenter: _ljubljanaCenter,
                         initialZoom: _zoomLevels[_MapZoom.city]!,
+                        maxZoom: 16.0,
                         interactionOptions: const InteractionOptions(
                           flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                         ),
@@ -277,11 +280,13 @@ class _MapZoomToggle extends StatelessWidget {
   final _MapZoom current;
   final bool isDark;
   final ValueChanged<_MapZoom> onChanged;
+  final String lang;
 
   const _MapZoomToggle({
     required this.current,
     required this.isDark,
     required this.onChanged,
+    required this.lang,
   });
 
   @override
@@ -304,9 +309,9 @@ class _MapZoomToggle extends StatelessWidget {
         children: _MapZoom.values.map((zoom) {
           final isActive = zoom == current;
           final label = {
-            _MapZoom.city: 'Mesto',
+            _MapZoom.city: t('zoom_city', lang),
             _MapZoom.nearby: '1 km',
-            _MapZoom.national: 'Slovenija',
+            _MapZoom.national: t('zoom_national', lang),
           }[zoom]!;
 
           return GestureDetector(

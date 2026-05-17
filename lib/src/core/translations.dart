@@ -158,6 +158,21 @@ const Map<String, Map<String, String>> _translations = {
     'next': 'Next',
     'back': 'Back',
     'finish': 'Finish',
+    'zoom_city': 'City',
+    'zoom_national': 'Slovenia',
+    'tremble_events_coming_soon': 'Tremble Events — Coming Soon',
+    'tutorial_step0_title': 'Proximity Scanning',
+    'tutorial_step0_desc':
+        'Tremble discretely scans your surroundings in the background. When it detects another member nearby, it alerts you with a subtle vibration.',
+    'tutorial_step1_title': 'Zero Empty Chat',
+    'tutorial_step1_desc':
+        'Hold the button to send a signal. No endless messaging — communication opens only when both are ready to meet in person.',
+    'tutorial_step2_title': 'Common Grounds',
+    'tutorial_step2_desc':
+        'Switch to Gym Mode or Run Club when training. Meet people who visit the same gym or run on the same routes.',
+    'tutorial_skip': 'Skip',
+    'tutorial_next': 'Next',
+    'tutorial_finish': 'Finish',
     'logout': 'Logout',
     'logout_confirm':
         'Are you sure you want to log out and stop the registration process?',
@@ -958,6 +973,21 @@ const Map<String, Map<String, String>> _translations = {
     'next': 'Naprej',
     'back': 'Nazaj',
     'finish': 'Zaključi',
+    'zoom_city': 'Mesto',
+    'zoom_national': 'Slovenija',
+    'tremble_events_coming_soon': 'Tremble Events — prihaja kmalu',
+    'tutorial_step0_title': 'Skeniranje bližine',
+    'tutorial_step0_desc':
+        'Tremble diskretno skenira tvojo okolico. Ko zazna drugega člana v tvojem radiju, te na to opozori s kratkim vibracijskim signalom.',
+    'tutorial_step1_title': 'Brez praznega klepeta',
+    'tutorial_step1_desc':
+        'Pridrži gumb, da pošlješ signal. Brez odvečnega dopisovanja: komunikacija se odpre šele, ko sta oba pripravljena na srečanje v živo.',
+    'tutorial_step2_title': 'Skupne točke',
+    'tutorial_step2_desc':
+        'Preklopi na Gym Mode ali Run Club, ko treniraš. Spoznaj ljudi, ki obiskujejo isti fitnes ali tečejo na enakih progah.',
+    'tutorial_skip': 'Preskoči',
+    'tutorial_next': 'Naprej',
+    'tutorial_finish': 'Končaj',
     'logout': 'Odjava',
     'open_radar': 'Odpri radar',
     'error_loading_profile': 'Napaka pri nalaganju profila',

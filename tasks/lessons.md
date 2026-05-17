@@ -281,5 +281,8 @@ Source: OSM Migration, May 2026.
 [2026-05-17] Always double-check relative import path depths when referencing files from different feature domains or core systems (e.g. `../../../core/` instead of `../../../../core/` when moving up 3 directory levels). Always run `flutter analyze` to ensure zero compilation or import resolution errors before starting simulator runs or production builds.
 Source: Compatibility Score (Faza A) Verification, May 2026.
 
+**Rule #66 — Verify iOS storyboard background after `flutter_native_splash`.**
+[2026-05-17] Running `dart run flutter_native_splash:create` can reset `ios/Runner/Base.lproj/LaunchScreen.storyboard` view background to white even when generated `LaunchBackground` is dark graphite. Always inspect the storyboard diff and restore the background color to `#1A1A18` (`red=0.10196078431`, `green=0.10196078431`, `blue=0.09411764706`) before iOS verification.
+Source: iOS Splash Screen Fix, May 2026.
 
 

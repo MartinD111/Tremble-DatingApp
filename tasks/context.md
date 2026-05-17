@@ -1,24 +1,34 @@
-## Session State — 2026-05-17 (Session 23)
-- Active Task: Outdated Tutorial Bypass, Launcher Icon & Code Style Formatting
+## Session State — 2026-05-17 (Session 25)
+- Active Task: iOS Splash Screen Fix Verification
 - Environment: Dev
 - Modified Files:
-    - `flutter_launcher_icons.yaml`
-    - `Logo/tremble_icon_clean_full_bleed.png`
     - `lib/src/features/dashboard/presentation/home_screen.dart`
-    - 16 files reformatted via `dart format`
-- Open Problems: BLOCKER-003 (RevenueCat)
-- System Status: Compile analysis: SUCCESS. Zero warnings. Codebase formatted.
+    - `lib/src/features/dashboard/application/tutorial_notifier.dart`
+    - `lib/src/features/dashboard/presentation/widgets/premium_tutorial_overlay.dart`
+    - `lib/src/features/dashboard/presentation/widgets/spotlight_painter.dart`
+    - `lib/src/features/settings/presentation/settings_screen.dart`
+    - `test/features/dashboard/tutorial_notifier_test.dart`
+    - `lib/src/features/map/presentation/tremble_map_screen.dart`
+    - `tasks/blockers.md`
+    - `tasks/lessons.md`
+    - `web/index.html` (generator newline only)
+- Open Problems: BLOCKER-003 (RevenueCat), BLOCKER-005 (iOS dev provisioning for `com.pulse`)
+- System Status: `flutter analyze` SUCCESS. `flutter test` SUCCESS (59/59). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS. `flutter build ios --debug --flavor dev --dart-define=FLAVOR=dev --no-codesign` SUCCESS. Physical iPhone run blocked by provisioning.
 
 ## Session Handoff
 - Completed:
-  - **Outdated Tutorial Bypass:** Disabled the old, static first-launch tutorial (`_showTutorial` popup overlay) from triggering automatically in debug mode (`!kDebugMode` condition). This prevents developer irritation and keeps the workspace clean and focused on live Radar, BLE, and gym interactions.
-  - **Master Icon Resolution:** Created a 1024x1024 full-bleed, brand-accurate launcher icon (`Logo/tremble_icon_clean_full_bleed.png`) with the official radial gradient (`#F95B82` center-ish to `#E12F58` edges) and transparent wave logo overlay.
-  - **White Border Prevention:** Updated `flutter_launcher_icons.yaml` to point to the new full-bleed PNG, eliminating the previous rounded squircle which left white borders on iOS devices.
+  - **Premium Tutorial Flow:** Implemented clean Premium Spotlight tutorial (radar scan, wave button, activity settings) backed by SharedPreferences, with manual restart button "Spoznaj Tremble ponovno" in settings screen.
+  - **Map Privacy Limits:** Capped maximum map zoom to `16.0` (max 4.0 meters per pixel) to prevent centimeter-precise coordinates tracking. Restricted heatmap circles by forcing `useRadiusInMeter: true` with a secure `120` meter radius constraint.
+  - **Multilingual Support:** Resolved language inconsistency bugs by localizing the onboarding flow, map's events banner, and map's zoom control toggle with Slovene and English translations.
+  - **iOS Splash Fix:** Ran `dart run flutter_native_splash:create`, verified iOS launch images are generated at 512/1024/1536 px and `LaunchBackground` is a 1x1 RGB asset. Corrected the generator regression that reset `LaunchScreen.storyboard` background to white by restoring graphite `#1A1A18`.
+  - **Cache Reset:** Ran `flutter clean` and `flutter pub get` after splash generation.
 - In Progress: None.
-- Blocked: BLOCKER-003 (RevenueCat/Legal)
+- Blocked:
+  - BLOCKER-003 (RevenueCat/Legal)
+  - BLOCKER-005 (Physical iPhone deploy cannot sign `com.pulse`; no matching development provisioning profile)
 - Next Action:
-  1. **How to Run the App (CLI):** Run `flutter run --flavor dev --dart-define=FLAVOR=dev` in terminal to launch the app on your connected device/simulator with the correct development configurations.
-  2. **How to Run the App (Xcode):** Open `ios/Runner.xcworkspace` in Xcode, select the **Runner** scheme + your connected iPhone, and click **Run** (or `Cmd + R`).
+  1. Fix Apple Developer/Xcode provisioning for bundle identifier `com.pulse`, then rerun `flutter run -d 00008120-001618402604201E --flavor dev --dart-define=FLAVOR=dev`.
+  2. On the physical iPhone, uninstall Tremble and reboot before rerun to flush iOS launch screen cache, then visually confirm no white splash and centered rose logo.
 
 ## Price Decision (2026-05-11)
 - **7,99 € / month** — confirmed by founder
