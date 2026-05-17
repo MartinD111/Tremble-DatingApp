@@ -1,22 +1,15 @@
-## Session State — 2026-05-17 (Session 25)
-- Active Task: iOS Splash Screen Fix Verification
+## Session State — 2026-05-17 (Session 26)
+- Active Task: iOS Splash Screen Fix Verification — completed locally
 - Environment: Dev
 - Modified Files:
-    - `lib/src/features/dashboard/presentation/home_screen.dart`
-    - `lib/src/features/dashboard/application/tutorial_notifier.dart`
-    - `lib/src/features/dashboard/presentation/widgets/premium_tutorial_overlay.dart`
-    - `lib/src/features/dashboard/presentation/widgets/spotlight_painter.dart`
-    - `lib/src/features/settings/presentation/settings_screen.dart`
-    - `test/features/dashboard/tutorial_notifier_test.dart`
-    - `lib/src/features/map/presentation/tremble_map_screen.dart`
-    - `tasks/blockers.md`
-    - `tasks/lessons.md`
-    - `web/index.html` (generator newline only)
+    - `tasks/context.md` (handoff only; splash regeneration matched committed assets)
 - Open Problems: BLOCKER-003 (RevenueCat), BLOCKER-005 (iOS dev provisioning for `com.pulse`)
-- System Status: `flutter analyze` SUCCESS. `flutter test` SUCCESS (59/59). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS. `flutter build ios --debug --flavor dev --dart-define=FLAVOR=dev --no-codesign` SUCCESS. Physical iPhone run blocked by provisioning.
+- System Status: `flutter analyze` SUCCESS. `flutter test` SUCCESS (59/59). `flutter build ios --debug --flavor dev --dart-define=FLAVOR=dev --no-codesign` SUCCESS. `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS. Physical iPhone run still blocked by provisioning.
 
 ## Session Handoff
 - Completed:
+  - **iOS Splash Fix Plan Execution:** Ran `dart run flutter_native_splash:create`, confirmed generated iOS launch image sizes are 512/1024/1536 px and `LaunchBackground` is 1x1. The generator temporarily reset `LaunchScreen.storyboard` fallback background to white; restored graphite `#1A1A18` and verified no tracked diff remained.
+  - **Cache Reset + Builds:** Ran `flutter clean`, `flutter pub get`, `flutter analyze`, `flutter test`, unsigned dev iOS build, and dev debug APK build successfully.
   - **Premium Tutorial Flow:** Implemented clean Premium Spotlight tutorial (radar scan, wave button, activity settings) backed by SharedPreferences, with manual restart button "Spoznaj Tremble ponovno" in settings screen.
   - **Map Privacy Limits:** Capped maximum map zoom to `16.0` (max 4.0 meters per pixel) to prevent centimeter-precise coordinates tracking. Restricted heatmap circles by forcing `useRadiusInMeter: true` with a secure `120` meter radius constraint.
   - **Multilingual Support:** Resolved language inconsistency bugs by localizing the onboarding flow, map's events banner, and map's zoom control toggle with Slovene and English translations.
