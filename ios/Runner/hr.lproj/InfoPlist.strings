@@ -1,0 +1,7 @@
+NSContactsUsageDescription = "Tremble treba pristup vašim kontaktima kako biste omogućili Anonimni način rada i blokirali osobe koje poznajete.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Tremble pronalazi druge signale u blizini čak i kada vam je telefon u džepu. Tako pronalazimo vašu sljedeću vezu.";
+NSLocationAlwaysUsageDescription = "Tremble pronalazi druge signale u blizini čak i kada vam je telefon u džepu. Tako pronalazimo vašu sljedeću vezu.";
+NSLocationWhenInUseUsageDescription = "Tremble koristi vašu lokaciju za pronalaženje potencijalnih partnera u blizini.";
+NSBluetoothAlwaysUsageDescription = "Tremble zahtijeva Bluetooth za pasivnu kalibraciju signala i otkrivanje blizine s drugim uređajima.";
+NSBluetoothPeripheralUsageDescription = "Tremble zahtijeva Bluetooth za održavanje detekcije blizine s obližnjim signalima.";
+NSMotionUsageDescription = "Tremble koristi senzore gibanja za automatsko uključivanje i isključivanje trkačkog kluba, čime štedi bateriju.";

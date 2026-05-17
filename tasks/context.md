@@ -1,13 +1,20 @@
-## Session State — 2026-05-17 (Session 26)
-- Active Task: iOS Splash Screen Fix Verification — completed locally
+## Session State — 2026-05-17 (Session 27)
+- Active Task: iOS Permission Prompt Localization — completed locally
 - Environment: Dev
 - Modified Files:
-    - `tasks/context.md` (handoff only; splash regeneration matched committed assets)
+    - `ios/Runner/Info.plist`
+    - `ios/Runner.xcodeproj/project.pbxproj`
+    - `ios/Runner/en.lproj/InfoPlist.strings`
+    - `ios/Runner/sl.lproj/InfoPlist.strings`
+    - `ios/Runner/hr.lproj/InfoPlist.strings`
+    - `tasks/context.md`
 - Open Problems: BLOCKER-003 (RevenueCat), BLOCKER-005 (iOS dev provisioning for `com.pulse`)
-- System Status: `flutter analyze` SUCCESS. `flutter test` SUCCESS (59/59). `flutter build ios --debug --flavor dev --dart-define=FLAVOR=dev --no-codesign` SUCCESS. `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS. Physical iPhone run still blocked by provisioning.
+- System Status: `dart format .` SUCCESS (0 changed). `plutil -lint` SUCCESS for plist/project/localization files. `flutter analyze` SUCCESS. `flutter test` SUCCESS (59/59). `flutter build ios --debug --flavor dev --dart-define=FLAVOR=dev --no-codesign` SUCCESS. Built app contains `en.lproj`, `sl.lproj`, and `hr.lproj` `InfoPlist.strings`. Physical iPhone run still blocked by provisioning.
 
 ## Session Handoff
 - Completed:
+  - **iOS Permission Localization:** Replaced Slovenian `NSContactsUsageDescription` fallback in `Info.plist` with English. Added native iOS `InfoPlist.strings` translations for English, Slovenian, and Croatian covering contacts, location, Bluetooth, and motion prompts.
+  - **Xcode Resource Registration:** Registered `InfoPlist.strings` as a localized `PBXVariantGroup` resource in `project.pbxproj` after the first build showed `.lproj` files were not bundled automatically. Verified the built `Runner.app` contains all three localized strings files.
   - **iOS Splash Fix Plan Execution:** Ran `dart run flutter_native_splash:create`, confirmed generated iOS launch image sizes are 512/1024/1536 px and `LaunchBackground` is 1x1. The generator temporarily reset `LaunchScreen.storyboard` fallback background to white; restored graphite `#1A1A18` and verified no tracked diff remained.
   - **Cache Reset + Builds:** Ran `flutter clean`, `flutter pub get`, `flutter analyze`, `flutter test`, unsigned dev iOS build, and dev debug APK build successfully.
   - **Premium Tutorial Flow:** Implemented clean Premium Spotlight tutorial (radar scan, wave button, activity settings) backed by SharedPreferences, with manual restart button "Spoznaj Tremble ponovno" in settings screen.

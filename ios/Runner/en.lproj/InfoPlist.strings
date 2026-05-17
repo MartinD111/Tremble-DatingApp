@@ -1,0 +1,7 @@
+NSContactsUsageDescription = "Tremble requires access to your contacts to enable Anonymous mode, allowing you to block people you know.";
+NSLocationAlwaysAndWhenInUseUsageDescription = "Tremble finds other signals nearby even when your phone is in your pocket. This is how we find your next connection.";
+NSLocationAlwaysUsageDescription = "Tremble finds other signals nearby even when your phone is in your pocket. This is how we find your next connection.";
+NSLocationWhenInUseUsageDescription = "Tremble uses your location to find potential matches nearby.";
+NSBluetoothAlwaysUsageDescription = "Tremble requires Bluetooth to calibrate signals and detect proximity with other nearby devices passively.";
+NSBluetoothPeripheralUsageDescription = "Tremble requires Bluetooth to maintain proximity detection with nearby signals.";
+NSMotionUsageDescription = "Tremble uses your device's motion sensors to intelligently activate and deactivate Run Club, conserving battery when you are stationary.";
