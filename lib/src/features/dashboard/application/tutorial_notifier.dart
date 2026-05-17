@@ -23,7 +23,7 @@ class TutorialState {
 
 class TutorialNotifier extends Notifier<TutorialState> {
   static const prefsKey = 'has_seen_premium_tutorial';
-  static const lastStep = 2;
+  static const lastStep = 5;
 
   @override
   TutorialState build() {

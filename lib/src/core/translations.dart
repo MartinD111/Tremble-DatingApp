@@ -170,6 +170,15 @@ const Map<String, Map<String, String>> _translations = {
     'tutorial_step2_title': 'Common Grounds',
     'tutorial_step2_desc':
         'Switch to Gym Mode or Run Club when training. Meet people who visit the same gym or run on the same routes.',
+    'tutorial_step3_title': 'Traveler Mode',
+    'tutorial_step3_desc':
+        'Traveling or visiting another city? Enable Traveler Mode to expand your discovery radius or preview upcoming destinations. Tremble adapts dynamically to your new surroundings while maintaining extreme background efficiency.',
+    'tutorial_step4_title': 'Recap vs. Near Miss',
+    'tutorial_step4_desc':
+        'Recap shows the places you’ve visited and active events where your paths crossed with other members. Near Miss captures real-time high-fidelity BLE close encounters. Both let you discover who matches your vibe without actively swiping.',
+    'tutorial_step5_title': 'Set and Forget',
+    'tutorial_step5_desc':
+        'Tremble is designed to be closed. Complete your profile, set your matching criteria, and let the app operate quietly in the background. Go live your life, and we will notify you the moment a genuine physical connection is discovered.',
     'tutorial_skip': 'Skip',
     'tutorial_next': 'Next',
     'tutorial_finish': 'Finish',
@@ -986,6 +995,15 @@ const Map<String, Map<String, String>> _translations = {
     'tutorial_step2_title': 'Skupne točke',
     'tutorial_step2_desc':
         'Preklopi na Gym Mode ali Run Club, ko treniraš. Spoznaj ljudi, ki obiskujejo isti fitnes ali tečejo na enakih progah.',
+    'tutorial_step3_title': 'Potovalni način',
+    'tutorial_step3_desc':
+        'Potuješ ali obiskuješ drugo mesto? Vklopi potovalni način, da razširiš svoj radij iskanja ali predogledaš prihodnje destinacije. Tremble se dinamično prilagodi tvoji novi lokaciji ob minimalni porabi baterije.',
+    'tutorial_step4_title': 'Recap vs. Near Miss',
+    'tutorial_step4_desc':
+        'Recap (zgodovina) prikazuje mesta in dogodke, kjer so se tvoje poti križale z drugimi člani. Near Miss (bližnja srečanja) pa beleži realnočasovne, visoko natančne BLE stike v živo. Oboje brez nenehnega drsanja po ekranu.',
+    'tutorial_step5_title': 'Zapri in živi',
+    'tutorial_step5_desc':
+        'Tremble je ustvarjen z namenom, da ga zapreš. Dokončaj svoj profil, določi kriterije ujemanja in pusti, da aplikacija tiho deluje v ozadju. Živi svoje življenje v živo, mi pa te obvestimo takoj, ko zaznamo pravo bližino.',
     'tutorial_skip': 'Preskoči',
     'tutorial_next': 'Naprej',
     'tutorial_finish': 'Končaj',
@@ -3777,11 +3795,9 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_body':
         'Le radar est actif. L\'émetteur fonctionne en arrière-plan. Pose ton téléphone. Nous t\'avertirons quand quelqu\'un sera proche.',
     'ritual_button': 'COMPRIS',
-    'ritual_midline':
-        'Tu es prêt à rencontrer des gens comme des gens.',
+    'ritual_midline': 'Tu es prêt à rencontrer des gens comme des gens.',
     'ritual_headline': 'Il fonctionne pendant que tu vis.',
-    'ritual_subline':
-        'Range-le. Lève les yeux. On s\'occupe du reste.',
+    'ritual_subline': 'Range-le. Lève les yeux. On s\'occupe du reste.',
     'sim_someone_nearby': 'Quelqu\'un est à proximité (20 m)',
     'sim_instruction': 'Maintenez le bouton 👋 enfoncé pour envoyer un salut.',
     'sim_distance': 'à environ 20 m',
@@ -5813,11 +5829,9 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_body':
         'A radar aktív. Az adó a háttérben fut. Tedd le a telefont. Értesítünk, ha valaki a közelben van.',
     'ritual_button': 'ÉRTETTEM',
-    'ritual_midline':
-        'Készen állsz arra, hogy embereket emberként találkozz.',
+    'ritual_midline': 'Készen állsz arra, hogy embereket emberként találkozz.',
     'ritual_headline': 'Működik, miközben élsz.',
-    'ritual_subline':
-        'Tedd el. Nézz fel. A többit elintézzük mi.',
+    'ritual_subline': 'Tedd el. Nézz fel. A többit elintézzük mi.',
     'sim_someone_nearby': 'Valaki a közelben van (20 m)',
     'sim_instruction': 'Tartsd nyomva a 👋 gombot, hogy üdvözlést küldj.',
     'sim_distance': '~20 m-re',

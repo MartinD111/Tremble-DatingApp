@@ -206,6 +206,36 @@ class _TutorialStep {
           description: t('tutorial_step2_desc', lang),
           showCardAtTop: false,
         );
+      case 3:
+        return _TutorialStep(
+          spotlightCenter: Offset(
+            screenWidth * 0.88,
+            screenHeight - 45 - mediaQuery.padding.bottom,
+          ),
+          spotlightRadius: 45,
+          title: t('tutorial_step3_title', lang),
+          description: t('tutorial_step3_desc', lang),
+          showCardAtTop: true,
+        );
+      case 4:
+        return _TutorialStep(
+          spotlightCenter: Offset(
+            screenWidth * 0.62,
+            screenHeight - 45 - mediaQuery.padding.bottom,
+          ),
+          spotlightRadius: 45,
+          title: t('tutorial_step4_title', lang),
+          description: t('tutorial_step4_desc', lang),
+          showCardAtTop: true,
+        );
+      case 5:
+        return _TutorialStep(
+          spotlightCenter: Offset(screenWidth / 2, screenHeight * 0.44),
+          spotlightRadius: 140,
+          title: t('tutorial_step5_title', lang),
+          description: t('tutorial_step5_desc', lang),
+          showCardAtTop: false,
+        );
       default:
         return _TutorialStep(
           spotlightCenter: Offset(screenWidth / 2, screenHeight * 0.44),

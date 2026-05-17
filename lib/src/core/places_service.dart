@@ -151,7 +151,11 @@ class PlacesService {
   /// No type filter — searches all establishment types so users can find
   /// gyms by name regardless of how Google categorises them (gym, CrossFit,
   /// yoga studio, etc.). Session token billing applies (Rule #42).
-  Future<List<PlacePrediction>> gymAutocomplete(String input) async {
+  Future<List<PlacePrediction>> gymAutocomplete(
+    String input, {
+    double? latitude,
+    double? longitude,
+  }) async {
     if (input.trim().isEmpty) return [];
     if (_apiKey.isEmpty) {
       debugPrint('[PlacesService] ⚠️ No API key for gym autocomplete.');
@@ -159,6 +163,20 @@ class PlacesService {
     }
 
     _sessionToken ??= _uuid.v4();
+
+    final locationBias = latitude != null && longitude != null
+        ? {
+            'circle': {
+              'center': {'latitude': latitude, 'longitude': longitude},
+              'radius': 50000.0,
+            },
+          }
+        : {
+            'circle': {
+              'center': {'latitude': 46.1512, 'longitude': 14.9955},
+              'radius': 2000000.0,
+            },
+          };
 
     try {
       final response = await http
@@ -171,6 +189,7 @@ class PlacesService {
             body: jsonEncode({
               'input': input.trim(),
               'sessionToken': _sessionToken,
+              'locationBias': locationBias,
               'languageCode': 'en',
             }),
           )

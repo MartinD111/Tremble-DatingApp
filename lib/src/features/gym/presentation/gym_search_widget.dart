@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/places_service.dart';
@@ -81,18 +82,84 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
   void _onSearchChanged(String value) {
     _debounce?.cancel();
     if (value.trim().isEmpty) {
-      setState(() => _predictions = []);
+      setState(() {
+        _predictions = [];
+        _isSearching = false;
+      });
       return;
     }
+    setState(() {});
     _debounce = Timer(const Duration(milliseconds: _debounceMs), () async {
       setState(() => _isSearching = true);
-      final results = await _places.gymAutocomplete(value);
-      if (mounted)
-        setState(() {
-          _predictions = results;
-          _isSearching = false;
-        });
+      final results = await _gymAutocomplete(value);
+      if (!mounted) return;
+      setState(() {
+        _predictions = results;
+        _isSearching = false;
+      });
     });
+  }
+
+  Future<void> _triggerSearch(String value) async {
+    final query = value.trim();
+    _debounce?.cancel();
+    _searchFocus.unfocus();
+
+    if (query.isEmpty) {
+      setState(() {
+        _predictions = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearching = true);
+    final results = await _gymAutocomplete(query);
+    if (!mounted) return;
+
+    setState(() {
+      _predictions = results;
+      _isSearching = false;
+    });
+
+    if (results.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'No gyms found nearby. Try another gym name.',
+            style: GoogleFonts.instrumentSans(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: _brandRose,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      );
+    }
+  }
+
+  Future<List<PlacePrediction>> _gymAutocomplete(String query) async {
+    try {
+      final position = await Geolocator.getLastKnownPosition();
+      final permission = await Geolocator.checkPermission();
+      final hasLocationPermission = permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse;
+
+      if (position != null && hasLocationPermission) {
+        return _places.gymAutocomplete(
+          query,
+          latitude: position.latitude,
+          longitude: position.longitude,
+        );
+      }
+    } catch (_) {
+      // Fall through to the national bias when cached location is unavailable.
+    }
+
+    return _places.gymAutocomplete(query);
   }
 
   Future<void> _selectPrediction(PlacePrediction prediction) async {
@@ -145,6 +212,8 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
           controller: _searchController,
           focusNode: _searchFocus,
           onChanged: _onSearchChanged,
+          onSubmitted: _triggerSearch,
+          textInputAction: TextInputAction.search,
           style: GoogleFonts.instrumentSans(color: textColor, fontSize: 15),
           decoration: InputDecoration(
             hintText: 'Search for your gym...',
@@ -165,7 +234,14 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
                       ),
                     ),
                   )
-                : null,
+                : _searchController.text.isNotEmpty
+                    ? IconButton(
+                        tooltip: 'Search',
+                        icon: const Icon(LucideIcons.search, size: 18),
+                        color: _brandRose,
+                        onPressed: () => _triggerSearch(_searchController.text),
+                      )
+                    : null,
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

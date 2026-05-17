@@ -1,5 +1,9 @@
 # Permanent Project Knowledge (Lessons)
 
+**Rule #58 — Translation map key parity must be audited after adding copy.**
+[2026-05-17] When adding keys to `translations.dart`, verify `en` and `sl` parity immediately, and check other active language blocks for intentional fallback gaps. Missing localized keys silently fall back through `t()` and can hide incomplete localization during QA.
+Source: Localization audit, May 2026.
+
 **Rule #55 — Ephemeral Media Cleanup Strategy.**
 [2026-04-30] "View-once" photos (Pulse Intercept F12) MUST be deleted server-side immediately upon the recipient triggering the `viewedAt` timestamp. UI-level hiding is insufficient for GDPR/MPC compliance. Always use a Cloud Function trigger to purge the file from Storage to ensure zero persistence.
 Source: Pulse Intercept (F12) Planning, April 2026.
@@ -284,5 +288,4 @@ Source: Compatibility Score (Faza A) Verification, May 2026.
 **Rule #66 — Verify iOS storyboard background after `flutter_native_splash`.**
 [2026-05-17] Running `dart run flutter_native_splash:create` can reset `ios/Runner/Base.lproj/LaunchScreen.storyboard` view background to white even when generated `LaunchBackground` is dark graphite. Always inspect the storyboard diff and restore the background color to `#1A1A18` (`red=0.10196078431`, `green=0.10196078431`, `blue=0.09411764706`) before iOS verification.
 Source: iOS Splash Screen Fix, May 2026.
-
 
