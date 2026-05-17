@@ -10,7 +10,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('checkFirstLaunch activates tutorial when it has not been seen',
+  test('checkFirstLaunch shows opt-in when tutorial has not been seen',
       () async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
@@ -18,8 +18,38 @@ void main() {
     await container.read(tutorialProvider.notifier).checkFirstLaunch();
 
     final state = container.read(tutorialProvider);
-    expect(state.isActive, isTrue);
+    expect(state.showOptIn, isTrue);
+    expect(state.isActive, isFalse);
     expect(state.currentStep, 0);
+  });
+
+  test('interactive tutorial advances from opt-in through all six steps',
+      () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(tutorialProvider.notifier);
+
+    await notifier.checkFirstLaunch();
+    notifier.startTutorial();
+
+    var state = container.read(tutorialProvider);
+    expect(state.isActive, isTrue);
+    expect(state.showOptIn, isFalse);
+    expect(state.currentStep, 0);
+
+    for (var step = 1; step <= TutorialNotifier.lastStep; step++) {
+      notifier.nextStep();
+      state = container.read(tutorialProvider);
+      expect(state.isActive, isTrue);
+      expect(state.currentStep, step);
+    }
+
+    await notifier.nextStep();
+    final prefs = await SharedPreferences.getInstance();
+    state = container.read(tutorialProvider);
+    expect(state.isActive, isFalse);
+    expect(state.showOptIn, isFalse);
+    expect(prefs.getBool(TutorialNotifier.prefsKey), isTrue);
   });
 
   test('completeTutorial hides tutorial and persists seen flag', () async {
@@ -32,6 +62,7 @@ void main() {
 
     final prefs = await SharedPreferences.getInstance();
     expect(container.read(tutorialProvider).isActive, isFalse);
+    expect(container.read(tutorialProvider).showOptIn, isFalse);
     expect(prefs.getBool(TutorialNotifier.prefsKey), isTrue);
   });
 
@@ -46,7 +77,8 @@ void main() {
 
     final prefs = await SharedPreferences.getInstance();
     final state = container.read(tutorialProvider);
-    expect(state.isActive, isTrue);
+    expect(state.showOptIn, isTrue);
+    expect(state.isActive, isFalse);
     expect(state.currentStep, 0);
     expect(prefs.getBool(TutorialNotifier.prefsKey), isFalse);
   });

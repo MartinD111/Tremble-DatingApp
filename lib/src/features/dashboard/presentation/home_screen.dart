@@ -68,6 +68,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   // Prevents duplicate recap prompts for the same run session transition.
   bool _runRecapShown = false;
+  bool _tutorialOptInShowing = false;
 
   @override
   void initState() {
@@ -80,6 +81,185 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       ref.read(tutorialProvider.notifier).checkFirstLaunch();
     });
+  }
+
+  Future<void> _showTutorialOptInSheet() async {
+    final lang = ref.read(appLanguageProvider);
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        final textColor = isDark ? Colors.white : const Color(0xFF1A1A18);
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            0,
+            20,
+            MediaQuery.of(ctx).padding.bottom + 24,
+          ),
+          child: GlassCard(
+            borderRadius: 24,
+            borderColor: const Color(0xFFF4436C).withValues(alpha: 0.28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  t('tutorial_opt_in_title', lang),
+                  style: GoogleFonts.lora(
+                    color: textColor,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  t('tutorial_opt_in_desc', lang),
+                  style: GoogleFonts.instrumentSans(
+                    color: textColor.withValues(alpha: 0.72),
+                    fontSize: 14,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () async {
+                          await ref
+                              .read(tutorialProvider.notifier)
+                              .completeTutorial();
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        child: Text(t('tutorial_opt_in_no', lang)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF4436C),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        onPressed: () {
+                          ref.read(navIndexProvider.notifier).state = 0;
+                          ref.read(selectedRadarModeProvider.notifier).state =
+                              RadarModeKind.gym;
+                          ref.read(tutorialProvider.notifier).startTutorial();
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        child: Text(t('tutorial_opt_in_yes', lang)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    _tutorialOptInShowing = false;
+  }
+
+  Set<int> _tutorialNavPulseIndexes(TutorialState tutorial, bool isPremium) {
+    if (!tutorial.isActive) return const {};
+    if (tutorial.currentStep == 2 && isPremium) return const {1};
+    if (tutorial.currentStep == 3) return {isPremium ? 2 : 1};
+    if (tutorial.currentStep == 4) return {isPremium ? 3 : 2};
+    return const {};
+  }
+
+  void _handleTutorialNavTap({
+    required int index,
+    required bool isPremium,
+  }) {
+    final tutorial = ref.read(tutorialProvider);
+    if (!tutorial.isActive) return;
+
+    final mapIndex = isPremium ? 1 : -1;
+    final peopleIndex = isPremium ? 2 : 1;
+    final settingsIndex = isPremium ? 3 : 2;
+
+    if (tutorial.currentStep == 2 && index == mapIndex) {
+      ref.read(tutorialProvider.notifier).nextStep();
+      return;
+    }
+    if (tutorial.currentStep == 3 && index == peopleIndex) {
+      _showTutorialStepPopup(step: 3);
+      return;
+    }
+    if (tutorial.currentStep == 4 && index == settingsIndex) {
+      _showTutorialStepPopup(step: 4);
+    }
+  }
+
+  Future<void> _showTutorialStepPopup({required int step}) async {
+    final lang = ref.read(appLanguageProvider);
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      builder: (ctx) => Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: GlassCard(
+            borderRadius: 24,
+            borderColor: const Color(0xFFF4436C).withValues(alpha: 0.34),
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    t('tutorial_step${step}_popup_title', lang),
+                    style: GoogleFonts.lora(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    t('tutorial_step${step}_popup_desc', lang),
+                    style: GoogleFonts.instrumentSans(
+                      color: Colors.white.withValues(alpha: 0.82),
+                      fontSize: 14,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF4436C),
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                      },
+                      child: Text(t('tutorial_got_it', lang)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    ref.read(navIndexProvider.notifier).state = 0;
+    await ref.read(tutorialProvider.notifier).nextStep();
   }
 
   @override
@@ -186,6 +366,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(authStateProvider);
     final lang = ref.watch(appLanguageProvider);
     final navIndex = ref.watch(navIndexProvider);
+    final tutorial = ref.watch(tutorialProvider);
+
+    ref.listen<TutorialState>(tutorialProvider, (previous, next) {
+      if (!next.showOptIn || _tutorialOptInShowing || !mounted) return;
+      _tutorialOptInShowing = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _showTutorialOptInSheet();
+      });
+    });
 
     final isScanning = ref.watch(isScanningProvider);
     final pingDistance = ref.watch(pingDistanceProvider);
@@ -336,8 +526,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: LiquidNavBar(
             currentIndex: navIndex,
             items: navItems,
+            pulsingIndexes: _tutorialNavPulseIndexes(tutorial, isPremium),
             onTap: (index) {
               ref.read(navIndexProvider.notifier).state = index;
+              _handleTutorialNavTap(index: index, isPremium: isPremium);
             },
           ),
         ),
@@ -488,6 +680,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       int signalPulseKey) {
     final isDegraded = radarMode == 'degraded';
     final lang = ref.watch(appLanguageProvider);
+    final tutorial = ref.watch(tutorialProvider);
     final bool isDevSearchActive = devSim.isMutualWaveActive;
     final bool isSearchActive = activeMatch != null || isDevSearchActive;
     return Stack(
@@ -567,95 +760,106 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   else ...[
                     // ── Pulsing Primary Action ────────────────────────
                     Center(
-                      child: _PulsingRadarButton(
-                        isScanning: isScanning,
-                        onTap: () async {
-                          final newState = !isScanning;
-                          ref.read(isScanningProvider.notifier).state =
-                              newState;
+                      child: _TutorialTarget(
+                        step: 5,
+                        child: _PulsingRadarButton(
+                          isScanning: isScanning,
+                          isHighlighted:
+                              tutorial.isActive && tutorial.currentStep == 5,
+                          onTap: () async {
+                            final newState = !isScanning;
+                            ref.read(isScanningProvider.notifier).state =
+                                newState;
 
-                          if (newState) {
-                            debugPrint(
-                                "📍 Location Captured: mock_lat: 46.05, mock_lng: 14.50 [Ljubljana]");
-                            // Android 13+: POST_NOTIFICATIONS is a runtime grant.
-                            // Without this the foreground service notification
-                            // (and our CallStyle live activity) is invisible.
-                            if (Platform.isAndroid) {
-                              final status =
-                                  await Permission.notification.status;
-                              if (!status.isGranted) {
-                                await Permission.notification.request();
+                            if (newState) {
+                              debugPrint(
+                                  "📍 Location Captured: mock_lat: 46.05, mock_lng: 14.50 [Ljubljana]");
+                              // Android 13+: POST_NOTIFICATIONS is a runtime grant.
+                              // Without this the foreground service notification
+                              // (and our CallStyle live activity) is invisible.
+                              if (Platform.isAndroid) {
+                                final status =
+                                    await Permission.notification.status;
+                                if (!status.isGranted) {
+                                  await Permission.notification.request();
+                                }
+                              }
+                              // Start background service. On Android we go through
+                              // RadarForegroundService (trampoline) which calls
+                              // startForeground() synchronously on its first line
+                              // — that satisfies Android 14+'s 5s deadline and
+                              // eliminates ForegroundServiceDidNotStartInTime
+                              // crashes. The trampoline then relay-starts
+                              // flutter_background_service which boots the Dart
+                              // isolate without deadline pressure. iOS keeps
+                              // the original plugin path. Same NOTIF_ID 888 +
+                              // channel tremble_radar_v2 → no flicker on swap.
+                              if (Platform.isAndroid) {
+                                await RadarIntegrationService.instance
+                                    .startRadarService();
+                              } else {
+                                FlutterBackgroundService().startService();
+                              }
+                              // Flip RadarStateBridge → tile + widget re-tint and
+                              // (on the active edge) the rich notification refresh
+                              // is broadcast. Notif builder is identical to the
+                              // one our trampoline already posted, so this is a
+                              // no-op repaint.
+                              await RadarIntegrationService.instance
+                                  .setRadarActive(true);
+                              // BleService must run in the main isolate — flutter_blue_plus
+                              // requires an Android Activity which the background isolate
+                              // does not have. Gate on GDPR consent before starting.
+                              final hasConsent =
+                                  ref.read(gdprConsentProvider).valueOrNull ??
+                                      false;
+                              if (hasConsent) {
+                                await BleService().start();
+                              }
+
+                              // ── Dev Mode: passive-discovery simulation ──────────
+                              // Phase 1 fires after 10s — pill first, radar empty
+                              // until mutual wave. kDebugMode guards production;
+                              // localAdminMode/bypassRadar OR canAccessRadar
+                              // both qualify so the sim works whether the dev
+                              // is signed in as admin or as a normal verified
+                              // user during testing.
+                              if (kDebugMode &&
+                                  (ref.read(bypassRadarProvider) ||
+                                      canAccessRadar)) {
+                                ref
+                                    .read(devSimulationControllerProvider
+                                        .notifier)
+                                    .start();
+                              }
+                            } else {
+                              // Stop BLE in main isolate and signal background service.
+                              await RadarIntegrationService.instance
+                                  .setRadarActive(false);
+                              BleService().stop();
+                              if (Platform.isAndroid) {
+                                await RadarIntegrationService.instance
+                                    .stopRadarService();
+                              } else {
+                                FlutterBackgroundService()
+                                    .invoke('stopService', null);
+                              }
+                              // Cancel any in-flight dev simulation without persisting.
+                              if (kDebugMode) {
+                                ref
+                                    .read(devSimulationControllerProvider
+                                        .notifier)
+                                    .cancelWithoutPersist();
                               }
                             }
-                            // Start background service. On Android we go through
-                            // RadarForegroundService (trampoline) which calls
-                            // startForeground() synchronously on its first line
-                            // — that satisfies Android 14+'s 5s deadline and
-                            // eliminates ForegroundServiceDidNotStartInTime
-                            // crashes. The trampoline then relay-starts
-                            // flutter_background_service which boots the Dart
-                            // isolate without deadline pressure. iOS keeps
-                            // the original plugin path. Same NOTIF_ID 888 +
-                            // channel tremble_radar_v2 → no flicker on swap.
-                            if (Platform.isAndroid) {
-                              await RadarIntegrationService.instance
-                                  .startRadarService();
-                            } else {
-                              FlutterBackgroundService().startService();
+                            if (tutorial.isActive &&
+                                tutorial.currentStep == 5) {
+                              await ref
+                                  .read(tutorialProvider.notifier)
+                                  .completeTutorial();
                             }
-                            // Flip RadarStateBridge → tile + widget re-tint and
-                            // (on the active edge) the rich notification refresh
-                            // is broadcast. Notif builder is identical to the
-                            // one our trampoline already posted, so this is a
-                            // no-op repaint.
-                            await RadarIntegrationService.instance
-                                .setRadarActive(true);
-                            // BleService must run in the main isolate — flutter_blue_plus
-                            // requires an Android Activity which the background isolate
-                            // does not have. Gate on GDPR consent before starting.
-                            final hasConsent =
-                                ref.read(gdprConsentProvider).valueOrNull ??
-                                    false;
-                            if (hasConsent) {
-                              await BleService().start();
-                            }
-
-                            // ── Dev Mode: passive-discovery simulation ──────────
-                            // Phase 1 fires after 10s — pill first, radar empty
-                            // until mutual wave. kDebugMode guards production;
-                            // localAdminMode/bypassRadar OR canAccessRadar
-                            // both qualify so the sim works whether the dev
-                            // is signed in as admin or as a normal verified
-                            // user during testing.
-                            if (kDebugMode &&
-                                (ref.read(bypassRadarProvider) ||
-                                    canAccessRadar)) {
-                              ref
-                                  .read(
-                                      devSimulationControllerProvider.notifier)
-                                  .start();
-                            }
-                          } else {
-                            // Stop BLE in main isolate and signal background service.
-                            await RadarIntegrationService.instance
-                                .setRadarActive(false);
-                            BleService().stop();
-                            if (Platform.isAndroid) {
-                              await RadarIntegrationService.instance
-                                  .stopRadarService();
-                            } else {
-                              FlutterBackgroundService()
-                                  .invoke('stopService', null);
-                            }
-                            // Cancel any in-flight dev simulation without persisting.
-                            if (kDebugMode) {
-                              ref
-                                  .read(
-                                      devSimulationControllerProvider.notifier)
-                                  .cancelWithoutPersist();
-                            }
-                          }
-                        },
+                          },
+                        ),
                       )
                           .animate()
                           .scale(duration: 600.ms, curve: Curves.easeOutBack),
@@ -772,6 +976,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       final runState = ref.watch(runModeControllerProvider);
                       final eventState = ref.watch(eventModeControllerProvider);
                       final lang = ref.watch(appLanguageProvider);
+                      final tutorial = ref.watch(tutorialProvider);
 
                       final isActive = switch (selectedMode) {
                         RadarModeKind.gym => gymState.isActive,
@@ -794,52 +999,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                       };
 
-                      return _PulseIcon(
-                        icon: modeIcon,
-                        color: modeColor,
-                        isActive: isActive,
-                        onTap: () {
-                          if (isActive) {
-                            switch (selectedMode) {
-                              case RadarModeKind.gym:
-                                ref
-                                    .read(gymModeControllerProvider.notifier)
-                                    .deactivate();
-                                break;
-                              case RadarModeKind.run:
-                                ref
-                                    .read(runModeControllerProvider.notifier)
-                                    .deactivate();
-                                break;
-                              case RadarModeKind.event:
-                                ref
-                                    .read(eventModeControllerProvider.notifier)
-                                    .deactivate();
-                                break;
-                            }
-                          } else {
-                            showModeInfoDialog(
-                              context: context,
-                              ref: ref,
-                              mode: selectedMode,
-                              lang: lang,
-                              isActive: false,
-                              onActivate: () {
-                                if (selectedMode == RadarModeKind.run) {
+                      return _TutorialTarget(
+                        step: 0,
+                        child: _PulseIcon(
+                          icon: modeIcon,
+                          color: modeColor,
+                          isActive: isActive,
+                          isHighlighted:
+                              tutorial.isActive && tutorial.currentStep == 0,
+                          onTap: () {
+                            if (isActive) {
+                              switch (selectedMode) {
+                                case RadarModeKind.gym:
+                                  ref
+                                      .read(gymModeControllerProvider.notifier)
+                                      .deactivate();
+                                  break;
+                                case RadarModeKind.run:
                                   ref
                                       .read(runModeControllerProvider.notifier)
-                                      .activate();
-                                } else if (selectedMode == RadarModeKind.gym) {
-                                  Navigator.pop(context);
-                                  GymModeSheet.show(context);
-                                } else {
-                                  Navigator.pop(context);
-                                }
-                              },
-                            );
-                          }
-                        },
-                        onLongPress: () => _showModeSelector(context),
+                                      .deactivate();
+                                  break;
+                                case RadarModeKind.event:
+                                  ref
+                                      .read(
+                                          eventModeControllerProvider.notifier)
+                                      .deactivate();
+                                  break;
+                              }
+                            } else {
+                              showModeInfoDialog(
+                                context: context,
+                                ref: ref,
+                                mode: selectedMode,
+                                lang: lang,
+                                isActive: false,
+                                onActivate: () {
+                                  if (selectedMode == RadarModeKind.run) {
+                                    ref
+                                        .read(
+                                            runModeControllerProvider.notifier)
+                                        .activate();
+                                  } else if (selectedMode ==
+                                      RadarModeKind.gym) {
+                                    Navigator.pop(context);
+                                    GymModeSheet.show(context);
+                                  } else {
+                                    Navigator.pop(context);
+                                  }
+                                },
+                              );
+                            }
+                            if (tutorial.isActive &&
+                                tutorial.currentStep == 0) {
+                              ref.read(tutorialProvider.notifier).nextStep();
+                            }
+                          },
+                          onLongPress: () => _showModeSelector(context),
+                        ),
                       );
                     },
                   ),
@@ -855,7 +1072,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
 
                   // Right: Schedule icon
-                  const _RadarScheduleButton(),
+                  const _TutorialTarget(
+                    step: 1,
+                    child: _RadarScheduleButton(),
+                  ),
                 ],
               ),
             ),
@@ -1211,39 +1431,161 @@ final navIndexProvider = StateProvider<int>((ref) => 0);
 final selectedRadarModeProvider =
     StateProvider<RadarModeKind>((ref) => RadarModeKind.gym);
 
-class _RadarScheduleButton extends StatelessWidget {
-  const _RadarScheduleButton();
+class _TutorialTarget extends ConsumerStatefulWidget {
+  const _TutorialTarget({
+    required this.step,
+    required this.child,
+  });
+
+  final int step;
+  final Widget child;
+
+  @override
+  ConsumerState<_TutorialTarget> createState() => _TutorialTargetState();
+}
+
+class _TutorialTargetState extends ConsumerState<_TutorialTarget> {
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final box = context.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) return;
+      final rect = box.localToGlobal(Offset.zero) & box.size;
+      final current = ref.read(tutorialTargetRectsProvider);
+      if (current[widget.step] == rect) return;
+      ref.read(tutorialTargetRectsProvider.notifier).state = {
+        ...current,
+        widget.step: rect,
+      };
+    });
+    return widget.child;
+  }
+}
+
+class _TutorialPulse extends StatefulWidget {
+  const _TutorialPulse({
+    required this.isActive,
+    required this.child,
+  });
+
+  final bool isActive;
+  final Widget child;
+
+  @override
+  State<_TutorialPulse> createState() => _TutorialPulseState();
+}
+
+class _TutorialPulseState extends State<_TutorialPulse>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 1.13).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    if (widget.isActive) _controller.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant _TutorialPulse oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive == oldWidget.isActive) return;
+    if (widget.isActive) {
+      _controller.repeat(reverse: true);
+    } else {
+      _controller.stop();
+      _controller.animateTo(0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AnimatedBuilder(
+      animation: _scale,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: widget.isActive ? _scale.value : 1.0,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: widget.isActive
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFFF4436C).withValues(alpha: 0.42),
+                        blurRadius: 20,
+                        spreadRadius: 3,
+                      ),
+                    ]
+                  : const [],
+            ),
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
 
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.05),
-        border: Border.all(
+class _RadarScheduleButton extends ConsumerWidget {
+  const _RadarScheduleButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tutorial = ref.watch(tutorialProvider);
+    final isHighlighted = tutorial.isActive && tutorial.currentStep == 1;
+
+    return _TutorialPulse(
+      isActive: isHighlighted,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
           color: isDark
-              ? Colors.white.withValues(alpha: 0.12)
-              : Colors.black.withValues(alpha: 0.08),
-          width: 1.5,
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
+          border: Border.all(
+            color: isHighlighted
+                ? const Color(0xFFF4436C).withValues(alpha: 0.62)
+                : isDark
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : Colors.black.withValues(alpha: 0.08),
+            width: 1.5,
+          ),
         ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        shape: const CircleBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => showRadarScheduleModal(context),
-          child: const Center(
-            child: Icon(
-              LucideIcons.clock,
-              size: 20,
-              color: Colors.white70,
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () {
+              showRadarScheduleModal(context);
+              if (isHighlighted) {
+                ref.read(tutorialProvider.notifier).nextStep();
+              }
+            },
+            child: const Center(
+              child: Icon(
+                LucideIcons.clock,
+                size: 20,
+                color: Colors.white70,
+              ),
             ),
           ),
         ),
@@ -1257,6 +1599,7 @@ class _PulseIcon extends StatefulWidget {
   final IconData icon;
   final Color color;
   final bool isActive;
+  final bool isHighlighted;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -1264,6 +1607,7 @@ class _PulseIcon extends StatefulWidget {
     required this.icon,
     required this.color,
     required this.isActive,
+    this.isHighlighted = false,
     required this.onTap,
     required this.onLongPress,
   });
@@ -1288,14 +1632,16 @@ class _PulseIconState extends State<_PulseIcon>
       CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
     );
 
-    if (widget.isActive) _ctrl.repeat(reverse: true);
+    if (widget.isActive || widget.isHighlighted) _ctrl.repeat(reverse: true);
   }
 
   @override
   void didUpdateWidget(_PulseIcon oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isActive != oldWidget.isActive) {
-      if (widget.isActive) {
+    final shouldPulse = widget.isActive || widget.isHighlighted;
+    final wasPulsing = oldWidget.isActive || oldWidget.isHighlighted;
+    if (shouldPulse != wasPulsing) {
+      if (shouldPulse) {
         _ctrl.repeat(reverse: true);
       } else {
         _ctrl.stop();
@@ -1333,16 +1679,16 @@ class _PulseIconState extends State<_PulseIcon>
             height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: widget.isActive
+              color: widget.isActive || widget.isHighlighted
                   ? widget.color.withValues(alpha: 0.2)
                   : inactiveBgColor,
               border: Border.all(
-                color: widget.isActive
+                color: widget.isActive || widget.isHighlighted
                     ? widget.color.withValues(alpha: 0.6)
                     : inactiveBorderColor,
                 width: 1.5,
               ),
-              boxShadow: widget.isActive
+              boxShadow: widget.isActive || widget.isHighlighted
                   ? [
                       BoxShadow(
                         color: widget.color.withValues(alpha: 0.2),
@@ -1353,12 +1699,15 @@ class _PulseIconState extends State<_PulseIcon>
                   : [],
             ),
             child: Transform.scale(
-              scale: widget.isActive ? _pulse.value : 1.0,
+              scale:
+                  widget.isActive || widget.isHighlighted ? _pulse.value : 1.0,
               child: Center(
                 child: Icon(
                   widget.icon,
                   size: 20,
-                  color: widget.isActive ? widget.color : inactiveIconColor,
+                  color: widget.isActive || widget.isHighlighted
+                      ? widget.color
+                      : inactiveIconColor,
                 ),
               ),
             ),
@@ -1696,9 +2045,14 @@ class _PowerSavePillState extends State<_PowerSavePill>
 
 class _PulsingRadarButton extends StatefulWidget {
   final bool isScanning;
+  final bool isHighlighted;
   final VoidCallback onTap;
 
-  const _PulsingRadarButton({required this.isScanning, required this.onTap});
+  const _PulsingRadarButton({
+    required this.isScanning,
+    this.isHighlighted = false,
+    required this.onTap,
+  });
 
   @override
   State<_PulsingRadarButton> createState() => _PulsingRadarButtonState();
@@ -1715,14 +2069,16 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    if (widget.isScanning) _pulseController.repeat();
+    if (widget.isScanning || widget.isHighlighted) _pulseController.repeat();
   }
 
   @override
   void didUpdateWidget(_PulsingRadarButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isScanning != oldWidget.isScanning) {
-      if (widget.isScanning) {
+    final shouldPulse = widget.isScanning || widget.isHighlighted;
+    final wasPulsing = oldWidget.isScanning || oldWidget.isHighlighted;
+    if (shouldPulse != wasPulsing) {
+      if (shouldPulse) {
         _pulseController.repeat();
       } else {
         _pulseController.stop();
@@ -1749,7 +2105,7 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
           alignment: Alignment.center,
           children: [
             // Expanding ripple rings when scanning
-            if (widget.isScanning)
+            if (widget.isScanning || widget.isHighlighted)
               ...List.generate(3, (index) {
                 return AnimatedBuilder(
                   animation: _pulseController,
@@ -1762,9 +2118,9 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
+                          color: (widget.isHighlighted
+                                  ? const Color(0xFFF4436C)
+                                  : Theme.of(context).colorScheme.onSurface)
                               .withValues(alpha: 1.0 - progress),
                           width: 1.5,
                         ),
@@ -1786,7 +2142,7 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
                   width: 100,
                   height: 100,
                   child: TrembleRadarHeart(
-                    isScanning: widget.isScanning,
+                    isScanning: widget.isScanning || widget.isHighlighted,
                     size: 100,
                     color: Colors.white,
                   ),

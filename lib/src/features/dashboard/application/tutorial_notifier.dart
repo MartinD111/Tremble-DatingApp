@@ -1,21 +1,28 @@
+import 'dart:ui';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum TutorialPhase { hidden, optIn, active }
+
 class TutorialState {
-  final bool isActive;
+  final TutorialPhase phase;
   final int currentStep;
 
   const TutorialState({
-    required this.isActive,
+    required this.phase,
     required this.currentStep,
   });
 
+  bool get isActive => phase == TutorialPhase.active;
+  bool get showOptIn => phase == TutorialPhase.optIn;
+
   TutorialState copyWith({
-    bool? isActive,
+    TutorialPhase? phase,
     int? currentStep,
   }) {
     return TutorialState(
-      isActive: isActive ?? this.isActive,
+      phase: phase ?? this.phase,
       currentStep: currentStep ?? this.currentStep,
     );
   }
@@ -27,33 +34,38 @@ class TutorialNotifier extends Notifier<TutorialState> {
 
   @override
   TutorialState build() {
-    return const TutorialState(isActive: false, currentStep: 0);
+    return const TutorialState(phase: TutorialPhase.hidden, currentStep: 0);
   }
 
   Future<void> checkFirstLaunch() async {
     final prefs = await SharedPreferences.getInstance();
     final hasSeen = prefs.getBool(prefsKey) ?? false;
     if (!hasSeen) {
-      state = const TutorialState(isActive: true, currentStep: 0);
+      state = const TutorialState(phase: TutorialPhase.optIn, currentStep: 0);
     }
   }
 
-  void nextStep() {
+  void startTutorial() {
+    state = const TutorialState(phase: TutorialPhase.active, currentStep: 0);
+  }
+
+  Future<void> nextStep() async {
+    if (!state.isActive) return;
     if (state.currentStep < lastStep) {
       state = state.copyWith(currentStep: state.currentStep + 1);
       return;
     }
-    completeTutorial();
+    await completeTutorial();
   }
 
   void previousStep() {
-    if (state.currentStep > 0) {
+    if (state.isActive && state.currentStep > 0) {
       state = state.copyWith(currentStep: state.currentStep - 1);
     }
   }
 
   Future<void> completeTutorial() async {
-    state = const TutorialState(isActive: false, currentStep: 0);
+    state = const TutorialState(phase: TutorialPhase.hidden, currentStep: 0);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(prefsKey, true);
   }
@@ -61,10 +73,13 @@ class TutorialNotifier extends Notifier<TutorialState> {
   Future<void> resetTutorial() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(prefsKey, false);
-    state = const TutorialState(isActive: true, currentStep: 0);
+    state = const TutorialState(phase: TutorialPhase.optIn, currentStep: 0);
   }
 }
 
 final tutorialProvider = NotifierProvider<TutorialNotifier, TutorialState>(
   TutorialNotifier.new,
 );
+
+final tutorialTargetRectsProvider =
+    StateProvider<Map<int, Rect>>((ref) => const {});

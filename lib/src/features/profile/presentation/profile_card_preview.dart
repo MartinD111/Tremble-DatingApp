@@ -157,23 +157,6 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                                       }),
                                     ),
                                   ),
-                                // Traveler status badge
-                                if (user.isTraveler)
-                                  Positioned(
-                                    top: 12,
-                                    left: 12,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            Colors.black.withValues(alpha: 0.6),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: const Text('🌴',
-                                          style: TextStyle(fontSize: 16)),
-                                    ),
-                                  ),
                               ],
                             ),
                           ),
@@ -194,6 +177,30 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              if (user.isTraveler) ...[
+                                const SizedBox(width: 8),
+                                Tooltip(
+                                  message: t('tourist_badge_tooltip', lang),
+                                  child: Container(
+                                    width: 30,
+                                    height: 30,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: const Color(0xFFF4436C)
+                                          .withValues(alpha: 0.14),
+                                      border: Border.all(
+                                        color: const Color(0xFFF4436C)
+                                            .withValues(alpha: 0.42),
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      LucideIcons.plane,
+                                      color: Color(0xFFF4436C),
+                                      size: 15,
+                                    ),
+                                  ),
+                                ),
+                              ],
                               if (user.birthDate != null) ...[
                                 const SizedBox(width: 8),
                                 Text(

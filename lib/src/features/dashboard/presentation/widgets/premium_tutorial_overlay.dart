@@ -1,6 +1,5 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -17,11 +16,13 @@ class PremiumTutorialOverlay extends ConsumerWidget {
     final state = ref.watch(tutorialProvider);
     if (!state.isActive) return const SizedBox.shrink();
     final lang = ref.watch(appLanguageProvider);
+    final targetRects = ref.watch(tutorialTargetRectsProvider);
 
     final tutorialStep = _TutorialStep.forIndex(
       state.currentStep,
       MediaQuery.of(context),
       lang,
+      targetRects[state.currentStep],
     );
 
     return Positioned.fill(
@@ -30,8 +31,9 @@ class PremiumTutorialOverlay extends ConsumerWidget {
         child: Stack(
           children: [
             Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: _SpotlightHitTestGate(
+                center: tutorialStep.spotlightCenter,
+                radius: tutorialStep.spotlightRadius,
                 child: CustomPaint(
                   painter: SpotlightPainter(
                     center: tutorialStep.spotlightCenter,
@@ -75,53 +77,22 @@ class PremiumTutorialOverlay extends ConsumerWidget {
                         height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _StepDots(currentStep: state.currentStep),
-                        Row(
-                          children: [
-                            TextButton(
-                              onPressed: () => ref
-                                  .read(tutorialProvider.notifier)
-                                  .completeTutorial(),
-                              child: Text(
-                                t('tutorial_skip', lang),
-                                style: GoogleFonts.instrumentSans(
-                                  color: Colors.white.withValues(alpha: 0.52),
-                                  fontSize: 13,
-                                ),
-                              ),
+                        TextButton(
+                          onPressed: () => ref
+                              .read(tutorialProvider.notifier)
+                              .completeTutorial(),
+                          child: Text(
+                            t('tutorial_skip', lang),
+                            style: GoogleFonts.instrumentSans(
+                              color: Colors.white.withValues(alpha: 0.52),
+                              fontSize: 13,
                             ),
-                            const SizedBox(width: 8),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFF4436C),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              onPressed: () => ref
-                                  .read(tutorialProvider.notifier)
-                                  .nextStep(),
-                              child: Text(
-                                state.currentStep == TutorialNotifier.lastStep
-                                    ? t('tutorial_finish', lang)
-                                    : t('tutorial_next', lang),
-                                style: GoogleFonts.instrumentSans(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
@@ -179,71 +150,146 @@ class _TutorialStep {
   });
 
   factory _TutorialStep.forIndex(
-      int step, MediaQueryData mediaQuery, String lang) {
+    int step,
+    MediaQueryData mediaQuery,
+    String lang,
+    Rect? targetRect,
+  ) {
     final screenWidth = mediaQuery.size.width;
     final screenHeight = mediaQuery.size.height;
+    final center = targetRect?.center;
+    final radius = targetRect == null
+        ? null
+        : (targetRect.longestSide / 2).clamp(44.0, 140.0).toDouble();
 
     switch (step) {
       case 1:
         return _TutorialStep(
-          spotlightCenter: Offset(
-            screenWidth / 2,
-            screenHeight - 65 - mediaQuery.padding.bottom,
-          ),
-          spotlightRadius: 45,
+          spotlightCenter: center ??
+              Offset(
+                screenWidth - 46,
+                70 + mediaQuery.padding.top,
+              ),
+          spotlightRadius: radius ?? 45,
           title: t('tutorial_step1_title', lang),
           description: t('tutorial_step1_desc', lang),
           showCardAtTop: true,
         );
       case 2:
         return _TutorialStep(
-          spotlightCenter: Offset(
-            screenWidth / 2,
-            70 + mediaQuery.padding.top,
-          ),
-          spotlightRadius: 75,
+          spotlightCenter: center ??
+              Offset(
+                screenWidth * 0.38,
+                screenHeight - 65 - mediaQuery.padding.bottom,
+              ),
+          spotlightRadius: radius ?? 45,
           title: t('tutorial_step2_title', lang),
           description: t('tutorial_step2_desc', lang),
-          showCardAtTop: false,
+          showCardAtTop: true,
         );
       case 3:
         return _TutorialStep(
-          spotlightCenter: Offset(
-            screenWidth * 0.88,
-            screenHeight - 45 - mediaQuery.padding.bottom,
-          ),
-          spotlightRadius: 45,
+          spotlightCenter: center ??
+              Offset(
+                screenWidth * 0.62,
+                screenHeight - 65 - mediaQuery.padding.bottom,
+              ),
+          spotlightRadius: radius ?? 45,
           title: t('tutorial_step3_title', lang),
           description: t('tutorial_step3_desc', lang),
           showCardAtTop: true,
         );
       case 4:
         return _TutorialStep(
-          spotlightCenter: Offset(
-            screenWidth * 0.62,
-            screenHeight - 45 - mediaQuery.padding.bottom,
-          ),
-          spotlightRadius: 45,
+          spotlightCenter: center ??
+              Offset(
+                screenWidth * 0.86,
+                screenHeight - 65 - mediaQuery.padding.bottom,
+              ),
+          spotlightRadius: radius ?? 45,
           title: t('tutorial_step4_title', lang),
           description: t('tutorial_step4_desc', lang),
           showCardAtTop: true,
         );
       case 5:
         return _TutorialStep(
-          spotlightCenter: Offset(screenWidth / 2, screenHeight * 0.44),
-          spotlightRadius: 140,
+          spotlightCenter:
+              center ?? Offset(screenWidth / 2, screenHeight * 0.44),
+          spotlightRadius: radius ?? 140,
           title: t('tutorial_step5_title', lang),
           description: t('tutorial_step5_desc', lang),
           showCardAtTop: false,
         );
       default:
         return _TutorialStep(
-          spotlightCenter: Offset(screenWidth / 2, screenHeight * 0.44),
-          spotlightRadius: 135,
+          spotlightCenter: center ??
+              Offset(
+                46,
+                70 + mediaQuery.padding.top,
+              ),
+          spotlightRadius: radius ?? 45,
           title: t('tutorial_step0_title', lang),
           description: t('tutorial_step0_desc', lang),
-          showCardAtTop: false,
+          showCardAtTop: true,
         );
     }
+  }
+}
+
+class _SpotlightHitTestGate extends SingleChildRenderObjectWidget {
+  const _SpotlightHitTestGate({
+    required this.center,
+    required this.radius,
+    required super.child,
+  });
+
+  final Offset center;
+  final double radius;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderSpotlightHitTestGate(center: center, radius: radius);
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderSpotlightHitTestGate renderObject,
+  ) {
+    renderObject
+      ..center = center
+      ..radius = radius;
+  }
+}
+
+class _RenderSpotlightHitTestGate extends RenderProxyBox {
+  _RenderSpotlightHitTestGate({
+    required Offset center,
+    required double radius,
+  })  : _center = center,
+        _radius = radius;
+
+  Offset _center;
+  double _radius;
+
+  set center(Offset value) {
+    if (_center == value) return;
+    _center = value;
+    markNeedsPaint();
+  }
+
+  set radius(double value) {
+    if (_radius == value) return;
+    _radius = value;
+    markNeedsPaint();
+  }
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if ((position - _center).distance <= _radius) {
+      return false;
+    }
+    result.add(BoxHitTestEntry(this, position));
+    return true;
   }
 }

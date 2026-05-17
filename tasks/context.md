@@ -1,3 +1,37 @@
+## Session State — 2026-05-17 (Session 29)
+- Active Task: Interactive Tutorial Flow & Passive Tourist Icon Remediation — completed locally
+- Environment: Dev
+- Modified Files:
+    - `lib/src/core/translations.dart`
+    - `lib/src/features/dashboard/application/tutorial_notifier.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `lib/src/features/dashboard/presentation/widgets/premium_tutorial_overlay.dart`
+    - `lib/src/features/profile/presentation/profile_card_preview.dart`
+    - `lib/src/features/profile/presentation/profile_detail_screen.dart`
+    - `lib/src/features/settings/presentation/settings_screen.dart`
+    - `lib/src/shared/ui/liquid_nav_bar.dart`
+    - `test/features/dashboard/tutorial_notifier_test.dart`
+    - `tasks/context.md`
+    - `tasks/PLAN_interactive_tutorial_and_tourist_remediation.md`
+- Open Problems: BLOCKER-003 (RevenueCat), BLOCKER-005 (iOS dev provisioning for `com.pulse`)
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (60/60). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS.
+
+## Session Handoff
+- Completed:
+  - Reworked the premium tutorial state machine into hidden / opt-in / active phases with six interaction-driven steps and persisted completion.
+  - Added the startup quick tutorial opt-in bottom sheet and interactive step advancement from the mode button, schedule button, nav tabs, popups, and central radar button.
+  - Replaced the blurred tutorial overlay with a sharp graphite spotlight overlay that passes taps through inside the highlighted circle and blocks outside taps.
+  - Added dynamic target rect registration and pulsing highlights for top controls, nav bar destinations, and radar CTA.
+  - Removed the manual Traveler Mode switch from Settings and kept the tourist indicator as a passive profile badge sourced from existing `isTraveler`.
+  - Updated English and Slovenian tutorial / tourist badge translations.
+- In Progress: None.
+- Blocked:
+  - BLOCKER-003 (RevenueCat/Legal)
+  - BLOCKER-005 (Physical iPhone deploy cannot sign `com.pulse`; no matching development provisioning profile)
+- Next Action:
+  1. Run on a simulator or physical Android device and manually step through the tutorial to visually verify spotlight alignment and click-through behavior across viewports.
+  2. Commit the completed feature branch when ready.
+
 ## Session State — 2026-05-17 (Session 28)
 - Active Task: Gym Search UX & Premium Spotlight Tutorial Remediation — completed locally
 - Environment: Dev

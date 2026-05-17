@@ -5,11 +5,13 @@ class LiquidNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
   final List<LiquidNavItem> items;
+  final Set<int> pulsingIndexes;
   const LiquidNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
     required this.items,
+    this.pulsingIndexes = const {},
   });
 
   @override
@@ -79,6 +81,7 @@ class LiquidNavBar extends StatelessWidget {
                     final index = entry.key;
                     final item = entry.value;
                     final isSelected = currentIndex == index;
+                    final isPulsing = pulsingIndexes.contains(index);
 
                     return GestureDetector(
                       onTap: () => onTap(index),
@@ -87,22 +90,18 @@ class LiquidNavBar extends StatelessWidget {
                         width: itemWidth,
                         height: navHeight,
                         alignment: Alignment.center,
-                        child: AnimatedScale(
-                          duration: const Duration(milliseconds: 600),
-                          scale: isSelected ? 1.15 : 1.0,
-                          curve: Curves.easeOutQuart,
-                          child: Icon(
-                            item.icon,
-                            color: isSelected
-                                ? Colors.white
-                                : (isDark
-                                    ? Colors.white.withValues(alpha: 0.4)
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.4)),
-                            size: 28,
-                          ),
+                        child: _PulsingNavIcon(
+                          icon: item.icon,
+                          isSelected: isSelected,
+                          isPulsing: isPulsing,
+                          color: isSelected || isPulsing
+                              ? Colors.white
+                              : (isDark
+                                  ? Colors.white.withValues(alpha: 0.4)
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.4)),
                         ),
                       ),
                     );
@@ -113,6 +112,91 @@ class LiquidNavBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PulsingNavIcon extends StatefulWidget {
+  const _PulsingNavIcon({
+    required this.icon,
+    required this.isSelected,
+    required this.isPulsing,
+    required this.color,
+  });
+
+  final IconData icon;
+  final bool isSelected;
+  final bool isPulsing;
+  final Color color;
+
+  @override
+  State<_PulsingNavIcon> createState() => _PulsingNavIconState();
+}
+
+class _PulsingNavIconState extends State<_PulsingNavIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _scale = Tween<double>(begin: 1.0, end: 1.18).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    if (widget.isPulsing) _controller.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant _PulsingNavIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isPulsing != oldWidget.isPulsing) {
+      if (widget.isPulsing) {
+        _controller.repeat(reverse: true);
+      } else {
+        _controller.stop();
+        _controller.animateTo(0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _scale,
+      builder: (context, child) {
+        final pulseScale = widget.isPulsing ? _scale.value : 1.0;
+        return AnimatedScale(
+          duration: const Duration(milliseconds: 600),
+          scale: (widget.isSelected ? 1.15 : 1.0) * pulseScale,
+          curve: Curves.easeOutQuart,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: widget.isPulsing
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFFF4436C).withValues(alpha: 0.48),
+                        blurRadius: 18,
+                        spreadRadius: 2,
+                      ),
+                    ]
+                  : const [],
+            ),
+            child: Icon(widget.icon, color: widget.color, size: 28),
+          ),
+        );
+      },
     );
   }
 }
