@@ -1,3 +1,34 @@
+## Session State — 2026-05-17 (Session 28)
+- Active Task: Gym Search UX & Premium Spotlight Tutorial Remediation — completed locally
+- Environment: Dev
+- Modified Files:
+    - `lib/src/core/places_service.dart`
+    - `lib/src/features/gym/presentation/gym_search_widget.dart`
+    - `lib/src/features/dashboard/application/tutorial_notifier.dart`
+    - `lib/src/features/dashboard/presentation/widgets/premium_tutorial_overlay.dart`
+    - `lib/src/core/translations.dart`
+    - `tasks/context.md`
+    - `tasks/archive/PLAN_compatibility_visibility_v1.1.md`
+    - `tasks/archive/PLAN_premium_tutorial_flow.md`
+    - `tasks/archive/TREMBLE_STABILIZATION_OSM_PLAN.md`
+- Open Problems: BLOCKER-003 (RevenueCat), BLOCKER-005 (iOS dev provisioning for `com.pulse`)
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (59/59). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS.
+
+## Session Handoff
+- Completed:
+  - **Gym Search API Bias:** Added Slovenia-centered `locationBias` to `gymAutocomplete` so real Places API searches prioritize local gym results in dev.
+  - **Gym Search Dynamic Bias:** Refined gym autocomplete to use cached device location with a 50km Places bias when location permission is granted, falling back to the Slovenia-wide national bias otherwise.
+  - **Gym Search UX:** Added keyboard search submission, a suffix search button, immediate search execution, keyboard unfocus, loading state handling, and rose empty-result feedback.
+  - **Premium Tutorial Expansion:** Expanded the Premium Spotlight tutorial from 3 to 6 steps, adding Traveler Mode, Recap vs. Near Miss, and Set-and-Forget walkthrough copy plus dynamic spotlight coordinates.
+  - **Task Archiving:** Moved completed plan files into `tasks/archive/`.
+- In Progress: None.
+- Blocked:
+  - BLOCKER-003 (RevenueCat/Legal)
+  - BLOCKER-005 (Physical iPhone deploy cannot sign `com.pulse`; no matching development provisioning profile)
+- Next Action:
+  1. Run the app on a simulator/physical device and visually verify tutorial spotlight placement across small and large viewports.
+  2. Test gym search with a real `PLACES_KEY_DEV` against Slovenian gym names.
+
 ## Session State — 2026-05-17 (Session 27)
 - Active Task: iOS Permission Prompt Localization — completed locally
 - Environment: Dev

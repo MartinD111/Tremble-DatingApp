@@ -206,8 +206,8 @@ class _RitualStepState extends State<RitualStep>
     } else if (time < _tFreezeEnd) {
       return stop;
     } else if (time < _tConvergeEnd) {
-      final p = _easeInOutCubic(
-          (time - _tFreezeEnd) / (_tConvergeEnd - _tFreezeEnd));
+      final p =
+          _easeInOutCubic((time - _tFreezeEnd) / (_tConvergeEnd - _tFreezeEnd));
       return _lerpPt(stop, center, p);
     }
     return center;
@@ -238,8 +238,7 @@ class _RitualStepState extends State<RitualStep>
           final radarScanning = _t < _tConvergeEnd;
 
           // Stage opacity fades out 7.4 → 8.0
-          final stageOpacity =
-              1.0 - ((_t - 7.4) / 0.6).clamp(0.0, 1.0);
+          final stageOpacity = 1.0 - ((_t - 7.4) / 0.6).clamp(0.0, 1.0);
 
           // Radar geometry
           final radarSize = min(size.width, size.height) * 0.7;
@@ -263,10 +262,8 @@ class _RitualStepState extends State<RitualStep>
           final lockupW = logoEndSize + lockupGap + wordmarkEstW;
           final logoEndCenterX = (size.width - lockupW) / 2 + logoEndSize / 2;
           final logoEndCenterY = safeTop + 110.0;
-          final logoX =
-              center.dx + (logoEndCenterX - center.dx) * logoMove;
-          final logoY =
-              center.dy + (logoEndCenterY - center.dy) * logoMove;
+          final logoX = center.dx + (logoEndCenterX - center.dx) * logoMove;
+          final logoY = center.dy + (logoEndCenterY - center.dy) * logoMove;
           final logoSize = 52.0 + (logoEndSize - 52.0) * logoMove;
 
           return Stack(
@@ -383,7 +380,8 @@ class _RitualStepState extends State<RitualStep>
                         color: Colors.black.withValues(alpha: 0.18),
                       ),
                       child: CustomPaint(
-                        painter: _TrembleMarkPainter(pulseT: 0, animated: false),
+                        painter:
+                            _TrembleMarkPainter(pulseT: 0, animated: false),
                       ),
                     ),
                   ),
@@ -562,8 +560,8 @@ class _TrembleMarkPainter extends CustomPainter {
       ..moveTo(10, 5)
       ..cubicTo(27, -15, 44, -5, 44, 12)
       ..cubicTo(44, 28, 27, 42, 10, 50);
-    canvas.drawPath(mid,
-        stroke..color = Colors.white.withValues(alpha: _arcOpacity(0.33)));
+    canvas.drawPath(
+        mid, stroke..color = Colors.white.withValues(alpha: _arcOpacity(0.33)));
 
     // Inner arc
     final inner = Path()
@@ -672,7 +670,8 @@ class _RadarPainter extends CustomPainter {
 
     // Trailing fan with sweep gradient
     canvas.save();
-    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: center, radius: r)));
+    canvas
+        .clipPath(Path()..addOval(Rect.fromCircle(center: center, radius: r)));
     final sweepShader = SweepGradient(
       startAngle: theta - fan,
       endAngle: theta,
