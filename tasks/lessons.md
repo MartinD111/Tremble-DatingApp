@@ -1,5 +1,9 @@
 # Permanent Project Knowledge (Lessons)
 
+**Rule #60 — Never commit App Check debug tokens in native plist files.**
+[2026-05-17] iOS debug tokens must be supplied locally through ignored config or `--dart-define`, not stored in `ios/Runner/Info.plist`. Tracked plist files can ship into builds and expose debug credentials to anyone with repository access.
+Source: Login layout + Apple Sign-In implementation, May 2026.
+
 **Rule #59 — Capture Riverpod notifiers before modal routes that can outlive their widget.**
 [2026-05-17] Bottom sheets and dialogs can keep their button callbacks alive after a routing/profile refresh disposes the originating `ConsumerState`. Do not call `ref.read(...)` inside modal callbacks or immediately after awaited modal routes unless `mounted` is checked first. Capture the required notifiers before opening the modal, then use `ctx.mounted` only for modal navigation.
 Source: Device tutorial opt-in crash fix, May 2026.

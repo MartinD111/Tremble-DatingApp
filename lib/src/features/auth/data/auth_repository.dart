@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../core/api_client.dart';
 import '../../../core/event_geofence_service.dart';
 import '../../../core/hobby_utils.dart';
@@ -787,6 +791,64 @@ class AuthRepository {
     }
   }
 
+  // ── Apple Sign-In ────────────────────────────────────────────────────────
+  Future<AuthUser> signInWithApple() async {
+    try {
+      final rawNonce = _generateNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+
+      final idToken = appleCredential.identityToken;
+      if (idToken == null) {
+        throw FirebaseAuthException(
+          code: 'missing-apple-identity-token',
+          message: 'Apple did not return an identity token.',
+        );
+      }
+
+      final credential = OAuthProvider('apple.com').credential(
+        idToken: idToken,
+        rawNonce: rawNonce,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      final firebaseUser = userCredential.user!;
+      final givenName = appleCredential.givenName;
+      final familyName = appleCredential.familyName;
+      final displayName = [
+        if (givenName != null && givenName.trim().isNotEmpty) givenName.trim(),
+        if (familyName != null && familyName.trim().isNotEmpty)
+          familyName.trim(),
+      ].join(' ');
+
+      if (displayName.isNotEmpty && firebaseUser.displayName == null) {
+        await firebaseUser.updateDisplayName(displayName);
+      }
+
+      return _fetchUser(firebaseUser);
+    } catch (e) {
+      debugPrint("[Apple Sign-In] Error: $e");
+      rethrow;
+    }
+  }
+
+  String _generateNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(
+      length,
+      (_) => charset[random.nextInt(charset.length)],
+    ).join();
+  }
+
   // ── Register ─────────────────────────────────────────────────────────────
   Future<AuthUser> registerWithEmail(String email, String password) async {
     final cred = await _auth.createUserWithEmailAndPassword(
@@ -995,6 +1057,10 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
 
   Future<void> signInWithGoogle() async {
     state = await _repository.signInWithGoogle();
+  }
+
+  Future<void> signInWithApple() async {
+    state = await _repository.signInWithApple();
   }
 
   Future<void> register(String email, String password) async {

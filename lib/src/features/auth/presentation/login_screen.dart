@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../shared/ui/tremble_logo.dart';
@@ -9,6 +8,30 @@ import '../../../shared/ui/primary_button.dart';
 import '../../../core/translations.dart';
 import '../data/auth_repository.dart';
 import 'radar_background.dart';
+
+@immutable
+class LoginLanguageOption {
+  const LoginLanguageOption({
+    required this.code,
+    required this.flag,
+    required this.label,
+  });
+
+  final String code;
+  final String flag;
+  final String label;
+}
+
+const loginLanguageOptions = [
+  LoginLanguageOption(code: 'sl', flag: '🇸🇮', label: 'Slovenščina'),
+  LoginLanguageOption(code: 'en', flag: '🇬🇧', label: 'English'),
+  LoginLanguageOption(code: 'hr', flag: '🇭🇷', label: 'Hrvatski'),
+  LoginLanguageOption(code: 'de', flag: '🇩🇪', label: 'Deutsch'),
+  LoginLanguageOption(code: 'it', flag: '🇮🇹', label: 'Italiano'),
+  LoginLanguageOption(code: 'fr', flag: '🇫🇷', label: 'Français'),
+  LoginLanguageOption(code: 'hu', flag: '🇭🇺', label: 'Magyar'),
+  LoginLanguageOption(code: 'sr', flag: '🇷🇸', label: 'Srpski'),
+];
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
@@ -34,6 +57,13 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   String _authErrorMessage(Object e) {
     if (e is FirebaseAuthException) {
       switch (e.code) {
@@ -57,484 +87,424 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
     return 'Prijava ni uspela. Poskusi znova.';
   }
 
+  Future<void> _runAuthAction(Future<void> Function() action) async {
+    setState(() => _isLoading = true);
+    try {
+      await action();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_authErrorMessage(e))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     String tr(String key) => t(key, lang);
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 30;
+    final mediaQuery = MediaQuery.of(context);
+    final bottomPadding = mediaQuery.padding.bottom + 24;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: const Color(0xFF1A1A18),
-      body: RadarBackground(
-        backgroundColor: const Color(0xFF1A1A18),
-        child: Stack(
-          children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(30, 30, 30, bottomPadding),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const TrembleLogo(size: 140),
-                    const SizedBox(height: 20),
-                    Text("Tremble",
-                        style:
-                            Theme.of(context).textTheme.displayLarge?.copyWith(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -1,
-                                )),
+      body: SafeArea(
+        child: RadarBackground(
+          backgroundColor: const Color(0xFF1A1A18),
+          child: Stack(
+            children: [
+              Center(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    30,
+                    24,
+                    30,
+                    bottomPadding + mediaQuery.viewInsets.bottom,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const TrembleLogo(size: 140),
+                      const SizedBox(height: 20),
+                      Text("Tremble",
+                          style: Theme.of(context)
+                              .textTheme
+                              .displayLarge
+                              ?.copyWith(
+                                fontSize: 48,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -1,
+                              )),
 
-                    const SizedBox(height: 8),
-                    Text(tr('onb1_title'),
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontSize: 16,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.7),
-                              letterSpacing: 0.5,
-                            )),
-                    const SizedBox(height: 50),
-
-                    // Email Input
-                    TextField(
-                      controller: _emailController,
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface),
-                      decoration: InputDecoration(
-                        labelText: tr('email'),
-                        labelStyle: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.7)),
-                        prefixIcon: Icon(LucideIcons.mail,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.7)),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide.none,
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        filled: true,
-                        fillColor: Theme.of(context)
-                            .colorScheme
-                            .surface
-                            .withValues(alpha: 0.5),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Password Input
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface),
-                      decoration: InputDecoration(
-                        labelText: tr('password'),
-                        labelStyle: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.7)),
-                        prefixIcon: Icon(LucideIcons.lock,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.7)),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? LucideIcons.eyeOff
-                                : LucideIcons.eye,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.7),
-                            size: 20,
-                          ),
-                          onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide.none,
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        filled: true,
-                        fillColor: Theme.of(context)
-                            .colorScheme
-                            .surface
-                            .withValues(alpha: 0.5),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Forgot password link
-                    Align(
-                      alignment: Alignment.center,
-                      child: GestureDetector(
-                        onTap: () => context.push('/forgot-password'),
-                        child: Text(
-                          tr('forgot_password'),
+                      const SizedBox(height: 8),
+                      Text(tr('onb1_title'),
                           style:
-                              Theme.of(context).textTheme.labelMedium?.copyWith(
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontSize: 16,
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
                                         .withValues(alpha: 0.7),
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.7),
-                                  ),
+                                    letterSpacing: 0.5,
+                                  )),
+                      const SizedBox(height: 18),
+                      _LoginLanguageRow(
+                        currentCode: lang,
+                        onChanged: (code) {
+                          ref
+                              .read(appLanguageProvider.notifier)
+                              .setLanguage(code);
+                        },
+                      ),
+                      const SizedBox(height: 34),
+
+                      // Email Input
+                      TextField(
+                        controller: _emailController,
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface),
+                        decoration: InputDecoration(
+                          labelText: tr('email'),
+                          labelStyle: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.7)),
+                          prefixIcon: Icon(LucideIcons.mail,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.7)),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          filled: true,
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .surface
+                              .withValues(alpha: 0.5),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
 
-                    const SizedBox(height: 24),
+                      // Password Input
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface),
+                        decoration: InputDecoration(
+                          labelText: tr('password'),
+                          labelStyle: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.7)),
+                          prefixIcon: Icon(LucideIcons.lock,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.7)),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? LucideIcons.eyeOff
+                                  : LucideIcons.eye,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.7),
+                              size: 20,
+                            ),
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          filled: true,
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .surface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
 
-                    if (_isLoading)
-                      CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.primary)
-                    else
-                      PrimaryButton(
+                      // Forgot password link
+                      Align(
+                        alignment: Alignment.center,
+                        child: GestureDetector(
+                          onTap: () => context.push('/forgot-password'),
+                          child: Text(
+                            tr('forgot_password'),
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.7),
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.7),
+                                ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      if (_isLoading)
+                        CircularProgressIndicator(
+                            color: Theme.of(context).colorScheme.primary)
+                      else
+                        PrimaryButton(
                           text: tr('login'),
-                          onPressed: () async {
-                            setState(() => _isLoading = true);
-                            try {
-                              await ref.read(authStateProvider.notifier).login(
+                          onPressed: () => _runAuthAction(
+                            () => ref.read(authStateProvider.notifier).login(
                                   _emailController.text,
-                                  _passwordController.text);
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(_authErrorMessage(e))),
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _isLoading = false);
-                            }
-                          }),
+                                  _passwordController.text,
+                                ),
+                          ),
+                        ),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    // Google Sign-In Button
-                    if (!_isLoading) ...[
+                      if (!_isLoading) ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _SocialSignInButton(
+                                icon: 'G',
+                                text: tr('continue_with_google'),
+                                iconColor: const Color(0xFF4285F4),
+                                backgroundColor:
+                                    const Color(0xFF1E1E1E).withValues(
+                                  alpha: 0.86,
+                                ),
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.onSurface,
+                                borderColor: Theme.of(context)
+                                    .colorScheme
+                                    .outline
+                                    .withValues(alpha: 0.28),
+                                onTap: () => _runAuthAction(
+                                  () => ref
+                                      .read(authStateProvider.notifier)
+                                      .signInWithGoogle(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _SocialSignInButton(
+                                icon: '',
+                                text: tr('continue_with_apple'),
+                                iconColor: Colors.black,
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black,
+                                borderColor: Colors.white,
+                                onTap: () => _runAuthAction(
+                                  () => ref
+                                      .read(authStateProvider.notifier)
+                                      .signInWithApple(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Are you new Pill
                       GestureDetector(
                         onTap: () async {
-                          setState(() => _isLoading = true);
-                          try {
-                            await ref
-                                .read(authStateProvider.notifier)
-                                .signInWithGoogle();
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(_authErrorMessage(e))),
-                              );
-                            }
-                          } finally {
-                            if (mounted) setState(() => _isLoading = false);
+                          if (FirebaseAuth.instance.currentUser != null) {
+                            await FirebaseAuth.instance.signOut();
                           }
+                          if (context.mounted) context.push('/onboarding');
                         },
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
+                            color: Colors.transparent,
                             borderRadius: BorderRadius.circular(100),
                             border: Border.all(
                                 color: Theme.of(context)
                                     .colorScheme
                                     .outline
-                                    .withValues(alpha: 0.3)),
+                                    .withValues(alpha: 0.5)),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white,
-                                  border: Border.all(
-                                      color: Colors.grey.shade300, width: 0.5),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'G',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF4285F4),
-                                      height: 1,
-                                    ),
+                          child: Center(
+                            child: Text(
+                              tr('are_you_new'),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 16,
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                tr('continue_with_google'),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                      fontSize: 16,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Are you new Pill
-                    GestureDetector(
-                      onTap: () async {
-                        if (FirebaseAuth.instance.currentUser != null) {
-                          await FirebaseAuth.instance.signOut();
-                        }
-                        if (context.mounted) context.push('/onboarding');
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(100),
-                          border: Border.all(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outline
-                                  .withValues(alpha: 0.5)),
-                        ),
-                        child: Center(
-                          child: Text(
-                            tr('are_you_new'),
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelLarge
-                                ?.copyWith(
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                  fontSize: 16,
-                                ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    // Language selector pill at the bottom
-                    GestureDetector(
-                      onTap: () {
-                        _showLanguagePicker(context, lang, ref);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surface
-                              .withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outline
-                                  .withValues(alpha: 0.4)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.language,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withValues(alpha: 0.7),
-                                size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              availableLanguages.firstWhere(
-                                  (l) => l['code'] == lang,
-                                  orElse: () =>
-                                      availableLanguages.first)['label']!,
-                              style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                  fontSize: 14),
                             ),
-                            const SizedBox(width: 4),
-                            Icon(Icons.arrow_drop_down,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withValues(alpha: 0.7),
-                                size: 18),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  void _showLanguagePicker(
-      BuildContext context, String currentLang, WidgetRef ref) {
-    String tr(String key) => t(key, currentLang);
-    final isSlovenian = currentLang == 'sl';
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF1E1E2E),
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setStateB) {
-            String searchQuery = "";
-            final filteredLangs = availableLanguages.where((l) {
-              if (searchQuery.isEmpty) return true;
-              final q = searchQuery.toLowerCase();
-              final enName = l['englishName']?.toLowerCase() ?? '';
-              final natName = l['nativeName']?.toLowerCase() ?? '';
-              final trName = tr(l['translationKey'] ?? '').toLowerCase();
-              return enName.contains(q) ||
-                  natName.contains(q) ||
-                  trName.contains(q);
-            }).toList();
+class _LoginLanguageRow extends StatelessWidget {
+  const _LoginLanguageRow({
+    required this.currentCode,
+    required this.onChanged,
+  });
 
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(ctx).viewInsets.bottom,
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(ctx).size.height * 0.7,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isSlovenian ? 'Izberi jezik' : 'Select Language',
-                      style: GoogleFonts.instrumentSans(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+  final String currentCode;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final language in loginLanguageOptions)
+          Tooltip(
+            message: language.label,
+            child: Semantics(
+              button: true,
+              selected: language.code == currentCode,
+              label: language.label,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: () => onChanged(language.code),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: language.code == currentCode
+                        ? colorScheme.primary.withValues(alpha: 0.16)
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: language.code == currentCode
+                          ? colorScheme.primary
+                          : colorScheme.outline.withValues(alpha: 0.18),
+                      width: language.code == currentCode ? 1.4 : 1,
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      onChanged: (val) => setStateB(() => searchQuery = val),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: isSlovenian ? "Išči..." : "Search...",
-                        hintStyle: const TextStyle(color: Colors.white30),
-                        prefixIcon: const Icon(LucideIcons.search,
-                            color: Colors.white54),
-                        filled: true,
-                        fillColor: Colors.white10,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
+                  ),
+                  child: Text(
+                    language.flag,
+                    style: const TextStyle(fontSize: 18, height: 1),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _SocialSignInButton extends StatelessWidget {
+  const _SocialSignInButton({
+    required this.icon,
+    required this.text,
+    required this.iconColor,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    required this.borderColor,
+    required this.onTap,
+  });
+
+  final String icon;
+  final String text;
+  final Color iconColor;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final Color borderColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(100),
+        onTap: onTap,
+        child: Container(
+          height: 54,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(color: borderColor),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                icon,
+                style: TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                  color: iconColor,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    text,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: foregroundColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: filteredLangs.length,
-                        itemBuilder: (context, index) {
-                          final l = filteredLangs[index];
-                          final isSelected = l['code'] == currentLang;
-                          return InkWell(
-                            onTap: () {
-                              ref
-                                  .read(appLanguageProvider.notifier)
-                                  .setLanguage(l['code']!);
-                              Navigator.pop(ctx);
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 16),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withValues(alpha: 0.2)
-                                    : Colors.white.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Colors.transparent,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    l['label']!,
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.white70,
-                                      fontSize: 16,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  if (isSelected)
-                                    Icon(Icons.check_circle,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                        size: 20),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            );
-          },
-        );
-      },
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

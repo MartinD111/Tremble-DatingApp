@@ -1,3 +1,40 @@
+## Session State — 2026-05-17 22:51 CEST (Session 31)
+- Active Task: Login layout redesign and Apple Sign-In wiring — implemented locally on `main`
+- Environment: Dev
+- Modified Files:
+    - `ios/Runner/Info.plist`
+    - `ios/Runner/Runner.entitlements`
+    - `lib/src/features/auth/data/auth_repository.dart`
+    - `lib/src/features/auth/presentation/login_screen.dart`
+    - `macos/Flutter/GeneratedPluginRegistrant.swift`
+    - `pubspec.yaml`
+    - `pubspec.lock`
+    - `test/features/auth/login_screen_test.dart`
+    - `tasks/PLAN_login_layout_apple_sign_in.md`
+    - `tasks/context.md`
+    - `tasks/lessons.md`
+- Open Problems: BLOCKER-003 (RevenueCat/legal), BLOCKER-005 (iOS dev provisioning); Apple Developer/Firebase Console Apple provider setup still requires portal access and private key configuration outside git.
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (61/61). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS. `flutter build ios --debug --flavor dev --dart-define=FLAVOR=dev --no-codesign` SUCCESS. `plutil -lint` SUCCESS. Tracked secret/API pattern scan found no live secrets; only the plan note mentioning the removed App Check plist key.
+
+## Session Handoff
+- Completed:
+  - Reworked login screen safe-area layout so the language selector is no longer at the bottom and keyboard/home-indicator padding is explicit.
+  - Added compact flag language controls beneath the Tremble subtitle with instant `appLanguageProvider` updates.
+  - Replaced the single Google social sign-in button with 50/50 Google and Apple buttons.
+  - Added `sign_in_with_apple: ^6.1.4` and wired Apple Sign-In through Firebase OAuth with a generated SHA-256 nonce.
+  - Added Apple Sign-In entitlement to `ios/Runner/Runner.entitlements`.
+  - Removed the tracked iOS App Check debug token from `ios/Runner/Info.plist` and documented Rule #60.
+  - Added `test/features/auth/login_screen_test.dart` for the compact login language order.
+- In Progress: None.
+- Blocked:
+  - Apple Developer Portal App ID capability and provisioning profile regeneration require portal access.
+  - Firebase Console Apple provider setup requires Team ID, Key ID, and Apple private key; no private key was added to the repo.
+  - Physical iOS deploy remains blocked by BLOCKER-005.
+- Next Action:
+  1. Complete Apple Developer Portal App ID capability setup and regenerate provisioning profiles.
+  2. Enable/configure the Firebase Console Apple provider using Apple Team ID, Key ID, and private key outside git.
+  3. After portal/Firebase setup, manually verify Apple Sign-In on an iOS device/simulator using the dev flavor.
+
 ## Session State — 2026-05-17 21:09 CEST (Session 30)
 - Active Task: On-device bug fixes — completed locally
 - Environment: Dev

@@ -36,8 +36,6 @@
 		</array>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
-		<key>FirebaseAppCheckDebugToken</key>
-		<string>31C971EB-C133-4C47-92D4-A790B093D2FF</string>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSBluetoothAlwaysUsageDescription</key>
