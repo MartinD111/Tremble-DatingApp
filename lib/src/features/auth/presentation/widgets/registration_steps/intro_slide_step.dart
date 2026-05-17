@@ -234,7 +234,12 @@ class IntroSlideStep extends StatelessWidget {
 
           // ── Pinned Continue button ────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            padding: EdgeInsets.fromLTRB(
+              24,
+              8,
+              24,
+              MediaQuery.of(context).padding.bottom + 24,
+            ),
             child: ContinueButton(
               enabled: true,
               onTap: onNext,

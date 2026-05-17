@@ -61,14 +61,18 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     String tr(String key) => t(key, lang);
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 30;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: const Color(0xFF1A1A18),
       body: RadarBackground(
+        backgroundColor: const Color(0xFF1A1A18),
         child: Stack(
           children: [
             Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(30),
+                padding: EdgeInsets.fromLTRB(30, 30, 30, bottomPadding),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -127,7 +131,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                             .withValues(alpha: 0.5),
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 16),
 
                     // Password Input
                     TextField(

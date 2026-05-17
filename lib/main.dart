@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'src/app.dart';
 // This import is intentionally kept even though initializeBackgroundService()
@@ -22,6 +23,12 @@ import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await GoogleFonts.pendingFonts([
+    GoogleFonts.playfairDisplay(),
+    GoogleFonts.lora(),
+    GoogleFonts.instrumentSans(),
+  ]);
 
   // Ensure system navigation bar is transparent and consistent
   SystemChrome.setSystemUIOverlayStyle(

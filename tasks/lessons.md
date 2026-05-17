@@ -1,5 +1,9 @@
 # Permanent Project Knowledge (Lessons)
 
+**Rule #59 — Capture Riverpod notifiers before modal routes that can outlive their widget.**
+[2026-05-17] Bottom sheets and dialogs can keep their button callbacks alive after a routing/profile refresh disposes the originating `ConsumerState`. Do not call `ref.read(...)` inside modal callbacks or immediately after awaited modal routes unless `mounted` is checked first. Capture the required notifiers before opening the modal, then use `ctx.mounted` only for modal navigation.
+Source: Device tutorial opt-in crash fix, May 2026.
+
 **Rule #58 — Translation map key parity must be audited after adding copy.**
 [2026-05-17] When adding keys to `translations.dart`, verify `en` and `sl` parity immediately, and check other active language blocks for intentional fallback gaps. Missing localized keys silently fall back through `t()` and can hide incomplete localization during QA.
 Source: Localization audit, May 2026.
@@ -288,4 +292,3 @@ Source: Compatibility Score (Faza A) Verification, May 2026.
 **Rule #66 — Verify iOS storyboard background after `flutter_native_splash`.**
 [2026-05-17] Running `dart run flutter_native_splash:create` can reset `ios/Runner/Base.lproj/LaunchScreen.storyboard` view background to white even when generated `LaunchBackground` is dark graphite. Always inspect the storyboard diff and restore the background color to `#1A1A18` (`red=0.10196078431`, `green=0.10196078431`, `blue=0.09411764706`) before iOS verification.
 Source: iOS Splash Screen Fix, May 2026.
-

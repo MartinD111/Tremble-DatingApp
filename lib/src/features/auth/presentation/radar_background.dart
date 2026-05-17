@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 class RadarBackground extends StatefulWidget {
   final Widget child;
   final Color? accentColor;
+  final Color? backgroundColor;
 
   const RadarBackground({
     super.key,
     required this.child,
     this.accentColor,
+    this.backgroundColor,
   });
 
   @override
@@ -62,7 +64,8 @@ class _RadarBackgroundState extends State<RadarBackground>
   @override
   Widget build(BuildContext context) {
     // Determine base colors from Theme
-    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final bgColor =
+        widget.backgroundColor ?? Theme.of(context).scaffoldBackgroundColor;
     final primaryColor =
         widget.accentColor ?? Theme.of(context).colorScheme.primary;
 

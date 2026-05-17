@@ -1,3 +1,35 @@
+## Session State — 2026-05-17 21:09 CEST (Session 30)
+- Active Task: On-device bug fixes — completed locally
+- Environment: Dev
+- Modified Files:
+    - `ios/Runner.xcodeproj/project.pbxproj`
+    - `lib/main.dart`
+    - `lib/src/features/auth/presentation/login_screen.dart`
+    - `lib/src/features/auth/presentation/radar_background.dart`
+    - `lib/src/features/auth/presentation/widgets/registration_steps/intro_slide_step.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `tasks/context.md`
+    - `tasks/lessons.md`
+    - `tasks/PLAN_device_bug_fixes.md`
+- Open Problems: BLOCKER-003 (RevenueCat), BLOCKER-005 (iOS dev provisioning for physical-device deploy)
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (60/60). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS. `plutil -lint` SUCCESS. `flutter build ios --debug --flavor dev --dart-define=FLAVOR=dev --no-codesign` SUCCESS.
+
+## Session Handoff
+- Completed:
+  - Fixed tutorial opt-in modal crash by capturing Riverpod notifiers before opening the bottom sheet/dialog and avoiding disposed `ref` access after modal callbacks.
+  - Updated the iOS Firebase plist copy script so `tremble.dating.app.dev` selects the Dev `GoogleService-Info.plist`.
+  - Added safe-area-aware bottom padding on the intro slide continue button and login scroll view to prevent iPhone home-indicator cutoff/overflow.
+  - Locked the login radar background to Tremble graphite for the affected screen and removed the odd 15px password-field gap.
+  - Preloaded Playfair Display, Lora, and Instrument Sans before `runApp()` to reduce first-frame font fallback on cold boot.
+  - Added Rule #59 documenting the Riverpod modal lifecycle pattern.
+- In Progress: None.
+- Blocked:
+  - BLOCKER-003 (RevenueCat/Legal)
+  - BLOCKER-005 (Physical iPhone deploy still depends on valid Apple provisioning for `tremble.dating.app.dev` / dev targets)
+- Next Action:
+  1. Run on the iPhone 15 once provisioning is available and manually verify tutorial opt-in, Firebase bundle logs, intro slide overflow, login language pill visibility, and first-frame fonts.
+  2. Commit `fix/device-bug-fixes` after physical-device verification or after accepting simulator/build-only coverage.
+
 ## Session State — 2026-05-17 (Session 29)
 - Active Task: Interactive Tutorial Flow & Passive Tourist Icon Remediation — completed locally
 - Environment: Dev

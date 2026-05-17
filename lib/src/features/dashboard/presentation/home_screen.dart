@@ -74,6 +74,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       // Register FCM Token on dashboard load
       final user = ref.read(authStateProvider);
       if (user != null) {
@@ -85,6 +86,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _showTutorialOptInSheet() async {
     final lang = ref.read(appLanguageProvider);
+    final tutorialNotifier = ref.read(tutorialProvider.notifier);
+    final navNotifier = ref.read(navIndexProvider.notifier);
+    final radarModeNotifier = ref.read(selectedRadarModeProvider.notifier);
+
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -131,9 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Expanded(
                       child: TextButton(
                         onPressed: () async {
-                          await ref
-                              .read(tutorialProvider.notifier)
-                              .completeTutorial();
+                          await tutorialNotifier.completeTutorial();
                           if (ctx.mounted) Navigator.pop(ctx);
                         },
                         child: Text(t('tutorial_opt_in_no', lang)),
@@ -151,10 +154,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                         onPressed: () {
-                          ref.read(navIndexProvider.notifier).state = 0;
-                          ref.read(selectedRadarModeProvider.notifier).state =
-                              RadarModeKind.gym;
-                          ref.read(tutorialProvider.notifier).startTutorial();
+                          navNotifier.state = 0;
+                          radarModeNotifier.state = RadarModeKind.gym;
+                          tutorialNotifier.startTutorial();
                           if (ctx.mounted) Navigator.pop(ctx);
                         },
                         child: Text(t('tutorial_opt_in_yes', lang)),
@@ -168,7 +170,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       },
     );
-    _tutorialOptInShowing = false;
+    if (mounted) {
+      _tutorialOptInShowing = false;
+    }
   }
 
   Set<int> _tutorialNavPulseIndexes(TutorialState tutorial, bool isPremium) {
@@ -205,6 +209,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _showTutorialStepPopup({required int step}) async {
     final lang = ref.read(appLanguageProvider);
+    final navNotifier = ref.read(navIndexProvider.notifier);
+    final tutorialNotifier = ref.read(tutorialProvider.notifier);
+
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.35),
@@ -258,8 +265,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
-    ref.read(navIndexProvider.notifier).state = 0;
-    await ref.read(tutorialProvider.notifier).nextStep();
+    navNotifier.state = 0;
+    await tutorialNotifier.nextStep();
   }
 
   @override
