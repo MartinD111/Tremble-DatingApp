@@ -685,23 +685,110 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           Builder(builder: (context) {
             final isDarkBtn = Theme.of(context).brightness == Brightness.dark;
             final btnColor = isDarkBtn ? Colors.white : Colors.black87;
-            return SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => context.push('/profile-preview'),
-                icon: Icon(LucideIcons.eye, size: 18, color: btnColor),
-                label: Text(_t('profile_card_view'),
-                    style: GoogleFonts.instrumentSans(
-                        color: btnColor, fontWeight: FontWeight.w600)),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: btnColor.withValues(alpha: 0.3)),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100)),
+            return Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.push('/profile-preview'),
+                    icon: Icon(LucideIcons.eye, size: 18, color: btnColor),
+                    label: Text(_t('profile_card_view'),
+                        style: GoogleFonts.instrumentSans(
+                            color: btnColor, fontWeight: FontWeight.w600)),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: btnColor.withValues(alpha: 0.3)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100)),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                _buildPremiumProfileAction(user),
+              ],
             );
           }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumProfileAction(AuthUser user) {
+    if (!user.isPremium) {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () => context.push('/premium'),
+          icon: const Icon(
+            LucideIcons.sparkles,
+            size: 18,
+            color: Colors.white,
+          ),
+          label: Text(
+            _t('get_tremble_premium'),
+            style: GoogleFonts.instrumentSans(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFF4436C),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(100),
+            ),
+            elevation: 0,
+          ),
+        ),
+      );
+    }
+
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      useGlassEffect: true,
+      child: Row(
+        children: [
+          const Icon(
+            LucideIcons.checkCircle,
+            color: Color(0xFFF5C842),
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _t('active_plan'),
+                  style: GoogleFonts.instrumentSans(
+                    color: Colors.white54,
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  'Tremble Premium',
+                  style: GoogleFonts.instrumentSans(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => context.push('/premium'),
+            child: Text(
+              _t('change_plan'),
+              style: GoogleFonts.instrumentSans(
+                color: const Color(0xFFF4436C),
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
         ],
       ),
     );

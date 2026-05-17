@@ -215,6 +215,9 @@ const Map<String, Map<String, String>> _translations = {
     'app_language': 'App language',
     'account_settings': 'Account settings',
     'premium_account': 'Premium account',
+    'get_tremble_premium': 'Get Tremble Premium',
+    'active_plan': 'Active plan',
+    'change_plan': 'Change Plan',
 
     // --- UGC Safety ---
     'report_user': 'Report {name}',
@@ -1059,6 +1062,9 @@ const Map<String, Map<String, String>> _translations = {
     'app_language': 'Jezik aplikacije',
     'account_settings': 'Nastavitve računa',
     'premium_account': 'Premium račun',
+    'get_tremble_premium': 'Pridobi Tremble Premium',
+    'active_plan': 'Aktivni plan',
+    'change_plan': 'Spremeni plan',
     'map_title': 'Tremble Zemljevid',
     'active_people_count': '{count} aktivnih',
     'events_count': '{count} dogodkov',
@@ -1724,6 +1730,9 @@ const Map<String, Map<String, String>> _translations = {
     'app_language': 'App-Sprache',
     'account_settings': 'Kontoeinstellungen',
     'premium_account': 'Premium-Konto',
+    'get_tremble_premium': 'Tremble Premium holen',
+    'active_plan': 'Aktiver Plan',
+    'change_plan': 'Plan ändern',
 
     // --- UGC Safety ---
     'report_user': '{name} melden',
@@ -2466,6 +2475,9 @@ const Map<String, Map<String, String>> _translations = {
     'app_language': 'Lingua app',
     'account_settings': 'Impostazioni account',
     'premium_account': 'Account Premium',
+    'get_tremble_premium': 'Ottieni Tremble Premium',
+    'active_plan': 'Piano attivo',
+    'change_plan': 'Cambia piano',
 
     // --- Sicurezza UGC ---
     'report_user': 'Segnala {name}',
@@ -3203,6 +3215,9 @@ const Map<String, Map<String, String>> _translations = {
     'app_language': 'Langue de l\'application',
     'account_settings': 'Paramètres du compte',
     'premium_account': 'Compte Premium',
+    'get_tremble_premium': 'Obtenir Tremble Premium',
+    'active_plan': 'Plan actif',
+    'change_plan': 'Changer de plan',
 
     // --- UGC Sécurité ---
     'report_user': 'Signaler {name}',
@@ -3931,6 +3946,9 @@ const Map<String, Map<String, String>> _translations = {
     'auto_hide_nav': 'Automatski sakrij navigaciju',
     'account_settings': 'Postavke računa',
     'premium_account': 'Premium račun',
+    'get_tremble_premium': 'Aktiviraj Tremble Premium',
+    'active_plan': 'Aktivni plan',
+    'change_plan': 'Promijeni plan',
     'age_range': 'Dobni raspon',
     'height_label': 'Visina',
     'who_looking_for': 'Koga tražim?',
@@ -4618,6 +4636,9 @@ const Map<String, Map<String, String>> _translations = {
     'app_language': 'Jezik aplikacije',
     'account_settings': 'Podešavanja naloga',
     'premium_account': 'Premium nalog',
+    'get_tremble_premium': 'Aktiviraj Tremble Premium',
+    'active_plan': 'Aktivni plan',
+    'change_plan': 'Promeni plan',
 
     // --- UGC Safety ---
     'report_user': 'Prijavi korisnika {name}',
@@ -5356,6 +5377,9 @@ const Map<String, Map<String, String>> _translations = {
     'app_language': 'Alkalmazás nyelve',
     'account_settings': 'Fiókbeállítások',
     'premium_account': 'Prémium fiók',
+    'get_tremble_premium': 'Tremble Premium aktiválása',
+    'active_plan': 'Aktív csomag',
+    'change_plan': 'Csomag módosítása',
     'premium_free_notice':
         'A prémium fiók jelenleg ingyenes minden felhasználó számára, amíg el nem érjük a 10 000 regisztrált felhasználót az országodban.',
     'current_users_count':

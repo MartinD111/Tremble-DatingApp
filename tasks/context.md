@@ -1,3 +1,58 @@
+## Session State — 2026-05-18 00:07 CEST (Session 35)
+- Active Task: Premium Upgrade Flow 3D Card Shuffle implementation — completed locally
+- Environment: Dev
+- Modified Files:
+    - `lib/src/core/router.dart`
+    - `lib/src/core/translations.dart`
+    - `lib/src/features/settings/presentation/settings_screen.dart`
+    - `lib/src/features/settings/presentation/premium_screen.dart`
+    - `test/features/settings/premium_screen_test.dart`
+    - `tasks/PLAN_premium_upgrade_flow.md`
+    - `tasks/context.md`
+- Open Problems: BLOCKER-003 (RevenueCat/legal), BLOCKER-005 (iOS dev provisioning).
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (62/62). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS.
+
+## Session Handoff
+- Completed:
+  - Added the Settings profile-section Premium CTA for basic users and active-plan/change-plan status block for premium users.
+  - Registered the `/premium` route with `GradientScaffold(child: PremiumUpgradeScreen())`.
+  - Implemented the 3D credit-card shuffle carousel using `PageView.builder`, Y-axis tilt, scale contraction, translation stacking, opacity depth, and `ImageFiltered` blur.
+  - Mapped the four approved cards and pricing: Premium 7,99 €, Weekend Getaway 2,99 € Friday 19:00 to Sunday 19:00, Choices monthly/yearly/lifetime, and Free Tier.
+  - Kept upgrade/downgrade behavior simulated locally only; no real billing, RevenueCat, StoreKit, API keys, or client-side Firestore `isPremium` writes were added.
+  - Added a focused premium card order/pricing test.
+- In Progress: None.
+- Blocked:
+  - BLOCKER-003: Real purchase flow and subscription persistence remain blocked by RevenueCat/legal setup.
+  - BLOCKER-005: Physical iOS verification remains blocked by provisioning.
+- Next Action:
+  1. Manually open Settings -> Premium on a simulator/device and visually inspect the carousel on compact and large phones.
+  2. When RevenueCat/legal is unblocked, replace the local simulation layer with real entitlement-backed purchase state.
+
+## Session State — 2026-05-18 01:20 CEST (Session 34)
+- Active Task: Premium Upgrade Flow 3D Card Shuffle Design Plan finalized
+- Environment: Dev
+- Modified Files:
+    - `tasks/PLAN_premium_upgrade_flow.md`
+    - `tasks/context.md`
+- Open Problems: BLOCKER-003 (RevenueCat/legal), BLOCKER-005 (iOS dev provisioning).
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (61/61). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS. `flutter build ios --debug --flavor dev --dart-define=FLAVOR=dev --no-codesign` SUCCESS.
+
+## Session Handoff
+- Completed:
+  - Finalized the high-fidelity implementation plan (`tasks/PLAN_premium_upgrade_flow.md`) to integrate the brand-compliant stacked 3D shuffle card carousel inside the dedicated in-app `/premium` route.
+  - Sourced the "Weekend Getaway" tier details from the founder: pricing is **2,99 €**, valid from **Friday 7:00 PM to Sunday 7:00 PM**, matching Premium upgrades during that window.
+  - Specified card visual definitions (Deep Graphite, Copper/Gold, Frosted Glass) and customized dynamic action buttons (such as "Want to switch back to free plan?" for premium users viewing Card 4).
+  - Provided a step-by-step layout formula for Y-axis rotation, translation offset, scaling contraction, and dynamic ImageFiltered blur layers.
+- In Progress:
+  - Preparing instructions for Codex to execute the implementation safely.
+- Blocked:
+  - BLOCKER-003 (RevenueCat/Legal setup) - Mocking/simulating transactions.
+  - BLOCKER-005 (iOS dev provisioning) - Local build is fine, physical deployment is blocked by team provisioning.
+- Next Action:
+  1. Founder copies the prompt provided in our response and hands it to Codex to execute the code modifications error-free.
+  2. Codex implements the Settings triggers and the `PremiumUpgradeScreen` in `/lib/src/features/settings/presentation/premium_screen.dart`.
+  3. Run full verification loop (`flutter analyze`, `flutter test`, `flutter build apk`).
+
 ## Session State — 2026-05-17 22:51 CEST (Session 31)
 - Active Task: Login layout redesign and Apple Sign-In wiring — implemented locally on `main`
 - Environment: Dev
