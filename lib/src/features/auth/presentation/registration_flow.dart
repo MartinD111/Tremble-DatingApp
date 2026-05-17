@@ -1020,7 +1020,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       onComplete: completeRegistration,
                       tr: tr,
                     ),
-                    RitualStep(tr: tr),
+                    RitualStep(
+                      tr: tr,
+                      userName: _nameController.text.trim(),
+                      gender: _selectedGender ?? 'male',
+                    ),
                   ],
                 ),
               ),

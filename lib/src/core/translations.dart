@@ -786,8 +786,9 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_body':
         'Radar is active. The transmitter is running in the background. Put down your phone. We\'ll call you when someone is nearby.',
     'ritual_button': 'GOT IT',
-    'ritual_headline': 'You\'re all set.',
-    'ritual_subline': 'Time to find someone in the real world.',
+    'ritual_midline': 'You are ready to meet people like people.',
+    'ritual_headline': 'It runs while you live.',
+    'ritual_subline': 'Put it away. Look up. We\'ll do the rest.',
     'sim_someone_nearby': 'Someone is nearby (20 m)',
     'sim_instruction': 'Hold the 👋 button to send a greeting.',
     'sim_distance': '~20 m away',
@@ -1547,8 +1548,9 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_body':
         'Radar je aktiven. Oddajnik deluje v ozadju. Odloži telefon. Mi te pokličemo, ko bo kdo blizu.',
     'ritual_button': 'RAZUMEM',
-    'ritual_headline': 'Vse je pripravljeno.',
-    'ritual_subline': 'Čas je, da najdeš nekoga v resničnem svetu.',
+    'ritual_midline': 'Pripravljen si, da spoznaš ljudi kot ljudi.',
+    'ritual_headline': 'Deluje, medtem ko živiš.',
+    'ritual_subline': 'Odloži telefon. Poglej navzgor. Mi opravimo ostalo.',
     'sim_someone_nearby': 'Nekdo je v bližini (20 m)',
     'sim_instruction': 'Pridrži gumb 👋, da pošlješ pozdrav.',
     'sim_distance': '~20 m stran',
@@ -2250,8 +2252,9 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_body':
         'Radar ist aktiv. Der Sender läuft im Hintergrund. Leg dein Handy weg. Wir melden uns, wenn jemand in der Nähe ist.',
     'ritual_button': 'VERSTANDEN',
-    'ritual_headline': 'Alles bereit.',
-    'ritual_subline': 'Zeit, jemanden in der echten Welt zu finden.',
+    'ritual_midline': 'Du bist bereit, Menschen wie Menschen zu treffen.',
+    'ritual_headline': 'Es läuft, während du lebst.',
+    'ritual_subline': 'Leg es weg. Schau auf. Wir machen den Rest.',
     'sim_someone_nearby': 'Jemand ist in der Nähe (20 m)',
     'sim_instruction': 'Halte den 👋 Knopf gedrückt, um einen Gruß zu senden.',
     'sim_distance': '~20 m entfernt',
@@ -2991,8 +2994,9 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_body':
         'Il radar è attivo. Il trasmettitore funziona in background. Metti giù il telefono. Ti avviseremo quando qualcuno è vicino.',
     'ritual_button': 'CAPITO',
-    'ritual_headline': 'Tutto pronto.',
-    'ritual_subline': 'È ora di trovare qualcuno nel mondo reale.',
+    'ritual_midline': 'Sei pronto a incontrare persone come persone.',
+    'ritual_headline': 'Funziona mentre vivi.',
+    'ritual_subline': 'Mettilo via. Guarda in alto. Pensiamo a noi al resto.',
     'sim_someone_nearby': 'Qualcuno è vicino (20 m)',
     'sim_instruction': 'Tieni premuto il tasto 👋 per inviare un saluto.',
     'sim_distance': '~20 m di distanza',
@@ -3773,8 +3777,11 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_body':
         'Le radar est actif. L\'émetteur fonctionne en arrière-plan. Pose ton téléphone. Nous t\'avertirons quand quelqu\'un sera proche.',
     'ritual_button': 'COMPRIS',
-    'ritual_headline': 'Tout est prêt.',
-    'ritual_subline': 'Il est temps de trouver quelqu\'un dans le monde réel.',
+    'ritual_midline':
+        'Tu es prêt à rencontrer des gens comme des gens.',
+    'ritual_headline': 'Il fonctionne pendant que tu vis.',
+    'ritual_subline':
+        'Range-le. Lève les yeux. On s\'occupe du reste.',
     'sim_someone_nearby': 'Quelqu\'un est à proximité (20 m)',
     'sim_instruction': 'Maintenez le bouton 👋 enfoncé pour envoyer un salut.',
     'sim_distance': 'à environ 20 m',
@@ -4355,8 +4362,9 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_body':
         'Radar je aktivan. Odašiljač radi u pozadini. Odloži telefon. Javit ćemo ti se kad netko bude blizu.',
     'ritual_button': 'RAZUMIJEM',
-    'ritual_headline': 'Sve je spremno.',
-    'ritual_subline': 'Vrijeme je da pronađeš nekoga u stvarnom svijetu.',
+    'ritual_midline': 'Spreman si upoznati ljude kao ljude.',
+    'ritual_headline': 'Radi dok ti živiš.',
+    'ritual_subline': 'Spremi telefon. Podigni pogled. Ostalo rješavamo mi.',
     'sim_instruction': 'Drži tipku 👋 za slanje pozdrava.',
     'sim_someone_nearby': 'Netko je blizu (20 m)',
     'sim_distance': '~20 m udaljenosti',
@@ -5137,8 +5145,9 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_body':
         'Radar je aktivan. Odašiljač radi u pozadini. Odloži telefon. Javićemo ti kada neko bude u blizini.',
     'ritual_button': 'RAZUMEM',
-    'ritual_headline': 'Sve je spremno.',
-    'ritual_subline': 'Vreme je da pronađeš nekoga u stvarnom svetu.',
+    'ritual_midline': 'Spreman si da upoznaš ljude kao ljude.',
+    'ritual_headline': 'Radi dok ti živiš.',
+    'ritual_subline': 'Skloni telefon. Podigni pogled. Ostalo rešavamo mi.',
     'sim_someone_nearby': 'Neko je u blizini (20 m)',
     'sim_instruction': 'Drži 👋 dugme da pošalješ pozdrav.',
     'sim_distance': '~20 m udaljenosti',
@@ -5804,8 +5813,11 @@ const Map<String, Map<String, String>> _translations = {
     'ritual_body':
         'A radar aktív. Az adó a háttérben fut. Tedd le a telefont. Értesítünk, ha valaki a közelben van.',
     'ritual_button': 'ÉRTETTEM',
-    'ritual_headline': 'Minden készen áll.',
-    'ritual_subline': 'Ideje megtalálni valakit a valós világban.',
+    'ritual_midline':
+        'Készen állsz arra, hogy embereket emberként találkozz.',
+    'ritual_headline': 'Működik, miközben élsz.',
+    'ritual_subline':
+        'Tedd el. Nézz fel. A többit elintézzük mi.',
     'sim_someone_nearby': 'Valaki a közelben van (20 m)',
     'sim_instruction': 'Tartsd nyomva a 👋 gombot, hogy üdvözlést küldj.',
     'sim_distance': '~20 m-re',
