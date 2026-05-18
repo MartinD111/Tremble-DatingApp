@@ -1,4 +1,4 @@
-# ADR-002: Motion Vocabulary & Emotional Arc Map
+# ADR-007: Motion Vocabulary & Emotional Arc Map
 
 > **Status:** APPROVED  
 > **Author:** Antigravity (Technical Co-Founder)  

@@ -1,4 +1,4 @@
-# ADR-004: Node.js 22 Runtime Migration
+# ADR-006: Node.js 22 Runtime Migration
 
 ## Status
 Accepted
