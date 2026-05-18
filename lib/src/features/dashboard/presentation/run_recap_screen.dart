@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme.dart';
 import '../../../shared/ui/glass_card.dart';
+import '../../../shared/ui/warmth_empty_state.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../data/run_club_repository.dart';
@@ -123,7 +124,17 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
             // ── Active Section ──────────────────────────────────────
             activeAsync.when(
               data: (docs) => docs.isEmpty
-                  ? const SliverToBoxAdapter(child: SizedBox.shrink())
+                  ? SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: WarmthEmptyState(
+                          title: t('run_active_empty_title', lang),
+                          subtitle: t('run_active_empty_sub', lang),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18, vertical: 16),
+                        ),
+                      ),
+                    )
                   : SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       sliver: SliverList(
@@ -222,15 +233,9 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                   return SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(20),
-                      child: Text(
-                        t('no_encounters_history', lang),
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 11,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.2),
-                        ),
+                      child: WarmthEmptyState(
+                        title: t('run_history_empty_title', lang),
+                        subtitle: t('run_history_empty_sub', lang),
                       ),
                     ),
                   );

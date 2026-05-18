@@ -9,6 +9,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'radar_animation.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/liquid_nav_bar.dart'; // Import LiquidNavBar
+import '../../../shared/ui/warmth_empty_state.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../map/presentation/tremble_map_screen.dart';
 import '../../../core/theme.dart';
@@ -447,6 +448,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       data: (docs) => docs.isNotEmpty ? docs.first : null,
       orElse: () => null,
     );
+    final runModeState = ref.watch(runModeControllerProvider);
+    final showNearMissEmpty = isScanning &&
+        runModeState.isActive &&
+        activeRunCross == null &&
+        runCrossesAsync.maybeWhen(data: (_) => true, orElse: () => false);
 
     // Signal pulse key: increments each time a new run encounter arrives,
     // triggering the one-shot expanding ring on the radar canvas.
@@ -473,6 +479,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             radarMode,
             batteryLevel,
             activeMatch,
+            showNearMissEmpty,
             devSim,
             signalPulseKey),
         const TrembleMapScreen(),
@@ -500,6 +507,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             radarMode,
             batteryLevel,
             activeMatch,
+            showNearMissEmpty,
             devSim,
             signalPulseKey),
         const MatchesScreen(),
@@ -707,6 +715,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
+        if (showNearMissEmpty)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 80,
+            left: 20,
+            right: 20,
+            child: SafeArea(
+              bottom: false,
+              child: WarmthEmptyState(
+                title: t('near_miss_empty_title', lang),
+                subtitle: t('near_miss_empty_sub', lang),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                maxWidth: 320,
+              ),
+            ),
+          ),
 
         const PremiumTutorialOverlay(),
       ],
@@ -725,6 +749,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       String radarMode,
       int batteryLevel,
       wave_match.Match? activeMatch,
+      bool showNearMissEmpty,
       DevSimulationState devSim,
       int signalPulseKey) {
     final isDegraded = radarMode == 'degraded';
@@ -915,6 +940,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
 
                     if (isScanning) ...[
+                      if (!showNearMissEmpty)
+                        Positioned(
+                          bottom: 205,
+                          left: 24,
+                          right: 24,
+                          child: WarmthEmptyState(
+                            title: t('radar_empty_title', lang),
+                            subtitle: t('radar_empty_sub', lang),
+                          ).animate().fadeIn(duration: 240.ms),
+                        ),
                       Positioned(
                         bottom: 140,
                         left: 0,

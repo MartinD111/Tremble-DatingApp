@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/translations.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/tremble_header.dart';
+import '../../../shared/ui/warmth_empty_state.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/safety_repository.dart';
 
@@ -85,26 +85,12 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
             data: (blockedUsers) {
               if (blockedUsers.isEmpty) {
                 return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(LucideIcons.userCheck,
-                          size: 64,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.35)),
-                      const SizedBox(height: 16),
-                      Text(
-                        t('no_blocked_users', lang),
-                        style: GoogleFonts.instrumentSans(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
-                            fontSize: 18),
-                      ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: WarmthEmptyState(
+                      title: t('no_blocked_users', lang),
+                      subtitle: t('no_blocked_users_sub', lang),
+                    ),
                   ),
                 );
               }

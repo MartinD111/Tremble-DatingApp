@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
+import 'package:tremble/src/shared/ui/warmth_empty_state.dart';
 import 'package:tremble/src/features/matches/data/match_repository.dart';
 import 'package:tremble/src/features/auth/data/auth_repository.dart';
 import 'package:tremble/src/features/match/application/match_service.dart';
@@ -596,18 +597,9 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
 
                   if (visibleItems.isEmpty) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(LucideIcons.users, size: 48, color: dimColor),
-                          const SizedBox(height: 12),
-                          Text(
-                            t('no_matches', lang),
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.instrumentSans(
-                                color: subtextColor, fontSize: 16),
-                          ),
-                        ],
+                      child: WarmthEmptyState(
+                        title: t('matches_empty_title', lang),
+                        subtitle: t('matches_empty_sub', lang),
                       ),
                     );
                   }

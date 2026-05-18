@@ -1,3 +1,29 @@
+## Session State — 2026-05-18 23:03 CEST (Session 37)
+- Active Task: Warmth Empty States — contextual Tremble microcopy — completed locally
+- Environment: Dev
+- Modified Files:
+    - `lib/src/shared/ui/warmth_empty_state.dart`
+    - `lib/src/core/translations.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart`
+    - `lib/src/features/matches/presentation/matches_screen.dart`
+    - `lib/src/features/safety/presentation/blocked_users_screen.dart`
+    - `tasks/context.md`
+- Open Problems: BLOCKER-003 (RevenueCat/legal), BLOCKER-005 (iOS dev provisioning).
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (66/66).
+
+## Session Handoff
+- Completed:
+  - Added shared `WarmthEmptyState` glass-card empty-state treatment with Tremble rose signal mark, Playfair Display title, and Lora subtitle.
+  - Added English and Slovenian warmth microcopy for radar empty, near-miss empty, run active empty, run history empty, matches empty, and blocked users empty states.
+  - Replaced silent/generic empty branches in Home radar, Home near-miss, Run Recap active/history, Matches, and Blocked Users.
+- In Progress: None.
+- Blocked:
+  - BLOCKER-003: Real purchase flow and subscription persistence remain blocked by RevenueCat/legal setup.
+  - BLOCKER-005: Physical iOS verification remains blocked by provisioning for `com.pulse`.
+- Next Action:
+  1. Visually review the new empty cards on a compact and large phone viewport to confirm spacing around the radar button, run recap sections, and blocked users header.
+
 ## Session State — 2026-05-18 15:20 CEST (Session 36)
 - Active Task: HomeScreen dynamic layout RangeError & Navigation Bounds stabilization — completed
 
