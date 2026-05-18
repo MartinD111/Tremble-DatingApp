@@ -21,6 +21,7 @@ import '../../../shared/ui/primary_button.dart';
 import '../../../features/safety/screen_protection_service.dart';
 import '../../../features/profile/domain/public_profile.dart';
 import 'widgets/common_traits_widget.dart';
+import '../../../core/motion.dart';
 import '../../../core/theme.dart';
 
 class MatchRevealScreen extends ConsumerStatefulWidget {
@@ -141,174 +142,188 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen> {
 
           Center(
             child: partnerProfileAsync.when(
-              data: (profile) => SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 80),
-
-                    // Brand headline - architectural and stoic
-                    Text(
-                      t('mutual_wave', lang).toUpperCase(),
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: _rose,
-                        letterSpacing: -1.28, // -0.04em for 32px
-                      ),
+              data: (profile) => TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0, end: 1),
+                duration: TrembleMotion.theatrical,
+                curve: TrembleMotion.theatricalReveal,
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - value) * 24),
+                      child: child,
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      t('both_sent_wave', lang).toUpperCase(),
-                      style: GoogleFonts.instrumentSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: _warmCream.withValues(alpha: 0.4),
-                        letterSpacing: 2,
-                      ),
-                    ),
+                  );
+                },
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 80),
 
-                    const SizedBox(height: 56),
-
-                    // Partner avatar with rose glow
-                    Stack(
-                      children: [
-                        Hero(
-                          tag: 'match_avatar_${profile.id}',
-                          child: Container(
-                            width: 180,
-                            height: 180,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: _rose.withValues(alpha: 0.3),
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _rose.withValues(alpha: 0.15),
-                                  blurRadius: 40,
-                                  spreadRadius: 4,
-                                ),
-                              ],
-                            ),
-                            child: ClipOval(
-                              child: profile.primaryPhotoUrl.isNotEmpty
-                                  ? Image.network(
-                                      profile.primaryPhotoUrl,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(
-                                      color: Colors.grey[900],
-                                      child: const Icon(Icons.person,
-                                          size: 80, color: Colors.white10),
-                                    ),
-                            ),
-                          ),
-                        ),
-                        if (profile.isTraveler)
-                          Positioned(
-                            bottom: 8,
-                            right: 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: _deepGraphite.withValues(alpha: 0.85),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white12),
-                              ),
-                              child: const Text('🌴',
-                                  style: TextStyle(fontSize: 14)),
-                            ),
-                          ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Partner name and age as one intimate reveal line.
-                    Text(
-                      '${profile.name}, ${profile.age}',
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 32,
-                        fontStyle: FontStyle.italic,
-                        fontWeight: FontWeight.w600,
-                        color: _warmCream,
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Skupne lastnosti — free IN pro vidita enako
-                    // Brez score-a, brez %, samo konkretne skupne točke
-                    if (myAuthUser != null) ...[
-                      CommonTraitsWidget(
-                        myProfile: _authUserToMatchProfile(myAuthUser),
-                        partnerProfile: _publicProfileToMatchProfile(profile),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
-
-                    // PRO: gumb za celoten profil
-                    if (isPremium) ...[
-                      OutlinedButton(
-                        onPressed: () {
-                          // TODO: odpri ProfileDetailScreen za partnerId
-                          // context.push('/profile/$partnerId');
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _warmCream.withValues(alpha: 0.6),
-                          side: BorderSide(
-                              color: _warmCream.withValues(alpha: 0.15)),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(100)),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                        ),
-                        child: Text(
-                          'VIEW FULL PROFILE',
-                          style: GoogleFonts.instrumentSans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                          ),
+                      // Brand headline - architectural and stoic
+                      Text(
+                        t('mutual_wave', lang).toUpperCase(),
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: _rose,
+                          letterSpacing: -1.28, // -0.04em for 32px
                         ),
                       ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    const SizedBox(height: 16),
-
-                    // Primary CTA — uses shared PrimaryButton for consistency
-                    PrimaryButton(
-                      text: t('open_radar', lang).toUpperCase(),
-                      onPressed: () => context.pop(),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Secondary action — dismiss
-                    TextButton(
-                      onPressed: () => context.pop(),
-                      child: Text(
-                        t('decide_later', lang).toUpperCase(),
+                      const SizedBox(height: 12),
+                      Text(
+                        t('both_sent_wave', lang).toUpperCase(),
                         style: GoogleFonts.instrumentSans(
-                          color: _warmCream.withValues(alpha: 0.3),
-                          fontSize: 12,
-                          letterSpacing: 2,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
+                          color: _warmCream.withValues(alpha: 0.4),
+                          letterSpacing: 2,
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 48),
+                      const SizedBox(height: 56),
 
-                    // Pulse Intercept — architectural signal tiles
-                    _PulseInterceptConsole(match: match),
+                      // Partner avatar with rose glow
+                      Stack(
+                        children: [
+                          Hero(
+                            tag: 'match_avatar_${profile.id}',
+                            child: Container(
+                              width: 180,
+                              height: 180,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: _rose.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: _rose.withValues(alpha: 0.15),
+                                    blurRadius: 40,
+                                    spreadRadius: 4,
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: profile.primaryPhotoUrl.isNotEmpty
+                                    ? Image.network(
+                                        profile.primaryPhotoUrl,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Container(
+                                        color: Colors.grey[900],
+                                        child: const Icon(Icons.person,
+                                            size: 80, color: Colors.white10),
+                                      ),
+                              ),
+                            ),
+                          ),
+                          if (profile.isTraveler)
+                            Positioned(
+                              bottom: 8,
+                              right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: _deepGraphite.withValues(alpha: 0.85),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white12),
+                                ),
+                                child: const Text('🌴',
+                                    style: TextStyle(fontSize: 14)),
+                              ),
+                            ),
+                        ],
+                      ),
 
-                    const SizedBox(height: 60),
-                  ],
+                      const SizedBox(height: 32),
+
+                      // Partner name and age as one intimate reveal line.
+                      Text(
+                        '${profile.name}, ${profile.age}',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 32,
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w600,
+                          color: _warmCream,
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Skupne lastnosti — free IN pro vidita enako
+                      // Brez score-a, brez %, samo konkretne skupne točke
+                      if (myAuthUser != null) ...[
+                        CommonTraitsWidget(
+                          myProfile: _authUserToMatchProfile(myAuthUser),
+                          partnerProfile: _publicProfileToMatchProfile(profile),
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+
+                      // PRO: gumb za celoten profil
+                      if (isPremium) ...[
+                        OutlinedButton(
+                          onPressed: () {
+                            // TODO: odpri ProfileDetailScreen za partnerId
+                            // context.push('/profile/$partnerId');
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _warmCream.withValues(alpha: 0.6),
+                            side: BorderSide(
+                                color: _warmCream.withValues(alpha: 0.15)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                          ),
+                          child: Text(
+                            'VIEW FULL PROFILE',
+                            style: GoogleFonts.instrumentSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      const SizedBox(height: 16),
+
+                      // Primary CTA — uses shared PrimaryButton for consistency
+                      PrimaryButton(
+                        text: t('open_radar', lang).toUpperCase(),
+                        onPressed: () => context.pop(),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Secondary action — dismiss
+                      TextButton(
+                        onPressed: () => context.pop(),
+                        child: Text(
+                          t('decide_later', lang).toUpperCase(),
+                          style: GoogleFonts.instrumentSans(
+                            color: _warmCream.withValues(alpha: 0.3),
+                            fontSize: 12,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 48),
+
+                      // Pulse Intercept — architectural signal tiles
+                      _PulseInterceptConsole(match: match),
+
+                      const SizedBox(height: 60),
+                    ],
+                  ),
                 ),
               ),
               loading: () => const Center(

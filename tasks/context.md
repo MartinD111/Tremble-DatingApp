@@ -1,3 +1,26 @@
+## Session State — 2026-05-19 00:33 CEST (Session 41)
+- Active Task: ADR-002 TrembleMotion implementation — completed locally
+- Environment: Dev
+- Modified Files:
+    - `lib/src/core/motion.dart`
+    - `lib/src/features/match/presentation/match_reveal_screen.dart`
+    - `test/core/motion_test.dart`
+    - `tasks/context.md`
+- Open Problems: BLOCKER-003 (RevenueCat/legal), BLOCKER-005 (iOS dev provisioning).
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (68/68).
+
+## Session Handoff
+- Completed:
+  - Added `TrembleMotion` in `lib/src/core/motion.dart` with ADR-002 curves and standard durations.
+  - Applied `TrembleMotion.theatricalReveal` and `TrembleMotion.theatrical` to the Match Reveal content entrance.
+  - Added focused tests covering the motion curves and durations.
+- In Progress: None.
+- Blocked:
+  - BLOCKER-003: Real purchase flow and subscription persistence remain blocked by RevenueCat/legal setup.
+  - BLOCKER-005: Physical iOS verification remains blocked by provisioning for `com.pulse`.
+- Next Action:
+  1. Visually verify the Match Reveal entrance timing on a physical Android device; iPhone verification remains blocked until provisioning is fixed.
+
 ## Session State — 2026-05-18 23:50 CEST (Session 40)
 - Active Task: Loader and error color cleanup — completed locally
 - Environment: Dev
