@@ -19,12 +19,12 @@ Eliminate the intermittent Android/iOS blank "empty home screen" state by (a) de
   - All other business logic and BLE services.
 
 ## 3. STEPS
-1. **Defensive Index Clamping:** 
+1. **Defensive Index Clamping:** ✅ DONE
    - Retrieve `navIndex` from `navIndexProvider` in `HomeScreen.build()`.
    - Calculate `final int safeNavIndex = navIndex.clamp(0, screens.length - 1);`.
    - Use `safeNavIndex` to look up the active widget in `screens[safeNavIndex]`, key the `KeyedSubtree` via `ValueKey<int>(safeNavIndex)`, and pass to the `LiquidNavBar` widget.
    - *Verification:* The build method compiles successfully and can never throw a `RangeError (Index out of range)` even if `navIndex` is temporarily greater than the size of the dynamic `screens` list.
-2. **Reactive Navigation Mapping on Status Transition:**
+2. **Reactive Navigation Mapping on Status Transition:** ✅ DONE
    - Listen to changes in the user's premium status reactively inside `HomeScreen.build()` using `ref.listen` on `authStateProvider.select((user) => user?.isPremium == true)`.
    - Implement the index conversion mapping to preserve Settings or Matches placement, and reset `Map` to `Radar` (index 0) if downgraded:
      - **Downgrade (Premium -> Free):**
@@ -36,13 +36,13 @@ Eliminate the intermittent Android/iOS blank "empty home screen" state by (a) de
        - Map `Settings (2)` to `Settings (3)`.
        - Keep `Radar (0)` as `Radar (0)`.
    - *Verification:* Transitioning user's premium status updates the active tab index smoothly without layout jumps or resetting the user to the starting page unless they were on the Premium Map.
-3. **Write Unit/Widget Tests:**
+3. **Write Unit/Widget Tests:** ✅ DONE
    - Add a focused widget/provider test inside a new test file `test/features/dashboard/navigation_bounds_test.dart` to verify that:
      - The home screen maps the navIndex defensively when premium status is updated.
      - Changing the premium status updates `navIndexProvider` with correct mapped values.
      - Clamping works for an out-of-bounds index (e.g. index 3 when free).
    - *Verification:* `flutter test test/features/dashboard/navigation_bounds_test.dart` passes.
-4. **Full Verification Loop:**
+4. **Full Verification Loop:** ✅ DONE
    - Run `flutter analyze` to ensure zero compilation or linter warnings.
    - Run `flutter test` to ensure all 62 original tests plus the new tests pass.
    - Run `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` to ensure the dev build works flawlessly.
