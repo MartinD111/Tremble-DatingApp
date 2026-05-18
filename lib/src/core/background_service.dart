@@ -282,7 +282,8 @@ void onStart(ServiceInstance service) async {
                     importance: Importance.defaultImportance,
                     priority: Priority.defaultPriority,
                     actions: [
-                      AndroidNotificationAction('RUN_CLUB_DEACTIVATE', 'Izklopi',
+                      AndroidNotificationAction(
+                          'RUN_CLUB_DEACTIVATE', 'Izklopi',
                           showsUserInterface: false),
                       AndroidNotificationAction(
                           'RUN_CLUB_KEEP_ACTIVE', 'Pusti aktivno',

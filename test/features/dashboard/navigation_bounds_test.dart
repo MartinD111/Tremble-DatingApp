@@ -68,7 +68,8 @@ void main() {
       isOnboarded: true,
     );
 
-    test('Remaps index correctly during Premium to Free transition (Downgrade)', () {
+    test('Remaps index correctly during Premium to Free transition (Downgrade)',
+        () {
       final mockNotifier = MockAuthNotifier(premiumUser);
       final container = ProviderContainer(
         overrides: [
@@ -90,7 +91,8 @@ void main() {
       expect(container.read(navIndexProvider), equals(2));
     });
 
-    test('Remaps index correctly during Free to Premium transition (Upgrade)', () {
+    test('Remaps index correctly during Free to Premium transition (Upgrade)',
+        () {
       final mockNotifier = MockAuthNotifier(freeUser);
       final container = ProviderContainer(
         overrides: [
@@ -112,7 +114,9 @@ void main() {
       expect(container.read(navIndexProvider), equals(3));
     });
 
-    test('Remaps index 1 (Map) to index 0 (Radar) during Premium to Free transition', () {
+    test(
+        'Remaps index 1 (Map) to index 0 (Radar) during Premium to Free transition',
+        () {
       final mockNotifier = MockAuthNotifier(premiumUser);
       final container = ProviderContainer(
         overrides: [
@@ -134,10 +138,11 @@ void main() {
       expect(container.read(navIndexProvider), equals(0));
     });
 
-    test('Defensively clamps invalid out-of-bounds indices in the widget tree', () {
+    test('Defensively clamps invalid out-of-bounds indices in the widget tree',
+        () {
       // Free users only have 3 screens: Radar (0), Matches (1), Settings (2).
       // Let's assert clamp behavior for Free users when navIndex is outside boundary.
-      
+
       // navIndex = -1
       expect((-1).clamp(0, 2), equals(0));
 

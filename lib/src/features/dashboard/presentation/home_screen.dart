@@ -388,20 +388,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // Free: 0: Radar, 1: Matches, 2: Settings
             // Premium: 0: Radar, 1: Map, 2: Matches, 3: Settings
             if (currentIndex == 1) {
-              ref.read(navIndexProvider.notifier).state = 2; // Matches stays Matches
+              ref.read(navIndexProvider.notifier).state =
+                  2; // Matches stays Matches
             } else if (currentIndex == 2) {
-              ref.read(navIndexProvider.notifier).state = 3; // Settings stays Settings
+              ref.read(navIndexProvider.notifier).state =
+                  3; // Settings stays Settings
             }
           } else {
             // Upgrade to Downgrade: Premium (4 tabs) -> Free (3 tabs)
             // Premium: 0: Radar, 1: Map, 2: Matches, 3: Settings
             // Free: 0: Radar, 1: Matches, 2: Settings
             if (currentIndex == 1) {
-              ref.read(navIndexProvider.notifier).state = 0; // Map redirects to Radar
+              ref.read(navIndexProvider.notifier).state =
+                  0; // Map redirects to Radar
             } else if (currentIndex == 2) {
-              ref.read(navIndexProvider.notifier).state = 1; // Matches stays Matches
+              ref.read(navIndexProvider.notifier).state =
+                  1; // Matches stays Matches
             } else if (currentIndex == 3) {
-              ref.read(navIndexProvider.notifier).state = 2; // Settings stays Settings
+              ref.read(navIndexProvider.notifier).state =
+                  2; // Settings stays Settings
             }
           }
         }

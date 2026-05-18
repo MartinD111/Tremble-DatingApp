@@ -384,7 +384,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => Consumer(
           builder: (context, ref, _) {
             final authUser = ref.watch(authStateProvider);
-            debugPrint('[DEBUG_ROUTE] / builder: authUser=${authUser?.id ?? 'null'} name=${authUser?.name}');
+            debugPrint(
+                '[DEBUG_ROUTE] / builder: authUser=${authUser?.id ?? 'null'} name=${authUser?.name}');
             if (authUser == null) return const _SplashLoadingScreen();
             return const GradientScaffold(child: HomeScreen());
           },
