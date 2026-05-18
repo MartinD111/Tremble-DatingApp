@@ -1,3 +1,28 @@
+## Session State — 2026-05-18 23:50 CEST (Session 40)
+- Active Task: Loader and error color cleanup — completed locally
+- Environment: Dev
+- Modified Files:
+    - `lib/src/core/theme.dart`
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart`
+    - `lib/src/features/match/presentation/match_reveal_screen.dart`
+    - `lib/src/features/safety/presentation/blocked_users_screen.dart`
+    - `tasks/context.md`
+- Open Problems: BLOCKER-003 (RevenueCat/legal), BLOCKER-005 (iOS dev provisioning).
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (66/66).
+
+## Session Handoff
+- Completed:
+  - Added a neutral `progressIndicatorTheme` so default loaders use white30 in dark mode and black26 in light mode.
+  - Removed explicit Rose loader colors from Blocked Users, Run Recap, and Match Reveal loading states.
+  - Replaced the Match Reveal profile error icon color with `TrembleTheme.roseDark`.
+  - Neutralized the Match Reveal image loading spinner from signal yellow to white30.
+- In Progress: None.
+- Blocked:
+  - BLOCKER-003: Real purchase flow and subscription persistence remain blocked by RevenueCat/legal setup.
+  - BLOCKER-005: Physical iOS verification remains blocked by provisioning for `com.pulse`.
+- Next Action:
+  1. Visually verify neutral loaders in Blocked Users, Run Recap, and Match Reveal on a dark-theme device.
+
 ## Session State — 2026-05-18 23:38 CEST (Session 39)
 - Active Task: Exclusive Playfair Match Reveal typography — completed locally
 - Environment: Dev

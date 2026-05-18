@@ -154,7 +154,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
               );
             },
             loading: () => const Center(
-              child: CircularProgressIndicator(color: Color(0xFFF4436C)),
+              child: CircularProgressIndicator(),
             ),
             error: (error, stack) => Center(
               child: Text('Error: $error',

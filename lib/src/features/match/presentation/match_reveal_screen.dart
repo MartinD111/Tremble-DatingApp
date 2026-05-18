@@ -21,6 +21,7 @@ import '../../../shared/ui/primary_button.dart';
 import '../../../features/safety/screen_protection_service.dart';
 import '../../../features/profile/domain/public_profile.dart';
 import 'widgets/common_traits_widget.dart';
+import '../../../core/theme.dart';
 
 class MatchRevealScreen extends ConsumerStatefulWidget {
   final Match match;
@@ -99,10 +100,13 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen> {
 
     // Still propagating — wait for the live document to have both userIds.
     if (partnerId.isEmpty) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: _deepGraphite,
         body: Center(
-          child: CircularProgressIndicator(color: _rose, strokeWidth: 2),
+          child: CircularProgressIndicator(
+            color: _warmCream.withValues(alpha: 0.3),
+            strokeWidth: 2,
+          ),
         ),
       );
     }
@@ -309,14 +313,18 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen> {
               ),
               loading: () => const Center(
                 child: CircularProgressIndicator(
-                  color: _rose,
+                  color: Colors.white30,
                   strokeWidth: 2,
                 ),
               ),
               error: (err, _) => Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.error_outline, color: _rose, size: 48),
+                  const Icon(
+                    Icons.error_outline,
+                    color: TrembleTheme.roseDark,
+                    size: 48,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     t('error_loading_profile', lang),
@@ -795,7 +803,7 @@ class __PulseReceiverButtonState extends ConsumerState<_PulseReceiverButton> {
                             height: 300,
                             child: Center(
                               child: CircularProgressIndicator(
-                                color: gold,
+                                color: Colors.white30,
                                 strokeWidth: 2,
                               ),
                             ),

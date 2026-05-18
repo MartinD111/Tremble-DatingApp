@@ -277,8 +277,7 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                 child: Center(
                   child: Padding(
                     padding: EdgeInsets.all(20),
-                    child: CircularProgressIndicator(
-                        color: TrembleTheme.rose, strokeWidth: 1),
+                    child: CircularProgressIndicator(strokeWidth: 1),
                   ),
                 ),
               ),

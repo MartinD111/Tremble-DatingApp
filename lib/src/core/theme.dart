@@ -163,6 +163,9 @@ class TrembleTheme {
       primaryColor: primaryColor,
       scaffoldBackgroundColor: scaffoldBg,
       colorScheme: colorScheme,
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: brightness == Brightness.dark ? Colors.white30 : Colors.black26,
+      ),
       // ── Buttons ──
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
