@@ -1,5 +1,5 @@
 ## Session State — 2026-05-19 00:33 CEST (Session 41)
-- Active Task: ADR-002 TrembleMotion implementation — completed locally
+- Active Task: ADR-007 TrembleMotion implementation — completed locally
 - Environment: Dev
 - Modified Files:
     - `lib/src/core/motion.dart`
@@ -11,7 +11,7 @@
 
 ## Session Handoff
 - Completed:
-  - Added `TrembleMotion` in `lib/src/core/motion.dart` with ADR-002 curves and standard durations.
+  - Added `TrembleMotion` in `lib/src/core/motion.dart` with ADR-007 curves and standard durations.
   - Applied `TrembleMotion.theatricalReveal` and `TrembleMotion.theatrical` to the Match Reveal content entrance.
   - Added focused tests covering the motion curves and durations.
 - In Progress: None.
