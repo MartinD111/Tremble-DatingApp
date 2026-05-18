@@ -376,6 +376,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final navIndex = ref.watch(navIndexProvider);
     final tutorial = ref.watch(tutorialProvider);
 
+    // Reactive mapping of active nav index during Premium/Free transitions
+    ref.listen<bool>(
+      authStateProvider.select((user) => user?.isPremium == true),
+      (previous, next) {
+        if (previous == null) return;
+        if (previous != next) {
+          final currentIndex = ref.read(navIndexProvider);
+          if (next) {
+            // Downgrade to Upgrade: Free (3 tabs) -> Premium (4 tabs)
+            // Free: 0: Radar, 1: Matches, 2: Settings
+            // Premium: 0: Radar, 1: Map, 2: Matches, 3: Settings
+            if (currentIndex == 1) {
+              ref.read(navIndexProvider.notifier).state = 2; // Matches stays Matches
+            } else if (currentIndex == 2) {
+              ref.read(navIndexProvider.notifier).state = 3; // Settings stays Settings
+            }
+          } else {
+            // Upgrade to Downgrade: Premium (4 tabs) -> Free (3 tabs)
+            // Premium: 0: Radar, 1: Map, 2: Matches, 3: Settings
+            // Free: 0: Radar, 1: Matches, 2: Settings
+            if (currentIndex == 1) {
+              ref.read(navIndexProvider.notifier).state = 0; // Map redirects to Radar
+            } else if (currentIndex == 2) {
+              ref.read(navIndexProvider.notifier).state = 1; // Matches stays Matches
+            } else if (currentIndex == 3) {
+              ref.read(navIndexProvider.notifier).state = 2; // Settings stays Settings
+            }
+          }
+        }
+      },
+    );
+
     ref.listen<TutorialState>(tutorialProvider, (previous, next) {
       if (!next.showOptIn || _tutorialOptInShowing || !mounted) return;
       _tutorialOptInShowing = true;
@@ -476,6 +508,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ];
     }
 
+    // Defensively clamp navIndex to prevent out of bounds RangeErrors
+    // during fast state/role transitions or initial bootup.
+    final int safeNavIndex = navIndex.clamp(0, screens.length - 1);
+
     final hideNavBarPref = ref.watch(hideNavBarPrefProvider);
     final isNavBarVisible = ref.watch(isNavBarVisibleProvider);
 
@@ -514,8 +550,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               },
               child: KeyedSubtree(
-                key: ValueKey<int>(navIndex),
-                child: screens[navIndex],
+                key: ValueKey<int>(safeNavIndex),
+                child: screens[safeNavIndex],
               ),
             ),
           ),
@@ -532,7 +568,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           left: 0,
           right: 0,
           child: LiquidNavBar(
-            currentIndex: navIndex,
+            currentIndex: safeNavIndex,
             items: navItems,
             pulsingIndexes: _tutorialNavPulseIndexes(tutorial, isPremium),
             onTap: (index) {
