@@ -176,22 +176,22 @@ const Map<String, Map<String, String>> _translations = {
         'Tap the clock to decide when radar should be active, so discovery works around your day instead of demanding attention.',
     'tutorial_step2_title': 'Map View',
     'tutorial_step2_desc':
-        'Tap the map tab to see where singles and activity signals are available without exposing exact private locations.',
-    'tutorial_step3_title': 'People',
+        'Switch to Gym Mode or Run Club when training. Meet people who visit the same gym or run on the same routes.',
+    'tutorial_step3_title': 'Traveler Mode',
     'tutorial_step3_desc':
-        'Tap the people tab to review matches and near misses after Tremble detects a meaningful connection.',
+        'Traveling or visiting another city? Enable Traveler Mode to expand your discovery radius or preview upcoming destinations. Tremble adapts dynamically to your new surroundings while maintaining extreme background efficiency.',
     'tutorial_step3_popup_title': 'People appear here',
     'tutorial_step3_popup_desc':
         'This is where matches, waves, and discovered people show up. Tremble brings you back to radar after this step.',
-    'tutorial_step4_title': 'Settings',
+    'tutorial_step4_title': 'Recap vs. Near Miss',
     'tutorial_step4_desc':
-        'Tap settings to control privacy, safety zones, notifications, and profile preferences.',
+        'Recap shows the places you\u2019ve visited and active events where your paths crossed with other members. Near Miss captures real-time high-fidelity BLE close encounters. Both let you discover who matches your vibe without actively swiping.',
     'tutorial_step4_popup_title': 'Control your boundaries',
     'tutorial_step4_popup_desc':
         'Settings are where you tune safety zones, privacy behavior, notifications, and your profile.',
     'tutorial_step5_title': 'Set and Forget',
     'tutorial_step5_desc':
-        'Tap the radar button to start scanning. Then put your phone away and let Tremble notify you when a genuine nearby connection appears.',
+        'Tremble is designed to be closed. Complete your profile, set your matching criteria, and let the app operate quietly in the background. Go live your life, and we will notify you the moment a genuine physical connection is discovered.',
     'tutorial_skip': 'Skip',
     'tutorial_next': 'Next',
     'tutorial_finish': 'Finish',
@@ -1020,22 +1020,22 @@ const Map<String, Map<String, String>> _translations = {
         'Tapni uro in določi, kdaj naj bo radar aktiven, da odkrivanje deluje po tvojem ritmu.',
     'tutorial_step2_title': 'Zemljevid',
     'tutorial_step2_desc':
-        'Tapni zavihek zemljevida in poglej, kje so single osebe in aktivni signali brez razkrivanja natančnih zasebnih lokacij.',
-    'tutorial_step3_title': 'Ljudje',
+        'Preklopi na Gym Mode ali Run Club, ko treniraš. Spoznaj ljudi, ki obiskujejo isti fitnes ali tečejo na enakih progah.',
+    'tutorial_step3_title': 'Potovalni način',
     'tutorial_step3_desc':
-        'Tapni zavihek ljudi in preglej ujemanja ter bližnja srečanja, ko Tremble zazna pomembno povezavo.',
+        'Potuješ ali obiskuješ drugo mesto? Vklopi potovalni način, da razširiš svoj radij iskanja ali predogledaš prihodnje destinacije. Tremble se dinamično prilagodi tvoji novi lokaciji ob minimalni porabi baterije.',
     'tutorial_step3_popup_title': 'Ljudje se prikažejo tukaj',
     'tutorial_step3_popup_desc':
         'Tukaj se prikažejo ujemanja, valovi in odkrite osebe. Po tem koraku te Tremble vrne na radar.',
-    'tutorial_step4_title': 'Nastavitve',
+    'tutorial_step4_title': 'Recap vs. Near Miss',
     'tutorial_step4_desc':
-        'Tapni nastavitve za varnostne cone, zasebnost, obvestila in nastavitve profila.',
+        'Recap (zgodovina) prikazuje mesta in dogodke, kjer so se tvoje poti križale z drugimi člani. Near Miss (bližnja srečanja) pa beleži realnočasovne, visoko natančne BLE stike v živo. Oboje brez nenehnega drsanja po ekranu.',
     'tutorial_step4_popup_title': 'Ti določaš meje',
     'tutorial_step4_popup_desc':
         'V nastavitvah urejaš varnostne cone, zasebnost, obvestila in svoj profil.',
     'tutorial_step5_title': 'Zapri in živi',
     'tutorial_step5_desc':
-        'Tapni radar, da začne skenirati. Nato pospravi telefon in pusti, da te Tremble obvesti, ko zazna pravo bližnjo povezavo.',
+        'Tremble je ustvarjen z namenom, da ga zapreš. Dokončaj svoj profil, določi kriterije ujemanja in pusti, da aplikacija tiho deluje v ozadju. Živi svoje življenje v živo, mi pa te obvestimo takoj, ko zaznamo pravo bližino.',
     'tutorial_skip': 'Preskoči',
     'tutorial_next': 'Naprej',
     'tutorial_finish': 'Končaj',
