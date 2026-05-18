@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -48,6 +50,13 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen> {
     };
     ScreenProtectionService.enable();
     ScreenProtectionService.addRecordingListener(_recordingListener);
+    unawaited(_playHeartbeatHaptic());
+  }
+
+  Future<void> _playHeartbeatHaptic() async {
+    await HapticFeedback.mediumImpact();
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    await HapticFeedback.mediumImpact();
   }
 
   @override

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../data/wave_repository.dart';
 
@@ -9,6 +12,7 @@ class WaveController extends _$WaveController {
   FutureOr<void> build() {}
 
   Future<void> handleWave(String targetUid) async {
+    unawaited(HapticFeedback.lightImpact());
     state = const AsyncLoading();
     state = await AsyncValue.guard(
         () => ref.read(waveRepositoryProvider).sendWave(targetUid));

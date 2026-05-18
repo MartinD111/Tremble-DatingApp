@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -42,6 +43,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
     if (_isGreeting) return;
     setState(() => _isGreeting = true);
     try {
+      await HapticFeedback.lightImpact();
       // Calls WaveRepository.sendWave() through MatchController
       final matched = await ref.read(matchControllerProvider.notifier).greet();
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'dart:ui';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'radar_animation.dart';
 import '../../../shared/ui/glass_card.dart';
@@ -291,9 +293,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (unseenMatch != null) {
         // Atomic: mark seen first to prevent re-trigger on next stream emission
         ref.read(waveRepositoryProvider).markMatchAsSeen(unseenMatch.id);
-        if (mounted) {
-          context.pushNamed('match_reveal', extra: unseenMatch);
-        }
+        unawaited(Future<void>.delayed(
+          const Duration(milliseconds: 400),
+          () {
+            if (mounted) {
+              context.pushNamed('match_reveal', extra: unseenMatch);
+            }
+          },
+        ));
       }
     });
 
@@ -611,6 +618,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   birthDate: devSim.profile!.birthDate,
                   pillState: _phaseToPillState(devSim.phase),
                   onWave: () {
+                    unawaited(HapticFeedback.lightImpact());
                     final notifier =
                         ref.read(devSimulationControllerProvider.notifier);
                     if (devSim.phase == DevSimPhase.waitingForAction) {
@@ -693,6 +701,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           name: profile.name,
                           age: profile.age,
                           onWave: () {
+                            unawaited(HapticFeedback.lightImpact());
                             ref
                                 .read(runClubRepositoryProvider)
                                 .sendWave(activeRunCross.id, user.id);

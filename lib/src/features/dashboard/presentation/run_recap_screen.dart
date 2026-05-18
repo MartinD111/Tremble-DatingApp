@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -394,7 +397,12 @@ class _RecapItem extends ConsumerWidget {
                   )
                 else
                   GestureDetector(
-                    onTap: onWave,
+                    onTap: onWave == null
+                        ? null
+                        : () {
+                            unawaited(HapticFeedback.lightImpact());
+                            onWave?.call();
+                          },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 9),

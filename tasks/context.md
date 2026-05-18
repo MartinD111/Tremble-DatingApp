@@ -1,3 +1,29 @@
+## Session State — 2026-05-18 23:22 CEST (Session 38)
+- Active Task: Emotional haptics and 400 ms match reveal pause — completed locally
+- Environment: Dev
+- Modified Files:
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart`
+    - `lib/src/features/match/presentation/match_reveal_screen.dart`
+    - `lib/src/features/match/presentation/wave_controller.dart`
+    - `lib/src/features/matches/presentation/match_dialog.dart`
+    - `lib/src/features/profile/presentation/profile_detail_screen.dart`
+    - `tasks/context.md`
+- Open Problems: BLOCKER-003 (RevenueCat/legal), BLOCKER-005 (iOS dev provisioning).
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (66/66).
+
+## Session Handoff
+- Completed:
+  - Added light haptic punctuation to real wave-send paths: dev match pill, LiveRunCard, Run Recap, WaveController, MatchDialog, and ProfileDetail.
+  - Added a two-pulse medium-impact heartbeat when `MatchRevealScreen` opens.
+  - Added a 400 ms delay between marking a foreground unseen match as seen and navigating to `match_reveal`.
+- In Progress: None.
+- Blocked:
+  - BLOCKER-003: Real purchase flow and subscription persistence remain blocked by RevenueCat/legal setup.
+  - BLOCKER-005: Physical iOS verification remains blocked by provisioning for `com.pulse`.
+- Next Action:
+  1. Manually verify haptic feel and reveal timing on a physical Android device; iPhone physical verification remains blocked until provisioning is fixed.
+
 ## Session State — 2026-05-18 23:03 CEST (Session 37)
 - Active Task: Warmth Empty States — contextual Tremble microcopy — completed locally
 - Environment: Dev

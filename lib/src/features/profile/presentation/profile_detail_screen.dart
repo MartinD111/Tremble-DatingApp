@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -490,6 +491,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
     bool isSent = false;
     VoidCallback onGreet = () async {
       try {
+        await HapticFeedback.lightImpact();
         if (matchDoc != null) {
           await ref.read(waveRepositoryProvider).sendGesture(matchDoc.id);
         } else {
