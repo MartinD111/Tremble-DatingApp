@@ -1281,6 +1281,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               'iconColor': IconUtils.getHairColor('gray_white')
             },
             {
+              'label': _t('hair_bald'),
+              'value': 'bald',
+              'icon': Icons.circle,
+              'iconColor': IconUtils.getHairColor('bald')
+            },
+            {
               'label': _t('hair_other'),
               'value': 'other',
               'icon': Icons.circle,

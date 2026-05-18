@@ -6,7 +6,7 @@ import 'step_shared.dart';
 import 'partner_preference_modal.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Nicotine product options — enum-like constants kept close to the UI
+// Nicotine product options — cannabis is handled separately as a toggle
 // ─────────────────────────────────────────────────────────────────────────────
 class NicotineOptions {
   static final List<Map<String, dynamic>> products = [
@@ -15,14 +15,13 @@ class NicotineOptions {
     {'key': 'iqos', 'icon': LucideIcons.zap},
     {'key': 'zyn', 'icon': LucideIcons.circle},
     {'key': 'shisha', 'icon': LucideIcons.flame},
-    {'key': 'cannabis', 'icon': LucideIcons.leaf},
   ];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NicotineStep — multi-select chips + "None" pill
+// NicotineStep — multi-select chips + separate cannabis toggle
 // ─────────────────────────────────────────────────────────────────────────────
-class NicotineStep extends StatelessWidget {
+class NicotineStep extends StatefulWidget {
   const NicotineStep({
     super.key,
     required this.selected,
@@ -33,19 +32,22 @@ class NicotineStep extends StatelessWidget {
     required this.tr,
   });
 
-  /// Currently selected product keys (empty = none).
   final List<String> selected;
-
-  /// Toggle a single product key on/off.
   final ValueChanged<String> onToggle;
   final VoidCallback onBack;
   final VoidCallback onNext;
-
-  /// Partner filter — single-choice string: 'any' | 'none_only' | 'no_preference'
   final ValueChanged<List<String>?> onSavePartner;
   final String Function(String) tr;
 
-  bool get _noneSelected => selected.isEmpty;
+  @override
+  State<NicotineStep> createState() => _NicotineStepState();
+}
+
+class _NicotineStepState extends State<NicotineStep> {
+  bool _showCannabisDisclaimer = false;
+
+  bool get _noneSelected => widget.selected.isEmpty;
+  bool get _cannabisSelected => widget.selected.contains('cannabis');
 
   @override
   Widget build(BuildContext context) {
@@ -59,86 +61,221 @@ class NicotineStep extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24),
-            TrembleBackButton(label: tr('back'), onPressed: onBack),
+            TrembleBackButton(
+                label: widget.tr('back'), onPressed: widget.onBack),
             const SizedBox(height: 24),
             StepHeader(
-              tr('nicotine_title'),
-              subtitle: tr('nicotine_subtitle'),
+              widget.tr('nicotine_title'),
+              subtitle: widget.tr('nicotine_subtitle'),
             ),
             const SizedBox(height: 28),
 
             // ── "None" pill ───────────────────────────────────────────────────
             _NicotinePill(
-              label: tr('nicotine_none'),
+              label: widget.tr('nicotine_none'),
               icon: LucideIcons.ban,
               selected: _noneSelected,
               isDark: isDark,
               primary: primary,
               onTap: () {
-                // Tapping "None" clears all selections
                 for (final p in NicotineOptions.products) {
-                  if (selected.contains(p['key'])) {
-                    onToggle(p['key'] as String);
+                  if (widget.selected.contains(p['key'])) {
+                    widget.onToggle(p['key'] as String);
                   }
+                }
+                if (_cannabisSelected) widget.onToggle('cannabis');
+                if (_showCannabisDisclaimer) {
+                  setState(() => _showCannabisDisclaimer = false);
                 }
               },
             ),
             const SizedBox(height: 16),
 
-            // ── Product grid ──────────────────────────────────────────────────
+            // ── Product grid (no cannabis) ────────────────────────────────────
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: NicotineOptions.products.map((p) {
                 final key = p['key'] as String;
                 final icon = p['icon'] as IconData;
-                final isSelected = selected.contains(key);
+                final isSelected = widget.selected.contains(key);
                 return _NicotineChip(
-                  label: tr('nicotine_$key'),
+                  label: widget.tr('nicotine_$key'),
                   icon: icon,
                   selected: isSelected,
                   isDark: isDark,
                   primary: primary,
-                  onTap: () => onToggle(key),
+                  onTap: () => widget.onToggle(key),
                 );
               }).toList(),
             ),
+            const SizedBox(height: 20),
+
+            // ── Cannabis toggle ───────────────────────────────────────────────
+            _CannabisToggleRow(
+              label: widget.tr('nicotine_cannabis'),
+              value: _cannabisSelected,
+              isDark: isDark,
+              primary: primary,
+              onChanged: (val) {
+                widget.onToggle('cannabis');
+                setState(() => _showCannabisDisclaimer = val);
+              },
+            ),
+
+            // ── Cannabis disclaimer ───────────────────────────────────────────
+            if (_showCannabisDisclaimer) ...[
+              const SizedBox(height: 12),
+              _CannabisDisclaimer(
+                text: widget.tr('cannabis_disclaimer'),
+                isDark: isDark,
+              ),
+            ],
 
             const Spacer(),
             ContinueButton(
-              enabled: true, // always enabled — "none" is valid
-              label: tr('continue_btn'),
+              enabled: true,
+              label: widget.tr('continue_btn'),
               onTap: () {
                 if (_noneSelected) {
-                  // User uses nothing → ask partner preference
                   showPartnerPreferenceModal(
                     context,
-                    title: tr('nicotine_partner_q'),
+                    title: widget.tr('nicotine_partner_q'),
                     options: [
                       {
                         'key': 'no_preference',
-                        'label': tr('nicotine_pref_no_preference')
+                        'label': widget.tr('nicotine_pref_no_preference')
                       },
                       {
                         'key': 'none_only',
-                        'label': tr('nicotine_pref_none_only')
+                        'label': widget.tr('nicotine_pref_none_only')
                       },
-                      {'key': 'any', 'label': tr('nicotine_pref_any')},
+                      {'key': 'any', 'label': widget.tr('nicotine_pref_any')},
                     ],
                     userSelection: '',
                     showCustom: false,
-                    onSave: onSavePartner,
-                    onNext: onNext,
-                    tr: tr,
+                    onSave: widget.onSavePartner,
+                    onNext: widget.onNext,
+                    tr: widget.tr,
                   );
                 } else {
-                  onNext();
+                  widget.onNext();
                 }
               },
             ),
             const SizedBox(height: 32),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _CannabisToggleRow
+// ─────────────────────────────────────────────────────────────────────────────
+class _CannabisToggleRow extends StatelessWidget {
+  const _CannabisToggleRow({
+    required this.label,
+    required this.value,
+    required this.isDark,
+    required this.primary,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool value;
+  final bool isDark;
+  final Color primary;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: value
+            ? primary.withValues(alpha: 0.10)
+            : (isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.black.withValues(alpha: 0.03)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: value
+              ? primary.withValues(alpha: 0.5)
+              : (isDark ? Colors.white24 : Colors.black12),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.leaf,
+              size: 18,
+              color:
+                  value ? primary : (isDark ? Colors.white60 : Colors.black45)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.instrumentSans(
+                fontSize: 15,
+                fontWeight: value ? FontWeight.w600 : FontWeight.w500,
+                color: value
+                    ? (isDark ? Colors.white : Colors.black)
+                    : (isDark ? Colors.white70 : Colors.black87),
+              ),
+            ),
+          ),
+          Switch(
+            value: value,
+            activeThumbColor: primary,
+            activeTrackColor: primary.withValues(alpha: 0.35),
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _CannabisDisclaimer
+// ─────────────────────────────────────────────────────────────────────────────
+class _CannabisDisclaimer extends StatelessWidget {
+  const _CannabisDisclaimer({required this.text, required this.isDark});
+
+  final String text;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: isDark ? 0.12 : 0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.amber.withValues(alpha: 0.4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(LucideIcons.alertTriangle,
+              size: 16, color: Colors.amber.shade700),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.instrumentSans(
+                fontSize: 12,
+                color: isDark ? Colors.amber.shade200 : Colors.amber.shade900,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

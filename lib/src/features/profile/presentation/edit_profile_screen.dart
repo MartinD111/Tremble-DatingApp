@@ -61,6 +61,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _occupationController = TextEditingController();
   final List<String> _nicotineUse = [];
   bool _nicotineUseToggle = false;
+  bool _cannabisShowDisclaimer = false;
   String? _drinkingHabit;
   String? _exerciseHabit;
   String? _sleepSchedule;
@@ -133,6 +134,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ..clear()
         ..addAll(user.nicotineUse);
       _nicotineUseToggle = user.nicotineUse.isNotEmpty;
+      _cannabisShowDisclaimer = user.nicotineUse.contains('cannabis');
       _occupation = user.occupation;
       _occupationController.text = user.occupation ?? '';
       _schoolController.text = user.school ?? '';
@@ -884,6 +886,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                       'icon': Icons.circle,
                                       'iconColor': IconUtils.getHairColor(
                                           'hair_gray_white')
+                                    },
+                                    {
+                                      'label': t('hair_bald', lang),
+                                      'value': 'hair_bald',
+                                      'icon': Icons.circle,
+                                      'iconColor':
+                                          IconUtils.getHairColor('hair_bald')
                                     },
                                     {
                                       'label': t('hair_other', lang),
@@ -1859,13 +1868,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       isGenderBased: isGenderBasedColor,
       gender: gender,
     );
-    const products = [
+    const nicotineProducts = [
       'cigarettes',
       'vape',
       'iqos',
       'zyn',
       'shisha',
-      'cannabis',
     ];
 
     final productIcons = {
@@ -1874,13 +1882,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       'iqos': LucideIcons.zap,
       'zyn': LucideIcons.square,
       'shisha': LucideIcons.flame,
-      'cannabis': LucideIcons.leaf,
     };
+
+    final cannabisSelected = _nicotineUse.contains('cannabis');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Toggle switch
+        // ── Nicotine use toggle ───────────────────────────────────────────────
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(t('nicotine_title', lang),
@@ -1893,17 +1902,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             _nicotineUseToggle = val;
             if (!val) {
               _nicotineUse.clear();
+              _cannabisShowDisclaimer = false;
             }
             _hasChanges = true;
           }),
         ),
-        const SizedBox(height: 8),
-        // Product pills shown only if toggle is ON
-        if (_nicotineUseToggle)
+        // ── Nicotine product chips (no cannabis) ──────────────────────────────
+        if (_nicotineUseToggle) ...[
+          const SizedBox(height: 4),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: products.map((key) {
+            children: nicotineProducts.map((key) {
               final sel = _nicotineUse.contains(key);
               final icon = productIcons[key];
               return GestureDetector(
@@ -1933,13 +1943,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (icon != null) ...[
-                        Icon(
-                          icon,
-                          size: 14,
-                          color: sel
-                              ? (isDark ? Colors.white : Colors.black)
-                              : textColor,
-                        ),
+                        Icon(icon,
+                            size: 14,
+                            color: sel
+                                ? (isDark ? Colors.white : Colors.black)
+                                : textColor),
                         const SizedBox(width: 6),
                       ],
                       Text(t('nicotine_$key', lang),
@@ -1956,6 +1964,97 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               );
             }).toList(),
           ),
+          const SizedBox(height: 12),
+          // ── Cannabis separate toggle ────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              color: cannabisSelected
+                  ? primary.withValues(alpha: 0.10)
+                  : (isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.black.withValues(alpha: 0.03)),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: cannabisSelected
+                    ? primary.withValues(alpha: 0.5)
+                    : (isDark ? Colors.white24 : Colors.black12),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(LucideIcons.leaf,
+                    size: 16,
+                    color: cannabisSelected
+                        ? primary
+                        : (isDark ? Colors.white60 : Colors.black45)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(t('nicotine_cannabis', lang),
+                      style: TextStyle(
+                        color: cannabisSelected
+                            ? (isDark ? Colors.white : Colors.black)
+                            : textColor,
+                        fontWeight: cannabisSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        fontSize: 14,
+                      )),
+                ),
+                Switch(
+                  value: cannabisSelected,
+                  activeThumbColor: primary,
+                  activeTrackColor: primary.withValues(alpha: 0.35),
+                  inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
+                  onChanged: (val) => setState(() {
+                    if (val) {
+                      _nicotineUse.add('cannabis');
+                      _cannabisShowDisclaimer = true;
+                    } else {
+                      _nicotineUse.remove('cannabis');
+                      _cannabisShowDisclaimer = false;
+                    }
+                    _hasChanges = true;
+                  }),
+                ),
+              ],
+            ),
+          ),
+          // ── Cannabis disclaimer ─────────────────────────────────────────────
+          if (_cannabisShowDisclaimer) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: isDark ? 0.12 : 0.10),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.4), width: 1),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(LucideIcons.alertTriangle,
+                      size: 15, color: Colors.amber.shade700),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      t('cannabis_disclaimer', lang),
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.4,
+                        color: isDark
+                            ? Colors.amber.shade200
+                            : Colors.amber.shade900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ],
     );
   }

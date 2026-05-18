@@ -157,6 +157,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   String? _drinkingHabit; // 'socially' | 'never' | 'frequently' | 'sober'
   final List<String> _nicotineUse = [];
   String? _childrenPreference; // 'want_someday' | 'dont_want' | ...
+  bool? _hasChildren;
   RangeValues _introversionRange = const RangeValues(0.3, 0.7); // 30% to 70%
   String? _sleepHabit; // 'night_owl' | 'early_bird'
   String? _petPreference; // 'dog' | 'cat' | 'nothing'
@@ -823,6 +824,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       onSavePartner: (v) =>
                           setState(() => _partnerChildrenPreference = v),
                       tr: tr,
+                      hasChildren: _hasChildren,
+                      onHasChildrenChanged: (v) =>
+                          setState(() => _hasChildren = v),
                     ),
                     IntroversionStep(
                       values: _introversionRange,
@@ -1753,6 +1757,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         partnerSleepSchedule: _partnerSleepHabit?.join(', '),
         partnerPetPreference: _partnerPetPreference?.join(', '),
         partnerChildrenPreference: _partnerChildrenPreference?.join(', '),
+        hasChildren: _hasChildren,
         nicotineFilter: _partnerNicotineFilter,
         politicalAffiliationPreference: _partnerPoliticalAffiliationPreference,
         partnerIntrovertPreference: _partnerIntroversionRange,

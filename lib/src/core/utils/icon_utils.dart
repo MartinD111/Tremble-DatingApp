@@ -40,6 +40,9 @@ class IconUtils {
       case 'gray_white':
       case 'hair_gray_white':
         return Colors.grey.shade400;
+      case 'bald':
+      case 'hair_bald':
+        return Colors.blueGrey.shade200;
       case 'other':
       case 'hair_other':
         return Colors.purple.shade400;

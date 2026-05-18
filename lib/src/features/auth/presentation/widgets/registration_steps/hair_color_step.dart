@@ -56,6 +56,12 @@ class HairColorStep extends StatelessWidget {
           'iconColor': IconUtils.getHairColor('gray_white')
         },
         {
+          'key': 'bald',
+          'label': tr('hair_bald'),
+          'icon': Icons.circle,
+          'iconColor': IconUtils.getHairColor('bald')
+        },
+        {
           'key': 'other',
           'label': tr('hair_other'),
           'icon': Icons.circle,
