@@ -83,7 +83,9 @@
       "Bash(cp \"C:\\\\Users\\\\marti\\\\.claude\\\\projects\\\\c--Users-marti-AMS-d-o-o-Tremble-DatingApp\\\\9000da64-a4a4-40e7-aafd-fc8862008220\\\\tool-results\\\\webfetch-1779013653311-64akld.bin\" /tmp/design.gz)",
       "Read(//tmp/**)",
       "Bash(mkdir -p /tmp/design)",
-      "Bash(tar -xzf /tmp/design.gz)"
+      "Bash(tar -xzf /tmp/design.gz)",
+      "Bash(flutter devices *)",
+      "Bash(adb -s R5CY12RLCWE logcat -d flutter:D *:S)"
     ]
   }
 }

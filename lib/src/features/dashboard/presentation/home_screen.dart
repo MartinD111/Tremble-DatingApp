@@ -92,22 +92,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color(0xFF1E1E2E),
       isDismissible: false,
       enableDrag: false,
       barrierColor: Colors.black.withValues(alpha: 0.55),
       builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        final textColor = isDark ? Colors.white : const Color(0xFF1A1A18);
+        const textColor = Colors.white;
         return Padding(
           padding: EdgeInsets.fromLTRB(
             20,
-            0,
+            20,
             20,
             MediaQuery.of(ctx).padding.bottom + 24,
           ),
           child: GlassCard(
             borderRadius: 24,
+            useGlassEffect: false,
+            solidDarkBg: const Color(0xFF2A2A3E),
             borderColor: const Color(0xFFF4436C).withValues(alpha: 0.28),
             child: Column(
               mainAxisSize: MainAxisSize.min,

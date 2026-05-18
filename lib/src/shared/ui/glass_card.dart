@@ -32,10 +32,10 @@ class GlassCard extends StatelessWidget {
             ? Colors.white.withValues(alpha: 0.3)
             : Colors.black.withValues(alpha: 0.15));
 
-    // For dark mode with solid background, use the provided color or default
+    // solidDarkBg overrides the theme-based fallback when useGlassEffect=false.
     final bgColor = useGlassEffect
         ? glassColor
-        : (isDark ? (solidDarkBg ?? const Color(0xFF2A2A2E)) : Colors.white);
+        : (solidDarkBg ?? (isDark ? const Color(0xFF2A2A2E) : Colors.white));
 
     final container = Container(
       padding: padding,

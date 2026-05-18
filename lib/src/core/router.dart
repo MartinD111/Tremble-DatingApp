@@ -251,10 +251,16 @@ class _RouterNotifier extends ChangeNotifier {
   // set _initialized = true causes a /login flash for returning users.
   bool _authStreamFired = false;
 
+  // Cached auth state — updated directly from the listener's `next` value
+  // to avoid reading a stale snapshot via _ref.read during the same frame
+  // that notifyListeners() fires.
+  AuthUser? _cachedAuthUser;
+
   _RouterNotifier(this._ref) {
     // Fast path: Riverpod already has a hydrated AuthUser (e.g. returning user
     // whose Firestore fetch completed synchronously from cache).
-    if (_ref.read(authStateProvider) != null) {
+    _cachedAuthUser = _ref.read(authStateProvider);
+    if (_cachedAuthUser != null) {
       _initialized = true;
       _authStreamFired = true;
     }
@@ -265,6 +271,7 @@ class _RouterNotifier extends ChangeNotifier {
     // because authStateProvider starts as null even for returning users.
     _ref.listen<AuthUser?>(authStateProvider, (prev, next) {
       debugPrint('[ROUTER] authStateProvider → user: ${next?.id ?? 'null'}');
+      _cachedAuthUser = next;
       _authStreamFired = true;
       _initialized = true;
       notifyListeners();
@@ -282,6 +289,13 @@ class _RouterNotifier extends ChangeNotifier {
       debugPrint(
           '[ROUTER] profileStatusProvider → $next  authStreamFired=$_authStreamFired');
       if (!next.isLoading && _authStreamFired) _initialized = true;
+      // Sync the cache: profileStatusProvider re-runs when authStateProvider
+      // changes, so both listeners may fire in the same Riverpod batch. The
+      // authStateProvider listener sets _cachedAuthUser first, but if
+      // profileStatusProvider fires first in the batch, _cachedAuthUser would
+      // still be stale. Reading here ensures the cache is always current before
+      // notifyListeners() triggers GoRouter's redirect evaluation.
+      _cachedAuthUser = _ref.read(authStateProvider);
       notifyListeners();
     });
 
@@ -310,7 +324,7 @@ class _RouterNotifier extends ChangeNotifier {
   }
 
   bool get isInitialized => _initialized;
-  AuthUser? get authState => _ref.read(authStateProvider);
+  AuthUser? get authState => _cachedAuthUser;
   bool get hasConsent => _ref.read(gdprConsentProvider).value ?? false;
   AsyncValue<ProfileStatus> get profileStatus =>
       _ref.read(profileStatusProvider);
@@ -370,6 +384,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => Consumer(
           builder: (context, ref, _) {
             final authUser = ref.watch(authStateProvider);
+            debugPrint('[DEBUG_ROUTE] / builder: authUser=${authUser?.id ?? 'null'} name=${authUser?.name}');
             if (authUser == null) return const _SplashLoadingScreen();
             return const GradientScaffold(child: HomeScreen());
           },
