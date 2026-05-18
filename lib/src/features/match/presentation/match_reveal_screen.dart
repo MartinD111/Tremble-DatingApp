@@ -223,24 +223,14 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Partner name
+                    // Partner name and age as one intimate reveal line.
                     Text(
-                      profile.name.toUpperCase(),
+                      '${profile.name}, ${profile.age}',
                       style: GoogleFonts.playfairDisplay(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: _warmCream,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${profile.age} LET',
-                      style: GoogleFonts.instrumentSans(
-                        fontSize: 14,
+                        fontSize: 32,
+                        fontStyle: FontStyle.italic,
                         fontWeight: FontWeight.w600,
-                        color: _warmCream.withValues(alpha: 0.5),
-                        letterSpacing: 1.5,
+                        color: _warmCream,
                       ),
                     ),
 

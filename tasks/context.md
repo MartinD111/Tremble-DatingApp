@@ -1,3 +1,23 @@
+## Session State — 2026-05-18 23:38 CEST (Session 39)
+- Active Task: Exclusive Playfair Match Reveal typography — completed locally
+- Environment: Dev
+- Modified Files:
+    - `lib/src/features/match/presentation/match_reveal_screen.dart`
+    - `tasks/context.md`
+- Open Problems: BLOCKER-003 (RevenueCat/legal), BLOCKER-005 (iOS dev provisioning).
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (66/66).
+
+## Session Handoff
+- Completed:
+  - Replaced the uppercase partner name and separate age label on Match Reveal with a single natural-case `Name, age` line.
+  - Switched the reveal typography to Playfair Display italic, `fontSize: 32`, `FontWeight.w600`, and no letter spacing.
+- In Progress: None.
+- Blocked:
+  - BLOCKER-003: Real purchase flow and subscription persistence remain blocked by RevenueCat/legal setup.
+  - BLOCKER-005: Physical iOS verification remains blocked by provisioning for `com.pulse`.
+- Next Action:
+  1. Visually verify Match Reveal with short and long names on device/simulator.
+
 ## Session State — 2026-05-18 23:22 CEST (Session 38)
 - Active Task: Emotional haptics and 400 ms match reveal pause — completed locally
 - Environment: Dev
