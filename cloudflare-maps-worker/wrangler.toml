@@ -1,0 +1,12 @@
+name = "tremble-maps-worker"
+main = "src/index.ts"
+compatibility_date = "2024-09-02"
+minify = true
+
+[[r2_buckets]]
+binding = "BUCKET"
+preview_bucket_name = "tremble-maps"
+bucket_name = "tremble-maps"
+
+[vars]
+ALLOWED_ORIGINS = "*"

@@ -2,7 +2,7 @@
 - Active Task: Deploy Cloudflare Worker & map validation
 - Environment: Dev (mobile: com.pulse)
 - Modified Files:
-    - `scratch/PMTiles/serverless/cloudflare/src/index.ts` (R2 type guard + R2GetOptions)
+    - `cloudflare-maps-worker/src/index.ts` (R2 type guard + R2GetOptions)
     - `tasks/lessons.md` (full rewrite: deduped rules, removed stale section, added Rule #67)
     - `tasks/todo.md` (updated to V4 with check marks on completed map tasks)
     - `tasks/context.md`

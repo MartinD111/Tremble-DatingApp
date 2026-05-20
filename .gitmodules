@@ -1,4 +1,0 @@
-[submodule "scratch/PMTiles"]
-	path = scratch/PMTiles
-	url = https://github.com/protomaps/PMTiles.git
-	ignore = dirty
