@@ -10,13 +10,18 @@ import '../../../core/theme.dart';
 import '../../../core/translations.dart';
 import '../../auth/data/auth_repository.dart';
 import 'event_pin_sheet.dart';
+import 'dart:convert';
+import 'package:vector_map_tiles/vector_map_tiles.dart';
+import 'package:vector_map_tiles_pmtiles/vector_map_tiles_pmtiles.dart';
+import 'package:vector_tile_renderer/vector_tile_renderer.dart' as vtr;
 
-// OSM tile source — dev uses OpenStreetMap, prod points to the
-// Cloudflare Worker in front of our R2-hosted planet.pmtiles file.
-// TODO(infra): deploy Protomaps Worker before prod release.
-const _tileUrl = String.fromEnvironment('FLAVOR', defaultValue: 'dev') == 'prod'
-    ? 'https://maps.trembledating.com/{z}/{x}/{y}.png'
-    : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const _pmtilesUrl = 'https://maps.trembledating.com/planet.pmtiles';
+
+class _MapInitData {
+  final vtr.Theme theme;
+  final PmTilesVectorTileProvider tileProvider;
+  _MapInitData({required this.theme, required this.tileProvider});
+}
 
 class TrembleMapScreen extends ConsumerStatefulWidget {
   const TrembleMapScreen({super.key});
@@ -30,6 +35,7 @@ enum _MapZoom { city, nearby, national }
 class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   late final MapController _mapController;
   _MapZoom _zoom = _MapZoom.city;
+  late final Future<_MapInitData> _mapInitFuture;
 
   static const bool _isDev =
       String.fromEnvironment('FLAVOR', defaultValue: 'dev') != 'prod';
@@ -60,6 +66,20 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
     _proximityPoints = _isDev ? _generateProximityPoints() : const [];
 
     ref.read(eventGeofenceServiceProvider).setActiveEvents([]);
+    _mapInitFuture = _initializeMap();
+  }
+
+  Future<_MapInitData> _initializeMap() async {
+    final styleString = await DefaultAssetBundle.of(context)
+        .loadString('assets/map/tremble_dark_style.json');
+    final Map<String, dynamic> styleJson = jsonDecode(styleString);
+    final theme =
+        vtr.ThemeReader(logger: const vtr.Logger.console()).read(styleJson);
+
+    final tileProvider =
+        await PmTilesVectorTileProvider.fromSource(_pmtilesUrl);
+
+    return _MapInitData(theme: theme, tileProvider: tileProvider);
   }
 
   List<LatLng> _generateProximityPoints() {
@@ -241,28 +261,54 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: FlutterMap(
-                      mapController: _mapController,
-                      options: MapOptions(
-                        initialCenter: _ljubljanaCenter,
-                        initialZoom: _zoomLevels[_MapZoom.city]!,
-                        maxZoom: 16.0,
-                        interactionOptions: const InteractionOptions(
-                          flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                        ),
-                      ),
-                      children: [
-                        TileLayer(
-                          urlTemplate: _tileUrl,
-                          userAgentPackageName: 'tremble.dating.app',
-                        ),
-                        CircleLayer(
-                          circles: _buildProximityCircles(effectivePremium),
-                        ),
-                        MarkerLayer(
-                          markers: _buildEventMarkers(effectivePremium, lang),
-                        ),
-                      ],
+                    child: FutureBuilder<_MapInitData>(
+                      future: _mapInitFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(
+                                'Error loading map: ${snapshot.error}',
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          );
+                        }
+                        if (!snapshot.hasData) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        final initData = snapshot.data!;
+                        return FlutterMap(
+                          mapController: _mapController,
+                          options: MapOptions(
+                            initialCenter: _ljubljanaCenter,
+                            initialZoom: _zoomLevels[_MapZoom.city]!,
+                            maxZoom: 16.0,
+                            interactionOptions: const InteractionOptions(
+                              flags:
+                                  InteractiveFlag.all & ~InteractiveFlag.rotate,
+                            ),
+                          ),
+                          children: [
+                            VectorTileLayer(
+                              theme: initData.theme,
+                              tileProviders: TileProviders({
+                                'protomaps': initData.tileProvider,
+                              }),
+                            ),
+                            CircleLayer(
+                              circles: _buildProximityCircles(effectivePremium),
+                            ),
+                            MarkerLayer(
+                              markers:
+                                  _buildEventMarkers(effectivePremium, lang),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),

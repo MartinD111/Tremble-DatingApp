@@ -1,298 +1,231 @@
 # Permanent Project Knowledge (Lessons)
 
-**Rule #60 — Never commit App Check debug tokens in native plist files.**
-[2026-05-17] iOS debug tokens must be supplied locally through ignored config or `--dart-define`, not stored in `ios/Runner/Info.plist`. Tracked plist files can ship into builds and expose debug credentials to anyone with repository access.
-Source: Login layout + Apple Sign-In implementation, May 2026.
+> Rules are permanent and never deleted. Ordered newest-first (highest rule number first).
 
-**Rule #59 — Capture Riverpod notifiers before modal routes that can outlive their widget.**
-[2026-05-17] Bottom sheets and dialogs can keep their button callbacks alive after a routing/profile refresh disposes the originating `ConsumerState`. Do not call `ref.read(...)` inside modal callbacks or immediately after awaited modal routes unless `mounted` is checked first. Capture the required notifiers before opening the modal, then use `ctx.mounted` only for modal navigation.
-Source: Device tutorial opt-in crash fix, May 2026.
+---
 
-**Rule #58 — Translation map key parity must be audited after adding copy.**
-[2026-05-17] When adding keys to `translations.dart`, verify `en` and `sl` parity immediately, and check other active language blocks for intentional fallback gaps. Missing localized keys silently fall back through `t()` and can hide incomplete localization during QA.
-Source: Localization audit, May 2026.
+**Rule #67 — Type guard R2ObjectBody when fetching from Cloudflare R2.**
+[2026-05-20] `env.BUCKET.get()` returns `R2ObjectBody | R2Object`. Only `R2ObjectBody` exposes `.body`. Always guard with `"body" in resp` before accessing the stream. Also type the options object as `R2GetOptions` to avoid `noExplicitAny` linter errors.
+Source: Cloudflare Worker Map tile publication, May 2026.
 
-**Rule #55 — Ephemeral Media Cleanup Strategy.**
-[2026-04-30] "View-once" photos (Pulse Intercept F12) MUST be deleted server-side immediately upon the recipient triggering the `viewedAt` timestamp. UI-level hiding is insufficient for GDPR/MPC compliance. Always use a Cloud Function trigger to purge the file from Storage to ensure zero persistence.
+**Rule #66 — Verify iOS storyboard background after `flutter_native_splash`.**
+[2026-05-17] Running `dart run flutter_native_splash:create` can reset `ios/Runner/Base.lproj/LaunchScreen.storyboard` view background to white even when the generated `LaunchBackground` is dark graphite. Always inspect the storyboard diff and restore the background color to `#1A1A18` before iOS verification.
+Source: iOS Splash Screen Fix, May 2026.
+
+**Rule #65 — Precise multi-level directory import paths.**
+[2026-05-17] Always double-check relative import path depths when referencing files from different feature domains (e.g. `../../../core/` vs `../../../../core/`). Run `flutter analyze` to catch import resolution errors before simulator runs.
+Source: Compatibility Score (Phase A) Verification, May 2026.
+
+**Rule #64 — Manual native cleanup for SDK removal.**
+[2026-05-09] Removing a package from `pubspec.yaml` is insufficient. Native keys and SDK initializers MUST be manually purged from `Info.plist` (iOS) and `AndroidManifest.xml` (Android) to prevent runtime crashes.
+Source: OSM Migration, May 2026.
+
+**Rule #63 — Seamless radar sweeps.**
+[2026-05-09] `SweepGradient` for `RadarPainter` must include a buffer stop at `0.99` (not `1.0`) to prevent a hard seam at the 3 o'clock wrap-around position.
+Source: UI Polish, May 2026.
+
+**Rule #62 — Native splash background matching.**
+[2026-05-09] Both `color` and `android_12: color` in `flutter_native_splash.yaml` MUST be `#1A1A18` to prevent a white-box regression during app startup.
+Source: Branding Stabilization, May 2026.
+
+**Rule #61 — Brand-accurate icon assets.**
+[2026-05-09] `adaptive_icon_background` in `flutter_launcher_icons.yaml` MUST match Tremble Rose `#F4436C` using `tremble_icon_clean.png`. Transparent variants produce a brown-pink artifact on launcher backgrounds.
+Source: Branding Stabilization, May 2026.
+
+**Rule #60 — Performance-safe contact hashing.**
+[2026-05-08] Processing large contact lists (1000+ entries) for SHA-256 hashing MUST be done in a background isolate (`compute` or manual `Isolate`). Normalize to E.164 before hashing.
+Source: F13 Stealth & Safety Implementation, May 2026.
+
+**Rule #59 — Mandatory confirmation for disabling privacy shields.**
+[2026-05-08] Any UI action disabling a privacy protection feature (e.g., toggling a Safe Zone inactive) MUST be gated behind a confirmation modal to prevent accidental exposure.
+Source: F13 Stealth & Safety Implementation, May 2026.
+
+**Rule #58 — GDPR-neutral naming for Safe Zones.**
+[2026-05-08] Safe Zones MUST use neutral indexed names (e.g., "Zone 1") instead of address-derived or timestamp-derived names to prevent location fingerprinting.
+Source: F13 Stealth & Safety Implementation, May 2026.
+
+**Rule #57 — Assistance contact sharing UX.**
+[2026-04-30] If a user skips phone entry during onboarding, the "Send Phone" button in the Trembling Window MUST be disabled/hidden with a clear explanation — never prompt mid-interaction.
 Source: Pulse Intercept (F12) Planning, April 2026.
 
-**Rule #56 — Zero-Chat Privacy Architecture.**
-[2026-04-30] To maintain the "Privacy-by-Architecture" standard and avoid GDPR complexities of private message storage, Tremble strictly forbids free-text chatrooms. Communication during the Trembling Window must be restricted to atomic, actionable buttons (e.g., [Send Phone]) and ephemeral visual aids.
+**Rule #56 — Zero-chat privacy architecture.**
+[2026-04-30] Tremble STRICTLY forbids free-text chatrooms. Communication during the Trembling Window is restricted to atomic actionable buttons (e.g., [Send Phone]) and ephemeral visual aids only.
 Source: Pulse Intercept (F12) Planning, April 2026.
 
-**Rule #57 — Assistance Contact Sharing UX.**
-[2026-04-30] Collection of phone numbers during onboarding is required for legitimacy but remains optional for the "Send Phone" feature. If a user skips phone entry, the sharing button in the Trembling Window must be disabled/hidden with a clear explanation, rather than prompting for input mid-interaction.
+**Rule #55 — Ephemeral media cleanup strategy.**
+[2026-04-30] "View-once" photos (Pulse Intercept F12) MUST be deleted server-side immediately when `viewedAt` is set. UI-level hiding alone is insufficient for GDPR compliance. Always use a Cloud Function trigger to purge the Storage file.
 Source: Pulse Intercept (F12) Planning, April 2026.
 
-**Rule #52 — Using `ColorFiltered` for "Missed Opportunities" UX.**
-[2026-04-30] To visually communicate a missed opportunity (expired interaction window), use a grayscale `ColorFiltered` matrix (Greyscale) on the entire card. This immediately signals to the user that the encounter is "cold" and historical, creating a psychological drive to be more active (or upgrade to Premium) next time.
+**Rule #54 — Recap UI structure: active vs. history separation.**
+[2026-04-30] Post-activity recaps must clearly separate actionable encounters (active TTL) from historical ones (expired) using distinct `SliverList` sections or a `CustomScrollView`.
 Source: Run Club Recap (F6) Implementation, April 2026.
 
-**Rule #53 — Tiered Profile Access in History Logs.**
-[2026-04-30] Historical logs (like Run History) must respect the same subscription-based data masking as the active Discovery radar. Free users see limited/blurred profiles, while Premium users see full details. This ensures that the "History" feature remains a value-add for the paid tier rather than a loophole to bypass discovery limits.
+**Rule #53 — Tiered profile access in history logs.**
+[2026-04-30] Historical logs must respect subscription-based data masking: free users see limited/blurred profiles, premium users see full details. History must not be a loophole for free users.
 Source: Run Club Recap (F6) Implementation, April 2026.
 
-**Rule #54 — Recap UI Structure: Active vs. History Separation.**
-[2026-04-30] Post-activity recaps should clearly separate "Actionable" encounters (active TTL) from "Historical" ones (expired). Using a `SliverList` or distinct sections within a `CustomScrollView` helps maintain focus on immediate actions while providing the context of the full activity.
+**Rule #52 — `ColorFiltered` for "Missed Opportunities" UX.**
+[2026-04-30] Use a greyscale `ColorFiltered` matrix on expired encounter cards to visually signal "cold/historical" state and drive premium upgrade motivation.
 Source: Run Club Recap (F6) Implementation, April 2026.
 
-**Rule #49 — The "Momentum Rule" (Strict 10-minute TTL for Run Club).**
-[2026-04-30] Proximity data for high-speed activities (running) must have a strictly enforced 10-minute TTL in Firestore. If users do not interact (send a Wave) within 10 minutes of crossing paths, the match record is purged. This maintains the "in-the-moment" brand promise and eliminates stalking risks.
-Source: Run Club (F6) Finalization, April 2026.
+**Rule #51 — Mid-run intercept UI overrides silent mode.**
+[2026-04-30] An explicit user action (e.g., sending a Wave from the Live Run Card) MUST override the receiver's silent state. Passive proximity remains silent; intentional Waves are always delivered immediately.
+Source: Run Club (F6) UX Design, April 2026.
 
-**Rule #50 — Native Motion Sensors (CoreMotion/ActivityRecognition) over Background Timers.**
-[2026-04-30] Background activity sensing for fitness (Run Club) MUST rely on native OS motion co-processors (`CMMotionActivityManager` on iOS and `ActivityRecognitionClient` on Android) via an `EventChannel`. Mock timers in the background isolate are unreliable and battery-heavy. Native sensors provide <1% battery drain and accurate state detection (`RUNNING`, `STATIONARY`).
+**Rule #50 — Native motion sensors over background timers.**
+[2026-04-30] Background activity sensing MUST use `CMMotionActivityManager` (iOS) and `ActivityRecognitionClient` (Android) via `EventChannel`. Mock timers in isolates are unreliable and battery-heavy.
 Source: ADR-001 Implementation, April 2026.
 
-**Rule #51 — Mid-Run Intercept UI overrides Silent Mode.**
-[2026-04-30] While Run Club is in "Silent Mode" (no notifications during the run), an explicit user action (e.g., sending a Wave from the Live Run Card) must override the receiver's silent state. This ensures that "Intentional Waves" are delivered immediately, while "Passive Proximity" remains silent.
-Source: Run Club (F6) UX Design, April 2026.
-+
+**Rule #49 — Strict 10-minute TTL for Run Club (Momentum Rule).**
+[2026-04-30] Proximity data for running must have a 10-minute TTL in Firestore. If no Wave is sent within 10 minutes, the match record is purged. Non-negotiable for privacy and brand promise.
+Source: Run Club (F6) Finalization, April 2026.
 
 **Rule #48 — Staged files modified by pre-commit hooks must be re-added.**
-[2026-04-29] If a pre-commit hook runs `dart format .` or any other auto-formatter, it may modify files in the commit. These modifications stay in the working directory unstaged, causing the commit to fail. Always run `git add <file>` to re-stage the newly formatted files before committing again.
+[2026-04-29] If `dart format .` runs in a pre-commit hook and modifies files, those changes stay unstaged. Run `git add <file>` to re-stage the formatted files before committing.
 Source: Git Hook Troubleshooting, April 2026.
 
-**Rule #47 — Use matchType for distinct product tiers in matching UI.**
-[2026-04-29] Distinct proximity scenarios (e.g., Event Mode vs Gym Mode) require separate UI visibility rules. For Event Mode, all users receive temporary Premium access (full profile cards unlocked) to drive engagement. For Gym Mode, Basic users remain locked (pill UI) while Do Not Disturb (DND) prevents intrusive push notifications during workout sessions.
+**Rule #47 — Use `matchType` for distinct product tiers in matching UI.**
+[2026-04-29] Event Mode gives all users temporary Premium access. Gym Mode keeps basic users locked (pill UI) with DND to prevent intrusive push notifications during workouts.
 Source: Proximity Engine Refinement, April 2026.
 
-
-**Rule #46 — Use Native Geofencing for Static Proximity Points.**
-[2026-04-29] To achieve zero battery drain while the app is killed, tracking for static locations (like gyms or event venues) must rely on OS Geofencing APIs rather than continuous GPS polling. The phone's secure location hardware wakes up the application only upon entering the region.
+**Rule #46 — Native geofencing for static proximity points.**
+[2026-04-29] Static location tracking (gyms, event venues) MUST use OS Geofencing APIs, not continuous GPS polling. The hardware wakes the app on region entry — zero drain when idle.
 Source: Proximity Engine Refinement, April 2026.
 
+**Rule #45 — NEVER commit secrets to version control.**
+[2026-04-29] API keys, access tokens, and credentials MUST NEVER appear in documentation, todo lists, or code files. Use Secret Managers or `--dart-define`. Leaked secrets must be rotated instantly.
+Source: Google Places API Leak in todo.md, April 2026.
 
 **Rule #44 — Always verify Cloud Function exports in `index.ts`.**
-[2026-04-29] When creating new backend endpoints, schedules, or triggers in Cloud Functions, always remember to export them in the core `functions/src/index.ts`. Failure to do so will result in functions not being deployed by the Firebase CLI.
+[2026-04-29] New Cloud Functions MUST be exported in `functions/src/index.ts`. Without this, the Firebase CLI will not deploy them.
 Source: Event Mode Matching (F2), April 2026.
 
-**Rule #41 — Single Source of Truth Documentation (MASTER_PLAN.md).**
-[2026-04-29] Do not fragment implementation plans, UI specs, or store submission strategies across multiple files. All architectural policies, deployment rules, and feature implementations MUST reside in `tasks/MASTER_PLAN.md` to ensure context is never dropped across agent sessions.
-Source: Project Consolidation, April 2026.
-
-**Rule #42 — Always use Places API Session Tokens.**
-[2026-04-29] To avoid astronomical GCP billing costs (reducing from $0.017/keystroke to $0.017/session), location autocomplete implementations MUST pass a unique, long-lived `sessionToken` with every search request until a location is explicitly selected.
-Source: Places API (New) Integration, April 2026.
-
 **Rule #43 — Avoid booleans for dynamic lifestyle preferences.**
-[2026-04-29] User preferences that span multiple choices (e.g., Nicotine covering vaping, cigarettes, shisha, ZYN) should be stored as multi-select lists (`List<String>`) rather than simple true/false switches. This supports evolving cultural habits without frequent database migrations.
+[2026-04-29] Multi-choice preferences (e.g., Nicotine: vaping, cigarettes, shisha) MUST be stored as `List<String>`, not booleans. This avoids database migrations as cultural habits evolve.
 Source: Nicotine Step Implementation, April 2026.
 
-Rule #1
-[2026-03-31] Never run un-flavored `flutter build` or `flutter run`. Must provide `--flavor dev --dart-define=FLAVOR=dev` or prod equivalents.
-Source: Multi-Env Setup March 2026.
+**Rule #42 — Always use Places API session tokens.**
+[2026-04-29] Location autocomplete MUST pass a long-lived `sessionToken` with every request until a selection is made. Reduces billing from $0.017/keystroke to $0.017/session.
+Source: Places API (New) Integration, April 2026.
 
-Rule #2
-[2026-03] Do not bypass Riverpod strictly typed state. Avoid mutating state directly in UI.
+**Rule #41 — Single source of truth documentation.**
+[2026-04-29] All architectural policies, deployment rules, and feature implementations MUST reside in `tasks/MASTER_PLAN.md`. Do not fragment plans across multiple files.
+Source: Project Consolidation, April 2026.
+
+**Rule #40 — `MainActivity` should extend `FlutterFragmentActivity`.**
+[2026-04-25] `FlutterFragmentActivity` is required for clean `MethodChannel`/`EventChannel` lifecycle management. `FlutterActivity` causes subtle teardown issues during orientation changes.
+Source: Android OS Integration, April 2026.
+
+**Rule #39 — `setColorInt` (RemoteViews) requires API 31+.**
+[2026-04-25] Gate all `RemoteViews.setColorInt` calls behind `Build.VERSION.SDK_INT >= Build.VERSION_CODES.S`. Provide a pre-API-31 fallback static drawable.
+Source: Android OS Integration, April 2026.
+
+**Rule #38 — Quick Settings tile icons must be monochrome vectors.**
+[2026-04-25] Android QS tiles require a single-color vector drawable. The system applies Material You tinting at runtime — do NOT embed brand colors in the drawable.
+Source: Android OS Integration, April 2026.
+
+**Rule #37 — `flutter_launcher_icons` adaptive foreground must use padded source.**
+[2026-04-24] Use `tremble_splash_source.png` (icon at 50% of 2048px canvas) for `adaptive_icon_foreground` to prevent clipping in all launcher shapes (circle, squircle, etc.).
+Source: Launcher Icon Fix, April 2026.
+
+**Rule #36 — Splash source image must be the colored icon.**
+[2026-04-24] `tremble_icon_clean_transparent.png` has white artwork on transparent background — it is invisible on dark splash screens. Always use `tremble_icon_clean.png` (rose-colored) as the splash source.
+Source: Splash Screen Fix, April 2026.
+
+**Rule #35 — Resolve Android startup "white flash" via `NormalTheme` inheritance.**
+[2026-04-24] Change `NormalTheme` parent to `Theme.Black.NoTitleBar` and explicitly set `windowBackground` to a dark color in `styles.xml`.
+Source: Android Theme Polish.
+
+**Rule #34 — Avoid `const` for initialization with dynamic categories in `flutter_local_notifications`.**
+[2026-04-24] Initialization settings cannot be `const` if they depend on runtime-generated notification categories or actions.
+Source: Notification Service Refactor.
+
+**Rule #33 — Rich notification payloads must use `imageUrl` for FCM Admin SDK.**
+[2026-04-24] The FCM payload key for images is `imageUrl`. Using `photoUrl` (internal model field) in the notification block will cause images to not appear in the system shade.
+Source: Interaction System v2.1.
+
+**Rule #32 — Never answer N/Y prompts during `firebase deploy` without reading them.**
+[2026-04-24] Firebase asked to delete TTL field overrides during a Firestore deploy. Answering Y would have permanently deleted TTL policies, causing documents to accumulate forever. Always answer N to field override deletion prompts.
+Source: Prod deploy, April 2026.
+
+**Rule #31 — Prod Firestore rules must be explicitly deployed.**
+[2026-04-24] Production Firestore does not inherit rules from dev. Always deploy full rules to prod: `firebase deploy --only firestore --project prod`.
+Source: Prod rules audit, April 2026.
+
+**Rule #30 — Never store raw GPS coordinates in Firestore for proximity matching.**
+[2026-04-24] `lat/lng` in `proximity/{uid}` readable by all authenticated users is a GDPR violation. Use geohash only for Firestore storage. Coordinates stay in-memory during Cloud Function execution.
+Source: SEC-002 Privacy Fix, April 2026.
+
+**Rule #29 — Avoid `SafeArea` as a global wrapper for modal bottom sheets.**
+[2026-04-23] `SafeArea` inside `showModalBottomSheet` causes a black gap at the bottom (iOS home indicator area). Use `MediaQuery.of(context).padding.bottom` for targeted padding inside the modal instead.
+Source: Onboarding v2 implementation.
+
+**Rule #28 — Center `CustomPainter` paths using SVG group transforms.**
+[2026-04-23] Match the SVG `group transform` (e.g., `translate(centerX - X * scale, centerY - Y * scale)`) when implementing icons in `CustomPainter`. Small offsets cause off-center rendering at different densities.
+Source: Onboarding v2 implementation.
+
+**Rule #27 — `flutter_launcher_icons` requires PNG assets.**
+[2026-04-23] The package does not support SVG. Convert the master SVG to a 1024×1024 PNG before running icon generation.
+Source: Onboarding v2 implementation.
+
+**Rule #26 — Use `PageView` indexing for multi-stage registration rituals.**
+[2026-04-23] Keep the Ritual screen as the final index in the existing `PageView` rather than pushing a new route. This enables seamless shared-element animations and keeps `PingOverlay` active.
+Source: Onboarding v2 implementation.
+
+**Rule #25 — Use `NotifierProvider` for persistent global app state (e.g., Language).**
+[2026-04-23] `StateProvider` can reset unexpectedly if its dependencies change during high-friction flows like registration. Switch to `NotifierProvider` with explicit state preservation in the `build` method.
+Source: Onboarding v2 implementation.
+
+**Rule #24 — Centralize date/zodiac logic in `ZodiacUtils`.**
+[2026-04-22] Never calculate age or zodiac locally in UI components. All birthday-to-age and birthday-to-zodiac logic MUST reside in `ZodiacUtils` for global consistency.
+Source: Zodiac Localization & UI Refinement, April 2026.
+
+**Rule #23 — Avoid system emojis in UI elements for cross-platform stability.**
+[2026-04-22] System emojis render as `[?]` squares on some iOS versions. Use `LucideIcons` or custom SVG assets for critical UI elements to maintain a premium, consistent aesthetic.
+Source: TASK-REG-18, April 2026.
+
+**Rule #22 — Prefer native button loading states over manual if/else UI switching.**
+[2026-04-21] Shared buttons (like `PrimaryButton`) should handle their own `isLoading` state internally. This prevents layout shifts and centralizes the spinner logic.
+Source: D-27 Spinner Fix, April 2026.
+
+**Rule #21 — Always verify Firebase aliases in `.firebaserc` before deployment.**
+[2026-04-20] A misconfigured `.firebaserc` (e.g., `development` pointing to prod) can cause catastrophic data loss. Always cross-reference with `firebase projects:list` before any deploy.
+Source: Phase 11 Security Audit, April 2026.
+
+**Rule #20 — "App as a Tool" Profile UI logic.**
+[2026-04-20] Favor vertical `Wrap` over horizontal `Row` for data-dense sections. Maintain 1:1 logic parity between `ProfileCardPreview` (self-view) and `ProfileDetailScreen` (match-view) at all times.
+Source: Profile UI Refinement TASK-004, April 2026.
+
+**Rule #19 — Duplicate keys in `const Map` are compile-time errors.**
+[2026-04-20] In Dart, adding an existing key to a constant map literal will prevent the app from building. Perform a global key-check before adding translations.
+Source: i18n Cleanup TASK-011, April 2026.
+
+**Rule #18 — Flutter/Dart environment paths vary on local machines.**
+[2026-04-20] The standard `flutter` command may fail in certain shell environments. Absolute path on this machine: `/Users/aleksandarbojic/flutter/bin/flutter`.
+Source: i18n Cleanup TASK-011, April 2026.
+
+**Rule #17 — Zero writing policy in onboarding.**
+[2026-04-20] The registration flow must contain zero custom text input fields (excluding Name). Use binary/enum-based selection only — the "Signal Calibration" brand demands no verbal friction.
+Source: Registration Phase 2 (Signal Calibration), April 2026.
+
+**Rule #16 — iOS Map xcconfig files live at `ios/Flutter/`, not `ios/Runner/`.**
+[2026-04-20] `Info.plist` resolves `$(MAPS_API_KEY)` from `ios/Flutter/Debug.xcconfig` / `Release.xcconfig`. If the map renders grey on iOS, confirm these files exist and contain a real key.
+Source: Map Troubleshooting, April 2026.
+
+**Rule #15 — App Check requires explicit server-side enforcement.**
+[2026-04-20] Enabling App Check client-side is only half the integration. Cloud Functions MUST also verify the token and have `enforceAppCheck: true` in their configuration. Without this, the backend remains open.
+Source: Phase 9 Security Hardening, April 2026.
+
+**Rule #8 — Always pass translation functions (`tr`) to standalone widgets.**
+Never rely on hardcoded strings in shared UI components.
+Source: Phase 10 Polish, April 2026.
 
 **Rule #3 — TREMBLE HAS NO IN-APP CHAT. EVER.**
 [2026-04-09] The core product mechanic is: Wave → Mutual Wave → 30-minute real-life finding game → meet in person.
 
-**Rule #15 — App Check requires explicit server-side enforcement.**
-[2026-04-20] Enabling App Check on the client (`FirebaseAppCheck.activate`) is only half the integration. Cloud Functions must also be updated to verify the token in the middleware (`request.appToken`) and have `enforceAppCheck: true` in their configuration. Without this, the backend remains open to unauthorized clients even if the mobile app is sending valid tokens.
-Source: Phase 9 Security Hardening, April 2026.
+**Rule #2 — Never bypass Riverpod strictly typed state.**
+[2026-03] Do not mutate state directly in the UI layer. Always use typed providers and notifiers.
 
-**Rule #16 — iOS Map xcconfig files live at `ios/Flutter/`, not `ios/Runner/`.**
-[2026-04-20] `ios/Runner/Info.plist` resolves `$(MAPS_API_KEY)` from `ios/Flutter/Debug.xcconfig` and `ios/Flutter/Release.xcconfig` (not `ios/Runner/*.xcconfig`). The Xcode project (`project.pbxproj`) points `baseConfigurationReference` to `Flutter/Debug.xcconfig`. If the map renders as a grey screen on iOS, confirm these two files exist and contain a real key (not placeholder). Android Maps key lives separately in `android/local.properties`.
-Source: Map Troubleshooting, April 2026.
-
-**Rule #17 — Zero Writing Policy in Onboarding.**
-[2026-04-20] The registration flow must contain zero custom text input fields (excluding Name). The brand identity ("Stoic, Solid") demands binary/enum-based selection only to maintain a technical "Signal Calibration" theme. Any request for "Custom" free-text fields (eg: custom pet, custom job) must be rejected to ensure zero verbal friction.
-Source: Registration Phase 2 (Signal Calibration), April 2026.
-
-**Rule #18 — Flutter/Dart Environment Paths are variable on local machines.**
-[2026-04-20] The standard `flutter` command may fail in certain shell environments if not properly sourced. Always verify the absolute path (on this machine: `/Users/aleksandarbojic/flutter/bin/flutter`) when standard commands fail.
-Source: i18n Cleanup TASK-011, April 2026.
-
-**Rule #19 — Duplicate keys in `const Map` are compile-time errors.**
-[2026-04-20] In Dart, adding a key that already exists to a constant map literal will prevent the app from building. When extracting strings to `translations.dart`, first perform a global key-check to avoid silent build failures in the IDE.
-Source: i18n Cleanup TASK-011, April 2026.
-
-**Rule #20 — "App as a Tool" Profile UI Logic.**
-[2026-04-20] Favor vertical `Wrap` over horizontal scrolling `Row` for data-dense sections (e.g., Hobbies). This improves transparency (everything visible at once) and reduces interaction friction. Additionally, always maintain 1:1 logic parity between `ProfileCardPreview` (self-view) and `ProfileDetailScreen` (match-view) to ensure the technical brand experience is consistent across all surfaces. Simplify complex visualizations (e.g., spectrum sliders) into direct data points (pills) for non-personality traits (e.g., politics) to avoid "designer-y" distractions.
-Source: Profile UI Refinement TASK-004, April 2026.
-**Rule #21 — Always verify Firebase aliases in `.firebaserc` before deployment.**
-[2026-04-20] Never assume project aliases like `development` or `staging` point to the correct project. A misconfigured `.firebaserc` (e.g., `development` pointing to a production project ID) can lead to catastrophic data loss or policy violations. Always cross-reference the project ID in `firebase.json` or `.firebaserc` with the official project list (`firebase projects:list`) before executing any deployment command.
-Source: Phase 11 Security Audit, April 2026.
-
-**Rule #22 — Prefer native button loading states over manual if/else UI switching.**
-[2026-04-21] To avoid layout shifts and maintain a premium look, shared buttons (like `PrimaryButton`) should handle their own `isLoading` state. This centralizes the spinner logic (SVG/CircularProgressIndicator) and ensures the page layout remains stable while the backend call is in progress.
-Source: D-27 Spinner Fix, April 2021.
-
-**Rule #23 — Avoid system emojis in UI elements for cross-platform stability.**
-[2026-04-22] System emojis often render as generic square blocks `[?]` on iOS if the font fallback is not perfectly configured or if the OS version differs. Always prefer `LucideIcons` or custom SVG assets for critical UI feedback (e.g., chips, status indicators, onboarding steps) to maintain a premium, technical aesthetic.
-Source: TASK-REG-18, April 2026.
-
-**Rule #24 — Centralize date/zodiac logic in `ZodiacUtils`.**
-[2026-04-22] Never implement age or zodiac calculations locally in UI components. All birthday-to-age and birthday-to-zodiac logic must reside in `ZodiacUtils` to ensure consistent data across Registration, Profile Editing, and Profile Detail screens. This avoids "logic drift" and ensures that if we update the calculation (e.g., Leap year edge cases), it propagates globally.
-Source: Zodiac Localization & UI Refinement, April 2026.
-+
-+**Rule #25 — Use `NotifierProvider` for persistent global app state (e.g., Language).**
-+[2026-04-23] Standard `StateProvider` can reset unexpectedly if its dependencies (like `authStateProvider`) change while the user has no defined profile state. Switching to `NotifierProvider` with explicit state preservation (reading `ref.state` in the build method) ensures the UI language remains stable during high-friction flows like registration.
-+Source: Onboarding v2 implementation.
-+
-+**Rule #26 — Use PageView indexing for multi-stage registration rituals.**
-+[2026-04-23] For high-fidelity visual transitions (like the Ritual screen), keep the widget as a final index in the existing `PageView` rather than pushing a new route. This allows for seamless shared-element animations and ensures the `PingOverlay` logic remains active across the entire activation sequence.
-+Source: Onboarding v2 implementation.
-+
-+**Rule #27 — `flutter_launcher_icons` requires PNG assets.**
-+[2026-04-23] The automated icon generation package (`flutter_launcher_icons`) does not support SVG files directly. To automate icon updates, always convert the master SVG to a high-resolution PNG (1024x1024) first. This ensures the pixel data is correctly extracted for various device resolutions.
-+
-+**Rule #28 — Center `CustomPainter` paths using SVG group transforms.**
-+[2026-04-23] When implementing complex icons (like the Tremble logo) in a `CustomPainter`, matching the source design exactly requires translating the coordinate system to match the SVG's `group transform` (e.g., `translate(centerX - (X * scale), centerY - (Y * scale))`). Small deviations in these offsets cause the logo to look "broken" or uncentered on different screen densities.
-+
-+**Rule #29 — Avoid `SafeArea` as a global wrapper for modal bottom sheets.**
-+[2026-04-23] Wrapping a `showModalBottomSheet` builder in `SafeArea` can cause a "black gap" or "cutoff" at the bottom of the screen (behind the iOS home indicator) because the `SafeArea` prevents the background color from extending into the system area. Instead, use `MediaQuery.of(context).padding.bottom` to add targeted padding inside the modal's background-colored container.
-**Rule #8** — Always pass translation functions (`tr`) to standalone widgets and bottom sheet utilities. Never rely on hardcoded strings in shared UI components. Source: Phase 10 Polish, April 2026.
-
-**Rule #30 — Never store raw GPS coordinates in Firestore for proximity matching.**
-[2026-04-24] updateLocation was writing lat/lng to proximity/{uid} with a rule allowing all authenticated users to read. This is a GDPR violation and contradicts "privacy by architecture" — the core brand promise. Use geohash only for Firestore storage. Coordinates are used in-memory during Cloud Function execution and never persisted.
-Source: SEC-002 Privacy Fix, April 2026.
-
-**Rule #31 — Prod Firestore rules must be explicitly deployed — they do not inherit from dev.**
-[2026-04-24] Production Firestore (am---dating-app) had only waitlist rules. All other collections (users, matches, waves, proximity, etc.) were relying on default deny — which works but is not explicit and creates risk. Always deploy full rules to prod. Use: firebase deploy --only firestore --project prod
-Source: Prod rules audit, April 2026.
-
-**Rule #32 — Never answer N/Y prompts during firebase deploy without reading them.**
-[2026-04-24] During firestore deploy to prod, Firebase asked to delete TTL field overrides (gdprRequests.ttl, proximity.ttl, proximity_events.ttl). Answering Y would have permanently deleted TTL policies — documents would accumulate forever. Always answer N to field override deletion prompts unless you explicitly created those overrides and want them gone.
-Source: Prod deploy, April 2026.
-Rule #33 — Rich notification payloads must use `imageUrl` for FCM Admin SDK.
-[2026-04-24] While the client uses `photoUrl` for internal models, the Firebase Cloud Messaging payload key for images in the data/notification block must be `imageUrl` (or matching the `NotificationService` wrapper) to ensure images appear correctly in the system notification shade.
-Source: Interaction System v2.1.
-
-Rule #34 — Avoid `const` for initialization with dynamic categories in `flutter_local_notifications`.
-[2026-04-24] Initialization settings for both Darwin (iOS) and Android cannot be declared as `const` if they depend on runtime-generated notification categories or actions. Attempting to use `const` will cause a compile-time error when categories are passed as a variable.
-Source: Notification Service Refactor.
-
-Rule #35 — Resolve Android startup "white flash" via `NormalTheme` inheritance.
-[2026-04-24] The common white flash during app initialization on Android is often caused by the `NormalTheme` inheriting from a `Light` parent in `styles.xml`. Changing the parent to `Theme.Black.NoTitleBar` (or a Material3 dark equivalent) and explicitly setting `windowBackground` to a dark color resolves this.
-Source: Android Theme Polish.
-
-**Rule #36 — Splash source image must be the COLORED icon, not the transparent variant.**
-[2026-04-24] `tremble_icon_clean_transparent.png` has WHITE artwork on transparent background. On a dark `#1A1A18` splash background, this renders as white/monochrome. Always use `tremble_icon_clean.png` (rose-colored full icon) as the splash/launcher source. For proper sizing, create `tremble_splash_source.png` — the rose icon at 50% of a 2048×2048 transparent canvas — to prevent zoom-in and cut-off on device.
-Source: Splash Screen Fix, April 2026.
-
-**Rule #38 — Quick Settings tile icons must be monochrome vectors.**
-[2026-04-25] Android Quick Settings tiles require a single-color vector drawable (`ic_tremble_qs_tile.xml`). The system tints the icon with the device accent colour (Material You) at runtime — do NOT embed brand colours in the drawable. Using a coloured PNG or a vector with hard-coded fillColor produces a flat white square on most OEM launchers and fails Play Store review.
-Source: Android OS Integration, April 2026.
-
-**Rule #39 — `setColorInt` (RemoteViews) requires API 31+ for icon tinting in widgets.**
-[2026-04-25] `RemoteViews.setColorInt` is only available from Android 12 (API 31). Always gate calls to this method behind `Build.VERSION.SDK_INT >= Build.VERSION_CODES.S` and provide a pre-12 fallback (static drawable with brand border) so older devices do not crash.
-Source: Android OS Integration, April 2026.
-
-**Rule #40 — `MainActivity` should extend `FlutterFragmentActivity`, not `FlutterActivity`.**
-[2026-04-25] `FlutterFragmentActivity` is the modern embedding base and is required for clean `MethodChannel`/`EventChannel` lifecycle management when adding custom native code alongside Flutter. `FlutterActivity` works but causes subtle issues with channel teardown during orientation changes.
-Source: Android OS Integration, April 2026.
-
-**Rule #37 — flutter_launcher_icons adaptive foreground must use padded source.**
-[2026-04-24] For Android adaptive icons, the foreground image should have ~25% padding on all sides (safe zone is 66% of the 108dp canvas). Use `tremble_splash_source.png` (icon at 50% of 2048px canvas) as `adaptive_icon_foreground` to ensure the rose icon is fully visible in all launcher shapes (circle, squircle, etc.) without clipping.
-Source: Launcher Icon Fix, April 2026.
-
-**Rule #38 — AnimatedSwitcher ScaleTransition causes perceived lag on tab switches.**
-[2026-04-24] A ScaleTransition(0.98→1.0) on NavigationBar tab switches creates a subtle but noticeable "pop" effect — the content appears to breathe in before settling, which reads as sluggishness. Use FadeTransition only for tab-level AnimatedSwitcher; keep duration ≤200 ms. Reserve scale transitions for explicit "open detail" navigations (e.g., GoRouter push to profile screen).
-Source: UI-Icon-Stability polish, April 2026.
-
-**Rule #39 — RadarPainter maxRadius must match the outermost grid circle.**
-[2026-04-24] If `maxRadius` is smaller than the canvas boundary where the last concentric ring is drawn, the radar pulse stops short of the outermost circle and the scan line appears clipped. `maxRadius` drives both the grid rings AND the scan geometry — if you change one, the other must match. Set `size.width * 0.5` as the canonical value.
-Source: UI-Icon-Stability polish, April 2026.
-
-
-## 🧠 Learning Log — Tremble Development
-
-### 1. Flutter + Google Maps: Safe API Key Injection (2026-04-08)
-- **Problem:** Storing API keys in `AndroidManifest.xml` or `AppDelegate.swift` leaks them to version control.
-- **Solution:** Multi-layered injection using platform configuration files that are excluded from `.gitignore`.
-- **Pattern (Android):**
-    1. `android/local.properties` -> `MAPS_API_KEY=your_key`
-    2. `android/app/build.gradle.kts` -> Load properties, add to `manifestPlaceholders`.
-    3. `AndroidManifest.xml` -> `<meta-data android:name="..." android:value="${MAPS_API_KEY}" />`
-- **Pattern (iOS):**
-    1. `ios/Flutter/Debug.xcconfig` -> `MAPS_API_KEY=your_key`
-    2. `ios/Runner/Info.plist` -> Add `MAPS_API_KEY` key with value `$(MAPS_API_KEY)`.
-    3. `ios/Runner/AppDelegate.swift` -> `GMSServices.provideAPIKey(Bundle.main.object(forInfoDictionaryKey: "MAPS_API_KEY") as? String ?? "")`
-
-### 2. Auth Redirect Loops (2026-04-08)
-- **Problem:** `GoRouter` redirecting `!isOnboarded` to `/login` which then logic-bounced to `/onboarding`.
-- **Solution:** Always jump directly to the target state (e.g., `/onboarding`) if the user is already authenticated but data-incomplete. Avoid redundant hops through auth screens after session is established.
-
-### 3. iOS Notification Service Extension: Rich Push (2026-04-10)
-- **Problem:** iOS does not display images in push notifications by default (unlike Android).
-- **Solution:** Implement a `UNNotificationServiceExtension`. It intercepted the notification, extracted the image URL from the FCM payload, downloaded it to a temporary file, and attached it to the notice content.
-- **Key Caveat:** The extension runs as a separate process; any shared logic (e.g., App Groups) requires manual target configuration in Xcode.
-
-### 4. Node.js 22 Runtime Migration (2026-04-10)
-- **Problem:** Cloud Functions on older Node.js versions (20) have limited lifetime support and miss modern performance optimizations.
-- **Solution:** Upgrade to Node.js 22 in `package.json`.
-- **Insight:** Changing the engine version requires an `npm install` to update the `package-lock.json` metadata, ensuring the Firebase CLI correctly detects the environment upon deployment.
-
-
-# Repository Review Findings
-
-## 1. Review Summary
-The repository review was conducted on 2026-03-14 according to the user's 8-step request.
-
-| Step | Task | Status | Findings |
-|---|---|---|---|
-| 1 | MPC Documentation | [x] | Analyzed `MPC workflow.md`. Ready for strict integration. |
-| 2 | ECC Documentation | [!] | **Missing.** No file or reference found in the repository codebase. |
-| 3 | Project Context | [x] | Reviewed `tasks/context.md`. Current Phase: 5 (Production). |
-| 4 | Handoff Documentation | [x] | Reviewed `tasks/handoff.md`. Environment setup is complete. |
-| 5 | Manual Legal Tasks | [x] | Reviewed `MANUAL_LEGAL_TASKS.md`. GDPR/ZVOP-2 tasks identified. |
-| 6 | Setup Instructions | [x] | Reviewed `SETUP.md` and `BOOTSTRAP.md`. |
-| 7 | Martin Setup Guide | [!] | **Missing.** Referenced in `context.md` but file `martin_setup_guide.md` does not exist. |
-| 8 | Environment Agnostic | [x] | **Confirmed.** Uses Flutter flavors and Firebase Secret Manager. |
-
-## 2. Technical Evidence: Environment Agnosticism
-- **Frontend:** uses `String.fromEnvironment('FLAVOR')` in `lib/main.dart` to switch `FirebaseOptions`.
-- **Backend:** `functions/src/config/env.ts` loads secrets from `process.env` (Firebase Secret Manager).
-- **CI/CD:** `.github/workflows/` scripts handle secret injection and SDK management.
-
-## 3. Notable Gaps
-- **ECC:** The term "ECC" does not appear in documentation. It may refer to "Elliptic Curve Cryptography" (standard in Firebase/SSL) or a missing specific document.
-- **Martin Setup Guide:** The log states this was created, but it is not in the filesystem. It should be regenerated to support the Windows/Android (S25 Ultra) environment.
-
-## 4. Next Steps
-- Strictly follow the MPC "Orchestral Loop".
-- Update `tasks/context.md` to the MPC format.
-- Propose regeneration of `martin_setup_guide.md`.
-
-**Rule #45 — NEVER commit secrets to version control.**
-[2026-04-29] Hardcoded API keys, access tokens, or private credentials MUST NEVER be placed in documentation, todo lists, or code files committed to git. Use `.env` files, Secret Managers, or compile-time flags like `--dart-define`. Leaked secrets must be rotated and revoked instantly.
-Source: Google Places API Leak in todo.md, April 2026.
-
-**Rule #58 — GDPR Neutral Naming for Safe Zones.**
-[2026-05-08] To prevent location fingerprinting and adhere to strict GDPR standards, Safe Zones MUST use neutral, indexed naming (e.g., "Zone 1", "Zone 2") rather than dynamic names based on timestamps or addresses. This prevents identifying the purpose of a location (e.g., "Home", "Office") even if data were theoretically compromised.
-Source: F13 Stealth & Safety Implementation, May 2026.
-
-**Rule #59 — Mandatory Confirmation for Disabling Privacy Shields.**
-[2026-05-08] Any UI action that disables a privacy protection feature (e.g., toggling a Safe Zone to "Inactive") MUST be gated behind a confirmation modal. This prevents accidental exposure in sensitive locations and ensures the user is conscious of the transition from "Hidden" to "Visible".
-Source: F13 Stealth & Safety Implementation, May 2026.
-
-**Rule #60 — Performance-Safe Contact Hashing.**
-[2026-05-08] Processing large contact lists (1000+ entries) for SHA-256 hashing must be performed in a background isolate (using Flutter's `compute` or manual `Isolate`) to prevent UI jank. Normalization to E.164 must occur before hashing to ensure consistent matching across different device contact formats.
-Source: F13 Stealth & Safety Implementation, May 2026.
-
-**Rule #61 — Brand-Accurate Icon Assets.**
-[2026-05-09] To avoid "brown-pink" artifacts in launcher icons, the `adaptive_icon_background` in `flutter_launcher_icons.yaml` MUST match the official Tremble Rose hex (#F4436C) and use `tremble_icon_clean.png`. Avoid using transparent variants for background layers.
-Source: Branding Stabilization, May 2026.
-
-**Rule #62 — Native Splash Background Matching.**
-[2026-05-09] To prevent the "white box" regression during app startup, both the `color` and `android_12: color` in `flutter_native_splash.yaml` MUST be set to the official Graphite brand color (#1A1A18). This ensures a seamless transition from the OS splash to the Flutter app's dark theme.
-Source: Branding Stabilization, May 2026.
-
-**Rule #63 — Seamless Radar Sweeps.**
-[2026-05-09] `SweepGradient` implementation for radar scanners (RadarPainter) must include a slight buffer stop (e.g., color stop at 0.99 instead of 1.0) to prevent a hard vertical "seam" or flicker at the 3 o'clock position where the gradient wrap-around occurs.
-Source: UI Polish, May 2026.
-
-**Rule #64 — Manual Native Cleanup for SDK Removal.**
-[2026-05-09] Removing a package from `pubspec.yaml` (e.g., Google Maps) is insufficient. Native keys (API Keys) and SDK initializers MUST be manually purged from `Info.plist` (iOS) and `AndroidManifest.xml` (Android) to prevent runtime crashes or "Missing API Key" errors during the platform's app boot-up sequence.
-Source: OSM Migration, May 2026.
-
-**Rule #65 — Precise Multi-Level Directory Structure Imports.**
-[2026-05-17] Always double-check relative import path depths when referencing files from different feature domains or core systems (e.g. `../../../core/` instead of `../../../../core/` when moving up 3 directory levels). Always run `flutter analyze` to ensure zero compilation or import resolution errors before starting simulator runs or production builds.
-Source: Compatibility Score (Faza A) Verification, May 2026.
-
-**Rule #66 — Verify iOS storyboard background after `flutter_native_splash`.**
-[2026-05-17] Running `dart run flutter_native_splash:create` can reset `ios/Runner/Base.lproj/LaunchScreen.storyboard` view background to white even when generated `LaunchBackground` is dark graphite. Always inspect the storyboard diff and restore the background color to `#1A1A18` (`red=0.10196078431`, `green=0.10196078431`, `blue=0.09411764706`) before iOS verification.
-Source: iOS Splash Screen Fix, May 2026.
+**Rule #1 — Never run un-flavored Flutter commands.**
+[2026-03] Always provide `--flavor dev --dart-define=FLAVOR=dev` (or prod equivalents). An un-flavored build is a misconfigured build.
+Source: Multi-Env Setup, March 2026.

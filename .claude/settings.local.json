@@ -85,7 +85,9 @@
       "Bash(mkdir -p /tmp/design)",
       "Bash(tar -xzf /tmp/design.gz)",
       "Bash(flutter devices *)",
-      "Bash(adb -s R5CY12RLCWE logcat -d flutter:D *:S)"
+      "Bash(adb -s R5CY12RLCWE logcat -d flutter:D *:S)",
+      "Skill(gsd-resume-work)",
+      "Bash(bash:*)"
     ]
   }
 }

@@ -1,3 +1,53 @@
+## Session State — 2026-05-20 15:00 CEST (Session 46)
+- Active Task: Deploy Cloudflare Worker & map validation
+- Environment: Dev (mobile: com.pulse)
+- Modified Files:
+    - `scratch/PMTiles/serverless/cloudflare/src/index.ts` (R2 type guard + R2GetOptions)
+    - `tasks/lessons.md` (full rewrite: deduped rules, removed stale section, added Rule #67)
+    - `tasks/todo.md` (updated to V4 with check marks on completed map tasks)
+    - `tasks/context.md`
+- Open Problems: BLOCKER-003 (RevenueCat/legal), BLOCKER-005 (iOS dev provisioning).
+- System Status: `flutter analyze` SUCCESS. `flutter test` SUCCESS (68/68). `npx tsc` SUCCESS. `npm run biome-check` SUCCESS. Worker deployed successfully.
+
+## Session Handoff
+- Completed:
+  - Fixed Cloudflare Worker TS error: `R2ObjectBody | R2Object` type narrowed with `"body" in resp` guard.
+  - Fixed `options: any` → `options: R2GetOptions` to satisfy Biome linter.
+  - Ran `biome check --apply-unsafe` to clean up STYLE_JSON key formatting.
+  - Deployed `tremble-maps-worker` live to Cloudflare: `https://tremble-maps-worker.ams-solutions-d-o-o.workers.dev`.
+  - Added and verified custom domain `maps.trembledating.com`, serving custom styles and PMTiles live.
+  - Verified `tremble_dark_style.json` is served correctly with custom theme styling.
+  - Confirmed `planet.pmtiles` database is uploaded by Martin.
+  - Cleaned up the `tasks/` folder: archived completed plans, deleted duplicate plan, and rewrote `tasks/lessons.md`.
+- In Progress: None.
+- Blocked:
+  - BLOCKER-003: RevenueCat/legal (company registration required).
+  - BLOCKER-005: iOS provisioning for `com.pulse`.
+- Next Action:
+  1. Run the mobile app (`flutter run --flavor dev --dart-define=FLAVOR=dev`) on a device/simulator to visually inspect the premium dark map styling.
+
+
+
+## Session State — 2026-05-19 CEST (Session 44)
+- Active Task: Protomaps Apple Maps styling & edge worker deployment roadmap
+- Environment: Dev (website: tremble-website & mobile: com.pulse)
+- Modified Files: tasks/context.md
+- Open Problems: BLOCKER-003 (RevenueCat/legal), BLOCKER-005 (iOS dev provisioning).
+- System Status: Dev server is running. Web sandbox verified. CORS configs correct.
+
+## Session Handoff
+- Completed:
+  - Formulated the comprehensive 5-step roadmap for Tremble dark map engine deployment.
+  - Explained the futureproofing and scalability of the hybrid vector-raster approach.
+  - Documented where the style JSON must be placed (Website public dir and Cloudflare Worker setting).
+- In Progress: Waiting for founder review of the styling deployment roadmap.
+- Blocked:
+  - BLOCKER-003: RevenueCat/legal.
+  - BLOCKER-005: iOS provisioning for `com.pulse`.
+- Next Action:
+  1. Founder updates the Cloudflare Worker with `tremble_dark_style.json`.
+  2. Sync Flutter client map settings to point to the production map style in both dev and prod if desired.
+
 ## Session State — 2026-05-19 00:33 CEST (Session 41)
 - Active Task: ADR-007 TrembleMotion implementation — completed locally
 - Environment: Dev
