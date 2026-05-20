@@ -192,19 +192,19 @@ class _CannabisToggleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
         color: value
-            ? primary.withValues(alpha: 0.10)
+            ? primary.withValues(alpha: 0.18)
             : (isDark
-                ? Colors.white.withValues(alpha: 0.06)
-                : Colors.black.withValues(alpha: 0.03)),
-        borderRadius: BorderRadius.circular(16),
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.04)),
+        borderRadius: BorderRadius.circular(100),
         border: Border.all(
           color: value
-              ? primary.withValues(alpha: 0.5)
+              ? primary
               : (isDark ? Colors.white24 : Colors.black12),
-          width: 1,
+          width: value ? 2 : 1,
         ),
       ),
       child: Row(

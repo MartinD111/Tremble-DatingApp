@@ -824,9 +824,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       onSavePartner: (v) =>
                           setState(() => _partnerChildrenPreference = v),
                       tr: tr,
-                      hasChildren: _hasChildren,
-                      onHasChildrenChanged: (v) =>
-                          setState(() => _hasChildren = v),
                     ),
                     IntroversionStep(
                       values: _introversionRange,
@@ -1811,35 +1808,57 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         }
       }
     } catch (e) {
-      if (kDebugMode && user != null) {
-        // Dev mode: show error but force local state and navigate through.
+      if (kDebugMode) {
         debugPrint('[DEV] Registration error (bypassed): $e');
-        ref.read(authStateProvider.notifier).setUser(
-              user.copyWith(isOnboarded: true),
-            );
-        await ref.read(gdprConsentProvider.notifier).resetConsent();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('[DEV] Error bypassed: $e',
-                  style: GoogleFonts.instrumentSans()),
-              backgroundColor: Colors.orange.shade800,
-              duration: const Duration(seconds: 5),
-            ),
-          );
-          setState(() => _isHardLocking = true);
-          await Future.delayed(const Duration(milliseconds: 2500));
+        if (user != null) {
+          // Photo upload succeeded — force-complete onboarding locally.
+          ref.read(authStateProvider.notifier).setUser(
+                user.copyWith(isOnboarded: true),
+              );
+          await ref.read(gdprConsentProvider.notifier).resetConsent();
           if (mounted) {
-            setState(() => _isHardLocking = false);
-            _goToPage(
-                Platform.isAndroid ? 29 : 28); // RitualStep — "SIGNAL LOCKED"
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('[DEV] Error bypassed: $e',
+                    style: GoogleFonts.instrumentSans()),
+                backgroundColor: Colors.orange.shade800,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+            setState(() => _isHardLocking = true);
+            await Future.delayed(const Duration(milliseconds: 2500));
+            if (mounted) {
+              setState(() => _isHardLocking = false);
+              _goToPage(
+                  Platform.isAndroid ? 29 : 28); // RitualStep — "SIGNAL LOCKED"
+            }
+          }
+        } else {
+          // Photo upload itself failed — user not yet built; let them retry.
+          setState(() => _isRegistering = false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('[DEV] Photo upload failed — retry: $e',
+                    style: GoogleFonts.instrumentSans()),
+                backgroundColor: Colors.red.shade800,
+                duration: const Duration(seconds: 6),
+              ),
+            );
           }
         }
       } else {
         setState(() => _isRegistering = false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Registration failed: $e')),
+            SnackBar(
+              content: Text(tr('registration_error'),
+                  style: GoogleFonts.instrumentSans()),
+              backgroundColor: Colors.red.shade800,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
           );
         }
       }

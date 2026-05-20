@@ -536,6 +536,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isNavBarVisible = ref.watch(isNavBarVisibleProvider);
 
     return Stack(
+      fit: StackFit.expand,
       children: [
         // Content with Liquid Transition
         Positioned.fill(
@@ -978,17 +979,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       .onSurface
                                       .withValues(alpha: 0.7),
                                 ).copyWith(letterSpacing: 2),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                t('system_nominal', lang).toUpperCase(),
-                                style: TrembleTheme.telemetryTextStyle(
-                                  context,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: 0.5),
-                                ).copyWith(fontSize: 10, letterSpacing: 1.5),
                               ),
                             ],
                           ).animate().fade().slideY(begin: 0.5),

@@ -1,4 +1,4 @@
-import 'dart:io' show HttpClient;
+import 'dart:io' show HandshakeException, HttpClient, SocketException, TlsException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/io_client.dart';
 import 'package:image_picker/image_picker.dart';
@@ -46,15 +46,13 @@ class UploadService {
     final uploadUrl = result['uploadUrl'] as String;
     final publicUrl = result['publicUrl'] as String;
 
-    // Step 2: PUT directly to R2 via IOClient (resolves TLS handshake issues with R2)
+    // Step 2: PUT directly to R2 via IOClient
     final ioHttpClient = HttpClient();
     final client = IOClient(ioHttpClient);
     try {
       final response = await client.put(
         Uri.parse(uploadUrl),
-        headers: {
-          'Content-Type': mimeType,
-        },
+        headers: {'Content-Type': mimeType},
         body: bytes,
       );
 
@@ -66,6 +64,21 @@ class UploadService {
       }
 
       return publicUrl;
+    } on HandshakeException catch (e) {
+      throw TrembleApiException(
+        code: 'unavailable',
+        message: 'TLS handshake failed uploading to R2: $e',
+      );
+    } on SocketException catch (e) {
+      throw TrembleApiException(
+        code: 'unavailable',
+        message: 'Network error uploading to R2: $e',
+      );
+    } on TlsException catch (e) {
+      throw TrembleApiException(
+        code: 'unavailable',
+        message: 'TLS error uploading to R2: $e',
+      );
     } finally {
       client.close();
     }

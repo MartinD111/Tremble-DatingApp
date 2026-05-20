@@ -1,10 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../../core/theme_provider.dart';
+import '../../../shared/ui/gradient_scaffold.dart';
+import '../../../shared/ui/tremble_back_button.dart';
 
 @immutable
 class PremiumPlanCard {
@@ -124,14 +128,15 @@ class PremiumUpgradeScreen extends ConsumerStatefulWidget {
 }
 
 class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
-  late PageController _pageController;
+  final PageController _pageController = PageController(viewportFraction: 0.76);
   double _currentPage = 0.0;
+  int _lastHapticPage = 0;
   bool _isLoading = false;
 
   // self-contained localized dictionary for English and Slovenian languages
   final Map<String, Map<String, String>> _localTranslations = {
     'en': {
-      'premium_title': 'Tremble Upgrade',
+      'premium_title': 'Upgrade Tremble',
       'premium_subtitle': 'Elevate your connection game. Discover physically.',
       'premium_cta_get_premium': 'Get the Tremble Premium Plan',
       'premium_cta_get_weekend': 'Get the Weekend Getaway Plan',
@@ -174,7 +179,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_free_wave_limit': 'Standard mutual wave limit',
     },
     'sl': {
-      'premium_title': 'Tremble Nadgradnja',
+      'premium_title': 'Nadgradi Tremble',
       'premium_subtitle': 'Dvigni raven spoznavanja. Odkrij fizično.',
       'premium_cta_get_premium': 'Aktiviraj Tremble Premium',
       'premium_cta_get_weekend': 'Aktiviraj Weekend Getaway',
@@ -228,12 +233,15 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.76)
-      ..addListener(() {
-        setState(() {
-          _currentPage = _pageController.page ?? 0.0;
-        });
-      });
+    _pageController.addListener(() {
+      final newPage = _pageController.page ?? 0.0;
+      final int snapped = newPage.round().clamp(0, premiumPlanCards.length - 1);
+      if (snapped != _lastHapticPage) {
+        _lastHapticPage = snapped;
+        HapticFeedback.selectionClick();
+      }
+      setState(() => _currentPage = newPage);
+    });
   }
 
   @override
@@ -408,169 +416,130 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     if (user == null) return const Scaffold(body: SizedBox.shrink());
 
     final lang = user.appLanguage;
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A18);
+    final subTextColor = isDark
+        ? Colors.white.withValues(alpha: 0.87)
+        : const Color(0xFF1A1A18).withValues(alpha: 0.75);
     final int selectedIndex =
         _currentPage.round().clamp(0, premiumPlanCards.length - 1);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF1A1A18), // Deep graphite default
-      body: Stack(
+    return GradientScaffold(
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          // Elegant decorative subtle glow effects in the background
-          Positioned(
-            top: -100,
-            right: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFF4436C).withValues(alpha: 0.08),
-                    blurRadius: 100,
-                    spreadRadius: 50,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 100,
-            left: -50,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFF5C842).withValues(alpha: 0.05),
-                    blurRadius: 80,
-                    spreadRadius: 40,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
           // Main Layout Content
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Clean Premium Navigation Header
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => context.pop(),
-                        icon: const Icon(LucideIcons.arrowLeft,
-                            color: Colors.white),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Navigation Header
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    TrembleBackButton(onPressed: () => context.pop()),
+                    const Spacer(),
+                    Text(
+                      _t('premium_title', lang),
+                      style: GoogleFonts.playfairDisplay(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
                       ),
-                      const Spacer(),
-                      Text(
-                        _t('premium_title', lang),
-                        style: GoogleFonts.instrumentSans(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const Spacer(),
-                      const SizedBox(width: 48), // Balance for alignment
-                    ],
-                  ),
-                ),
-
-                // Subtitle introduction
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  child: Text(
-                    _t('premium_subtitle', lang),
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      height: 1.3,
                     ),
+                    const Spacer(),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
+
+              // Subtitle introduction
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Text(
+                  _t('premium_subtitle', lang),
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: subTextColor,
+                    height: 1.3,
                   ),
                 ),
+              ),
 
                 const SizedBox(height: 16),
 
-                // 3D Horizontal Card Shuffle Stack Viewport Area
+                // PageView handles gesture/physics; Stack renders cards in z-order
+                // Google Wallet–style card carousel
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      return PageView.builder(
-                        controller: _pageController,
-                        itemCount: premiumPlanCards.length,
-                        physics: const BouncingScrollPhysics(),
-                        itemBuilder: (context, i) {
-                          final item = premiumPlanCards[i];
-                          final double offset = i - _currentPage;
+                      final W = constraints.maxWidth;
+                      // Card fills most of the width; adjacent cards peek ~10% from each side
+                      final cardWidth = W * 0.82;
+                      // peek amount ≈ spacing (distance from active center to adjacent center)
+                      final spacing = W * 0.11;
 
-                          // Dynamic stack physics calculations
-                          double translationX = 0.0;
-                          double scale = 1.0;
-                          double rotY = 0.0;
-                          double blurSigma = 0.0;
-                          double opacity = 1.0;
+                      // Farthest card painted first (bottom), active painted last (top)
+                      final sortedIndices =
+                          List.generate(premiumPlanCards.length, (i) => i)
+                            ..sort((a, b) {
+                              final dA = (_currentPage - a).abs();
+                              final dB = (_currentPage - b).abs();
+                              return dB.compareTo(dA);
+                            });
 
-                          if (offset >= 0) {
-                            // Layered background cards stacked behind the front card
-                            translationX =
-                                -offset * (constraints.maxWidth * 0.44);
-                            scale = 1.0 - (offset * 0.12);
-                            rotY = -offset * 0.24;
-                            blurSigma = offset * 4.5;
-                            opacity = (1.0 - (offset * 0.4)).clamp(0.0, 1.0);
-                          } else {
-                            // Swiping away card (to the left)
-                            translationX =
-                                offset * (constraints.maxWidth * 0.12);
-                            scale = 1.0 - (offset.abs() * 0.08);
-                            rotY = -offset * 0.16;
-                            blurSigma = offset.abs() * 2.0;
-                            opacity =
-                                (1.0 - (offset.abs() * 0.3)).clamp(0.0, 1.0);
-                          }
-
-                          Widget cardWidget = Opacity(
-                            opacity: opacity,
-                            child: Transform(
-                              transform: Matrix4.identity()
-                                ..setEntry(3, 2, 0.001) // perspective
-                                ..translateByDouble(
-                                  translationX,
-                                  0.0,
-                                  -offset.abs() * 100.0,
-                                  1.0,
-                                )
-                                ..scaleByDouble(scale, scale, scale, 1.0)
-                                ..rotateY(rotY),
+                      return Stack(
+                        children: [
+                          // Invisible PageView — provides native swipe physics & snap
+                          PageView.builder(
+                            controller: _pageController,
+                            itemCount: premiumPlanCards.length,
+                            physics: const BouncingScrollPhysics(),
+                            itemBuilder: (_, __) => const SizedBox.expand(),
+                          ),
+                          // Visible cards with correct z-order
+                          Positioned.fill(
+                            child: IgnorePointer(
+                            child: Stack(
+                              clipBehavior: Clip.hardEdge,
                               alignment: Alignment.center,
-                              child: _buildCreditCard(item, lang),
+                              children: sortedIndices.map((i) {
+                                final double offset = i - _currentPage;
+                                final double absOff = offset.abs();
+                                // Only render immediate neighbours
+                                if (absOff > 1.5) return const SizedBox.shrink();
+
+                                final double scale =
+                                    (1.0 - absOff * 0.04).clamp(0.92, 1.0);
+                                final double opacity =
+                                    (1.0 - absOff * 0.3).clamp(0.0, 1.0);
+                                // tx = peek amount × sign of offset
+                                final double tx = offset * spacing;
+
+                                return Transform.translate(
+                                  offset: Offset(tx, 0),
+                                  child: Transform.scale(
+                                    scale: scale,
+                                    child: Opacity(
+                                      opacity: opacity,
+                                      child: SizedBox(
+                                        width: cardWidth,
+                                        child: _buildCreditCard(
+                                            premiumPlanCards[i], lang),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
                             ),
-                          );
-
-                          // Real-time backdrop blur transformation for stacked card depth
-                          if (blurSigma > 0.1) {
-                            cardWidget = ImageFiltered(
-                              imageFilter: ImageFilter.blur(
-                                sigmaX: blurSigma,
-                                sigmaY: blurSigma,
-                              ),
-                              child: cardWidget,
-                            );
-                          }
-
-                          return cardWidget;
-                        },
+                          ),
+                          ),
+                        ],
                       );
                     },
                   ),
@@ -584,17 +553,16 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                   children: List.generate(premiumPlanCards.length, (i) {
                     final double distance = (i - _currentPage).abs();
                     final double factor = (1.0 - distance).clamp(0.0, 1.0);
+                    final inactiveColor = isDark
+                        ? Colors.white.withValues(alpha: 0.3)
+                        : Colors.black.withValues(alpha: 0.2);
                     return Container(
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       width: 8 + (factor * 12),
                       height: 8,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(4),
-                        color: Color.lerp(
-                          Colors.white.withValues(alpha: 0.3),
-                          const Color(0xFFF4436C),
-                          factor,
-                        ),
+                        color: Color.lerp(inactiveColor, const Color(0xFFF4436C), factor),
                       ),
                     );
                   }),
@@ -614,7 +582,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                 ),
               ],
             ),
-          ),
 
           // Loading screen overlay during mock transactional events
           if (_isLoading)
@@ -655,17 +622,16 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
       decoration: BoxDecoration(
-        color: data.color,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            data.color,
+            Color.lerp(data.color, Colors.black, 0.35)!,
+          ],
+        ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: data.borderColor, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 15,
-            spreadRadius: 2,
-            offset: const Offset(0, 10),
-          ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
@@ -851,48 +817,31 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
 
     // Index 3 is the Free Tier Card
     if (index == 3) {
-      if (isPremium) {
-        return SizedBox(
-          width: double.infinity,
-          child: TextButton.icon(
-            onPressed: () => _showDowngradeConfirmation(user),
-            icon: const Icon(LucideIcons.arrowLeftRight,
-                size: 18, color: Colors.white60),
-            label: Text(
-              _t('switch_to_free', user.appLanguage),
-              style: GoogleFonts.instrumentSans(
-                color: Colors.white60,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: isPremium ? () => _showDowngradeConfirmation(user) : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isPremium
+                ? Colors.white.withValues(alpha: 0.15)
+                : Colors.white.withValues(alpha: 0.05),
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: Colors.white.withValues(alpha: 0.05),
+            disabledForegroundColor: Colors.white30,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(100)),
+            elevation: 0,
+          ),
+          child: Text(
+            'Switch back to free',
+            style: GoogleFonts.instrumentSans(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
           ),
-        );
-      } else {
-        return SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: null, // Disabled as it is the current basic plan
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withValues(alpha: 0.05),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100)),
-            ),
-            child: Text(
-              _t('current_plan', user.appLanguage),
-              style: GoogleFonts.instrumentSans(
-                color: Colors.white30,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-          ),
-        );
-      }
+        ),
+      );
     }
 
     // Standard upgrade plans

@@ -23,6 +23,7 @@ class GymSearchWidget extends ConsumerStatefulWidget {
     required this.onRemove,
     this.onSearchFocused,
     this.focusNode,
+    this.showSelectedGyms = true,
   });
 
   /// Current selection (read-only; owned by parent state).
@@ -41,6 +42,10 @@ class GymSearchWidget extends ConsumerStatefulWidget {
   /// Optional external focus node. If provided, the widget uses this instead
   /// of its internal one — allows the parent to programmatically focus the field.
   final FocusNode? focusNode;
+
+  /// Whether to render the selected-gym tiles below the search field.
+  /// Set to false when embedding inside an "add only" bottom sheet.
+  final bool showSelectedGyms;
 
   @override
   ConsumerState<GymSearchWidget> createState() => _GymSearchWidgetState();
@@ -301,7 +306,7 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
         ],
 
         // ── Selected gyms ────────────────────────────────────────────────
-        if (widget.selectedGyms.isNotEmpty) ...[
+        if (widget.showSelectedGyms && widget.selectedGyms.isNotEmpty) ...[
           const SizedBox(height: 16),
           ...widget.selectedGyms.map(
             (gym) => _GymTile(

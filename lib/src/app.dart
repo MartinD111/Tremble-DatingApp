@@ -21,6 +21,17 @@ class TrembleApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     final user = ref.read(authStateProvider);
 
+    // One-time sync: when user first logs in on a new device, apply their
+    // Firestore isDarkMode preference if it differs from the local default.
+    ref.listen<AuthUser?>(authStateProvider, (previous, next) {
+      if (previous == null && next != null) {
+        final desired = next.isDarkMode ? ThemeMode.dark : ThemeMode.light;
+        if (ref.read(themeModeProvider) != desired) {
+          ref.read(themeModeProvider.notifier).setThemeMode(desired);
+        }
+      }
+    });
+
     final theme = TrembleTheme.lightTheme(user);
     final darkTheme = TrembleTheme.darkTheme(user);
 

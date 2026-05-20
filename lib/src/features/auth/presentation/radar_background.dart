@@ -93,8 +93,8 @@ class _RadarBackgroundState extends State<RadarBackground>
           },
         ),
 
-        // Content
-        SafeArea(child: widget.child),
+        // Content — SafeArea is caller's responsibility
+        widget.child,
       ],
     );
   }

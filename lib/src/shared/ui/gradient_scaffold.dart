@@ -50,6 +50,7 @@ class GradientScaffold extends ConsumerWidget {
       floatingActionButton: floatingActionButton,
       floatingActionButtonLocation: floatingActionButtonLocation,
       body: Stack(
+        fit: StackFit.expand,
         children: [
           Container(
             decoration: BoxDecoration(
