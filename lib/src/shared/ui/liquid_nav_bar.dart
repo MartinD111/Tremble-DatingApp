@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class LiquidNavBar extends StatelessWidget {
   final int currentIndex;
@@ -84,7 +85,10 @@ class LiquidNavBar extends StatelessWidget {
                     final isPulsing = pulsingIndexes.contains(index);
 
                     return GestureDetector(
-                      onTap: () => onTap(index),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        onTap(index);
+                      },
                       behavior: HitTestBehavior.opaque,
                       child: Container(
                         width: itemWidth,

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class TrembleCircleButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -29,7 +30,10 @@ class TrembleCircleButton extends StatelessWidget {
     final iconColor = color ?? (isDark ? Colors.white : Colors.black87);
 
     return GestureDetector(
-      onTap: onPressed,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onPressed();
+      },
       child: ClipOval(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),

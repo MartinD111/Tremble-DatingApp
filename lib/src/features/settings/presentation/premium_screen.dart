@@ -1,11 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:flutter/services.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../../shared/ui/tremble_back_button.dart';
 
 @immutable
 class PremiumPlanCard {
@@ -157,26 +158,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
   int _lastHapticPage = 0;
   bool _isLoading = false;
 
-  late final TextStyle _screenTitleStyle = GoogleFonts.instrumentSans(
-    color: Colors.white,
-    fontWeight: FontWeight.bold,
-    fontSize: 18,
-  );
-  late final TextStyle _screenSubtitleStyle = GoogleFonts.playfairDisplay(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-    height: 1.3,
-  );
-  late final TextStyle _dialogTitleStyle = GoogleFonts.playfairDisplay(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-  );
-  late final TextStyle _dialogSubtitleStyle = GoogleFonts.instrumentSans(
-    color: Colors.white70,
-    height: 1.4,
-  );
+  // Theme-independent card-level text styles (cards are always dark).
   late final TextStyle _cardTagStyle = GoogleFonts.instrumentSans(
     fontSize: 10,
     fontWeight: FontWeight.bold,
@@ -218,6 +200,20 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     fontSize: 12,
     height: 1.3,
   );
+
+  // Resolve accent color from gender when the setting is on.
+  static Color _resolveGenderAccent({
+    required String? gender,
+    required bool isGenderBased,
+    required Color fallback,
+  }) {
+    if (!isGenderBased) return fallback;
+    return switch (gender?.toLowerCase()) {
+      'male' => const Color(0xFF4A9EFF),
+      'female' => const Color(0xFFF4436C),
+      _ => fallback,
+    };
+  }
 
   // self-contained localized dictionary for English and Slovenian languages
   final Map<String, Map<String, String>> _localTranslations = {
@@ -403,27 +399,35 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
   }
 
   void _showDowngradeConfirmation(AuthUser user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor:
+            isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF2F2F7),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           _t('confirm_downgrade', user.appLanguage),
           style: GoogleFonts.instrumentSans(
-              color: Colors.white, fontWeight: FontWeight.bold),
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Text(
           _t('downgrade_prompt', user.appLanguage),
-          style:
-              GoogleFonts.instrumentSans(color: Colors.white70, fontSize: 14),
+          style: GoogleFonts.instrumentSans(
+            color: isDark ? Colors.white70 : Colors.black54,
+            fontSize: 14,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               _t('no_keep', user.appLanguage),
-              style: GoogleFonts.instrumentSans(color: Colors.white54),
+              style: GoogleFonts.instrumentSans(
+                color: isDark ? Colors.white54 : Colors.black38,
+              ),
             ),
           ),
           ElevatedButton(
@@ -452,8 +456,10 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     required String subtitle,
     required String lang,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Dialog(
-      backgroundColor: const Color(0xFF1A1A18),
+      backgroundColor:
+          isDark ? const Color(0xFF1A1A18) : const Color(0xFFF2F2F7),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -473,21 +479,28 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: _dialogTitleStyle,
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: _dialogSubtitleStyle,
+              style: GoogleFonts.instrumentSans(
+                color: isDark ? Colors.white70 : Colors.black54,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  context.pop(); // Go back to settings
+                  Navigator.pop(context);
+                  context.pop();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF4436C),
@@ -516,17 +529,46 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     final pageController = _pageController;
 
     if (pageController == null) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF1A1A18),
-        body: SizedBox.shrink(),
-      );
+      return const Scaffold(body: SizedBox.shrink());
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF1A1A18), // Deep graphite default
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor =
+        isDark ? const Color(0xFF1A1A18) : const Color(0xFFF2F2F7);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white70 : Colors.black54;
+    final glowOpacity = isDark ? 0.08 : 0.05;
+    final glowOpacity2 = isDark ? 0.05 : 0.03;
+
+    final genderAccent = _resolveGenderAccent(
+      gender: user.gender,
+      isGenderBased: user.isGenderBasedColor,
+      fallback: const Color(0xFFF4436C),
+    );
+
+    final screenTitleStyle = GoogleFonts.playfairDisplay(
+      color: textColor,
+      fontWeight: FontWeight.bold,
+      fontSize: 24,
+    );
+    final screenSubtitleStyle = GoogleFonts.instrumentSans(
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+      color: subtextColor,
+      height: 1.4,
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        systemNavigationBarColor: bgColor,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+      child: Scaffold(
+      backgroundColor: bgColor,
       body: Stack(
         children: [
-          // Elegant decorative subtle glow effects in the background
+          // Decorative glow effects
           Positioned(
             top: -100,
             right: -50,
@@ -537,7 +579,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF4436C).withValues(alpha: 0.08),
+                    color: genderAccent.withValues(alpha: glowOpacity),
                     blurRadius: 100,
                     spreadRadius: 50,
                   ),
@@ -555,7 +597,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF5C842).withValues(alpha: 0.05),
+                    color: genderAccent.withValues(alpha: glowOpacity2),
                     blurRadius: 80,
                     spreadRadius: 40,
                   ),
@@ -564,53 +606,50 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
             ),
           ),
 
-          // Main Layout Content
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Clean Premium Navigation Header
+                // Header
                 Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(
                     children: [
-                      IconButton(
-                        onPressed: () => context.pop(),
-                        icon: const Icon(LucideIcons.arrowLeft,
-                            color: Colors.white),
-                      ),
+                      TrembleBackButton(onPressed: () => context.pop()),
                       const Spacer(),
                       Text(
                         _t('premium_title', lang),
-                        style: _screenTitleStyle,
+                        style: screenTitleStyle,
                       ),
                       const Spacer(),
-                      const SizedBox(width: 48), // Balance for alignment
+                      const SizedBox(width: 48),
                     ],
                   ),
                 ),
 
-                // Subtitle introduction
+                // Subtitle
                 Padding(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   child: Text(
                     _t('premium_subtitle', lang),
                     textAlign: TextAlign.center,
-                    style: _screenSubtitleStyle,
+                    style: screenSubtitleStyle,
                   ),
                 ),
 
                 const SizedBox(height: 16),
 
-                // 3D Horizontal Card Shuffle Stack Viewport Area
+                // Carousel
                 Expanded(
                   child: _PremiumCarousel(
                     pageController: pageController,
                     cardBuilder: (card, language) =>
                         _buildCreditCard(card, language),
                     lang: lang,
+                    accentColor: genderAccent,
+                    isDark: isDark,
                     onPageChanged: (index) =>
                         setState(() => _selectedIndex = index),
                   ),
@@ -618,7 +657,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
 
                 const SizedBox(height: 24),
 
-                // Contextual CTA Button Area matching the active card
+                // CTA
                 Padding(
                   padding:
                       const EdgeInsets.only(left: 24, right: 24, bottom: 24),
@@ -626,13 +665,14 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                     _selectedIndex,
                     premiumPlanCards[_selectedIndex],
                     user,
+                    genderAccent,
                   ),
                 ),
               ],
             ),
           ),
 
-          // Loading screen overlay during mock transactional events
+          // Loading overlay
           if (_isLoading)
             Positioned.fill(
               child: BackdropFilter(
@@ -643,9 +683,9 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const CircularProgressIndicator(
+                        CircularProgressIndicator(
                           valueColor:
-                              AlwaysStoppedAnimation<Color>(Color(0xFFF4436C)),
+                              AlwaysStoppedAnimation<Color>(genderAccent),
                         ),
                         const SizedBox(height: 20),
                         Text(
@@ -664,6 +704,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
             ),
         ],
       ),
+    ),
     );
   }
 
@@ -686,7 +727,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
         borderRadius: BorderRadius.circular(28),
         child: Stack(
           children: [
-            // Elegant background line vectors simulating a premium card design
             Positioned(
               right: -50,
               top: -50,
@@ -723,7 +763,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header badge tag + chip
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -745,7 +784,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
 
                   const Spacer(flex: 2),
 
-                  // Plan Title
                   Text(
                     _t(data.titleKey, lang),
                     style: _cardTitleStyle,
@@ -753,7 +791,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
 
                   const SizedBox(height: 8),
 
-                  // Price
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
@@ -815,7 +852,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                       color: Colors.white.withValues(alpha: 0.1), height: 1),
                   const SizedBox(height: 16),
 
-                  // Included Features Title
                   Text(
                     _t('features', lang).toUpperCase(),
                     style: _featureTitleStyle,
@@ -823,7 +859,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
 
                   const SizedBox(height: 10),
 
-                  // Bullet Points list
                   Expanded(
                     flex: 12,
                     child: ListView.separated(
@@ -861,28 +896,37 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     );
   }
 
-  Widget _buildCTAButton(int index, PremiumPlanCard data, AuthUser user) {
+  Widget _buildCTAButton(
+      int index, PremiumPlanCard data, AuthUser user, Color genderAccent) {
     final isPremium = user.isPremium;
 
-    // Index 4 is the Free Tier card.
     if (index == 4) {
       if (isPremium) {
-        return SizedBox(
-          width: double.infinity,
-          child: TextButton.icon(
-            onPressed: () => _showDowngradeConfirmation(user),
-            icon: const Icon(LucideIcons.arrowLeftRight,
-                size: 18, color: Colors.white60),
-            label: Text(
-              _t(data.ctaPremiumKey, user.appLanguage),
-              style: GoogleFonts.instrumentSans(
-                color: Colors.white60,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
+        return GestureDetector(
+          onTap: () => _showDowngradeConfirmation(user),
+          child: Container(
+            width: double.infinity,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100),
+              color: const Color(0xFF2A2A2E),
             ),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(LucideIcons.arrowLeftRight,
+                    size: 16, color: Colors.white60),
+                const SizedBox(width: 10),
+                Text(
+                  _t(data.ctaPremiumKey, user.appLanguage),
+                  style: GoogleFonts.instrumentSans(
+                    color: Colors.white60,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -890,7 +934,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: null, // Disabled as it is the current basic plan
+            onPressed: null,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white.withValues(alpha: 0.05),
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -910,14 +954,14 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       }
     }
 
-    // Standard upgrade plans
     final ctaText = _t(
       isPremium ? data.ctaPremiumKey : data.ctaBasicKey,
       user.appLanguage,
     );
 
+    // Index 0 (premium card) uses gender-based accent; others keep their card accent.
     final buttonBg = switch (index) {
-      0 => const Color(0xFFF4436C),
+      0 => genderAccent,
       1 => const Color(0xFFF5C842),
       2 => const Color(0xFF00C8FF),
       3 => const Color(0xFFFFB347),
@@ -960,38 +1004,46 @@ class _PremiumCarousel extends StatelessWidget {
     required this.pageController,
     required this.cardBuilder,
     required this.lang,
+    required this.accentColor,
+    required this.isDark,
     required this.onPageChanged,
   });
 
   final PageController pageController;
   final Widget Function(PremiumPlanCard card, String lang) cardBuilder;
   final String lang;
+  final Color accentColor;
+  final bool isDark;
   final ValueChanged<int> onPageChanged;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: pageController,
-      builder: (context, _) {
-        final currentPage = pageController.hasClients
-            ? pageController.page ?? pageController.initialPage.toDouble()
-            : pageController.initialPage.toDouble();
+    // LayoutBuilder is outermost so screen dimensions are computed only on
+    // actual layout changes — not on every scroll frame.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = constraints.maxWidth * 0.82;
+        final cardHeight = constraints.maxHeight - 8 - 24; // minus dots + gap
 
-        return Column(
-          children: [
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final cardWidth = constraints.maxWidth * 0.82;
-                  final sortedIndices =
-                      List.generate(premiumPlanCards.length, (i) => i)
-                        ..sort((a, b) {
-                          final dA = (currentPage - a).abs();
-                          final dB = (currentPage - b).abs();
-                          return dB.compareTo(dA);
-                        });
+        return AnimatedBuilder(
+          animation: pageController,
+          builder: (context, _) {
+            final currentPage = pageController.hasClients
+                ? pageController.page ?? pageController.initialPage.toDouble()
+                : pageController.initialPage.toDouble();
 
-                  return Stack(
+            final sortedIndices =
+                List.generate(premiumPlanCards.length, (i) => i)
+                  ..sort((a, b) {
+                    final dA = (currentPage - a).abs();
+                    final dB = (currentPage - b).abs();
+                    return dB.compareTo(dA);
+                  });
+
+            return Column(
+              children: [
+                Expanded(
+                  child: Stack(
                     alignment: Alignment.center,
                     children: [
                       PageView.builder(
@@ -1011,7 +1063,7 @@ class _PremiumCarousel extends StatelessWidget {
                                 lang: lang,
                                 currentPage: currentPage,
                                 cardWidth: cardWidth,
-                                cardHeight: constraints.maxHeight,
+                                cardHeight: cardHeight,
                                 screenWidth: constraints.maxWidth,
                                 cardBuilder: cardBuilder,
                               ),
@@ -1019,13 +1071,17 @@ class _PremiumCarousel extends StatelessWidget {
                         ),
                       ),
                     ],
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            _PremiumCarouselDots(currentPage: currentPage),
-          ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _PremiumCarouselDots(
+                  currentPage: currentPage,
+                  accentColor: accentColor,
+                  isDark: isDark,
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -1119,12 +1175,21 @@ class _PremiumCarouselCard extends StatelessWidget {
 }
 
 class _PremiumCarouselDots extends StatelessWidget {
-  const _PremiumCarouselDots({required this.currentPage});
+  const _PremiumCarouselDots({
+    required this.currentPage,
+    required this.accentColor,
+    required this.isDark,
+  });
 
   final double currentPage;
+  final Color accentColor;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
+    final inactiveColor = isDark
+        ? Colors.white.withValues(alpha: 0.3)
+        : Colors.black.withValues(alpha: 0.2);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(premiumPlanCards.length, (i) {
@@ -1136,11 +1201,7 @@ class _PremiumCarouselDots extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(4),
-            color: Color.lerp(
-              Colors.white.withValues(alpha: 0.3),
-              const Color(0xFFF4436C),
-              factor,
-            ),
+            color: Color.lerp(inactiveColor, accentColor, factor),
           ),
         );
       }),

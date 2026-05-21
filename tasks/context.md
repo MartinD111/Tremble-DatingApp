@@ -1,3 +1,42 @@
+## Session State — 2026-05-21 22:00 CEST
+- Active Task: Foreground wave pill — animation overhaul + OverlayEntry service
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/features/match/presentation/widgets/match_notification_pill.dart` (full rewrite)
+    - `lib/src/shared/ui/wave_pill_service.dart` (new)
+    - `lib/src/core/notification_service.dart` (onForegroundWave callback)
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `flutter analyze` SUCCESS (0 issues). `flutter test` SUCCESS (71/71).
+
+## Session Handoff
+- Completed:
+    - Full rewrite of `MatchNotificationPill`: drop-then-expand entrance, shake+haptic on wave tap, rainbow SweepGradient border on success, auto-dismiss after 3s, slide-up on ignore. Solid dark colors (no glassmorphism).
+    - New `WavePillService`: static `show()` / `dismiss()` managing a global `OverlayEntry`. Replaces any active pill before inserting a new one.
+    - `NotificationService.initialize()` gains `onForegroundWave` callback; INCOMING_WAVE and CROSSING_PATHS foreground messages now route to the pill (suppressing the OS banner) when the callback is wired.
+- In Progress: None.
+- Blocked: FCM → pill wiring in `home_screen.dart` is not yet done (see Next Action).
+- Next Action:
+    1. In `HomeScreen.initState`, pass `onForegroundWave` to `NotificationService.initialize()` and call `WavePillService.show(Overlay.of(context), ...)`. Cloud Functions must also emit `senderName`, `senderAge`, `senderPhotoUrl` in FCM data payloads for the pill to receive them.
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification after App Check debug token is registered.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (71/71). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS.
+
+## Session Handoff
+- Completed:
+  - Located and mapped the match notification codebase across both backend Cloud Functions and the Flutter app client.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+  1. Answer the user's question regarding the location of the match notification code.
+
 ## Session State — 2026-05-21 09:19 CEST
 - Active Task: Premium card redesign
 - Environment: Dev mobile flavor on `main`

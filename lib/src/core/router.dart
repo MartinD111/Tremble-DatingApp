@@ -28,6 +28,7 @@ import '../features/match/domain/match.dart';
 import '../shared/ui/gradient_scaffold.dart';
 import 'consent_service.dart';
 import 'notification_service.dart';
+import '../shared/ui/wave_pill_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // ── Navigator Key ─────────────────────────────────────────────────────────────
@@ -493,6 +494,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   NotificationService.initialize(
     onNotificationTap: (data) {
       handleNotificationNavigation(data);
+    },
+    onForegroundMatch: () {
+      final overlay = rootNavigatorKey.currentState?.overlay;
+      if (overlay != null) WavePillService.showConfetti(overlay);
     },
   );
 

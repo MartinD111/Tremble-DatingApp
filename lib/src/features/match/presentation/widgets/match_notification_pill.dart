@@ -1,29 +1,58 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../shared/ui/glass_card.dart';
 import '../../../../core/utils/icon_utils.dart';
 
-// Visual state of the notification pill. Maps 1:1 to DevSimPhase pill-visible
-// values (waitingForAction / waveSent / waveReceived).
+// ─── Public API ───────────────────────────────────────────────────────────────
+
 enum PillState {
-  waitingForAction, // "Sarah, 24" + [Wave][Ignore]
-  waveSent, // "Wave sent…" pending, no actions
-  waveReceived, // "Sarah sent you a wave!" expanded vertically + [Wave Back][Ignore]
+  waitingForAction, // "Ana, 23, is nearby"
+  waveSent,         // legacy — handled internally
+  waveReceived,     // "Ana, 23, sent you a wave!"
 }
 
+// ─── Internal stage machine ───────────────────────────────────────────────────
+
+enum _Stage {
+  entering,   // avatar circle drops in
+  expanding,  // circle widens to full pill
+  idle,       // interactive
+  shaking,    // decaying oscillation
+  success,    // confirmation + rainbow
+  dismissing, // leaving screen
+}
+
+// ─── Widget ───────────────────────────────────────────────────────────────────
+
+/// Foreground proximity / wave notification pill.
+/// All animation stages are self-contained.  [onIgnore] fires exactly once
+/// after the dismiss animation completes — use it to remove the pill from the
+/// widget tree or OverlayEntry.
 class MatchNotificationPill extends StatefulWidget {
   final String name;
   final int age;
   final String imageUrl;
   final DateTime? birthDate;
   final PillState pillState;
+
+  /// 'male' | 'female' — drives accent + background tint.
+  /// Null → female/rose (Tremble default).
+  final String? gender;
+
   final VoidCallback onWave;
+
+  /// Called ONCE after dismiss animation ends.
   final VoidCallback onIgnore;
-  // Tap on the pill body (avatar + label area). Routes to profile/paywall
-  // depending on premium state — owned by the parent so this widget stays pure.
+
+  /// Called when the wave is confirmed and the success state begins.
+  /// Use this to trigger a match confetti overlay.
+  final VoidCallback? onMatch;
+
+  /// Tap on avatar / label — open profile or paywall.
   final VoidCallback? onTap;
 
   const MatchNotificationPill({
@@ -33,8 +62,10 @@ class MatchNotificationPill extends StatefulWidget {
     required this.imageUrl,
     this.birthDate,
     required this.pillState,
+    this.gender,
     required this.onWave,
     required this.onIgnore,
+    this.onMatch,
     this.onTap,
   });
 
@@ -43,485 +74,597 @@ class MatchNotificationPill extends StatefulWidget {
 }
 
 class _MatchNotificationPillState extends State<MatchNotificationPill>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _swipeController;
-  late Animation<double> _swipeOpacity;
-  late Animation<Offset> _swipeSlide;
-  bool _isDismissing = false;
-  double _swipeDirection = 1.0; // +1 = right, -1 = left
+    with TickerProviderStateMixin {
+  // ── Dimensions ───────────────────────────────────────────────────────────
+  static const _pillH    = 72.0;
+  static const _circleW  = 72.0;
+  static const _circleBR = 36.0;
+  static const _idleBR   = 36.0; // height/2 → perfect pill
+  static const _successW = 248.0;
+  static const _avatarD  = 54.0;
+
+  // ── Rainbow colours ───────────────────────────────────────────────────────
+  static const _rainbow = [
+    Color(0xFFFF004D), Color(0xFFFF7700), Color(0xFFFFE600),
+    Color(0xFF00E676), Color(0xFF2979FF), Color(0xFFD500F9),
+    Color(0xFFFF004D),
+  ];
+
+  // ── Layout state ─────────────────────────────────────────────────────────
+  _Stage _stage     = _Stage.entering;
+  double _pillW     = _circleW;
+  double _pillBR    = _circleBR;
+  double _fullWidth = 380.0;
+
+  // ── Swipe state ───────────────────────────────────────────────────────────
+  double _swipeDx        = 0.0;
+  bool   _swipeCommitted = false;
+
+  // ── Controllers ───────────────────────────────────────────────────────────
+  late final AnimationController _dropCtrl;
+  late final Animation<double>   _dropY;
+
+  late final AnimationController _shakeCtrl;
+  late final Animation<double>   _shakeX;
+
+  late final AnimationController _rainbowCtrl;
+
+  late final AnimationController _dismissCtrl;
+  late final Animation<double>   _dismissY;
+
+  late final AnimationController _swipeCtrl;
+  late       Animation<double>   _swipeSlide;
+  late final Animation<double>   _swipeFade;
 
   @override
   void initState() {
     super.initState();
-    _swipeController = AnimationController(
+
+    _dropCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 350),
+      duration: const Duration(milliseconds: 800),
     );
-    _swipeOpacity = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeInOutCubic),
+    _dropY = Tween<double>(begin: -(_pillH + 100), end: 0.0).animate(
+      CurvedAnimation(parent: _dropCtrl, curve: Curves.easeOutQuart),
     );
-    _swipeSlide = _buildSwipeSlide();
+    _dropCtrl.addStatusListener(_onDropStatus);
+
+    _shakeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+    _shakeX = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0,   end:  14.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 14.0,  end: -11.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -11.0, end:   9.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin:  9.0,  end:  -6.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -6.0,  end:   3.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin:  3.0,  end:   0.0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _shakeCtrl, curve: Curves.linear));
+
+    _rainbowCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+
+    _dismissCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    _dismissY = Tween<double>(begin: 0.0, end: -(_pillH + 140.0)).animate(
+      CurvedAnimation(parent: _dismissCtrl, curve: Curves.easeInCubic),
+    );
+    _dismissCtrl.addStatusListener(_onDismissStatus);
+
+    _swipeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+    );
+    _swipeSlide = Tween<double>(begin: 0, end: 0).animate(_swipeCtrl);
+    _swipeFade  = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: _swipeCtrl, curve: Curves.easeInQuart),
+    );
+    _swipeCtrl.addStatusListener(_onSwipeOutStatus);
+
+    _dropCtrl.forward();
+
+    // Vibrate on arrival — medium pulse so the user notices without it being harsh.
+    HapticFeedback.mediumImpact();
   }
 
-  Animation<Offset> _buildSwipeSlide() {
-    return Tween<Offset>(
-      begin: Offset.zero,
-      end: Offset(_swipeDirection * 1.5, 0),
-    ).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeInCubic),
-    );
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+  @override
+  void didUpdateWidget(MatchNotificationPill old) {
+    super.didUpdateWidget(old);
+    final becameWaveReceived = old.pillState != PillState.waveReceived &&
+        widget.pillState == PillState.waveReceived;
+    if (becameWaveReceived &&
+        (_stage == _Stage.idle || _stage == _Stage.expanding)) {
+      _triggerWaveReceivedEntry();
+    }
+  }
+
+  // ── Status listeners ──────────────────────────────────────────────────────
+
+  void _onDropStatus(AnimationStatus s) {
+    if (s != AnimationStatus.completed || !mounted) return;
+    setState(() {
+      _stage = _Stage.expanding;
+      _pillW  = _fullWidth;
+      _pillBR = _idleBR;
+    });
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted || _stage != _Stage.expanding) return;
+      setState(() => _stage = _Stage.idle);
+      if (widget.pillState == PillState.waveReceived) {
+        _triggerWaveReceivedEntry();
+      }
+    });
+  }
+
+  void _onDismissStatus(AnimationStatus s) {
+    if (s != AnimationStatus.completed || !mounted) return;
+    widget.onIgnore();
+  }
+
+  void _onSwipeOutStatus(AnimationStatus s) {
+    if (s != AnimationStatus.completed || !mounted) return;
+    widget.onIgnore();
+  }
+
+  // ── Interactions ──────────────────────────────────────────────────────────
+
+  /// Transition into waveReceived: vibrate, start rainbow, then shake.
+  Future<void> _triggerWaveReceivedEntry() async {
+    if (_stage != _Stage.idle) return;
+    HapticFeedback.heavyImpact();
+    if (!_rainbowCtrl.isAnimating) _rainbowCtrl.repeat();
+    setState(() => _stage = _Stage.shaking);
+    _shakeCtrl.reset();
+    await _shakeCtrl.forward();
+    if (!mounted) return;
+    setState(() => _stage = _Stage.idle);
+    // Rainbow continues while user decides.
+  }
+
+  Future<void> _handleWave() async {
+    if (_stage != _Stage.idle) return;
+    HapticFeedback.lightImpact();
+
+    // Capture callbacks before the async gap — the parent widget may unmount
+    // this pill (e.g. DevSim flips hasPillVisible→false on the same frame as
+    // onWave()), so widget.onMatch would never be reached past `if (!mounted)`.
+    final capturedOnWave  = widget.onWave;
+    final capturedOnMatch = widget.onMatch;
+
+    capturedOnWave();
+
+    setState(() => _stage = _Stage.shaking);
+    _shakeCtrl.reset();
+    await _shakeCtrl.forward();
+
+    // Fire onMatch regardless of mount state — it's a side-effect on the
+    // overlay layer and must run even if the pill itself was removed.
+    HapticFeedback.heavyImpact();
+    capturedOnMatch?.call();
+
+    if (!mounted) return;
+    if (!_rainbowCtrl.isAnimating) _rainbowCtrl.repeat();
+    setState(() {
+      _stage = _Stage.success;
+      _pillW  = _successW;
+    });
+
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+    _beginVerticalDismiss();
+  }
+
+  void _beginVerticalDismiss() {
+    if (_stage == _Stage.dismissing) return;
+    setState(() => _stage = _Stage.dismissing);
+    _rainbowCtrl.stop();
+    _dismissCtrl.forward();
+  }
+
+  // ── Swipe ─────────────────────────────────────────────────────────────────
+
+  void _onDragUpdate(DragUpdateDetails d) {
+    if (_swipeCommitted || _stage == _Stage.dismissing ||
+        _stage == _Stage.entering) return;
+    setState(() => _swipeDx += d.delta.dx);
+  }
+
+  void _onDragEnd(DragEndDetails d) {
+    if (_swipeCommitted || _stage == _Stage.dismissing) return;
+    final velocity  = d.primaryVelocity ?? 0;
+    final threshold = _fullWidth * 0.30;
+    if (_swipeDx.abs() > threshold || velocity.abs() > 500) {
+      _commitSwipeDismiss(_swipeDx >= 0 ? 1.0 : -1.0);
+    } else {
+      setState(() => _swipeDx = 0.0);
+    }
+  }
+
+  void _onDragCancel() {
+    if (!_swipeCommitted) setState(() => _swipeDx = 0.0);
+  }
+
+  void _commitSwipeDismiss(double direction) {
+    if (_stage == _Stage.dismissing) return;
+    HapticFeedback.lightImpact();
+    setState(() {
+      _stage = _Stage.dismissing;
+      _swipeCommitted = true;
+    });
+    _rainbowCtrl.stop();
+    _swipeSlide = Tween<double>(
+      begin: _swipeDx,
+      end:   direction * (_fullWidth + 320),
+    ).animate(CurvedAnimation(parent: _swipeCtrl, curve: Curves.easeInCubic));
+    _swipeCtrl.forward();
   }
 
   @override
   void dispose() {
-    _swipeController.dispose();
+    _dropCtrl.dispose();
+    _shakeCtrl.dispose();
+    _rainbowCtrl.dispose();
+    _dismissCtrl.dispose();
+    _swipeCtrl.dispose();
     super.dispose();
   }
 
-  void _onSwipeDismiss({double direction = 1.0}) {
-    if (_isDismissing) return;
-    _isDismissing = true;
-    setState(() {
-      _swipeDirection = direction;
-      _swipeSlide = _buildSwipeSlide();
-    });
-    _swipeController.forward().then((_) {
-      widget.onIgnore();
-    });
+  // ── Derived ───────────────────────────────────────────────────────────────
+
+  bool get _isWaveBack  => widget.pillState == PillState.waveReceived;
+  bool get _isSuccess   => _stage == _Stage.success;
+  bool get _showRainbow =>
+      _rainbowCtrl.isAnimating &&
+      _stage != _Stage.entering &&
+      _stage != _Stage.expanding;
+
+  String get _titleText {
+    if (_isSuccess) return _isWaveBack ? 'Waved back! \u{1F44B}' : 'Wave sent! \u{1F44B}';
+    return '${widget.name}, ${widget.age}';
   }
+
+  String? get _subtitleText {
+    if (_isSuccess) return null;
+    return _isWaveBack ? 'sent you a wave' : 'is nearby';
+  }
+
+  // ── Theme helpers (gender + dark/light aware) ─────────────────────────────
+
+  bool get _isMale => widget.gender?.toLowerCase() == 'male';
+
+  /// Accent: rose (female/default) or sky-blue (male).
+  Color _accent(bool isDark) => _isMale
+      ? (isDark ? const Color(0xFF64B5F6) : const Color(0xFF1565C0))
+      : const Color(0xFFF4436C);
+
+  /// Background: dark graphite / light rose-tint (female) or blue-tint (male).
+  Color _bg(bool isDark) {
+    if (isDark) return const Color(0xFF1C1C20);
+    return _isMale ? const Color(0xFFF0F5FF) : const Color(0xFFFDF3F4);
+  }
+
+  /// Border: subtle tinted line matching the bg.
+  Color _borderC(bool isDark) {
+    if (isDark) return const Color(0xFF3A3A40);
+    return _isMale ? const Color(0xFFBFD0EC) : const Color(0xFFE8C4C8);
+  }
+
+  Color _textC(bool isDark) =>
+      isDark ? const Color(0xFFFAFAF7) : const Color(0xFF18181C);
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    const primaryRose = Color(0xFFF4436C);
-    const warmCream = Color(0xFFFAFAF7);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    _fullWidth = MediaQuery.of(context).size.width - 80.0;
 
-    // waveReceived expands vertically — rounder top corners, pill-like bottom.
-    final bool isExpanded = widget.pillState == PillState.waveReceived;
-    final double radius = isExpanded ? 28 : 60;
+    final isDark  = Theme.of(context).brightness == Brightness.dark;
+    final accent  = _accent(isDark);
+    final bg      = _bg(isDark);
+    final borderC = _borderC(isDark);
+    final textC   = _textC(isDark);
 
-    return GestureDetector(
-      // Swipe left or right to dismiss (same as tapping Ignore).
-      onHorizontalDragEnd: (details) {
-        if (details.primaryVelocity != null &&
-            details.primaryVelocity!.abs() > 200) {
-          _onSwipeDismiss(
-            direction: (details.primaryVelocity! < 0) ? -1.0 : 1.0,
-          );
-        }
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        _dropCtrl, _shakeCtrl, _rainbowCtrl, _dismissCtrl, _swipeCtrl,
+      ]),
+      builder: (ctx, _) {
+        final dy      = _dropY.value + _dismissY.value;
+        final shakeX  = _stage == _Stage.shaking ? _shakeX.value : 0.0;
+        final swipeX  = _swipeCommitted ? _swipeSlide.value : _swipeDx;
+        final opacity = (_swipeCommitted ? _swipeFade.value : 1.0).clamp(0.0, 1.0);
+
+        return Transform.translate(
+          offset: Offset(shakeX + swipeX, dy),
+          child: Opacity(
+            opacity: opacity,
+            child: GestureDetector(
+              onHorizontalDragUpdate: _onDragUpdate,
+              onHorizontalDragEnd:    _onDragEnd,
+              onHorizontalDragCancel: _onDragCancel,
+              child: _buildShell(
+                isDark:  isDark,
+                accent:  accent,
+                bg:      bg,
+                borderC: borderC,
+                textC:   textC,
+              ),
+            ),
+          ),
+        );
       },
-      child: SlideTransition(
-        position: _swipeSlide,
-        child: FadeTransition(
-          opacity: _swipeOpacity,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 1000),
-              curve: Curves.fastOutSlowIn,
-              child: GlassCard(
-                opacity: 0.35,
-                borderRadius: radius,
-                useGlassEffect: !isDark,
-                solidDarkBg: const Color(0xFF2A2A2E),
-                padding: EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: isExpanded ? 16 : 12,
+    );
+  }
+
+  // ── Shell ─────────────────────────────────────────────────────────────────
+
+  Widget _buildShell({
+    required bool isDark,
+    required Color accent,
+    required Color bg,
+    required Color borderC,
+    required Color textC,
+  }) {
+    // CustomPaint draws the border (solid or rainbow) as a foreground layer
+    // so it is never clipped by the inner container's Clip.hardEdge.
+    return CustomPaint(
+      foregroundPainter: _BorderPainter(
+        rainbowProgress: _rainbowCtrl.value,
+        showRainbow:     _showRainbow,
+        radius:          _pillBR,
+        solidColor:      borderC,
+        rainbowColors:   _rainbow,
+      ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 380),
+        curve:    Curves.easeOutCubic,
+        width:    _pillW,
+        height:   _pillH,
+        clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(
+          color:        bg,
+          borderRadius: BorderRadius.circular(_pillBR),
+        ),
+        child: _buildContentRow(
+          accent: accent,
+          textC:  textC,
+        ),
+      ),
+    );
+  }
+
+  // ── Content ───────────────────────────────────────────────────────────────
+
+  Widget _buildContentRow({required Color accent, required Color textC}) {
+    final labelVisible = _stage != _Stage.entering;
+    final showWaveBtn  = _stage == _Stage.idle || _stage == _Stage.shaking;
+
+    return AnimatedOpacity(
+      opacity:  labelVisible ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 220),
+      child: SizedBox(
+        height: _pillH,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // ── Label — true pill center ──────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 72),
+              child: AnimatedSwitcher(
+                duration:       const Duration(milliseconds: 260),
+                switchInCurve:  Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, anim) => FadeTransition(
+                  opacity: anim,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.1),
+                      end:   Offset.zero,
+                    ).animate(anim),
+                    child: child,
+                  ),
                 ),
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 1000),
-                  curve: Curves.fastOutSlowIn,
-                  alignment: Alignment.topCenter,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 700),
-                    reverseDuration: const Duration(milliseconds: 600),
-                    switchInCurve: Curves.fastOutSlowIn,
-                    switchOutCurve: Curves.fastOutSlowIn,
-                    layoutBuilder:
-                        (Widget? currentChild, List<Widget> previousChildren) {
-                      return Stack(
-                        alignment: Alignment.topCenter,
-                        children: <Widget>[
-                          ...previousChildren,
-                          if (currentChild != null) currentChild,
-                        ],
-                      );
-                    },
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.0, 0.05),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: isExpanded
-                        ? _ExpandedLayout(
-                            key: const ValueKey('expanded_layout'),
-                            name: widget.name,
-                            age: widget.age,
-                            imageUrl: widget.imageUrl,
-                            birthDate: widget.birthDate,
-                            onTap: widget.onTap,
-                            onWave: widget.onWave,
-                            onIgnore: _onSwipeDismiss,
-                            warmCream: warmCream,
-                            primaryRose: primaryRose,
-                          )
-                        : _CompactLayout(
-                            key: const ValueKey('compact_layout'),
-                            name: widget.name,
-                            age: widget.age,
-                            imageUrl: widget.imageUrl,
-                            birthDate: widget.birthDate,
-                            pillState: widget.pillState,
-                            onTap: widget.onTap,
-                            onWave: widget.onWave,
-                            onIgnore: _onSwipeDismiss,
-                            warmCream: warmCream,
-                            primaryRose: primaryRose,
-                          ),
+                child: _LabelText(
+                  key:           ValueKey(_isSuccess ? 'success' : widget.pillState),
+                  title:         _titleText,
+                  subtitle:      _subtitleText,
+                  titleColor:    textC,
+                  subtitleColor: textC.withValues(alpha: 0.55),
+                  iconColor:     textC.withValues(alpha: 0.32),
+                  birthDate:     _isSuccess ? null : widget.birthDate,
+                ),
+              ),
+            ),
+
+            // ── Avatar (pinned left) ──────────────────────────────────────
+            Positioned(
+              left: 10,
+              child: GestureDetector(
+                onTap: widget.onTap,
+                child: Container(
+                  width:  _avatarD,
+                  height: _avatarD,
+                  decoration: BoxDecoration(
+                    shape:  BoxShape.circle,
+                    border: Border.all(
+                      color: accent.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      widget.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: accent.withValues(alpha: 0.1),
+                        child: Icon(Icons.person_rounded, color: accent, size: 20),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+
+            // ── Wave button — only shown when pill is interactive ─────────
+            if (showWaveBtn)
+              Positioned(
+                right: 10,
+                child: _CircleBtn(
+                  icon:     LucideIcons.hand,
+                  color:    accent,
+                  size:     38,
+                  iconSize: 19,
+                  onTap:    _handleWave,
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ── Compact layout: waitingForAction & waveSent ─────────────────────────────
-class _CompactLayout extends StatelessWidget {
-  final String name;
-  final int age;
-  final String imageUrl;
-  final DateTime? birthDate;
-  final PillState pillState;
-  final VoidCallback? onTap;
-  final VoidCallback onWave;
-  final VoidCallback onIgnore;
-  final Color warmCream;
-  final Color primaryRose;
+// ─── Border painter ───────────────────────────────────────────────────────────
 
-  const _CompactLayout({
-    super.key,
-    required this.name,
-    required this.age,
-    required this.imageUrl,
-    required this.birthDate,
-    required this.pillState,
-    required this.onTap,
-    required this.onWave,
-    required this.onIgnore,
-    required this.warmCream,
-    required this.primaryRose,
+class _BorderPainter extends CustomPainter {
+  final double       rainbowProgress;
+  final bool         showRainbow;
+  final double       radius;
+  final Color        solidColor;
+  final List<Color>  rainbowColors;
+
+  const _BorderPainter({
+    required this.rainbowProgress,
+    required this.showRainbow,
+    required this.radius,
+    required this.solidColor,
+    required this.rainbowColors,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Flexible(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onTap,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _Avatar(imageUrl: imageUrl, warmCream: warmCream),
-                const SizedBox(width: 14),
-                Flexible(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    switchInCurve: Curves.easeOutQuart,
-                    switchOutCurve: Curves.easeInQuart,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.0, 0.15),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: _CompactLabel(
-                      key: ValueKey(pillState),
-                      pillState: pillState,
-                      name: name,
-                      age: age,
-                      birthDate: birthDate,
-                      warmCream: warmCream,
-                      primaryRose: primaryRose,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 14),
-        if (pillState != PillState.waveSent)
-          _ActionRow(
-            onWave: onWave,
-            onIgnore: onIgnore,
-            primaryRose: primaryRose,
-            warmCream: warmCream,
-          ),
-      ],
-    );
+  void paint(Canvas canvas, Size size) {
+    final strokeW = showRainbow ? 2.5 : 1.2;
+    final inset   = strokeW / 2;
+    final rect    = Rect.fromLTWH(inset, inset, size.width - strokeW, size.height - strokeW);
+    final rrect   = RRect.fromRectAndRadius(rect, Radius.circular(radius - inset));
+
+    final paint = Paint()
+      ..style       = PaintingStyle.stroke
+      ..strokeWidth = strokeW;
+
+    if (showRainbow) {
+      paint.shader = SweepGradient(
+        transform: GradientRotation(rainbowProgress * math.pi * 2),
+        colors:    rainbowColors,
+      ).createShader(rect);
+    } else {
+      paint.color = solidColor;
+    }
+
+    canvas.drawRRect(rrect, paint);
   }
+
+  @override
+  bool shouldRepaint(_BorderPainter old) =>
+      old.rainbowProgress != rainbowProgress ||
+      old.showRainbow     != showRainbow      ||
+      old.solidColor      != solidColor;
 }
 
-// ── Expanded layout: waveReceived ───────────────────────────────────────────
-// Avatar + name on top row, action buttons in a second row below.
-class _ExpandedLayout extends StatelessWidget {
-  final String name;
-  final int age;
-  final String imageUrl;
-  final DateTime? birthDate;
-  final VoidCallback? onTap;
-  final VoidCallback onWave;
-  final VoidCallback onIgnore;
-  final Color warmCream;
-  final Color primaryRose;
+// ─── Sub-widgets ──────────────────────────────────────────────────────────────
 
-  const _ExpandedLayout({
+class _LabelText extends StatelessWidget {
+  final String    title;
+  final String?   subtitle;
+  final Color     titleColor;
+  final Color     subtitleColor;
+  final Color     iconColor;
+  final DateTime? birthDate;
+
+  const _LabelText({
     super.key,
-    required this.name,
-    required this.age,
-    required this.imageUrl,
-    required this.birthDate,
-    required this.onTap,
-    required this.onWave,
-    required this.onIgnore,
-    required this.warmCream,
-    required this.primaryRose,
+    required this.title,
+    this.subtitle,
+    required this.titleColor,
+    required this.subtitleColor,
+    required this.iconColor,
+    this.birthDate,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize:       MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Top row: avatar + "Nika sent you a wave!"
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: Row(
-            children: [
-              _Avatar(imageUrl: imageUrl, warmCream: warmCream),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  '$name sent you a wave!',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: true,
-                  style: GoogleFonts.instrumentSans(
-                    color: warmCream,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.3,
-                  ),
-                ).animate(onPlay: (c) => c.repeat(reverse: true)).fade(
-                      duration: 2000.ms,
-                      begin: 0.6,
-                      end: 1.0,
-                    ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        // Bottom row: full-width Wave Back + Ignore buttons
         Row(
+          mainAxisSize:       MainAxisSize.min,
+          mainAxisAlignment:  MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: _FullWidthActionButton(
-                icon: LucideIcons.hand,
-                label: 'Wave back',
-                color: primaryRose,
-                onTap: onWave,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _FullWidthActionButton(
-                icon: LucideIcons.x,
-                label: 'Ignore',
-                color: warmCream.withValues(alpha: 0.35),
-                onTap: onIgnore,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-// ── Shared sub-widgets ───────────────────────────────────────────────────────
-
-class _Avatar extends StatelessWidget {
-  final String imageUrl;
-  final Color warmCream;
-  const _Avatar({required this.imageUrl, required this.warmCream});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: warmCream.withValues(alpha: 0.25),
-          width: 1.5,
-        ),
-      ),
-      child: CircleAvatar(
-        radius: 26,
-        backgroundImage: NetworkImage(imageUrl),
-      ),
-    );
-  }
-}
-
-class _CompactLabel extends StatelessWidget {
-  final PillState pillState;
-  final String name;
-  final int age;
-  final DateTime? birthDate;
-  final Color warmCream;
-  final Color primaryRose;
-
-  const _CompactLabel({
-    super.key,
-    required this.pillState,
-    required this.name,
-    required this.age,
-    required this.birthDate,
-    required this.warmCream,
-    required this.primaryRose,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    switch (pillState) {
-      case PillState.waitingForAction:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '$name, $age',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              softWrap: true,
-              style: GoogleFonts.instrumentSans(
-                color: warmCream,
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.4,
-              ),
-            ),
-            if (birthDate != null) ...[
-              const SizedBox(width: 8),
-              Icon(
-                ZodiacUtils.getZodiacIcon(ZodiacUtils.getZodiacSign(birthDate)),
-                size: 16,
-                color: warmCream.withValues(alpha: 0.5),
-              ),
-            ],
-          ],
-        );
-      case PillState.waveSent:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 1.8,
-                valueColor: AlwaysStoppedAnimation(primaryRose),
-              ),
-            ),
-            const SizedBox(width: 10),
             Flexible(
               child: Text(
-                'Wave sent…',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                softWrap: true,
-                style: GoogleFonts.instrumentSans(
-                  color: warmCream.withValues(alpha: 0.9),
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
+                title,
+                maxLines:  1,
+                overflow:  TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  color:         titleColor,
+                  fontSize:      15.0,
+                  fontWeight:    FontWeight.w700,
+                  height:        1.2,
                   letterSpacing: -0.3,
                 ),
               ),
             ),
+            if (birthDate != null && subtitle != null) ...[
+              const SizedBox(width: 4),
+              Icon(
+                ZodiacUtils.getZodiacIcon(ZodiacUtils.getZodiacSign(birthDate)),
+                size:  13,
+                color: iconColor,
+              ),
+            ],
           ],
-        );
-      case PillState.waveReceived:
-        // Rendered in _ExpandedLayout, not here.
-        return const SizedBox.shrink();
-    }
-  }
-}
-
-class _ActionRow extends StatelessWidget {
-  final VoidCallback onWave;
-  final VoidCallback onIgnore;
-  final Color primaryRose;
-  final Color warmCream;
-
-  const _ActionRow({
-    required this.onWave,
-    required this.onIgnore,
-    required this.primaryRose,
-    required this.warmCream,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _ActionButton(
-          icon: LucideIcons.hand,
-          color: primaryRose,
-          onTap: onWave,
         ),
-        const SizedBox(width: 8),
-        _ActionButton(
-          icon: LucideIcons.x,
-          color: warmCream.withValues(alpha: 0.3),
-          onTap: onIgnore,
-        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            subtitle!,
+            maxLines:  1,
+            overflow:  TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              color:      subtitleColor,
+              fontSize:   11.5,
+              fontWeight: FontWeight.w400,
+              height:     1.2,
+            ),
+          ),
+        ],
       ],
     );
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final Color color;
+class _CircleBtn extends StatelessWidget {
+  final IconData     icon;
+  final Color        color;
+  final double       size;
+  final double       iconSize;
   final VoidCallback onTap;
 
-  const _ActionButton({
+  const _CircleBtn({
     required this.icon,
     required this.color,
+    required this.size,
+    required this.iconSize,
     required this.onTap,
   });
 
@@ -530,63 +673,14 @@ class _ActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(11),
+        width:  size,
+        height: size,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.25),
-          shape: BoxShape.circle,
-          border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
+          color:  color.withValues(alpha: 0.12),
+          shape:  BoxShape.circle,
+          border: Border.all(color: color.withValues(alpha: 0.38), width: 1.1),
         ),
-        child: Icon(
-          icon,
-          size: 22,
-          color: color,
-        ),
-      ),
-    );
-  }
-}
-
-// Full-width pill button used in the expanded waveReceived layout.
-class _FullWidthActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _FullWidthActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.35), width: 1.2),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: GoogleFonts.instrumentSans(
-                color: color,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ],
-        ),
+        child: Icon(icon, size: iconSize, color: color),
       ),
     );
   }

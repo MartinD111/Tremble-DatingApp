@@ -82,6 +82,23 @@ class NotificationService {
     /// Called when user taps a notification and the app opens.
     /// Receives the notification payload data Map.
     void Function(Map<String, dynamic> data)? onNotificationTap,
+
+    /// Called when an INCOMING_WAVE or CROSSING_PATHS message arrives while the
+    /// app is in the foreground. Use this to show [WavePillService.show].
+    ///
+    /// Fields guaranteed non-empty when this fires:
+    ///   name, imageUrl, targetUid — age may be 0 if Cloud Function omits it.
+    void Function({
+      required String name,
+      required int age,
+      required String imageUrl,
+      required String targetUid,
+      required bool isIncomingWave,
+    })? onForegroundWave,
+
+    /// Called when a MUTUAL_WAVE message arrives in the foreground — meaning
+    /// someone accepted a wave the current user sent. Triggers confetti + haptic.
+    VoidCallback? onForegroundMatch,
   }) async {
     // ── Local Notifications init ──────────────────────────
     const androidSettings =
@@ -192,6 +209,33 @@ class NotificationService {
             now.difference(_lastHapticAt!) > const Duration(seconds: 2)) {
           _lastHapticAt = now;
           HapticFeedback.heavyImpact();
+        }
+      }
+
+      // Mutual wave (someone accepted our wave) → confetti + suppress OS banner.
+      if (type == TrembleNotificationType.mutualWave &&
+          onForegroundMatch != null) {
+        onForegroundMatch();
+        return;
+      }
+
+      // In-app pill for wave / proximity events — suppresses the OS banner.
+      final isPillEvent = type == TrembleNotificationType.incomingWave ||
+          type == TrembleNotificationType.crossingPaths;
+      if (isPillEvent && onForegroundWave != null) {
+        final senderUid  = (message.data['senderId'] ?? message.data['fromUid'] ?? '') as String;
+        final senderName = (message.data['senderName'] ?? '') as String;
+        final senderPhoto = (message.data['senderPhotoUrl'] ?? '') as String;
+        final senderAge  = int.tryParse(message.data['senderAge'] ?? '') ?? 0;
+        if (senderUid.isNotEmpty && senderName.isNotEmpty) {
+          onForegroundWave(
+            name:           senderName,
+            age:            senderAge,
+            imageUrl:       senderPhoto,
+            targetUid:      senderUid,
+            isIncomingWave: type == TrembleNotificationType.incomingWave,
+          );
+          return; // pill replaces the OS banner for these event types
         }
       }
 

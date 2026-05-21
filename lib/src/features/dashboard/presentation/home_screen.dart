@@ -38,6 +38,7 @@ import '../application/dev_simulation_controller.dart';
 import '../application/radar_search_session.dart';
 import '../application/tutorial_notifier.dart';
 import '../../match/presentation/widgets/match_notification_pill.dart';
+import '../../../shared/ui/wave_pill_service.dart';
 import '../../../shared/ui/premium_paywall.dart';
 import '../../gym/application/gym_mode_controller.dart';
 import '../../gym/presentation/gym_mode_sheet.dart';
@@ -540,7 +541,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       children: [
         // Content with Liquid Transition
         Positioned.fill(
-          child: NotificationListener<ScrollNotification>(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onHorizontalDragEnd: (details) {
+              final velocity = details.primaryVelocity ?? 0;
+              if (velocity < -300) {
+                final next = (safeNavIndex + 1).clamp(0, screens.length - 1);
+                if (next != safeNavIndex) {
+                  HapticFeedback.selectionClick();
+                  ref.read(navIndexProvider.notifier).state = next;
+                }
+              } else if (velocity > 300) {
+                final prev = (safeNavIndex - 1).clamp(0, screens.length - 1);
+                if (prev != safeNavIndex) {
+                  HapticFeedback.selectionClick();
+                  ref.read(navIndexProvider.notifier).state = prev;
+                }
+              }
+            },
+            child: NotificationListener<ScrollNotification>(
             onNotification: (notification) {
               if (!hideNavBarPref) {
                 // If preference is off, make sure nav bar is visible
@@ -576,6 +595,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
+          ),
         ),
 
         // Floating Liquid Navigation Bar
@@ -588,14 +608,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   : -100,
           left: 0,
           right: 0,
-          child: LiquidNavBar(
-            currentIndex: safeNavIndex,
-            items: navItems,
-            pulsingIndexes: _tutorialNavPulseIndexes(tutorial, isPremium),
-            onTap: (index) {
-              ref.read(navIndexProvider.notifier).state = index;
-              _handleTutorialNavTap(index: index, isPremium: isPremium);
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onHorizontalDragEnd: (details) {
+              final velocity = details.primaryVelocity ?? 0;
+              if (velocity < -300) {
+                final next = (safeNavIndex + 1).clamp(0, screens.length - 1);
+                if (next != safeNavIndex) {
+                  HapticFeedback.selectionClick();
+                  ref.read(navIndexProvider.notifier).state = next;
+                }
+              } else if (velocity > 300) {
+                final prev = (safeNavIndex - 1).clamp(0, screens.length - 1);
+                if (prev != safeNavIndex) {
+                  HapticFeedback.selectionClick();
+                  ref.read(navIndexProvider.notifier).state = prev;
+                }
+              }
             },
+            child: LiquidNavBar(
+              currentIndex: safeNavIndex,
+              items: navItems,
+              pulsingIndexes: _tutorialNavPulseIndexes(tutorial, isPremium),
+              onTap: (index) {
+                ref.read(navIndexProvider.notifier).state = index;
+                _handleTutorialNavTap(index: index, isPremium: isPremium);
+              },
+            ),
           ),
         ),
 
@@ -631,6 +670,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onIgnore: () => ref
                       .read(devSimulationControllerProvider.notifier)
                       .onIgnore(),
+                  onMatch: () {
+                    final overlay = Overlay.of(context);
+                    WavePillService.showConfetti(
+                      overlay,
+                      imageUrl: devSim.profile?.imageUrl,
+                    );
+                  },
                   // Premium → open profile reveal. Free → paywall bottom sheet.
                   // Source of truth for premium gating is AuthUser.isPremium
                   // (same provider used by matches_screen and settings).
@@ -950,16 +996,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
 
                     if (isScanning) ...[
-                      if (!showNearMissEmpty)
-                        Positioned(
-                          bottom: 205,
-                          left: 24,
-                          right: 24,
-                          child: WarmthEmptyState(
-                            title: t('radar_empty_title', lang),
-                            subtitle: t('radar_empty_sub', lang),
-                          ).animate().fadeIn(duration: 240.ms),
-                        ),
                       Positioned(
                         bottom: 140,
                         left: 0,

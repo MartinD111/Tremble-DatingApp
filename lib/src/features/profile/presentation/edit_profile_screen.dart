@@ -423,8 +423,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _hasChanges = false);
     if (context.mounted) {
       if (navigateToProfile) {
-        // When coming from back button + save in modal, go to My Profile
-        context.go('/profile-preview');
+        // Pop back to My Profile — context.go would wipe navigation history
+        if (context.canPop()) context.pop();
       } else {
         // When clicking save button directly, just stay on edit profile
         // (no navigation needed)
