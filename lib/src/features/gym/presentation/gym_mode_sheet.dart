@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
 import 'package:tremble/src/core/theme.dart';
 import '../../auth/data/auth_repository.dart';

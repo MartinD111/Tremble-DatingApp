@@ -8,7 +8,7 @@
 // Prikaže samo konkretne skupne lastnosti — brez % in brez rangiranja.
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/hobby_categories.dart';
 import '../../matches/data/match_repository.dart';
 

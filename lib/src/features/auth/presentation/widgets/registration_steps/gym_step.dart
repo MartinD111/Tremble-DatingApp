@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import '../../../../../features/gym/domain/selected_gym.dart';
 import '../../../../../features/gym/presentation/gym_search_widget.dart';

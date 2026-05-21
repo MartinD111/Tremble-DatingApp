@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 import 'partner_preference_modal.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ChildrenStep extends StatefulWidget {
   const ChildrenStep({

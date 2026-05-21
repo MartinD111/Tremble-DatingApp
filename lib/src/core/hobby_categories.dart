@@ -4,7 +4,7 @@
 // Mapiraj obstoječe hobbije iz hobby_data.dart na 4 kategorije za compatibility scoring.
 // NE zamenjuje hobby_data.dart — samo dodaja kategorijsko logiko.
 
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/material.dart';
 
 enum HobbyCategory {

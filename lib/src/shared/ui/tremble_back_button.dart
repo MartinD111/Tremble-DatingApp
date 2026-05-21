@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'tremble_circle_button.dart';
 
 /// Brand-consistent back button (One UI 8.5 circle style).
