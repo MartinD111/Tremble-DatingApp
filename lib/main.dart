@@ -13,6 +13,7 @@ import 'src/app.dart';
 // @pragma('vm:entry-point') onStart function by library name.
 // ignore: unused_import
 import 'src/core/background_service.dart';
+import 'src/core/crash_filter.dart';
 import 'src/core/firebase_options_dev.dart';
 import 'src/core/firebase_options_prod.dart';
 import 'src/core/theme_provider.dart';
@@ -74,8 +75,13 @@ void main() async {
     }
   }
 
-  // Pass all uncaught Flutter errors to Crashlytics
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  FlutterError.onError = (details) {
+    if (CrashFilter.shouldSuppressFlutterError(details)) {
+      FlutterError.presentError(details);
+      return;
+    }
+    FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+  };
 
   // Register FCM background handler BEFORE runApp().
   // Must be called here — Firebase requires this to be registered before

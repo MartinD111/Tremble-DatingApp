@@ -11,6 +11,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../core/api_client.dart';
 import '../../../core/event_geofence_service.dart';
 import '../../../core/hobby_utils.dart';
+import '../../../core/slider_normalizer.dart';
 import '../../gym/domain/selected_gym.dart';
 
 // Sentinel marking "argument not provided" — distinguishes from explicit null
@@ -318,7 +319,7 @@ class AuthUser {
       jobStatus: data['jobStatus'] as String?,
       occupation: data['occupation'] as String?,
       drinkingHabit: data['drinkingHabit'] as String?,
-      introvertScale: data['introvertScale'] as int?,
+      introvertScale: SliderNormalizer.toNewFormat(data['introvertScale']),
       selfIntrovertMin: data['selfIntrovertMin'] as int?,
       selfIntrovertMax: data['selfIntrovertMax'] as int?,
       partnerIntrovertPreference: data['partnerIntrovertPreference'] as String?,

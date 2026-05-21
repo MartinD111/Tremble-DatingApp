@@ -74,6 +74,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           authStateProvider.overrideWith((ref) => mockNotifier),
+          navIndexProvider.overrideWith((ref) => 0),
         ],
       );
       addTearDown(container.dispose);
@@ -97,6 +98,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           authStateProvider.overrideWith((ref) => mockNotifier),
+          navIndexProvider.overrideWith((ref) => 0),
         ],
       );
       addTearDown(container.dispose);
@@ -121,6 +123,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           authStateProvider.overrideWith((ref) => mockNotifier),
+          navIndexProvider.overrideWith((ref) => 0),
         ],
       );
       addTearDown(container.dispose);

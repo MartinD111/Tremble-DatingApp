@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/data/auth_repository.dart';
@@ -11,11 +13,14 @@ import 'widgets/preference_edit_modal.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 
 final settingsControllerProvider = Provider<SettingsController>((ref) {
-  return SettingsController(ref);
+  final controller = SettingsController(ref);
+  ref.onDispose(controller.dispose);
+  return controller;
 });
 
 class SettingsController {
   final Ref _ref;
+  Timer? _introvertScaleDebounce;
 
   SettingsController(this._ref);
 
@@ -98,7 +103,25 @@ class SettingsController {
   }
 
   void updateIntrovertScale(double value) {
-    updateUser((u) => u.copyWith(introvertScale: value.round().clamp(0, 100)));
+    final user = _user;
+    if (user == null) return;
+
+    final nextValue = value.round().clamp(0, 100);
+    _ref
+        .read(authStateProvider.notifier)
+        .setUser(user.copyWith(introvertScale: nextValue));
+
+    _introvertScaleDebounce?.cancel();
+    _introvertScaleDebounce =
+        Timer(const Duration(milliseconds: 800), () async {
+      final latestUser = _user;
+      if (latestUser == null) return;
+      await _ref.read(authStateProvider.notifier).updateProfile(latestUser);
+    });
+  }
+
+  void dispose() {
+    _introvertScaleDebounce?.cancel();
   }
 
   void updatePartnerPoliticalRange(RangeValues values) {

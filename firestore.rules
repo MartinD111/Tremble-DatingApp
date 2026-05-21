@@ -78,6 +78,15 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════════════════════
+    // ACTIVE RUN CROSSES — branje le vpletenima, pisanje samo backend
+    // ══════════════════════════════════════════════════════
+    match /active_run_crosses/{docId} {
+      allow read: if request.auth != null &&
+                    request.auth.uid in resource.data.userIds;
+      allow create, update, delete: if false;
+    }
+
+    // ══════════════════════════════════════════════════════
     // PROXIMITY EVENTS — BLE zapisuje, backend procesira
     // ══════════════════════════════════════════════════════
     match /proximity_events/{eventId} {

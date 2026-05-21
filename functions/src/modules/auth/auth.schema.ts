@@ -6,6 +6,14 @@
 
 import { z } from "zod";
 
+const interestedInValueSchema = z.enum(["male", "female", "non_binary"]);
+
+const interestedInSchema = z.preprocess((value) => {
+    if (value === "both") return ["male", "female"];
+    if (typeof value === "string") return [value];
+    return value;
+}, z.array(interestedInValueSchema).min(1).max(3));
+
 /** Schema for completing the onboarding profile */
 export const completeOnboardingSchema = z.object({
     name: z
@@ -24,7 +32,7 @@ export const completeOnboardingSchema = z.object({
         { message: "Must be between 18 and 120 years old" }
     ),
     gender: z.enum(["male", "female", "non_binary"]),
-    interestedIn: z.enum(["male", "female", "both", "non_binary"]),
+    interestedIn: interestedInSchema,
     height: z.number().int().min(100).max(250).optional(),
     location: z.string().max(100).optional(),
     photoUrls: z.array(z.string().url()).min(1).max(6),

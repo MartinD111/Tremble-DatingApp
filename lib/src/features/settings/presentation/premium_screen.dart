@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter/services.dart';
 import '../../auth/data/auth_repository.dart';
 
 @immutable
@@ -21,12 +22,18 @@ class PremiumPlanCard {
     required this.accent,
     required this.tag,
     required this.icon,
+    this.perMonthPrice,
+    this.billedAs,
+    this.savingsBadge,
   });
 
   final String titleKey;
   final String price;
   final String periodKey;
   final String windowKey;
+  final String? perMonthPrice;
+  final String? billedAs;
+  final String? savingsBadge;
   final List<String> features;
   final String ctaBasicKey;
   final String ctaPremiumKey;
@@ -78,22 +85,43 @@ const premiumPlanCards = [
     icon: LucideIcons.mountain,
   ),
   PremiumPlanCard(
-    titleKey: 'premium_card_choices_title',
+    titleKey: 'premium_card_yearly_title',
     price: '59,99 €',
-    periodKey: 'premium_card_choices_period',
+    periodKey: 'premium_card_yearly_period',
     windowKey: '',
+    perMonthPrice: '5,00 €',
+    billedAs: 'premium_card_yearly_billed_as',
+    savingsBadge: 'premium_yearly_savings_badge',
     features: [
-      'premium_choice_monthly',
-      'premium_choice_yearly',
-      'premium_choice_lifetime',
+      'premium_feature_all_premium',
+      'premium_feature_yearly_access',
+      'premium_feature_cancel_anytime',
     ],
-    ctaBasicKey: 'premium_cta_get_choices',
-    ctaPremiumKey: 'premium_cta_get_choices',
+    ctaBasicKey: 'premium_cta_get_yearly',
+    ctaPremiumKey: 'premium_cta_get_yearly',
     color: Color(0xFF1A1F26),
-    borderColor: Color(0x88FAFAF7),
-    accent: Color(0xFFFAFAF7),
-    tag: 'DURATION MATRIX',
+    borderColor: Color(0x9900C8FF),
+    accent: Color(0xFF00C8FF),
+    tag: 'YEARLY ACCESS',
     icon: LucideIcons.calendarDays,
+  ),
+  PremiumPlanCard(
+    titleKey: 'premium_card_lifetime_title',
+    price: '149,99 €',
+    periodKey: 'premium_card_lifetime_period',
+    windowKey: 'premium_card_lifetime_window',
+    features: [
+      'premium_feature_all_premium',
+      'premium_feature_lifetime_upgrades',
+      'premium_feature_priority_support',
+    ],
+    ctaBasicKey: 'premium_cta_get_lifetime',
+    ctaPremiumKey: 'premium_cta_get_lifetime',
+    color: Color(0xFF22180A),
+    borderColor: Color(0x99FFB347),
+    accent: Color(0xFFFFB347),
+    tag: 'LIFETIME ACCESS',
+    icon: LucideIcons.infinity,
   ),
   PremiumPlanCard(
     titleKey: 'premium_card_free_title',
@@ -124,9 +152,72 @@ class PremiumUpgradeScreen extends ConsumerStatefulWidget {
 }
 
 class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
-  late PageController _pageController;
-  double _currentPage = 0.0;
+  PageController? _pageController;
+  int _selectedIndex = 0;
+  int _lastHapticPage = 0;
   bool _isLoading = false;
+
+  late final TextStyle _screenTitleStyle = GoogleFonts.instrumentSans(
+    color: Colors.white,
+    fontWeight: FontWeight.bold,
+    fontSize: 18,
+  );
+  late final TextStyle _screenSubtitleStyle = GoogleFonts.playfairDisplay(
+    fontSize: 22,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+    height: 1.3,
+  );
+  late final TextStyle _dialogTitleStyle = GoogleFonts.playfairDisplay(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
+  late final TextStyle _dialogSubtitleStyle = GoogleFonts.instrumentSans(
+    color: Colors.white70,
+    height: 1.4,
+  );
+  late final TextStyle _cardTagStyle = GoogleFonts.instrumentSans(
+    fontSize: 10,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.5,
+  );
+  late final TextStyle _cardTitleStyle = GoogleFonts.playfairDisplay(
+    color: Colors.white,
+    fontSize: 26,
+    fontWeight: FontWeight.bold,
+    height: 1.1,
+  );
+  late final TextStyle _priceStyle = GoogleFonts.instrumentSans(
+    color: Colors.white,
+    fontSize: 34,
+    fontWeight: FontWeight.w800,
+  );
+  late final TextStyle _periodStyle = GoogleFonts.instrumentSans(
+    color: Colors.white60,
+    fontSize: 14,
+  );
+  late final TextStyle _billedAsStyle = GoogleFonts.instrumentSans(
+    color: Colors.white60,
+    fontSize: 12,
+    height: 1.3,
+  );
+  late final TextStyle _badgeStyle = GoogleFonts.instrumentSans(
+    fontSize: 11,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.5,
+  );
+  late final TextStyle _featureTitleStyle = GoogleFonts.instrumentSans(
+    color: Colors.white38,
+    fontSize: 10,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.8,
+  );
+  late final TextStyle _featureStyle = GoogleFonts.instrumentSans(
+    color: Colors.white.withValues(alpha: 0.87),
+    fontSize: 12,
+    height: 1.3,
+  );
 
   // self-contained localized dictionary for English and Slovenian languages
   final Map<String, Map<String, String>> _localTranslations = {
@@ -135,7 +226,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_subtitle': 'Elevate your connection game. Discover physically.',
       'premium_cta_get_premium': 'Get the Tremble Premium Plan',
       'premium_cta_get_weekend': 'Get the Weekend Getaway Plan',
-      'premium_cta_get_choices': 'Get the Duration Choice Plan',
+      'premium_cta_get_yearly': 'Activate Yearly — 59.99 € / year',
+      'premium_cta_get_lifetime': 'Activate Lifetime — 149.99 €',
       'premium_current_plan': 'Current Plan',
       'premium_switch_to_free': 'Want to switch back to free plan?',
       'confirm_downgrade': 'Confirm Downgrade',
@@ -157,18 +249,24 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_card_weekend_title': 'Weekend Getaway',
       'premium_card_weekend_period': '/ Weekend',
       'premium_card_weekend_window': 'Friday 7:00 PM to Sunday 7:00 PM',
-      'premium_card_choices_title': 'Choices',
-      'premium_card_choices_period': '/ Year',
+      'premium_card_yearly_title': 'Yearly',
+      'premium_card_yearly_period': '/ month',
+      'premium_card_yearly_billed_as': 'billed as 59.99 € / year',
+      'premium_yearly_savings_badge': 'SAVE 37%',
+      'premium_card_lifetime_title': 'Lifetime',
+      'premium_card_lifetime_period': 'one-time',
+      'premium_card_lifetime_window': 'never pay again',
       'premium_card_free_title': 'Free Tier',
       'premium_feature_wider_radar': '50% wider radar scan',
       'premium_feature_unlimited_geofence': 'Unlimited geofence pings',
       'premium_feature_custom_themes': 'Custom themes',
       'premium_feature_advanced_filters': 'Advanced filtering matrix',
       'premium_feature_weekend_window': 'Active during the getaway window',
-      'premium_choice_monthly': 'Monthly: 7.99 € / Month',
-      'premium_choice_yearly':
-          'Yearly: 59.99 € / Year (~5.00 € / month, Save 37%)',
-      'premium_choice_lifetime': 'Lifetime: 149.99 € / One-time',
+      'premium_feature_all_premium': 'All Premium features',
+      'premium_feature_yearly_access': '12 months of uninterrupted access',
+      'premium_feature_cancel_anytime': 'Cancel anytime',
+      'premium_feature_lifetime_upgrades': 'All future upgrades',
+      'premium_feature_priority_support': 'Priority support',
       'premium_free_gym_mode': 'Gym mode access',
       'premium_free_local_radar': '30-min local radar',
       'premium_free_wave_limit': 'Standard mutual wave limit',
@@ -178,7 +276,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_subtitle': 'Dvigni raven spoznavanja. Odkrij fizično.',
       'premium_cta_get_premium': 'Aktiviraj Tremble Premium',
       'premium_cta_get_weekend': 'Aktiviraj Weekend Getaway',
-      'premium_cta_get_choices': 'Izberi trajanje paketa',
+      'premium_cta_get_yearly': 'Aktiviraj Yearly — 59,99 € / leto',
+      'premium_cta_get_lifetime': 'Aktiviraj Lifetime — 149,99 €',
       'premium_current_plan': 'Trenutni plan',
       'premium_switch_to_free': 'Se želiš vrniti na brezplačen plan?',
       'confirm_downgrade': 'Potrdi Prekinitev',
@@ -200,18 +299,24 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_card_weekend_title': 'Weekend Getaway',
       'premium_card_weekend_period': '/ vikend',
       'premium_card_weekend_window': 'Petek 19:00 do nedelja 19:00',
-      'premium_card_choices_title': 'Choices',
-      'premium_card_choices_period': '/ leto',
+      'premium_card_yearly_title': 'Yearly',
+      'premium_card_yearly_period': '/ mesec',
+      'premium_card_yearly_billed_as': 'obračunano kot 59,99 € / leto',
+      'premium_yearly_savings_badge': 'PRIHRANI 37%',
+      'premium_card_lifetime_title': 'Lifetime',
+      'premium_card_lifetime_period': 'enkratno',
+      'premium_card_lifetime_window': 'nikoli več ne plačaš',
       'premium_card_free_title': 'Brezplačni paket',
       'premium_feature_wider_radar': '50% širši domet radarja',
       'premium_feature_unlimited_geofence': 'Neomejeni geofence pingi',
       'premium_feature_custom_themes': 'Prilagojene teme',
       'premium_feature_advanced_filters': 'Napredna matrika filtrov',
       'premium_feature_weekend_window': 'Aktivno med getaway oknom',
-      'premium_choice_monthly': 'Mesečno: 7.99 € / mesec',
-      'premium_choice_yearly':
-          'Letno: 59.99 € / leto (~5.00 € / mesec, 37% prihranek)',
-      'premium_choice_lifetime': 'Doživljenjsko: 149.99 € / enkratno',
+      'premium_feature_all_premium': 'Vse Premium funkcije',
+      'premium_feature_yearly_access': '12 mesecev neprekinjenega dostopa',
+      'premium_feature_cancel_anytime': 'Odpoveš kadarkoli',
+      'premium_feature_lifetime_upgrades': 'Vse prihodnje nadgradnje',
+      'premium_feature_priority_support': 'Prioritetna podpora',
       'premium_free_gym_mode': 'Dostop do Gym načina',
       'premium_free_local_radar': '30-min lokalni radar',
       'premium_free_wave_limit': 'Standardna omejitev mutual wave',
@@ -230,15 +335,20 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     super.initState();
     _pageController = PageController(viewportFraction: 0.76)
       ..addListener(() {
-        setState(() {
-          _currentPage = _pageController.page ?? 0.0;
-        });
+        final controller = _pageController;
+        if (controller == null || !controller.hasClients) return;
+        final page = controller.page ?? controller.initialPage.toDouble();
+        final snapped = page.round().clamp(0, premiumPlanCards.length - 1);
+        if (snapped == _lastHapticPage) return;
+        _lastHapticPage = snapped;
+        HapticFeedback.selectionClick();
       });
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _pageController?.dispose();
+    _pageController = null;
     super.dispose();
   }
 
@@ -363,18 +473,13 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: GoogleFonts.playfairDisplay(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              style: _dialogTitleStyle,
             ),
             const SizedBox(height: 12),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: GoogleFonts.instrumentSans(
-                  color: Colors.white70, height: 1.4),
+              style: _dialogSubtitleStyle,
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -408,8 +513,14 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     if (user == null) return const Scaffold(body: SizedBox.shrink());
 
     final lang = user.appLanguage;
-    final int selectedIndex =
-        _currentPage.round().clamp(0, premiumPlanCards.length - 1);
+    final pageController = _pageController;
+
+    if (pageController == null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF1A1A18),
+        body: SizedBox.shrink(),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A18), // Deep graphite default
@@ -472,11 +583,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                       const Spacer(),
                       Text(
                         _t('premium_title', lang),
-                        style: GoogleFonts.instrumentSans(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
+                        style: _screenTitleStyle,
                       ),
                       const Spacer(),
                       const SizedBox(width: 48), // Balance for alignment
@@ -491,12 +598,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                   child: Text(
                     _t('premium_subtitle', lang),
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      height: 1.3,
-                    ),
+                    style: _screenSubtitleStyle,
                   ),
                 ),
 
@@ -504,100 +606,14 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
 
                 // 3D Horizontal Card Shuffle Stack Viewport Area
                 Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return PageView.builder(
-                        controller: _pageController,
-                        itemCount: premiumPlanCards.length,
-                        physics: const BouncingScrollPhysics(),
-                        itemBuilder: (context, i) {
-                          final item = premiumPlanCards[i];
-                          final double offset = i - _currentPage;
-
-                          // Dynamic stack physics calculations
-                          double translationX = 0.0;
-                          double scale = 1.0;
-                          double rotY = 0.0;
-                          double blurSigma = 0.0;
-                          double opacity = 1.0;
-
-                          if (offset >= 0) {
-                            // Layered background cards stacked behind the front card
-                            translationX =
-                                -offset * (constraints.maxWidth * 0.44);
-                            scale = 1.0 - (offset * 0.12);
-                            rotY = -offset * 0.24;
-                            blurSigma = offset * 4.5;
-                            opacity = (1.0 - (offset * 0.4)).clamp(0.0, 1.0);
-                          } else {
-                            // Swiping away card (to the left)
-                            translationX =
-                                offset * (constraints.maxWidth * 0.12);
-                            scale = 1.0 - (offset.abs() * 0.08);
-                            rotY = -offset * 0.16;
-                            blurSigma = offset.abs() * 2.0;
-                            opacity =
-                                (1.0 - (offset.abs() * 0.3)).clamp(0.0, 1.0);
-                          }
-
-                          Widget cardWidget = Opacity(
-                            opacity: opacity,
-                            child: Transform(
-                              transform: Matrix4.identity()
-                                ..setEntry(3, 2, 0.001) // perspective
-                                ..translateByDouble(
-                                  translationX,
-                                  0.0,
-                                  -offset.abs() * 100.0,
-                                  1.0,
-                                )
-                                ..scaleByDouble(scale, scale, scale, 1.0)
-                                ..rotateY(rotY),
-                              alignment: Alignment.center,
-                              child: _buildCreditCard(item, lang),
-                            ),
-                          );
-
-                          // Real-time backdrop blur transformation for stacked card depth
-                          if (blurSigma > 0.1) {
-                            cardWidget = ImageFiltered(
-                              imageFilter: ImageFilter.blur(
-                                sigmaX: blurSigma,
-                                sigmaY: blurSigma,
-                              ),
-                              child: cardWidget,
-                            );
-                          }
-
-                          return cardWidget;
-                        },
-                      );
-                    },
+                  child: _PremiumCarousel(
+                    pageController: pageController,
+                    cardBuilder: (card, language) =>
+                        _buildCreditCard(card, language),
+                    lang: lang,
+                    onPageChanged: (index) =>
+                        setState(() => _selectedIndex = index),
                   ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Interactive Dynamic Indicator Dots
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(premiumPlanCards.length, (i) {
-                    final double distance = (i - _currentPage).abs();
-                    final double factor = (1.0 - distance).clamp(0.0, 1.0);
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: 8 + (factor * 12),
-                      height: 8,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: Color.lerp(
-                          Colors.white.withValues(alpha: 0.3),
-                          const Color(0xFFF4436C),
-                          factor,
-                        ),
-                      ),
-                    );
-                  }),
                 ),
 
                 const SizedBox(height: 24),
@@ -607,8 +623,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                   padding:
                       const EdgeInsets.only(left: 24, right: 24, bottom: 24),
                   child: _buildCTAButton(
-                    selectedIndex,
-                    premiumPlanCards[selectedIndex],
+                    _selectedIndex,
+                    premiumPlanCards[_selectedIndex],
                     user,
                   ),
                 ),
@@ -653,7 +669,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
 
   Widget _buildCreditCard(PremiumPlanCard data, String lang) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
       decoration: BoxDecoration(
         color: data.color,
         borderRadius: BorderRadius.circular(28),
@@ -721,12 +736,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                         ),
                         child: Text(
                           data.tag,
-                          style: GoogleFonts.instrumentSans(
-                            color: data.accent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
+                          style: _cardTagStyle.copyWith(color: data.accent),
                         ),
                       ),
                       Icon(data.icon, color: data.accent, size: 24),
@@ -738,12 +748,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                   // Plan Title
                   Text(
                     _t(data.titleKey, lang),
-                    style: GoogleFonts.playfairDisplay(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      height: 1.1,
-                    ),
+                    style: _cardTitleStyle,
                   ),
 
                   const SizedBox(height: 8),
@@ -754,34 +759,53 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        data.price,
-                        style: GoogleFonts.instrumentSans(
-                          color: Colors.white,
-                          fontSize: 34,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        data.perMonthPrice ?? data.price,
+                        style: _priceStyle,
                       ),
                       if (data.periodKey.isNotEmpty) ...[
                         const SizedBox(width: 4),
                         Text(
                           _t(data.periodKey, lang),
-                          style: GoogleFonts.instrumentSans(
-                            color: Colors.white60,
-                            fontSize: 14,
-                          ),
+                          style: _periodStyle,
                         ),
                       ],
                     ],
                   ),
 
+                  if (data.perMonthPrice != null && data.billedAs != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _t(data.billedAs!, lang),
+                      style: _billedAsStyle,
+                    ),
+                  ],
+
                   if (data.windowKey.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
                       _t(data.windowKey, lang),
-                      style: GoogleFonts.instrumentSans(
+                      style: _periodStyle.copyWith(
                         color: data.accent,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+
+                  if (data.savingsBadge != null) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: data.accent.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Text(
+                        _t(data.savingsBadge!, lang),
+                        style: _badgeStyle.copyWith(color: data.accent),
                       ),
                     ),
                   ],
@@ -794,12 +818,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                   // Included Features Title
                   Text(
                     _t('features', lang).toUpperCase(),
-                    style: GoogleFonts.instrumentSans(
-                      color: Colors.white38,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.8,
-                    ),
+                    style: _featureTitleStyle,
                   ),
 
                   const SizedBox(height: 10),
@@ -825,11 +844,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                             Expanded(
                               child: Text(
                                 _t(data.features[index], lang),
-                                style: GoogleFonts.instrumentSans(
-                                  color: Colors.white.withValues(alpha: 0.87),
-                                  fontSize: 12,
-                                  height: 1.3,
-                                ),
+                                style: _featureStyle,
                               ),
                             ),
                           ],
@@ -849,8 +864,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
   Widget _buildCTAButton(int index, PremiumPlanCard data, AuthUser user) {
     final isPremium = user.isPremium;
 
-    // Index 3 is the Free Tier Card
-    if (index == 3) {
+    // Index 4 is the Free Tier card.
+    if (index == 4) {
       if (isPremium) {
         return SizedBox(
           width: double.infinity,
@@ -859,7 +874,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
             icon: const Icon(LucideIcons.arrowLeftRight,
                 size: 18, color: Colors.white60),
             label: Text(
-              _t('switch_to_free', user.appLanguage),
+              _t(data.ctaPremiumKey, user.appLanguage),
               style: GoogleFonts.instrumentSans(
                 color: Colors.white60,
                 fontWeight: FontWeight.bold,
@@ -883,7 +898,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                   borderRadius: BorderRadius.circular(100)),
             ),
             child: Text(
-              _t('current_plan', user.appLanguage),
+              _t(data.ctaBasicKey, user.appLanguage),
               style: GoogleFonts.instrumentSans(
                 color: Colors.white30,
                 fontWeight: FontWeight.bold,
@@ -896,19 +911,21 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     }
 
     // Standard upgrade plans
-    final String ctaText = index == 0
-        ? _t(data.ctaBasicKey, user.appLanguage)
-        : index == 1
-            ? _t(data.ctaBasicKey, user.appLanguage)
-            : _t(data.ctaBasicKey, user.appLanguage);
+    final ctaText = _t(
+      isPremium ? data.ctaPremiumKey : data.ctaBasicKey,
+      user.appLanguage,
+    );
 
-    final buttonBg = index == 0
-        ? const Color(0xFFF4436C) // Strong rose for premium tier
-        : index == 1
-            ? const Color(0xFFF5C842) // Warm signal yellow for weekend
-            : const Color(0xFF00C8FF); // Vibrant cyan for options
+    final buttonBg = switch (index) {
+      0 => const Color(0xFFF4436C),
+      1 => const Color(0xFFF5C842),
+      2 => const Color(0xFF00C8FF),
+      3 => const Color(0xFFFFB347),
+      _ => data.accent,
+    };
 
-    final textColor = index == 1 ? const Color(0xFF1A1A18) : Colors.white;
+    final textColor =
+        (index == 1 || index == 3) ? const Color(0xFF1A1A18) : Colors.white;
 
     return SizedBox(
       width: double.infinity,
@@ -934,6 +951,199 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PremiumCarousel extends StatelessWidget {
+  const _PremiumCarousel({
+    required this.pageController,
+    required this.cardBuilder,
+    required this.lang,
+    required this.onPageChanged,
+  });
+
+  final PageController pageController;
+  final Widget Function(PremiumPlanCard card, String lang) cardBuilder;
+  final String lang;
+  final ValueChanged<int> onPageChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: pageController,
+      builder: (context, _) {
+        final currentPage = pageController.hasClients
+            ? pageController.page ?? pageController.initialPage.toDouble()
+            : pageController.initialPage.toDouble();
+
+        return Column(
+          children: [
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final cardWidth = constraints.maxWidth * 0.82;
+                  final sortedIndices =
+                      List.generate(premiumPlanCards.length, (i) => i)
+                        ..sort((a, b) {
+                          final dA = (currentPage - a).abs();
+                          final dB = (currentPage - b).abs();
+                          return dB.compareTo(dA);
+                        });
+
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      PageView.builder(
+                        controller: pageController,
+                        itemCount: premiumPlanCards.length,
+                        physics: const BouncingScrollPhysics(),
+                        onPageChanged: onPageChanged,
+                        itemBuilder: (_, __) => const SizedBox.expand(),
+                      ),
+                      IgnorePointer(
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            for (final i in sortedIndices)
+                              _PremiumCarouselCard(
+                                data: premiumPlanCards[i],
+                                lang: lang,
+                                currentPage: currentPage,
+                                cardWidth: cardWidth,
+                                cardHeight: constraints.maxHeight,
+                                screenWidth: constraints.maxWidth,
+                                cardBuilder: cardBuilder,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            _PremiumCarouselDots(currentPage: currentPage),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PremiumCarouselCard extends StatelessWidget {
+  const _PremiumCarouselCard({
+    required this.data,
+    required this.lang,
+    required this.currentPage,
+    required this.cardWidth,
+    required this.cardHeight,
+    required this.screenWidth,
+    required this.cardBuilder,
+  });
+
+  final PremiumPlanCard data;
+  final String lang;
+  final double currentPage;
+  final double cardWidth;
+  final double cardHeight;
+  final double screenWidth;
+  final Widget Function(PremiumPlanCard card, String lang) cardBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final index = premiumPlanCards.indexOf(data);
+    final offset = index - currentPage;
+
+    final double translationX;
+    final double scale;
+    final double rotY;
+    final double blurSigma;
+    final double opacity;
+
+    if (offset >= 0) {
+      translationX = -offset * (screenWidth * 0.44);
+      scale = 1.0 - (offset * 0.12);
+      rotY = -offset * 0.24;
+      blurSigma = offset * 4.5;
+      opacity = (1.0 - (offset * 0.4)).clamp(0.0, 1.0);
+    } else {
+      translationX = offset * (screenWidth * 0.12);
+      scale = 1.0 - (offset.abs() * 0.08);
+      rotY = -offset * 0.16;
+      blurSigma = offset.abs() * 2.0;
+      opacity = (1.0 - (offset.abs() * 0.3)).clamp(0.0, 1.0);
+    }
+
+    Widget cardWidget = Transform(
+      transform: Matrix4.identity()
+        ..setEntry(3, 2, 0.001)
+        ..translateByDouble(
+          translationX,
+          0.0,
+          -offset.abs() * 100.0,
+          1.0,
+        )
+        ..scaleByDouble(scale, scale, scale, 1.0)
+        ..rotateY(rotY),
+      alignment: Alignment.center,
+      child: SizedBox(
+        width: cardWidth,
+        height: cardHeight,
+        child: RepaintBoundary(
+          child: Opacity(
+            opacity: opacity,
+            alwaysIncludeSemantics: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: cardBuilder(data, lang),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (blurSigma > 0.1) {
+      cardWidget = ImageFiltered(
+        imageFilter: ImageFilter.blur(
+          sigmaX: blurSigma,
+          sigmaY: blurSigma,
+        ),
+        child: cardWidget,
+      );
+    }
+
+    return cardWidget;
+  }
+}
+
+class _PremiumCarouselDots extends StatelessWidget {
+  const _PremiumCarouselDots({required this.currentPage});
+
+  final double currentPage;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(premiumPlanCards.length, (i) {
+        final distance = (i - currentPage).abs();
+        final factor = (1.0 - distance).clamp(0.0, 1.0);
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: 8 + (factor * 12),
+          height: 8,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            color: Color.lerp(
+              Colors.white.withValues(alpha: 0.3),
+              const Color(0xFFF4436C),
+              factor,
+            ),
+          ),
+        );
+      }),
     );
   }
 }

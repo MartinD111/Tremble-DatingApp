@@ -1,4 +1,31 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tremble/src/features/auth/data/auth_repository.dart';
+import 'package:tremble/src/features/settings/presentation/settings_controller.dart';
+
+class FakeAuthRepository implements AuthRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #authStateChanges) {
+      return const Stream<AuthUser?>.empty();
+    }
+    return super.noSuchMethod(invocation);
+  }
+}
+
+class CountingAuthNotifier extends AuthNotifier {
+  CountingAuthNotifier(AuthUser initial) : super(FakeAuthRepository()) {
+    state = initial;
+  }
+
+  int updateProfileCallCount = 0;
+
+  @override
+  Future<void> updateProfile(AuthUser user) async {
+    updateProfileCallCount += 1;
+    state = user;
+  }
+}
 
 void main() {
   group('Registration Flow Integration Tests', () {
@@ -62,20 +89,47 @@ void main() {
       expect(true, true); // Placeholder
     });
 
-    test('Slider range normalization handles both 0-1 and 0-100 scales',
-        () async {
-      // SETUP: Existing profile has introvertScale = 0.5 (old 0-1 format)
-      // AND: New profiles should use 0-100 format
-      //
-      // EXPECTED:
-      // - When loading old profile, detect scale ≤ 1
-      // - Automatically multiply by 100 (0.5 → 50)
-      // - Display as "50% Ambivert"
-      // - When saving, persist as 50 (0-100 format)
-      //
-      // This ensures backward compatibility without data loss.
+    test('Slider range normalization handles both 0-1 and 0-100 scales', () {
+      final legacyUser = AuthUser.fromFirestore(
+        'legacy-user',
+        const {
+          'introvertScale': 0.5,
+        },
+      );
 
-      expect(true, true); // Placeholder
+      final currentUser = AuthUser.fromFirestore(
+        'current-user',
+        const {
+          'introvertScale': 50,
+        },
+      );
+
+      expect(legacyUser.introvertScale, 50);
+      expect(currentUser.introvertScale, 50);
+    });
+
+    test('Introvert slider saves only after debounce window', () async {
+      const user = AuthUser(id: 'settings-user', introvertScale: 50);
+      final authNotifier = CountingAuthNotifier(user);
+      final container = ProviderContainer(
+        overrides: [
+          authStateProvider.overrideWith((ref) => authNotifier),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(settingsControllerProvider);
+      controller.updateIntrovertScale(60);
+      controller.updateIntrovertScale(61);
+      controller.updateIntrovertScale(62);
+
+      expect(container.read(authStateProvider)?.introvertScale, 62);
+      expect(authNotifier.updateProfileCallCount, 0);
+
+      await Future<void>.delayed(const Duration(milliseconds: 900));
+
+      expect(authNotifier.updateProfileCallCount, 1);
+      expect(container.read(authStateProvider)?.introvertScale, 62);
     });
   });
 }

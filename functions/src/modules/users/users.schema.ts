@@ -6,6 +6,14 @@
 
 import { z } from "zod";
 
+const interestedInValueSchema = z.enum(["male", "female", "non_binary"]);
+
+const interestedInSchema = z.preprocess((value) => {
+    if (value === "both") return ["male", "female"];
+    if (typeof value === "string") return [value];
+    return value;
+}, z.array(interestedInValueSchema).min(1).max(3));
+
 /** Schema for partial profile updates (settings/preferences) */
 export const updateProfileSchema = z
     .object({
@@ -48,7 +56,7 @@ export const updateProfileSchema = z
         partnerPoliticalMin: z.number().int().min(1).max(5).optional(),
         partnerPoliticalMax: z.number().int().min(1).max(5).optional(),
         partnerHeightPreference: z.string().max(50).optional(),
-        interestedIn: z.enum(["male", "female", "both", "non_binary"]).optional(),
+        interestedIn: interestedInSchema.optional(),
         lookingFor: z.array(z.string().max(50)).max(5).optional(),
         languages: z.array(z.string().max(50)).max(5).optional(),
         hobbies: z.array(z.string().max(50)).max(20).optional(),

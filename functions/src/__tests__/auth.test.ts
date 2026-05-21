@@ -90,6 +90,37 @@ describe("Auth Module", () => {
             expect(result.success).toBe(true);
         });
 
+        it("should validate onboarding schema — accept Flutter interestedIn list payload", async () => {
+            const { completeOnboardingSchema } = await import(
+                "../../src/modules/auth/auth.schema"
+            );
+
+            const result = completeOnboardingSchema.safeParse({
+                name: "Ana",
+                birthDate: "1995-06-15",
+                gender: "female",
+                interestedIn: ["male", "female"],
+                photoUrls: ["https://media.trembledating.com/users/u/photos/p.jpg"],
+                lookingFor: ["long_term"],
+                languages: ["Slovenian"],
+                hobbies: ["Hiking"],
+                prompts: {},
+                appLanguage: "sl",
+                isDarkMode: true,
+                isPrideMode: false,
+                showPingAnimation: true,
+                ageRangeStart: 22,
+                ageRangeEnd: 35,
+                maxDistance: 10,
+                consentGiven: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.interestedIn).toEqual(["male", "female"]);
+            }
+        });
+
         it("should reject a user under 18", async () => {
             const { completeOnboardingSchema } = await import(
                 "../../src/modules/auth/auth.schema"

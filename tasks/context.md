@@ -1,3 +1,150 @@
+## Session State — 2026-05-21 09:19 CEST
+- Active Task: Premium card redesign
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/features/settings/presentation/premium_screen.dart`
+    - `test/features/settings/premium_screen_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification after App Check debug token is registered.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (71/71). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS.
+
+## Session Handoff
+- Completed:
+  - Split the old Duration Matrix card into separate Yearly Access and Lifetime Access cards; carousel now has 5 cards.
+  - Added `perMonthPrice`, `billedAs`, and `savingsBadge` fields to `PremiumPlanCard`.
+  - Updated Yearly display to lead with `5,00 € / mesec`, show billed-as copy, and render a savings badge.
+  - Added the deep amber Lifetime card and 5-card CTA color/index handling.
+  - Preserved the jitter fix: no `setState` in `PageController` listener, carousel/dots stay inside `AnimatedBuilder`, and animated cards keep `RepaintBoundary`.
+  - Updated premium card ordering/pricing regression test.
+- In Progress: None.
+- Blocked:
+  - Visual confirmation still needs the new dev APK installed and swiped on a physical Samsung device.
+- Next Action:
+  1. Install `build/app/outputs/flutter-apk/app-dev-debug.apk` and verify the 5-card premium carousel visually on device.
+
+## Session State — 2026-05-21 09:06 CEST
+- Active Task: Premium carousel jitter remediation
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/features/settings/presentation/premium_screen.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification after App Check debug token is registered.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (71/71). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS.
+
+## Session Handoff
+- Completed:
+  - Removed per-scroll-frame `setState` from `PremiumUpgradeScreen`; the page listener now only updates selected CTA state and haptics when the snapped page changes.
+  - Moved carousel animation and dots into `_PremiumCarousel` with an `AnimatedBuilder`, keeping header, subtitle, dialog copy, and CTA outside per-frame rebuilds.
+  - Added `RepaintBoundary` around each animated card and kept the `PageView` as a lightweight gesture target.
+  - Cached premium screen `GoogleFonts` text styles as `late final` fields.
+- In Progress: None.
+- Blocked:
+  - Visual/performance confirmation still needs the new dev APK installed and swiped on the Samsung test device.
+- Next Action:
+  1. Install the new dev APK on Samsung and verify Premium carousel swipe smoothness plus Crashlytics silence.
+
+## Session State — 2026-05-21 08:58 CEST
+- Active Task: BLOCKER-006 backend contract fix + Crashlytics triage
+- Environment: Dev backend (`tremble-dev`) + dev mobile flavor
+- Modified Files:
+    - `functions/src/modules/auth/auth.schema.ts`
+    - `functions/src/modules/users/users.schema.ts`
+    - `functions/src/__tests__/auth.test.ts`
+    - `functions/src/__tests__/users.test.ts`
+    - `lib/main.dart`
+    - `lib/src/core/crash_filter.dart`
+    - `lib/src/features/settings/presentation/premium_screen.dart`
+    - `test/core/crash_filter_test.dart`
+    - `tasks/blockers.md`
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device/simulator verification after App Check debug token is registered.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (71/71). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS. `npm test -- --runInBand` SUCCESS (14/14). `npm run build` SUCCESS. `completeOnboarding` and `updateProfile` deployed to `tremble-dev`.
+
+## Session Handoff
+- Completed:
+  - Added regression tests proving real Flutter `interestedIn: List<String>` payloads are accepted by onboarding and profile-update schemas.
+  - Fixed backend `interestedIn` schema normalization for both `completeOnboardingSchema` and `updateProfileSchema`; legacy `"both"` now normalizes to `["male", "female"]`.
+  - Deployed fixed `completeOnboarding` and `updateProfile` Cloud Functions to `tremble-dev`.
+  - Added `CrashFilter` and wired `FlutterError.onError` to suppress benign `vector_map_tiles` cancellation errors instead of recording them as fatal Crashlytics events.
+  - Hardened `PremiumUpgradeScreen` by making `_pageController` nullable, guarding listener/build/dispose paths, and preventing `LateInitializationError` from becoming fatal.
+- In Progress: None.
+- Blocked:
+  - Photo upload E2E still requires a real authenticated app run with App Check debug token registered in Firebase Console.
+- Next Action:
+  1. Register the Android App Check debug token from Logcat, then run full registration with a real image and verify R2 `publicUrl` lands in `/users/{uid}.photoUrls`.
+  2. Build/distribute a new dev APK so Crashlytics cancellation filtering and premium lifecycle hardening reach the Samsung device.
+
+## Session State — 2026-05-21 08:47 CEST
+- Active Task: Production-readiness triage — photo upload E2E, settings debounce, prod rules, launch blockers
+- Environment: Dev + Prod rules (`tremble-dev`, `am---dating-app`)
+- Modified Files:
+    - `tasks/blockers.md`
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Photo upload / onboarding E2E not verified; backend schema mismatch found.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `firebase functions:list --project tremble-dev` confirms `generateUploadUrl` is deployed. `firebase deploy --only firestore:rules --project am---dating-app` SUCCESS. `npm test -- --runInBand` in `functions/` SUCCESS (12/12), but current tests do not cover Flutter's real `interestedIn` list payload.
+
+## Session Handoff
+- Completed:
+  - Deployed `active_run_crosses` Firestore rules to production project `am---dating-app`.
+  - Confirmed `generateUploadUrl` exists on `tremble-dev` as a v2 callable in `europe-west1`.
+  - Verified Settings debounce test only proves `SettingsController.updateIntrovertScale()` debounces when called; current visible Settings range rows use modal Save and do not call that method on drag.
+  - Found onboarding schema mismatch: Flutter sends `interestedIn` as `List<String>` via `AuthUser.toApiPayload()`, while backend `completeOnboardingSchema` expects `z.enum(...)`.
+  - Checked HR translation parity: HR has 606 keys vs EN 685 in a quick key-count script; missing vs EN reported as 80 keys, not 13, so translation coverage needs a proper audited fix.
+  - Confirmed local website sources include privacy and erasure pages, but live `trembledating.com` publication was not verified in this session.
+- In Progress: None.
+- Blocked:
+  - Photo upload E2E remains unverified until schema mismatch is fixed and a real authenticated app flow is run.
+  - App Check debug token still requires Firebase Console entry from Logcat before dev Cloud Function calls can be fully trusted from device.
+- Next Action:
+  1. Approve implementation plan for BLOCKER-006: add failing backend schema test for Flutter payload, fix `completeOnboardingSchema` / `updateProfileSchema` interestedIn handling, run functions + Flutter tests, deploy functions to `tremble-dev`, then run real photo registration E2E.
+
+## Session State — 2026-05-21 08:21 CEST
+- Active Task: PR #153 blocker cleanup — CI isolation, active run crosses rules, registration/settings slider safeguards
+- Environment: Dev (`tremble-dev`, mobile flavor `com.pulse`)
+- Modified Files:
+    - `firestore.rules`
+    - `lib/src/features/auth/data/auth_repository.dart`
+    - `lib/src/features/settings/presentation/settings_controller.dart`
+    - `test/features/auth/registration_flow_test.dart`
+    - `test/features/dashboard/navigation_bounds_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - App Check debug token still requires manual Firebase Console entry from device Logcat.
+- System Status: `dart format` SUCCESS. `flutter analyze` SUCCESS. `flutter test` SUCCESS (69/69). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS. Firestore rules deployed to `tremble-dev`.
+
+## Session Handoff
+- Completed:
+  - Added isolated `navIndexProvider` overrides to all `navigation_bounds_test.dart` ProviderContainers.
+  - Added Firestore rules for `active_run_crosses`: authenticated reads only for users in `resource.data.userIds`; all client writes denied.
+  - Deployed updated Firestore rules to dev project `tremble-dev`.
+  - Verified `android/app/src/dev/google-services.json` exists.
+  - Preserved and verified existing local slider changes: `AuthUser.fromFirestore()` uses `SliderNormalizer.toNewFormat(...)`; Settings introvert updates debounce the backend write after 800 ms.
+- In Progress: None.
+- Blocked:
+  - App Check debug token must still be added manually in Firebase Console from Logcat output.
+  - Production rules were not deployed; only `tremble-dev` was updated to avoid implicit prod changes.
+- Next Action:
+  1. Add the Android App Check debug token in Firebase Console for the dev app.
+  2. If production `active_run_crosses` is currently broken, explicitly approve a prod Firestore rules deploy to `am---dating-app`.
+
 ## Session State — 2026-05-20 15:00 CEST (Session 46)
 - Active Task: Deploy Cloudflare Worker & map validation
 - Environment: Dev (mobile: com.pulse)
