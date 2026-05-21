@@ -91,10 +91,13 @@ void main() async {
   // Initialize background service for Radar scanning.
   await initializeBackgroundService();
 
-  // Pre-load theme before first frame to prevent Dark Mode flash on navigation
+  // Pre-load theme before first frame to prevent Dark Mode flash on navigation.
+  // Default to dark when no local preference is saved (fresh install / new device)
+  // because the entire UI is designed dark-first. Light mode is only used when
+  // the user has explicitly saved it (isDark == false in SharedPreferences).
   final prefs = await SharedPreferences.getInstance();
   final isDark = prefs.getBool('themeMode');
-  final initialTheme = isDark == true ? ThemeMode.dark : ThemeMode.light;
+  final initialTheme = isDark == false ? ThemeMode.light : ThemeMode.dark;
   final initialLang = prefs.getString('appLanguage');
 
   runApp(

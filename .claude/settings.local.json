@@ -87,7 +87,9 @@
       "Bash(flutter devices *)",
       "Bash(adb -s R5CY12RLCWE logcat -d flutter:D *:S)",
       "Skill(gsd-resume-work)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(cd \"c:\\\\Users\\\\marti\\\\AMS d.o.o\\\\Tremble-DatingApp\" && dart run --no-sound-null-safety 2>/dev/null; flutter pub deps | grep cupertino 2>&1 | head -5; grep -r \"apple\" ~/.pub-cache/hosted/pub.dev/cupertino_icons*/lib/ 2>/dev/null | head -5)",
+      "Read(//c/Users/marti/.pub-cache/hosted/**)"
     ]
   }
 }
