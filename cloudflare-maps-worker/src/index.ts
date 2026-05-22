@@ -20,7 +20,7 @@ const STYLE_JSON = {
       id: "background",
       type: "background",
       paint: {
-        "background-color": "#1A1A18",
+        "background-color": "#0B0C10",
       },
     },
     {
@@ -29,7 +29,7 @@ const STYLE_JSON = {
       source: "protomaps",
       "source-layer": "earth",
       paint: {
-        "fill-color": "#1A1A18",
+        "fill-color": "#0B0C10",
       },
     },
     {
@@ -39,7 +39,7 @@ const STYLE_JSON = {
       "source-layer": "landuse",
       filter: ["in", "kind", "residential", "suburb"],
       paint: {
-        "fill-color": "#1C1C1A",
+        "fill-color": "#161821",
       },
     },
     {
@@ -58,7 +58,7 @@ const STYLE_JSON = {
         "hospital",
       ],
       paint: {
-        "fill-color": "#1E1E1C",
+        "fill-color": "#1A1D28",
       },
     },
     {
@@ -81,7 +81,7 @@ const STYLE_JSON = {
         "recreation_ground",
       ],
       paint: {
-        "fill-color": "#17221A",
+        "fill-color": "#15281E",
       },
     },
     {
@@ -91,7 +91,7 @@ const STYLE_JSON = {
       "source-layer": "natural",
       filter: ["in", "kind", "wood", "forest", "scrub", "heath", "grassland"],
       paint: {
-        "fill-color": "#17221A",
+        "fill-color": "#15281E",
       },
     },
     {
@@ -101,7 +101,7 @@ const STYLE_JSON = {
       "source-layer": "natural",
       filter: ["==", "kind", "sand"],
       paint: {
-        "fill-color": "#26221B",
+        "fill-color": "#2B2519",
       },
     },
     {
@@ -110,7 +110,7 @@ const STYLE_JSON = {
       source: "protomaps",
       "source-layer": "water",
       paint: {
-        "fill-color": "#131924",
+        "fill-color": "#0E1830",
       },
     },
     {
@@ -120,7 +120,7 @@ const STYLE_JSON = {
       "source-layer": "water",
       filter: ["==", "$type", "LineString"],
       paint: {
-        "line-color": "#131924",
+        "line-color": "#0E1830",
         "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 16, 3],
       },
     },
@@ -131,8 +131,8 @@ const STYLE_JSON = {
       "source-layer": "buildings",
       maxzoom: 14.5,
       paint: {
-        "fill-color": "#222220",
-        "fill-opacity": 0.75,
+        "fill-color": "#2A2E3A",
+        "fill-opacity": 0.9,
       },
     },
     {
@@ -147,9 +147,9 @@ const STYLE_JSON = {
           ["linear"],
           ["zoom"],
           14.5,
-          "#222220",
+          "#2A2E3A",
           17,
-          "#282826",
+          "#36394A",
         ],
         "fill-extrusion-height": [
           "coalesce",
@@ -172,7 +172,7 @@ const STYLE_JSON = {
       source: "protomaps",
       "source-layer": "boundaries",
       paint: {
-        "line-color": "#3C3C39",
+        "line-color": "#5C5E6A",
         "line-width": ["interpolate", ["linear"], ["zoom"], 3, 0.5, 10, 2],
       },
     },
@@ -183,7 +183,7 @@ const STYLE_JSON = {
       "source-layer": "roads",
       filter: ["in", "kind", "motorway", "trunk", "primary", "secondary"],
       paint: {
-        "line-color": "#141412",
+        "line-color": "#0A0B10",
         "line-width": ["interpolate", ["linear"], ["zoom"], 12, 1.5, 18, 12],
         "line-opacity": ["interpolate", ["linear"], ["zoom"], 12, 0.0, 14, 1.0],
       },
@@ -202,7 +202,7 @@ const STYLE_JSON = {
         "service",
       ],
       paint: {
-        "line-color": "#242422",
+        "line-color": "#3A3D48",
         "line-width": ["interpolate", ["linear"], ["zoom"], 12, 0.5, 18, 4.0],
       },
     },
@@ -213,7 +213,7 @@ const STYLE_JSON = {
       "source-layer": "roads",
       filter: ["in", "kind", "primary", "secondary"],
       paint: {
-        "line-color": "#2E2E2C",
+        "line-color": "#4A4D58",
         "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.8, 18, 8.0],
       },
     },
@@ -224,7 +224,7 @@ const STYLE_JSON = {
       "source-layer": "roads",
       filter: ["in", "kind", "motorway", "trunk"],
       paint: {
-        "line-color": "#383835",
+        "line-color": "#5C5F6B",
         "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.8, 18, 10.0],
       },
     },
@@ -235,7 +235,7 @@ const STYLE_JSON = {
       "source-layer": "roads",
       filter: ["in", "kind", "path", "footway", "cycleway", "pedestrian"],
       paint: {
-        "line-color": "#1D1D1B",
+        "line-color": "#272A33",
         "line-width": ["interpolate", ["linear"], ["zoom"], 14, 0.5, 18, 1.5],
         "line-dasharray": [2, 2],
       },
@@ -247,7 +247,7 @@ const STYLE_JSON = {
       "source-layer": "transit",
       filter: ["==", "kind", "rail"],
       paint: {
-        "line-color": "#2A222B",
+        "line-color": "#3D3445",
         "line-width": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 18, 2.0],
         "line-dasharray": [4, 4],
       },
@@ -347,7 +347,7 @@ const STYLE_JSON = {
         "text-rotation-alignment": "map",
       },
       paint: {
-        "text-color": "#BFBFBC",
+        "text-color": "#D0D0CC",
         "text-halo-color": "#1A1A18",
         "text-halo-width": 1.0,
       },
