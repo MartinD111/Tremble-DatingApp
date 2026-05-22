@@ -23,50 +23,43 @@ class PrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ElevatedButton.icon(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSecondary
-            ? (isDark
-                ? Colors.white.withValues(alpha: 0.12)
-                : Colors.black.withValues(alpha: 0.08))
-            : Theme.of(context).colorScheme.primary,
-        foregroundColor: isSecondary
-            ? Theme.of(context).colorScheme.onSurface
-            : Colors.white,
-        side: isSecondary
-            ? BorderSide(color: isDark ? Colors.white24 : Colors.black12)
-            : null,
-        minimumSize: Size(width ?? double.infinity, height ?? 56),
-        maximumSize: width != null ? Size(width!, height ?? 56) : null,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-        elevation: 0,
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 180),
+      opacity: isLoading ? 0.62 : 1.0,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isSecondary
+              ? (isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.black.withValues(alpha: 0.08))
+              : Theme.of(context).colorScheme.primary,
+          foregroundColor: isSecondary
+              ? Theme.of(context).colorScheme.onSurface
+              : Colors.white,
+          side: isSecondary
+              ? BorderSide(color: isDark ? Colors.white24 : Colors.black12)
+              : null,
+          minimumSize: Size(width ?? double.infinity, height ?? 56),
+          maximumSize: width != null ? Size(width!, height ?? 56) : null,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+          elevation: 0,
+        ),
+        onPressed: isLoading
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                onPressed();
+              },
+        icon: icon != null ? Icon(icon) : const SizedBox.shrink(),
+        label: Text(
+          text,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontSize: 16,
+                  ) ??
+              const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
       ),
-      onPressed: isLoading
-          ? null
-          : () {
-              HapticFeedback.selectionClick();
-              onPressed();
-            },
-      icon: isLoading
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
-          : (icon != null ? Icon(icon) : const SizedBox.shrink()),
-      label: isLoading
-          ? const SizedBox.shrink()
-          : Text(
-              text,
-              style: Theme.of(context)
-                      .textTheme
-                      .labelLarge
-                      ?.copyWith(fontSize: 16) ??
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
     );
   }
 }

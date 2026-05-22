@@ -1,3 +1,39 @@
+## Session State — 2026-05-23 01:35 CEST
+- Active Task: Premium loading states and outage/error handling overhaul
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/main.dart`
+    - `lib/src/shared/ui/tremble_loading_spinner.dart`
+    - `lib/src/shared/ui/tremble_outage_screen.dart`
+    - `lib/src/shared/ui/primary_button.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `lib/src/features/settings/presentation/settings_screen.dart`
+    - `lib/src/features/match/presentation/match_reveal_screen.dart`
+    - `lib/src/core/translations.dart`
+    - `test/shared/ui/tremble_loading_spinner_test.dart`
+    - `test/shared/ui/tremble_outage_screen_test.dart`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format --set-exit-if-changed .` SUCCESS. `flutter analyze --no-fatal-warnings` SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (75/75). `flutter test --coverage` SUCCESS (75/75). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS. `flutter build apk --flavor dev --dart-define=FLAVOR=dev` SUCCESS. Backend lint/build/tests SUCCESS.
+
+## Session Handoff
+- Completed:
+    - Enabled global Firestore offline persistence with unlimited local cache after Firebase initialization.
+    - Added `TrembleLoadingSpinner` with simple/dynamic modes, animated message cycling, and a >10s linear fallback.
+    - Added `TrembleOutageScreen` with component status rows, retry countdown, haptic retry cues, manual retry, and settings actions via existing `openAppSettings()`.
+    - Updated `PrimaryButton` quick loading behavior to disable and fade instead of showing a spinner.
+    - Replaced radar partner-profile, match reveal, and delete-account modal loaders with Tremble loading components.
+    - Added timeout protection to delete-account backend call.
+    - Added loading/outage translation keys across all 8 supported languages.
+    - Added widget tests for loading spinner and outage screen behavior.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Manual UX verification on device: simulate network loss and denied permissions to validate outage copy, haptics, and settings deep-link behavior.
+
 ## Session State — 2026-05-23 00:45 CEST
 - Active Task: CI/CD release build cleanup and main sync
 - Environment: Dev mobile flavor on `main`

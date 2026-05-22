@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/primary_button.dart';
+import '../../../shared/ui/tremble_loading_spinner.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/api_client.dart';
@@ -488,7 +489,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       : () async {
                           setDialogState(() => isLoading = true);
                           try {
-                            await TrembleApiClient().call('deleteUserAccount');
+                            await TrembleApiClient()
+                                .call('deleteUserAccount')
+                                .timeout(const Duration(seconds: 15));
                             if (context.mounted) {
                               Navigator.pop(context);
                               // Force logout and back to login
@@ -514,8 +517,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
+                          child: TrembleLoadingSpinner(
+                            style: LoadingStyle.simple,
+                            accentColor: Colors.white,
+                          ),
+                        )
                       : const Text('Delete My Account',
                           style: TextStyle(color: Colors.white)),
                 ),

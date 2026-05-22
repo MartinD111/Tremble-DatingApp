@@ -12,6 +12,7 @@ import 'radar_animation.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/liquid_nav_bar.dart'; // Import LiquidNavBar
 import '../../../shared/ui/warmth_empty_state.dart';
+import '../../../shared/ui/tremble_loading_spinner.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../map/presentation/tremble_map_screen.dart';
 import '../../../core/theme.dart';
@@ -932,8 +933,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         );
                                     return profile.when(
                                       data: (p) => buildOverlay(p.name),
-                                      loading: () =>
-                                          const CircularProgressIndicator(),
+                                      loading: () => TrembleLoadingSpinner(
+                                        style: LoadingStyle.dynamic,
+                                        messages: [
+                                          t('loading_scanning', lang),
+                                          t('loading_connecting', lang),
+                                          t('loading_signals', lang),
+                                        ],
+                                      ),
                                       error: (_, __) => buildOverlay(
                                           t('someone_nearby', lang)),
                                     );

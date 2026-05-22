@@ -11,6 +11,7 @@ import '../../../features/profile/domain/public_profile.dart';
 import '../domain/match.dart';
 import '../../../features/safety/screen_protection_service.dart';
 import '../application/match_service.dart';
+import '../../../shared/ui/tremble_loading_spinner.dart';
 
 // ── Pep talk data ────────────────────────────────────────────────────────────
 
@@ -214,7 +215,10 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
       return const Scaffold(
         backgroundColor: _bgDeep,
         body: Center(
-          child: CircularProgressIndicator(color: _greenLight, strokeWidth: 2),
+          child: TrembleLoadingSpinner(
+            style: LoadingStyle.simple,
+            accentColor: _greenLight,
+          ),
         ),
       );
     }
@@ -229,7 +233,10 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
       return const Scaffold(
         backgroundColor: _bgDeep,
         body: Center(
-          child: CircularProgressIndicator(color: _greenLight, strokeWidth: 2),
+          child: TrembleLoadingSpinner(
+            style: LoadingStyle.simple,
+            accentColor: _greenLight,
+          ),
         ),
       );
     }
