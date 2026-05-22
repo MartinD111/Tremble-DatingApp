@@ -7,12 +7,14 @@ class LiquidNavBar extends StatelessWidget {
   final Function(int) onTap;
   final List<LiquidNavItem> items;
   final Set<int> pulsingIndexes;
+  final Widget Function(int index, Widget child)? itemWrapper;
   const LiquidNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
     required this.items,
     this.pulsingIndexes = const {},
+    this.itemWrapper,
   });
 
   @override
@@ -84,30 +86,36 @@ class LiquidNavBar extends StatelessWidget {
                     final isSelected = currentIndex == index;
                     final isPulsing = pulsingIndexes.contains(index);
 
+                    final itemChild = Container(
+                      width: itemWidth,
+                      height: navHeight,
+                      alignment: Alignment.center,
+                      child: _PulsingNavIcon(
+                        icon: item.icon,
+                        isSelected: isSelected,
+                        isPulsing: isPulsing,
+                        color: isSelected || isPulsing
+                            ? Colors.white
+                            : (isDark
+                                ? Colors.white.withValues(alpha: 0.4)
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.4)),
+                      ),
+                    );
+
+                    final wrappedChild = itemWrapper != null
+                        ? itemWrapper!(index, itemChild)
+                        : itemChild;
+
                     return GestureDetector(
                       onTap: () {
                         HapticFeedback.selectionClick();
                         onTap(index);
                       },
                       behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        width: itemWidth,
-                        height: navHeight,
-                        alignment: Alignment.center,
-                        child: _PulsingNavIcon(
-                          icon: item.icon,
-                          isSelected: isSelected,
-                          isPulsing: isPulsing,
-                          color: isSelected || isPulsing
-                              ? Colors.white
-                              : (isDark
-                                  ? Colors.white.withValues(alpha: 0.4)
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.4)),
-                        ),
-                      ),
+                      child: wrappedChild,
                     );
                   }).toList(),
                 ),

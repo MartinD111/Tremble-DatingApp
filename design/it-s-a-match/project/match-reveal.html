@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>It's a match — Tremble</title>
+  <link rel="stylesheet" href="colors_and_type.css"/>
+  <style>
+    html, body {
+      background: #14140F;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      gap: 48px;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(45,155,111,0.10), transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(244,67,108,0.06), transparent 50%),
+        #14140F;
+    }
+
+    .side-notes {
+      max-width: 300px;
+      color: rgba(250,250,247,0.65);
+    }
+    .side-notes .eyebrow {
+      color: #5BBF93;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .side-notes h2 {
+      font-family: var(--font-display);
+      color: #FAFAF7;
+      font-size: 32px;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-bottom: 14px;
+      font-weight: 800;
+    }
+    .side-notes h2 em {
+      color: #5BBF93;
+      font-style: italic;
+      font-weight: 700;
+    }
+    .side-notes p {
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.65;
+      color: rgba(250,250,247,0.55);
+      margin: 0 0 14px;
+    }
+    .side-notes .stage-list {
+      list-style: none;
+      padding: 0;
+      margin: 18px 0 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: rgba(250,250,247,0.45);
+    }
+    .side-notes .stage-list li {
+      padding: 6px 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex; justify-content: space-between; gap: 12px;
+    }
+    .side-notes .stage-list li b { color: #FAFAF7; font-weight: 500; }
+    @media (max-width: 980px) {
+      body { flex-direction: column; padding: 24px 16px; }
+      .side-notes { max-width: 380px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Starter components & ours -->
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="green-flag.jsx"></script>
+  <script type="text/babel" src="pep-talks.jsx"></script>
+  <script type="text/babel" src="match-reveal.jsx"></script>
+
+  <!-- Tweaks defaults — host can persist edits to this JSON block. -->
+  <script>
+    window.__TWEAK_DEFAULTS__ = /*EDITMODE-BEGIN*/{
+      "speed": 0.75,
+      "headline": "We have a match",
+      "partnerName": "Ana",
+      "partnerAge": 22,
+      "photoUrl": "",
+      "pepTalkIndex": -1
+    }/*EDITMODE-END*/;
+  </script>
+
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="env,react">
+    const { useState, useEffect } = React;
+
+    function App() {
+      const [t, setTweak] = useTweaks(window.__TWEAK_DEFAULTS__);
+      const [key, setKey] = useState(0);
+
+      // Pick a fresh pep-talk every time the reveal restarts. Skip the one
+      // we just showed (tracked via a ref) so you don't see the same line twice.
+      const lastIdxRef = React.useRef(-1);
+      const pep = React.useMemo(() => {
+        const p = pickPepTalk(lastIdxRef.current);
+        lastIdxRef.current = p.index;
+        return p;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [key]);
+
+      // Space-bar replays
+      useEffect(() => {
+        const onKey = (e) => {
+          const tag = (e.target && e.target.tagName) || '';
+          if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+          if (e.key === ' ') {
+            e.preventDefault();
+            setKey(k => k + 1);
+          }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, []);
+
+      const partner = {
+        id: 'partner',
+        name: t.partnerName,
+        age: t.partnerAge,
+        photoUrl: t.photoUrl || null,
+      };
+
+      return (
+        <>
+          <IOSDevice width={390} height={844} dark={true}>
+            <div style={{ position: 'absolute', inset: 0 }}>
+              <MatchReveal
+                key={key}
+                partner={partner}
+                headline={t.headline}
+                message={pep.message}
+                note={pep.note}
+                speed={parseFloat(t.speed)}
+              />
+            </div>
+          </IOSDevice>
+
+          <div className="side-notes">
+            <div className="eyebrow">· Match reveal · {PEP_TALKS.length} pep talks</div>
+            <h2>Different line<br/><em>every time.</em></h2>
+            <p>
+              The photo flies in from below, spinning on its Y axis, lands
+              face-forward, and the flag rises up top. Then “We have a match”
+              + a randomly-picked pep talk + a small disclaimer.
+            </p>
+            <p style={{
+              padding: '10px 12px',
+              background: 'rgba(45,155,111,0.08)',
+              border: '1px solid rgba(45,155,111,0.25)',
+              borderRadius: 12,
+              color: 'rgba(250,250,247,0.7)',
+              fontFamily: 'var(--font-body)',
+              fontStyle: 'italic',
+              fontSize: 13,
+            }}>
+              <b style={{ color: '#5BBF93', fontStyle: 'normal' }}>Now showing:</b><br/>
+              “{pep.message}”
+              {pep.note && <><br/><span style={{ fontSize: 11, color: 'rgba(250,250,247,0.5)' }}>{pep.note}</span></>}
+            </p>
+            <p style={{ marginTop: 18, fontSize: 12, color: 'rgba(250,250,247,0.4)' }}>
+              Press <b style={{ color: '#FAFAF7' }}>Space</b> or hit Replay to
+              roll a new line.
+            </p>
+          </div>
+
+          <TweaksPanel>
+            <TweakSection label="Timing"/>
+            <TweakSlider label="Speed" value={t.speed} min={0.4} max={2.0} step={0.05}
+                         onChange={(v) => setTweak('speed', v)}/>
+
+            <TweakSection label="Content"/>
+            <TweakText label="Headline" value={t.headline}
+                       onChange={(v) => setTweak('headline', v)}/>
+            <TweakText label="Name" value={t.partnerName}
+                       onChange={(v) => setTweak('partnerName', v)}/>
+            <TweakNumber label="Age" value={t.partnerAge} min={18} max={99}
+                         onChange={(v) => setTweak('partnerAge', v)}/>
+            <TweakText label="Photo URL" value={t.photoUrl} placeholder="https://…"
+                       onChange={(v) => setTweak('photoUrl', v)}/>
+
+            <TweakSection label="Actions"/>
+            <TweakButton label="Roll new pep talk" onClick={() => setKey(k => k + 1)}/>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>

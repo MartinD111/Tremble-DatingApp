@@ -1,3 +1,30 @@
+## Session State — 2026-05-22 16:25 CEST
+- Active Task: Bottom Nav highlight on Premium Map, Panning lock & Copywriting updates
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/shared/ui/liquid_nav_bar.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `lib/src/core/translations.dart`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `flutter analyze` SUCCESS (0 issues). `flutter test` SUCCESS (71/71).
+
+## Session Handoff
+- Completed:
+    - Added modular `itemWrapper` builder callback inside `LiquidNavBar` to wrap navigation bar icons.
+    - Mapped premium navigation items for Map, Recap/Near-Miss, and Settings tabs dynamically to spotlight tutorial targets inside `HomeScreen`.
+    - Protected active Premium Map view from horizontal swipe tab transitions by disabling page drag-switching gestures when Map view is active, freeing map panning gestures.
+    - Updated `tutorial_step2_desc` translation strings in English, Slovenian, and Croatian.
+    - Fixed step 3 premium tutorial title to `"Your Matches"` / `"Tvoja Ujemanja"` / `"Tvoji Spoji"` and rewrote the description copywriting to introduce past matches, gyms, events, and runs.
+    - Ran static code checks (`flutter analyze`) and full widget/integration tests (`71/71 tests passed`) with zero issues.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Visual and interaction verification on physical device/emulator. Run the app with: `flutter run --flavor dev --dart-define=FLAVOR=dev`
+
 ## Session State — 2026-05-21 22:00 CEST
 - Active Task: Foreground wave pill — animation overhaul + OverlayEntry service
 - Environment: Dev mobile flavor on `main`

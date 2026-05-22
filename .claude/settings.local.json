@@ -89,7 +89,10 @@
       "Skill(gsd-resume-work)",
       "Bash(bash:*)",
       "Bash(cd \"c:\\\\Users\\\\marti\\\\AMS d.o.o\\\\Tremble-DatingApp\" && dart run --no-sound-null-safety 2>/dev/null; flutter pub deps | grep cupertino 2>&1 | head -5; grep -r \"apple\" ~/.pub-cache/hosted/pub.dev/cupertino_icons*/lib/ 2>/dev/null | head -5)",
-      "Read(//c/Users/marti/.pub-cache/hosted/**)"
+      "Read(//c/Users/marti/.pub-cache/hosted/**)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\marti\\\\AMS d.o.o\\\\Tremble-DatingApp\\\\lib\\\\src\\\\features\" -Directory)",
+      "Bash(Select-Object Name)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\marti\\\\AMS d.o.o\\\\Tremble-DatingApp\\\\lib\\\\src\\\\features\" -Directory | Where-Object {$_.Name -match \"match\"})"
     ]
   }
 }

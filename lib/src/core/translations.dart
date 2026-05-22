@@ -170,16 +170,16 @@ const Map<String, Map<String, String>> _translations = {
     'tourist_badge_tooltip': 'Visiting',
     'tutorial_step0_title': 'Common Grounds',
     'tutorial_step0_desc':
-        'Tap the mode button to switch into Gym Mode, Run Club, or events when you want Tremble to understand your real-world context.',
+        'Tap to activate mode and long press to switch mode.',
     'tutorial_step1_title': 'Your Schedule',
     'tutorial_step1_desc':
         'Tap the clock to decide when radar should be active, so discovery works around your day instead of demanding attention.',
     'tutorial_step2_title': 'Map View',
     'tutorial_step2_desc':
-        'Switch to Gym Mode or Run Club when training. Meet people who visit the same gym or run on the same routes.',
-    'tutorial_step3_title': 'Traveler Mode',
+        'See where people using Tremble actually are so go out and meet new people.',
+    'tutorial_step3_title': 'Your Matches',
     'tutorial_step3_desc':
-        'Traveling or visiting another city? Enable Traveler Mode to expand your discovery radius or preview upcoming destinations. Tremble adapts dynamically to your new surroundings while maintaining extreme background efficiency.',
+        'See all the people that you have matched in the past and people that are active in your gym, on the event and on the run.',
     'tutorial_step3_popup_title': 'People appear here',
     'tutorial_step3_popup_desc':
         'This is where matches, waves, and discovered people show up. Tremble brings you back to radar after this step.',
@@ -1025,16 +1025,16 @@ const Map<String, Map<String, String>> _translations = {
     'tourist_badge_tooltip': 'Na obisku',
     'tutorial_step0_title': 'Skupne točke',
     'tutorial_step0_desc':
-        'Tapni gumb za način in preklopi v Gym Mode, Run Club ali dogodke, ko želiš, da Tremble razume tvoj realni kontekst.',
+        'Tapni za aktivacijo načina in dolgo pritisni za preklop načina.',
     'tutorial_step1_title': 'Tvoj urnik',
     'tutorial_step1_desc':
         'Tapni uro in določi, kdaj naj bo radar aktiven, da odkrivanje deluje po tvojem ritmu.',
     'tutorial_step2_title': 'Zemljevid',
     'tutorial_step2_desc':
-        'Preklopi na Gym Mode ali Run Club, ko treniraš. Spoznaj ljudi, ki obiskujejo isti fitnes ali tečejo na enakih progah.',
-    'tutorial_step3_title': 'Potovalni način',
+        'Poglej, kje se dejansko nahajajo uporabniki Tremble, zato pojdi ven in spoznaj nove ljudi.',
+    'tutorial_step3_title': 'Tvoja Ujemanja',
     'tutorial_step3_desc':
-        'Potuješ ali obiskuješ drugo mesto? Vklopi potovalni način, da razširiš svoj radij iskanja ali predogledaš prihodnje destinacije. Tremble se dinamično prilagodi tvoji novi lokaciji ob minimalni porabi baterije.',
+        'Oglej si vse ljudi, s katerimi si se ujel-a v preteklosti, in tiste, ki so aktivni v tvojem fitnesu, na dogodkih in na teku.',
     'tutorial_step3_popup_title': 'Ljudje se prikažejo tukaj',
     'tutorial_step3_popup_desc':
         'Tukaj se prikažejo ujemanja, valovi in odkrite osebe. Po tem koraku te Tremble vrne na radar.',
@@ -4659,16 +4659,16 @@ const Map<String, Map<String, String>> _translations = {
     'tutorial_opt_in_no': 'Ne, hvala',
     'tutorial_step0_title': 'Zajednička mjesta',
     'tutorial_step0_desc':
-        'Pritisni gumb načina rada za prebacivanje u Gym način, Run Club ili događaje kad želiš da Tremble razumije tvoj stvarni kontekst.',
+        'Pritisni za aktivaciju načina rada i dugo pritisni za promjenu načina.',
     'tutorial_step1_title': 'Tvoj raspored',
     'tutorial_step1_desc':
         'Pritisni sat da odlučiš kad bi radar trebao biti aktivan, tako da otkrivanje funkcionira oko tvog dana umjesto da zahtijeva pažnju.',
     'tutorial_step2_title': 'Prikaz karte',
     'tutorial_step2_desc':
-        'Prebaci se na Gym način ili Run Club tijekom treninga. Upoznaj ljude koji posjećuju isti gym ili trče istim rutama.',
-    'tutorial_step3_title': 'Način putnika',
+        'Pogledaj gdje se zapravo nalaze korisnici Tremblea, pa izađi van i upoznaj nove ljude.',
+    'tutorial_step3_title': 'Tvoji Spoji',
     'tutorial_step3_desc':
-        'Putuješ ili posjećuješ drugi grad? Omogući Traveler način za proširenje radijusa otkrivanja. Tremble se dinamički prilagođava novoj okolini uz maksimalnu energetsku učinkovitost.',
+        'Pogledaj sve ljude s kojima si se spojio u prošlosti i one koji su aktivni u tvojoj teretani, na događajima i na trčanju.',
     'tutorial_step3_popup_title': 'Ovdje se pojavljuju ljudi',
     'tutorial_step3_popup_desc':
         'Ovdje se prikazuju spojevi, valovi i otkriveni ljudi. Tremble te vraća na radar nakon ovog koraka.',

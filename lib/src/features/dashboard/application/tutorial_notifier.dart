@@ -8,10 +8,12 @@ enum TutorialPhase { hidden, optIn, active }
 class TutorialState {
   final TutorialPhase phase;
   final int currentStep;
+  final bool isPopupActive;
 
   const TutorialState({
     required this.phase,
     required this.currentStep,
+    this.isPopupActive = false,
   });
 
   bool get isActive => phase == TutorialPhase.active;
@@ -20,10 +22,12 @@ class TutorialState {
   TutorialState copyWith({
     TutorialPhase? phase,
     int? currentStep,
+    bool? isPopupActive,
   }) {
     return TutorialState(
       phase: phase ?? this.phase,
       currentStep: currentStep ?? this.currentStep,
+      isPopupActive: isPopupActive ?? this.isPopupActive,
     );
   }
 }
@@ -34,19 +38,37 @@ class TutorialNotifier extends Notifier<TutorialState> {
 
   @override
   TutorialState build() {
-    return const TutorialState(phase: TutorialPhase.hidden, currentStep: 0);
+    return const TutorialState(
+      phase: TutorialPhase.hidden,
+      currentStep: 0,
+      isPopupActive: false,
+    );
   }
 
   Future<void> checkFirstLaunch() async {
     final prefs = await SharedPreferences.getInstance();
     final hasSeen = prefs.getBool(prefsKey) ?? false;
     if (!hasSeen) {
-      state = const TutorialState(phase: TutorialPhase.optIn, currentStep: 0);
+      state = const TutorialState(
+        phase: TutorialPhase.optIn,
+        currentStep: 0,
+        isPopupActive: false,
+      );
     }
   }
 
   void startTutorial() {
-    state = const TutorialState(phase: TutorialPhase.active, currentStep: 0);
+    state = const TutorialState(
+      phase: TutorialPhase.active,
+      currentStep: 0,
+      isPopupActive: false,
+    );
+  }
+
+  void setPopupActive(bool active) {
+    if (state.isActive) {
+      state = state.copyWith(isPopupActive: active);
+    }
   }
 
   Future<void> nextStep() async {

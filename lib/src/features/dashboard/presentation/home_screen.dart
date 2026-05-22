@@ -65,6 +65,8 @@ final radarBatteryLevelProvider = StateProvider<int>((ref) => 100);
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
+  static final GlobalKey homeStackKey = GlobalKey(debugLabel: 'homeStackKey');
+
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
@@ -217,60 +219,73 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final navNotifier = ref.read(navIndexProvider.notifier);
     final tutorialNotifier = ref.read(tutorialProvider.notifier);
 
-    await showDialog<void>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.35),
-      builder: (ctx) => Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: GlassCard(
-            borderRadius: 24,
-            borderColor: const Color(0xFFF4436C).withValues(alpha: 0.34),
-            child: Material(
-              color: Colors.transparent,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    t('tutorial_step${step}_popup_title', lang),
-                    style: GoogleFonts.lora(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    t('tutorial_step${step}_popup_desc', lang),
-                    style: GoogleFonts.instrumentSans(
-                      color: Colors.white.withValues(alpha: 0.82),
-                      fontSize: 14,
-                      height: 1.35,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF4436C),
-                        foregroundColor: Colors.white,
+    tutorialNotifier.setPopupActive(true);
+
+    // Let the overlay rebuild and hide the card in the current frame before showing the dialog
+    await Future<void>.delayed(Duration.zero);
+
+    try {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        barrierColor: Colors.black.withValues(alpha: 0.35),
+        builder: (ctx) => Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: GlassCard(
+              borderRadius: 24,
+              borderColor: const Color(0xFFF4436C).withValues(alpha: 0.34),
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      t('tutorial_step${step}_popup_title', lang),
+                      style: GoogleFonts.lora(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
                       ),
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                      },
-                      child: Text(t('tutorial_got_it', lang)),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Text(
+                      t('tutorial_step${step}_popup_desc', lang),
+                      style: GoogleFonts.instrumentSans(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        fontSize: 14,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF4436C),
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                        },
+                        child: Text(t('tutorial_got_it', lang)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
-    navNotifier.state = 0;
+      );
+    } finally {
+      tutorialNotifier.setPopupActive(false);
+    }
+
+    if (step == 4) {
+      navNotifier.state = 0;
+    }
     await tutorialNotifier.nextStep();
   }
 
@@ -298,6 +313,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           const Duration(milliseconds: 400),
           () {
             if (mounted) {
+              WavePillService.dismiss();
               context.pushNamed('match_reveal', extra: unseenMatch);
             }
           },
@@ -537,28 +553,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isNavBarVisible = ref.watch(isNavBarVisibleProvider);
 
     return Stack(
+      key: HomeScreen.homeStackKey,
       fit: StackFit.expand,
       children: [
         // Content with Liquid Transition
         Positioned.fill(
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onHorizontalDragEnd: (details) {
-              final velocity = details.primaryVelocity ?? 0;
-              if (velocity < -300) {
-                final next = (safeNavIndex + 1).clamp(0, screens.length - 1);
-                if (next != safeNavIndex) {
-                  HapticFeedback.selectionClick();
-                  ref.read(navIndexProvider.notifier).state = next;
-                }
-              } else if (velocity > 300) {
-                final prev = (safeNavIndex - 1).clamp(0, screens.length - 1);
-                if (prev != safeNavIndex) {
-                  HapticFeedback.selectionClick();
-                  ref.read(navIndexProvider.notifier).state = prev;
-                }
-              }
-            },
+            onHorizontalDragEnd: (isPremium && safeNavIndex == 1)
+                ? null
+                : (details) {
+                    final velocity = details.primaryVelocity ?? 0;
+                    if (velocity < -300) {
+                      final next = (safeNavIndex + 1).clamp(0, screens.length - 1);
+                      if (next != safeNavIndex) {
+                        HapticFeedback.selectionClick();
+                        ref.read(navIndexProvider.notifier).state = next;
+                      }
+                    } else if (velocity > 300) {
+                      final prev = (safeNavIndex - 1).clamp(0, screens.length - 1);
+                      if (prev != safeNavIndex) {
+                        HapticFeedback.selectionClick();
+                        ref.read(navIndexProvider.notifier).state = prev;
+                      }
+                    }
+                  },
             child: NotificationListener<ScrollNotification>(
             onNotification: (notification) {
               if (!hideNavBarPref) {
@@ -634,6 +653,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ref.read(navIndexProvider.notifier).state = index;
                 _handleTutorialNavTap(index: index, isPremium: isPremium);
               },
+              itemWrapper: (index, child) {
+                // Determine tutorial step based on index and premium status:
+                // Premium: Map (index 1) -> Step 2, People (index 2) -> Step 3, Settings (index 3) -> Step 4
+                // Free: People (index 1) -> Step 3, Settings (index 2) -> Step 4
+                final int? step = isPremium
+                    ? (index == 1 ? 2 : (index == 2 ? 3 : (index == 3 ? 4 : null)))
+                    : (index == 1 ? 3 : (index == 2 ? 4 : null));
+
+                if (step != null) {
+                  return _TutorialTarget(
+                    step: step,
+                    child: child,
+                  );
+                }
+                return child;
+              },
             ),
           ),
         ),
@@ -671,11 +706,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       .read(devSimulationControllerProvider.notifier)
                       .onIgnore(),
                   onMatch: () {
-                    final overlay = Overlay.of(context);
-                    WavePillService.showConfetti(
-                      overlay,
-                      imageUrl: devSim.profile?.imageUrl,
+                    WavePillService.dismiss();
+                    final matchUser = ref.read(authStateProvider);
+                    final now = DateTime.now();
+                    final synthesized = wave_match.Match(
+                      id: 'dev-${now.microsecondsSinceEpoch}',
+                      userIds: [
+                        matchUser?.id ?? 'dev-self',
+                        devSim.profile!.id,
+                      ],
+                      createdAt: now,
+                      seenBy: [matchUser?.id ?? 'dev-self'],
+                      status: 'found',
+                      isFound: true,
+                      gestures: {
+                        (matchUser?.id ?? 'dev-self'): true,
+                        devSim.profile!.id: true,
+                      },
+                      expiresAt: now.add(const Duration(minutes: 30)),
                     );
+                    context.pushNamed('match_reveal', extra: synthesized);
                   },
                   // Premium → open profile reveal. Free → paywall bottom sheet.
                   // Source of truth for premium gating is AuthUser.isPremium
@@ -1570,7 +1620,12 @@ class _TutorialTargetState extends ConsumerState<_TutorialTarget> {
       if (!mounted) return;
       final box = context.findRenderObject() as RenderBox?;
       if (box == null || !box.hasSize) return;
-      final rect = box.localToGlobal(Offset.zero) & box.size;
+
+      final homeStackBox = HomeScreen.homeStackKey.currentContext?.findRenderObject() as RenderBox?;
+      final rect = homeStackBox != null
+          ? (box.localToGlobal(Offset.zero, ancestor: homeStackBox) & box.size)
+          : (box.localToGlobal(Offset.zero) & box.size);
+
       final current = ref.read(tutorialTargetRectsProvider);
       if (current[widget.step] == rect) return;
       ref.read(tutorialTargetRectsProvider.notifier).state = {

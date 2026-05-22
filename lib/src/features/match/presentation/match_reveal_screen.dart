@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'dart:ui';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
@@ -8,54 +7,182 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../profile/data/profile_repository.dart';
-import '../domain/match.dart';
-import 'widgets/match_background_animation.dart';
-import '../../../shared/ui/glass_card.dart';
-import '../../matches/data/match_repository.dart';
-import '../application/match_service.dart';
-import '../../../core/translations.dart';
-import '../../../core/upload_service.dart';
-import 'package:image_picker/image_picker.dart';
-import '../../../features/auth/data/auth_repository.dart';
-import '../../../shared/ui/primary_button.dart';
-import '../../../features/safety/screen_protection_service.dart';
 import '../../../features/profile/domain/public_profile.dart';
-import 'widgets/common_traits_widget.dart';
-import '../../../core/motion.dart';
-import '../../../core/theme.dart';
+import '../domain/match.dart';
+import '../../../features/safety/screen_protection_service.dart';
+import '../application/match_service.dart';
+
+// ── Pep talk data ────────────────────────────────────────────────────────────
+
+typedef _Pep = ({String message, String? note});
+
+const List<_Pep> _pepTalks = [
+  (
+    message: "Go shoot your shot",
+    note: "Please don't actually shoot anybody. Thank you"
+  ),
+  (
+    message: "You got this!",
+    note: "We at Tremble believe that you believe in yourself"
+  ),
+  (
+    message: "What's the worst thing they can say?",
+    note: 'Best thing they can say is "I\'m Batman"'
+  ),
+  (
+    message: "You miss 100% of the shots you don't take",
+    note: "Please don't actually shoot anybody. Thank you"
+  ),
+  (
+    message: "Life's too short to overthink it",
+    note: "But not too short to avoid making it weird"
+  ),
+  (
+    message: "Take the leap",
+    note: "Metaphorical leaps only. Knees are expensive"
+  ),
+  (
+    message: "Fortune favors the brave",
+    note: "Brave people still respect boundaries"
+  ),
+  (
+    message: "Trust your rizz",
+    note: "Confidence is attractive. Arson is not"
+  ),
+  (
+    message: "Stop rehearsing conversations in your head and just go for it",
+    note: "They can't hear the imaginary version anyway"
+  ),
+  (
+    message: "Go create your rom-com moment",
+    note: "Keep it cute and non-criminal"
+  ),
+  (
+    message: "The “what if” will haunt you more than the rejection",
+    note: "Unless you confess during their grandma's funeral. Timing matters"
+  ),
+  (
+    message: "Confidence looks good on you",
+    note: "Overconfidence looks like a LinkedIn motivational post"
+  ),
+  (
+    message: "Make your move",
+    note: "Preferably without dramatic background music"
+  ),
+  (
+    message: "Take the chance — your future self might thank you",
+    note: "Your future self might also cringe. That's part of life"
+  ),
+  (
+    message: "Romantic risks build character",
+    note: "So do restraining orders. Avoid those"
+  ),
+  (
+    message:
+        "Worst case? You get rejected. Best case? Main character arc begins",
+    note: "Please do not start narrating your life out loud"
+  ),
+  (
+    message: "Just be yourself",
+    note:
+        "Unless “yourself” was planning a surprise ukulele performance"
+  ),
+  (
+    message: "Go flirt a little",
+    note: "“A little” is the key phrase here"
+  ),
+  (
+    message: "Say hi — it's not a federal offense",
+    note: "Unless you're trespassing. Then maybe leave first"
+  ),
+  (
+    message:
+        "Your soulmate probably isn't going to materialize in your living room",
+    note: "If they do, contact a physicist"
+  ),
+  (
+    message:
+        "Take the risk. Great stories rarely start with “I stayed home”",
+    note: "Great court cases sometimes do, though"
+  ),
+  (
+    message: "Confidence is attractive. Panic monologues are less so",
+    note: "Keep the TED Talk under 30 seconds"
+  ),
+  (
+    message: "Do it scared if you have to",
+    note: "Just don't do it illegal while scared"
+  ),
+  (
+    message: "Make your intentions known",
+    note: "Subtle hints are not a universal language"
+  ),
+  (
+    message: "Take the chance — life doesn't do reruns",
+    note: "Except in your brain at 3 a.m"
+  ),
+  (
+    message: "You'll never know unless you try",
+    note: "And yes, that includes making the first move"
+  ),
+  (
+    message: "If you feel the fear, that probably means it matters",
+    note: "Or you just had too much caffeine — check both"
+  ),
+  (
+    message: "Go on, be a little courageous",
+    note: "Not “jump off a cliff” courageous. The other kind"
+  ),
+  (
+    message: "If it works, great. If it doesn't, you still get closure",
+    note: "Closure is underrated and slightly bitter"
+  ),
+];
+
+_Pep _pickPep() => _pepTalks[math.Random().nextInt(_pepTalks.length)];
+
+// ── Screen ────────────────────────────────────────────────────────────────────
 
 class MatchRevealScreen extends ConsumerStatefulWidget {
   final Match match;
   const MatchRevealScreen({super.key, required this.match});
 
-  static const Color _rose = Color(0xFFF4436C);
-  static const Color _deepGraphite = Color(0xFF1A1A18);
-  static const Color _warmCream = Color(0xFFFAFAF7);
-
   @override
   ConsumerState<MatchRevealScreen> createState() => _MatchRevealScreenState();
 }
 
-class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen> {
-  static const _rose = MatchRevealScreen._rose;
-  static const _deepGraphite = MatchRevealScreen._deepGraphite;
-  static const _warmCream = MatchRevealScreen._warmCream;
+class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
+    with SingleTickerProviderStateMixin {
+  // ── Colors (Tremble design tokens) ─────────────────────────────────────────
+  static const _bgDeep = Color(0xFF0B0B09);
+  static const _bgMid = Color(0xFF13130F);
+  static const _bgBottom = Color(0xFF0E0E0C);
+  static const _greenDark = Color(0xFF2D9B6F);
+  static const _greenLight = Color(0xFF5BBF93);
+  static const _cream = Color(0xFFFAFAF7);
 
+  late final AnimationController _ctrl;
+  late final _Pep _pep;
   bool _isRecording = false;
   late final void Function(bool) _recordingListener;
 
   @override
   void initState() {
     super.initState();
-    _recordingListener = (isRecording) {
-      if (mounted) setState(() => _isRecording = isRecording);
+    _pep = _pickPep();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4400),
+    )..forward();
+    _recordingListener = (v) {
+      if (mounted) setState(() => _isRecording = v);
     };
     ScreenProtectionService.enable();
     ScreenProtectionService.addRecordingListener(_recordingListener);
-    unawaited(_playHeartbeatHaptic());
+    unawaited(_haptic());
   }
 
-  Future<void> _playHeartbeatHaptic() async {
+  Future<void> _haptic() async {
     await HapticFeedback.mediumImpact();
     await Future<void>.delayed(const Duration(milliseconds: 80));
     await HapticFeedback.mediumImpact();
@@ -63,879 +190,392 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen> {
 
   @override
   void dispose() {
+    _ctrl.dispose();
     ScreenProtectionService.removeRecordingListener();
     ScreenProtectionService.disable();
     super.dispose();
   }
 
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+
+  Matrix4 _rotateY(double rad) => Matrix4.identity()
+    ..setEntry(3, 2, 1 / 1200.0)
+    ..rotateY(rad);
+
+  static double _easeOutCubic(double x) =>
+      1.0 - math.pow(1.0 - x.clamp(0.0, 1.0), 3.0).toDouble();
+
+  static double _easeOut(double x) =>
+      Curves.easeOut.transform(x.clamp(0.0, 1.0));
+
+  static double _easeOutBack(double x) =>
+      Curves.easeOutBack.transform(x.clamp(0.0, 1.0));
+
+  // ── Build ────────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     if (_isRecording) return const RecordingShield();
 
-    final match = widget.match;
     final myUid = FirebaseAuth.instance.currentUser?.uid;
-    final lang = ref.watch(appLanguageProvider);
-
     if (myUid == null) {
-      return Scaffold(
-        backgroundColor: _deepGraphite,
+      return const Scaffold(
+        backgroundColor: _bgDeep,
         body: Center(
-          child: Text(
-            t('auth_error', lang),
-            style: GoogleFonts.instrumentSans(color: _warmCream),
-          ),
+          child: CircularProgressIndicator(color: _greenLight, strokeWidth: 2),
         ),
       );
     }
 
-    // Use live stream so we pick up the match document once Firestore finishes
-    // writing both userIds — avoids the race condition where the snapshot passed
-    // via `extra` had an empty or incomplete userIds list.
     final liveMatch = ref
             .watch(activeMatchesStreamProvider)
             .value
-            ?.firstWhere((m) => m.id == match.id, orElse: () => match) ??
-        match;
-
+            ?.firstWhere((m) => m.id == widget.match.id,
+                orElse: () => widget.match) ??
+        widget.match;
     final partnerId = liveMatch.getPartnerId(myUid);
 
-    // Still propagating — wait for the live document to have both userIds.
     if (partnerId.isEmpty) {
-      return Scaffold(
-        backgroundColor: _deepGraphite,
+      return const Scaffold(
+        backgroundColor: _bgDeep,
         body: Center(
-          child: CircularProgressIndicator(
-            color: _warmCream.withValues(alpha: 0.3),
-            strokeWidth: 2,
-          ),
+          child: CircularProgressIndicator(color: _greenLight, strokeWidth: 2),
         ),
       );
     }
 
-    final partnerProfileAsync = ref.watch(publicProfileProvider(partnerId));
-    final myAuthUser = ref.watch(authStateProvider);
-    final isPremium = myAuthUser?.isPremium ?? false;
+    final profile =
+        ref.watch(publicProfileProvider(partnerId)).whenOrNull(data: (p) => p);
 
     return Scaffold(
-      backgroundColor: _deepGraphite,
-      body: Stack(
-        children: [
-          // Animated Rose radar pulse background
-          const Positioned.fill(child: MatchBackgroundAnimation()),
+      backgroundColor: _bgDeep,
+      body: GestureDetector(
+        onTap: () => context.pop(),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedBuilder(
+          animation: _ctrl,
+          builder: (context, _) => _buildScene(context, profile),
+        ),
+      ),
+    );
+  }
 
-          // Subtle deep graphite gradient overlay for readability
-          Positioned.fill(
-            child: DecoratedBox(
+  Widget _buildScene(BuildContext context, PublicProfile? profile) {
+    final size = MediaQuery.of(context).size;
+
+    // t: elapsed seconds (0 → 4.4)
+    final t = _ctrl.value * 4.4;
+
+    // ── Background ──────────────────────────────────────────────────────────
+    final bgIn = (t / 0.6).clamp(0.0, 1.0);
+
+    // ── Avatar rise + Y-axis spin ───────────────────────────────────────────
+    // 0.20 s → start; 1.40 s → fully landed (rise stops, spin ends face-forward)
+    final riseRaw = ((t - 0.20) / 1.20).clamp(0.0, 1.0);
+    final rise = _easeOutCubic(riseRaw);
+    final avatarOffsetY = (1.0 - rise) * size.height * 1.3;
+    // 2 full Y-axis turns (4π rad) → lands face-forward (cos 4π = 1)
+    final spinRad = rise * 4.0 * math.pi;
+    final avatarOp = (riseRaw * 4).clamp(0.0, 1.0);
+    final isFront = math.cos(spinRad) >= 0;
+
+    // ── Text stages ─────────────────────────────────────────────────────────
+    final titleOp = _easeOut((t - 1.45) / 0.46);
+    final titleTy = (1.0 - _easeOutBack((t - 1.45) / 0.62)) * 20.0;
+    final msgOp = _easeOut((t - 1.70) / 0.42);
+    final msgTy = (1.0 - _easeOut((t - 1.70) / 0.52)) * 10.0;
+    final noteOp = _easeOut((t - 1.95) / 0.36);
+    final noteTy = (1.0 - _easeOut((t - 1.95) / 0.42)) * 6.0;
+
+    // ── Partner data ─────────────────────────────────────────────────────────
+    final photoUrl =
+        profile != null && profile.primaryPhotoUrl.isNotEmpty
+            ? profile.primaryPhotoUrl
+            : null;
+    final name = profile?.name ?? '';
+    final age = profile?.age;
+
+    // Dynamic font size: shorter messages render larger
+    final msgLen = _pep.message.length;
+    final msgSize =
+        msgLen > 70 ? 18.0 : msgLen > 50 ? 21.0 : msgLen > 30 ? 24.0 : 28.0;
+
+    return Stack(
+      children: [
+        // Background
+        Positioned.fill(child: _buildBackground(bgIn)),
+
+        // "We have a match" + partner name — anchored near top
+        Positioned(
+          top: 148,
+          left: 28,
+          right: 28,
+          child: Opacity(
+            opacity: titleOp,
+            child: Transform.translate(
+              offset: Offset(0, titleTy),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'We have a match',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w900,
+                      color: _cream,
+                      height: 1.0,
+                      letterSpacing: -1.4,
+                      shadows: const [
+                        Shadow(
+                          color: Colors.black38,
+                          blurRadius: 32,
+                          offset: Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (name.isNotEmpty || age != null) ...[
+                    const SizedBox(height: 14),
+                    Text(
+                      '$name${age != null ? ', $age' : ''}',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 32,
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w600,
+                        color: _cream.withValues(alpha: 0.92),
+                        height: 1.1,
+                        letterSpacing: -0.48,
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black38,
+                            blurRadius: 22,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // Center column: avatar + pep talk
+        Positioned.fill(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Avatar — Y-axis spin + rise from below
+              RepaintBoundary(
+                child: Opacity(
+                  opacity: avatarOp,
+                  child: Transform.translate(
+                    offset: Offset(0, avatarOffsetY),
+                    child: SizedBox(
+                      width: 188,
+                      height: 188,
+                      child: Stack(
+                        children: [
+                          // Back face (green disc, visible mid-spin)
+                          if (!isFront)
+                            Transform(
+                              transform: _rotateY(spinRad + math.pi),
+                              alignment: Alignment.center,
+                              child: Container(
+                                width: 188,
+                                height: 188,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [_greenDark, _greenLight],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Front face (photo or initial)
+                          if (isFront)
+                            Transform(
+                              transform: _rotateY(spinRad),
+                              alignment: Alignment.center,
+                              child: _buildFrontFace(photoUrl, name),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Pep talk text
+              const SizedBox(height: 28),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Opacity(
+                      opacity: msgOp,
+                      child: Transform.translate(
+                        offset: Offset(0, msgTy),
+                        child: Text(
+                          _pep.message,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: msgSize,
+                            fontWeight: FontWeight.w600,
+                            color: _greenLight,
+                            height: 1.3,
+                            letterSpacing: -0.005 * msgSize,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (_pep.note != null) ...[
+                      const SizedBox(height: 14),
+                      Opacity(
+                        opacity: noteOp,
+                        child: Transform.translate(
+                          offset: Offset(0, noteTy),
+                          child: Text(
+                            _pep.note!,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w400,
+                              fontStyle: FontStyle.italic,
+                              color: _cream.withValues(alpha: 0.42),
+                              height: 1.5,
+                              letterSpacing: 0.42,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFrontFace(String? photoUrl, String name) {
+    return Container(
+      width: 188,
+      height: 188,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_greenLight, _greenDark],
+        ),
+      ),
+      child: ClipOval(
+        child: Stack(
+          children: [
+            if (photoUrl != null)
+              Image.network(
+                photoUrl,
+                width: 188,
+                height: 188,
+                fit: BoxFit.cover,
+              )
+            else
+              Center(
+                child: Text(
+                  name.isNotEmpty ? name[0].toUpperCase() : '?',
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 92,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    height: 1,
+                  ),
+                ),
+              ),
+            // Inner highlight shimmer
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    center: const Alignment(-0.3, -0.5),
+                    radius: 0.7,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.22),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackground(double bgIn) {
+    return Stack(
+      children: [
+        // Base linear gradient
+        const Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [_bgDeep, _bgMid, _bgBottom],
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+        ),
+        // Green radial bloom — center
+        Positioned.fill(
+          child: Opacity(
+            opacity: bgIn,
+            child: const DecoratedBox(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                gradient: RadialGradient(
+                  // Alignment(0, -0.08) ≈ 50% horizontal, 46% vertical
+                  center: Alignment(0, -0.08),
+                  radius: 0.85,
                   colors: [
-                    _deepGraphite.withValues(alpha: 0.2),
-                    _deepGraphite.withValues(alpha: 0.6),
-                    _deepGraphite.withValues(alpha: 0.9),
+                    Color(0x8C2D9B6F), // rgba(45,155,111,0.55)
+                    Colors.transparent,
                   ],
                 ),
               ),
             ),
           ),
-
-          Center(
-            child: partnerProfileAsync.when(
-              data: (profile) => TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0, end: 1),
-                duration: TrembleMotion.theatrical,
-                curve: TrembleMotion.theatricalReveal,
-                builder: (context, value, child) {
-                  return Opacity(
-                    opacity: value,
-                    child: Transform.translate(
-                      offset: Offset(0, (1 - value) * 24),
-                      child: child,
-                    ),
-                  );
-                },
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 80),
-
-                      // Brand headline - architectural and stoic
-                      Text(
-                        t('mutual_wave', lang).toUpperCase(),
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          color: _rose,
-                          letterSpacing: -1.28, // -0.04em for 32px
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        t('both_sent_wave', lang).toUpperCase(),
-                        style: GoogleFonts.instrumentSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: _warmCream.withValues(alpha: 0.4),
-                          letterSpacing: 2,
-                        ),
-                      ),
-
-                      const SizedBox(height: 56),
-
-                      // Partner avatar with rose glow
-                      Stack(
-                        children: [
-                          Hero(
-                            tag: 'match_avatar_${profile.id}',
-                            child: Container(
-                              width: 180,
-                              height: 180,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: _rose.withValues(alpha: 0.3),
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: _rose.withValues(alpha: 0.15),
-                                    blurRadius: 40,
-                                    spreadRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              child: ClipOval(
-                                child: profile.primaryPhotoUrl.isNotEmpty
-                                    ? Image.network(
-                                        profile.primaryPhotoUrl,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Container(
-                                        color: Colors.grey[900],
-                                        child: const Icon(Icons.person,
-                                            size: 80, color: Colors.white10),
-                                      ),
-                              ),
-                            ),
-                          ),
-                          if (profile.isTraveler)
-                            Positioned(
-                              bottom: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: _deepGraphite.withValues(alpha: 0.85),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white12),
-                                ),
-                                child: const Text('🌴',
-                                    style: TextStyle(fontSize: 14)),
-                              ),
-                            ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Partner name and age as one intimate reveal line.
-                      Text(
-                        '${profile.name}, ${profile.age}',
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 32,
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.w600,
-                          color: _warmCream,
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Skupne lastnosti — free IN pro vidita enako
-                      // Brez score-a, brez %, samo konkretne skupne točke
-                      if (myAuthUser != null) ...[
-                        CommonTraitsWidget(
-                          myProfile: _authUserToMatchProfile(myAuthUser),
-                          partnerProfile: _publicProfileToMatchProfile(profile),
-                        ),
-                        const SizedBox(height: 32),
-                      ],
-
-                      // PRO: gumb za celoten profil
-                      if (isPremium) ...[
-                        OutlinedButton(
-                          onPressed: () {
-                            // TODO: odpri ProfileDetailScreen za partnerId
-                            // context.push('/profile/$partnerId');
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: _warmCream.withValues(alpha: 0.6),
-                            side: BorderSide(
-                                color: _warmCream.withValues(alpha: 0.15)),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(100)),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                          ),
-                          child: Text(
-                            'VIEW FULL PROFILE',
-                            style: GoogleFonts.instrumentSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-
-                      const SizedBox(height: 16),
-
-                      // Primary CTA — uses shared PrimaryButton for consistency
-                      PrimaryButton(
-                        text: t('open_radar', lang).toUpperCase(),
-                        onPressed: () => context.pop(),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Secondary action — dismiss
-                      TextButton(
-                        onPressed: () => context.pop(),
-                        child: Text(
-                          t('decide_later', lang).toUpperCase(),
-                          style: GoogleFonts.instrumentSans(
-                            color: _warmCream.withValues(alpha: 0.3),
-                            fontSize: 12,
-                            letterSpacing: 2,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 48),
-
-                      // Pulse Intercept — architectural signal tiles
-                      _PulseInterceptConsole(match: match),
-
-                      const SizedBox(height: 60),
-                    ],
-                  ),
+        ),
+        // Green glow — bottom edge
+        Positioned.fill(
+          child: Opacity(
+            opacity: bgIn,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.bottomCenter,
+                  radius: 0.65,
+                  colors: [
+                    Color(0x2E5BBF93), // rgba(91,191,147,0.18)
+                    Colors.transparent,
+                  ],
                 ),
-              ),
-              loading: () => const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white30,
-                  strokeWidth: 2,
-                ),
-              ),
-              error: (err, _) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: TrembleTheme.roseDark,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    t('error_loading_profile', lang),
-                    style: GoogleFonts.instrumentSans(
-                      color: _warmCream.withValues(alpha: 0.6),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Visible in debug builds only — surfaces the real Firestore error
-                  // (e.g. permission-denied) so it can be diagnosed without logcat.
-                  if (kDebugMode)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(
-                        err.toString(),
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.jetBrainsMono(
-                          color: _rose.withValues(alpha: 0.7),
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 24),
-                  TextButton(
-                    onPressed: () => context.pop(),
-                    child: Text(
-                      t('close', lang).toUpperCase(),
-                      style: TextStyle(
-                        color: _rose,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
-}
-
-class _PulseInterceptConsole extends ConsumerWidget {
-  final Match match;
-  const _PulseInterceptConsole({required this.match});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return GlassCard(
-      opacity: 0.04,
-      borderRadius: 20,
-      padding: EdgeInsets.zero,
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(
-              child: _PulseInterceptButton(match: match),
-            ),
-            Container(
-              width: 1,
-              color: Colors.white.withValues(alpha: 0.08),
-            ),
-            Expanded(
-              child: _PulseReceiverButton(match: match),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PulseInterceptButton extends ConsumerStatefulWidget {
-  final Match match;
-  const _PulseInterceptButton({required this.match});
-
-  @override
-  ConsumerState<_PulseInterceptButton> createState() =>
-      __PulseInterceptButtonState();
-}
-
-class __PulseInterceptButtonState extends ConsumerState<_PulseInterceptButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _showInterceptOptions() async {
-    final lang = ref.read(appLanguageProvider);
-    final user = ref.read(authStateProvider);
-    final hasPhone = user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black87,
-      builder: (ctx) => Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).padding.bottom,
-        ),
-        child: GlassCard(
-          opacity: 0.15,
-          borderRadius: 32,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white12,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 40),
-              Text(
-                t('pulse_intercept', lang).toUpperCase(),
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                  color: MatchRevealScreen._rose,
-                  letterSpacing: 4,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                t('intercept_desc', lang).toUpperCase(),
-                textAlign: TextAlign.center,
-                style: GoogleFonts.instrumentSans(
-                  color: Colors.white38,
-                  fontSize: 10,
-                  letterSpacing: 1.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 48),
-
-              // Option 1: Share Phone
-              _buildOption(
-                icon: Icons.grid_3x3_rounded,
-                label: t('share_phone', lang).toUpperCase(),
-                enabled: hasPhone,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _handleInterceptRequest('phone');
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Option 2: Send Photo
-              _buildOption(
-                icon: Icons.camera_rounded,
-                label: t('send_photo', lang).toUpperCase(),
-                enabled: true,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _handlePhotoIntercept();
-                },
-              ),
-
-              if (!hasPhone) ...[
-                const SizedBox(height: 32),
-                Text(
-                  t('intercept_disabled', lang).toUpperCase(),
-                  style: GoogleFonts.instrumentSans(
-                    color: MatchRevealScreen._rose.withValues(alpha: 0.4),
-                    fontSize: 9,
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOption({
-    required IconData icon,
-    required String label,
-    required bool enabled,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(20),
-      child: GlassCard(
-        opacity: enabled ? 0.08 : 0.03,
-        borderRadius: 20,
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 28),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: enabled ? MatchRevealScreen._rose : Colors.white10,
-              size: 22,
-            ),
-            const SizedBox(width: 24),
-            Text(
-              label,
-              style: GoogleFonts.instrumentSans(
-                color: enabled ? Colors.white : Colors.white10,
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                letterSpacing: 2,
-              ),
-            ),
-            const Spacer(),
-            if (enabled)
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: Colors.white24,
-                size: 20,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleInterceptRequest(String type, {String? data}) async {
-    final lang = ref.read(appLanguageProvider);
-    setState(() => _isLoading = true);
-    try {
-      final myUid = FirebaseAuth.instance.currentUser?.uid;
-      final partnerId = widget.match.getPartnerId(myUid!);
-
-      await ref.read(matchControllerProvider.notifier).requestIntercept(
-            targetUid: partnerId,
-            type: type,
-            data: data,
-          );
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            t('signal_emitted', lang).toUpperCase(),
-            style: GoogleFonts.instrumentSans(
-              fontWeight: FontWeight.w800,
-              letterSpacing: 2,
-              fontSize: 12,
-            ),
-          ),
-          backgroundColor: MatchRevealScreen._rose,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(24),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text('${t('signal_error', lang).toUpperCase()}: ${e.toString()}'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _handlePhotoIntercept() async {
-    final lang = ref.read(appLanguageProvider);
-    final picker = ImagePicker();
-    final image = await picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 1024,
-      maxHeight: 1024,
-      imageQuality: 80,
-    );
-
-    if (image == null) return;
-
-    setState(() => _isLoading = true);
-    try {
-      final uploadService = ref.read(uploadServiceProvider);
-      final url = await uploadService.uploadPhoto(image);
-      await _handleInterceptRequest('photo', data: url);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              '${t('upload_failure', lang).toUpperCase()}: ${e.toString()}'),
-          backgroundColor:
-              MatchRevealScreen._rose, // Using brand rose instead of redAccent
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final lang = ref.watch(appLanguageProvider);
-    return InkWell(
-      onTap: _isLoading ? null : _showInterceptOptions,
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(20),
-        bottomLeft: Radius.circular(20),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.sensors_rounded,
-              color: _isLoading
-                  ? MatchRevealScreen._rose.withValues(alpha: 0.3)
-                  : MatchRevealScreen._rose,
-              size: 24,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              t('action_share', lang).toUpperCase(),
-              style: GoogleFonts.instrumentSans(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: MatchRevealScreen._warmCream.withValues(alpha: 0.5),
-                letterSpacing: 2,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PulseReceiverButton extends ConsumerStatefulWidget {
-  final Match match;
-  const _PulseReceiverButton({required this.match});
-
-  @override
-  ConsumerState<_PulseReceiverButton> createState() =>
-      __PulseReceiverButtonState();
-}
-
-class __PulseReceiverButtonState extends ConsumerState<_PulseReceiverButton> {
-  bool _isLoading = false;
-
-  Future<void> _checkPulse() async {
-    final lang = ref.read(appLanguageProvider);
-    setState(() => _isLoading = true);
-    try {
-      final myUid = FirebaseAuth.instance.currentUser?.uid;
-      final partnerId = widget.match.getPartnerId(myUid!);
-
-      final data = await ref
-          .read(matchControllerProvider.notifier)
-          .fetchIntercept(partnerId);
-
-      if (!mounted) return;
-
-      _showPulseInterceptDialog(data);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t('no_pulse_detected', lang).toUpperCase()),
-          backgroundColor: const Color(0xFFF5C842),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(24),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  void _showPulseInterceptDialog(Map<String, dynamic> data) {
-    final type = data['type'] as String;
-    final payload = data['data'] as String;
-    final lang = ref.read(appLanguageProvider);
-    const gold = Color(0xFFF5C842);
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-          child: GlassCard(
-            opacity: 0.2,
-            borderRadius: 32,
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.lock_clock_rounded,
-                  color: gold,
-                  size: 44,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  t('pulse_intercept', lang).toUpperCase(),
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 4,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  t(type == 'phone' ? 'temporary_contact' : 'view_once_frame',
-                          lang)
-                      .toUpperCase(),
-                  style: GoogleFonts.instrumentSans(
-                    color: Colors.white38,
-                    fontSize: 10,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                if (type == 'phone')
-                  GlassCard(
-                    opacity: 0.08,
-                    borderRadius: 20,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 32, horizontal: 24),
-                    child: Text(
-                      payload,
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  )
-                else
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.white12),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Image.network(
-                        payload,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return const SizedBox(
-                            height: 300,
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.white30,
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 48),
-                Text(
-                  t('intercept_data_deleted', lang).toUpperCase(),
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.instrumentSans(
-                    color: gold.withValues(alpha: 0.6),
-                    fontSize: 10,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 22),
-                      backgroundColor: Colors.white.withValues(alpha: 0.05),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: const BorderSide(color: Colors.white12),
-                      ),
-                    ),
-                    child: Text(
-                      t('close_purge', lang).toUpperCase(),
-                      style: GoogleFonts.instrumentSans(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 3,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final lang = ref.watch(appLanguageProvider);
-    const gold = Color(0xFFF5C842);
-
-    return InkWell(
-      onTap: _isLoading ? null : _checkPulse,
-      borderRadius: const BorderRadius.only(
-        topRight: Radius.circular(20),
-        bottomRight: Radius.circular(20),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.radar_rounded,
-              color: _isLoading ? gold.withValues(alpha: 0.3) : gold,
-              size: 24,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              t('action_view', lang).toUpperCase(),
-              style: GoogleFonts.instrumentSans(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: MatchRevealScreen._warmCream.withValues(alpha: 0.5),
-                letterSpacing: 2,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Helper: pretvori AuthUser v MatchProfile za CommonTraitsCalculator
-MatchProfile _authUserToMatchProfile(AuthUser user) {
-  return MatchProfile(
-    id: user.id,
-    name: user.name ?? '',
-    age: user.age ?? 18,
-    imageUrl: user.photoUrls.isNotEmpty ? user.photoUrls.first : '',
-    hobbies: user.hobbies,
-    bio: '',
-    nicotineUse: user.nicotineUse,
-    drinkingHabit: user.drinkingHabit,
-    introvertLevel: user.introvertScale,
-    exerciseHabit: user.exerciseHabit,
-    sleepSchedule: user.sleepSchedule,
-    religion: user.religion,
-  );
-}
-
-// Helper: pretvori PublicProfile v MatchProfile za CommonTraitsCalculator
-MatchProfile _publicProfileToMatchProfile(PublicProfile profile) {
-  return MatchProfile(
-    id: profile.id,
-    name: profile.name,
-    age: profile.age,
-    imageUrl: profile.primaryPhotoUrl,
-    hobbies: profile.hobbies,
-    bio: '',
-    // PublicProfile nima lifestyle polj — CommonTraitsCalculator bo
-    // prikazal samo hobby matches (zadostuje za reveal screen)
-  );
 }

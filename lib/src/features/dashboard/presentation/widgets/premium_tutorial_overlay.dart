@@ -26,22 +26,21 @@ class PremiumTutorialOverlay extends ConsumerWidget {
     );
 
     return Positioned.fill(
-      child: Material(
-        color: Colors.transparent,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: _SpotlightHitTestGate(
-                center: tutorialStep.spotlightCenter,
-                radius: tutorialStep.spotlightRadius,
-                child: CustomPaint(
-                  painter: SpotlightPainter(
-                    center: tutorialStep.spotlightCenter,
-                    radius: tutorialStep.spotlightRadius,
-                  ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: _SpotlightHitTestGate(
+              center: tutorialStep.spotlightCenter,
+              radius: tutorialStep.spotlightRadius,
+              child: CustomPaint(
+                painter: SpotlightPainter(
+                  center: tutorialStep.spotlightCenter,
+                  radius: tutorialStep.spotlightRadius,
                 ),
               ),
             ),
+          ),
+          if (!state.isPopupActive)
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOutCubic,
@@ -53,7 +52,9 @@ class PremiumTutorialOverlay extends ConsumerWidget {
               bottom: tutorialStep.showCardAtTop
                   ? null
                   : 120 + MediaQuery.of(context).padding.bottom,
-              child: GlassCard(
+              child: Material(
+                color: Colors.transparent,
+                child: GlassCard(
                 borderRadius: 24,
                 borderColor: const Color(0xFFF4436C).withValues(alpha: 0.28),
                 child: Column(
@@ -100,8 +101,8 @@ class PremiumTutorialOverlay extends ConsumerWidget {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -157,10 +158,13 @@ class _TutorialStep {
   ) {
     final screenWidth = mediaQuery.size.width;
     final screenHeight = mediaQuery.size.height;
-    final center = targetRect?.center;
-    final radius = targetRect == null
+    
+    final localRect = targetRect;
+
+    final center = localRect?.center;
+    final radius = localRect == null
         ? null
-        : (targetRect.longestSide / 2).clamp(44.0, 140.0).toDouble();
+        : (localRect.longestSide / 2).clamp(44.0, 140.0).toDouble();
 
     switch (step) {
       case 1:
@@ -168,7 +172,7 @@ class _TutorialStep {
           spotlightCenter: center ??
               Offset(
                 screenWidth - 46,
-                70 + mediaQuery.padding.top,
+                70,
               ),
           spotlightRadius: radius ?? 45,
           title: t('tutorial_step1_title', lang),
@@ -180,7 +184,7 @@ class _TutorialStep {
           spotlightCenter: center ??
               Offset(
                 screenWidth * 0.38,
-                screenHeight - 65 - mediaQuery.padding.bottom,
+                screenHeight - 65 - mediaQuery.padding.bottom - mediaQuery.padding.top,
               ),
           spotlightRadius: radius ?? 45,
           title: t('tutorial_step2_title', lang),
@@ -192,7 +196,7 @@ class _TutorialStep {
           spotlightCenter: center ??
               Offset(
                 screenWidth * 0.62,
-                screenHeight - 65 - mediaQuery.padding.bottom,
+                screenHeight - 65 - mediaQuery.padding.bottom - mediaQuery.padding.top,
               ),
           spotlightRadius: radius ?? 45,
           title: t('tutorial_step3_title', lang),
@@ -204,7 +208,7 @@ class _TutorialStep {
           spotlightCenter: center ??
               Offset(
                 screenWidth * 0.86,
-                screenHeight - 65 - mediaQuery.padding.bottom,
+                screenHeight - 65 - mediaQuery.padding.bottom - mediaQuery.padding.top,
               ),
           spotlightRadius: radius ?? 45,
           title: t('tutorial_step4_title', lang),
@@ -214,7 +218,7 @@ class _TutorialStep {
       case 5:
         return _TutorialStep(
           spotlightCenter:
-              center ?? Offset(screenWidth / 2, screenHeight * 0.44),
+              center ?? Offset(screenWidth / 2, (screenHeight * 0.44) - mediaQuery.padding.top),
           spotlightRadius: radius ?? 140,
           title: t('tutorial_step5_title', lang),
           description: t('tutorial_step5_desc', lang),
@@ -225,7 +229,7 @@ class _TutorialStep {
           spotlightCenter: center ??
               Offset(
                 46,
-                70 + mediaQuery.padding.top,
+                70,
               ),
           spotlightRadius: radius ?? 45,
           title: t('tutorial_step0_title', lang),

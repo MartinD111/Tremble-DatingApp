@@ -1,0 +1,350 @@
+/* ============================================================
+   TREMBLE — Design Tokens
+   Imported by every preview/ card and the UI kits.
+   Source of truth: tremble-brand-identity.html (v5.0, May 2026)
+   ============================================================ */
+
+/* Brand fonts — Instrument Sans served locally from uploaded TTFs.
+   Playfair Display, Lora, JetBrains Mono still pulled from Google Fonts
+   (no local files supplied yet — flag to user). */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('./fonts/InstrumentSans-VariableFont_wdth_wght.ttf') format('truetype-variations');
+  font-weight: 400 700;
+  font-stretch: 75% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('./fonts/InstrumentSans-Italic-VariableFont_wdth_wght.ttf') format('truetype-variations');
+  font-weight: 400 700;
+  font-stretch: 75% 100%;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* ── Brand color — Rose ─────────────────────────── */
+  --rose:       #F4436C;   /* Tremble Rose — primary CTA, brand */
+  --rose-light: #F9839E;   /* hover/lighter accents */
+  --rose-dark:  #C02048;   /* pressed, dark mode primary */
+
+  /* ── Functional ─────────────────────────────────── */
+  --yellow:     #F5C842;   /* Signal Yellow — labels, telemetry, "live" */
+  --green:      #2D9B6F;   /* Confirm Green — success, GDPR */
+
+  /* ── Neutrals ───────────────────────────────────── */
+  --graphite:   #1A1A18;   /* near-black, deep graphite */
+  --cream:      #FAFAF7;   /* page background — warm, never pure white */
+  --cream-2:    #F0F0EB;   /* subtle surface, alt bg */
+  --warm-gray:  #6B6B63;   /* secondary body text */
+  --warm-gray-light: #A0A09A; /* disabled, hints */
+  --border:     #E2E2DC;
+  --surface:    #FFFFFF;
+
+  /* ── Semantic — Foreground ──────────────────────── */
+  --fg-primary:   var(--graphite);
+  --fg-secondary: var(--warm-gray);
+  --fg-disabled:  var(--warm-gray-light);
+  --fg-on-rose:   #FFFFFF;
+  --fg-on-dark:   #FFFFFF;
+
+  /* ── Semantic — Background ──────────────────────── */
+  --bg-page:     var(--cream);
+  --bg-elevated: var(--surface);
+  --bg-subtle:   var(--cream-2);
+  --bg-inverse:  var(--graphite);
+
+  /* ── Type — Families ─────────────────────────────── */
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body:    'Lora', Georgia, serif;
+  --font-ui:      'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ── Type — Semantic roles ───────────────────────── */
+  /* H1 / hero: 96–110px display, weight 900, tracking -0.04em */
+  --type-hero-size: clamp(64px, 9vw, 110px);
+  --type-hero-weight: 900;
+  --type-hero-tracking: -0.04em;
+  --type-hero-leading: 1.0;
+
+  /* H2 / section: 40–56px */
+  --type-h2-size: clamp(34px, 5vw, 56px);
+  --type-h2-weight: 700;
+  --type-h2-tracking: -0.02em;
+  --type-h2-leading: 1.1;
+
+  /* H3: 26px */
+  --type-h3-size: 26px;
+  --type-h3-weight: 700;
+  --type-h3-tracking: -0.015em;
+  --type-h3-leading: 1.2;
+
+  /* Body: Lora 17–18 / 1.75 */
+  --type-body-size: 17px;
+  --type-body-leading: 1.75;
+
+  /* UI label / button: Instrument Sans 15 / 500 */
+  --type-ui-size: 15px;
+  --type-ui-weight: 500;
+
+  /* Eyebrow: 11px, 700, uppercase, 0.22em tracking */
+  --type-eyebrow-size: 11px;
+  --type-eyebrow-weight: 700;
+  --type-eyebrow-tracking: 0.22em;
+
+  /* Telemetry / mono: 12px */
+  --type-mono-size: 12px;
+  --type-mono-weight: 500;
+  --type-mono-tracking: 0.05em;
+
+  /* ── Spacing — 8px base ──────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;   /* tight gaps */
+  --space-3: 12px;
+  --space-4: 16px;   /* inner padding */
+  --space-5: 24px;   /* section gaps */
+  --space-6: 32px;
+  --space-7: 48px;   /* large padding */
+  --space-8: 64px;
+  --space-9: 96px;   /* section spacing */
+
+  /* ── Radius ─────────────────────────────────────── */
+  --radius-sm:  8px;    /* buttons, inputs */
+  --radius-md: 16px;    /* cards */
+  --radius-lg: 24px;    /* modals, big surfaces */
+  --radius-pill: 100px; /* CTAs, pills */
+  --radius-icon: 22%;   /* logo container — 22% of width */
+
+  /* ── Shadows — subtle only ──────────────────────── */
+  --shadow-sm: 0 4px 14px rgba(11, 17, 32, 0.05);
+  --shadow-md: 0 10px 30px rgba(11, 17, 32, 0.08);
+  --shadow-focus: 0 0 0 3px rgba(244, 67, 108, 0.25);
+
+  /* ── Glass — APP ONLY ───────────────────────────── */
+  --glass-bg:     rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-blur:   blur(12px);
+
+  /* ── Motion ─────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur-med:  250ms;
+  --dur-slow: 600ms;
+  --dur-pulse: 2800ms; /* radar / signal pulse */
+}
+
+/* ============================================================
+   SEMANTIC ELEMENT DEFAULTS
+   Apply when colors_and_type.css is loaded — gives any preview
+   the right base look without a layout.
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-page);
+  color: var(--fg-primary);
+  font-family: var(--font-ui);
+  font-size: var(--type-ui-size);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: var(--type-hero-size);
+  font-weight: var(--type-hero-weight);
+  letter-spacing: var(--type-hero-tracking);
+  line-height: var(--type-hero-leading);
+  color: var(--fg-primary);
+  margin: 0;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: var(--type-h2-size);
+  font-weight: var(--type-h2-weight);
+  letter-spacing: var(--type-h2-tracking);
+  line-height: var(--type-h2-leading);
+  color: var(--fg-primary);
+  margin: 0;
+}
+
+h3 {
+  font-family: var(--font-display);
+  font-size: var(--type-h3-size);
+  font-weight: var(--type-h3-weight);
+  letter-spacing: var(--type-h3-tracking);
+  line-height: var(--type-h3-leading);
+  color: var(--fg-primary);
+  margin: 0;
+}
+
+p, .body {
+  font-family: var(--font-body);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+  color: var(--fg-secondary);
+  margin: 0;
+}
+
+p strong, .body strong {
+  color: var(--fg-primary);
+  font-weight: 600;
+}
+
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: var(--type-eyebrow-size);
+  font-weight: var(--type-eyebrow-weight);
+  letter-spacing: var(--type-eyebrow-tracking);
+  text-transform: uppercase;
+  color: var(--rose);
+}
+
+.label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-disabled);
+}
+
+.mono, code, kbd {
+  font-family: var(--font-mono);
+  font-size: var(--type-mono-size);
+  font-weight: var(--type-mono-weight);
+  letter-spacing: var(--type-mono-tracking);
+  color: var(--fg-disabled);
+}
+
+.principle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-style: italic;
+  color: var(--fg-secondary);
+  line-height: 1.5;
+  border-left: 2px solid var(--rose);
+  padding-left: 20px;
+}
+
+/* ──────────── Buttons ──────────── */
+
+.btn {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 22px;
+  border-radius: var(--radius-pill);
+  border: 0;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out),
+              transform 80ms var(--ease-out),
+              opacity var(--dur-fast) var(--ease-out);
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--rose);
+  color: var(--fg-on-rose);
+}
+.btn-primary:hover  { background: var(--rose-dark); }
+.btn-primary:active { transform: scale(0.97); background: var(--rose-dark); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--fg-primary);
+  border: 2px solid var(--fg-primary);
+  padding: 10px 20px; /* compensate for border */
+}
+.btn-secondary:hover  { background: var(--fg-primary); color: var(--fg-on-dark); }
+.btn-secondary:active { transform: scale(0.97); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--fg-secondary);
+  padding: 8px 14px;
+}
+.btn-ghost:hover { color: var(--fg-primary); }
+
+.btn-sm { font-size: 12px; padding: 8px 16px; }
+.btn-lg { font-size: 16px; padding: 16px 32px; }
+
+/* ──────────── Cards ──────────── */
+
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-flat { box-shadow: none; }
+
+/* ──────────── Glass — app overlay only ──────────── */
+
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-lg);
+}
+
+/* ──────────── Form ──────────── */
+
+.input {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  padding: 14px 18px;
+  background: var(--bg-subtle);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  color: var(--fg-primary);
+  width: 100%;
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out);
+}
+.input::placeholder { color: var(--fg-disabled); }
+.input:focus { border-color: var(--rose); background: var(--bg-elevated); }
+
+/* ──────────── Badges / Chips ──────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-subtle);
+  color: var(--fg-disabled);
+}
+.badge-rose   { background: rgba(244, 67, 108, 0.1); color: var(--rose); }
+.badge-yellow { background: rgba(245, 200, 66, 0.15); color: #8C6A00; }
+.badge-green  { background: rgba(45, 155, 111, 0.1); color: var(--green); }
+.badge-dot::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}

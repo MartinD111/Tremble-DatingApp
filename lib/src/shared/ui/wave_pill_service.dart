@@ -81,7 +81,8 @@ class WavePillService {
                   : PillState.waitingForAction,
               onWave:   () => onWave(data.targetUid),
               onIgnore: () => _removeEntry(entry),
-              onMatch:  () => _showConfetti(overlay, imageUrl: data.imageUrl),
+              // Match reveal handled by activeMatchesStream → MatchRevealScreen.
+              onMatch:  null,
               onTap:    onTap,
             ),
           ),
