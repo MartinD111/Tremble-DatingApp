@@ -55,53 +55,53 @@ class PremiumTutorialOverlay extends ConsumerWidget {
               child: Material(
                 color: Colors.transparent,
                 child: GlassCard(
-                borderRadius: 24,
-                borderColor: const Color(0xFFF4436C).withValues(alpha: 0.28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      tutorialStep.title,
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                  borderRadius: 24,
+                  borderColor: const Color(0xFFF4436C).withValues(alpha: 0.28),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        tutorialStep.title,
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      tutorialStep.description,
-                      style: GoogleFonts.instrumentSans(
-                        fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        height: 1.4,
+                      const SizedBox(height: 10),
+                      Text(
+                        tutorialStep.description,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          height: 1.4,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 18),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _StepDots(currentStep: state.currentStep),
-                        TextButton(
-                          onPressed: () => ref
-                              .read(tutorialProvider.notifier)
-                              .completeTutorial(),
-                          child: Text(
-                            t('tutorial_skip', lang),
-                            style: GoogleFonts.instrumentSans(
-                              color: Colors.white.withValues(alpha: 0.52),
-                              fontSize: 13,
+                      const SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _StepDots(currentStep: state.currentStep),
+                          TextButton(
+                            onPressed: () => ref
+                                .read(tutorialProvider.notifier)
+                                .completeTutorial(),
+                            child: Text(
+                              t('tutorial_skip', lang),
+                              style: GoogleFonts.instrumentSans(
+                                color: Colors.white.withValues(alpha: 0.52),
+                                fontSize: 13,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -158,7 +158,7 @@ class _TutorialStep {
   ) {
     final screenWidth = mediaQuery.size.width;
     final screenHeight = mediaQuery.size.height;
-    
+
     final localRect = targetRect;
 
     final center = localRect?.center;
@@ -184,7 +184,10 @@ class _TutorialStep {
           spotlightCenter: center ??
               Offset(
                 screenWidth * 0.38,
-                screenHeight - 65 - mediaQuery.padding.bottom - mediaQuery.padding.top,
+                screenHeight -
+                    65 -
+                    mediaQuery.padding.bottom -
+                    mediaQuery.padding.top,
               ),
           spotlightRadius: radius ?? 45,
           title: t('tutorial_step2_title', lang),
@@ -196,7 +199,10 @@ class _TutorialStep {
           spotlightCenter: center ??
               Offset(
                 screenWidth * 0.62,
-                screenHeight - 65 - mediaQuery.padding.bottom - mediaQuery.padding.top,
+                screenHeight -
+                    65 -
+                    mediaQuery.padding.bottom -
+                    mediaQuery.padding.top,
               ),
           spotlightRadius: radius ?? 45,
           title: t('tutorial_step3_title', lang),
@@ -208,7 +214,10 @@ class _TutorialStep {
           spotlightCenter: center ??
               Offset(
                 screenWidth * 0.86,
-                screenHeight - 65 - mediaQuery.padding.bottom - mediaQuery.padding.top,
+                screenHeight -
+                    65 -
+                    mediaQuery.padding.bottom -
+                    mediaQuery.padding.top,
               ),
           spotlightRadius: radius ?? 45,
           title: t('tutorial_step4_title', lang),
@@ -217,8 +226,9 @@ class _TutorialStep {
         );
       case 5:
         return _TutorialStep(
-          spotlightCenter:
-              center ?? Offset(screenWidth / 2, (screenHeight * 0.44) - mediaQuery.padding.top),
+          spotlightCenter: center ??
+              Offset(screenWidth / 2,
+                  (screenHeight * 0.44) - mediaQuery.padding.top),
           spotlightRadius: radius ?? 140,
           title: t('tutorial_step5_title', lang),
           description: t('tutorial_step5_desc', lang),

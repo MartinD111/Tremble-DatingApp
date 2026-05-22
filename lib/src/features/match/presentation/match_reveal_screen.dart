@@ -45,10 +45,7 @@ const List<_Pep> _pepTalks = [
     message: "Fortune favors the brave",
     note: "Brave people still respect boundaries"
   ),
-  (
-    message: "Trust your rizz",
-    note: "Confidence is attractive. Arson is not"
-  ),
+  (message: "Trust your rizz", note: "Confidence is attractive. Arson is not"),
   (
     message: "Stop rehearsing conversations in your head and just go for it",
     note: "They can't hear the imaginary version anyway"
@@ -84,13 +81,9 @@ const List<_Pep> _pepTalks = [
   ),
   (
     message: "Just be yourself",
-    note:
-        "Unless “yourself” was planning a surprise ukulele performance"
+    note: "Unless “yourself” was planning a surprise ukulele performance"
   ),
-  (
-    message: "Go flirt a little",
-    note: "“A little” is the key phrase here"
-  ),
+  (message: "Go flirt a little", note: "“A little” is the key phrase here"),
   (
     message: "Say hi — it's not a federal offense",
     note: "Unless you're trespassing. Then maybe leave first"
@@ -101,8 +94,7 @@ const List<_Pep> _pepTalks = [
     note: "If they do, contact a physicist"
   ),
   (
-    message:
-        "Take the risk. Great stories rarely start with “I stayed home”",
+    message: "Take the risk. Great stories rarely start with “I stayed home”",
     note: "Great court cases sometimes do, though"
   ),
   (
@@ -227,11 +219,9 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
       );
     }
 
-    final liveMatch = ref
-            .watch(activeMatchesStreamProvider)
-            .value
-            ?.firstWhere((m) => m.id == widget.match.id,
-                orElse: () => widget.match) ??
+    final liveMatch = ref.watch(activeMatchesStreamProvider).value?.firstWhere(
+            (m) => m.id == widget.match.id,
+            orElse: () => widget.match) ??
         widget.match;
     final partnerId = liveMatch.getPartnerId(myUid);
 
@@ -288,17 +278,21 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
     final noteTy = (1.0 - _easeOut((t - 1.95) / 0.42)) * 6.0;
 
     // ── Partner data ─────────────────────────────────────────────────────────
-    final photoUrl =
-        profile != null && profile.primaryPhotoUrl.isNotEmpty
-            ? profile.primaryPhotoUrl
-            : null;
+    final photoUrl = profile != null && profile.primaryPhotoUrl.isNotEmpty
+        ? profile.primaryPhotoUrl
+        : null;
     final name = profile?.name ?? '';
     final age = profile?.age;
 
     // Dynamic font size: shorter messages render larger
     final msgLen = _pep.message.length;
-    final msgSize =
-        msgLen > 70 ? 18.0 : msgLen > 50 ? 21.0 : msgLen > 30 ? 24.0 : 28.0;
+    final msgSize = msgLen > 70
+        ? 18.0
+        : msgLen > 50
+            ? 21.0
+            : msgLen > 30
+                ? 24.0
+                : 28.0;
 
     return Stack(
       children: [

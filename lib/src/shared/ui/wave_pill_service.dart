@@ -12,7 +12,8 @@ class WavePillData {
   final int age;
   final String imageUrl;
   final String targetUid;
-  final bool isIncomingWave; // true → PillState.waveReceived, false → waitingForAction
+  final bool
+      isIncomingWave; // true → PillState.waveReceived, false → waitingForAction
   final DateTime? birthDate;
 
   const WavePillData({
@@ -66,24 +67,24 @@ class WavePillService {
       builder: (ctx) {
         final topPad = MediaQuery.of(ctx).padding.top;
         return Positioned(
-          top:   topPad + 14,
-          left:  16,
+          top: topPad + 14,
+          left: 16,
           right: 16,
           child: Material(
             type: MaterialType.transparency,
             child: MatchNotificationPill(
-              name:      data.name,
-              age:       data.age,
-              imageUrl:  data.imageUrl,
+              name: data.name,
+              age: data.age,
+              imageUrl: data.imageUrl,
               birthDate: data.birthDate,
               pillState: data.isIncomingWave
                   ? PillState.waveReceived
                   : PillState.waitingForAction,
-              onWave:   () => onWave(data.targetUid),
+              onWave: () => onWave(data.targetUid),
               onIgnore: () => _removeEntry(entry),
               // Match reveal handled by activeMatchesStream → MatchRevealScreen.
-              onMatch:  null,
-              onTap:    onTap,
+              onMatch: null,
+              onTap: onTap,
             ),
           ),
         );

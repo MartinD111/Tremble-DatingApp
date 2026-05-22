@@ -24,12 +24,17 @@ class _MatchConfettiOverlayState extends State<MatchConfettiOverlay>
     with TickerProviderStateMixin {
   late final AnimationController _confettiCtrl;
   late final AnimationController _textCtrl;
-  late final List<_Particle>     _particles;
+  late final List<_Particle> _particles;
 
   static const _colors = [
-    Color(0xFFFF004D), Color(0xFFFF7700), Color(0xFFFFE600),
-    Color(0xFF00E676), Color(0xFF2979FF), Color(0xFFD500F9),
-    Color(0xFFF4436C), Color(0xFFFFFFFF),
+    Color(0xFFFF004D),
+    Color(0xFFFF7700),
+    Color(0xFFFFE600),
+    Color(0xFF00E676),
+    Color(0xFF2979FF),
+    Color(0xFFD500F9),
+    Color(0xFFF4436C),
+    Color(0xFFFFFFFF),
   ];
 
   @override
@@ -37,17 +42,19 @@ class _MatchConfettiOverlayState extends State<MatchConfettiOverlay>
     super.initState();
 
     final rng = math.Random();
-    _particles = List.generate(90, (_) => _Particle(
-      x:        rng.nextDouble(),
-      startY:   -(rng.nextDouble() * 0.12),
-      speed:    0.5 + rng.nextDouble() * 0.9,
-      drift:    (rng.nextDouble() - 0.5) * 0.18,
-      color:    _colors[rng.nextInt(_colors.length)],
-      size:     4.0 + rng.nextDouble() * 7.0,
-      rotation: rng.nextDouble() * math.pi * 2,
-      rotSpeed: (rng.nextDouble() - 0.5) * 10,
-      isCircle: rng.nextBool(),
-    ));
+    _particles = List.generate(
+        90,
+        (_) => _Particle(
+              x: rng.nextDouble(),
+              startY: -(rng.nextDouble() * 0.12),
+              speed: 0.5 + rng.nextDouble() * 0.9,
+              drift: (rng.nextDouble() - 0.5) * 0.18,
+              color: _colors[rng.nextInt(_colors.length)],
+              size: 4.0 + rng.nextDouble() * 7.0,
+              rotation: rng.nextDouble() * math.pi * 2,
+              rotSpeed: (rng.nextDouble() - 0.5) * 10,
+              isCircle: rng.nextBool(),
+            ));
 
     _confettiCtrl = AnimationController(
       vsync: this,
@@ -88,8 +95,9 @@ class _MatchConfettiOverlayState extends State<MatchConfettiOverlay>
       animation: Listenable.merge([_confettiCtrl, _textCtrl]),
       builder: (ctx, _) {
         // Text fades in quickly, then fades out in the last 30% of the animation.
-        final fadeIn  = _textCtrl.value;
-        final fadeOut = 1.0 - ((_confettiCtrl.value - 0.70).clamp(0.0, 0.30) / 0.30);
+        final fadeIn = _textCtrl.value;
+        final fadeOut =
+            1.0 - ((_confettiCtrl.value - 0.70).clamp(0.0, 0.30) / 0.30);
         final textOpacity = (fadeIn * fadeOut).clamp(0.0, 1.0);
 
         return IgnorePointer(
@@ -99,16 +107,16 @@ class _MatchConfettiOverlayState extends State<MatchConfettiOverlay>
               CustomPaint(
                 size: screenSize,
                 painter: _ConfettiPainter(
-                  particles:  _particles,
-                  progress:   _confettiCtrl.value,
+                  particles: _particles,
+                  progress: _confettiCtrl.value,
                   screenSize: screenSize,
                 ),
               ),
 
               // ── "It's a match!" label ───────────────────────────────
               Positioned(
-                top:   screenSize.height * 0.26,
-                left:  0,
+                top: screenSize.height * 0.26,
+                left: 0,
                 right: 0,
                 child: Opacity(
                   opacity: textOpacity,
@@ -119,14 +127,14 @@ class _MatchConfettiOverlayState extends State<MatchConfettiOverlay>
                         "It's a match!",
                         textAlign: TextAlign.center,
                         style: GoogleFonts.playfairDisplay(
-                          fontSize:   38,
+                          fontSize: 38,
                           fontWeight: FontWeight.w700,
-                          color:      Colors.white,
+                          color: Colors.white,
                           shadows: const [
                             Shadow(
-                              color:      Color(0x66000000),
+                              color: Color(0x66000000),
                               blurRadius: 16,
-                              offset:     Offset(0, 4),
+                              offset: Offset(0, 4),
                             ),
                           ],
                         ),
@@ -150,15 +158,15 @@ class _MatchConfettiOverlayState extends State<MatchConfettiOverlay>
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _Particle {
-  final double x;        // 0–1 fraction of screen width
-  final double startY;   // negative fraction — above top edge
-  final double speed;    // fall-speed multiplier
-  final double drift;    // horizontal drift over full animation
-  final Color  color;
+  final double x; // 0–1 fraction of screen width
+  final double startY; // negative fraction — above top edge
+  final double speed; // fall-speed multiplier
+  final double drift; // horizontal drift over full animation
+  final Color color;
   final double size;
   final double rotation;
   final double rotSpeed;
-  final bool   isCircle;
+  final bool isCircle;
 
   const _Particle({
     required this.x,
@@ -179,8 +187,8 @@ class _Particle {
 
 class _ConfettiPainter extends CustomPainter {
   final List<_Particle> particles;
-  final double          progress;
-  final Size            screenSize;
+  final double progress;
+  final Size screenSize;
 
   const _ConfettiPainter({
     required this.particles,
@@ -193,16 +201,17 @@ class _ConfettiPainter extends CustomPainter {
     final paint = Paint()..style = PaintingStyle.fill;
 
     for (final p in particles) {
-      final t       = (progress * p.speed).clamp(0.0, 1.0);
-      final easedT  = t * t; // quadratic gravity feel
+      final t = (progress * p.speed).clamp(0.0, 1.0);
+      final easedT = t * t; // quadratic gravity feel
 
       final cx = (p.x + p.drift * progress) * size.width;
       final cy = p.startY * size.height + easedT * (size.height + p.size * 3);
 
       // Fade in near top, fade out near bottom
-      final fadeTop    = (cy / (size.height * 0.08)).clamp(0.0, 1.0);
-      final fadeBottom = ((size.height - cy) / (size.height * 0.25)).clamp(0.0, 1.0);
-      final alpha      = (fadeTop * fadeBottom).clamp(0.0, 1.0);
+      final fadeTop = (cy / (size.height * 0.08)).clamp(0.0, 1.0);
+      final fadeBottom =
+          ((size.height - cy) / (size.height * 0.25)).clamp(0.0, 1.0);
+      final alpha = (fadeTop * fadeBottom).clamp(0.0, 1.0);
 
       if (alpha <= 0.01) continue;
 
@@ -220,7 +229,7 @@ class _ConfettiPainter extends CustomPainter {
         canvas.drawRect(
           Rect.fromCenter(
             center: Offset.zero,
-            width:  p.size,
+            width: p.size,
             height: p.size * 0.45,
           ),
           paint,

@@ -11,18 +11,18 @@ import '../../../../core/utils/icon_utils.dart';
 
 enum PillState {
   waitingForAction, // "Ana, 23, is nearby"
-  waveSent,         // legacy — handled internally
-  waveReceived,     // "Ana, 23, sent you a wave!"
+  waveSent, // legacy — handled internally
+  waveReceived, // "Ana, 23, sent you a wave!"
 }
 
 // ─── Internal stage machine ───────────────────────────────────────────────────
 
 enum _Stage {
-  entering,   // avatar circle drops in
-  expanding,  // circle widens to full pill
-  idle,       // interactive
-  shaking,    // decaying oscillation
-  success,    // confirmation + rainbow
+  entering, // avatar circle drops in
+  expanding, // circle widens to full pill
+  idle, // interactive
+  shaking, // decaying oscillation
+  success, // confirmation + rainbow
   dismissing, // leaving screen
 }
 
@@ -76,45 +76,49 @@ class MatchNotificationPill extends StatefulWidget {
 class _MatchNotificationPillState extends State<MatchNotificationPill>
     with TickerProviderStateMixin {
   // ── Dimensions ───────────────────────────────────────────────────────────
-  static const _pillH    = 72.0;
-  static const _circleW  = 72.0;
+  static const _pillH = 72.0;
+  static const _circleW = 72.0;
   static const _circleBR = 36.0;
-  static const _idleBR   = 36.0; // height/2 → perfect pill
+  static const _idleBR = 36.0; // height/2 → perfect pill
   static const _successW = 248.0;
-  static const _avatarD  = 54.0;
+  static const _avatarD = 54.0;
 
   // ── Rainbow colours ───────────────────────────────────────────────────────
   static const _rainbow = [
-    Color(0xFFFF004D), Color(0xFFFF7700), Color(0xFFFFE600),
-    Color(0xFF00E676), Color(0xFF2979FF), Color(0xFFD500F9),
+    Color(0xFFFF004D),
+    Color(0xFFFF7700),
+    Color(0xFFFFE600),
+    Color(0xFF00E676),
+    Color(0xFF2979FF),
+    Color(0xFFD500F9),
     Color(0xFFFF004D),
   ];
 
   // ── Layout state ─────────────────────────────────────────────────────────
-  _Stage _stage     = _Stage.entering;
-  double _pillW     = _circleW;
-  double _pillBR    = _circleBR;
+  _Stage _stage = _Stage.entering;
+  double _pillW = _circleW;
+  double _pillBR = _circleBR;
   double _fullWidth = 380.0;
 
   // ── Swipe state ───────────────────────────────────────────────────────────
-  double _swipeDx        = 0.0;
-  bool   _swipeCommitted = false;
+  double _swipeDx = 0.0;
+  bool _swipeCommitted = false;
 
   // ── Controllers ───────────────────────────────────────────────────────────
   late final AnimationController _dropCtrl;
-  late final Animation<double>   _dropY;
+  late final Animation<double> _dropY;
 
   late final AnimationController _shakeCtrl;
-  late final Animation<double>   _shakeX;
+  late final Animation<double> _shakeX;
 
   late final AnimationController _rainbowCtrl;
 
   late final AnimationController _dismissCtrl;
-  late final Animation<double>   _dismissY;
+  late final Animation<double> _dismissY;
 
   late final AnimationController _swipeCtrl;
-  late       Animation<double>   _swipeSlide;
-  late final Animation<double>   _swipeFade;
+  late Animation<double> _swipeSlide;
+  late final Animation<double> _swipeFade;
 
   @override
   void initState() {
@@ -134,12 +138,12 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
       duration: const Duration(milliseconds: 520),
     );
     _shakeX = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0,   end:  14.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 14.0,  end: -11.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -11.0, end:   9.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin:  9.0,  end:  -6.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -6.0,  end:   3.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin:  3.0,  end:   0.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 14.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 14.0, end: -11.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -11.0, end: 9.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 9.0, end: -6.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -6.0, end: 3.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 3.0, end: 0.0), weight: 1),
     ]).animate(CurvedAnimation(parent: _shakeCtrl, curve: Curves.linear));
 
     _rainbowCtrl = AnimationController(
@@ -161,7 +165,7 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
       duration: const Duration(milliseconds: 260),
     );
     _swipeSlide = Tween<double>(begin: 0, end: 0).animate(_swipeCtrl);
-    _swipeFade  = Tween<double>(begin: 1.0, end: 0.0).animate(
+    _swipeFade = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(parent: _swipeCtrl, curve: Curves.easeInQuart),
     );
     _swipeCtrl.addStatusListener(_onSwipeOutStatus);
@@ -191,7 +195,7 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
     if (s != AnimationStatus.completed || !mounted) return;
     setState(() {
       _stage = _Stage.expanding;
-      _pillW  = _fullWidth;
+      _pillW = _fullWidth;
       _pillBR = _idleBR;
     });
     Future.delayed(const Duration(milliseconds: 400), () {
@@ -235,7 +239,7 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
     // Capture callbacks before the async gap — the parent widget may unmount
     // this pill (e.g. DevSim flips hasPillVisible→false on the same frame as
     // onWave()), so widget.onMatch would never be reached past `if (!mounted)`.
-    final capturedOnWave  = widget.onWave;
+    final capturedOnWave = widget.onWave;
     final capturedOnMatch = widget.onMatch;
 
     capturedOnWave();
@@ -253,7 +257,7 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
     if (!_rainbowCtrl.isAnimating) _rainbowCtrl.repeat();
     setState(() {
       _stage = _Stage.success;
-      _pillW  = _successW;
+      _pillW = _successW;
     });
 
     await Future.delayed(const Duration(seconds: 3));
@@ -271,14 +275,15 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
   // ── Swipe ─────────────────────────────────────────────────────────────────
 
   void _onDragUpdate(DragUpdateDetails d) {
-    if (_swipeCommitted || _stage == _Stage.dismissing ||
+    if (_swipeCommitted ||
+        _stage == _Stage.dismissing ||
         _stage == _Stage.entering) return;
     setState(() => _swipeDx += d.delta.dx);
   }
 
   void _onDragEnd(DragEndDetails d) {
     if (_swipeCommitted || _stage == _Stage.dismissing) return;
-    final velocity  = d.primaryVelocity ?? 0;
+    final velocity = d.primaryVelocity ?? 0;
     final threshold = _fullWidth * 0.30;
     if (_swipeDx.abs() > threshold || velocity.abs() > 500) {
       _commitSwipeDismiss(_swipeDx >= 0 ? 1.0 : -1.0);
@@ -301,7 +306,7 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
     _rainbowCtrl.stop();
     _swipeSlide = Tween<double>(
       begin: _swipeDx,
-      end:   direction * (_fullWidth + 320),
+      end: direction * (_fullWidth + 320),
     ).animate(CurvedAnimation(parent: _swipeCtrl, curve: Curves.easeInCubic));
     _swipeCtrl.forward();
   }
@@ -318,15 +323,16 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
 
   // ── Derived ───────────────────────────────────────────────────────────────
 
-  bool get _isWaveBack  => widget.pillState == PillState.waveReceived;
-  bool get _isSuccess   => _stage == _Stage.success;
+  bool get _isWaveBack => widget.pillState == PillState.waveReceived;
+  bool get _isSuccess => _stage == _Stage.success;
   bool get _showRainbow =>
       _rainbowCtrl.isAnimating &&
       _stage != _Stage.entering &&
       _stage != _Stage.expanding;
 
   String get _titleText {
-    if (_isSuccess) return _isWaveBack ? 'Waved back! \u{1F44B}' : 'Wave sent! \u{1F44B}';
+    if (_isSuccess)
+      return _isWaveBack ? 'Waved back! \u{1F44B}' : 'Wave sent! \u{1F44B}';
     return '${widget.name}, ${widget.age}';
   }
 
@@ -365,21 +371,26 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
   Widget build(BuildContext context) {
     _fullWidth = MediaQuery.of(context).size.width - 80.0;
 
-    final isDark  = Theme.of(context).brightness == Brightness.dark;
-    final accent  = _accent(isDark);
-    final bg      = _bg(isDark);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = _accent(isDark);
+    final bg = _bg(isDark);
     final borderC = _borderC(isDark);
-    final textC   = _textC(isDark);
+    final textC = _textC(isDark);
 
     return AnimatedBuilder(
       animation: Listenable.merge([
-        _dropCtrl, _shakeCtrl, _rainbowCtrl, _dismissCtrl, _swipeCtrl,
+        _dropCtrl,
+        _shakeCtrl,
+        _rainbowCtrl,
+        _dismissCtrl,
+        _swipeCtrl,
       ]),
       builder: (ctx, _) {
-        final dy      = _dropY.value + _dismissY.value;
-        final shakeX  = _stage == _Stage.shaking ? _shakeX.value : 0.0;
-        final swipeX  = _swipeCommitted ? _swipeSlide.value : _swipeDx;
-        final opacity = (_swipeCommitted ? _swipeFade.value : 1.0).clamp(0.0, 1.0);
+        final dy = _dropY.value + _dismissY.value;
+        final shakeX = _stage == _Stage.shaking ? _shakeX.value : 0.0;
+        final swipeX = _swipeCommitted ? _swipeSlide.value : _swipeDx;
+        final opacity =
+            (_swipeCommitted ? _swipeFade.value : 1.0).clamp(0.0, 1.0);
 
         return Transform.translate(
           offset: Offset(shakeX + swipeX, dy),
@@ -387,14 +398,14 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
             opacity: opacity,
             child: GestureDetector(
               onHorizontalDragUpdate: _onDragUpdate,
-              onHorizontalDragEnd:    _onDragEnd,
+              onHorizontalDragEnd: _onDragEnd,
               onHorizontalDragCancel: _onDragCancel,
               child: _buildShell(
-                isDark:  isDark,
-                accent:  accent,
-                bg:      bg,
+                isDark: isDark,
+                accent: accent,
+                bg: bg,
                 borderC: borderC,
-                textC:   textC,
+                textC: textC,
               ),
             ),
           ),
@@ -417,24 +428,24 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
     return CustomPaint(
       foregroundPainter: _BorderPainter(
         rainbowProgress: _rainbowCtrl.value,
-        showRainbow:     _showRainbow,
-        radius:          _pillBR,
-        solidColor:      borderC,
-        rainbowColors:   _rainbow,
+        showRainbow: _showRainbow,
+        radius: _pillBR,
+        solidColor: borderC,
+        rainbowColors: _rainbow,
       ),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 380),
-        curve:    Curves.easeOutCubic,
-        width:    _pillW,
-        height:   _pillH,
+        curve: Curves.easeOutCubic,
+        width: _pillW,
+        height: _pillH,
         clipBehavior: Clip.hardEdge,
         decoration: BoxDecoration(
-          color:        bg,
+          color: bg,
           borderRadius: BorderRadius.circular(_pillBR),
         ),
         child: _buildContentRow(
           accent: accent,
-          textC:  textC,
+          textC: textC,
         ),
       ),
     );
@@ -444,10 +455,10 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
 
   Widget _buildContentRow({required Color accent, required Color textC}) {
     final labelVisible = _stage != _Stage.entering;
-    final showWaveBtn  = _stage == _Stage.idle || _stage == _Stage.shaking;
+    final showWaveBtn = _stage == _Stage.idle || _stage == _Stage.shaking;
 
     return AnimatedOpacity(
-      opacity:  labelVisible ? 1.0 : 0.0,
+      opacity: labelVisible ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 220),
       child: SizedBox(
         height: _pillH,
@@ -458,27 +469,27 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 72),
               child: AnimatedSwitcher(
-                duration:       const Duration(milliseconds: 260),
-                switchInCurve:  Curves.easeOutCubic,
+                duration: const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
                 transitionBuilder: (child, anim) => FadeTransition(
                   opacity: anim,
                   child: SlideTransition(
                     position: Tween<Offset>(
                       begin: const Offset(0, 0.1),
-                      end:   Offset.zero,
+                      end: Offset.zero,
                     ).animate(anim),
                     child: child,
                   ),
                 ),
                 child: _LabelText(
-                  key:           ValueKey(_isSuccess ? 'success' : widget.pillState),
-                  title:         _titleText,
-                  subtitle:      _subtitleText,
-                  titleColor:    textC,
+                  key: ValueKey(_isSuccess ? 'success' : widget.pillState),
+                  title: _titleText,
+                  subtitle: _subtitleText,
+                  titleColor: textC,
                   subtitleColor: textC.withValues(alpha: 0.55),
-                  iconColor:     textC.withValues(alpha: 0.32),
-                  birthDate:     _isSuccess ? null : widget.birthDate,
+                  iconColor: textC.withValues(alpha: 0.32),
+                  birthDate: _isSuccess ? null : widget.birthDate,
                 ),
               ),
             ),
@@ -489,10 +500,10 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
               child: GestureDetector(
                 onTap: widget.onTap,
                 child: Container(
-                  width:  _avatarD,
+                  width: _avatarD,
                   height: _avatarD,
                   decoration: BoxDecoration(
-                    shape:  BoxShape.circle,
+                    shape: BoxShape.circle,
                     border: Border.all(
                       color: accent.withValues(alpha: 0.5),
                       width: 1.5,
@@ -504,7 +515,8 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
                         color: accent.withValues(alpha: 0.1),
-                        child: Icon(Icons.person_rounded, color: accent, size: 20),
+                        child:
+                            Icon(Icons.person_rounded, color: accent, size: 20),
                       ),
                     ),
                   ),
@@ -517,11 +529,11 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
               Positioned(
                 right: 10,
                 child: _CircleBtn(
-                  icon:     LucideIcons.hand,
-                  color:    accent,
-                  size:     38,
+                  icon: LucideIcons.hand,
+                  color: accent,
+                  size: 38,
                   iconSize: 19,
-                  onTap:    _handleWave,
+                  onTap: _handleWave,
                 ),
               ),
           ],
@@ -534,11 +546,11 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
 // ─── Border painter ───────────────────────────────────────────────────────────
 
 class _BorderPainter extends CustomPainter {
-  final double       rainbowProgress;
-  final bool         showRainbow;
-  final double       radius;
-  final Color        solidColor;
-  final List<Color>  rainbowColors;
+  final double rainbowProgress;
+  final bool showRainbow;
+  final double radius;
+  final Color solidColor;
+  final List<Color> rainbowColors;
 
   const _BorderPainter({
     required this.rainbowProgress,
@@ -551,18 +563,20 @@ class _BorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final strokeW = showRainbow ? 2.5 : 1.2;
-    final inset   = strokeW / 2;
-    final rect    = Rect.fromLTWH(inset, inset, size.width - strokeW, size.height - strokeW);
-    final rrect   = RRect.fromRectAndRadius(rect, Radius.circular(radius - inset));
+    final inset = strokeW / 2;
+    final rect = Rect.fromLTWH(
+        inset, inset, size.width - strokeW, size.height - strokeW);
+    final rrect =
+        RRect.fromRectAndRadius(rect, Radius.circular(radius - inset));
 
     final paint = Paint()
-      ..style       = PaintingStyle.stroke
+      ..style = PaintingStyle.stroke
       ..strokeWidth = strokeW;
 
     if (showRainbow) {
       paint.shader = SweepGradient(
         transform: GradientRotation(rainbowProgress * math.pi * 2),
-        colors:    rainbowColors,
+        colors: rainbowColors,
       ).createShader(rect);
     } else {
       paint.color = solidColor;
@@ -574,18 +588,18 @@ class _BorderPainter extends CustomPainter {
   @override
   bool shouldRepaint(_BorderPainter old) =>
       old.rainbowProgress != rainbowProgress ||
-      old.showRainbow     != showRainbow      ||
-      old.solidColor      != solidColor;
+      old.showRainbow != showRainbow ||
+      old.solidColor != solidColor;
 }
 
 // ─── Sub-widgets ──────────────────────────────────────────────────────────────
 
 class _LabelText extends StatelessWidget {
-  final String    title;
-  final String?   subtitle;
-  final Color     titleColor;
-  final Color     subtitleColor;
-  final Color     iconColor;
+  final String title;
+  final String? subtitle;
+  final Color titleColor;
+  final Color subtitleColor;
+  final Color iconColor;
   final DateTime? birthDate;
 
   const _LabelText({
@@ -601,24 +615,24 @@ class _LabelText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisSize:       MainAxisSize.min,
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
-          mainAxisSize:       MainAxisSize.min,
-          mainAxisAlignment:  MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Flexible(
               child: Text(
                 title,
-                maxLines:  1,
-                overflow:  TextOverflow.ellipsis,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
-                  color:         titleColor,
-                  fontSize:      15.0,
-                  fontWeight:    FontWeight.w700,
-                  height:        1.2,
+                  color: titleColor,
+                  fontSize: 15.0,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
                   letterSpacing: -0.3,
                 ),
               ),
@@ -627,7 +641,7 @@ class _LabelText extends StatelessWidget {
               const SizedBox(width: 4),
               Icon(
                 ZodiacUtils.getZodiacIcon(ZodiacUtils.getZodiacSign(birthDate)),
-                size:  13,
+                size: 13,
                 color: iconColor,
               ),
             ],
@@ -637,14 +651,14 @@ class _LabelText extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             subtitle!,
-            maxLines:  1,
-            overflow:  TextOverflow.ellipsis,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              color:      subtitleColor,
-              fontSize:   11.5,
+              color: subtitleColor,
+              fontSize: 11.5,
               fontWeight: FontWeight.w400,
-              height:     1.2,
+              height: 1.2,
             ),
           ),
         ],
@@ -654,10 +668,10 @@ class _LabelText extends StatelessWidget {
 }
 
 class _CircleBtn extends StatelessWidget {
-  final IconData     icon;
-  final Color        color;
-  final double       size;
-  final double       iconSize;
+  final IconData icon;
+  final Color color;
+  final double size;
+  final double iconSize;
   final VoidCallback onTap;
 
   const _CircleBtn({
@@ -673,11 +687,11 @@ class _CircleBtn extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width:  size,
+        width: size,
         height: size,
         decoration: BoxDecoration(
-          color:  color.withValues(alpha: 0.12),
-          shape:  BoxShape.circle,
+          color: color.withValues(alpha: 0.12),
+          shape: BoxShape.circle,
           border: Border.all(color: color.withValues(alpha: 0.38), width: 1.1),
         ),
         child: Icon(icon, size: iconSize, color: color),

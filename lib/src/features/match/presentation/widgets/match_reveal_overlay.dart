@@ -34,7 +34,6 @@ class MatchRevealOverlay extends StatefulWidget {
 
 class _MatchRevealOverlayState extends State<MatchRevealOverlay>
     with TickerProviderStateMixin {
-
   // ── Controllers ─────────────────────────────────────────────────────────
 
   late final AnimationController _bgCtrl;
@@ -73,7 +72,7 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
 
   // Photo diameter inside the ring (must fit within ring radius − stroke)
   static const double _photoDiameter = 164.0;
-  static const double _ringSize      = 196.0;
+  static const double _ringSize = 196.0;
 
   // ─── Init ─────────────────────────────────────────────────────────────────
 
@@ -81,35 +80,40 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
   void initState() {
     super.initState();
 
-    _bgCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _bgCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
     _bgFade = CurvedAnimation(parent: _bgCtrl, curve: Curves.easeIn);
 
     // Ring spin: 2.5 rotations with strong deceleration
-    _spinCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
+    _spinCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1400));
     _spinAngle = Tween<double>(begin: 0, end: 2.5 * 2 * math.pi)
         .animate(CurvedAnimation(parent: _spinCtrl, curve: Curves.easeOut));
 
     // Ring scale-pulse when spin settles
-    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
+    _pulseCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 420));
     _ringScale = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.20), weight: 40),
       TweenSequenceItem(tween: Tween(begin: 1.20, end: 0.95), weight: 30),
-      TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.0),  weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.0), weight: 30),
     ]).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
 
     // Text spring-in (above the ring)
-    _textCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _textCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 700));
     _textScale = Tween<double>(begin: 0.35, end: 1.0)
         .animate(CurvedAnimation(parent: _textCtrl, curve: Curves.elasticOut));
-    _textOpacity = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(CurvedAnimation(
-          parent: _textCtrl,
-          curve: const Interval(0.0, 0.30, curve: Curves.easeIn),
-        ));
+    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+      parent: _textCtrl,
+      curve: const Interval(0.0, 0.30, curve: Curves.easeIn),
+    ));
 
-    _confettiCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 2600));
+    _confettiCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 2600));
 
-    _exitCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 480));
+    _exitCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 480));
     _exitFade = Tween<double>(begin: 1.0, end: 0.0)
         .animate(CurvedAnimation(parent: _exitCtrl, curve: Curves.easeIn));
 
@@ -181,11 +185,17 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
       onTap: _startExit,
       child: AnimatedBuilder(
         animation: Listenable.merge([
-          _bgCtrl, _spinCtrl, _pulseCtrl, _textCtrl, _confettiCtrl, _exitCtrl,
+          _bgCtrl,
+          _spinCtrl,
+          _pulseCtrl,
+          _textCtrl,
+          _confettiCtrl,
+          _exitCtrl,
         ]),
         builder: (_, __) {
           final exitOpacity = (_exitCtrl.isAnimating || _exitCtrl.isCompleted)
-              ? _exitFade.value : 1.0;
+              ? _exitFade.value
+              : 1.0;
 
           return Opacity(
             opacity: exitOpacity.clamp(0.0, 1.0),
@@ -212,7 +222,7 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
                   size: size,
                   painter: _ConfettiPainter(
                     particles: _particles,
-                    progress:  _confettiCtrl.value,
+                    progress: _confettiCtrl.value,
                   ),
                 ),
               ],
@@ -259,7 +269,7 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
           blendMode: BlendMode.srcIn,
           shaderCallback: (bounds) => const LinearGradient(
             begin: Alignment.topLeft,
-            end:   Alignment.bottomRight,
+            end: Alignment.bottomRight,
             colors: [
               Color(0xFFFFD0DF), // soft petal
               Color(0xFFF4436C), // brand rose
@@ -271,11 +281,11 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
             "IT'S A MATCH",
             textAlign: TextAlign.center,
             style: GoogleFonts.playfairDisplay(
-              fontSize:      42,
-              fontWeight:    FontWeight.w800,
-              color:         Colors.white, // overridden by ShaderMask
+              fontSize: 42,
+              fontWeight: FontWeight.w800,
+              color: Colors.white, // overridden by ShaderMask
               letterSpacing: 3.0,
-              height:        1.1,
+              height: 1.1,
               shadows: const [
                 Shadow(color: Color(0xCCF4436C), blurRadius: 40),
                 Shadow(color: Color(0x88FF8FAB), blurRadius: 80),
@@ -296,22 +306,23 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
     }
 
     final scale = (_pulseCtrl.isAnimating || _pulseCtrl.isCompleted)
-        ? _ringScale.value : 1.0;
+        ? _ringScale.value
+        : 1.0;
 
-    final hasPhoto = widget.matchImageUrl != null &&
-        widget.matchImageUrl!.isNotEmpty;
+    final hasPhoto =
+        widget.matchImageUrl != null && widget.matchImageUrl!.isNotEmpty;
 
     return Transform.scale(
       scale: scale,
       child: SizedBox(
-        width:  _ringSize,
+        width: _ringSize,
         height: _ringSize,
         child: Stack(
           alignment: Alignment.center,
           children: [
             // ── Match photo (static — doesn't spin) ──────────────────
             Container(
-              width:  _photoDiameter,
+              width: _photoDiameter,
               height: _photoDiameter,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -339,7 +350,7 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
                 size: const Size(_ringSize, _ringSize),
                 painter: _RingPainter(
                   progress: _spinCtrl.value,
-                  colors:   _ringColors,
+                  colors: _ringColors,
                 ),
               ),
             ),
@@ -364,8 +375,8 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _RingPainter extends CustomPainter {
-  final double       progress;
-  final List<Color>  colors;
+  final double progress;
+  final List<Color> colors;
 
   const _RingPainter({required this.progress, required this.colors});
 
@@ -373,28 +384,29 @@ class _RingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
     final radius = size.shortestSide / 2 - 8;
-    final rect   = Rect.fromCircle(center: center, radius: radius);
+    final rect = Rect.fromCircle(center: center, radius: radius);
 
     // Outer glow
     final glowPaint = Paint()
-      ..style       = PaintingStyle.stroke
+      ..style = PaintingStyle.stroke
       ..strokeWidth = 22
-      ..color       = const Color(0xFFF4436C).withValues(alpha: 0.14 * progress.clamp(0.0, 1.0))
-      ..maskFilter  = const MaskFilter.blur(BlurStyle.normal, 16);
+      ..color = const Color(0xFFF4436C)
+          .withValues(alpha: 0.14 * progress.clamp(0.0, 1.0))
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
     canvas.drawCircle(center, radius, glowPaint);
 
     // Gradient arc — grows from 0 → full circle at the start of the spin
-    final sweepAngle = (math.pi * 2 * math.min(1.0, progress * 3.0))
-        .clamp(0.001, math.pi * 2);
+    final sweepAngle =
+        (math.pi * 2 * math.min(1.0, progress * 3.0)).clamp(0.001, math.pi * 2);
 
     final arcPaint = Paint()
-      ..style       = PaintingStyle.stroke
+      ..style = PaintingStyle.stroke
       ..strokeWidth = 4.0
-      ..strokeCap   = StrokeCap.round
-      ..shader      = SweepGradient(
+      ..strokeCap = StrokeCap.round
+      ..shader = SweepGradient(
         startAngle: -math.pi / 2,
-        endAngle:   -math.pi / 2 + math.pi * 2,
-        colors:     colors,
+        endAngle: -math.pi / 2 + math.pi * 2,
+        colors: colors,
       ).createShader(rect);
 
     canvas.drawArc(rect, -math.pi / 2, sweepAngle, false, arcPaint);
@@ -402,7 +414,8 @@ class _RingPainter extends CustomPainter {
     // Sparkle dots at 8 evenly spaced positions
     final dotPaint = Paint()
       ..style = PaintingStyle.fill
-      ..color = Colors.white.withValues(alpha: (0.88 * progress).clamp(0.0, 0.88));
+      ..color =
+          Colors.white.withValues(alpha: (0.88 * progress).clamp(0.0, 0.88));
 
     for (int i = 0; i < 8; i++) {
       final fraction = i / 8.0;
@@ -410,7 +423,7 @@ class _RingPainter extends CustomPainter {
       final angle = -math.pi / 2 + fraction * math.pi * 2;
       canvas.drawCircle(
         Offset(center.dx + radius * math.cos(angle),
-               center.dy + radius * math.sin(angle)),
+            center.dy + radius * math.sin(angle)),
         2.6,
         dotPaint,
       );
@@ -431,20 +444,20 @@ class _Particle {
   final double vy;
   final double gravity;
   final double delay;
-  final Color  color;
+  final Color color;
   final double size;
   final double rotation;
   final double rotSpeed;
-  final bool   isCircle;
+  final bool isCircle;
 
   _Particle(math.Random rng)
-      : startX   = rng.nextDouble(),
-        vx       = (rng.nextDouble() - 0.5) * 0.55,
-        vy       = 0.90 + rng.nextDouble() * 1.30,
-        gravity  = 0.55 + rng.nextDouble() * 0.90,
-        delay    = rng.nextDouble() * 0.22,
-        color    = _colors[rng.nextInt(_colors.length)],
-        size     = 5.0 + rng.nextDouble() * 9.0,
+      : startX = rng.nextDouble(),
+        vx = (rng.nextDouble() - 0.5) * 0.55,
+        vy = 0.90 + rng.nextDouble() * 1.30,
+        gravity = 0.55 + rng.nextDouble() * 0.90,
+        delay = rng.nextDouble() * 0.22,
+        color = _colors[rng.nextInt(_colors.length)],
+        size = 5.0 + rng.nextDouble() * 9.0,
         rotation = rng.nextDouble() * math.pi * 2,
         rotSpeed = (rng.nextDouble() - 0.5) * 10,
         isCircle = rng.nextBool();
@@ -463,7 +476,7 @@ class _Particle {
 
 class _ConfettiPainter extends CustomPainter {
   final List<_Particle> particles;
-  final double          progress;
+  final double progress;
 
   const _ConfettiPainter({required this.particles, required this.progress});
 
@@ -483,7 +496,7 @@ class _ConfettiPainter extends CustomPainter {
 
       if (cy > size.height + p.size || cy < -p.size * 2) continue;
 
-      final fadeIn  = (t / 0.08).clamp(0.0, 1.0);
+      final fadeIn = (t / 0.08).clamp(0.0, 1.0);
       final fadeOut = progress < 0.85
           ? 1.0
           : (1.0 - (progress - 0.85) / 0.15).clamp(0.0, 1.0);
@@ -502,7 +515,7 @@ class _ConfettiPainter extends CustomPainter {
         canvas.drawRect(
           Rect.fromCenter(
             center: Offset.zero,
-            width:  p.size,
+            width: p.size,
             height: p.size * 0.44,
           ),
           paint,

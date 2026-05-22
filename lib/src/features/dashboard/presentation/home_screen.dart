@@ -565,13 +565,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 : (details) {
                     final velocity = details.primaryVelocity ?? 0;
                     if (velocity < -300) {
-                      final next = (safeNavIndex + 1).clamp(0, screens.length - 1);
+                      final next =
+                          (safeNavIndex + 1).clamp(0, screens.length - 1);
                       if (next != safeNavIndex) {
                         HapticFeedback.selectionClick();
                         ref.read(navIndexProvider.notifier).state = next;
                       }
                     } else if (velocity > 300) {
-                      final prev = (safeNavIndex - 1).clamp(0, screens.length - 1);
+                      final prev =
+                          (safeNavIndex - 1).clamp(0, screens.length - 1);
                       if (prev != safeNavIndex) {
                         HapticFeedback.selectionClick();
                         ref.read(navIndexProvider.notifier).state = prev;
@@ -579,41 +581,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     }
                   },
             child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              if (!hideNavBarPref) {
-                // If preference is off, make sure nav bar is visible
-                if (!ref.read(isNavBarVisibleProvider)) {
-                  ref.read(isNavBarVisibleProvider.notifier).state = true;
-                }
-                return false;
-              }
-
-              if (notification is ScrollUpdateNotification) {
-                if (notification.scrollDelta != null) {
-                  if (notification.scrollDelta! > 5 && isNavBarVisible) {
-                    ref.read(isNavBarVisibleProvider.notifier).state = false;
-                  } else if (notification.scrollDelta! < -5 &&
-                      !isNavBarVisible) {
+              onNotification: (notification) {
+                if (!hideNavBarPref) {
+                  // If preference is off, make sure nav bar is visible
+                  if (!ref.read(isNavBarVisibleProvider)) {
                     ref.read(isNavBarVisibleProvider.notifier).state = true;
                   }
+                  return false;
                 }
-              }
-              return false;
-            },
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: child,
-                );
+
+                if (notification is ScrollUpdateNotification) {
+                  if (notification.scrollDelta != null) {
+                    if (notification.scrollDelta! > 5 && isNavBarVisible) {
+                      ref.read(isNavBarVisibleProvider.notifier).state = false;
+                    } else if (notification.scrollDelta! < -5 &&
+                        !isNavBarVisible) {
+                      ref.read(isNavBarVisibleProvider.notifier).state = true;
+                    }
+                  }
+                }
+                return false;
               },
-              child: KeyedSubtree(
-                key: ValueKey<int>(safeNavIndex),
-                child: screens[safeNavIndex],
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  );
+                },
+                child: KeyedSubtree(
+                  key: ValueKey<int>(safeNavIndex),
+                  child: screens[safeNavIndex],
+                ),
               ),
             ),
-          ),
           ),
         ),
 
@@ -658,7 +660,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // Premium: Map (index 1) -> Step 2, People (index 2) -> Step 3, Settings (index 3) -> Step 4
                 // Free: People (index 1) -> Step 3, Settings (index 2) -> Step 4
                 final int? step = isPremium
-                    ? (index == 1 ? 2 : (index == 2 ? 3 : (index == 3 ? 4 : null)))
+                    ? (index == 1
+                        ? 2
+                        : (index == 2 ? 3 : (index == 3 ? 4 : null)))
                     : (index == 1 ? 3 : (index == 2 ? 4 : null));
 
                 if (step != null) {
@@ -868,6 +872,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // Radar View (Conditional)
         canAccessRadar
             ? Stack(
+                fit: StackFit.expand,
                 children: [
                   Positioned.fill(
                     child: RadarAnimation(
@@ -1621,7 +1626,8 @@ class _TutorialTargetState extends ConsumerState<_TutorialTarget> {
       final box = context.findRenderObject() as RenderBox?;
       if (box == null || !box.hasSize) return;
 
-      final homeStackBox = HomeScreen.homeStackKey.currentContext?.findRenderObject() as RenderBox?;
+      final homeStackBox = HomeScreen.homeStackKey.currentContext
+          ?.findRenderObject() as RenderBox?;
       final rect = homeStackBox != null
           ? (box.localToGlobal(Offset.zero, ancestor: homeStackBox) & box.size)
           : (box.localToGlobal(Offset.zero) & box.size);

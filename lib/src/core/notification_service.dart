@@ -223,16 +223,18 @@ class NotificationService {
       final isPillEvent = type == TrembleNotificationType.incomingWave ||
           type == TrembleNotificationType.crossingPaths;
       if (isPillEvent && onForegroundWave != null) {
-        final senderUid  = (message.data['senderId'] ?? message.data['fromUid'] ?? '') as String;
+        final senderUid = (message.data['senderId'] ??
+            message.data['fromUid'] ??
+            '') as String;
         final senderName = (message.data['senderName'] ?? '') as String;
         final senderPhoto = (message.data['senderPhotoUrl'] ?? '') as String;
-        final senderAge  = int.tryParse(message.data['senderAge'] ?? '') ?? 0;
+        final senderAge = int.tryParse(message.data['senderAge'] ?? '') ?? 0;
         if (senderUid.isNotEmpty && senderName.isNotEmpty) {
           onForegroundWave(
-            name:           senderName,
-            age:            senderAge,
-            imageUrl:       senderPhoto,
-            targetUid:      senderUid,
+            name: senderName,
+            age: senderAge,
+            imageUrl: senderPhoto,
+            targetUid: senderUid,
             isIncomingWave: type == TrembleNotificationType.incomingWave,
           );
           return; // pill replaces the OS banner for these event types

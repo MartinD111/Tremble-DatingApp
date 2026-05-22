@@ -533,8 +533,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor =
-        isDark ? const Color(0xFF1A1A18) : const Color(0xFFF2F2F7);
+    final bgColor = isDark ? const Color(0xFF1A1A18) : const Color(0xFFF2F2F7);
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtextColor = isDark ? Colors.white70 : Colors.black54;
     final glowOpacity = isDark ? 0.08 : 0.05;
@@ -565,146 +564,146 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
             isDark ? Brightness.light : Brightness.dark,
       ),
       child: Scaffold(
-      backgroundColor: bgColor,
-      body: Stack(
-        children: [
-          // Decorative glow effects
-          Positioned(
-            top: -100,
-            right: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: genderAccent.withValues(alpha: glowOpacity),
-                    blurRadius: 100,
-                    spreadRadius: 50,
-                  ),
-                ],
+        backgroundColor: bgColor,
+        body: Stack(
+          children: [
+            // Decorative glow effects
+            Positioned(
+              top: -100,
+              right: -50,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: genderAccent.withValues(alpha: glowOpacity),
+                      blurRadius: 100,
+                      spreadRadius: 50,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: 100,
-            left: -50,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: genderAccent.withValues(alpha: glowOpacity2),
-                    blurRadius: 80,
-                    spreadRadius: 40,
-                  ),
-                ],
+            Positioned(
+              bottom: 100,
+              left: -50,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: genderAccent.withValues(alpha: glowOpacity2),
+                      blurRadius: 80,
+                      spreadRadius: 40,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Row(
-                    children: [
-                      TrembleBackButton(onPressed: () => context.pop()),
-                      const Spacer(),
-                      Text(
-                        _t('premium_title', lang),
-                        style: screenTitleStyle,
-                      ),
-                      const Spacer(),
-                      const SizedBox(width: 48),
-                    ],
-                  ),
-                ),
-
-                // Subtitle
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: Text(
-                    _t('premium_subtitle', lang),
-                    textAlign: TextAlign.center,
-                    style: screenSubtitleStyle,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Carousel
-                Expanded(
-                  child: _PremiumCarousel(
-                    pageController: pageController,
-                    cardBuilder: (card, language) =>
-                        _buildCreditCard(card, language),
-                    lang: lang,
-                    accentColor: genderAccent,
-                    isDark: isDark,
-                    onPageChanged: (index) =>
-                        setState(() => _selectedIndex = index),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // CTA
-                Padding(
-                  padding:
-                      const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-                  child: _buildCTAButton(
-                    _selectedIndex,
-                    premiumPlanCards[_selectedIndex],
-                    user,
-                    genderAccent,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Loading overlay
-          if (_isLoading)
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
                       children: [
-                        CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(genderAccent),
-                        ),
-                        const SizedBox(height: 20),
+                        TrembleBackButton(onPressed: () => context.pop()),
+                        const Spacer(),
                         Text(
-                          _t('loading', lang),
-                          style: GoogleFonts.instrumentSans(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          _t('premium_title', lang),
+                          style: screenTitleStyle,
                         ),
+                        const Spacer(),
+                        const SizedBox(width: 48),
                       ],
+                    ),
+                  ),
+
+                  // Subtitle
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Text(
+                      _t('premium_subtitle', lang),
+                      textAlign: TextAlign.center,
+                      style: screenSubtitleStyle,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Carousel
+                  Expanded(
+                    child: _PremiumCarousel(
+                      pageController: pageController,
+                      cardBuilder: (card, language) =>
+                          _buildCreditCard(card, language),
+                      lang: lang,
+                      accentColor: genderAccent,
+                      isDark: isDark,
+                      onPageChanged: (index) =>
+                          setState(() => _selectedIndex = index),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // CTA
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                    child: _buildCTAButton(
+                      _selectedIndex,
+                      premiumPlanCards[_selectedIndex],
+                      user,
+                      genderAccent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Loading overlay
+            if (_isLoading)
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(genderAccent),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            _t('loading', lang),
+                            style: GoogleFonts.instrumentSans(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -757,7 +756,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                 ),
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -781,16 +779,12 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                       Icon(data.icon, color: data.accent, size: 24),
                     ],
                   ),
-
                   const Spacer(flex: 2),
-
                   Text(
                     _t(data.titleKey, lang),
                     style: _cardTitleStyle,
                   ),
-
                   const SizedBox(height: 8),
-
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
@@ -808,7 +802,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                       ],
                     ],
                   ),
-
                   if (data.perMonthPrice != null && data.billedAs != null) ...[
                     const SizedBox(height: 4),
                     Text(
@@ -816,7 +809,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                       style: _billedAsStyle,
                     ),
                   ],
-
                   if (data.windowKey.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
@@ -828,7 +820,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                       ),
                     ),
                   ],
-
                   if (data.savingsBadge != null) ...[
                     const SizedBox(height: 10),
                     Container(
@@ -846,19 +837,15 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                       ),
                     ),
                   ],
-
                   const SizedBox(height: 16),
                   Divider(
                       color: Colors.white.withValues(alpha: 0.1), height: 1),
                   const SizedBox(height: 16),
-
                   Text(
                     _t('features', lang).toUpperCase(),
                     style: _featureTitleStyle,
                   ),
-
                   const SizedBox(height: 10),
-
                   Expanded(
                     flex: 12,
                     child: ListView.separated(
@@ -906,8 +893,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
           onTap: () => _showDowngradeConfirmation(user),
           child: Container(
             width: double.infinity,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(100),
               color: const Color(0xFF2A2A2E),

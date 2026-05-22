@@ -19,7 +19,8 @@ class TrembleApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    ref.watch(_themeKeyProvider); // rebuilds theme when gender/colour pref changes
+    ref.watch(
+        _themeKeyProvider); // rebuilds theme when gender/colour pref changes
     final router = ref.watch(routerProvider);
     final user = ref.read(authStateProvider);
 
