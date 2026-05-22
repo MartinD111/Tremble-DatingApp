@@ -1619,27 +1619,41 @@ class _TutorialTarget extends ConsumerStatefulWidget {
 }
 
 class _TutorialTargetState extends ConsumerState<_TutorialTarget> {
+  Rect? _lastReported;
+
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final box = context.findRenderObject() as RenderBox?;
-      if (box == null || !box.hasSize) return;
-
-      final homeStackBox = HomeScreen.homeStackKey.currentContext
-          ?.findRenderObject() as RenderBox?;
-      final rect = homeStackBox != null
-          ? (box.localToGlobal(Offset.zero, ancestor: homeStackBox) & box.size)
-          : (box.localToGlobal(Offset.zero) & box.size);
-
-      final current = ref.read(tutorialTargetRectsProvider);
-      if (current[widget.step] == rect) return;
-      ref.read(tutorialTargetRectsProvider.notifier).state = {
-        ...current,
-        widget.step: rect,
-      };
-    });
+    final isActive = ref.watch(tutorialProvider).isActive;
+    if (isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _maybeReport());
+    }
     return widget.child;
+  }
+
+  void _maybeReport() {
+    if (!mounted) return;
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize || !box.attached) return;
+
+    final homeStackBox = HomeScreen.homeStackKey.currentContext
+        ?.findRenderObject() as RenderBox?;
+    if (homeStackBox == null ||
+        !homeStackBox.hasSize ||
+        !homeStackBox.attached) {
+      return;
+    }
+
+    final rect =
+        box.localToGlobal(Offset.zero, ancestor: homeStackBox) & box.size;
+    if (rect == _lastReported) return;
+    _lastReported = rect;
+
+    final current = ref.read(tutorialTargetRectsProvider);
+    if (current[widget.step] == rect) return;
+    ref.read(tutorialTargetRectsProvider.notifier).state = {
+      ...current,
+      widget.step: rect,
+    };
   }
 }
 
