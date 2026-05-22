@@ -80,10 +80,10 @@ jobs:
       - name: Build APK
         run: |
           FLAVOR="${{ github.event.inputs.environment == 'production' && 'prod' || 'dev' }}"
-          flutter build apk --release --dart-define=FLAVOR=$FLAVOR
+          flutter build apk --release --flavor $FLAVOR --dart-define=FLAVOR=$FLAVOR
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: tremble-${{ github.event.inputs.environment }}-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-${{ github.event.inputs.environment == 'production' && 'prod' || 'dev' }}-release.apk

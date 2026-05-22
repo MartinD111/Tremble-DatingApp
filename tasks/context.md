@@ -1,3 +1,27 @@
+## Session State — 2026-05-23 00:45 CEST
+- Active Task: CI/CD release build cleanup and main sync
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `.github/workflows/deploy.yml`
+    - `android/build.gradle.kts`
+    - `android/settings.gradle.kts`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format --set-exit-if-changed .` SUCCESS. `flutter analyze --no-fatal-warnings` SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (71/71). `flutter test --coverage` SUCCESS (71/71). `flutter build apk --flavor dev --dart-define=FLAVOR=dev` SUCCESS. Backend lint/build/tests SUCCESS.
+
+## Session Handoff
+- Completed:
+    - Fixed Android release dev APK build failure by upgrading the Google Services Gradle plugin declarations from `4.3.15` to `4.4.1`, satisfying Crashlytics Gradle plugin 3 requirements.
+    - Fixed manual deploy APK build to pass the required Flutter flavor and upload the correct flavored release artifact path.
+    - Verified local equivalents of PR and push CI gates before syncing.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Watch GitHub Actions after push and confirm remote CI completes.
+
 ## Session State — 2026-05-22 16:25 CEST
 - Active Task: Bottom Nav highlight on Premium Map, Panning lock & Copywriting updates
 - Environment: Dev mobile flavor on `main`
