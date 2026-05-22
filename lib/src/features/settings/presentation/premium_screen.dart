@@ -1101,39 +1101,36 @@ class _PremiumCarouselCard extends StatelessWidget {
     final double translationX;
     final double scale;
     final double rotY;
-    final double blurSigma;
     final double opacity;
 
     if (offset >= 0) {
       translationX = -offset * (screenWidth * 0.44);
       scale = 1.0 - (offset * 0.12);
       rotY = -offset * 0.24;
-      blurSigma = offset * 4.5;
       opacity = (1.0 - (offset * 0.4)).clamp(0.0, 1.0);
     } else {
       translationX = offset * (screenWidth * 0.12);
       scale = 1.0 - (offset.abs() * 0.08);
       rotY = -offset * 0.16;
-      blurSigma = offset.abs() * 2.0;
       opacity = (1.0 - (offset.abs() * 0.3)).clamp(0.0, 1.0);
     }
 
-    Widget cardWidget = Transform(
-      transform: Matrix4.identity()
-        ..setEntry(3, 2, 0.001)
-        ..translateByDouble(
-          translationX,
-          0.0,
-          -offset.abs() * 100.0,
-          1.0,
-        )
-        ..scaleByDouble(scale, scale, scale, 1.0)
-        ..rotateY(rotY),
-      alignment: Alignment.center,
-      child: SizedBox(
-        width: cardWidth,
-        height: cardHeight,
-        child: RepaintBoundary(
+    return RepaintBoundary(
+      child: Transform(
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, 0.001)
+          ..translateByDouble(
+            translationX,
+            0.0,
+            -offset.abs() * 100.0,
+            1.0,
+          )
+          ..scaleByDouble(scale, scale, scale, 1.0)
+          ..rotateY(rotY),
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: cardWidth,
+          height: cardHeight,
           child: Opacity(
             opacity: opacity,
             alwaysIncludeSemantics: false,
@@ -1145,18 +1142,6 @@ class _PremiumCarouselCard extends StatelessWidget {
         ),
       ),
     );
-
-    if (blurSigma > 0.1) {
-      cardWidget = ImageFiltered(
-        imageFilter: ImageFilter.blur(
-          sigmaX: blurSigma,
-          sigmaY: blurSigma,
-        ),
-        child: cardWidget,
-      );
-    }
-
-    return cardWidget;
   }
 }
 
@@ -1181,13 +1166,15 @@ class _PremiumCarouselDots extends StatelessWidget {
       children: List.generate(premiumPlanCards.length, (i) {
         final distance = (i - currentPage).abs();
         final factor = (1.0 - distance).clamp(0.0, 1.0);
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: 8 + (factor * 12),
-          height: 8,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-            color: Color.lerp(inactiveColor, accentColor, factor),
+        return RepaintBoundary(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: 8 + (factor * 12),
+            height: 8,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: Color.lerp(inactiveColor, accentColor, factor),
+            ),
           ),
         );
       }),
