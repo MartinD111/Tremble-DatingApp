@@ -11,7 +11,7 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
-import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
+import { requireAuth, requireAdmin, assertNotBanned } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { assertValidDocumentId } from "../../middleware/validate";
 import { sendMatchNotificationEmail } from "../email/email.functions";
@@ -361,7 +361,7 @@ export const getMatches = onCall(
 export const migrateMatchTypes = onCall(
     { maxInstances: 10, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
-        requireAuth(request);
+        const uid = requireAdmin(request);
 
         const matchesSnapshot = await db.collection("matches").get();
         let updatedCount = 0;
@@ -391,7 +391,7 @@ export const migrateMatchTypes = onCall(
             await batch.commit();
         }
 
-        console.log(`[MIGRATION] migrateMatchTypes: updated ${updatedCount} matches`);
+        console.log(`[MIGRATION] migrateMatchTypes: admin ${uid.substring(0, 8)}... updated ${updatedCount} matches`);
         return { success: true, updatedCount };
     }
 );

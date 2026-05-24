@@ -1,3 +1,23 @@
+## Session State — 2026-05-25 00:25 CEST
+- Active Task: Gate `migrateMatchTypes` callable behind admin auth
+- Environment: Prod backend deploy (`am---dating-app`), functions only
+- Modified Files:
+    - `functions/src/modules/matches/matches.functions.ts`
+- Open Problems:
+    - No migration tracking flag or commit evidence was found proving `migrateMatchTypes` already ran in prod.
+    - `firebase deploy --only functions --project prod --non-interactive` created several functions that were exported in code but apparently not yet present in prod; deploy completed successfully.
+- System Status: `npm run build` SUCCESS. `npm run lint` SUCCESS. `npm test -- --runInBand` SUCCESS (14/14). Functions deploy SUCCESS to `am---dating-app`. Firestore rules were not deployed.
+
+## Session Handoff
+- Completed:
+    - Checked git history, codebase references, and function comments for evidence that `migrateMatchTypes` had already been executed or tracked; no reliable evidence found.
+    - Treated the migration as potentially still needed and added `requireAdmin(request)` at the top of `migrateMatchTypes`.
+    - Deployed functions only to prod with `firebase deploy --only functions --project prod --non-interactive`.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Verify in Firebase Console that expected newly-created prod functions are intentional and remove any stale exports if not needed.
+
 ## Session State — 2026-05-24 23:05 CEST
 - Active Task: Firebase Functions and Firestore security audit implementation
 - Environment: Dev backend audit (`tremble-dev` context), no deploy
