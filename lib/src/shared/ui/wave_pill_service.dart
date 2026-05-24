@@ -102,19 +102,19 @@ class WavePillService {
           child: Material(
             type: MaterialType.transparency,
             child: MatchNotificationPill(
-              name:           data.name,
-              age:            data.age,
-              imageUrl:       data.imageUrl,
-              birthDate:      data.birthDate,
+              name: data.name,
+              age: data.age,
+              imageUrl: data.imageUrl,
+              birthDate: data.birthDate,
               pillState: data.isIncomingWave
                   ? PillState.waveReceived
                   : PillState.waitingForAction,
-              onWave:         () => onWave(data.targetUid),
-              onIgnore:       () => _removeEntry(entry),
+              onWave: () => onWave(data.targetUid),
+              onIgnore: () => _removeEntry(entry),
               // Match reveal handled by activeMatchesStream → MatchRevealScreen.
-              onMatch:        null,
-              onTap:          onTap,
-              showSwipeHint:  showHint,
+              onMatch: null,
+              onTap: onTap,
+              showSwipeHint: showHint,
             ),
           ),
         );

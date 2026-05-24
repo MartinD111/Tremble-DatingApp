@@ -88,14 +88,13 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
   Widget build(BuildContext context) {
     // Detect when the other person waves while the profile card is open.
     // Fires the shake + rainbow animation on the wave button exactly once.
-    final myUid =
-        ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
+    final myUid = ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
     // Dev sim bridge: Firestore stream is absent in dev sim, so watch the
     // sim controller directly and mirror the waveReceived signal here.
     ref.listen(devSimulationControllerProvider, (prev, next) {
       if (_waveAnimTriggered) return;
       final wasReceived = prev?.phase == DevSimPhase.waveReceived;
-      final isReceived  = next.phase  == DevSimPhase.waveReceived;
+      final isReceived = next.phase == DevSimPhase.waveReceived;
       if (!wasReceived && isReceived && next.profile?.id == widget.match.id) {
         setState(() => _waveAnimTriggered = true);
         HapticFeedback.heavyImpact();
@@ -536,7 +535,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
     String waveText = 'Wave';
     bool isSent = false;
     if (iWaved && !theyWaved) {
-      waveText = "${t('sent', lang).substring(0, 1).toUpperCase()}${t('sent', lang).substring(1)}";
+      waveText =
+          "${t('sent', lang).substring(0, 1).toUpperCase()}${t('sent', lang).substring(1)}";
       isSent = true;
     } else if (theyWaved && !iWaved) {
       waveText = 'Wave back';
@@ -1143,8 +1143,12 @@ class _WaveButton extends StatefulWidget {
 class _WaveButtonState extends State<_WaveButton>
     with TickerProviderStateMixin {
   static const _rainbow = [
-    Color(0xFFFF004D), Color(0xFFFF7700), Color(0xFFFFE600),
-    Color(0xFF00E676), Color(0xFF2979FF), Color(0xFFD500F9),
+    Color(0xFFFF004D),
+    Color(0xFFFF7700),
+    Color(0xFFFFE600),
+    Color(0xFF00E676),
+    Color(0xFF2979FF),
+    Color(0xFFD500F9),
     Color(0xFFFF004D),
   ];
 
@@ -1207,7 +1211,10 @@ class _WaveButtonState extends State<_WaveButton>
 
   void _handleTap() {
     if (_sent || widget.onTap == null) return;
-    setState(() { _sent = true; _shakeForSent = true; });
+    setState(() {
+      _sent = true;
+      _shakeForSent = true;
+    });
     _shakeCtrl.forward(from: 0);
     HapticFeedback.lightImpact();
     widget.onTap!();

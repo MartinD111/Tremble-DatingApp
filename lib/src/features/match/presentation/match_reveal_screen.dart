@@ -285,9 +285,8 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
     final noteTy = (1.0 - _easeOut((t - 1.95) / 0.42)) * 6.0;
     // "Tap anywhere to start radar" — last to appear, gentle pulse afterwards
     final hintOp = _easeOut((t - 2.40) / 0.50);
-    final hintPulse = t > 2.90
-        ? 0.55 + 0.45 * (0.5 + 0.5 * math.sin((t - 2.90) * 2.2))
-        : 1.0;
+    final hintPulse =
+        t > 2.90 ? 0.55 + 0.45 * (0.5 + 0.5 * math.sin((t - 2.90) * 2.2)) : 1.0;
 
     // ── Partner data ─────────────────────────────────────────────────────────
     final photoUrl = profile != null && profile.primaryPhotoUrl.isNotEmpty

@@ -409,14 +409,14 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
               children: [
                 GestureDetector(
                   onHorizontalDragUpdate: _onDragUpdate,
-                  onHorizontalDragEnd:    _onDragEnd,
+                  onHorizontalDragEnd: _onDragEnd,
                   onHorizontalDragCancel: _onDragCancel,
                   child: _buildShell(
-                    isDark:  isDark,
-                    accent:  accent,
-                    bg:      bg,
+                    isDark: isDark,
+                    accent: accent,
+                    bg: bg,
                     borderC: borderC,
-                    textC:   textC,
+                    textC: textC,
                   ),
                 ),
                 if (showHint)

@@ -612,104 +612,103 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
               ),
             ),
 
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Row(
-                    children: [
-                      TrembleBackButton(onPressed: () => context.pop()),
-                      const Spacer(),
-                      Text(
-                        _t('premium_title', lang),
-                        style: screenTitleStyle,
-                      ),
-                      const Spacer(),
-                      const SizedBox(width: 48),
-                    ],
-                  ),
-                ),
-
-                // Subtitle
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: Text(
-                    _t('premium_subtitle', lang),
-                    textAlign: TextAlign.center,
-                    style: screenSubtitleStyle,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Carousel
-                Expanded(
-                  child: _PremiumCarousel(
-                    pageController: pageController,
-                    cardBuilder: (card, language) =>
-                        _buildCreditCard(card, language),
-                    lang: lang,
-                    accentColor: genderAccent,
-                    isDark: isDark,
-                    onPageChanged: (index) => setState(
-                      () => _selectedIndex =
-                          index % premiumPlanCards.length,
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Row(
+                      children: [
+                        TrembleBackButton(onPressed: () => context.pop()),
+                        const Spacer(),
+                        Text(
+                          _t('premium_title', lang),
+                          style: screenTitleStyle,
+                        ),
+                        const Spacer(),
+                        const SizedBox(width: 48),
+                      ],
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 24),
-
-                // CTA
-                Padding(
-                  padding:
-                      const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-                  child: _buildCTAButton(
-                    _selectedIndex,
-                    premiumPlanCards[_selectedIndex],
-                    user,
-                    genderAccent,
+                  // Subtitle
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Text(
+                      _t('premium_subtitle', lang),
+                      textAlign: TextAlign.center,
+                      style: screenSubtitleStyle,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
 
-          // Loading overlay
-          if (_isLoading)
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(genderAccent),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          _t('loading', lang),
-                          style: GoogleFonts.instrumentSans(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                  const SizedBox(height: 16),
+
+                  // Carousel
+                  Expanded(
+                    child: _PremiumCarousel(
+                      pageController: pageController,
+                      cardBuilder: (card, language) =>
+                          _buildCreditCard(card, language),
+                      lang: lang,
+                      accentColor: genderAccent,
+                      isDark: isDark,
+                      onPageChanged: (index) => setState(
+                        () => _selectedIndex = index % premiumPlanCards.length,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // CTA
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                    child: _buildCTAButton(
+                      _selectedIndex,
+                      premiumPlanCards[_selectedIndex],
+                      user,
+                      genderAccent,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Loading overlay
+            if (_isLoading)
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(genderAccent),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 20),
+                          Text(
+                            _t('loading', lang),
+                            style: GoogleFonts.instrumentSans(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
