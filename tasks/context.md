@@ -14,8 +14,8 @@
 - Open Problems:
     - `npm audit fix` reduced backend audit findings to 9 moderate vulnerabilities. Remaining npm recommendation is `npm audit fix --force`, which would downgrade `firebase-admin` to `10.3.0` and `firebase-functions` to `4.9.0`; not applied because it is a breaking downgrade path.
     - `verifyGoogleToken` intentionally remains unauthenticated because it is called during login before the user has a Firebase auth token.
-    - Firebase CLI failed before rules validation with `firepit-log.txt`; no deploy was attempted.
-- System Status: `npm run build` SUCCESS. `npm run lint` SUCCESS. `npm test -- --runInBand` SUCCESS (14/14). `npm audit --json` reports 0 critical, 0 high, 9 moderate. Firestore rules rewritten but not deployed.
+    - None blocking deploy; Firebase CLI update check still exits nonzero on `firebase --version` because `/Users/aleksandarbojic/.config` ownership blocks update-check metadata.
+- System Status: `npm run build` SUCCESS. `npm run lint` SUCCESS. `npm test -- --runInBand` SUCCESS (14/14). `npm audit --json` reports 0 critical, 0 high, 9 moderate. `firebase deploy --only firestore:rules --project prod --non-interactive` SUCCESS: rules released to `am---dating-app`.
 
 ## Session Handoff
 - Completed:
@@ -25,11 +25,12 @@
     - Added structured JSON logging to high-priority proximity, wave, match, and Pulse Intercept flows without logging GPS coordinates, profiles, tokens, or emails.
     - Upgraded `firebase-admin` to `13.10.0`, `firebase-functions` to `7.2.5`, then ran `npm audit fix`.
     - Verified TypeScript build, ESLint, and Jest.
+    - Updated Firebase CLI to `15.18.0` and deployed Firestore rules to production project `am---dating-app`.
 - In Progress: None.
 - Blocked:
-    - Firestore rules syntax could not be validated locally because `firebase --version` failed inside firebase-tools before output.
+    - None.
 - Next Action:
-    1. Install/update Firebase CLI and deploy `firestore.rules` to prod explicitly with `--project prod` after confirming firebase-tools runs locally.
+    1. Review remaining 9 moderate npm audit findings; avoid `npm audit fix --force` unless intentionally downgrading Firebase SDK major versions.
 
 ## Session State — 2026-05-23 01:35 CEST
 - Active Task: Premium loading states and outage/error handling overhaul
