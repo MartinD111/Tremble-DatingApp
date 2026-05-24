@@ -55,6 +55,9 @@ class MatchNotificationPill extends StatefulWidget {
   /// Tap on avatar / label — open profile or paywall.
   final VoidCallback? onTap;
 
+  /// Show a "Swipe away to ignore" hint below the pill.
+  final bool showSwipeHint;
+
   const MatchNotificationPill({
     super.key,
     required this.name,
@@ -67,6 +70,7 @@ class MatchNotificationPill extends StatefulWidget {
     required this.onIgnore,
     this.onMatch,
     this.onTap,
+    this.showSwipeHint = false,
   });
 
   @override
@@ -392,21 +396,43 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
         final opacity =
             (_swipeCommitted ? _swipeFade.value : 1.0).clamp(0.0, 1.0);
 
+        final showHint = widget.showSwipeHint &&
+            _stage != _Stage.success &&
+            _stage != _Stage.dismissing;
+
         return Transform.translate(
           offset: Offset(shakeX + swipeX, dy),
           child: Opacity(
             opacity: opacity,
-            child: GestureDetector(
-              onHorizontalDragUpdate: _onDragUpdate,
-              onHorizontalDragEnd: _onDragEnd,
-              onHorizontalDragCancel: _onDragCancel,
-              child: _buildShell(
-                isDark: isDark,
-                accent: accent,
-                bg: bg,
-                borderC: borderC,
-                textC: textC,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onHorizontalDragUpdate: _onDragUpdate,
+                  onHorizontalDragEnd:    _onDragEnd,
+                  onHorizontalDragCancel: _onDragCancel,
+                  child: _buildShell(
+                    isDark:  isDark,
+                    accent:  accent,
+                    bg:      bg,
+                    borderC: borderC,
+                    textC:   textC,
+                  ),
+                ),
+                if (showHint)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      'Swipe away to ignore',
+                      style: GoogleFonts.instrumentSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.45),
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         );
@@ -465,6 +491,16 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
         child: Stack(
           alignment: Alignment.center,
           children: [
+            // ── Full-body tap target — first = lowest z-order, reached only
+            // when the wave button (last child) is NOT in the hit area ─────
+            if (widget.onTap != null)
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: widget.onTap,
+                ),
+              ),
+
             // ── Label — true pill center ──────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 72),

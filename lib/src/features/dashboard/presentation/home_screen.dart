@@ -76,10 +76,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // Prevents duplicate recap prompts for the same run session transition.
   bool _runRecapShown = false;
   bool _tutorialOptInShowing = false;
+  // Snapshot of shouldShowHint taken when the dev-sim pill becomes visible.
+  bool _devSimShowHint = false;
 
   @override
   void initState() {
     super.initState();
+    // Pre-warm the swipe-hint counter so shouldShowHint is accurate on first pill show.
+    WavePillService.preloadHintCount();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       // Register FCM Token on dashboard load
@@ -392,6 +396,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(pingDistanceProvider.notifier).state = null;
         ref.read(pingAngleProvider.notifier).state = null;
       }
+
+      // Snapshot hint state when the dev-sim pill first becomes visible.
+      final wasVisible = prev?.hasPillVisible ?? false;
+      if (!wasVisible && next.hasPillVisible) {
+        final hint = WavePillService.shouldShowHint;
+        if (hint) unawaited(WavePillService.recordPillShown());
+        if (mounted) setState(() => _devSimShowHint = hint);
+      }
     });
 
     // Keep the gym dwell service alive as long as HomeScreen is in the tree.
@@ -702,8 +714,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     final notifier =
                         ref.read(devSimulationControllerProvider.notifier);
                     if (devSim.phase == DevSimPhase.waitingForAction) {
+                      // Outgoing wave: pill stays visible (waveSent), so the
+                      // pill's own onMatch callback fires reliably after its
+                      // shake animation completes. Nothing else to do here.
                       notifier.onUserWave();
                     } else if (devSim.phase == DevSimPhase.waveReceived) {
+                      // Wave-back: navigate FIRST, then transition sim state.
+                      // The pill's onMatch is unreliable on this path — the
+                      // state transition flips devSim.hasPillVisible to false
+                      // on the same frame, unmounting the pill mid-await
+                      // before onMatch ever runs. Driving the navigation here
+                      // guarantees the reveal animation always shows.
+                      final matchUser = ref.read(authStateProvider);
+                      final now = DateTime.now();
+                      final synthesized = wave_match.Match(
+                        id: 'dev-${now.microsecondsSinceEpoch}',
+                        userIds: [
+                          matchUser?.id ?? 'dev-self',
+                          devSim.profile!.id,
+                        ],
+                        createdAt: now,
+                        seenBy: [matchUser?.id ?? 'dev-self'],
+                        status: 'found',
+                        isFound: true,
+                        gestures: {
+                          (matchUser?.id ?? 'dev-self'): true,
+                          devSim.profile!.id: true,
+                        },
+                        expiresAt: now.add(const Duration(minutes: 30)),
+                      );
+                      context.pushNamed('match_reveal', extra: synthesized);
                       notifier.onUserWaveBack();
                     }
                   },
@@ -711,6 +751,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       .read(devSimulationControllerProvider.notifier)
                       .onIgnore(),
                   onMatch: () {
+                    // Only the outgoing-wave path (waitingForAction → tap) is
+                    // routed through here. The wave-back path navigates from
+                    // onWave directly (see above) to sidestep the pill unmount
+                    // race, so reaching this callback while devSim was already
+                    // past waitingForAction means it's stale — bail to avoid
+                    // double-pushing the reveal screen.
+                    if (devSim.phase != DevSimPhase.waitingForAction) return;
                     WavePillService.dismiss();
                     final matchUser = ref.read(authStateProvider);
                     final now = DateTime.now();
@@ -732,9 +779,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     );
                     context.pushNamed('match_reveal', extra: synthesized);
                   },
-                  // Premium → open profile reveal. Free → paywall bottom sheet.
-                  // Source of truth for premium gating is AuthUser.isPremium
-                  // (same provider used by matches_screen and settings).
+                  // Tap on the pill avatar → open the full profile card with
+                  // Wave / Ignore actions. The match reveal animation is NOT
+                  // shown here — it's reserved for the actual mutual-wave
+                  // moment (outgoing wave accepted, or wave-back tapped from
+                  // the pill itself). Premium users see the profile; free
+                  // users see the paywall (existing gate).
                   onTap: () {
                     final tapUser = ref.read(authStateProvider);
                     final tapIsPremium = tapUser?.isPremium == true;
@@ -742,29 +792,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       PremiumPaywallBottomSheet.show(context);
                       return;
                     }
-                    // Synthesize a wave_match.Match from the dev profile so the
-                    // production match_reveal route accepts it without a
-                    // dev-only sibling. id uses ms-since-epoch (good enough
-                    // for an ephemeral dev object — no Firestore write).
-                    final now = DateTime.now();
-                    final synthesized = wave_match.Match(
-                      id: 'dev-${now.microsecondsSinceEpoch}',
-                      userIds: [
-                        tapUser?.id ?? 'dev-self',
-                        devSim.profile!.id,
-                      ],
-                      createdAt: now,
-                      seenBy: [tapUser?.id ?? 'dev-self'],
-                      status: 'found',
-                      isFound: true,
-                      gestures: {
-                        (tapUser?.id ?? 'dev-self'): true,
-                        devSim.profile!.id: true,
-                      },
-                      expiresAt: now.add(const Duration(minutes: 30)),
-                    );
-                    context.pushNamed('match_reveal', extra: synthesized);
+                    context.push('/profile', extra: devSim.profile);
                   },
+                  showSwipeHint: _devSimShowHint,
                 )
                     .animate()
                     .fadeIn(duration: 250.ms)

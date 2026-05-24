@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/match/presentation/widgets/match_notification_pill.dart';
 import '../../features/match/presentation/widgets/match_reveal_overlay.dart';
@@ -51,6 +52,31 @@ class WavePillService {
   static OverlayEntry? _entry;
   static OverlayEntry? _confettiEntry;
 
+  // ── Swipe-hint counter ────────────────────────────────────────────────────
+  // Show "Swipe away to ignore" hint for the first 3 pills ever shown.
+  static const _hintKey = 'wave_pill_hint_count';
+  static int _hintCount = 0;
+  static bool _hintLoaded = false;
+
+  /// Pre-warm the counter from SharedPreferences (call once at app start).
+  static Future<void> preloadHintCount() async {
+    if (_hintLoaded) return;
+    _hintLoaded = true;
+    final prefs = await SharedPreferences.getInstance();
+    _hintCount = prefs.getInt(_hintKey) ?? 0;
+  }
+
+  static bool get shouldShowHint => _hintCount < 3;
+
+  /// Call this when showing the dev-sim pill (which bypasses [show]).
+  static Future<void> recordPillShown() async => _recordPillShown();
+
+  static Future<void> _recordPillShown() async {
+    _hintCount++;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_hintKey, _hintCount);
+  }
+
   // ── Public API ────────────────────────────────────────────────────────────
 
   static void show({
@@ -61,6 +87,9 @@ class WavePillService {
   }) {
     // Replace any existing pill instead of stacking.
     _forceDismiss();
+
+    final showHint = shouldShowHint;
+    if (showHint) _recordPillShown();
 
     late OverlayEntry entry;
     entry = OverlayEntry(
@@ -73,18 +102,19 @@ class WavePillService {
           child: Material(
             type: MaterialType.transparency,
             child: MatchNotificationPill(
-              name: data.name,
-              age: data.age,
-              imageUrl: data.imageUrl,
-              birthDate: data.birthDate,
+              name:           data.name,
+              age:            data.age,
+              imageUrl:       data.imageUrl,
+              birthDate:      data.birthDate,
               pillState: data.isIncomingWave
                   ? PillState.waveReceived
                   : PillState.waitingForAction,
-              onWave: () => onWave(data.targetUid),
-              onIgnore: () => _removeEntry(entry),
+              onWave:         () => onWave(data.targetUid),
+              onIgnore:       () => _removeEntry(entry),
               // Match reveal handled by activeMatchesStream → MatchRevealScreen.
-              onMatch: null,
-              onTap: onTap,
+              onMatch:        null,
+              onTap:          onTap,
+              showSwipeHint:  showHint,
             ),
           ),
         );

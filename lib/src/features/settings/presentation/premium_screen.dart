@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -152,10 +153,14 @@ class PremiumUpgradeScreen extends ConsumerStatefulWidget {
       _PremiumUpgradeScreenState();
 }
 
+// Large multiple of premiumPlanCards.length so we can scroll freely in both
+// directions before bumping into the virtual list bounds.
+const int _kInfiniteInitialPage = 5000;
+
 class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
   PageController? _pageController;
   int _selectedIndex = 0;
-  int _lastHapticPage = 0;
+  int _lastHapticPage = _kInfiniteInitialPage;
   bool _isLoading = false;
 
   // Theme-independent card-level text styles (cards are always dark).
@@ -329,12 +334,14 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.76)
-      ..addListener(() {
+    _pageController = PageController(
+      viewportFraction: 0.76,
+      initialPage: _kInfiniteInitialPage,
+    )..addListener(() {
         final controller = _pageController;
         if (controller == null || !controller.hasClients) return;
         final page = controller.page ?? controller.initialPage.toDouble();
-        final snapped = page.round().clamp(0, premiumPlanCards.length - 1);
+        final snapped = page.round();
         if (snapped == _lastHapticPage) return;
         _lastHapticPage = snapped;
         HapticFeedback.selectionClick();
@@ -605,102 +612,104 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
               ),
             ),
 
-            SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Header
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Row(
-                      children: [
-                        TrembleBackButton(onPressed: () => context.pop()),
-                        const Spacer(),
-                        Text(
-                          _t('premium_title', lang),
-                          style: screenTitleStyle,
-                        ),
-                        const Spacer(),
-                        const SizedBox(width: 48),
-                      ],
-                    ),
-                  ),
-
-                  // Subtitle
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    child: Text(
-                      _t('premium_subtitle', lang),
-                      textAlign: TextAlign.center,
-                      style: screenSubtitleStyle,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Carousel
-                  Expanded(
-                    child: _PremiumCarousel(
-                      pageController: pageController,
-                      cardBuilder: (card, language) =>
-                          _buildCreditCard(card, language),
-                      lang: lang,
-                      accentColor: genderAccent,
-                      isDark: isDark,
-                      onPageChanged: (index) =>
-                          setState(() => _selectedIndex = index),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // CTA
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-                    child: _buildCTAButton(
-                      _selectedIndex,
-                      premiumPlanCards[_selectedIndex],
-                      user,
-                      genderAccent,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Loading overlay
-            if (_isLoading)
-              Positioned.fill(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                  child: Container(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(genderAccent),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            _t('loading', lang),
-                            style: GoogleFonts.instrumentSans(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      TrembleBackButton(onPressed: () => context.pop()),
+                      const Spacer(),
+                      Text(
+                        _t('premium_title', lang),
+                        style: screenTitleStyle,
                       ),
+                      const Spacer(),
+                      const SizedBox(width: 48),
+                    ],
+                  ),
+                ),
+
+                // Subtitle
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Text(
+                    _t('premium_subtitle', lang),
+                    textAlign: TextAlign.center,
+                    style: screenSubtitleStyle,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Carousel
+                Expanded(
+                  child: _PremiumCarousel(
+                    pageController: pageController,
+                    cardBuilder: (card, language) =>
+                        _buildCreditCard(card, language),
+                    lang: lang,
+                    accentColor: genderAccent,
+                    isDark: isDark,
+                    onPageChanged: (index) => setState(
+                      () => _selectedIndex =
+                          index % premiumPlanCards.length,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // CTA
+                Padding(
+                  padding:
+                      const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                  child: _buildCTAButton(
+                    _selectedIndex,
+                    premiumPlanCards[_selectedIndex],
+                    user,
+                    genderAccent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Loading overlay
+          if (_isLoading)
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(genderAccent),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          _t('loading', lang),
+                          style: GoogleFonts.instrumentSans(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -1018,13 +1027,17 @@ class _PremiumCarousel extends StatelessWidget {
                 ? pageController.page ?? pageController.initialPage.toDouble()
                 : pageController.initialPage.toDouble();
 
-            final sortedIndices =
-                List.generate(premiumPlanCards.length, (i) => i)
-                  ..sort((a, b) {
-                    final dA = (currentPage - a).abs();
-                    final dB = (currentPage - b).abs();
-                    return dB.compareTo(dA);
-                  });
+            // Render a window of virtual pages around the current page so the
+            // card at the wrap boundary stays visible while scrolling.
+            const window = 3;
+            final base = currentPage.round();
+            final virtualPages = <int>[
+              for (int p = base - window; p <= base + window; p++) p,
+            ]..sort((a, b) {
+                final dA = (currentPage - a).abs();
+                final dB = (currentPage - b).abs();
+                return dB.compareTo(dA);
+              });
 
             return Column(
               children: [
@@ -1034,7 +1047,8 @@ class _PremiumCarousel extends StatelessWidget {
                     children: [
                       PageView.builder(
                         controller: pageController,
-                        itemCount: premiumPlanCards.length,
+                        // null itemCount → infinite scroll in both directions.
+                        itemCount: null,
                         physics: const BouncingScrollPhysics(),
                         onPageChanged: onPageChanged,
                         itemBuilder: (_, __) => const SizedBox.expand(),
@@ -1043,9 +1057,11 @@ class _PremiumCarousel extends StatelessWidget {
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            for (final i in sortedIndices)
+                            for (final p in virtualPages)
                               _PremiumCarouselCard(
-                                data: premiumPlanCards[i],
+                                data: premiumPlanCards[
+                                    p % premiumPlanCards.length],
+                                virtualPage: p,
                                 lang: lang,
                                 currentPage: currentPage,
                                 cardWidth: cardWidth,
@@ -1077,6 +1093,7 @@ class _PremiumCarousel extends StatelessWidget {
 class _PremiumCarouselCard extends StatelessWidget {
   const _PremiumCarouselCard({
     required this.data,
+    required this.virtualPage,
     required this.lang,
     required this.currentPage,
     required this.cardWidth,
@@ -1086,6 +1103,7 @@ class _PremiumCarouselCard extends StatelessWidget {
   });
 
   final PremiumPlanCard data;
+  final int virtualPage;
   final String lang;
   final double currentPage;
   final double cardWidth;
@@ -1095,8 +1113,7 @@ class _PremiumCarouselCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final index = premiumPlanCards.indexOf(data);
-    final offset = index - currentPage;
+    final offset = virtualPage - currentPage;
 
     final double translationX;
     final double scale;
@@ -1161,10 +1178,16 @@ class _PremiumCarouselDots extends StatelessWidget {
     final inactiveColor = isDark
         ? Colors.white.withValues(alpha: 0.3)
         : Colors.black.withValues(alpha: 0.2);
+    final length = premiumPlanCards.length;
+    // Project the virtual page onto [0, length) so wrapping past the last
+    // card keeps the dots animation smooth.
+    final normalized = currentPage - (currentPage / length).floor() * length;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(premiumPlanCards.length, (i) {
-        final distance = (i - currentPage).abs();
+      children: List.generate(length, (i) {
+        // Shortest distance considering wrap-around in both directions.
+        final raw = (i - normalized).abs();
+        final distance = math.min(raw, length - raw);
         final factor = (1.0 - distance).clamp(0.0, 1.0);
         return RepaintBoundary(
           child: Container(

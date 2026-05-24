@@ -16,6 +16,7 @@ import '../../../shared/ui/tremble_circle_button.dart';
 import '../../../core/theme.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../safety/screen_protection_service.dart';
+import '../../dashboard/application/dev_simulation_controller.dart';
 
 class ProfileDetailScreen extends ConsumerStatefulWidget {
   final MatchProfile match;
@@ -32,13 +33,18 @@ class ProfileDetailScreen extends ConsumerStatefulWidget {
       _ProfileDetailScreenState();
 }
 
-class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
+class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
+    with TickerProviderStateMixin {
   final PageController _photoPageController = PageController();
   int _currentPhotoPage = 0;
   final ValueNotifier<double> _buttonsOpacity = ValueNotifier(1.0);
   double _lastScrollOffset = 0;
   bool _isRecording = false;
   late final void Function(bool) _recordingListener;
+
+  // Tracks whether "they waved" animation has been triggered so we don't
+  // re-trigger on every build after theyWaved becomes true.
+  bool _waveAnimTriggered = false;
 
   @override
   void initState() {
@@ -80,6 +86,41 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Detect when the other person waves while the profile card is open.
+    // Fires the shake + rainbow animation on the wave button exactly once.
+    final myUid =
+        ref.read(firebaseAuthProvider).currentUser?.uid ?? '';
+    // Dev sim bridge: Firestore stream is absent in dev sim, so watch the
+    // sim controller directly and mirror the waveReceived signal here.
+    ref.listen(devSimulationControllerProvider, (prev, next) {
+      if (_waveAnimTriggered) return;
+      final wasReceived = prev?.phase == DevSimPhase.waveReceived;
+      final isReceived  = next.phase  == DevSimPhase.waveReceived;
+      if (!wasReceived && isReceived && next.profile?.id == widget.match.id) {
+        setState(() => _waveAnimTriggered = true);
+        HapticFeedback.heavyImpact();
+      }
+    });
+
+    ref.listen(getMatchByUserIdProvider(widget.match.id), (prev, next) {
+      // Mutual wave while profile card is open → go straight to reveal screen.
+      final wasMutual = prev?.isMutual ?? false;
+      final nowMutual = next?.isMutual ?? false;
+      if (!wasMutual && nowMutual && context.mounted) {
+        context.pop();
+        context.pushNamed('match_reveal', extra: next);
+        return;
+      }
+
+      if (_waveAnimTriggered) return;
+      final theyWaved = next?.hasWaved(widget.match.id) ?? false;
+      final iWaved = next?.hasWaved(myUid) ?? false;
+      if (theyWaved && !iWaved) {
+        setState(() => _waveAnimTriggered = true);
+        HapticFeedback.heavyImpact();
+      }
+    });
+
     final match = widget.match;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
@@ -486,9 +527,24 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
         ? TrembleTheme.rose.withValues(alpha: 0.7)
         : TrembleTheme.rose.withValues(alpha: 0.6);
 
-    // Default state: No gesture sent
-    String greetText = t('greet', lang);
+    // Determine wave state from Firestore match doc
+    final iWaved = matchDoc?.hasWaved(myUid) ?? false;
+    final theyWaved = matchDoc?.hasWaved(match.id) ?? false;
+    final isMutual = matchDoc?.isMutual ?? false;
+
+    // Button label
+    String waveText = 'Wave';
     bool isSent = false;
+    if (iWaved && !theyWaved) {
+      waveText = "${t('sent', lang).substring(0, 1).toUpperCase()}${t('sent', lang).substring(1)}";
+      isSent = true;
+    } else if (theyWaved && !iWaved) {
+      waveText = 'Wave back';
+    } else if (isMutual) {
+      waveText = t('radar_lock_active', lang);
+      isSent = true;
+    }
+
     VoidCallback onGreet = () async {
       try {
         await HapticFeedback.lightImpact();
@@ -496,12 +552,6 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
           await ref.read(waveRepositoryProvider).sendGesture(matchDoc.id);
         } else {
           await ref.read(matchControllerProvider.notifier).greet();
-        }
-        if (context.mounted) {
-          final sentMsg =
-              "${t('greet', lang)} ${t('sent', lang)} ${match.name}!";
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(sentMsg)));
         }
       } catch (e) {
         if (context.mounted) {
@@ -512,22 +562,6 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
         }
       }
     };
-
-    if (matchDoc != null) {
-      final iWaved = matchDoc.hasWaved(myUid);
-      final theyWaved = matchDoc.hasWaved(match.id);
-
-      if (iWaved && !theyWaved) {
-        greetText =
-            "${t('sent', lang).substring(0, 1).toUpperCase()}${t('sent', lang).substring(1)}"; // "Poslan"
-        isSent = true;
-      } else if (theyWaved && !iWaved) {
-        greetText = t('accept', lang); // "Sprejmi"
-      } else if (matchDoc.isMutual) {
-        greetText = t('radar_lock_active', lang);
-        isSent = true;
-      }
-    }
 
     return Row(
       children: [
@@ -545,10 +579,11 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen> {
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: _ActionTextButton(
-            text: greetText,
+          child: _WaveButton(
+            text: waveText,
             color: isSent ? primaryColor.withValues(alpha: 0.5) : primaryColor,
-            onTap: isSent ? () {} : onGreet,
+            onTap: isSent ? null : onGreet,
+            theyWaved: _waveAnimTriggered,
           ),
         ),
       ],
@@ -1083,4 +1118,167 @@ class _ActionTextButton extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─── Animated wave button ────────────────────────────────────────────────────
+// Shakes briefly then shows a cycling rainbow border when theyWaved flips true.
+
+class _WaveButton extends StatefulWidget {
+  final String text;
+  final Color color;
+  final VoidCallback? onTap;
+  final bool theyWaved;
+
+  const _WaveButton({
+    required this.text,
+    required this.color,
+    this.onTap,
+    this.theyWaved = false,
+  });
+
+  @override
+  State<_WaveButton> createState() => _WaveButtonState();
+}
+
+class _WaveButtonState extends State<_WaveButton>
+    with TickerProviderStateMixin {
+  static const _rainbow = [
+    Color(0xFFFF004D), Color(0xFFFF7700), Color(0xFFFFE600),
+    Color(0xFF00E676), Color(0xFF2979FF), Color(0xFFD500F9),
+    Color(0xFFFF004D),
+  ];
+
+  late final AnimationController _shakeCtrl;
+  late final AnimationController _rainbowCtrl;
+  late final Animation<double> _shakeX;
+  bool _rainbowActive = false;
+  bool _sent = false;
+  // True when the current shake was triggered by the user tapping Wave
+  // (not by theyWaved), so rainbow doesn't activate afterwards.
+  bool _shakeForSent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _shakeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 460),
+    );
+    _shakeX = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 12.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 12.0, end: -9.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -9.0, end: 7.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 7.0, end: -4.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -4.0, end: 2.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 2.0, end: 0.0), weight: 1),
+    ]).animate(_shakeCtrl);
+    _rainbowCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+    _shakeCtrl.addStatusListener((s) {
+      if (s == AnimationStatus.completed && mounted) {
+        final forSent = _shakeForSent;
+        _shakeForSent = false;
+        if (!forSent) {
+          setState(() => _rainbowActive = true);
+          _rainbowCtrl.repeat();
+        }
+      }
+    });
+    if (widget.theyWaved) _shakeCtrl.forward();
+  }
+
+  @override
+  void didUpdateWidget(_WaveButton old) {
+    super.didUpdateWidget(old);
+    if (!old.theyWaved && widget.theyWaved) {
+      _shakeForSent = false;
+      _shakeCtrl.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _shakeCtrl.dispose();
+    _rainbowCtrl.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    if (_sent || widget.onTap == null) return;
+    setState(() { _sent = true; _shakeForSent = true; });
+    _shakeCtrl.forward(from: 0);
+    HapticFeedback.lightImpact();
+    widget.onTap!();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final displayColor = _sent ? Colors.amber : widget.color;
+    final displayText = _sent ? 'Wave sent' : widget.text;
+
+    return AnimatedBuilder(
+      animation: Listenable.merge([_shakeCtrl, _rainbowCtrl]),
+      builder: (_, __) => Transform.translate(
+        offset: Offset(_shakeCtrl.isAnimating ? _shakeX.value : 0, 0),
+        child: GestureDetector(
+          onTap: _sent ? null : _handleTap,
+          child: CustomPaint(
+            foregroundPainter: _rainbowActive
+                ? _RainbowBorderPainter(_rainbowCtrl.value, _rainbow)
+                : null,
+            child: Container(
+              height: 56,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(28),
+                border: _rainbowActive
+                    ? null
+                    : Border.all(color: displayColor, width: 2),
+              ),
+              child: Text(
+                displayText,
+                style: GoogleFonts.instrumentSans(
+                  color: _rainbowActive ? Colors.white : displayColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RainbowBorderPainter extends CustomPainter {
+  final double progress;
+  final List<Color> colors;
+
+  _RainbowBorderPainter(this.progress, this.colors);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rr = RRect.fromRectAndRadius(rect, const Radius.circular(28));
+    final shader = SweepGradient(
+      colors: colors,
+      startAngle: 0,
+      endAngle: 3.14159 * 2,
+      transform: GradientRotation(progress * 3.14159 * 2),
+    ).createShader(rect);
+    canvas.drawRRect(
+      rr,
+      Paint()
+        ..shader = shader
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_RainbowBorderPainter old) => old.progress != progress;
 }
