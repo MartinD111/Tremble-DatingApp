@@ -2,6 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
+import { assertValidDocumentId } from "../../middleware/validate";
 import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
@@ -27,9 +28,10 @@ export const onEventModeActivate = onCall(
         const userDoc = await db.collection('users').doc(uid).get();
         assertNotBanned(userDoc.data());
 
-        const { eventId, latitude, longitude } = request.data;
+        const { eventId: rawEventId, latitude, longitude } = request.data;
+        const eventId = assertValidDocumentId(rawEventId, "eventId");
 
-        if (!eventId || latitude === undefined || longitude === undefined) {
+        if (latitude === undefined || longitude === undefined) {
             throw new HttpsError('invalid-argument', 'Missing eventId, latitude, or longitude');
         }
 
@@ -100,7 +102,7 @@ export const onEventModeDeactivate = onCall(
 // Scheduled — expire event modes every hour
 export const expireEventModes = onSchedule(
     { schedule: 'every 60 minutes', region: "europe-west1" },
-    async (event) => {
+    async (_event) => {
         const expired = await db.collection('users')
             .where('eventModeUntil', '<', Timestamp.now())
             .get();

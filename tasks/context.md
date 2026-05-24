@@ -1,3 +1,36 @@
+## Session State — 2026-05-24 23:05 CEST
+- Active Task: Firebase Functions and Firestore security audit implementation
+- Environment: Dev backend audit (`tremble-dev` context), no deploy
+- Modified Files:
+    - `firestore.rules`
+    - `functions/src/middleware/validate.ts`
+    - `functions/src/modules/events/events.functions.ts`
+    - `functions/src/modules/gym/gym.functions.ts`
+    - `functions/src/modules/matches/intercept.functions.ts`
+    - `functions/src/modules/matches/matches.functions.ts`
+    - `functions/src/modules/proximity/proximity.functions.ts`
+    - `functions/src/modules/safety/safety.schema.ts`
+    - `functions/src/modules/users/users.functions.ts`
+- Open Problems:
+    - `npm audit fix` reduced backend audit findings to 9 moderate vulnerabilities. Remaining npm recommendation is `npm audit fix --force`, which would downgrade `firebase-admin` to `10.3.0` and `firebase-functions` to `4.9.0`; not applied because it is a breaking downgrade path.
+    - `verifyGoogleToken` intentionally remains unauthenticated because it is called during login before the user has a Firebase auth token.
+    - Firebase CLI failed before rules validation with `firepit-log.txt`; no deploy was attempted.
+- System Status: `npm run build` SUCCESS. `npm run lint` SUCCESS. `npm test -- --runInBand` SUCCESS (14/14). `npm audit --json` reports 0 critical, 0 high, 9 moderate. Firestore rules rewritten but not deployed.
+
+## Session Handoff
+- Completed:
+    - Ran `npm audit --json` and `npm audit fix --dry-run --json` from `functions/`.
+    - Added shared `assertValidDocumentId()` guard and applied CRITICAL path validation fixes for request-supplied Firestore document IDs.
+    - Rewrote `firestore.rules` to enforce own-user reads, deny client proximity reads, restrict waves/sessions, and preserve default deny.
+    - Added structured JSON logging to high-priority proximity, wave, match, and Pulse Intercept flows without logging GPS coordinates, profiles, tokens, or emails.
+    - Upgraded `firebase-admin` to `13.10.0`, `firebase-functions` to `7.2.5`, then ran `npm audit fix`.
+    - Verified TypeScript build, ESLint, and Jest.
+- In Progress: None.
+- Blocked:
+    - Firestore rules syntax could not be validated locally because `firebase --version` failed inside firebase-tools before output.
+- Next Action:
+    1. Install/update Firebase CLI and deploy `firestore.rules` to prod explicitly with `--project prod` after confirming firebase-tools runs locally.
+
 ## Session State — 2026-05-23 01:35 CEST
 - Active Task: Premium loading states and outage/error handling overhaul
 - Environment: Dev mobile flavor on `main`

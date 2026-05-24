@@ -8,7 +8,7 @@ import { onCall } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { requireAuth, requireVerifiedEmail } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
-import { validateRequest } from "../../middleware/validate";
+import { assertValidDocumentId, validateRequest } from "../../middleware/validate";
 import { updateProfileSchema } from "./users.schema";
 import { ENFORCE_APP_CHECK } from "../../config/env";
 
@@ -81,10 +81,8 @@ export const getPublicProfile = onCall(
     async (request) => {
         requireVerifiedEmail(request);
 
-        const { userId } = request.data as { userId: string };
-        if (!userId || typeof userId !== "string") {
-            throw new Error("userId is required");
-        }
+        const { userId: rawUserId } = request.data as { userId: unknown };
+        const userId = assertValidDocumentId(rawUserId, "userId");
 
         const doc = await db.collection("users").doc(userId).get();
         if (!doc.exists) {

@@ -13,11 +13,23 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
+import { assertValidDocumentId } from "../../middleware/validate";
 import { sendMatchNotificationEmail } from "../email/email.functions";
 import { getRedis, waveDedupKey, WAVE_DEDUP_SECS } from "../../core/redis";
 import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
+
+function logStructured(fields: Record<string, unknown>): void {
+    console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        ...fields,
+    }));
+}
+
+function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+}
 
 /**
  * sendWave — Callable: rate-limited wave submission.
@@ -28,11 +40,11 @@ export const sendWave = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        const startedAt = Date.now();
+        logStructured({ fn: "sendWave", event: "entry", uid });
 
-        const { targetUid } = request.data;
-        if (!targetUid || typeof targetUid !== "string") {
-            throw new HttpsError("invalid-argument", "targetUid required");
-        }
+        try {
+        const targetUid = assertValidDocumentId(request.data?.targetUid, "targetUid");
         if (uid === targetUid) {
             throw new HttpsError("invalid-argument", "Cannot wave at yourself");
         }
@@ -56,7 +68,12 @@ export const sendWave = onCall(
             createdAt: FieldValue.serverTimestamp(),
         });
 
+        logStructured({ fn: "sendWave", event: "success", uid, targetUid, durationMs: Date.now() - startedAt });
         return { success: true };
+        } catch (error) {
+            logStructured({ fn: "sendWave", event: "error", uid, error: errorMessage(error), durationMs: Date.now() - startedAt });
+            throw error;
+        }
     }
 );
 
@@ -77,6 +94,10 @@ export const sendWave = onCall(
 export const onWaveCreated = onDocumentCreated(
     { document: "waves/{waveId}", region: "europe-west1" },
     async (event) => {
+        const startedAt = Date.now();
+        logStructured({ fn: "onWaveCreated", event: "entry", uid: "system", waveId: event.params.waveId });
+
+        try {
         const snapshot = event.data;
         if (!snapshot) return;
 
@@ -85,6 +106,7 @@ export const onWaveCreated = onDocumentCreated(
         const toUid = waveData.toUid as string;
 
         if (!fromUid || !toUid) return;
+        logStructured({ fn: "onWaveCreated", event: "entry", uid: fromUid, waveId: event.params.waveId });
 
         // ── Wave deduplication (Redis, 5-min TTL) ─────────────────
         //    Prevents INCOMING_WAVE spam from rapid double-taps or
@@ -145,7 +167,7 @@ export const onWaveCreated = onDocumentCreated(
             const userBGym = userBDoc.data()?.activeGymId;
 
             let matchType = "standard";
-            let matchContext: any = null;
+            let matchContext: Record<string, unknown> | null = null;
 
             if (userAEvent && userBEvent && userAEvent === userBEvent) {
                 matchType = "event";
@@ -234,6 +256,7 @@ export const onWaveCreated = onDocumentCreated(
             }
 
             await Promise.allSettled(notifications);
+            logStructured({ fn: "onWaveCreated", event: "success", uid: fromUid, matchId, result: "mutual_wave", durationMs: Date.now() - startedAt });
 
             // Also send match email (fire-and-forget)
             const senderEmail = senderDoc.data()?.email as string | undefined;
@@ -279,6 +302,11 @@ export const onWaveCreated = onDocumentCreated(
             });
 
             console.log(`[WAVE] INCOMING_WAVE sent: ${fromUid} → ${toUid}`);
+            logStructured({ fn: "onWaveCreated", event: "success", uid: fromUid, result: "incoming_wave", durationMs: Date.now() - startedAt });
+        }
+        } catch (error) {
+            logStructured({ fn: "onWaveCreated", event: "error", uid: "system", error: errorMessage(error), durationMs: Date.now() - startedAt });
+            throw error;
         }
     }
 );

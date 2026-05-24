@@ -2,30 +2,77 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ══════════════════════════════════════════════════════
-    // USERS — branje lastnega profila, pisanje samo preko backend-a
-    // ══════════════════════════════════════════════════════
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function validCreateKeys() {
+      return !request.resource.data.keys().hasAny([
+        'isPremium',
+        'isAdmin',
+        'activeGymId',
+        'gymModeUntil',
+        'activeEventId',
+        'ageConfirmed',
+        'ageConfirmedAt'
+      ]);
+    }
+
+    function validUpdateKeys() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'isPremium',
+        'isAdmin',
+        'activeGymId',
+        'gymModeUntil',
+        'activeEventId',
+        'ageConfirmed',
+        'ageConfirmedAt'
+      ]);
+    }
+
+    function isWaveParticipant(data) {
+      return signedIn() && (
+        request.auth.uid == data.senderId ||
+        request.auth.uid == data.receiverId ||
+        request.auth.uid == data.fromUid ||
+        request.auth.uid == data.toUid
+      );
+    }
+
+    function isWaveSender(data) {
+      return signedIn() && (
+        request.auth.uid == data.senderId ||
+        request.auth.uid == data.fromUid
+      );
+    }
+
+    function isSessionParticipant(data) {
+      return signedIn() && (
+        request.auth.uid == data.senderId ||
+        request.auth.uid == data.receiverId ||
+        (data.keys().hasAny(['userIds']) && request.auth.uid in data.userIds)
+      );
+    }
+
+    // USERS — own profile only.
     match /users/{userId} {
-      // Own profile: full read.
-      // Other authenticated users: read allowed. PublicProfile.fromFirestore
-      // only surfaces safe fields (name, age, photoUrls, hobbies, lookingFor,
-      // isTraveler) — no PII. Write protection below keeps sensitive fields
-      // (isPremium, isAdmin, activeGymId, gymModeUntil, activeEventId)
-      // backend-only regardless of who can read.
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == userId && !request.resource.data.keys().hasAny(['isPremium', 'isAdmin', 'activeGymId', 'gymModeUntil', 'activeEventId', 'ageConfirmed', 'ageConfirmedAt']);
-      allow update: if request.auth != null && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isPremium', 'isAdmin', 'activeGymId', 'gymModeUntil', 'activeEventId', 'ageConfirmed', 'ageConfirmedAt']);
+      allow read: if isSelf(userId);
+      allow create: if isSelf(userId) && validCreateKeys();
+      allow update: if isSelf(userId) && validUpdateKeys();
+      allow delete: if isSelf(userId);
     }
 
     match /drafts/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isSelf(userId);
     }
 
-    // ══════════════════════════════════════════════════════
-    // WAITLIST — javna prijava na čakalno listo
-    // ══════════════════════════════════════════════════════
+    // WAITLIST — public signup only.
     match /waitlist/{document=**} {
-      allow create: if 
+      allow create: if
         request.resource.data.email is string &&
         request.resource.data.email.matches('.+@.+\\..+') &&
         request.resource.data.source in ['website', 'website-undo'] &&
@@ -34,73 +81,58 @@ service cloud.firestore {
       allow read, write, update, delete: if false;
     }
 
-    // ══════════════════════════════════════════════════════
-    // MATCHES — branje dovoljeno le vpletenima (userIds array)
-    // ══════════════════════════════════════════════════════
+    // MATCHES — participants only.
     match /matches/{matchId} {
-      allow read: if request.auth != null &&
-                    request.auth.uid in resource.data.userIds;
-      // Edina dovoljena klient sprememba je seenBy (markMatchAsSeen po razkritju)
-      allow update: if request.auth != null &&
-                      request.auth.uid in resource.data.userIds &&
-                      request.resource.data.diff(resource.data).affectedKeys()
-                        .hasOnly(['seenBy']);
-      allow create, delete: if false; // Izključno Cloud Function onWaveCreated
+      allow read: if signedIn() && request.auth.uid in resource.data.userIds;
+      allow update: if signedIn() &&
+                    request.auth.uid in resource.data.userIds &&
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['seenBy']);
+      allow create, delete: if false;
     }
 
-    /// ══════════════════════════════════════════════════════
-    // WAVES — stroga zasebnost, branje le lastnih izhodnih valov
-    // ══════════════════════════════════════════════════════
+    // WAVES — participants can read, only the sender can create, no mutation.
     match /waves/{waveId} {
-      allow read: if request.auth != null && resource.data.fromUid == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.fromUid == request.auth.uid;
+      allow read: if isWaveParticipant(resource.data);
+      allow create: if isWaveSender(request.resource.data);
       allow update, delete: if false;
     }
 
-    // ══════════════════════════════════════════════════════
-    // EVENTS — F2: Event Mode Matching
-    // Branje dovoljeno vsem avtentificiranim (da preverijo aktiven event).
-    // Pisanje je IZKLJUČNO Cloud Functions (admin-ustvarjeni eventi).
-    // ══════════════════════════════════════════════════════
+    // SESSIONS — participants can read, clients cannot write.
+    match /sessions/{sessionId} {
+      allow read: if isSessionParticipant(resource.data);
+      allow create, update, delete: if false;
+    }
+
+    // EVENTS — authenticated read, backend-only writes.
     match /events/{eventId} {
-      // Authenticated users can read events to join them
-      allow read: if request.auth != null;
-      // Only Cloud Functions (no auth uid == service account) can write
+      allow read: if signedIn();
       allow create, update, delete: if false;
     }
 
-    // ══════════════════════════════════════════════════════
-    // PROXIMITY — branje aktivnih uporabnikov za radar
-    // ══════════════════════════════════════════════════════
+    // PROXIMITY — backend-readable only. Clients may write only their own
+    // ephemeral geohash document; Admin SDK bypasses rules for Cloud Functions.
     match /proximity/{userId} {
-      allow read: if request.auth != null;
-      allow write: if false;
+      allow read: if false;
+      allow write: if isSelf(userId);
     }
 
-    // ══════════════════════════════════════════════════════
-    // ACTIVE RUN CROSSES — branje le vpletenima, pisanje samo backend
-    // ══════════════════════════════════════════════════════
+    // ACTIVE RUN CROSSES — involved users can read, backend-only writes.
     match /active_run_crosses/{docId} {
-      allow read: if request.auth != null &&
-                    request.auth.uid in resource.data.userIds;
+      allow read: if signedIn() && request.auth.uid in resource.data.userIds;
       allow create, update, delete: if false;
     }
 
-    // ══════════════════════════════════════════════════════
-    // PROXIMITY EVENTS — BLE zapisuje, backend procesira
-    // ══════════════════════════════════════════════════════
+    // PROXIMITY EVENTS — BLE writes, backend processes.
     match /proximity_events/{eventId} {
-      allow write: if request.auth != null
-        && request.resource.data.from == request.auth.uid
-        && request.resource.data.keys().hasAll(['from', 'toDeviceId', 'rssi', 'timestamp', 'ttl'])
-        && request.resource.data.rssi is int
-        && request.resource.data.timestamp is timestamp;
+      allow write: if signedIn() &&
+        request.resource.data.from == request.auth.uid &&
+        request.resource.data.keys().hasAll(['from', 'toDeviceId', 'rssi', 'timestamp', 'ttl']) &&
+        request.resource.data.rssi is int &&
+        request.resource.data.timestamp is timestamp;
       allow read: if false;
     }
 
-    // ══════════════════════════════════════════════════════
-    // SISTEMSKI DEL (Rate Limits, Idempotency, GDPR)
-    // ══════════════════════════════════════════════════════
     match /rateLimits/{doc} {
       allow read, write: if false;
     }
@@ -110,13 +142,11 @@ service cloud.firestore {
     }
 
     match /gdprRequests/{doc} {
-      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
       allow write: if false;
     }
 
-    // ══════════════════════════════════════════════════════
     // DEFAULT DENY
-    // ══════════════════════════════════════════════════════
     match /{document=**} {
       allow read, write: if false;
     }

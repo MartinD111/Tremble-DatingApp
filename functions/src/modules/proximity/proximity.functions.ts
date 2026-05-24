@@ -38,6 +38,17 @@ const db = getFirestore();
 const RADIUS_FREE_M = 100;
 const RADIUS_PRO_M = 250;
 
+function logStructured(fields: Record<string, unknown>): void {
+    console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        ...fields,
+    }));
+}
+
+function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+}
+
 // ── Schemas ──────────────────────────────────────────────
 
 const updateLocationSchema = z.object({
@@ -175,33 +186,41 @@ export const updateLocation = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        const startedAt = Date.now();
+        logStructured({ fn: "updateLocation", event: "entry", uid });
 
-        await checkRateLimit(uid, "updateLocation", {
-            maxRequests: 60,
-            windowMs: 60_000,
-        });
+        try {
+            await checkRateLimit(uid, "updateLocation", {
+                maxRequests: 60,
+                windowMs: 60_000,
+            });
 
-        const data = validateRequest(updateLocationSchema, request.data);
+            const data = validateRequest(updateLocationSchema, request.data);
 
-        const userDoc = await db.collection("users").doc(uid).get();
-        assertNotBanned(userDoc.data());
+            const userDoc = await db.collection("users").doc(uid).get();
+            assertNotBanned(userDoc.data());
 
-        const geohash = encodeGeohash(data.latitude, data.longitude);
+            const geohash = encodeGeohash(data.latitude, data.longitude);
 
-        await db
-            .collection("proximity")
-            .doc(uid)
-            .set(
-                {
-                    geohash,
-                    lastSeen: FieldValue.serverTimestamp(),
-                    isActive: true,
-                },
-                { merge: true }
-            );
+            await db
+                .collection("proximity")
+                .doc(uid)
+                .set(
+                    {
+                        geohash,
+                        lastSeen: FieldValue.serverTimestamp(),
+                        isActive: true,
+                    },
+                    { merge: true }
+                );
 
+            logStructured({ fn: "updateLocation", event: "success", uid, geohash, durationMs: Date.now() - startedAt });
 
-        return { success: true, geohash };
+            return { success: true, geohash };
+        } catch (error) {
+            logStructured({ fn: "updateLocation", event: "error", uid, error: errorMessage(error), durationMs: Date.now() - startedAt });
+            throw error;
+        }
     }
 );
 
@@ -224,7 +243,10 @@ export const findNearby = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        const startedAt = Date.now();
+        logStructured({ fn: "findNearby", event: "entry", uid });
 
+        try {
         await checkRateLimit(uid, "findNearby", {
             maxRequests: 20,
             windowMs: 60_000,
@@ -236,6 +258,7 @@ export const findNearby = onCall(
         const requesterData = requesterDoc.data();
         if (!requesterData) {
             console.log(`[PROXIMITY] Requester data not found: ${uid.substring(0, 8)}...`);
+            logStructured({ fn: "findNearby", event: "success", uid, matchCount: 0, radiusM: RADIUS_FREE_M, radiusTier: "free", durationMs: Date.now() - startedAt });
             return { nearby: [], radiusTier: "free", radiusM: RADIUS_FREE_M };
         }
 
@@ -392,8 +415,13 @@ export const findNearby = onCall(
         console.log(
             `[PROXIMITY] ${uid.substring(0, 8)}...: ${nearbyUsers.length} users within ${radiusM}m (${radiusTier})`
         );
+        logStructured({ fn: "findNearby", event: "success", uid, matchCount: nearbyUsers.length, radiusM, radiusTier, durationMs: Date.now() - startedAt });
 
         return { nearby: nearbyUsers, radiusTier, radiusM };
+        } catch (error) {
+            logStructured({ fn: "findNearby", event: "error", uid, error: errorMessage(error), durationMs: Date.now() - startedAt });
+            throw error;
+        }
     }
 );
 
@@ -404,13 +432,21 @@ export const setInactive = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        const startedAt = Date.now();
+        logStructured({ fn: "setInactive", event: "entry", uid });
 
-        await db.collection("proximity").doc(uid).update({
-            isActive: false,
-            lastSeen: FieldValue.serverTimestamp(),
-        });
+        try {
+            await db.collection("proximity").doc(uid).update({
+                isActive: false,
+                lastSeen: FieldValue.serverTimestamp(),
+            });
 
-        return { success: true };
+            logStructured({ fn: "setInactive", event: "success", uid, durationMs: Date.now() - startedAt });
+            return { success: true };
+        } catch (error) {
+            logStructured({ fn: "setInactive", event: "error", uid, error: errorMessage(error), durationMs: Date.now() - startedAt });
+            throw error;
+        }
     }
 );
 
@@ -432,7 +468,10 @@ export const getProximityMatchCandidates = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        const startedAt = Date.now();
+        logStructured({ fn: "getProximityMatchCandidates", event: "entry", uid });
 
+        try {
         await checkRateLimit(uid, "getProximityMatchCandidates", {
             maxRequests: 30,
             windowMs: 60_000,
@@ -444,6 +483,7 @@ export const getProximityMatchCandidates = onCall(
         const requesterDoc = await db.collection("users").doc(uid).get();
         const requesterData = requesterDoc.data();
         if (!requesterData) {
+            logStructured({ fn: "getProximityMatchCandidates", event: "success", uid, matchCount: 0, radiusM: RADIUS_FREE_M, radiusTier: "free", durationMs: Date.now() - startedAt });
             return { candidates: [], radiusTier: "free", radiusM: RADIUS_FREE_M };
         }
 
@@ -519,8 +559,13 @@ export const getProximityMatchCandidates = onCall(
             `${filteredCandidates.length} candidates within ${radiusM}m (${radiusTier}) ` +
             `[nicotine filter: ${myNicotineFilter}]`
         );
+        logStructured({ fn: "getProximityMatchCandidates", event: "success", uid, matchCount: filteredCandidates.length, radiusM, radiusTier, durationMs: Date.now() - startedAt });
 
         return { candidates: filteredCandidates, radiusTier, radiusM };
+        } catch (error) {
+            logStructured({ fn: "getProximityMatchCandidates", event: "error", uid, error: errorMessage(error), durationMs: Date.now() - startedAt });
+            throw error;
+        }
     }
 );
 

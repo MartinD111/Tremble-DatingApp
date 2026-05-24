@@ -2,6 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
+import { assertValidDocumentId } from "../../middleware/validate";
 import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
@@ -41,9 +42,10 @@ export const onGymModeActivate = onCall(
         const userDoc = await db.collection("users").doc(uid).get();
         assertNotBanned(userDoc.data());
 
-        const { gymId, latitude, longitude } = request.data;
+        const { gymId: rawGymId, latitude, longitude } = request.data;
+        const gymId = assertValidDocumentId(rawGymId, "gymId");
 
-        if (!gymId || latitude === undefined || longitude === undefined) {
+        if (latitude === undefined || longitude === undefined) {
             throw new HttpsError("invalid-argument", "Missing gymId, latitude, or longitude");
         }
 

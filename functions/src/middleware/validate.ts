@@ -32,3 +32,10 @@ export function validateRequest<T>(schema: ZodSchema<T>, data: unknown): T {
         throw new HttpsError("internal", "Validation error.");
     }
 }
+
+export function assertValidDocumentId(value: unknown, label = "ID"): string {
+    if (typeof value !== "string" || value.length === 0 || value.includes("/")) {
+        throw new HttpsError("invalid-argument", `Invalid ${label}`);
+    }
+    return value;
+}

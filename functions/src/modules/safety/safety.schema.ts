@@ -14,16 +14,21 @@ export const REPORT_REASONS = [
     "spam",
 ] as const;
 
+const documentIdSchema = z.string().min(1).max(128).refine(
+    (value) => !value.includes("/"),
+    "Invalid ID"
+);
+
 export const blockUserSchema = z.object({
-    targetUid: z.string().min(1).max(128),
+    targetUid: documentIdSchema,
 });
 
 export const unblockUserSchema = z.object({
-    targetUid: z.string().min(1).max(128),
+    targetUid: documentIdSchema,
 });
 
 export const reportUserSchema = z.object({
-    reportedUid: z.string().min(1).max(128),
+    reportedUid: documentIdSchema,
     reasons: z.array(z.enum(REPORT_REASONS)).min(1).max(10),
     explanation: z.string().max(500).optional(),
 });
