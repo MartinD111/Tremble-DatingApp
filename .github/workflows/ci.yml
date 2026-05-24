@@ -14,6 +14,7 @@ concurrency:
 env:
   PLAN_FILE: "tasks/plan.md"
   CONTEXT_FILE: "tasks/context.md"
+  POLICY_DIR: "tasks/policies"
   QUALITY_SCORE_THRESHOLD: "85"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -290,11 +291,11 @@ jobs:
     if: |
       github.event_name == 'pull_request' &&
       needs.mpc-validate-pr.outputs.is_high_risk == 'true'
-    environment:
-      name: "founder-approval"
-      # Set this up in GitHub → Settings → Environments
-      # Add yourself as a required reviewer.
-      # High-risk PRs (infra, auth, PII, AI) will pause here for your approval.
+    # TODO: Create this environment in GitHub → Settings → Environments
+    # before any HIGH RISK PR reaches this gate. Add yourself as a required
+    # reviewer. Until the environment exists, this job is skipped for all PRs
+    # because is_high_risk will be false.
+    environment: founder-approval
     steps:
       - name: Awaiting founder approval
         run: |
