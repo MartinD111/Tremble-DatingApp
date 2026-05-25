@@ -23,7 +23,7 @@ The proximity event — the moment two Tremble users are physically near each ot
 - ✓ Firestore proximity event logging — Phase 3
 - ✓ CI/CD via GitHub Actions (Base64 secret injection, flutter stable) — Phase 5
 - ✓ Cloudflare R2 media storage (tremble-avatars / tremble-avatars-dev) — Phase 5
-- ✓ 21 deployed Cloud Functions (europe-west1) — Phase 5
+- ✓ Cloud Functions source organized across 11 `*.functions.ts` files (europe-west1) — Phase 5
 - ✓ Auth redirect loop fixed (login → onboarding routing) — Phase 5
 - ✓ Google Maps API key injection mechanism (Android + iOS) — Phase 5
 - ✓ Email verification banner in registration flow — Phase 5
@@ -39,6 +39,15 @@ The proximity event — the moment two Tremble users are physically near each ot
 - ✓ Push notifications: CROSSING_PATHS (anonymous), INCOMING_WAVE, MUTUAL_WAVE — Phase 7 (v1.1)
 - ✓ WAVE_BACK_ACTION — send wave-back from notification without opening app — Phase 7 (v1.1)
 - ✓ FCM (Android) + APNs (iOS) configured — Phase 7 (v1.1)
+- ✓ Weekend Getaway plan defined — €2,99/vikend, Friday 19:00 to Sunday 19:00, Signal Yellow accent — Phase 8 (v1.2)
+- ✓ Premium screen: 5-card carousel for Signal Prime (€7,99/mo), Weekend Getaway (€2,99/vikend), Yearly (€59,99/yr), Lifetime (€149,99), and Free Tier — Phase 8 (v1.2)
+- ✓ Premium carousel uses 3D perspective PageView, haptic feedback, infinite scroll, and dots indicator — Phase 8 (v1.2)
+- ✓ `LiquidNavBar` modular `itemWrapper` support for tutorial spotlight targeting — Phase 10 (v1.2)
+- ✓ `WavePillService` OverlayEntry pill for foreground waves — FCM wiring still pending — Phase 7 follow-up (v1.2)
+- ✓ 6-step tutorial spotlight overlay with opt-in first-launch flow and SharedPreferences persistence — Phase 10 (v1.2)
+- ✓ Places API session tokens wired to reduce autocomplete cost — Infrastructure (v1.2)
+- ✓ Croatian translations complete: 608/608 strings — Localization (v1.2)
+- ✓ `vector_map_tiles` and `vector_map_tiles_pmtiles` added for F1 Protomaps dependency path — Maps (v1.2)
 
 ### Active
 
@@ -47,7 +56,7 @@ The proximity event — the moment two Tremble users are physically near each ot
 - [ ] **PAY-01**: Free tier allows 5 outgoing waves/month
 - [ ] **PAY-02**: Paywall appears after first proximity event (value proven before ask)
 - [ ] **PAY-03**: Tremble Pro (~€9.99/month): unlimited waves + priority match visibility
-- [ ] **PAY-04**: RevenueCat integration for cross-platform subscription management
+- [ ] **PAY-04**: RevenueCat integration for cross-platform subscription management (`purchases_flutter` not yet in `pubspec.yaml`; current upgrade flow is `_simulateUpgrade()` mock)
 - [ ] **PAY-05**: Subscription state synced to Firestore user record
 - [ ] **PAY-06**: Graceful downgrade when Pro subscription lapses
 
@@ -83,10 +92,11 @@ The proximity event — the moment two Tremble users are physically near each ot
 
 ## Context
 
-### Current State (after v1.1)
+### Current State (May 2026)
 
 - **Shipped milestones:** v1.0 Foundation (2026-04-08) + v1.1 Core Product (2026-04-09)
-- **Codebase:** ~25,000 Dart LOC + TypeScript Cloud Functions
+- **Current milestone:** v1.2 Monetization & Security in progress
+- **Codebase stats:** 157 Dart files in `lib/`, 13 Dart test files, 11 Cloud Functions source files matching `functions/src/**/*.functions.ts`
 - **Stack:** Flutter 3 + Riverpod 2 + GoRouter | Firebase (Auth, Firestore, Functions, europe-west1) | Cloudflare R2 | Upstash Redis | Resend
 - **Environments:** `tremble-dev` (dev) | `am---dating-app` (prod) — strict separation enforced
 - **Bundle IDs:** `com.pulse` (dev) | `tremble.dating.app` (prod)
@@ -105,19 +115,21 @@ The proximity event — the moment two Tremble users are physically near each ot
 
 | ID | Issue | Impact |
 |----|-------|--------|
-| SEC-001 | Firebase App Check configured but not enforced in Cloud Functions | Prod security gap — Phase 9 |
-| FUNCTIONS-DEPLOY | Cloud Functions build not deployed to tremble-dev since 2026-04-18 | Dev environment stale |
+| BLOCKER-005 | iOS dev provisioning for `com.pulse`; physical-device `flutter run` fails | iOS QA blocked |
+| BLOCKER-006 | Photo upload E2E not verified on `tremble-dev` | Onboarding launch risk |
+| BLOCKER-007 | `purchases_flutter` not in `pubspec.yaml`; RevenueCat is `_simulateUpgrade()` mock | Phase 8 billing blocked |
+| BLOCKER-008 | `active_run_crosses` Firestore rule missing; prod still returns `PERMISSION_DENIED` because rules were deployed to `tremble-dev` only | Production proximity rule gap |
+| BLOCKER-009 | `WavePillService` → `HomeScreen` wiring missing for FCM foreground `onForegroundWave` callback | Foreground wave UX incomplete |
+| BLOCKER-010 | Privacy Policy and Terms of Service are not confirmed live on `trembledating.com` | Store review risk |
 
 ### Known Tech Debt
 
 | ID | Debt | Severity |
 |----|------|----------|
-| D-25 | 40+ hardcoded Slovenian strings bypassing i18n system (home_screen, matches_screen, etc.) | Medium |
-| D-26 | `ugc_action_sheet.dart` white background on dark gradient app | Medium |
-| D-27 | Forgot password spinner doesn't stop after email sent | Medium |
-| D-28 | 17-item registration UI fix plan (2026-04-13) — pending founder approval | Medium |
 | D-29 | Map screen tile render test on physical device deferred (from 06-03) | Low |
 | D-30 | Phase 7 executed outside GSD framework — no PLAN files, SUMMARY reconstructed retroactively | Low |
+| D-31 | `.planning/` docs are one month behind actual codebase | Medium |
+| D-32 | `MainApplication` extends deprecated `io.flutter.app.FlutterApplication`; migrate to `android.app.Application` | Medium |
 
 ## Constraints
 
@@ -162,4 +174,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-18 after v1.1 milestone — Core Product shipped. Wave mechanic live. No chat, ever.*
+*Last updated: 2026-05-25 — v1.2 in progress. Premium UI mock exists; RevenueCat dependency and live billing are still blocked.*

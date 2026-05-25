@@ -32,7 +32,7 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 **Plans**: Complete
 
 ### Phase 4: Infrastructure
-**Goal**: Cloud infrastructure is production-ready — R2 media storage, 21 Cloud Functions, Redis rate limiting, and multi-env separation enforced
+**Goal**: Cloud infrastructure is production-ready — R2 media storage, Cloud Functions source organized across 11 `*.functions.ts` files, Redis rate limiting, and multi-env separation enforced
 **Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04
 **Plans**: Complete
 
@@ -68,16 +68,18 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 **Milestone Goal:** Revenue layer is live and the app meets production security and compliance requirements.
 
 #### Phase 8: Paywall / Tremble Pro
+**Status**: 🟡 In progress (mock)
 **Goal**: The freemium wave limit and Tremble Pro subscription are live and purchasable on both platforms
 **Depends on**: Phase 7
 **Requirements**: WAVE-07, PAY-01, PAY-02, PAY-03, PAY-04, PAY-05, PAY-06
 **Success Criteria** (what must be TRUE):
   1. Free tier users are blocked from sending a 6th wave in a calendar month with a clear paywall prompt
   2. Paywall appears after the first proximity event — not at onboarding or app open
-  3. User can subscribe to Tremble Pro (~€9.99/month) via App Store (StoreKit) and Play Store (Play Billing) through RevenueCat
+  3. User can subscribe to Signal Prime (€7,99/month), Weekend Getaway (€2,99/weekend), Yearly (€59,99/year), or Lifetime (€149,99) via App Store (StoreKit) and Play Store (Play Billing) through RevenueCat
   4. Pro subscription state is synced to Firestore and respected by wave-limit enforcement
   5. When a Pro subscription lapses, the user gracefully reverts to free tier limits without data loss or crash
-**Note**: Both founders must be present for Phase 8 kickoff.
+**Current implementation**: Premium screen is implemented as a 5-card 3D perspective carousel with Signal Prime, Weekend Getaway, Yearly, Lifetime, and Free Tier cards. Billing is still mocked through `_simulateUpgrade()` because `purchases_flutter` is not in `pubspec.yaml`.
+**Note**: RevenueCat/legal setup remains blocked until company registration and store billing setup are ready.
 **Plans**: TBD
 
 #### Phase 9: Security Hardening & GDPR
@@ -133,7 +135,7 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 | 5. Auth & Routing | v1.0 | - | ✅ Complete | 2026-04-08 |
 | 6. Brand Alignment | v1.1 | 3/3 | ✅ Complete | 2026-04-09 |
 | 7. Wave Mechanic + Push Notifications | v1.1 | - | ✅ Complete | 2026-04-09 |
-| 8. Paywall / Tremble Pro | v1.2 | 0/TBD | ⏳ Not started | - |
+| 8. Paywall / Tremble Pro | v1.2 | 0/TBD | 🟡 In progress (mock) | - |
 | 9. Security Hardening & GDPR | v1.2 | 1/TBD | 🟡 In progress | - |
 | 10. Launch Polish & Store Deploy | v1.3 | 2/5 | 🟡 In progress | - |
 | 11. SECURITY-01: Technical Security Audit & Hardening | v1.2 | 0/TBD | ⏳ Not started | - |
