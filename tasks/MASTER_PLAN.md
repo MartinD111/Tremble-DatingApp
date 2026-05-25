@@ -1,14 +1,16 @@
-# TREMBLE — MASTER IMPLEMENTATION PLAN (V3 — 2026-05)
-**Status:** 🚀 PRODUCTION STABILIZATION
+# TREMBLE — MASTER IMPLEMENTATION PLAN (V4 — 2026-05-25)
+**Status:** Production stabilization + Phase E (Pulse Intercept / F12)
 **Single Source of Truth** for the Tremble Mobile App (Flutter).
 
 ---
 
 ## 🛠 Tech Stack (Final)
 - **Frontend:** Flutter 3 + Riverpod 2 + GoRouter
-- **Maps:** `flutter_map` + `latlong2` + **Protomaps (PMTiles)**
-- **Infrastructure:** Cloudflare R2 (`tremble-maps`) + Cloudflare Workers (`maps.trembledating.com`)
-- **Backend:** Firebase (Auth, Firestore, Cloud Functions europe-west1)
+- **Maps:** `flutter_map` + `latlong2` + Protomaps/PMTiles
+- **Infrastructure:** Cloudflare R2 (`tremble-maps`) + Cloudflare Worker (`maps.trembledating.com`)
+- **Backend:** Firebase Auth, Firestore, Cloud Functions `europe-west1` on Node.js 22
+- **Media:** Cloudflare R2 (`tremble-avatars` / `tremble-avatars-dev`)
+- **Email:** Resend (`info@trembledating.com`)
 - **Caching:** Redis (Upstash)
 - **Security:** App Check (Enforced on all Functions)
 - **Branding:** Tremble Rose (`#F4436C`), Deep Graphite (`#1A1A18`)
@@ -21,39 +23,42 @@
    - Dev: `tremble-dev` | Prod: `am---dating-app`
    - Build: `--flavor dev --dart-define=FLAVOR=dev`
 3. **80% Context Rule:** When AI memory reaches 80%, update `tasks/context.md` and rotate the session.
-4. **App Check:** No Firestore/Function calls without valid App Check tokens.
+4. **App Check:** New callable Cloud Functions must use `enforceAppCheck: true` unless explicitly unauthenticated by design.
 5. **Branding:** Use `GlassCard` for HUD feel. No Material defaults.
+6. **Local commit gate:** `.git/hooks/pre-commit` runs Flutter format/analyze/tests and backend lint/build/tests.
 
 ---
 
-## 🗺 Feature Roadmap (Status 2026-05)
+## 🗺 Feature Roadmap (Status 2026-05-25)
 
 | Phase | Feature | Status | Tech Note |
 |---|---|---|---|
-| F1 | **Global Maps** | 🟡 In Progress | Migrated to Protomaps/OSM. Tiles pending R2 upload. |
+| F1 | **Global Maps** | ✅ DONE | Protomaps/OSM Worker live at `maps.trembledating.com`; physical-device tile verification remains a QA item. |
 | F2 | **Event Mode** | ✅ DONE | 0.55 match threshold, quiet lists. |
 | F3 | **Match Categories** | ✅ DONE | Event/Activity/Gym tabs + History filters. |
 | F4 | **Hot/Cold Nav** | ✅ DONE | RSSI-based proximity indicators. |
 | F6 | **Run Club** | ✅ DONE | Native motion bridge, 10-min TTL handshake. |
-| F7 | **Valentine Promo** | ⏳ READY | RevenueCat 7-day free trial logic. |
-| F8 | **Pricing** | ⏳ BLOCKED | Gated on Legal/Company registration. |
+| F7 | **Valentine Promo** | ⏸ BLOCKED | Depends on RevenueCat/legal readiness. |
+| F8 | **Pricing / Paywall** | 🔴 BLOCKED | `BLOCKER-003`: company registration/legal setup required. |
 | F9 | **Radius Logic** | ✅ DONE | 100m (Free) / 250m (Pro) Geohash filtering. |
 | F10| **Gym Mode** | ✅ DONE | Native Geofencing + Places API (Search only). |
 | F13| **Stealth & Safety**| ✅ DONE | Safe Zones + SHA-256 Contact Anonymity. |
+| E | **Pulse Intercept (F12)** | 🟡 IN PROGRESS | Zero-chat, button-triggered, 10-minute `expiresAt` interactions. |
 
 ---
 
-## 🛰 Infrastructure Plan: Protomaps Migration
-Instead of Google Maps ($15k+ scaling risk), we host our own global map.
+## 🛰 Maps Infrastructure: Protomaps / OSM
+Instead of Google Maps SDK map rendering, Tremble hosts its own global map.
 
-1. **Storage (R2):** `planet.pmtiles` hosted in `tremble-maps` bucket.
-2. **CDN (Worker):** `maps.trembledating.com` serves vector tiles from R2 using `protomaps-worker`.
-3. **Flutter:** `TrembleMapScreen` uses `VectorTileLayer` (Maptiler-style) or `TileLayer` (Raster-fallback).
+1. **Storage (R2):** `planet.pmtiles` is hosted in the `tremble-maps` bucket.
+2. **CDN (Worker):** `maps.trembledating.com` serves PMTiles/vector tiles from Cloudflare edge.
+3. **Flutter:** `TrembleMapScreen` uses `VectorTileLayer` with `PmTilesVectorTileProvider`.
+4. **Remaining QA:** verify worldwide tile loading on physical iOS once `BLOCKER-005` is resolved.
 
 ---
 
 ## 🛡 Security Policy
-- **App Check:** Enforced globally. Debug tokens strictly managed in `main.dart`.
+- **App Check:** Enforced for backend callable functions unless a flow is intentionally pre-auth (for example `verifyGoogleToken`).
 - **MethodChannels:** 
   - `app.tremble/motion` -> Gym/Run detection.
   - `app.tremble/proximity` -> BLE scanning background logic.

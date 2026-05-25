@@ -1,3 +1,42 @@
+## Session State — 2026-05-25 01:22 CEST
+- Active Task: Control-plane documentation synchronization
+- Environment: Dev/docs only; no Firebase or app runtime changes
+- Modified Files:
+    - `AGENTS.md`
+    - `BOOTSTRAP.md`
+    - `CLAUDE.md`
+    - `GEMINI-app.md`
+    - `README.md`
+    - `Tremble MPC Workflow.md`
+    - `tasks/MASTER_PLAN.md`
+    - `tasks/todo.md`
+    - `tasks/system_map.md`
+    - `tasks/appstore_metadata.md`
+    - `tasks/debt.md`
+    - `tasks/decisions/ADR-001-ble-proximity-engine.md`
+    - `tasks/decisions/ADR-006-node-22-migration.md`
+    - `tasks/lessons.md`
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+    - Firebase Console follow-up remains: verify expected newly-created prod functions from the latest deploy.
+- System Status: Documentation-only changes. No Flutter/backend tests run for this docs sync. Previous pre-commit dry-run on 2026-05-25 passed all Flutter and backend gates.
+
+## Session Handoff
+- Completed:
+    - Added and verified local `.git/hooks/pre-commit` dry-run before this docs sync.
+    - Updated root agent/bootstrap docs with current blockers, Node 22 backend setup, dev-flavor commands, and local pre-commit gate.
+    - Updated `tasks/MASTER_PLAN.md`, `tasks/todo.md`, `tasks/system_map.md`, `tasks/appstore_metadata.md`, `tasks/debt.md`, and relevant ADRs to remove stale ADR-001/App Check/Node 20/map-in-progress references.
+    - Added lessons for bundled map-style ownership, light frosted overlays on light basemaps, and map-style color literal validation.
+- In Progress: None.
+- Blocked: None for documentation sync.
+- Next Action:
+    1. Verify in Firebase Console that expected newly-created prod functions are intentional.
+    2. Resolve or schedule BLOCKER-006 real photo upload/onboarding E2E verification on `tremble-dev`.
+
 ## Session State — 2026-05-25 00:25 CEST
 - Active Task: Gate `migrateMatchTypes` callable behind admin auth
 - Environment: Prod backend deploy (`am---dating-app`), functions only

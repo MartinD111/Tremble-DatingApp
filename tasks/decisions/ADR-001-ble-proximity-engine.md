@@ -1,8 +1,8 @@
 # ADR-001: BLE Proximity Discovery Engine
 
 Date: 2026-03-10  
-Status: Implemented  
-Implemented In: `lib/src/core/background_service.dart`, `lib/src/core/ble_service.dart`
+Status: Implemented / Resolved
+Implemented In: `lib/src/core/background_service.dart`, `lib/src/core/ble_service.dart`, native `NativeMotionService` EventChannel bridge
 Risk Level: HIGH  
 Requires Founder Approval: YES
 
@@ -12,7 +12,9 @@ Requires Founder Approval: YES
 
 Tremble's core value proposition is **passive proximity discovery**: users must be discoverable to each other in the background, without actively opening the app.
 
-The current `background_service.dart` only contains a **mock timer** that randomly simulates matches every 15 seconds. No actual BLE or geolocation scanning is present.
+Original issue: `background_service.dart` contained a mock timer that randomly simulated matches every 15 seconds. No actual BLE or geolocation scanning was present.
+
+Current status as of 2026-05-25: ADR-001 is resolved. `background_service.dart` uses the NativeMotionService EventChannel bridge for real motion/proximity behavior. The remaining timer usage is for battery/idle notification behavior, not proximity simulation.
 
 We need a real discovery engine that:
 - Runs in the background on iOS and Android
@@ -83,8 +85,7 @@ Cloud Function: onBleProximity
 
 ## Consequences
 
-- ADR supersedes mock timer in `background_service.dart`
-- Requires update to iOS `Info.plist` (BLE usage, background modes)
-- Requires update to Android `AndroidManifest.xml` (BLE permissions, foreground service)
-- New Firestore collection: `proximity_events/`
-- New Cloud Function: `onBleProximity`
+- ADR superseded the mock proximity timer in `background_service.dart`
+- Native configuration changes were completed during the BLE / NativeMotionService integration
+- Firestore proximity storage remains privacy-minimized and time-limited
+- Keep physical iOS verification tied to `BLOCKER-005` provisioning status

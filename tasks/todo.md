@@ -1,8 +1,8 @@
-# Tremble - Project TODOs (V4)
+# Tremble - Project TODOs (V5)
 
-## 🚀 Active Focus: Maps Infrastructure — Cloudflare Worker Deploy
+## Active Focus: Production Stabilization + Phase E
 
-### 1. Infrastructure (Maps) ⏳ IN PROGRESS
+### 1. Infrastructure (Maps) ✅ COMPLETE, QA REMAINS
 - [x] Design Protomaps dark style (`tremble_dark_style.json`) — Apple Maps aesthetic.
 - [x] Bundle `tremble_dark_style.json` as a local Flutter asset for zero-latency load.
 - [x] Integrate `VectorTileLayer` + `PmTilesVectorTileProvider` in `tremble_map_screen.dart`.
@@ -22,12 +22,21 @@
 - [x] Remove Google Maps SDK native dependencies (Info.plist, AndroidManifest).
 - [x] Clean up Background Modes (remove remote-notification for free dev accounts).
 - [x] Verify App Check enforcement on all Cloud Functions.
+- [x] ADR-001 BLE background restoration resolved via NativeMotionService.
 
-### 4. Remaining Features & Blockers
-- [ ] **LEGAL:** Company registration (Blocks RevenueCat/F8).
-- [ ] **F7 (Valentine):** Activate promo logic for next release.
-- [ ] **ADR-001:** Physical device testing of BLE background restoration.
-- [ ] **BLOCKER-005:** iOS Dev provisioning for `com.pulse` — physical iPhone deploy blocked.
+### 4. Current Open Blockers
+- [ ] **BLOCKER-003:** Legal/company registration blocks RevenueCat, paywall, and Valentine promo activation.
+- [ ] **BLOCKER-005:** iOS dev provisioning for `com.pulse` blocks physical iPhone deploy and iOS tile verification.
+- [ ] **BLOCKER-006:** Real photo upload / onboarding E2E still needs device verification on `tremble-dev`.
+- [ ] **BLOCKER-007:** Live Privacy Policy, Terms, and Erasure URLs must be verified on `trembledating.com`.
+
+### 5. Backend Follow-Up
+- [ ] Verify in Firebase Console that functions newly created by the latest prod deploy are intentional.
+- [ ] Review remaining 9 moderate npm audit findings; do not use `npm audit fix --force` unless intentionally accepting Firebase SDK downgrades.
+
+### 6. Local Workflow
+- [x] Local `.git/hooks/pre-commit` created and verified directly on 2026-05-25.
+- [x] Agent/bootstrap docs updated to include the local pre-commit gate.
 
 ---
-*Last Updated: 2026-05-20*
+*Last Updated: 2026-05-25*

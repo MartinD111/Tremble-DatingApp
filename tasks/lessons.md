@@ -4,6 +4,18 @@
 
 ---
 
+**Rule #70 — Validate map style color literals before committing them.**
+[2026-05-25] Map style JSON must only contain valid hex literals and supported color expressions. If a planned color token is incomplete or malformed, normalize it before editing the style asset so the style stays parseable and reviewable.
+Source: Light Apple Maps redesign, May 2026.
+
+**Rule #69 — Light maps require light frosted overlays, not dark glass shells.**
+[2026-05-25] On light basemaps, bottom sheets, zoom pills, search bars, and info panels should use translucent white, blur, a fine light-gray border, and a soft shadow. Reusing dark-framed glass UI on a light map makes the canvas feel muddy and lowers hierarchy. Keep glassmorphism in the overlay layer, not in the basemap style.
+Source: Light Apple Maps redesign, May 2026.
+
+**Rule #68 — Bundled map style assets are the source of truth for app-side vector tile maps.**
+[2026-05-25] When `flutter_map` / `VectorTileLayer` loads a bundled style JSON asset, treat that asset as canonical. Worker or tile-server style JSON is parity only. Map palette, label hierarchy, and zoom gating must be edited in the Flutter asset first so mobile rendering stays deterministic offline.
+Source: Light Apple Maps redesign, May 2026.
+
 **Rule #67 — Type guard R2ObjectBody when fetching from Cloudflare R2.**
 [2026-05-20] `env.BUCKET.get()` returns `R2ObjectBody | R2Object`. Only `R2ObjectBody` exposes `.body`. Always guard with `"body" in resp` before accessing the stream. Also type the options object as `R2GetOptions` to avoid `noExplicitAny` linter errors.
 Source: Cloudflare Worker Map tile publication, May 2026.

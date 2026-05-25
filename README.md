@@ -1,4 +1,4 @@
-# 🏗️ Tremble — The Proximity Discovery Experience
+# Tremble — The Proximity Discovery Experience
 
 Tremble is a next-generation mobile platform engineered by **AMS Solutions d.o.o.** It focuses on high-fidelity proximity matching, designed to bridge the gap between digital discovery and real-world interaction through a "tool-first" philosophy.
 
@@ -20,12 +20,24 @@ The current dating landscape is saturated with endless digital noise and low-int
 
 Tremble is built using a modern, scalable stack designed for global performance:
 *   **Frontend:** Cross-platform Flutter implementation with Riverpod state management.
-*   **Backend:** Real-time cloud infrastructure (Firebase) and Cloudflare R2 storage.
+*   **Backend:** Firebase Auth, Firestore, Cloud Functions in `europe-west1`, Cloudflare R2 avatar storage, Upstash Redis, and Resend email.
 *   **Intelligence:** Agentic development orchestration, ensuring rapid deployment and extreme code reliability.
+
+## 🚦 Development
+
+This repository is governed by MPC. Read `tasks/context.md` and `tasks/blockers.md` before code changes.
+
+Run the app only with an explicit flavor:
+
+```bash
+flutter run --flavor dev --dart-define=FLAVOR=dev
+```
+
+Local commits should pass `.git/hooks/pre-commit`, which runs Flutter format, analyze, tests with `FLAVOR=dev`, and backend lint/build/tests.
 
 ## 🔒 Security & Privacy
 
-We take user privacy seriously. Tremble utilizes localized on-device processing (Native Motion Services) for activity detection. While encounter summaries are stored for your **Run History**, raw proximity logs are ephemeral and encrypted to exceed 2026 data protection standards.
+We take user privacy seriously. Tremble utilizes localized on-device processing (Native Motion Services) for activity detection. Encounter summaries are scoped and minimized, F12 interactions expire after 10 minutes, and the product follows a zero-chat policy: no free-text chatrooms.
 
 ---
 

@@ -17,17 +17,20 @@ When this file is detected, immediately adopt the role of **Technical Co-Founder
 
 ---
 
-## Active Blockers (as of 2026-04-30)
+## Active Blockers (as of 2026-05-25)
 
 | ID | Blocker | Impact |
 |----|---------|--------|
 | BLOCKER-003 | RevenueCat / Legal Setup | Phase 8 (Paywall) on hold until company registration |
-| SEC-001 | App Check enforcement | Done for backend, needs verification in every new PR |
+| BLOCKER-005 | iOS Dev Provisioning for `com.pulse` | Physical iPhone dev deploy blocked until a valid development profile exists |
+| BLOCKER-006 | Photo Upload / Onboarding E2E Not Verified | Registration photo upload flow still needs real-image device verification |
+| BLOCKER-007 | Legal Web Pages Not Confirmed Live | Store review risk until Privacy Policy, Terms, and Erasure pages are verified live |
 
 **Resolved:**
 - ADR-001 (BLE wiring): ✅ RESOLVED (NativeMotionService integrated).
 - D-37 (3-State Map): ✅ RESOLVED (Verified on physical S25 Ultra).
 - F5 (Strava): ✅ REMOVED (Privacy alignment).
+- SEC-001 (App Check enforcement): ✅ RESOLVED for backend; verify on every new PR.
 
 ---
 
@@ -64,6 +67,7 @@ DISCOVER → PLAN → BUILD → VERIFY → OPERATE → EVOLVE
 
 - No coding without an approved plan.
 - No deploy without passing quality checks.
+- Local commits must pass `.git/hooks/pre-commit` when present.
 - No generic AI output — every visual decision must align with the Tremble glassmorphic theme.
 - No assumptions about permissions (BLE, Location) or auth flows.
 - No autonomous action on Firebase Security Rules, Cloud Functions, or native iOS/Android config without founder approval.
@@ -208,6 +212,24 @@ lib/src/
 | Cross-Platform | 20% | Builds on iOS and Android |
 | Security | 15% | Rules verified, no exposed secrets |
 | UX Compliance | 10% | Adheres to `policies/design.yaml` |
+
+### Local Pre-Commit Gate
+
+The local Git hook `.git/hooks/pre-commit` runs:
+
+```bash
+flutter pub get --offline || flutter pub get
+dart format --set-exit-if-changed .
+flutter analyze --no-fatal-infos
+flutter test --coverage --dart-define=FLAVOR=dev
+cd functions
+npm ci --silent
+npm run lint
+npm run build
+npm test -- --passWithNoTests
+```
+
+If the hook is missing after a fresh clone, recreate it from `BOOTSTRAP.md` and make it executable with `chmod +x .git/hooks/pre-commit`.
 
 ---
 

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/theme.dart';
@@ -44,155 +46,152 @@ class EventPinSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surfaceColor = isDark ? const Color(0xFF1E1E2E) : Colors.white;
-    final textPrimary = isDark ? Colors.white : TrembleTheme.textColor;
-    final dividerColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
+    final surfaceColor = Colors.white.withValues(alpha: 0.82);
+    final textPrimary = TrembleTheme.textColor;
+    final dividerColor = const Color(0xFFD8D5CC).withValues(alpha: 0.85);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 12),
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.25)
-                      : Colors.black.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(
+              color: const Color(0xFFD9D7CF).withValues(alpha: 0.95),
             ),
-            const SizedBox(height: 20),
-
-            // ── Taste of Premium banner ──────────────────────────────
-            if (isTasteOfPremium) ...[
-              _TasteOfPremiumBanner(isDark: isDark, lang: lang),
-              const SizedBox(height: 16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, -4),
+              ),
             ],
-
-            // ── Event header ─────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _EventStatusDot(isActive: event.isActive),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          event.name,
-                          style: TrembleTheme.displayFont(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: textPrimary,
-                          ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 12),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFB8B4A9).withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (isTasteOfPremium) ...[
+                  _TasteOfPremiumBanner(isDark: isDark, lang: lang),
+                  const SizedBox(height: 16),
+                ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _EventStatusDot(isActive: event.isActive),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              event.name,
+                              style: TrembleTheme.displayFont(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              event.isActive
+                                  ? t('active_now', lang)
+                                  : t('coming_at', lang).replaceAll(
+                                      '{time}', event.startsAt ?? ''),
+                              style: TrembleTheme.uiFont(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: event.isActive
+                                    ? TrembleTheme.azure
+                                    : TrembleTheme.warmGray,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          event.isActive
-                              ? t('active_now', lang)
-                              : t('coming_at', lang)
-                                  .replaceAll('{time}', event.startsAt ?? ''),
-                          style: TrembleTheme.uiFont(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: event.isActive
-                                ? TrembleTheme.rose
-                                : TrembleTheme.accentYellow,
-                          ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Divider(height: 1, color: dividerColor),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: effectiveIsPremium
+                      ? _PeopleCountRow(
+                          count: event.peopleCount,
+                          isDark: isDark,
+                          lang: lang,
+                        )
+                      : _LockedFeatureRow(
+                          label: t('pulsing_here', lang)
+                              .replaceAll('{count}', '??'),
+                          sublabel: t('pro_feature_locked', lang),
+                          isDark: isDark,
                         ),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: effectiveIsPremium
+                      ? _HeatmapActiveRow(isDark: isDark, lang: lang)
+                      : _LockedFeatureRow(
+                          label: 'Heatmap',
+                          sublabel: t('heatmap_locked', lang),
+                          isDark: isDark,
+                        ),
+                ),
+                const SizedBox(height: 24),
+                Divider(height: 1, color: dividerColor),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _ShareButton(event: event, isDark: isDark, lang: lang),
+                      if (!effectiveIsPremium && event.isActive) ...[
+                        const SizedBox(height: 10),
+                        _UnlockButton(isDark: isDark, lang: lang),
                       ],
+                    ],
+                  ),
+                ),
+                if (const String.fromEnvironment('FLAVOR',
+                        defaultValue: 'dev') ==
+                    'dev') ...[
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _DevGeofenceControls(
+                      event: event,
+                      inGeofence: isTasteOfPremium,
+                      isDark: isDark,
                     ),
                   ),
                 ],
-              ),
+                const SizedBox(height: 24),
+              ],
             ),
-
-            const SizedBox(height: 20),
-            Divider(height: 1, color: dividerColor),
-            const SizedBox(height: 16),
-
-            // ── People count row ─────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: effectiveIsPremium
-                  ? _PeopleCountRow(
-                      count: event.peopleCount,
-                      isDark: isDark,
-                      lang: lang,
-                    )
-                  : _LockedFeatureRow(
-                      label:
-                          t('pulsing_here', lang).replaceAll('{count}', '??'),
-                      sublabel: t('pro_feature_locked', lang),
-                      isDark: isDark,
-                    ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // ── Heatmap indicator ────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: effectiveIsPremium
-                  ? _HeatmapActiveRow(isDark: isDark, lang: lang)
-                  : _LockedFeatureRow(
-                      label: 'Heatmap',
-                      sublabel: t('heatmap_locked', lang),
-                      isDark: isDark,
-                    ),
-            ),
-
-            const SizedBox(height: 24),
-            Divider(height: 1, color: dividerColor),
-            const SizedBox(height: 16),
-
-            // ── Action buttons ───────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _ShareButton(event: event, isDark: isDark, lang: lang),
-                  if (!effectiveIsPremium && event.isActive) ...[
-                    const SizedBox(height: 10),
-                    _UnlockButton(isDark: isDark, lang: lang),
-                  ],
-                ],
-              ),
-            ),
-
-            // ── Dev-only: geofence simulation ────────────────────────
-            if (const String.fromEnvironment('FLAVOR', defaultValue: 'dev') ==
-                'dev') ...[
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _DevGeofenceControls(
-                  event: event,
-                  inGeofence: isTasteOfPremium,
-                  isDark: isDark,
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
       ),
     );
@@ -214,11 +213,12 @@ class _TasteOfPremiumBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFF5C842), Color(0xFFFFAA30)],
+          colors: [Color(0xFFF7FBFF), Color(0xFFE4F0FF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD9D7CF)),
       ),
       child: Row(
         children: [
@@ -233,7 +233,7 @@ class _TasteOfPremiumBanner extends StatelessWidget {
                   style: TrembleTheme.uiFont(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A18),
+                    color: TrembleTheme.textColor,
                   ),
                 ),
                 Text(
@@ -241,7 +241,7 @@ class _TasteOfPremiumBanner extends StatelessWidget {
                   style: TrembleTheme.uiFont(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF1A1A18).withValues(alpha: 0.75),
+                    color: TrembleTheme.textColor.withValues(alpha: 0.68),
                   ),
                 ),
               ],
@@ -259,14 +259,21 @@ class _EventStatusDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? TrembleTheme.rose : TrembleTheme.accentYellow;
+    final color = isActive ? TrembleTheme.azure : TrembleTheme.warmGray;
     return Container(
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: Colors.white.withValues(alpha: 0.92),
         shape: BoxShape.circle,
-        border: Border.all(color: color.withValues(alpha: 0.35)),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Center(
         child: Icon(
@@ -291,14 +298,14 @@ class _PeopleCountRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.favorite_rounded, color: TrembleTheme.rose, size: 18),
+        Icon(Icons.favorite_rounded, color: TrembleTheme.azure, size: 18),
         const SizedBox(width: 10),
         Text(
           t('pulsing_here', lang).replaceAll('{count}', '$count'),
           style: TrembleTheme.uiFont(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : TrembleTheme.textColor,
+            color: TrembleTheme.textColor,
           ),
         ),
       ],
@@ -316,29 +323,31 @@ class _HeatmapActiveRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.layers_rounded, color: TrembleTheme.rose, size: 18),
+        Icon(Icons.layers_rounded, color: TrembleTheme.azure, size: 18),
         const SizedBox(width: 10),
         Text(
           'Heatmap aktiven',
           style: TrembleTheme.uiFont(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : TrembleTheme.textColor,
+            color: TrembleTheme.textColor,
           ),
         ),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
           decoration: BoxDecoration(
-            color: TrembleTheme.rose.withValues(alpha: 0.12),
+            color: TrembleTheme.azure.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(100),
+            border:
+                Border.all(color: TrembleTheme.azure.withValues(alpha: 0.18)),
           ),
           child: Text(
             'LIVE',
             style: TrembleTheme.uiFont(
               fontSize: 10,
               fontWeight: FontWeight.w700,
-              color: TrembleTheme.rose,
+              color: TrembleTheme.azure,
             ),
           ),
         ),
@@ -357,13 +366,11 @@ class _LockedFeatureRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final borderColor = const Color(0xFFD9D7CF).withValues(alpha: 0.95);
     return Row(
       children: [
         Icon(Icons.lock_rounded,
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.25),
-            size: 18),
+            color: TrembleTheme.warmGray.withValues(alpha: 0.7), size: 18),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
@@ -371,26 +378,23 @@ class _LockedFeatureRow extends StatelessWidget {
             style: TrembleTheme.uiFont(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.black.withValues(alpha: 0.3),
+              color: TrembleTheme.warmGray.withValues(alpha: 0.72),
             ),
           ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: TrembleTheme.accentYellow.withValues(alpha: 0.15),
+            color: const Color(0xFFF2EFE8),
             borderRadius: BorderRadius.circular(100),
-            border: Border.all(
-                color: TrembleTheme.accentYellow.withValues(alpha: 0.4)),
+            border: Border.all(color: borderColor),
           ),
           child: Text(
             sublabel,
             style: TrembleTheme.uiFont(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: TrembleTheme.accentYellow,
+              color: TrembleTheme.warmGray,
             ),
           ),
         ),
@@ -425,20 +429,24 @@ class _ShareButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         decoration: BoxDecoration(
-          color: TrembleTheme.rose,
+          color: Colors.white.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: const Color(0xFFD9D7CF).withValues(alpha: 0.95),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.ios_share_rounded, color: Colors.white, size: 18),
+            const Icon(Icons.ios_share_rounded,
+                color: Color(0xFF007AFF), size: 18),
             const SizedBox(width: 8),
             Text(
               t('share_event_invite', lang),
               style: TrembleTheme.uiFont(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: Color(0xFF007AFF),
               ),
             ),
           ],
@@ -462,28 +470,24 @@ class _UnlockButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.06)
-              : Colors.black.withValues(alpha: 0.04),
+          color: Colors.white.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.12)
-                : Colors.black.withValues(alpha: 0.10),
+            color: const Color(0xFFD9D7CF).withValues(alpha: 0.95),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.workspace_premium_rounded,
-                color: TrembleTheme.accentYellow, size: 18),
+                color: Color(0xFFF5C842), size: 18),
             const SizedBox(width: 8),
             Text(
               t('upgrade_to_pro', lang),
               style: TrembleTheme.uiFont(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: TrembleTheme.accentYellow,
+                color: TrembleTheme.textColor,
               ),
             ),
           ],
@@ -508,22 +512,22 @@ class _DevGeofenceControls extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.yellow.withValues(alpha: 0.08)
-            : Colors.yellow.withValues(alpha: 0.15),
+        color: Colors.white.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.yellow.withValues(alpha: 0.4)),
+        border:
+            Border.all(color: const Color(0xFFD9D7CF).withValues(alpha: 0.95)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.bug_report_rounded, color: Colors.yellow, size: 16),
+          const Icon(Icons.bug_report_rounded,
+              color: Color(0xFF007AFF), size: 16),
           const SizedBox(width: 8),
           Text(
             'DEV: ${inGeofence ? 'In geofence' : 'Outside geofence'}',
             style: TrembleTheme.uiFont(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: Colors.yellow,
+              color: TrembleTheme.textColor,
             ),
           ),
         ],

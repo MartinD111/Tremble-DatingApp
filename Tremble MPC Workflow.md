@@ -3,7 +3,7 @@
 **Role:** Technical Co-Founder & Lead Mobile Architect  
 **Project:** Tremble dating app — Flutter/Firebase proximity-based matching  
 **Standard:** Production-grade. No shortcuts that create debt.  
-**Principles:** No mock timers in production code. No unresolved blockers. No untested Firebase migrations.
+**Principles:** No mock timers in production code. No unresolved blockers. No untested Firebase migrations. No unflavored Flutter builds.
 
 ---
 
@@ -39,6 +39,9 @@ DISCOVER → PLAN → BUILD → TEST → MERGE → DEPLOY → OPERATE
 - No silent Firebase migrations — explicitly tested first
 - No production code with mock timers or placeholder services
 - No iOS TestFlight build until all platform gates pass
+- No free-text chatrooms; all user communication is button-triggered
+- Local commits must pass `.git/hooks/pre-commit` when present
+- Never run unflavored `flutter run` or `flutter build`
 
 ### Engineering Priorities (app-specific)
 
@@ -55,15 +58,14 @@ DISCOVER → PLAN → BUILD → TEST → MERGE → DEPLOY → OPERATE
 ```
 tasks/
   context.md           ← Read at session start, update at session end
-  plan.md              ← Feature roadmap by phase (24 phases documented)
+  MASTER_PLAN.md       ← Feature roadmap and phase history
   lessons.md           ← Permanent rules from mistakes
   blockers.md          ← Critical + medium blockers, resolution plan
-  architecture.md      ← System design: layers, data flow, external services
+  system_map.md        ← System design: layers, data flow, external services
   decisions/           ← ADRs for significant technical choices
-  test_strategy.md     ← Unit, integration, device test requirements
-  security.md          ← Firebase Rules, permissions, secret rotation
-  dependencies.md      ← Flutter packages + versions (lock file maintained)
-  ci_cd.md             ← GitHub Actions workflow, build gates
+  policies/design.yaml ← Visual contract
+  policies/auth.yaml   ← Auth and security contract
+  policies/deploy.yaml ← Deployment contract
 ```
 
 ---
@@ -84,20 +86,22 @@ Read this first. Update this last. Every session.
 - Android APK Status: [testable / blocked]
 
 ## Blocker Tracking
-- ADR-001 (BLE integration): Status [IN PROGRESS] — deadline Phase X
-- Firebase App Check: Status [PENDING] — deadline Phase X
+- BLOCKER-003: RevenueCat / Legal Setup — Phase 8 blocked
+- BLOCKER-005: iOS Dev Provisioning for `com.pulse`
+- BLOCKER-006: Photo Upload / Onboarding E2E Not Verified
+- BLOCKER-007: Legal Web Pages Not Confirmed Live
 
 ## Session Handoff
 - Completed: [what was done]
 - In Progress: [partially done, next step]
 - Blocked: [what and why, unblocking plan]
 - Next Action: [exact next step]
-- Staleness Rule: If > 24h old, re-sync with main before executing
+- Staleness Rule: If > 48h old, re-validate before executing
 ```
 
 ---
 
-### plan.md — Tremble Roadmap (24 Phases)
+### MASTER_PLAN.md — Tremble Roadmap
 
 ```markdown
 ## Phase Status Dashboard
@@ -109,32 +113,12 @@ Read this first. Update this last. Every session.
 | C | Proximity Engine — Run Club, Hot/Cold | ✅ |
 | E | Next — Pulse Intercept (F12) | 🟡 In progress |
 | 8 | Paywall — RevenueCat | 🔴 Blocked (BLOCKER-003) |
-Phase 8 – Notifications           [PENDING] FCM + local notifications
-Phase 9 – Location Permissions    [PENDING] iOS/Android permission flows
-Phase 10 – BLE Background Mode    [PENDING] Background execution strategy
-Phase 11 – Push Notifications     [PENDING] FCM setup + testing
-Phase 12 – In-App Messaging       [PENDING] Chat UI, message history
-Phase 13 – Payment Integration    [PENDING] Stripe setup (if premium features)
-Phase 14 – Analytics              [PENDING] Firebase Analytics + Mixpanel
-Phase 15 – Crash Reporting        [PENDING] Firebase Crashlytics
-Phase 16 – Testing Suite          [PENDING] Automated device testing
-Phase 17 – iOS Build Pipeline     [PENDING] Fastlane, code signing, TestFlight
-Phase 18 – Android Build Pipeline [PENDING] Gradle, signing key, Play Console
-Phase 19 – Security Hardening     [IN PROGRESS] Firebase Rules, secrets rotation
-Phase 20 – Performance Tuning     [PENDING] Bundle size, frame rate, battery
-Phase 21 – Localization           [PENDING] Multi-language strings
-Phase 22 – App Store Optimization [PENDING] Screenshots, description, keywords
-Phase 23 – Beta Release           [PENDING] TestFlight + Play Console beta
-Phase 24 – Public Launch          [PENDING] App Store + Play Store production
-
 ## Phase Exit Criteria Examples
 
-**Phase 3 – Proximity Detection [BLOCKER: ADR-001]**
-- [ ] BLE scanning implemented with flutter_blue_plus (real device, not mock)
-- [ ] Restart upon app backgrounding works
-- [ ] RSSI → distance mapping validated on test devices
-- [ ] Unit tests: BLE state transitions (scanning, connected, error)
-- [ ] Integration test: real beacon ↔ app communication
+**Phase C – Proximity Engine [RESOLVED]**
+- [x] NativeMotionService integrated for proximity/motion behavior
+- [x] Background state restoration enabled
+- [x] 3-state map toggle verified on physical Samsung S25 Ultra
 
 **Phase 5 – Matching Algorithm**
 - [ ] Proximity triggers firing on Firestore (within 100m)
@@ -166,6 +150,23 @@ Phase 24 – Public Launch          [PENDING] App Store + Play Store production
 **Issue:** Phase 8 (Paywall) on hold until company registration and legal entities are established.
 **Action:** Resume when company entity is confirmed.
 
+### BLOCKER-006: Photo Upload / Onboarding E2E Not Verified
+**Status:** OPEN
+**Issue:** Registration photo upload flow still needs a real-image device verification.
+**Action:** Verify picker → presigned URL → R2 PUT → `photoUrls` → `completeOnboarding` on `tremble-dev`.
+
+## MEDIUM BLOCKERS
+
+### BLOCKER-005: iOS Dev Provisioning for `com.pulse`
+**Status:** OPEN
+**Issue:** Physical iPhone dev deploy is blocked until a valid development profile exists.
+**Action:** Create or select a development profile for bundle identifier `com.pulse`.
+
+### BLOCKER-007: Legal Web Pages Not Confirmed Live
+**Status:** OPEN
+**Issue:** Privacy Policy, Terms, and Erasure pages are not confirmed live.
+**Action:** Verify live URLs on `trembledating.com` and link them from store metadata and app settings.
+
 ## RESOLVED BLOCKERS
 
 ### ADR-001: BLE Integration (NativeMotionService)
@@ -174,31 +175,17 @@ Phase 24 – Public Launch          [PENDING] App Store + Play Store production
 
 ### Firebase App Check Enforcement
 **Status:** ✅ RESOLVED (2026-04-20)
-**Resolution:** Enforced in Cloud Functions and Firestore rules.
-
-## MEDIUM BLOCKERS
-
-### Background Mode Permissions (iOS/Android)
-**Status:** PENDING  
-**Issue:** BLE scanning in background requires special permission flows  
-**Impact:** App stops scanning when backgrounded (defeats proximity core mechanic)  
-**Unblocking Plan:**
-1. iOS: NSBluetoothPeripheralUsageDescription + background modes configuration
-2. Android: foreground service setup (notification required)
-3. Integration test: app backgrounded for 10 min, radar updates continue
-**Owner:** Martin (Android), Aleksandar (iOS)  
-**ETA:** [DATE]
+**Resolution:** Enforced in backend; verify every new Cloud Function has App Check enforcement.
 
 ## LOW PRIORITY (tracked but not blocking)
 
 - [ ] Localization strings (UI works in English)
 - [ ] Analytics (basic Firebase Analytics sufficient for MVP)
-- [ ] In-app messaging (fallback to email for critical messages)
 ```
 
 ---
 
-### architecture.md — System Design
+### system_map.md — System Design
 
 ```markdown
 ## Tremble App Architecture
@@ -215,10 +202,10 @@ Phase 24 – Public Launch          [PENDING] App Store + Play Store production
 ┌─────────────────────────────────────────────────────────────┐
 │                    Firebase (google-services)               │
 ├──────────────────┬──────────────────┬──────────────────────┤
-│   Firestore      │   Cloud          │   Realtime           │
-│   (users,        │   Functions      │   Database           │
-│    matches,      │   (matching)     │   (messages)         │
-│    messages)     │                  │                      │
+│   Firestore      │   Cloud          │   Firebase Auth      │
+│   (users,        │   Functions      │   + App Check        │
+│    matches,      │   (matching,     │                      │
+│    interactions) │   safety, GDPR)  │                      │
 └──────────────────┴──────────────────┴──────────────────────┘
          │                    │                    │
          ↓                    ↓                    ↓
@@ -239,17 +226,18 @@ Phase 24 – Public Launch          [PENDING] App Store + Play Store production
 4. Cloud Function triggered: check matching rules (age, gender, distance)
 5. If match: create Match document in Firestore
 6. Both clients receive realtime notification via Firestore listener
-7. Users can open chat (Realtime Database for low-latency messages)
+7. Users can trigger button-based F12 interactions with a 10-minute TTL
 ```
 
 ### External Services Integration
 
 - **Firebase Firestore:** User profiles, matches, read-only data
 - **Firebase Cloud Functions:** Matching algorithm (triggered by proximity)
-- **Firebase Realtime Database:** Live messaging (fallback to Firestore if needed)
+- **Firebase Auth + App Check:** Authentication and backend request integrity
 - **Cloudflare R2:** Avatar image storage (signed URLs)
 - **Resend:** Transactional emails (welcome, password reset)
 - **Google Cloud Secret Manager:** API keys, database secrets (no hardcoding)
+- **Upstash Redis:** Cache/rate-limit support
 
 ---
 
@@ -257,14 +245,13 @@ Phase 24 – Public Launch          [PENDING] App Store + Play Store production
 
 | Layer | Technology | Version | Locked |
 |-------|------------|---------|--------|
-| Frontend | Flutter | 3.19+ | pubspec.lock |
-| BLE | flutter_blue_plus | 1.31+ | pubspec.lock |
-| Navigation | Go Router | 13.0+ | pubspec.lock |
-| State | Riverpod | 2.4+ | pubspec.lock |
+| Frontend | Flutter | 3.x | pubspec.lock |
+| BLE | NativeMotionService / flutter_blue_plus | locked | pubspec.lock |
+| Navigation | GoRouter | locked | pubspec.lock |
+| State | Riverpod 2 | locked | pubspec.lock |
 | Auth | Firebase Auth | - | google-services.json |
 | Database | Firestore | - | Firebase Console |
-| Messaging | Realtime DB | - | Firebase Console |
-| Backend | Cloud Functions | Node.js 20 | package-lock.json |
+| Backend | Cloud Functions | Node.js 22 | package-lock.json |
 | Storage | Cloudflare R2 | - | Cloudflare Console |
 ```
 
@@ -298,7 +285,7 @@ test('Matching filter rejects users outside age range', () {
 ### Level 3: Device Tests (before TestFlight)
 - Run on real iOS device + real Android device (not emulator)
 - BLE scanning continues for 30 minutes
-- Messaging latency < 2 seconds
+- F12 interaction delivery latency < 2 seconds
 - No excessive battery drain (< 5% per hour in background)
 - No crashes in error scenarios (no internet, BLE disabled, etc.)
 
@@ -306,7 +293,7 @@ test('Matching filter rejects users outside age range', () {
 - Firebase production rules active (strict permissions)
 - App Check enforcement ON (SafetyNet + DeviceCheck required)
 - All Cloud Functions deployed to production project
-- Smoke test: real user sign up → match created → message sent
+- Smoke test: real user sign up → match created → F12 interaction sent
 
 **Test Results Required for Merge:**
 ```
@@ -433,7 +420,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
-      - run: flutter test --coverage
+      - run: flutter test --coverage --dart-define=FLAVOR=dev
       - uses: codecov/codecov-action@v3
 
   lint:
@@ -441,7 +428,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
-      - run: flutter analyze
+      - run: flutter analyze --no-fatal-infos
 
   build_ios:
     runs-on: macos-latest
@@ -449,7 +436,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
-      - run: flutter build ios --release
+      - run: flutter build ios --release --flavor dev --dart-define=FLAVOR=dev
       - uses: ruby/setup-ruby@v1
       - run: fastlane ios build_testflight
 
@@ -459,7 +446,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
-      - run: flutter build apk --release --split-per-abi
+      - run: flutter build apk --release --flavor dev --dart-define=FLAVOR=dev --split-per-abi
 ```
 
 **Merge gates:**
@@ -502,8 +489,8 @@ Every task follows this sequence. No steps skipped.
 
 ```
 1. SYNC
-   Read context.md, blockers.md, architecture.md
-   Is context.md > 24h old? Re-validate before executing.
+   Read context.md, blockers.md, system_map.md
+   Is context.md > 48h old? Re-validate before executing.
    Are any blockers unblocked since last session? Update.
 
 2. HYPOTHESIZE
@@ -521,9 +508,9 @@ Every task follows this sequence. No steps skipped.
    Atomic commits (one logical change per commit).
 
 5. TEST & VERIFY
-   Unit tests: pass
+   Unit tests: pass (`flutter test --coverage --dart-define=FLAVOR=dev`)
    Integration tests (if data layer): pass
-   Linter: clean
+   Linter: clean (`flutter analyze --no-fatal-infos`)
    Device tests (if HIGH risk): pass on 2+ real devices
 
 6. REFLECT
@@ -551,14 +538,14 @@ Current Tremble project structure:
 Tremble/Pulse---Dating-app/
 ├── lib/
 │   ├── main.dart
-│   ├── models/          ← User, Match, Message data structures
-│   ├── services/        ← BLE, Firebase, Auth services
-│   ├── screens/         ← UI screens (home, profile, matches)
-│   ├── widgets/         ← Reusable UI components
-│   └── utils/           ← Helpers (RSSI mapping, validators)
+│   └── src/
+│       ├── core/        ← Firebase, routing, translations, platform services
+│       ├── features/    ← Auth, dashboard, interactions, match, profile, settings
+│       └── shared/      ← Reusable Tremble UI components
 ├── test/
-│   ├── unit/            ← Service logic tests
-│   └── integration/     ← Firestore + Cloud Functions tests
+│   ├── core/            ← Core unit tests
+│   ├── features/        ← Feature tests
+│   └── shared/          ← Shared UI tests
 ├── ios/                 ← Swift code, Info.plist, permissions
 ├── android/             ← Kotlin code, AndroidManifest.xml
 ├── pubspec.yaml         ← Flutter dependencies
@@ -566,13 +553,13 @@ Tremble/Pulse---Dating-app/
 ├── firebase.json        ← Cloud Functions config
 ├── functions/           ← Node.js Cloud Functions
 │   ├── src/
-│   │   ├── matching.ts  ← Proximity-triggered matching
-│   │   └── auth.ts      ← User initialization
+│   │   ├── modules/     ← Auth, users, proximity, matches, safety, GDPR
+│   │   └── middleware/  ← Auth, App Check, validation
 │   └── package-lock.json
 ├── tasks/               ← MPC control plane (this file lives here)
 │   ├── context.md
 │   ├── blockers.md
-│   ├── architecture.md
+│   ├── system_map.md
 │   └── decisions/
 └── .github/workflows/   ← CI/CD (GitHub Actions)
 ```
@@ -592,6 +579,22 @@ Tremble/Pulse---Dating-app/
 | Security (Firebase Rules, App Check) | 10% | Zero misconfigurations |
 
 **Blocker if any dimension fails.**
+
+### Local Pre-Commit Gate
+
+The local Git hook `.git/hooks/pre-commit` runs:
+
+```bash
+flutter pub get --offline || flutter pub get
+dart format --set-exit-if-changed .
+flutter analyze --no-fatal-infos
+flutter test --coverage --dart-define=FLAVOR=dev
+cd functions
+npm ci --silent
+npm run lint
+npm run build
+npm test -- --passWithNoTests
+```
 
 ---
 
@@ -692,8 +695,8 @@ Branch: feature/[name]
 ```
 Initialize MPC v5 App for Tremble
 Role: Technical Co-Founder
-Current phase: 5 (matching algorithm)
-Active blockers: ADR-001 (BLE), Firebase App Check
+Current phase: E (Pulse Intercept / F12)
+Active blockers: BLOCKER-003, BLOCKER-005, BLOCKER-006, BLOCKER-007
 ```
 
 The system will:

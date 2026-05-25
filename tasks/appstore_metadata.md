@@ -82,8 +82,12 @@ Za zagotavljanje pravočasnih ujemanj v živo Tremble potrebuje dostop do lokaci
 ---
 
 ## 🍏 App Store Review Checklist (Pre-Flight)
-- [ ] **Privacy Policy URL:** Must provide a valid web URL hosted on trembledating.com
+- [ ] **Privacy Policy URL:** Must provide and verify a valid web URL hosted on `trembledating.com` (`BLOCKER-007`).
+- [ ] **Terms URL:** Must provide and verify a valid Terms page on `trembledating.com` (`BLOCKER-007`).
+- [ ] **Account Erasure URL:** Must provide and verify a valid erasure form/page on `trembledating.com` (`BLOCKER-007`).
 - [ ] **Support URL:** Must provide a valid contact form or support page URL.
 - [ ] **Data Explanations:** Info.plist completely filled with clear usage descriptions (Verified completed in Session 27).
 - [ ] **UGC Mechanism:** Block & Report features implemented and functional (Verified).
-- [ ] **Reviewer Demo Account:** We MUST provide a test account (username + password) in the App Store Connect notes for the reviewer to log in. Since the app requires physical movement, we must include a video link showing the app working (a screen recording of the Dev Simulator triggering a radar match).
+- [ ] **Reviewer Demo Account:** Provide a test account (username + password) in App Store Connect notes.
+- [ ] **Reviewer Video:** Since the app requires physical movement/proximity, include a video link showing the app working (screen recording of a dev radar match / F12 interaction).
+- [ ] **iOS Physical Device Verification:** Blocked until `BLOCKER-005` provisioning for `com.pulse` is resolved.
