@@ -42,10 +42,13 @@
 
 ## BLOCKER-007 — Legal Web Pages Not Confirmed Live
 **Date:** 2026-05-21
-**Status:** 🟡 OPEN
-**Impact:** App Store / Play Store review can fail if Privacy Policy, Terms, and Erasure pages are not live and linked on `trembledating.com`.
-**Evidence:** Website sources exist under `../Website/Izvedba/tremble-website/app/privacy` and `app/erasure`, but this mobile repo has no proof that final Privacy Policy, ToS, and Erasure Form are published live.
-**Action:** Verify live URLs on `trembledating.com`, add missing ToS if absent, and link them from store metadata and app settings.
+**Status:** ✅ RESOLVED
+**Impact:** None. Privacy Policy, Terms, and Erasure pages are live and linked on `trembledating.com`.
+**Evidence:** Privacy Policy, ToS, and Erasure URLs were verified live on 2026-05-26.
+**Action:** None.
+
+> BLOCKER-007 (App Store legal URLs) ✅ RESOLVED 2026-05-26
+> — privacy/tos/erasure all return HTTP 200.
 
 ---
 

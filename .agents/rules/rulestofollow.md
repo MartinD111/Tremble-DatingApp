@@ -25,10 +25,15 @@ When this file is detected, immediately adopt the role of **Technical Co-Founder
 
 | ID | Blocker | Impact |
 |----|---------|--------|
-| BLOCKER-003 | Legal/Company registration — blocks RevenueCat (F8 Paywall) | Phase 7 gated |
+| B005 | iOS Provisioning — com.pulse vs correct bundle ID, Apple Developer account pending approval | TestFlight gated |
+| B006 | Photo Upload E2E — blocked on B005 iOS provisioning | Onboarding unverified |
+| B007 | purchases_flutter absent — RevenueCat SDK not wired, billing is mock | Paywall non-functional |
 
-> ADR-001 (BLE) ✅ RESOLVED 2026-04-29 — NativeMotionService EventChannel wired.
+> BLOCKER-003 (AMS Solutions d.o.o. registration) ✅ RESOLVED 2026-05-07
+> ADR-001 (iOS BLE Background State Restoration) ✅ RESOLVED 2026-04-29 — NativeMotionService EventChannel wired.
 > SEC-001 (App Check) ✅ RESOLVED 2026-04-29 — Enforced on all Cloud Functions.
+> B008 (Prod Firestore Rules active_run_crosses) ✅ RESOLVED 2026-05-24 — Verified active on am---dating-app.
+> B009 (WavePillService FCM) ✅ RESOLVED 2026-05-26 — Wired in router.dart.
 
 ---
 
@@ -37,8 +42,8 @@ When this file is detected, immediately adopt the role of **Technical Co-Founder
 ```
 Flutter 3 + Riverpod 2 + GoRouter
 Firebase: Auth, Firestore, Cloud Functions (europe-west1)
-Storage: Cloudflare R2 (tremble-avatars / tremble-avatars-dev)
-Redis: Upstash
+Storage: Cloudflare R2 (media.trembledating.com — GET only, LIST disabled)
+Redis: Upstash (EU region — verify)
 Email: Resend (info@trembledating.com)
 Domain: trembledating.com
 ```
@@ -48,7 +53,7 @@ Domain: trembledating.com
 | | Dev | Prod |
 |--|-----|------|
 | Firebase | `tremble-dev` | `am---dating-app` |
-| Bundle ID | `com.pulse` | `tremble.dating.app` |
+| Bundle ID | `com.pulse` | TBD — confirm in Firebase console |
 | Run command | `--flavor dev --dart-define=FLAVOR=dev` | `--flavor prod --dart-define=FLAVOR=prod` |
 
 Cross-contamination between environments = critical failure. Stop and escalate.
@@ -65,10 +70,11 @@ DISCOVER → PLAN → BUILD → VERIFY → OPERATE → EVOLVE
 
 - No coding without an approved plan.
 - No deploy without passing quality checks.
-- No generic AI output — every visual decision must align with the Tremble glassmorphic theme.
+- No generic AI output — every visual decision must align with the Tremble brand system.
 - No assumptions about permissions (BLE, Location) or auth flows.
 - No autonomous action on Firebase Security Rules, Cloud Functions, or native iOS/Android config without founder approval.
 - Never run un-flavored `flutter build` or `flutter run`.
+- GlassCard: useGlassEffect defaults to false. Only enable explicitly where glass effect is intentional (light theme contexts).
 
 ---
 
@@ -112,12 +118,13 @@ Staleness rule: if this block is >48h old, re-validate before executing.
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 1 | Foundation — Architecture, Theme, Nav | ✅ |
-| 2 | Core UX — Profiles, Swiping, Matching | ✅ |
+| 2 | Core UX — Profiles, Matching | ✅ |
 | 3 | Proximity Engine — BLE + Geohash Radius | ✅ |
-| 4 | Signals & Push Notifications (Waves, Intercept alerts — **no chatrooms, ever**) | ⏳ |
-| 5 | Matching Algorithm — Event/Gym/Run scoring, Match Categories | 🟡 In progress |
+| 4 | Signals & Push Notifications (Waves, FCM, WavePillService) | ✅ |
+| 5 | Matching Algorithm — Event/Gym/Run scoring, Match Categories | ✅ |
 | 6 | Infra & Security — App Check, Firestore Rules | ✅ |
-| 7 | Launch Polish — Paywall, Store Deploy | ⏳ Blocked (legal) |
+| F1 | Protomaps — Google Maps SDK replaced, planet.pmtiles on R2, Worker at maps.trembledating.com | ✅ pubspec wired, device test pending B005 |
+| 7 | Launch Polish — Paywall, Store Deploy | ⏳ Blocked on B005 + B007 |
 
 Phase does not close until all exit criteria pass.
 
@@ -131,6 +138,12 @@ Source: Multi-Env Setup, March 2026.
 **Rule #2** — Do not bypass Riverpod strictly typed state. Never mutate state directly in UI layer.
 
 **Rule #3** — Read a file before editing it. Always. No assumptions about current content.
+
+**Rule #4** — Client-side rate limit guards must read from the same source the backend writes to. Mismatched sources (e.g. users/{uid}.wavesThisMonth vs rateLimits/{uid}:wave_monthly.count) produce silent always-pass guards.
+Source: Wave limit implementation, May 2026.
+
+**Rule #5** — firebase firestore:rules:get and firestore:fields:list are not valid Firebase CLI commands. Use Firebase Rules API for rules verification and gcloud firestore fields ttls list for TTL policy checks.
+Source: TTL verification sprint, May 2026.
 
 Add new rules here immediately after any mistake. Format: `**Rule #N** — [rule]. Source: [context], [date].`
 
@@ -150,18 +163,6 @@ Add new rules here immediately after any mistake. Format: `**Rule #N** — [rule
 - `AndroidManifest.xml` or `Info.plist` (permissions)
 - Core Firebase Auth logic
 - Cloud Functions deployment to prod
-
-**Agent assignments:**
-
-| Agent | Task |
-|-------|------|
-| `flutter-reviewer` | Flutter code review, Riverpod patterns |
-| `dart-build-resolver` | Build failures |
-| `security-reviewer` | Before any Firebase/auth commit |
-| `architect` | BLE engine design, data model decisions |
-| `planner` | Feature breakdown for MEDIUM+ tasks |
-| `tdd-guide` | Test-first on business logic |
-| `silent-failure-hunter` | BLE edge cases, swallowed errors |
 
 ---
 
@@ -199,15 +200,13 @@ Branch: feature/[name]
 Run in this order after every significant change:
 
 ```bash
-flutter analyze
-flutter test
+flutter analyze --no-fatal-infos
+flutter test --dart-define=FLAVOR=dev
 flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev
 ```
 
 For BLE changes, also run on physical device — emulator cannot simulate Bluetooth hardware.
 For Firebase changes, run against emulator suite first: `firebase emulators:start`.
-
-ECC `verification-loop` skill covers JS/TS projects. The above is the Flutter equivalent.
 
 ---
 
@@ -218,20 +217,25 @@ Maintained in `tasks/system_map.md`. Update when structure changes.
 ```
 lib/src/
 ├── core/
-│   ├── ble_service.dart           ← BLE interface (flutter_blue_plus) — ADR-001
-│   ├── background_service.dart    ← Background execution — mock timer pending replacement
+│   ├── ble_service.dart           ← BLE interface (flutter_blue_plus) + adapter/permission state providers
+│   ├── router.dart                ← GoRouter + WavePillService FCM wiring
 │   └── firebase_options_*.dart    ← Dev/Prod config maps
 ├── features/
-│   ├── auth/                      ← Login, Google Sign-In, Onboarding
-│   ├── dashboard/                 ← Radar, Proximity discovery
-│   ├── matches/                   ← Swipe queue, Match resolution
-│   └── profile/                   ← Bio, Images, Preferences
-└── shared/                        ← GlassCard, Buttons, shared hooks
+│   ├── auth/                      ← Login, Onboarding, AuthUser (wavesThisMonth from rateLimits)
+│   ├── dashboard/                 ← Radar, RunRecap (TTL timer, Free/Pro diff, gone-forever flag)
+│   ├── matches/                   ← Match history, Near-Miss, wave limit guard
+│   ├── map/                       ← Protomaps, EventRecap
+│   ├── gym/                       ← Gym Mode
+│   ├── recap/                     ← RecapTTLProvider, ViewedRecapsRepository
+│   └── profile/                   ← Bio, Images, wave limit guard
+└── shared/                        ← GlassCard (useGlassEffect default: false), Buttons, shared hooks
 
 Infrastructure:
+- 172 Dart files, 13 test files, 11 CF src files (37 exported functions)
 - Platforms: iOS (Swift base), Android (Kotlin base)
-- Secret Manager: 40 items (Secret Manager, not hardcoded)
-- CI/CD: GitHub Actions (Base64 secret injection, flutter stable channel)
+- CI/CD: GitHub Actions
+- Firestore TTL: proximity ✅ ACTIVE, rateLimits ✅ ACTIVE
+- Legal pages live: trembledating.com/privacy ✅ trembledating.com/tos ✅ trembledating.com/erasure ✅
 ```
 
 ---
@@ -244,7 +248,7 @@ Infrastructure:
 | UI & Performance | 25% | No overflow errors, ≥60 FPS |
 | Cross-Platform | 20% | Builds on iOS and Android |
 | Security | 15% | Rules verified, no exposed secrets |
-| UX Compliance | 10% | Adheres to `policies/design.yaml` |
+| UX Compliance | 10% | Adheres to brand tokens + `policies/design.yaml` |
 
 ---
 
@@ -253,13 +257,15 @@ Infrastructure:
 ```yaml
 # Enforced at code review. Block PR if violated.
 style_contract:
-  - Dark theme by default
-  - Glassmorphism via GlassCard only — not applied globally (causes jank)
+  - Dark theme by default. Four themes total: dark/male, dark/female, light/male, light/female.
+  - GlassCard: useGlassEffect defaults to false. Enable only in light theme contexts explicitly.
   - Google Fonts only — no system fonts
   - Animations: radar pulse, match reveal — fluid, never decorative
   - No Material default blue (#2196F3) — use Tremble brand tokens
-  - Primary rose: #F4436C | Signal yellow: #F5C842 | Deep graphite: #1A1A18 | Warm cream: #FAFAF7
+  - Primary rose: #F4436C | Signal yellow: #F5C842 | Confirm green: #2D9B6F | Deep graphite: #1A1A18 | Warm cream: #FAFAF7
   - Typography: Playfair Display / Lora / Instrument Sans / JetBrains Mono
+  - Forbidden: glassmorphism on content cards in dark theme, 3D phone mockups, stock couple photos
+  - Forbidden copy: revolutionary, seamless, game-changing, "find love today"
 ```
 
 ---
@@ -269,7 +275,7 @@ style_contract:
 ```
 Local (flutter run --flavor dev)
         ↓
-flutter analyze + flutter test (GitHub Actions)
+flutter analyze --no-fatal-infos + flutter test --dart-define=FLAVOR=dev (GitHub Actions)
         ↓
 Firebase Rules (Emulator suite)
         ↓
@@ -280,7 +286,7 @@ Founder sign-off
 Production (flutter build ipa/appbundle --flavor prod)
 ```
 
-TestFlight currently gated on ADR-001 (BLE blocker).
+TestFlight currently gated on B005 iOS provisioning (Apple Developer account pending approval).
 
 ---
 

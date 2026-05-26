@@ -1052,7 +1052,7 @@ DA:138,1
 DA:143,1
 DA:145,1
 DA:148,2
-DA:157,2
+DA:157,1
 DA:159,0
 DA:176,0
 DA:180,0
@@ -1209,7 +1209,7 @@ DA:542,0
 DA:543,0
 DA:550,0
 DA:551,0
-DA:560,2
+DA:560,1
 DA:562,0
 DA:564,0
 DA:568,0
@@ -1842,8 +1842,8 @@ LF:36
 LH:0
 end_of_record
 SF:lib/src/features/auth/presentation/login_screen.dart
-DA:16,2
-DA:39,2
+DA:16,1
+DA:39,1
 DA:41,0
 DA:43,0
 DA:48,0
@@ -2086,7 +2086,7 @@ DA:504,0
 DA:505,0
 DA:506,0
 DA:516,0
-DA:536,2
+DA:536,1
 DA:538,0
 DA:540,0
 DA:543,0
@@ -2116,7 +2116,7 @@ DA:580,0
 DA:581,0
 DA:582,0
 DA:587,0
-DA:592,2
+DA:592,1
 DA:594,0
 DA:596,0
 DA:599,0
@@ -2171,7 +2171,7 @@ LF:325
 LH:4
 end_of_record
 SF:lib/src/features/auth/presentation/registration_flow.dart
-DA:86,2
+DA:86,1
 DA:88,0
 DA:89,0
 DA:100,0
@@ -3114,7 +3114,7 @@ LF:939
 LH:1
 end_of_record
 SF:lib/src/features/auth/presentation/forgot_password_screen.dart
-DA:14,2
+DA:14,1
 DA:16,0
 DA:18,0
 DA:28,0
@@ -3210,7 +3210,7 @@ LF:92
 LH:1
 end_of_record
 SF:lib/src/features/auth/presentation/permission_gate_screen.dart
-DA:13,2
+DA:13,1
 DA:15,0
 DA:17,0
 DA:24,0
@@ -3373,7 +3373,7 @@ DA:56,0
 DA:59,0
 DA:63,0
 DA:64,0
-DA:67,2
+DA:67,1
 DA:69,0
 DA:71,0
 DA:72,0
@@ -4075,7 +4075,7 @@ DA:1638,0
 DA:1656,3
 DA:1660,0
 DA:1661,0
-DA:1664,2
+DA:1664,1
 DA:1672,0
 DA:1673,0
 DA:1679,0
@@ -4129,7 +4129,7 @@ DA:1775,0
 DA:1776,0
 DA:1777,0
 DA:1788,0
-DA:1794,2
+DA:1794,1
 DA:1796,0
 DA:1798,0
 DA:1799,0
@@ -4394,7 +4394,7 @@ DA:29,1
 DA:30,1
 DA:33,1
 DA:34,1
-DA:39,2
+DA:39,1
 DA:41,0
 DA:42,0
 DA:49,0
@@ -4745,7 +4745,7 @@ SF:lib/src/features/settings/presentation/settings_screen.dart
 DA:26,0
 DA:30,0
 DA:34,0
-DA:37,2
+DA:37,1
 DA:39,0
 DA:40,0
 DA:60,0
@@ -5628,8 +5628,8 @@ LF:882
 LH:1
 end_of_record
 SF:lib/src/features/settings/presentation/premium_screen.dart
-DA:14,2
-DA:149,2
+DA:14,1
+DA:149,1
 DA:151,0
 DA:153,0
 DA:210,0
@@ -6540,7 +6540,7 @@ LF:524
 LH:0
 end_of_record
 SF:lib/src/features/profile/presentation/profile_card_preview.dart
-DA:16,2
+DA:16,1
 DA:18,0
 DA:19,0
 DA:29,0
@@ -6919,7 +6919,7 @@ LF:375
 LH:1
 end_of_record
 SF:lib/src/features/profile/presentation/edit_profile_screen.dart
-DA:28,2
+DA:28,1
 DA:30,0
 DA:31,0
 DA:85,0
@@ -8118,7 +8118,7 @@ DA:37,0
 DA:38,0
 DA:39,0
 DA:40,0
-DA:49,2
+DA:49,1
 DA:51,0
 DA:52,0
 DA:59,0
@@ -8185,7 +8185,7 @@ LF:85
 LH:1
 end_of_record
 SF:lib/src/features/safety/presentation/anonymous_mode_screen.dart
-DA:14,2
+DA:14,1
 DA:16,0
 DA:18,0
 DA:27,0
@@ -8287,7 +8287,7 @@ LF:98
 LH:1
 end_of_record
 SF:lib/src/features/safety/presentation/safe_zones_screen.dart
-DA:16,2
+DA:16,1
 DA:18,0
 DA:19,0
 DA:28,0
@@ -8549,7 +8549,7 @@ LF:258
 LH:1
 end_of_record
 SF:lib/src/features/safety/presentation/account_suspended_screen.dart
-DA:8,2
+DA:8,1
 DA:10,0
 DA:12,0
 DA:14,0
@@ -8568,7 +8568,7 @@ LF:15
 LH:1
 end_of_record
 SF:lib/src/features/gym/presentation/my_gyms_screen.dart
-DA:14,2
+DA:14,1
 DA:16,0
 DA:17,0
 DA:25,0
@@ -8869,7 +8869,7 @@ LF:41
 LH:0
 end_of_record
 SF:lib/src/shared/ui/gradient_scaffold.dart
-DA:19,2
+DA:19,1
 DA:30,0
 DA:32,0
 DA:33,0
@@ -8935,7 +8935,7 @@ LF:62
 LH:1
 end_of_record
 SF:lib/src/shared/ui/premium_paywall.dart
-DA:8,2
+DA:8,1
 DA:10,0
 DA:11,0
 DA:15,0
@@ -9472,7 +9472,7 @@ LF:103
 LH:0
 end_of_record
 SF:lib/src/shared/ui/tremble_logo.dart
-DA:9,2
+DA:9,1
 DA:16,0
 DA:18,0
 DA:19,0
@@ -9744,7 +9744,7 @@ LF:39
 LH:0
 end_of_record
 SF:lib/src/features/auth/presentation/widgets/registration_steps/phone_step.dart
-DA:12,2
+DA:12,1
 DA:86,0
 DA:87,0
 DA:91,0
@@ -12745,8 +12745,8 @@ LF:154
 LH:0
 end_of_record
 SF:lib/src/features/dashboard/application/dev_simulation_controller.dart
-DA:64,2
-DA:73,4
+DA:64,1
+DA:73,2
 DA:75,0
 DA:83,0
 DA:84,0
@@ -12963,7 +12963,7 @@ LF:1
 LH:0
 end_of_record
 SF:lib/src/features/dashboard/application/tutorial_notifier.dart
-DA:13,3
+DA:13,2
 DA:19,3
 DA:20,3
 DA:22,1
@@ -13062,7 +13062,7 @@ DA:59,0
 DA:61,0
 DA:63,0
 DA:64,0
-DA:75,2
+DA:75,1
 DA:78,0
 DA:81,0
 DA:86,0
@@ -13399,7 +13399,7 @@ LF:23
 LH:0
 end_of_record
 SF:lib/src/shared/ui/tremble_loading_spinner.dart
-DA:11,2
+DA:11,1
 DA:28,1
 DA:29,1
 DA:38,1
@@ -13465,7 +13465,7 @@ LH:46
 end_of_record
 SF:lib/src/features/map/presentation/tremble_map_screen.dart
 DA:24,0
-DA:28,2
+DA:28,1
 DA:30,0
 DA:31,0
 DA:63,0
@@ -13650,7 +13650,7 @@ DA:30,0
 DA:31,0
 DA:34,0
 DA:35,0
-DA:38,2
+DA:38,1
 DA:40,0
 DA:41,0
 DA:58,0
@@ -14375,7 +14375,7 @@ SF:lib/src/features/dashboard/presentation/widgets/radar_schedule_modal.dart
 DA:17,0
 DA:18,0
 DA:22,0
-DA:27,2
+DA:27,1
 DA:29,0
 DA:31,0
 DA:37,0
@@ -14572,7 +14572,7 @@ LF:196
 LH:1
 end_of_record
 SF:lib/src/features/dashboard/presentation/widgets/premium_tutorial_overlay.dart
-DA:12,2
+DA:12,1
 DA:14,0
 DA:16,0
 DA:17,0
@@ -14717,7 +14717,7 @@ DA:40,0
 DA:42,0
 DA:44,0
 DA:45,0
-DA:56,2
+DA:56,1
 DA:59,0
 DA:62,0
 DA:67,0
@@ -15049,7 +15049,7 @@ LF:279
 LH:0
 end_of_record
 SF:lib/src/features/gym/application/gym_mode_controller.dart
-DA:13,2
+DA:13,1
 DA:20,0
 DA:21,0
 DA:23,0
@@ -15094,7 +15094,7 @@ DA:117,0
 DA:122,0
 DA:123,0
 DA:124,0
-DA:138,2
+DA:138,1
 DA:145,0
 DA:146,0
 DA:148,0
@@ -15143,7 +15143,7 @@ LF:90
 LH:2
 end_of_record
 SF:lib/src/features/gym/presentation/gym_mode_sheet.dart
-DA:12,2
+DA:12,1
 DA:14,0
 DA:15,0
 DA:19,0
@@ -15558,7 +15558,7 @@ DA:5,2
 DA:6,1
 DA:7,1
 DA:8,1
-DA:16,3
+DA:16,2
 DA:21,1
 DA:25,1
 DA:26,0
@@ -15596,7 +15596,7 @@ DA:48,0
 DA:52,0
 DA:54,0
 DA:55,0
-DA:62,2
+DA:62,1
 DA:64,0
 DA:66,0
 DA:68,0
@@ -17133,7 +17133,7 @@ LF:97
 LH:18
 end_of_record
 SF:lib/src/features/settings/presentation/widgets/phone_edit_modal.dart
-DA:12,2
+DA:12,1
 DA:82,0
 DA:83,0
 DA:87,0

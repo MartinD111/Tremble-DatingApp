@@ -1,3 +1,121 @@
+## Session State — 2026-05-26 23:53 CEST
+- Active Task: History empty states for Matches, Recaps, and Near-Miss
+- Environment: Dev mobile flavor on `main`; no Firebase/backend/native config changes
+- Modified Files:
+    - `lib/src/features/matches/presentation/matches_screen.dart`
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart`
+    - `lib/src/core/translations.dart`
+    - `test/features/recap/viewed_recaps_wiring_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - Existing unrelated dirty files remain in the worktree and were not reverted.
+- System Status: `dart format` SUCCESS. Focused history empty-state tests SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (105/105). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS.
+
+## Session Handoff
+- Completed:
+    - Reused the existing `WarmthEmptyState` pattern instead of adding a new empty-state widget.
+    - Added exact English History empty copy for Matches, Recaps, and Pro Near-Miss states.
+    - Routed empty Matches screen content through `historyEmptyTitleKey(...)` so empty copy changes by active History section/filter.
+    - Updated Run Recap history empty state to use the Recaps copy with no subtitle.
+    - Added regression coverage for section-specific empty-state copy and wiring.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action:
+    1. Device-smoke the History sections as free and pro users to confirm the copy appears in the expected section picker/tab combinations.
+
+## Session State — 2026-05-26 23:44 CEST
+- Active Task: Run/Gym/Event defensive crash fixes
+- Environment: Dev mobile flavor on `main`; no Firebase/backend/native config changes
+- Modified Files:
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart`
+    - `lib/src/features/map/presentation/event_recap_screen.dart`
+    - `lib/src/features/gym/presentation/gym_mode_sheet.dart`
+    - `test/features/dashboard/run_recap_defensive_paths_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - Existing unrelated dirty files remain in the worktree and were not reverted.
+- System Status: `dart format` SUCCESS. Focused defensive-path test SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (104/104). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS.
+
+## Session Handoff
+- Completed:
+    - Guarded malformed or missing run recap `userIds` data with `safeRecapUserIdsFromData(...)` so build does not throw on bad Firestore shape.
+    - Replaced silent run recap provider error states with logged, centered "Something went wrong." fallback copy.
+    - Wrapped run recap wave sending with async error handling and a retry snackbar.
+    - Added `.catchError(...)` logging to run and event viewedRecaps close writes.
+    - Made gym notification preference saving null-safe when auth disappears mid-dialog.
+    - Added focused regression coverage for the defensive paths.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action:
+    1. Have Martin retry Run Club, Gym Mode, and Event Mode taps on the device/build that produced the dark screen.
+
+## Session State — 2026-05-26 23:25 CEST
+- Active Task: Near-Miss locked state in Matches
+- Environment: Dev mobile flavor on `main`; no Firebase/backend/native config changes
+- Modified Files:
+    - `lib/src/features/matches/presentation/matches_screen.dart`
+    - `lib/src/core/translations.dart`
+    - `test/features/match/near_miss_locked_state_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - Existing unrelated dirty files remain in the worktree and were not reverted.
+- System Status: `dart format` SUCCESS. Focused near-miss test SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (101/101). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS.
+
+## Session Handoff
+- Completed:
+    - Read `matches_screen.dart` fully and reported how `matchType`, list building, translations, premium state, and `PrimaryButton` import were currently handled.
+    - Added test coverage for near-miss activity counting, run upsell gating, EN/SL/HR upsell copy, CTA translations, and source-level UI wiring.
+    - Implemented free-user activity near-miss locked cards: blurred avatar, centered lock overlay, `someone_nearby` name, hidden age/zodiac/details, hidden menu/removal actions, and paywall on card tap.
+    - Implemented pro-user activity cards as full unblurred cards with trailing menu/removal actions hidden.
+    - Added `_NearMissUpsellCard` as the final run-section list item for free users, using the current visible activity-profile count and opening `PremiumPaywallBottomSheet.show(context)`.
+    - Added EN/SL/HR `near_miss_upsell_body` and `near_miss_upsell_cta` translations.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action:
+    1. Device-smoke the Run/Near-Miss section as free and pro users to confirm the locked-card tap target and upsell placement feel correct.
+
+## Session State — 2026-05-26 23:18 CEST
+- Active Task: MPC v5 prompt replacement
+- Environment: Dev / docs on `main`
+- Modified Files:
+    - `AGENTS.md`
+    - `CLAUDE.md`
+    - `tasks/context.md`
+- Open Problems:
+    - None for this task.
+- System Status: Documentation-only change; Flutter gates not run.
+
+## Session Handoff
+- Completed:
+    - Replaced root MPC prompt content in `AGENTS.md` with the provided MPC v5 document exactly.
+    - Replaced matching root MPC prompt content in `CLAUDE.md` with the same provided MPC v5 document so both prompt entrypoints remain synchronized.
+    - Verified `AGENTS.md` and `CLAUDE.md` have no diff after replacement.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Review and commit the prompt update when ready.
+
+## Session State — 2026-05-26 23:12 CEST
+- Active Task: App Store metadata rewrite and checklist updates
+- Environment: Dev / Prod docs on `main`
+- Modified Files:
+    - `tasks/appstore_metadata.md`
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+- System Status: `appstore_metadata.md` updated with revised English and Slovenian descriptions. Web page checklist items (Privacy Policy, Terms, Data Erasure) marked as completed/live.
+
+## Session Handoff
+- Completed:
+    - Replaced English and Slovenian Full Descriptions in `tasks/appstore_metadata.md` with brand-compliant copy.
+    - Marked Privacy Policy URL, Terms URL, and Account Erasure URL checklist items in `tasks/appstore_metadata.md` as done (`[x]`).
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action:
+    1. Resolve remaining items on the App Store pre-flight checklist.
+
 ## Session State — 2026-05-26 15:38 CEST
 - Active Task: Radar BLE off / Bluetooth permission denied UI states
 - Environment: Dev mobile flavor on `main`; no Firebase/backend/native config changes

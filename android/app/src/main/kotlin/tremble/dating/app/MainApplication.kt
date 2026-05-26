@@ -1,11 +1,11 @@
 package tremble.dating.app
 
+import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import io.flutter.app.FlutterApplication
 import tremble.dating.app.radar.RadarNotificationBuilder
 import tremble.dating.app.radar.RadarStateBridge
 
@@ -29,7 +29,7 @@ const val EXTRA_RADAR_BODY = "body"
  * broadcast and the receiver does the actual notification post — entirely
  * in native code, no Flutter dependency.
  */
-class MainApplication : FlutterApplication() {
+class MainApplication : Application() {
 
     private val notificationReceiver = RadarNotificationReceiver()
 

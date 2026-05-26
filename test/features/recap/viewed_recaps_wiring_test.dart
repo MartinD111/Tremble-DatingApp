@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tremble/src/core/translations.dart';
 
 void main() {
   test('recap screens write viewedRecaps only for free users on close', () {
@@ -41,5 +42,34 @@ void main() {
 
     expect(source, contains('match /users/{uid}/viewedRecaps/{recapId}'));
     expect(source, contains('allow read, write: if isSelf(uid);'));
+  });
+
+  test('history empty states use section-specific copy', () {
+    final matchesSource = File(
+      'lib/src/features/matches/presentation/matches_screen.dart',
+    ).readAsStringSync();
+    final runSource = File(
+      'lib/src/features/dashboard/presentation/run_recap_screen.dart',
+    ).readAsStringSync();
+
+    expect(
+      t('matches_history_empty_title', 'en'),
+      'No mutual waves yet. The radar is on.',
+    );
+    expect(
+      t('recaps_history_empty_title', 'en'),
+      'No recaps yet. Run, go to the gym, or find an event.',
+    );
+    expect(
+      t('near_miss_history_empty_title', 'en'),
+      'No near-misses recorded yet.',
+    );
+
+    expect(matchesSource, contains('historyEmptyTitleKey('));
+    expect(matchesSource, contains('matchType: activeFilter.matchType'));
+    expect(matchesSource, contains('title: t('));
+    expect(matchesSource, contains('activeSection: activeSection'));
+    expect(matchesSource, contains('isPremium: isPremium'));
+    expect(runSource, contains("title: t('recaps_history_empty_title', lang)"));
   });
 }

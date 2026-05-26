@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
+import 'package:tremble/src/shared/ui/primary_button.dart';
 import 'package:tremble/src/shared/ui/premium_paywall.dart';
 import 'package:tremble/src/shared/ui/warmth_empty_state.dart';
 import 'package:tremble/src/features/matches/data/match_repository.dart';
@@ -22,6 +23,46 @@ import 'package:tremble/src/features/dashboard/presentation/home_screen.dart'
     show showModeInfoDialog, RadarModeKind;
 
 enum MatchSection { gym, event, run, matches }
+
+bool isNearMissProfile(MatchProfile profile) => profile.matchType == 'activity';
+
+int countNearMissProfiles(Iterable<MatchProfile> profiles) {
+  return profiles.where(isNearMissProfile).length;
+}
+
+bool shouldShowNearMissUpsell({
+  required MatchSection activeSection,
+  required bool isPremium,
+  required int nearMissCount,
+}) {
+  return activeSection == MatchSection.run && !isPremium && nearMissCount > 0;
+}
+
+String nearMissUpsellBody(String lang, int count) {
+  return t('near_miss_upsell_body', lang).replaceAll('{count}', '$count');
+}
+
+String historyEmptyTitleKey({
+  required MatchSection activeSection,
+  required String? matchType,
+  required bool isPremium,
+}) {
+  final isNearMissSection =
+      activeSection == MatchSection.run || matchType == 'activity';
+  if (isPremium && isNearMissSection) {
+    return 'near_miss_history_empty_title';
+  }
+
+  final isRecapSection = activeSection == MatchSection.gym ||
+      activeSection == MatchSection.event ||
+      activeSection == MatchSection.run ||
+      matchType == 'event' ||
+      matchType == 'activity' ||
+      matchType == 'gym';
+  if (isRecapSection) return 'recaps_history_empty_title';
+
+  return 'matches_history_empty_title';
+}
 
 String _historyKey(HistoryFilter filter) => switch (filter) {
       HistoryFilter.lastWeek => 'history_last_week',
@@ -609,194 +650,272 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                   final visibleItems = matchesToDisplay
                       .where((item) => !_removedIds.contains(item.profile.id))
                       .toList();
+                  final nearMissCount = countNearMissProfiles(
+                    visibleItems.map((item) => item.profile),
+                  );
+                  final showNearMissUpsell = shouldShowNearMissUpsell(
+                    activeSection: activeSection,
+                    isPremium: isPremium,
+                    nearMissCount: nearMissCount,
+                  );
 
                   if (visibleItems.isEmpty) {
                     return Center(
                       child: WarmthEmptyState(
-                        title: t('matches_empty_title', lang),
-                        subtitle: t('matches_empty_sub', lang),
+                        title: t(
+                          historyEmptyTitleKey(
+                            activeSection: activeSection,
+                            matchType: activeFilter.matchType,
+                            isPremium: isPremium,
+                          ),
+                          lang,
+                        ),
                       ),
                     );
                   }
 
                   return ListView.builder(
-                    itemCount: visibleItems.length,
+                    itemCount:
+                        visibleItems.length + (showNearMissUpsell ? 1 : 0),
                     padding: const EdgeInsets.only(top: 8, bottom: 12),
                     itemBuilder: (context, index) {
+                      if (showNearMissUpsell && index == visibleItems.length) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _NearMissUpsellCard(
+                            count: nearMissCount,
+                            lang: lang,
+                            onPressed: () {
+                              PremiumPaywallBottomSheet.show(context);
+                            },
+                          ),
+                        );
+                      }
+
                       final item = visibleItems[index];
                       final profile = item.profile;
                       final isLocked = item.isLocked;
+                      final isNearMiss = isNearMissProfile(profile);
+                      final isNearMissLocked = isNearMiss && !isPremium;
+                      final isNearMissReadOnly = isNearMiss && isPremium;
+                      final hideDetails = isLocked || isNearMissLocked;
+                      final disableTrailingActions =
+                          isLocked || isNearMissLocked || isNearMissReadOnly;
+                      final displayName = isNearMissLocked
+                          ? t('someone_nearby', lang)
+                          : isLocked
+                              ? t('someone_sent_you_wave', lang)
+                              : profile.name;
+
+                      Widget profileImage = CircleAvatar(
+                        radius: 32,
+                        backgroundImage: NetworkImage(profile.imageUrl),
+                        backgroundColor: Colors.white12,
+                      );
+
+                      if (isNearMissLocked) {
+                        profileImage = ClipOval(
+                          child: ImageFiltered(
+                            imageFilter:
+                                ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                            child: profileImage,
+                          ),
+                        );
+                      }
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: GestureDetector(
-                          onTap: (isLocked || _isEditMode)
-                              ? null
-                              : () => _openProfile(profile),
+                          onTap: isNearMissLocked
+                              ? () => PremiumPaywallBottomSheet.show(context)
+                              : (isLocked || _isEditMode)
+                                  ? null
+                                  : () => _openProfile(profile),
                           child: Opacity(
                             opacity: isLocked ? 0.6 : 1.0,
-                            child: GlassCard(
-                              opacity: 0.15,
-                              borderRadius: 999,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 10),
-                              child: Row(
-                                children: [
-                                  if (!isLocked)
-                                    CircleAvatar(
-                                      radius: 32,
-                                      backgroundImage:
-                                          NetworkImage(profile.imageUrl),
-                                      backgroundColor: Colors.white12,
-                                    )
-                                  else
-                                    Container(
-                                      width: 64,
-                                      height: 64,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.06),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
+                            child: Stack(
+                              children: [
+                                GlassCard(
+                                  opacity: 0.15,
+                                  borderRadius: 999,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 10),
+                                  child: Row(
+                                    children: [
+                                      if (isLocked && !isNearMissLocked)
+                                        Container(
+                                          width: 64,
+                                          height: 64,
+                                          decoration: BoxDecoration(
                                             color: Colors.white
-                                                .withValues(alpha: 0.12)),
-                                      ),
-                                      child: const Icon(LucideIcons.user,
-                                          color: Colors.white24, size: 28),
-                                    ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          isLocked
-                                              ? t('someone_sent_you_wave', lang)
-                                              : profile.name,
-                                          style: TrembleTheme.displayFont(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w900,
-                                            color: textColor,
+                                                .withValues(alpha: 0.06),
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.12)),
                                           ),
+                                          child: const Icon(LucideIcons.user,
+                                              color: Colors.white24, size: 28),
+                                        )
+                                      else
+                                        profileImage,
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              displayName,
+                                              style: TrembleTheme.displayFont(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w900,
+                                                color: textColor,
+                                              ),
+                                            ),
+                                            if (!hideDetails) ...[
+                                              const SizedBox(height: 2),
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    '${profile.age} ${t('years', lang)}',
+                                                    style: GoogleFonts
+                                                        .instrumentSans(
+                                                      fontSize: 13,
+                                                      color: subtextColor,
+                                                    ),
+                                                  ),
+                                                  if (profile.birthDate !=
+                                                      null) ...[
+                                                    const SizedBox(width: 8),
+                                                    Icon(
+                                                      ZodiacUtils.getZodiacIcon(
+                                                        ZodiacUtils
+                                                            .getZodiacSign(
+                                                                profile
+                                                                    .birthDate),
+                                                      ),
+                                                      size: 14,
+                                                      color: subtextColor
+                                                          .withValues(
+                                                              alpha: 0.7),
+                                                    ),
+                                                  ],
+                                                  if (profile.matchType !=
+                                                      'standard') ...[
+                                                    const SizedBox(width: 8),
+                                                    _MatchTypeBadge(
+                                                      type: profile.matchType,
+                                                      primary: primary,
+                                                    ),
+                                                  ],
+                                                  if (profile.isTraveler) ...[
+                                                    const SizedBox(width: 6),
+                                                    const Text('🌴',
+                                                        style: TextStyle(
+                                                            fontSize: 12)),
+                                                  ],
+                                                ],
+                                              ),
+                                            ],
+                                          ],
                                         ),
-                                        if (!isLocked) ...[
-                                          const SizedBox(height: 2),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                '${profile.age} ${t('years', lang)}',
-                                                style:
-                                                    GoogleFonts.instrumentSans(
-                                                  fontSize: 13,
-                                                  color: subtextColor,
+                                      ),
+                                      if (isLocked && !isNearMissLocked)
+                                        Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            const Icon(LucideIcons.lock,
+                                                color: Colors.white24,
+                                                size: 16),
+                                            const SizedBox(height: 4),
+                                            GestureDetector(
+                                              onTap: () {
+                                                PremiumPaywallBottomSheet.show(
+                                                    context);
+                                              },
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 3),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFF4436C)
+                                                      .withValues(alpha: 0.15),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          100),
+                                                  border: Border.all(
+                                                      color: const Color(
+                                                              0xFFF4436C)
+                                                          .withValues(
+                                                              alpha: 0.3)),
+                                                ),
+                                                child: Text(
+                                                  t('upgrade_to_see', lang),
+                                                  style: GoogleFonts
+                                                      .instrumentSans(
+                                                    fontSize: 9,
+                                                    fontWeight: FontWeight.w700,
+                                                    color:
+                                                        const Color(0xFFF4436C),
+                                                    letterSpacing: 0.5,
+                                                  ),
                                                 ),
                                               ),
-                                              if (profile.birthDate !=
-                                                  null) ...[
-                                                const SizedBox(width: 8),
-                                                Icon(
-                                                  ZodiacUtils.getZodiacIcon(
-                                                    ZodiacUtils.getZodiacSign(
-                                                        profile.birthDate),
-                                                  ),
-                                                  size: 14,
-                                                  color: subtextColor
-                                                      .withValues(alpha: 0.7),
-                                                ),
-                                              ],
-                                              if (profile.matchType !=
-                                                  'standard') ...[
-                                                const SizedBox(width: 8),
-                                                _MatchTypeBadge(
-                                                  type: profile.matchType,
-                                                  primary: primary,
-                                                ),
-                                              ],
-                                              if (profile.isTraveler) ...[
-                                                const SizedBox(width: 6),
-                                                const Text('🌴',
-                                                    style: TextStyle(
-                                                        fontSize: 12)),
-                                              ],
-                                            ],
+                                            ),
+                                          ],
+                                        )
+                                      else if (!disableTrailingActions &&
+                                          _isEditMode)
+                                        GestureDetector(
+                                          onTap: () => _removeMatch(
+                                              profile.id, profile.name),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.red
+                                                  .withValues(alpha: 0.2),
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                  color: Colors.red
+                                                      .withValues(alpha: 0.4)),
+                                            ),
+                                            child: const Icon(LucideIcons.x,
+                                                color: Colors.red, size: 18),
                                           ),
-                                        ],
-                                      ],
+                                        )
+                                      else if (!disableTrailingActions)
+                                        IconButton(
+                                          icon: Icon(LucideIcons.moreVertical,
+                                              color: subtextColor),
+                                          onPressed: () {
+                                            UgcActionSheet.show(
+                                              context,
+                                              targetUid: profile.id,
+                                              targetName: profile.name,
+                                            );
+                                          },
+                                        )
+                                      else
+                                        const SizedBox(width: 48),
+                                      const SizedBox(width: 5),
+                                    ],
+                                  ),
+                                ),
+                                if (isNearMissLocked)
+                                  const Positioned.fill(
+                                    child: Center(
+                                      child: Icon(
+                                        LucideIcons.lock,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
                                     ),
                                   ),
-                                  if (isLocked)
-                                    Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        const Icon(LucideIcons.lock,
-                                            color: Colors.white24, size: 16),
-                                        const SizedBox(height: 4),
-                                        GestureDetector(
-                                          onTap: () {
-                                            PremiumPaywallBottomSheet.show(
-                                                context);
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFF4436C)
-                                                  .withValues(alpha: 0.15),
-                                              borderRadius:
-                                                  BorderRadius.circular(100),
-                                              border: Border.all(
-                                                  color: const Color(0xFFF4436C)
-                                                      .withValues(alpha: 0.3)),
-                                            ),
-                                            child: Text(
-                                              t('upgrade_to_see', lang),
-                                              style: GoogleFonts.instrumentSans(
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w700,
-                                                color: const Color(0xFFF4436C),
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  else if (_isEditMode)
-                                    GestureDetector(
-                                      onTap: () => _removeMatch(
-                                          profile.id, profile.name),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              Colors.red.withValues(alpha: 0.2),
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                              color: Colors.red
-                                                  .withValues(alpha: 0.4)),
-                                        ),
-                                        child: const Icon(LucideIcons.x,
-                                            color: Colors.red, size: 18),
-                                      ),
-                                    )
-                                  else
-                                    IconButton(
-                                      icon: Icon(LucideIcons.moreVertical,
-                                          color: subtextColor),
-                                      onPressed: () {
-                                        UgcActionSheet.show(
-                                          context,
-                                          targetUid: profile.id,
-                                          targetName: profile.name,
-                                        );
-                                      },
-                                    ),
-                                  const SizedBox(width: 5),
-                                ],
-                              ),
+                              ],
                             ),
                           ),
                         ),
@@ -806,6 +925,72 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                 },
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _NearMissUpsellCard — shown after locked run near-miss profiles for free users
+// ─────────────────────────────────────────────────────────────────────────────
+class _NearMissUpsellCard extends StatelessWidget {
+  final int count;
+  final String lang;
+  final VoidCallback onPressed;
+
+  const _NearMissUpsellCard({
+    required this.count,
+    required this.lang,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).primaryColor;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
+    return GlassCard(
+      opacity: 0.16,
+      borderRadius: 28,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: primary.withValues(alpha: 0.14),
+                  border: Border.all(color: primary.withValues(alpha: 0.28)),
+                ),
+                child: Icon(LucideIcons.lock, color: primary, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  nearMissUpsellBody(lang, count),
+                  style: GoogleFonts.instrumentSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                    height: 1.32,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          PrimaryButton(
+            text: t('near_miss_upsell_cta', lang),
+            onPressed: onPressed,
+            height: 48,
+            icon: LucideIcons.eye,
           ),
         ],
       ),

@@ -198,7 +198,10 @@ class _PulsingNavIconState extends State<_PulsingNavIcon>
               boxShadow: widget.isPulsing
                   ? [
                       BoxShadow(
-                        color: const Color(0xFFF4436C).withValues(alpha: 0.48),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.48),
                         blurRadius: 18,
                         spreadRadius: 2,
                       ),

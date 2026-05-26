@@ -904,12 +904,19 @@ const Map<String, Map<String, String>> _translations = {
     'radar_empty_sub': 'Live your day — we\'re watching.',
     'near_miss_empty_title': 'Nothing yet.',
     'near_miss_empty_sub': 'When paths cross, you\'ll be the first to know.',
+    'near_miss_upsell_body':
+        'You missed {count} people this week. Pro shows you who.',
+    'near_miss_upsell_cta': 'See who',
     'run_active_empty_title': 'No signals on this route.',
     'run_active_empty_sub': 'Keep moving.',
     'run_history_empty_title': 'No crossings yet.',
     'run_history_empty_sub': 'Every run adds to your story.',
     'matches_empty_title': 'Nobody close yet.',
     'matches_empty_sub': 'The radar is patient. So are we.',
+    'matches_history_empty_title': 'No mutual waves yet. The radar is on.',
+    'recaps_history_empty_title':
+        'No recaps yet. Run, go to the gym, or find an event.',
+    'near_miss_history_empty_title': 'No near-misses recorded yet.',
 
     // --- Anonymity & Safe Zones (F13) ---
     'privacy_and_stealth': 'Privacy & Stealth',
@@ -1685,6 +1692,9 @@ const Map<String, Map<String, String>> _translations = {
     'radar_empty_sub': 'Živi svoj dan. Mi pazimo.',
     'near_miss_empty_title': 'Zaenkrat nič.',
     'near_miss_empty_sub': 'Ko se poti prekrižajo, boš prvi izvedel/a.',
+    'near_miss_upsell_body':
+        'Ta teden si zamudil/a {count} ljudi. Premium ti pokaže kdo.',
+    'near_miss_upsell_cta': 'Poglej kdo',
     'run_active_empty_title': 'Na tej progi ni signalov.',
     'run_active_empty_sub': 'Nadaljuj.',
     'run_history_empty_title': 'Zaenkrat brez srečanj.',
@@ -4721,6 +4731,9 @@ const Map<String, Map<String, String>> _translations = {
     'matches_empty_sub': 'Radar je strpljiv. I mi smo.',
     'near_miss_empty_title': 'Još ništa.',
     'near_miss_empty_sub': 'Kad se putovi ukrste, bit ćeš prvi koji zna.',
+    'near_miss_upsell_body':
+        'Ovaj tjedan propustio/la si {count} ljudi. Premium ti pokazuje tko.',
+    'near_miss_upsell_cta': 'Pogledaj tko',
     'no_blocked_users_sub': 'Neka tvoj prostor ostane ugodan.',
     'radar_empty_title': 'Tiho vani.',
     'radar_empty_sub': 'Živite dan — mi promatramo.',

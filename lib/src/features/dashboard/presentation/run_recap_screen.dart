@@ -35,6 +35,38 @@ MatchProfile runRecapMatchProfileFromPublicProfile(PublicProfile profile) {
   );
 }
 
+@visibleForTesting
+List<String> safeRecapUserIdsFromData(Map<String, dynamic> data) {
+  final rawUserIds = data['userIds'];
+  if (rawUserIds is! List) return const [];
+  return rawUserIds.whereType<String>().toList(growable: false);
+}
+
+@visibleForTesting
+Widget recapProviderErrorContent(Object error, StackTrace stackTrace) {
+  debugPrint('RecapProvider error: $error\n$stackTrace');
+  return Center(
+    child: Text(
+      'Something went wrong.',
+      style: GoogleFonts.lora(
+        color: const Color(0xFF6B6B63),
+      ),
+    ),
+  );
+}
+
+SliverToBoxAdapter _recapProviderErrorSliver(
+  Object error,
+  StackTrace stackTrace,
+) {
+  return SliverToBoxAdapter(
+    child: SizedBox(
+      height: 120,
+      child: recapProviderErrorContent(error, stackTrace),
+    ),
+  );
+}
+
 class RunRecapScreen extends ConsumerStatefulWidget {
   const RunRecapScreen({super.key});
 
@@ -73,11 +105,18 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
     final recapIds = activeDocs.map((doc) => doc.id);
 
     unawaited(
-      ref.read(viewedRecapsRepositoryProvider).markViewedRecapsOnClose(
+      ref
+          .read(viewedRecapsRepositoryProvider)
+          .markViewedRecapsOnClose(
             uid: user.id,
             recapIds: recapIds,
             type: 'run',
-          ),
+          )
+          .catchError(
+        (Object e, StackTrace st) {
+          debugPrint('viewedRecaps write failed: $e\n$st');
+        },
+      ),
     );
   }
 
@@ -188,8 +227,7 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                           (context, index) {
                             final doc = docs[index];
                             final data = doc.data() as Map<String, dynamic>;
-                            final userIds =
-                                List<String>.from(data['userIds'] ?? []);
+                            final userIds = safeRecapUserIdsFromData(data);
                             final partnerId = userIds.firstWhere(
                               (id) => id != user.id,
                               orElse: () => '',
@@ -207,9 +245,11 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                                 iWaved: iWaved,
                                 isPremium: effectivePremium,
                                 isActive: true,
-                                onWave: () => ref
-                                    .read(runClubRepositoryProvider)
-                                    .sendWave(doc.id, user.id),
+                                onWave: () {
+                                  return ref
+                                      .read(runClubRepositoryProvider)
+                                      .sendWave(doc.id, user.id);
+                                },
                               ),
                             );
                           },
@@ -218,8 +258,7 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                       ),
                     ),
               loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
-              error: (_, __) =>
-                  const SliverToBoxAdapter(child: SizedBox.shrink()),
+              error: _recapProviderErrorSliver,
             ),
 
             // ── History Header ──────────────────────────────────────
@@ -262,16 +301,16 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
               data: (docs) {
                 // Filter out those who are currently active to avoid duplicates
                 final activeIds = activeAsync.valueOrNull
-                        ?.map((d) => (d.data()
-                            as Map<String, dynamic>)['userIds'] as List)
-                        .expand((ids) => ids)
+                        ?.expand((doc) => safeRecapUserIdsFromData(
+                              doc.data() as Map<String, dynamic>,
+                            ))
                         .where((id) => id != user.id)
                         .toSet() ??
                     {};
 
                 final historyDocs = docs.where((doc) {
                   final data = doc.data() as Map<String, dynamic>;
-                  final userIds = List<String>.from(data['userIds'] ?? []);
+                  final userIds = safeRecapUserIdsFromData(data);
                   final partnerId = userIds.firstWhere((id) => id != user.id,
                       orElse: () => '');
                   return !activeIds.contains(partnerId) &&
@@ -283,8 +322,7 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(20),
                       child: WarmthEmptyState(
-                        title: t('run_history_empty_title', lang),
-                        subtitle: t('run_history_empty_sub', lang),
+                        title: t('recaps_history_empty_title', lang),
                       ),
                     ),
                   );
@@ -297,8 +335,7 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                       (context, index) {
                         final doc = historyDocs[index];
                         final data = doc.data() as Map<String, dynamic>;
-                        final userIds =
-                            List<String>.from(data['userIds'] ?? []);
+                        final userIds = safeRecapUserIdsFromData(data);
                         final partnerId = userIds.firstWhere(
                             (id) => id != user.id,
                             orElse: () => '');
@@ -329,8 +366,7 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                   ),
                 ),
               ),
-              error: (_, __) =>
-                  const SliverToBoxAdapter(child: SizedBox.shrink()),
+              error: _recapProviderErrorSliver,
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
           ],
@@ -343,7 +379,7 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
 class _RecapItem extends ConsumerStatefulWidget {
   final String partnerId;
   final bool iWaved;
-  final VoidCallback? onWave;
+  final Future<void> Function()? onWave;
   final bool isHistory;
   final bool isPremium;
   final bool isActive;
@@ -397,6 +433,23 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
   String _formatRemaining(int remainingSeconds) {
     return '${remainingSeconds ~/ 60}:'
         '${(remainingSeconds % 60).toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _handleWaveTap(BuildContext context) async {
+    unawaited(HapticFeedback.lightImpact());
+    final onWave = widget.onWave;
+    if (onWave == null) return;
+
+    try {
+      await onWave();
+    } catch (e, st) {
+      debugPrint('sendWave error: $e\n$st');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Wave failed. Try again.')),
+        );
+      }
+    }
   }
 
   @override
@@ -496,10 +549,7 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
                     )
                   else if (showWaveButton)
                     GestureDetector(
-                      onTap: () {
-                        unawaited(HapticFeedback.lightImpact());
-                        widget.onWave?.call();
-                      },
+                      onTap: () => unawaited(_handleWaveTap(context)),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 9),
@@ -544,7 +594,10 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
         ),
       ),
       loading: () => const SizedBox(height: 60),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (e, st) => SizedBox(
+        height: 80,
+        child: recapProviderErrorContent(e, st),
+      ),
     );
   }
 }

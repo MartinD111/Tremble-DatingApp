@@ -132,10 +132,13 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
   }
 
   void _saveGymNotificationsPref({required bool enabled}) {
+    final user = ref.read(authStateProvider);
+    if (user == null) return;
+
     ref.read(authStateProvider.notifier).updateProfile(
-          ref.read(authStateProvider)!.copyWith(
-                gymNotificationsEnabled: enabled,
-              ),
+          user.copyWith(
+            gymNotificationsEnabled: enabled,
+          ),
         );
   }
 

@@ -78,11 +78,18 @@ class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
     if (user == null || ref.read(effectiveIsPremiumProvider)) return;
 
     unawaited(
-      ref.read(viewedRecapsRepositoryProvider).markViewedRecapOnClose(
+      ref
+          .read(viewedRecapsRepositoryProvider)
+          .markViewedRecapOnClose(
             uid: user.id,
             recapId: widget.eventId,
             type: 'event',
-          ),
+          )
+          .catchError(
+        (Object e, StackTrace st) {
+          debugPrint('viewedRecaps write failed: $e\n$st');
+        },
+      ),
     );
   }
 
