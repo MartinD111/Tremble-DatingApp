@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -25,7 +27,10 @@ import '../features/safety/presentation/account_suspended_screen.dart';
 import '../features/gym/presentation/my_gyms_screen.dart';
 import '../features/match/presentation/match_reveal_screen.dart';
 import '../features/match/domain/match.dart';
+import '../features/match/data/wave_repository.dart';
 import '../shared/ui/gradient_scaffold.dart';
+import '../shared/ui/premium_paywall.dart';
+import '../shared/ui/wave_pill_service.dart';
 import 'consent_service.dart';
 import 'notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -493,6 +498,36 @@ final routerProvider = Provider<GoRouter>((ref) {
   NotificationService.initialize(
     onNotificationTap: (data) {
       handleNotificationNavigation(data);
+    },
+    onForegroundWave: ({
+      required String name,
+      required int age,
+      required String imageUrl,
+      required String targetUid,
+      required bool isIncomingWave,
+    }) {
+      final context = rootNavigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
+
+      final overlay = Overlay.of(context);
+      WavePillService.show(
+        overlay: overlay,
+        data: WavePillData(
+          name: name,
+          age: age,
+          imageUrl: imageUrl,
+          targetUid: targetUid,
+          isIncomingWave: isIncomingWave,
+        ),
+        onWave: (uid) {
+          final user = ref.read(authStateProvider);
+          if (user?.hasReachedFreeWaveLimit == true) {
+            PremiumPaywallBottomSheet.show(context);
+            return;
+          }
+          unawaited(ref.read(waveRepositoryProvider).sendWave(uid));
+        },
+      );
     },
     // Foreground MUTUAL_WAVE: let the activeMatchesStream listener in
     // HomeScreen navigate to MatchRevealScreen — no overlay needed here.

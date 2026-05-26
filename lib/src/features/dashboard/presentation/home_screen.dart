@@ -896,6 +896,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDegraded = radarMode == 'degraded';
     final lang = ref.watch(appLanguageProvider);
     final tutorial = ref.watch(tutorialProvider);
+    final bleIssue = canAccessRadar ? ref.watch(radarBleIssueProvider) : null;
     final bool isDevSearchActive = devSim.isMutualWaveActive;
     final bool isSearchActive = activeMatch != null || isDevSearchActive;
     return Stack(
@@ -908,7 +909,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Positioned.fill(
                     child: RadarAnimation(
                       isScanning: isScanning &&
-                          !isSearchActive, // stop visual pulse if searching
+                          !isSearchActive &&
+                          bleIssue ==
+                              null, // stop visual pulse if searching/blocked
                       isVibrationEnabled: user?.isPingVibrationEnabled ?? true,
                       pingDistance: pingDistance,
                       pingAngle: pingAngle,
@@ -916,7 +919,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       signalPulseKey: signalPulseKey,
                     ),
                   ),
-                  if (isSearchActive)
+                  if (bleIssue != null)
+                    Center(
+                      child: RadarBleIssueMessage(
+                        issue: bleIssue,
+                        onOpenSettings: () {
+                          openAppSettings();
+                          ref.invalidate(bluetoothAdapterStateProvider);
+                          ref.invalidate(bluetoothPermissionStatusProvider);
+                        },
+                        onGrantPermission: () async {
+                          await ConsentService.requestBluetooth();
+                          ref.invalidate(bluetoothPermissionStatusProvider);
+                        },
+                      ),
+                    )
+                  else if (isSearchActive)
                     // Bottom-anchored, NOT centered, NOT dimmed — the radar
                     // canvas + ping must remain 100% visible during a mutual
                     // wave so the user can see the partner approaching.
@@ -2198,6 +2216,80 @@ Future<void> showModeInfoDialog({
       ),
     ),
   );
+}
+
+class RadarBleIssueMessage extends StatelessWidget {
+  const RadarBleIssueMessage({
+    super.key,
+    required this.issue,
+    required this.onOpenSettings,
+    required this.onGrantPermission,
+  });
+
+  final RadarBleIssue issue;
+  final VoidCallback onOpenSettings;
+  final VoidCallback onGrantPermission;
+
+  @override
+  Widget build(BuildContext context) {
+    final isBluetoothOff = issue == RadarBleIssue.bluetoothOff;
+    final message = isBluetoothOff
+        ? 'Bluetooth is off. Tremble needs it to detect people nearby.'
+        : 'Bluetooth permission required.';
+    final actionLabel = isBluetoothOff ? 'Open Settings' : 'Grant Permission';
+    final action = isBluetoothOff ? onOpenSettings : onGrantPermission;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 340),
+        child: GlassCard(
+          useGlassEffect: false,
+          solidDarkBg: const Color(0xFF222220),
+          borderRadius: 24,
+          borderColor: TrembleTheme.rose.withValues(alpha: 0.28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: TrembleTheme.rose.withValues(alpha: 0.14),
+                ),
+                child: Icon(
+                  isBluetoothOff
+                      ? LucideIcons.bluetoothOff
+                      : LucideIcons.shieldAlert,
+                  color: TrembleTheme.rose,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.instrumentSans(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 22),
+              PrimaryButton(
+                text: actionLabel,
+                onPressed: action,
+                width: 220,
+                height: 48,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Amber animated pill shown on the Radar screen when the background engine

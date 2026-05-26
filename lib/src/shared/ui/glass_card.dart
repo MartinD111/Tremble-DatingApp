@@ -17,7 +17,7 @@ class GlassCard extends StatelessWidget {
     this.borderRadius = 28.0,
     this.padding = const EdgeInsets.all(20),
     this.borderColor,
-    this.useGlassEffect = true,
+    this.useGlassEffect = false,
     this.solidDarkBg,
   });
 

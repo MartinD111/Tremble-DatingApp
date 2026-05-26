@@ -17,6 +17,14 @@ import '../../gym/domain/selected_gym.dart';
 // Sentinel marking "argument not provided" — distinguishes from explicit null
 // in copyWith. Use to allow callers to clear a nullable field by passing null.
 const Object _unset = Object();
+const String _waveMonthlyEndpoint = 'wave_monthly';
+
+@visibleForTesting
+String waveMonthlyRateLimitDocId(String uid) => '$uid:$_waveMonthlyEndpoint';
+
+@visibleForTesting
+int waveCountFromRateLimitData(Map<String, dynamic>? data) =>
+    data?['count'] as int? ?? 0;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AuthUser — data model (password field REMOVED for security)
@@ -75,6 +83,7 @@ class AuthUser {
   final bool isEmailVerified;
   final bool isAdmin;
   final bool isPremium;
+  final int wavesThisMonth;
   final bool isDarkMode;
   final bool isPrideMode;
   final bool isClassicAppearance;
@@ -111,6 +120,8 @@ class AuthUser {
   /// EventGeofenceService — it is runtime-only and never persisted.
   bool effectiveIsPremium({bool inEventGeofence = false}) =>
       isPremium || inEventGeofence;
+
+  bool get hasReachedFreeWaveLimit => !isPremium && wavesThisMonth >= 5;
 
   const AuthUser({
     required this.id,
@@ -160,6 +171,7 @@ class AuthUser {
     this.isEmailVerified = false,
     this.isAdmin = false,
     this.isPremium = false,
+    this.wavesThisMonth = 0,
     this.isDarkMode = false,
     this.isPrideMode = false,
     this.isClassicAppearance = true,
@@ -298,8 +310,12 @@ class AuthUser {
     return null;
   }
 
-  factory AuthUser.fromFirestore(String uid, Map<String, dynamic> data,
-      {bool emailVerified = false}) {
+  factory AuthUser.fromFirestore(
+    String uid,
+    Map<String, dynamic> data, {
+    bool emailVerified = false,
+    int wavesThisMonth = 0,
+  }) {
     return AuthUser(
       id: uid,
       name: data['name'] as String?,
@@ -348,6 +364,7 @@ class AuthUser {
       prompts: Map<String, String>.from(data['prompts'] ?? {}),
       isAdmin: data['isAdmin'] as bool? ?? false,
       isPremium: data['isPremium'] as bool? ?? false,
+      wavesThisMonth: wavesThisMonth,
       isDarkMode: data['isDarkMode'] as bool? ?? false,
       isPrideMode: data['isPrideMode'] as bool? ?? false,
       isClassicAppearance: data['isClassicAppearance'] as bool? ?? true,
@@ -428,6 +445,7 @@ class AuthUser {
     bool? isEmailVerified,
     bool? isAdmin,
     bool? isPremium,
+    int? wavesThisMonth,
     bool? isDarkMode,
     bool? isPrideMode,
     bool? isClassicAppearance,
@@ -535,6 +553,7 @@ class AuthUser {
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
       isAdmin: isAdmin ?? this.isAdmin,
       isPremium: isPremium ?? this.isPremium,
+      wavesThisMonth: wavesThisMonth ?? this.wavesThisMonth,
       isDarkMode: isDarkMode ?? this.isDarkMode,
       isPrideMode: isPrideMode ?? this.isPrideMode,
       isClassicAppearance: isClassicAppearance ?? this.isClassicAppearance,
@@ -901,6 +920,7 @@ class AuthRepository {
   // ── Fetch user from Firestore (READ only — this is fine client-side) ────
   Future<AuthUser> _fetchUser(User firebaseUser) async {
     final doc = await _users.doc(firebaseUser.uid).get();
+    final wavesThisMonth = await _fetchMonthlyWaveCount(firebaseUser.uid);
     if (doc.exists && doc.data() != null) {
       final data = doc.data()!;
       // isOnboarded is the authoritative source of truth — read it directly.
@@ -913,6 +933,7 @@ class AuthRepository {
         firebaseUser.uid,
         data,
         emailVerified: firebaseUser.emailVerified,
+        wavesThisMonth: wavesThisMonth,
       );
     }
     // User doc not yet created by Cloud Function — return minimal stub.
@@ -922,7 +943,21 @@ class AuthRepository {
       email: firebaseUser.email,
       isOnboarded: false,
       isEmailVerified: firebaseUser.emailVerified,
+      wavesThisMonth: wavesThisMonth,
     );
+  }
+
+  Future<int> _fetchMonthlyWaveCount(String uid) async {
+    try {
+      final doc = await _db
+          .collection('rateLimits')
+          .doc(waveMonthlyRateLimitDocId(uid))
+          .get();
+      return waveCountFromRateLimitData(doc.data());
+    } catch (e) {
+      debugPrint('[AUTH] Failed to fetch wave monthly rate limit for $uid: $e');
+      return 0;
+    }
   }
 
   // ── Complete onboarding (via Cloud Functions) ────────────────────────────

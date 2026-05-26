@@ -17,6 +17,7 @@ import '../../../core/theme.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../safety/screen_protection_service.dart';
 import '../../dashboard/application/dev_simulation_controller.dart';
+import '../../../shared/ui/premium_paywall.dart';
 
 class ProfileDetailScreen extends ConsumerStatefulWidget {
   final MatchProfile match;
@@ -545,14 +546,20 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
       isSent = true;
     }
 
-    VoidCallback onGreet = () async {
+    Future<bool> Function() onGreet = () async {
+      final user = ref.read(authStateProvider);
+      if (user?.hasReachedFreeWaveLimit == true) {
+        PremiumPaywallBottomSheet.show(context);
+        return false;
+      }
+
       try {
-        await HapticFeedback.lightImpact();
         if (matchDoc != null) {
           await ref.read(waveRepositoryProvider).sendGesture(matchDoc.id);
         } else {
           await ref.read(matchControllerProvider.notifier).greet();
         }
+        return true;
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -560,6 +567,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
             backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
           ));
         }
+        return false;
       }
     };
 
@@ -1126,7 +1134,7 @@ class _ActionTextButton extends StatelessWidget {
 class _WaveButton extends StatefulWidget {
   final String text;
   final Color color;
-  final VoidCallback? onTap;
+  final Future<bool> Function()? onTap;
   final bool theyWaved;
 
   const _WaveButton({
@@ -1209,8 +1217,11 @@ class _WaveButtonState extends State<_WaveButton>
     super.dispose();
   }
 
-  void _handleTap() {
+  Future<void> _handleTap() async {
     if (_sent || widget.onTap == null) return;
+    final didSend = await widget.onTap!();
+    if (!didSend || !mounted) return;
+
     setState(() {
       _sent = true;
       _shakeForSent = true;

@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// Tremble BLE Service — advertises presence and scans for other Tremble users.
 ///
@@ -249,4 +250,47 @@ class BleService {
 
 final bleServiceProvider = Provider<BleService>((ref) {
   return BleService();
+});
+
+enum RadarBleIssue {
+  bluetoothOff,
+  permissionDenied,
+}
+
+RadarBleIssue? resolveRadarBleIssue({
+  required BluetoothAdapterState? adapterState,
+  required PermissionStatus? permissionStatus,
+}) {
+  if (adapterState == BluetoothAdapterState.off) {
+    return RadarBleIssue.bluetoothOff;
+  }
+
+  if (permissionStatus == PermissionStatus.denied ||
+      permissionStatus == PermissionStatus.permanentlyDenied ||
+      permissionStatus == PermissionStatus.restricted) {
+    return RadarBleIssue.permissionDenied;
+  }
+
+  return null;
+}
+
+final bluetoothAdapterStateProvider =
+    StreamProvider<BluetoothAdapterState>((ref) {
+  return FlutterBluePlus.adapterState;
+});
+
+final bluetoothPermissionStatusProvider =
+    FutureProvider<PermissionStatus>((ref) {
+  return Permission.bluetoothScan.status;
+});
+
+final radarBleIssueProvider = Provider<RadarBleIssue?>((ref) {
+  final adapterState = ref.watch(bluetoothAdapterStateProvider).valueOrNull;
+  final permissionStatus =
+      ref.watch(bluetoothPermissionStatusProvider).valueOrNull;
+
+  return resolveRadarBleIssue(
+    adapterState: adapterState,
+    permissionStatus: permissionStatus,
+  );
 });

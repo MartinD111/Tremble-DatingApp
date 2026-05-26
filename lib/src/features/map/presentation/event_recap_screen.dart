@@ -9,6 +9,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme.dart';
 import '../../../core/translations.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../recap/data/viewed_recaps_repository.dart';
 import '../../safety/screen_protection_service.dart';
 
 // (Countdown is managed as local state in _EventRecapScreenState — simpler
@@ -65,10 +66,24 @@ class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
 
   @override
   void dispose() {
+    _markViewedRecapOnClose();
     ScreenProtectionService.removeRecordingListener();
     ScreenProtectionService.disable();
     _timer?.cancel();
     super.dispose();
+  }
+
+  void _markViewedRecapOnClose() {
+    final user = ref.read(authStateProvider);
+    if (user == null || ref.read(effectiveIsPremiumProvider)) return;
+
+    unawaited(
+      ref.read(viewedRecapsRepositoryProvider).markViewedRecapOnClose(
+            uid: user.id,
+            recapId: widget.eventId,
+            type: 'event',
+          ),
+    );
   }
 
   @override

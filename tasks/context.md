@@ -1,3 +1,261 @@
+## Session State — 2026-05-26 15:38 CEST
+- Active Task: Radar BLE off / Bluetooth permission denied UI states
+- Environment: Dev mobile flavor on `main`; no Firebase/backend/native config changes
+- Modified Files:
+    - `lib/src/core/ble_service.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `test/core/ble_service_radar_state_test.dart`
+    - `test/features/dashboard/radar_ble_issue_message_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - Device smoke still needed: toggle Bluetooth off and deny Bluetooth permission on a real Android/iOS device to confirm OS-specific permission/status reporting.
+    - Existing unrelated dirty files from previous recap/wave/rules work remain in the worktree and were not reverted.
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. Focused Radar BLE tests SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (98/98). `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` SUCCESS.
+
+## Session Handoff
+- Completed:
+    - Verified `permission_handler` is already present in `pubspec.yaml`.
+    - Confirmed Bluetooth adapter state was only checked inside `BleService._runScan()` and not exposed to Radar UI.
+    - Added `RadarBleIssue`, `resolveRadarBleIssue(...)`, `bluetoothAdapterStateProvider`, `bluetoothPermissionStatusProvider`, and `radarBleIssueProvider`.
+    - Wired Radar to show a centered non-dismissible message when Bluetooth is off: "Bluetooth is off. Tremble needs it to detect people nearby." with "Open Settings" calling `openAppSettings()`.
+    - Wired Radar to show a distinct permission state: "Bluetooth permission required." with "Grant Permission" calling `ConsentService.requestBluetooth()`.
+    - Ensured these blocker states suppress the normal radar pulse/search UI path and do not render a loading spinner.
+    - Added focused resolver and widget tests for both states.
+- In Progress: None.
+- Blocked:
+    - No code blocker. Physical device verification is still required for OS-level Bluetooth/permission behavior.
+- Next Action:
+    1. Device-smoke Radar with Bluetooth off and Bluetooth permission denied, then confirm the settings/request actions recover when the OS state changes.
+
+## Session State — 2026-05-26 15:27 CEST
+- Active Task: Gone Forever free recap viewed flag
+- Environment: Dev mobile flavor on `main`; Firestore rules edited locally, not deployed
+- Modified Files:
+    - `firestore.rules`
+    - `lib/src/features/recap/data/viewed_recaps_repository.dart`
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart`
+    - `lib/src/features/map/presentation/event_recap_screen.dart`
+    - `lib/src/features/matches/presentation/matches_screen.dart`
+    - `test/features/recap/viewed_recaps_test.dart`
+    - `test/features/recap/viewed_recaps_wiring_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - Firestore viewedRecaps rule is local only; it still needs deploy to `tremble-dev` and `am---dating-app` before clients can use it outside permissive/dev contexts.
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (93/93).
+
+## Session Handoff
+- Completed:
+    - Read the existing Run Recap history query in `run_club_repository.dart`: `run_encounters/{uid}/encounters`, ordered by `timestamp`, limited to 20.
+    - Read the Matches history flow: `matchesStreamProvider` listens to `matches`, hydrates through `getMatches`, and `filteredMatchesProvider` applies `MatchRepository.filterMatches(...)` in memory.
+    - Added `ViewedRecapsRepository`, `viewedRecapIdsProvider`, and `shouldHideViewedMatchRecap(...)`.
+    - Free users now write `users/{uid}/viewedRecaps/{recapId}` on Run Recap and Event Recap close with `closedAt: FieldValue.serverTimestamp()` and `type: 'run'` or `'event'`; Pro users skip writes.
+    - Free users now filter Run Recap history by `doc.id` and Matches history by match/profile/context recap IDs; Pro users use an empty viewed set and see full history.
+    - Added Firestore owner-only read/write rule for `users/{uid}/viewedRecaps/{recapId}`.
+    - Added focused tests for filtering, wiring, and rules.
+- In Progress: None.
+- Blocked:
+    - Rules deploy was not requested in this task; owner-only viewedRecaps access is not live until deployed.
+- Next Action:
+    1. Deploy `firestore.rules` to dev/prod when ready, then device-smoke free-user close → viewedRecaps write → history hidden.
+
+## Session State — 2026-05-26 15:15 CEST
+- Active Task: Recap TTL provider and premium Run Recap gating
+- Environment: Dev mobile flavor on `main`; no backend/Firebase deploy changes
+- Modified Files:
+    - `lib/src/features/recap/providers/recap_ttl_provider.dart`
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart`
+    - `lib/src/features/matches/presentation/matches_screen.dart`
+    - `test/features/recap/recap_ttl_provider_test.dart`
+    - `test/features/recap/recap_ui_wiring_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (87/87).
+
+## Session Handoff
+- Completed:
+    - Added `recapTTLProvider`, `RecapTTLState`, and `RecapTTLNotifier` with manual `start()`, one-second countdown, expiry state, and timer disposal.
+    - Wired Run Recap to `effectiveIsPremiumProvider`.
+    - Made active premium run recap cards start/watch TTL by `partnerId`, show remaining `m:ss`, hide wave action after expiry, and become read-only.
+    - Made free run recap cards read-only with grey saturation filter and no wave action.
+    - Kept history recap cards read-only with no TTL and full color for premium users.
+    - Replaced the locked Matches recap paywall TODO with `PremiumPaywallBottomSheet.show(context)`.
+    - Added focused tests for TTL behavior and recap/paywall UI wiring.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action:
+    1. Device smoke test Run Recap active/free/history cards to confirm the visual treatment and countdown feel right in the real UI.
+
+## Session State — 2026-05-26 15:03 CEST
+- Active Task: Allow owner reads for Firestore rate limit counters
+- Environment: Dev + Prod Firestore rules deploy (`tremble-dev`, `am---dating-app`)
+- Modified Files:
+    - `firestore.rules`
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: Firestore rules deployed successfully to `tremble-dev` and `am---dating-app`. `flutter analyze --no-fatal-infos` SUCCESS.
+
+## Session Handoff
+- Completed:
+    - Read existing `rateLimits` rule block before editing.
+    - Replaced the deny-all read/write rule with owner-only reads for docs whose ID starts with `request.auth.uid + ':'`; writes remain denied.
+    - Deployed `firestore.rules` to dev project `tremble-dev`.
+    - Deployed `firestore.rules` to prod project `am---dating-app`.
+    - Verified Flutter analyzer gate.
+- In Progress: None.
+- Blocked: None for rate-limit owner-read rules.
+- Next Action:
+    1. Device/app smoke test signed-in client read of `rateLimits/{uid}:wave_monthly.count` and confirm free paywall guard triggers at count `>= 5`.
+
+## Session State — 2026-05-26 15:00 CEST
+- Active Task: Source `AuthUser.wavesThisMonth` from rate limit counter
+- Environment: Dev mobile flavor on `main`; no Cloud Functions/backend code changes
+- Modified Files:
+    - `lib/src/features/auth/data/auth_repository.dart`
+    - `test/features/auth/auth_user_wave_limit_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - `firestore.rules` currently denies all reads to `rateLimits/{doc}` (`allow read, write: if false`). The client-side read of `rateLimits/{uid}:wave_monthly.count` will return `0` until rules explicitly allow the signed-in owner to read their own wave-monthly rate-limit document.
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (83/83).
+
+## Session Handoff
+- Completed:
+    - Verified backend format: `sendWave` calls `checkRateLimit(uid, "wave_monthly", ...)`, and `checkRateLimit` writes document ID `${uid}:${endpoint}` in `rateLimits`, so the literal client document ID is `{uid}:wave_monthly`.
+    - Read current auth hydration: `authStateChanges()` calls `_fetchUser(firebaseUser)`, which previously read only `users/{uid}` and passed that data into `AuthUser.fromFirestore(...)`.
+    - Added `waveMonthlyRateLimitDocId(uid)` and `waveCountFromRateLimitData(...)`.
+    - Updated `_fetchUser` to read `rateLimits/{uid}:wave_monthly` and pass its `count` to `AuthUser.fromFirestore(..., wavesThisMonth: count)`.
+    - Updated tests so `users/{uid}.wavesThisMonth` is ignored and `rateLimits/{uid}:wave_monthly.count` is the source for `AuthUser.wavesThisMonth`.
+- In Progress: None.
+- Blocked:
+    - Client read is blocked by current Firestore rules unless a follow-up rules change is approved and deployed.
+- Next Action:
+    1. Decide whether to update Firestore rules to allow `request.auth.uid + ":wave_monthly"` owner reads under `rateLimits`.
+
+## Session State — 2026-05-26 14:45 CEST
+- Active Task: Client-side free Wave limit paywall guard
+- Environment: Dev mobile flavor on `main`; no backend/Firebase deploy changes
+- Modified Files:
+    - `lib/src/features/auth/data/auth_repository.dart`
+    - `lib/src/features/profile/presentation/profile_detail_screen.dart`
+    - `lib/src/features/matches/presentation/match_dialog.dart`
+    - `lib/src/core/router.dart`
+    - `test/features/auth/auth_user_wave_limit_test.dart`
+    - `test/features/match/wave_limit_guard_wiring_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - `AuthUser.wavesThisMonth` now reads `users/{uid}.wavesThisMonth`; client-side UX depends on that field being present/fresh in Firestore. Server-side `sendWave` remains authoritative and unchanged.
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (82/82).
+
+## Session Handoff
+- Completed:
+    - Confirmed branch is `main`.
+    - Read `AuthUser` model exposure for `isPremium`; confirmed `wavesThisMonth` was not previously exposed.
+    - Read `PremiumPaywallBottomSheet.show(BuildContext context)` and existing `PremiumPaywallBottomSheet.show(context)` call site.
+    - Added `AuthUser.wavesThisMonth`, default `0`, Firestore parsing, copyWith support, and `hasReachedFreeWaveLimit`.
+    - Added client-side pre-checks before `sendWave` paths in Profile Detail, Match Dialog, and foreground Wave Pill callback. Free users with `wavesThisMonth >= 5` see `PremiumPaywallBottomSheet.show(context)` and do not call `sendWave`.
+    - Added targeted tests for AuthUser wave-limit behavior and Wave UI guard wiring.
+- In Progress: None.
+- Blocked: None for this client-side UX guard.
+- Next Action:
+    1. Confirm Firestore user documents maintain a fresh `wavesThisMonth` value; otherwise this guard will only work when that field is populated client-side.
+
+## Session State — 2026-05-26 14:31 CEST
+- Active Task: B009 — Wire foreground FCM waves to WavePillService
+- Environment: Dev mobile flavor on `main`; no Firebase/backend/deploy changes
+- Modified Files:
+    - `lib/src/core/router.dart`
+    - `test/core/router_foreground_wave_wiring_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (78/78).
+
+## Session Handoff
+- Completed:
+    - Confirmed current git branch is `main`.
+    - Read `WavePillService.show`, `WavePillData`, `NotificationService.initialize` callback signatures, and the current `NotificationService.initialize(...)` call before editing.
+    - Added `onForegroundWave` to `NotificationService.initialize(...)` in `router.dart`.
+    - Callback now gets `rootNavigatorKey.currentContext`, resolves `Overlay.of(context)`, calls `WavePillService.show(...)` with `WavePillData`, and wires `onWave` to `ref.read(waveRepositoryProvider).sendWave(uid)`.
+    - Added regression coverage for the router foreground wave wiring.
+- In Progress: None.
+- Blocked: None for B009.
+- Next Action:
+    1. Device smoke test foreground `INCOMING_WAVE` / `CROSSING_PATHS` FCM payloads and confirm the pill appears above the active route.
+
+## Session State — 2026-05-26 14:26 CEST
+- Active Task: B008 — Verify production Firestore rules
+- Environment: Prod verification (`am---dating-app`), read-only Firebase Rules API; no deploy
+- Modified Files:
+    - `tasks/context.md`
+- Open Problems:
+    - Requested `firebase firestore:rules:get --project am---dating-app` is not supported by installed `firebase-tools` 15.18.0.
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: Prod Firestore rules verified read-only via Firebase Rules API. Active release `projects/am---dating-app/releases/cloud.firestore` points to ruleset `projects/am---dating-app/rulesets/61ff6999-670d-4d71-9c66-db6816a7d94f`, updated `2026-05-24T21:43:51.433801Z`.
+
+## Session Handoff
+- Completed:
+    - Confirmed current git branch is `main`.
+    - Ran the exact requested Firebase CLI command and captured its failure output: the installed CLI does not include `firestore:rules:get`.
+    - Fetched the active production Firestore rules release and active ruleset via Firebase Rules API.
+    - Confirmed the deployed `/active_run_crosses/{docId}` block is present and matches local `firestore.rules` lines 120-124 exactly.
+- In Progress: None.
+- Blocked: None for B008 verification.
+- Next Action:
+    1. Continue with the next planned stabilization item on `main`.
+
+## Session State — 2026-05-26 14:20 CEST
+- Active Task: Fix recap profile navigation route extra
+- Environment: Dev mobile flavor; no Firebase/backend/runtime deploy changes
+- Modified Files:
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart`
+    - `test/features/dashboard/run_recap_navigation_test.dart`
+- Open Problems:
+    - BLOCKER-003: RevenueCat/legal remains open.
+    - BLOCKER-005: iOS dev provisioning for `com.pulse` remains open.
+    - BLOCKER-006: Real photo upload/onboarding E2E still needs device verification.
+    - BLOCKER-007: Legal web pages not confirmed live.
+- System Status: `dart format` SUCCESS. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (77/77).
+
+## Session Handoff
+- Completed:
+    - Read `lib/src/core/router.dart` before editing and confirmed `/profile` expects `state.extra as MatchProfile?`.
+    - Checked `event_recap_screen.dart`; no broken `/profile/:id` navigation call exists there.
+    - Replaced run recap `/profile/${partnerId}` navigation with `/profile` plus a `MatchProfile` extra converted from the loaded `PublicProfile`.
+    - Added regression coverage for the `PublicProfile` to `MatchProfile` route-extra conversion.
+- In Progress: None.
+- Blocked: None for this navigation fix.
+- Next Action:
+    1. Commit the navigation fix after review, or run device smoke verification by tapping a Run Recap partner card.
+
 ## Session State — 2026-05-25 01:22 CEST
 - Active Task: Control-plane documentation synchronization
 - Environment: Dev/docs only; no Firebase or app runtime changes

@@ -9,6 +9,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../data/match_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/translations.dart';
+import '../../../shared/ui/premium_paywall.dart';
+import '../../auth/data/auth_repository.dart';
 
 class MatchDialog extends ConsumerStatefulWidget {
   final MatchProfile match;
@@ -41,6 +43,12 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
 
   Future<void> _sendGreet() async {
     if (_isGreeting) return;
+    final user = ref.read(authStateProvider);
+    if (user?.hasReachedFreeWaveLimit == true) {
+      PremiumPaywallBottomSheet.show(context);
+      return;
+    }
+
     setState(() => _isGreeting = true);
     try {
       await HapticFeedback.lightImpact();

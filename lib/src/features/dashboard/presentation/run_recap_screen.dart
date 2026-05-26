@@ -10,10 +10,30 @@ import '../../../core/theme.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/warmth_empty_state.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../matches/data/match_repository.dart';
 import '../../profile/data/profile_repository.dart';
+import '../../profile/domain/public_profile.dart';
+import '../../recap/data/viewed_recaps_repository.dart';
+import '../../recap/providers/recap_ttl_provider.dart';
 import '../data/run_club_repository.dart';
 import '../../../core/translations.dart';
 import '../../safety/screen_protection_service.dart';
+
+@visibleForTesting
+MatchProfile runRecapMatchProfileFromPublicProfile(PublicProfile profile) {
+  return MatchProfile(
+    id: profile.id,
+    name: profile.name,
+    age: profile.age,
+    imageUrl: profile.primaryPhotoUrl,
+    photoUrls: profile.photoUrls,
+    hobbies: profile.hobbies,
+    bio: '',
+    matchType: 'activity',
+    lookingFor: profile.lookingFor == null ? const [] : [profile.lookingFor!],
+    isTraveler: profile.isTraveler,
+  );
+}
 
 class RunRecapScreen extends ConsumerStatefulWidget {
   const RunRecapScreen({super.key});
@@ -38,9 +58,27 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
 
   @override
   void dispose() {
+    _markViewedRecapsOnClose();
     ScreenProtectionService.removeRecordingListener();
     ScreenProtectionService.disable();
     super.dispose();
+  }
+
+  void _markViewedRecapsOnClose() {
+    final user = ref.read(authStateProvider);
+    if (user == null || ref.read(effectiveIsPremiumProvider)) return;
+
+    final activeDocs =
+        ref.read(recentRunCrossesProvider(user.id)).valueOrNull ?? const [];
+    final recapIds = activeDocs.map((doc) => doc.id);
+
+    unawaited(
+      ref.read(viewedRecapsRepositoryProvider).markViewedRecapsOnClose(
+            uid: user.id,
+            recapIds: recapIds,
+            type: 'run',
+          ),
+    );
   }
 
   @override
@@ -49,10 +87,15 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
 
     final user = ref.watch(authStateProvider);
     final lang = ref.watch(appLanguageProvider);
+    final effectivePremium = ref.watch(effectiveIsPremiumProvider);
     if (user == null) return const SizedBox.shrink();
 
     final activeAsync = ref.watch(recentRunCrossesProvider(user.id));
     final historyAsync = ref.watch(runHistoryProvider(user.id));
+    final viewedRecapIds = effectivePremium
+        ? const <String>{}
+        : ref.watch(viewedRecapIdsProvider(user.id)).valueOrNull ??
+            const <String>{};
 
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A18),
@@ -162,6 +205,8 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                               child: _RecapItem(
                                 partnerId: partnerId,
                                 iWaved: iWaved,
+                                isPremium: effectivePremium,
+                                isActive: true,
                                 onWave: () => ref
                                     .read(runClubRepositoryProvider)
                                     .sendWave(doc.id, user.id),
@@ -229,7 +274,8 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                   final userIds = List<String>.from(data['userIds'] ?? []);
                   final partnerId = userIds.firstWhere((id) => id != user.id,
                       orElse: () => '');
-                  return !activeIds.contains(partnerId);
+                  return !activeIds.contains(partnerId) &&
+                      !viewedRecapIds.contains(doc.id);
                 }).toList();
 
                 if (historyDocs.isEmpty) {
@@ -265,6 +311,8 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                             iWaved: false,
                             onWave: null, // Disabled in history
                             isHistory: true,
+                            isPremium: effectivePremium,
+                            isActive: false,
                           ),
                         );
                       },
@@ -292,143 +340,206 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
   }
 }
 
-class _RecapItem extends ConsumerWidget {
+class _RecapItem extends ConsumerStatefulWidget {
   final String partnerId;
   final bool iWaved;
   final VoidCallback? onWave;
   final bool isHistory;
+  final bool isPremium;
+  final bool isActive;
 
   const _RecapItem({
     required this.partnerId,
     required this.iWaved,
+    required this.isPremium,
+    required this.isActive,
     this.onWave,
     this.isHistory = false,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(publicProfileProvider(partnerId));
+  ConsumerState<_RecapItem> createState() => _RecapItemState();
+}
+
+class _RecapItemState extends ConsumerState<_RecapItem> {
+  bool _ttlStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTTLIfNeeded();
+  }
+
+  @override
+  void didUpdateWidget(covariant _RecapItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.partnerId != widget.partnerId ||
+        oldWidget.isPremium != widget.isPremium ||
+        oldWidget.isActive != widget.isActive ||
+        oldWidget.isHistory != widget.isHistory) {
+      _ttlStarted = false;
+      _startTTLIfNeeded();
+    }
+  }
+
+  void _startTTLIfNeeded() {
+    if (_ttlStarted ||
+        !widget.isPremium ||
+        !widget.isActive ||
+        widget.isHistory) {
+      return;
+    }
+
+    ref.read(recapTTLProvider(widget.partnerId).notifier).start();
+    _ttlStarted = true;
+  }
+
+  String _formatRemaining(int remainingSeconds) {
+    return '${remainingSeconds ~/ 60}:'
+        '${(remainingSeconds % 60).toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profileAsync = ref.watch(publicProfileProvider(widget.partnerId));
     final lang = ref.watch(appLanguageProvider);
+    final shouldTrackTTL =
+        widget.isPremium && widget.isActive && !widget.isHistory;
+    final ttlState = shouldTrackTTL
+        ? ref.watch(recapTTLProvider(widget.partnerId))
+        : const RecapTTLState();
+    final isExpired = shouldTrackTTL && ttlState.isExpired;
+    final isReadOnly = !widget.isPremium || widget.isHistory || isExpired;
+    final showWaveButton =
+        shouldTrackTTL && !widget.iWaved && !isExpired && widget.onWave != null;
 
     return profileAsync.when(
       data: (profile) => GestureDetector(
-        onTap: () => context.push('/profile/${partnerId}'),
-        child: ColorFiltered(
-          colorFilter: isHistory
-              ? const ColorFilter.matrix([
-                  0.2126,
-                  0.7152,
-                  0.0722,
-                  0,
-                  0,
-                  0.2126,
-                  0.7152,
-                  0.0722,
-                  0,
-                  0,
-                  0.2126,
-                  0.7152,
-                  0.0722,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  1,
-                  0,
-                ])
-              : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
-          child: GlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            borderColor:
-                Colors.white.withValues(alpha: isHistory ? 0.03 : 0.08),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: TrembleTheme.rose.withValues(alpha: 0.06),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isHistory ? LucideIcons.ghost : LucideIcons.zap,
-                    color: TrembleTheme.rose
-                        .withValues(alpha: isHistory ? 0.4 : 1.0),
-                    size: 16,
-                  ),
+        onTap: isReadOnly
+            ? null
+            : () => context.push(
+                  '/profile',
+                  extra: runRecapMatchProfileFromPublicProfile(profile),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    '${profile.name}, ${profile.age}',
-                    style: TrembleTheme.displayFont(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: isHistory ? 0.4 : 1.0),
+        child: GlassCard(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          borderColor:
+              Colors.white.withValues(alpha: widget.isHistory ? 0.03 : 0.08),
+          child: Builder(
+            builder: (context) {
+              final content = Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: TrembleTheme.rose.withValues(alpha: 0.06),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      widget.isHistory ? LucideIcons.ghost : LucideIcons.zap,
+                      color: TrembleTheme.rose
+                          .withValues(alpha: widget.isPremium ? 1.0 : 0.4),
+                      size: 16,
                     ),
                   ),
-                ),
-                if (isHistory)
-                  Text(
-                    t('missed', lang).toUpperCase(),
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 10,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.2),
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 1.2,
-                    ),
-                  )
-                else if (iWaved)
-                  Text(
-                    t('run_wave_sent', lang).toUpperCase(),
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 10,
-                      color: TrembleTheme.rose.withValues(alpha: 0.6),
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 1.2,
-                    ),
-                  )
-                else
-                  GestureDetector(
-                    onTap: onWave == null
-                        ? null
-                        : () {
-                            unawaited(HapticFeedback.lightImpact());
-                            onWave?.call();
-                          },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 9),
-                      decoration: BoxDecoration(
-                        color: TrembleTheme.rose.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(10),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      '${profile.name}, ${profile.age}',
+                      style: TrembleTheme.displayFont(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: widget.isPremium ? 1.0 : 0.4),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(LucideIcons.hand,
-                              color: Colors.white, size: 14),
-                          const SizedBox(width: 5),
-                          Text(
-                            t('wave', lang),
-                            style: GoogleFonts.jetBrainsMono(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
+                    ),
+                  ),
+                  if (shouldTrackTTL)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: Text(
+                        _formatRemaining(ttlState.remainingSeconds),
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          color: TrembleTheme.rose.withValues(
+                            alpha: isExpired ? 0.35 : 0.75,
                           ),
-                        ],
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.8,
+                        ),
                       ),
                     ),
-                  ),
-              ],
-            ),
+                  if (widget.isHistory)
+                    Text(
+                      t('missed', lang).toUpperCase(),
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 10,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.2),
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 1.2,
+                      ),
+                    )
+                  else if (widget.iWaved)
+                    Text(
+                      t('run_wave_sent', lang).toUpperCase(),
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 10,
+                        color: TrembleTheme.rose.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 1.2,
+                      ),
+                    )
+                  else if (showWaveButton)
+                    GestureDetector(
+                      onTap: () {
+                        unawaited(HapticFeedback.lightImpact());
+                        widget.onWave?.call();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 9),
+                        decoration: BoxDecoration(
+                          color: TrembleTheme.rose.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(LucideIcons.hand,
+                                color: Colors.white, size: 14),
+                            const SizedBox(width: 5),
+                            Text(
+                              t('wave', lang),
+                              style: GoogleFonts.jetBrainsMono(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                ],
+              );
+
+              if (widget.isPremium) return content;
+
+              return ColorFiltered(
+                colorFilter: const ColorFilter.mode(
+                  Colors.grey,
+                  BlendMode.saturation,
+                ),
+                child: content,
+              );
+            },
           ),
         ),
       ),

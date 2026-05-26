@@ -66,6 +66,10 @@ service cloud.firestore {
       allow delete: if isSelf(userId);
     }
 
+    match /users/{uid}/viewedRecaps/{recapId} {
+      allow read, write: if isSelf(uid);
+    }
+
     match /drafts/{userId} {
       allow read, write: if isSelf(userId);
     }
@@ -133,8 +137,10 @@ service cloud.firestore {
       allow read: if false;
     }
 
-    match /rateLimits/{doc} {
-      allow read, write: if false;
+    match /rateLimits/{docId} {
+      allow read: if request.auth != null &&
+        docId.matches(request.auth.uid + ':.*');
+      allow write: if false;
     }
 
     match /idempotencyKeys/{doc} {

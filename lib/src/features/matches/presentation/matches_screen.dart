@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
+import 'package:tremble/src/shared/ui/premium_paywall.dart';
 import 'package:tremble/src/shared/ui/warmth_empty_state.dart';
 import 'package:tremble/src/features/matches/data/match_repository.dart';
 import 'package:tremble/src/features/auth/data/auth_repository.dart';
 import 'package:tremble/src/features/match/application/match_service.dart';
 import 'package:tremble/src/features/match/domain/match.dart' as wave_match;
+import 'package:tremble/src/features/recap/data/viewed_recaps_repository.dart';
 import 'package:tremble/src/features/safety/presentation/widgets/ugc_action_sheet.dart';
 import 'package:tremble/src/core/theme.dart';
 import 'package:tremble/src/core/translations.dart';
@@ -352,6 +354,10 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
     final activeFilter = ref.watch(matchFilterProvider);
     final user = ref.watch(authStateProvider);
     final isPremium = user?.isPremium == true;
+    final viewedRecapIds = isPremium || user == null
+        ? const <String>{}
+        : ref.watch(viewedRecapIdsProvider(user.id)).valueOrNull ??
+            const <String>{};
     final lang = ref.watch(appLanguageProvider);
     final gymState = ref.watch(gymModeControllerProvider);
     final activeSection = ref.watch(matchSectionProvider);
@@ -575,6 +581,15 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                       ),
                     );
 
+                    if (shouldHideViewedMatchRecap(
+                      isPremium: isPremium,
+                      profile: profile,
+                      viewedRecapIds: viewedRecapIds,
+                      matchId: matchData.id,
+                    )) {
+                      continue;
+                    }
+
                     // Lock samo za Recap: nekdo TI je poslal wave, ti nisi odgovoril
                     // Vse ostalo (wave poslan, mutual, near-miss) = vidno
                     final myUid = user?.id ?? '';
@@ -721,8 +736,8 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                         const SizedBox(height: 4),
                                         GestureDetector(
                                           onTap: () {
-                                            // TODO: odpri paywall
-                                            // Navigator.push ali showModalBottomSheet
+                                            PremiumPaywallBottomSheet.show(
+                                                context);
                                           },
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(
