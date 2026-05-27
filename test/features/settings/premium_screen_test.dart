@@ -13,16 +13,21 @@ void main() {
     ]);
 
     expect(premiumPlanCards[0].price, '7,99 €');
+    expect(premiumPlanCards[0].productIdentifier, 'monthly');
     expect(premiumPlanCards[1].price, '2,99 €');
+    expect(premiumPlanCards[1].productIdentifier, 'weekly');
     expect(
       premiumPlanCards[1].windowKey,
       'premium_card_weekend_window',
     );
     expect(premiumPlanCards[2].perMonthPrice, '5,00 €');
     expect(premiumPlanCards[2].price, '59,99 €');
+    expect(premiumPlanCards[2].productIdentifier, 'yearly');
     expect(premiumPlanCards[2].savingsBadge, 'premium_yearly_savings_badge');
     expect(premiumPlanCards[3].price, '149,99 €');
+    expect(premiumPlanCards[3].productIdentifier, 'lifetime');
     expect(premiumPlanCards[3].accent, const Color(0xFFFFB347));
     expect(premiumPlanCards[4].ctaPremiumKey, 'premium_switch_to_free');
+    expect(premiumPlanCards[4].productIdentifier, isNull);
   });
 }

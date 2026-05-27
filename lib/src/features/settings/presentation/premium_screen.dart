@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../subscriptions/application/revenuecat_subscription.dart';
 import '../../../shared/ui/tremble_back_button.dart';
 
 @immutable
@@ -27,6 +28,7 @@ class PremiumPlanCard {
     this.perMonthPrice,
     this.billedAs,
     this.savingsBadge,
+    this.productIdentifier,
   });
 
   final String titleKey;
@@ -44,6 +46,7 @@ class PremiumPlanCard {
   final Color accent;
   final String tag;
   final IconData icon;
+  final String? productIdentifier;
 }
 
 const premiumPlanCards = [
@@ -65,6 +68,7 @@ const premiumPlanCards = [
     accent: Color(0xFFF4436C),
     tag: 'SIGNAL PRIME',
     icon: LucideIcons.sparkles,
+    productIdentifier: revenueCatMonthlyProduct,
   ),
   PremiumPlanCard(
     titleKey: 'premium_card_weekend_title',
@@ -85,6 +89,7 @@ const premiumPlanCards = [
     accent: Color(0xFFF5C842),
     tag: 'WEEKEND ACCESS',
     icon: LucideIcons.mountain,
+    productIdentifier: revenueCatWeeklyProduct,
   ),
   PremiumPlanCard(
     titleKey: 'premium_card_yearly_title',
@@ -106,6 +111,7 @@ const premiumPlanCards = [
     accent: Color(0xFF00C8FF),
     tag: 'YEARLY ACCESS',
     icon: LucideIcons.calendarDays,
+    productIdentifier: revenueCatYearlyProduct,
   ),
   PremiumPlanCard(
     titleKey: 'premium_card_lifetime_title',
@@ -124,6 +130,7 @@ const premiumPlanCards = [
     accent: Color(0xFFFFB347),
     tag: 'LIFETIME ACCESS',
     icon: LucideIcons.infinity,
+    productIdentifier: revenueCatLifetimeProduct,
   ),
   PremiumPlanCard(
     titleKey: 'premium_card_free_title',
@@ -231,6 +238,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_cta_get_lifetime': 'Activate Lifetime — 149.99 €',
       'premium_current_plan': 'Current Plan',
       'premium_switch_to_free': 'Want to switch back to free plan?',
+      'premium_manage_subscription': 'Manage subscription',
+      'restore_purchases': 'Restore purchases',
       'confirm_downgrade': 'Confirm Downgrade',
       'downgrade_prompt':
           'Are you sure you want to cancel your Premium features and revert to the basic Free Tier?',
@@ -238,10 +247,15 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'no_keep': 'No, Keep Premium',
       'activation_success': 'Upgrade Activated!',
       'activation_success_sub':
-          'Your premium features have been provisioned locally for UI validation. RevenueCat billing is still gated.',
+          'Your Premium entitlement is active in RevenueCat.',
       'downgrade_success': 'Reverted to Free',
       'downgrade_success_sub':
-          'The simulated premium state has been cleared for this session.',
+          'Open RevenueCat Customer Center to change or cancel your subscription.',
+      'purchase_cancelled': 'Purchase cancelled.',
+      'purchase_failed': 'Purchase failed. Please try again.',
+      'restore_success': 'Purchases restored.',
+      'restore_failed': 'No active Premium purchase was found.',
+      'customer_center_failed': 'Customer Center is unavailable right now.',
       'close': 'Dismiss',
       'loading': 'Securing transaction...',
       'features': 'Upgrades Included',
@@ -281,6 +295,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_cta_get_lifetime': 'Aktiviraj Lifetime — 149,99 €',
       'premium_current_plan': 'Trenutni plan',
       'premium_switch_to_free': 'Se želiš vrniti na brezplačen plan?',
+      'premium_manage_subscription': 'Upravljaj naročnino',
+      'restore_purchases': 'Obnovi nakupe',
       'confirm_downgrade': 'Potrdi Prekinitev',
       'downgrade_prompt':
           'Ali si prepričan, da želiš preklicati svoje Premium funkcije in se vrniti na osnovni brezplačni paket?',
@@ -288,10 +304,15 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'no_keep': 'Ne, Obdrži Premium',
       'activation_success': 'Nadgradnja aktivirana!',
       'activation_success_sub':
-          'Premium stanje je lokalno simulirano za preverjanje UI. RevenueCat plačila so še blokirana.',
+          'Tvoja Premium pravica je aktivna v RevenueCat.',
       'downgrade_success': 'Preklopljeno na Brezplačno',
       'downgrade_success_sub':
-          'Simulirano premium stanje je odstranjeno za to sejo.',
+          'Za spremembo ali preklic naročnine odpri RevenueCat Customer Center.',
+      'purchase_cancelled': 'Nakup preklican.',
+      'purchase_failed': 'Nakup ni uspel. Poskusi znova.',
+      'restore_success': 'Nakupi so obnovljeni.',
+      'restore_failed': 'Aktiven Premium nakup ni bil najden.',
+      'customer_center_failed': 'Customer Center trenutno ni na voljo.',
       'close': 'Zapri',
       'loading': 'Zavarovanje transakcije...',
       'features': 'Vključene Nadgradnje',
@@ -355,105 +376,91 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     super.dispose();
   }
 
-  Future<void> _simulateUpgrade(AuthUser user, String planName) async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 1400));
-    try {
-      final updatedUser = user.copyWith(isPremium: true);
-      ref.read(authStateProvider.notifier).setUser(updatedUser);
+  Future<void> _purchasePlan(AuthUser user, PremiumPlanCard plan) async {
+    final productIdentifier = plan.productIdentifier;
+    if (productIdentifier == null) return;
 
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => _buildSuccessDialog(
-            title: _t('activation_success', user.appLanguage),
-            subtitle: _t('activation_success_sub', user.appLanguage),
-            lang: user.appLanguage,
-          ),
-        );
+    setState(() => _isLoading = true);
+    try {
+      final result = await ref
+          .read(revenueCatSubscriptionProvider.notifier)
+          .purchaseProduct(productIdentifier);
+
+      if (!mounted) return;
+
+      switch (result) {
+        case RevenueCatPurchaseOutcome.purchased:
+        case RevenueCatPurchaseOutcome.restored:
+        case RevenueCatPurchaseOutcome.alreadyPremium:
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => _buildSuccessDialog(
+              title: _t('activation_success', user.appLanguage),
+              subtitle: _t('activation_success_sub', user.appLanguage),
+              lang: user.appLanguage,
+            ),
+          );
+        case RevenueCatPurchaseOutcome.cancelled:
+          _showSnack(_t('purchase_cancelled', user.appLanguage));
+        case RevenueCatPurchaseOutcome.error:
+          final error = ref.read(revenueCatSubscriptionProvider).errorMessage ??
+              _t('purchase_failed', user.appLanguage);
+          _showSnack(error);
       }
     } catch (e) {
-      debugPrint('[PREMIUM] Simulation failed: $e');
+      debugPrint('[PREMIUM] RevenueCat purchase failed: $e');
+      if (mounted) _showSnack(_t('purchase_failed', user.appLanguage));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _simulateDowngrade(AuthUser user) async {
+  Future<void> _restorePurchases(AuthUser user) async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 1000));
     try {
-      final updatedUser = user.copyWith(isPremium: false);
-      ref.read(authStateProvider.notifier).setUser(updatedUser);
+      final result = await ref
+          .read(revenueCatSubscriptionProvider.notifier)
+          .restorePurchases();
 
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => _buildSuccessDialog(
-            title: _t('downgrade_success', user.appLanguage),
-            subtitle: _t('downgrade_success_sub', user.appLanguage),
-            lang: user.appLanguage,
-          ),
-        );
+      if (!mounted) return;
+
+      if (result == RevenueCatPurchaseOutcome.restored) {
+        _showSnack(_t('restore_success', user.appLanguage));
+      } else {
+        final error = ref.read(revenueCatSubscriptionProvider).errorMessage ??
+            _t('restore_failed', user.appLanguage);
+        _showSnack(error);
       }
     } catch (e) {
-      debugPrint('[PREMIUM] Downgrade failed: $e');
+      debugPrint('[PREMIUM] RevenueCat restore failed: $e');
+      if (mounted) _showSnack(_t('restore_failed', user.appLanguage));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showDowngradeConfirmation(AuthUser user) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor:
-            isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF2F2F7),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          _t('confirm_downgrade', user.appLanguage),
-          style: GoogleFonts.instrumentSans(
-            color: isDark ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          _t('downgrade_prompt', user.appLanguage),
-          style: GoogleFonts.instrumentSans(
-            color: isDark ? Colors.white70 : Colors.black54,
-            fontSize: 14,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              _t('no_keep', user.appLanguage),
-              style: GoogleFonts.instrumentSans(
-                color: isDark ? Colors.white54 : Colors.black38,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _simulateDowngrade(user);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF4436C),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100)),
-            ),
-            child: Text(
-              _t('yes_revert', user.appLanguage),
-              style: GoogleFonts.instrumentSans(
-                  color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
+  Future<void> _openCustomerCenter(AuthUser user) async {
+    setState(() => _isLoading = true);
+    try {
+      final opened = await ref
+          .read(revenueCatSubscriptionProvider.notifier)
+          .presentCustomerCenter();
+      if (!mounted || opened) return;
+      _showSnack(_t('customer_center_failed', user.appLanguage));
+    } catch (e) {
+      debugPrint('[PREMIUM] Customer Center failed: $e');
+      if (mounted) _showSnack(_t('customer_center_failed', user.appLanguage));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFF4436C),
       ),
     );
   }
@@ -668,11 +675,28 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                   Padding(
                     padding:
                         const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-                    child: _buildCTAButton(
-                      _selectedIndex,
-                      premiumPlanCards[_selectedIndex],
-                      user,
-                      genderAccent,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildCTAButton(
+                          _selectedIndex,
+                          premiumPlanCards[_selectedIndex],
+                          user,
+                          genderAccent,
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed:
+                              _isLoading ? null : () => _restorePurchases(user),
+                          child: Text(
+                            _t('restore_purchases', lang),
+                            style: GoogleFonts.instrumentSans(
+                              color: subtextColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -898,7 +922,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     if (index == 4) {
       if (isPremium) {
         return GestureDetector(
-          onTap: () => _showDowngradeConfirmation(user),
+          onTap: () => _openCustomerCenter(user),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
@@ -913,7 +937,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                     size: 16, color: Colors.white60),
                 const SizedBox(width: 10),
                 Text(
-                  _t(data.ctaPremiumKey, user.appLanguage),
+                  _t('premium_manage_subscription', user.appLanguage),
                   style: GoogleFonts.instrumentSans(
                     color: Colors.white60,
                     fontWeight: FontWeight.w600,
@@ -968,8 +992,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () =>
-            _simulateUpgrade(user, _t(data.titleKey, user.appLanguage)),
+        onPressed: () => _purchasePlan(user, data),
         style: ElevatedButton.styleFrom(
           backgroundColor: buttonBg,
           foregroundColor: textColor,

@@ -1,3 +1,41 @@
+## Session State — 2026-05-27 23:13 CEST
+- Active Task: RevenueCat SDK integration for Premium entitlement/paywall
+- Environment: Dev mobile flavor on `main`; no deploys; no Firestore/webhook sync
+- Modified Files:
+    - `android/app/src/main/AndroidManifest.xml`
+    - `lib/src/app.dart`
+    - `lib/src/features/auth/data/auth_repository.dart`
+    - `lib/src/features/settings/presentation/premium_screen.dart`
+    - `lib/src/features/subscriptions/application/revenuecat_subscription.dart`
+    - `lib/src/shared/ui/premium_paywall.dart`
+    - `macos/Flutter/GeneratedPluginRegistrant.swift`
+    - `pubspec.yaml`
+    - `pubspec.lock`
+    - `test/features/settings/premium_screen_test.dart`
+    - `test/features/subscriptions/revenuecat_subscription_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - RevenueCat webhooks / Firestore `isPremium` sync intentionally not wired; separate task after Apple Developer account approval.
+    - Store-side products/offering/paywall must exist in RevenueCat/App Store Connect/Play Console for real purchases to work on device.
+- System Status: `dart format` SUCCESS on changed Dart files. `flutter analyze --no-fatal-infos` SUCCESS. `flutter test --dart-define=FLAVOR=dev` SUCCESS (110/110). No deploy performed.
+
+## Session Handoff
+- Completed:
+    - Installed `purchases_flutter` and `purchases_ui_flutter` via Pub.
+    - Added Android billing permission only: `com.android.vending.BILLING`.
+    - Added a testable RevenueCat subscription controller with `premium` entitlement, `default` offering, exact product IDs `monthly`, `yearly`, `lifetime`, and `weekly`.
+    - Configured SDK startup through `--dart-define=REVENUECAT_API_KEY`; the dev key was not committed to source.
+    - Wired Firebase auth user IDs to RevenueCat `logIn` / `logOut` without syncing Firestore `isPremium`.
+    - Wired RevenueCat CustomerInfo entitlement status into `effectiveIsPremiumProvider`.
+    - Replaced the shared mock paywall bottom sheet with RevenueCat Paywall presentation.
+    - Replaced Premium screen simulated purchases with RevenueCat package purchase, restore purchases, and Customer Center entry for subscription management.
+    - Added regression tests for identifiers, disabled missing-key behavior, purchase/restore premium state, and premium card product mapping.
+- In Progress: None.
+- Blocked:
+    - Real purchase/device validation remains blocked by store-side product readiness and existing Apple Developer provisioning blocker.
+- Next Action:
+    1. Run the app with `--flavor dev --dart-define=FLAVOR=dev --dart-define=REVENUECAT_API_KEY=<dev sandbox key>` on a device/simulator after RevenueCat offering/paywall/products are configured.
+
 ## Session State — 2026-05-26 23:53 CEST
 - Active Task: History empty states for Matches, Recaps, and Near-Miss
 - Environment: Dev mobile flavor on `main`; no Firebase/backend/native config changes

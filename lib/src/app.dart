@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme.dart';
 import 'core/router.dart';
 import 'core/theme_provider.dart';
 import 'features/auth/data/auth_repository.dart';
+import 'features/subscriptions/application/revenuecat_subscription.dart';
 
 // Watches only the two fields that affect theme colours. TrembleApp rebuilds
 // when gender or isGenderBasedColor changes without touching routerProvider
@@ -23,6 +26,7 @@ class TrembleApp extends ConsumerWidget {
         _themeKeyProvider); // rebuilds theme when gender/colour pref changes
     final router = ref.watch(routerProvider);
     final user = ref.read(authStateProvider);
+    ref.watch(revenueCatSubscriptionProvider);
 
     // One-time sync: when user first logs in on a new device, apply their
     // Firestore isDarkMode preference if it differs from the local default.
@@ -33,7 +37,24 @@ class TrembleApp extends ConsumerWidget {
           ref.read(themeModeProvider.notifier).setThemeMode(desired);
         }
       }
+      unawaited(
+        ref.read(revenueCatSubscriptionProvider.notifier).syncAppUserId(
+              next?.id,
+            ),
+      );
     });
+
+    ref.listen<RevenueCatSubscriptionState>(
+      revenueCatSubscriptionProvider,
+      (previous, next) {
+        if (next.status != RevenueCatSubscriptionStatus.ready) return;
+        unawaited(
+          ref.read(revenueCatSubscriptionProvider.notifier).syncAppUserId(
+                ref.read(authStateProvider)?.id,
+              ),
+        );
+      },
+    );
 
     final theme = TrembleTheme.lightTheme(user);
     final darkTheme = TrembleTheme.darkTheme(user);

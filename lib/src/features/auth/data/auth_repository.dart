@@ -12,6 +12,7 @@ import '../../../core/api_client.dart';
 import '../../../core/event_geofence_service.dart';
 import '../../../core/hobby_utils.dart';
 import '../../../core/slider_normalizer.dart';
+import '../../subscriptions/application/revenuecat_subscription.dart';
 import '../../gym/domain/selected_gym.dart';
 
 // Sentinel marking "argument not provided" — distinguishes from explicit null
@@ -1060,8 +1061,10 @@ class AuthRepository {
 final effectiveIsPremiumProvider = Provider<bool>((ref) {
   final user = ref.watch(authStateProvider);
   final geofence = ref.watch(eventGeofenceServiceProvider);
-  return user?.effectiveIsPremium(inEventGeofence: geofence.inEventGeofence) ??
-      false;
+  final revenueCatPremium = ref.watch(revenueCatIsPremiumProvider);
+  return revenueCatPremium ||
+      (user?.effectiveIsPremium(inEventGeofence: geofence.inEventGeofence) ??
+          false);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

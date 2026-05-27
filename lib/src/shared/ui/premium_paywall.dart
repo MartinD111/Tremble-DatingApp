@@ -1,181 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'glass_card.dart';
-import 'primary_button.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PremiumPaywallBottomSheet extends StatelessWidget {
-  const PremiumPaywallBottomSheet({super.key});
+import '../../features/subscriptions/application/revenuecat_subscription.dart';
 
-  static void show(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.8),
-      builder: (context) => const PremiumPaywallBottomSheet(),
-    );
-  }
+class PremiumPaywallBottomSheet {
+  const PremiumPaywallBottomSheet._();
 
-  @override
-  Widget build(BuildContext context) {
-    // A beautiful glassmorphic bottom sheet for Premium upgrades
-    return Container(
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      child: GlassCard(
-        opacity: 0.15,
-        borderRadius: 32,
-        padding:
-            const EdgeInsets.only(top: 12, left: 24, right: 24, bottom: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Drag handle indicator
-            Center(
-              child: Container(
-                width: 48,
-                height: 5,
-                margin: const EdgeInsets.only(bottom: 24),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
+  static Future<void> show(BuildContext context) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final controller = ProviderScope.containerOf(context, listen: false)
+        .read(revenueCatSubscriptionProvider.notifier);
 
-            // Icon & Title
-            const Center(
-              child: Icon(
-                LucideIcons.crown,
-                color: Color(0xFFF4436C), // Rose
-                size: 48,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Odkleni Premium',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.instrumentSans(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Pridobi dostop do vseh ekskluzivnih funkcij in izstopaj iz množice.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 15,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 32),
+    final result = await controller.presentPaywallIfNeeded();
 
-            // Feature List
-            _buildFeatureRow(LucideIcons.radar, 'Radar do 250m (namesto 100m)'),
-            _buildFeatureRow(
-                LucideIcons.waves, '20 valov na mesec (namesto 5)'),
-            _buildFeatureRow(LucideIcons.history, 'Zgodovina Run Club'),
-            _buildFeatureRow(
-                LucideIcons.dumbbell, 'Prednostno ujemanje v Gym Mode'),
+    if (!context.mounted) return;
 
-            const SizedBox(height: 36),
-
-            // Price Display
-            Center(
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '7,99 €',
-                      style: GoogleFonts.instrumentSans(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const TextSpan(
-                      text: ' / mesec',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white54,
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Upgrade CTA
-            PrimaryButton(
-              text: 'Naroči se zdaj',
-              onPressed: () {
-                // TODO: Wire up to RevenueCat / In-App Purchases
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Kmalu na voljo! (Integracija plačil)'),
-                    backgroundColor: Color(0xFFF4436C),
-                  ),
-                );
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // Restore Purchases & Cancel
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Ne, hvala',
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF4436C).withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: const Color(0xFFF4436C), size: 20),
+    switch (result) {
+      case RevenueCatPaywallOutcome.purchased:
+        messenger?.showSnackBar(
+          const SnackBar(
+            content: Text('Premium activated.'),
+            backgroundColor: Color(0xFFF4436C),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+        );
+      case RevenueCatPaywallOutcome.restored:
+        messenger?.showSnackBar(
+          const SnackBar(
+            content: Text('Purchases restored.'),
+            backgroundColor: Color(0xFFF4436C),
           ),
-        ],
-      ),
-    );
+        );
+      case RevenueCatPaywallOutcome.error:
+        final error = ProviderScope.containerOf(context, listen: false)
+                .read(revenueCatSubscriptionProvider)
+                .errorMessage ??
+            'Unable to open the paywall.';
+        messenger?.showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: const Color(0xFFF4436C),
+          ),
+        );
+      case RevenueCatPaywallOutcome.notPresented:
+      case RevenueCatPaywallOutcome.cancelled:
+        break;
+    }
   }
 }
