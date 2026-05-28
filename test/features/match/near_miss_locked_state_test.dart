@@ -74,6 +74,75 @@ void main() {
     expect(t('near_miss_upsell_cta', 'hr'), 'Pogledaj tko');
   });
 
+  test('slovenian greeting copy avoids wave terminology', () {
+    const expectedSlGreetingCopy = {
+      'pulse_intercept_body':
+          'Zaznan signal. Pozdrav je bil poslan v vašo smer. Želite prestreči?',
+      'mutual_wave': 'Skupni pozdrav',
+      'both_sent_wave': 'Oba sta si poslala pozdrav',
+      'someone_sent_you_wave': 'Nekdo ti je poslal pozdrav',
+      'tutorial_step3_popup_desc':
+          'Tukaj se prikažejo ujemanja, pozdravi in odkrite osebe. Po tem koraku te Tremble vrne na radar.',
+      'wave_sent': 'Pozdrav poslan.',
+      'wave_failed': 'Pozdrava ni bilo mogoce poslati. Poskusi znova.',
+      'wave_sent_to': 'Pozdrav poslan — čakamo na {name}!',
+      'onb2_title': 'NIČ POTEZ. EN POZDRAV.',
+      'onb2_body':
+          'Brez feedov. Brez algoritmov. Brez klepetalnic. Le signal bližine in ena odločitev: pozdrav ali naprej.',
+      'onb4_body':
+          'Odpravi ujemanje ali blokiraj kadarkoli. Enosmerno — nihče ne ve, da si poslal pozdrav, dokler ni vzajemno.',
+      'run_wave_sent': 'Pozdrav poslan',
+      'run_wave_received': 'Pozdrav prejet',
+      'mutual_wave_find': 'Vzajemni pozdrav! Poišči jih.',
+      'wave': 'Pozdrav',
+    };
+
+    for (final entry in expectedSlGreetingCopy.entries) {
+      expect(t(entry.key, 'sl'), entry.value);
+      expect(t(entry.key, 'sl').toLowerCase(), isNot(contains('val')));
+    }
+  });
+
+  test('greet failure translations and match dialog wiring are present', () {
+    expect(t('greet_failed', 'en'), 'Could not send greeting. Try again.');
+    expect(
+      t('greet_failed', 'sl'),
+      'Pozdrava ni bilo mogoce poslati. Poskusi znova.',
+    );
+    expect(
+      t('greet_failed', 'hr'),
+      'Nije moguce poslati pozdrav. Pokusaj ponovo.',
+    );
+    expect(
+      t('greet_failed', 'de'),
+      'Gruss konnte nicht gesendet werden. Versuche es erneut.',
+    );
+    expect(
+      t('greet_failed', 'it'),
+      'Impossibile inviare il saluto. Riprova.',
+    );
+    expect(
+      t('greet_failed', 'fr'),
+      'Impossible d envoyer la salutation. Reessaie.',
+    );
+    expect(
+      t('greet_failed', 'sr'),
+      'Nije moguce poslati pozdrav. Pokusaj ponovo.',
+    );
+    expect(
+      t('greet_failed', 'hu'),
+      'Nem sikertult elktildeni az udvozletet. Probald ujra.',
+    );
+
+    final matchDialog = File(
+      'lib/src/features/matches/presentation/match_dialog.dart',
+    ).readAsStringSync();
+
+    expect(matchDialog, contains("t('greet_failed', lang)"));
+    expect(matchDialog, isNot(contains("t('wave_failed', lang)")));
+    expect(matchDialog, isNot(contains('Napaka: \${e.toString()}')));
+  });
+
   test('matches screen wires locked near miss UI states', () {
     final source = File(
       'lib/src/features/matches/presentation/matches_screen.dart',

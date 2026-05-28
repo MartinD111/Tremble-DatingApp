@@ -472,6 +472,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Home ---
     'scanning': 'Scanning...',
     'wave_sent': 'Wave sent.',
+    'wave_failed': 'Wave failed. Try again.',
+    'greet_failed': 'Could not send greeting. Try again.',
     'geo_matching_paused': 'Geo matching \u2014 BLE paused',
     'warning': 'Warning',
     'ignore': 'Ignore',
@@ -953,7 +955,7 @@ const Map<String, Map<String, String>> _translations = {
     'pulse_intercept': 'Pulse Intercept',
     'pulse_intercept_title': 'PULSE INTERCEPT',
     'pulse_intercept_body':
-        'Zaznan signal. Val je bil poslan v vašo smer. Želite prestreči?',
+        'Zaznan signal. Pozdrav je bil poslan v vašo smer. Želite prestreči?',
     'intercept_active': 'INTERCEPCIJA AKTIVNA',
     'intercept_shield_on': 'ŠTIT VKLOPLJEN',
     'intercept_shield_off': 'ŠTIT IZKLOPLJEN',
@@ -983,8 +985,8 @@ const Map<String, Map<String, String>> _translations = {
     'temporary_contact': 'Začasni kontakt',
     'view_once_frame': 'Enkratni okvir',
     'close_purge': 'Zapri in izbriši',
-    'mutual_wave': 'Skupni val',
-    'both_sent_wave': 'Oba sta si poslala val',
+    'mutual_wave': 'Skupni pozdrav',
+    'both_sent_wave': 'Oba sta si poslala pozdrav',
     'decide_later': 'Odloči se pozneje',
     'schedule_radar': 'Urnik radarja',
     'schedule_radar_sub': 'Nastavi ure, ko naj se radar samodejno vklopi.',
@@ -1025,7 +1027,7 @@ const Map<String, Map<String, String>> _translations = {
     'loading_error': 'Napaka pri nalaganju',
     'try_again': 'Poskusi znova',
     'hidden_person': 'Skrita oseba',
-    'someone_sent_you_wave': 'Nekdo ti je poslal val',
+    'someone_sent_you_wave': 'Nekdo ti je poslal pozdrav',
     'upgrade_to_see': 'Nadgradi da vidiš kdo',
     'years': 'let',
     'hobbies': 'Hobiji',
@@ -1072,7 +1074,7 @@ const Map<String, Map<String, String>> _translations = {
         'Oglej si vse ljudi, s katerimi si se ujel-a v preteklosti, in tiste, ki so aktivni v tvojem fitnesu, na dogodkih in na teku.',
     'tutorial_step3_popup_title': 'Ljudje se prikažejo tukaj',
     'tutorial_step3_popup_desc':
-        'Tukaj se prikažejo ujemanja, valovi in odkrite osebe. Po tem koraku te Tremble vrne na radar.',
+        'Tukaj se prikažejo ujemanja, pozdravi in odkrite osebe. Po tem koraku te Tremble vrne na radar.',
     'tutorial_step4_title': 'Recap vs. Near Miss',
     'tutorial_step4_desc':
         'Recap (zgodovina) prikazuje mesta in dogodke, kjer so se tvoje poti križale z drugimi člani. Near Miss (bližnja srečanja) pa beleži realnočasovne, visoko natančne BLE stike v živo. Oboje brez nenehnega drsanja po ekranu.',
@@ -1332,14 +1334,16 @@ const Map<String, Map<String, String>> _translations = {
     'verify_email_title': 'Prosim, potrdi svojo e-pošto',
     'resend': 'Pošlji ponovno',
     'scanning': 'Iščem...',
-    'wave_sent': 'Val poslan.',
+    'wave_sent': 'Pozdrav poslan.',
+    'wave_failed': 'Pozdrava ni bilo mogoce poslati. Poskusi znova.',
+    'greet_failed': 'Pozdrava ni bilo mogoce poslati. Poskusi znova.',
     'geo_matching_paused': 'Geo ujemanje \u2014 BLE zaustavljen',
     'warning': 'Opozorilo',
     'ignore_warning_body':
         'Če greš ven, se bo zaznamovalo, kot da si osebo zignoriral.',
     'ignore': 'Ignoriraj',
     'match_again_future': 'Ujemanje v prihodnje',
-    'wave_sent_to': 'Val poslan — čakamo na {name}!',
+    'wave_sent_to': 'Pozdrav poslan — čakamo na {name}!',
     'greet': 'Pozdrav',
     'accept': 'Sprejmi',
     'sent': 'poslan',
@@ -1451,15 +1455,15 @@ const Map<String, Map<String, String>> _translations = {
     'onb1_title': 'DELUJE, MEDTEM KO ŽIVIŠ.',
     'onb1_body':
         'Tremble deluje v ozadju. Ko je nekdo združljiv z blizu tebe, dobiš signal. Brskanja ni potrebnega.',
-    'onb2_title': 'NIČ POTEZ. EN VAL.',
+    'onb2_title': 'NIČ POTEZ. EN POZDRAV.',
     'onb2_body':
-        'Brez feedov. Brez algoritmov. Brez klepetalnic. Le signal bližine in ena odločitev: val ali naprej.',
+        'Brez feedov. Brez algoritmov. Brez klepetalnic. Le signal bližine in ena odločitev: pozdrav ali naprej.',
     'onb3_title': 'TVOJE MESTO, V ŽIVO.',
     'onb3_body':
         'Poglej, kdo odkriva v bližini v realnem času. Več kot je Tremble uporabnikov okoli tebe, močnejši je signal.',
     'onb4_title': 'TVOJA PRAVILA.',
     'onb4_body':
-        'Odpravi ujemanje ali blokiraj kadarkoli. Enosmerno — nihče ne ve, da si poslal val, dokler ni vzajemno.',
+        'Odpravi ujemanje ali blokiraj kadarkoli. Enosmerno — nihče ne ve, da si poslal pozdrav, dokler ni vzajemno.',
     // Hardware Calibration Setup
     'calib0_title': 'Deluje medtem, ko živiš.',
     'calib0_body':
@@ -1670,16 +1674,16 @@ const Map<String, Map<String, String>> _translations = {
         'Signali potečejo 10 minut po srečanju. Ukrepaj zdaj ali nikoli.',
     'active_signals': 'Aktivni signali',
     'history': 'Zgodovina',
-    'run_wave_sent': 'Val poslan',
-    'run_wave_received': 'Val prejet',
+    'run_wave_sent': 'Pozdrav poslan',
+    'run_wave_received': 'Pozdrav prejet',
     'crossed_paths_with': 'Prekrižala sta poti z osebo {name}',
     'no_encounters': 'Med tem tekom ni bilo zaznanih srečanj.',
     'stop': 'USTAVI',
     'getting_closer': 'PRIBLIŽUJEŠ SE',
     'moving_away': 'ODDALJUJEŠ SE',
-    'mutual_wave_find': 'Vzajemni val! Poišči jih.',
+    'mutual_wave_find': 'Vzajemni pozdrav! Poišči jih.',
     'signal_detected': 'SIGNAL ZAZNAN',
-    'wave': 'Val',
+    'wave': 'Pozdrav',
     'run_finished_title': 'TEK ZAKLJUČEN',
     'run_finished_sub': 'Lep tek je bil. Poglej, če se je kje zaiskrilo.',
     'run_finished_action': 'Poglej koga si srečal',
@@ -2053,6 +2057,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Home ---
     'scanning': 'Scannen...',
     'wave_sent': 'Welle gesendet.',
+    'wave_failed': 'Welle fehlgeschlagen. Bitte nochmal versuchen.',
+    'greet_failed': 'Gruss konnte nicht gesendet werden. Versuche es erneut.',
     'geo_matching_paused': 'Geo-Matching — BLE pausiert',
     'warning': 'Warnung',
     'ignore': 'Ignorieren',
@@ -2814,6 +2820,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Home ---
     'scanning': 'Scansione in corso...',
     'wave_sent': 'Onda inviata.',
+    'wave_failed': 'Invio onda fallito. Riprova.',
+    'greet_failed': 'Impossibile inviare il saluto. Riprova.',
     'geo_matching_paused': 'Geo-Matching — BLE in pausa',
     'warning': 'Attenzione',
     'ignore': 'Ignora',
@@ -3574,6 +3582,8 @@ const Map<String, Map<String, String>> _translations = {
 
     'scanning': 'Scan en cours...',
     'wave_sent': 'Wave envoyée.',
+    'wave_failed': 'Wave échouée. Réessayez.',
+    'greet_failed': 'Impossible d envoyer la salutation. Reessaie.',
     'geo_matching_paused': 'Géo-Matching — BLE en pause',
     'warning': 'Attention',
     'ignore': 'Ignorer',
@@ -4130,6 +4140,8 @@ const Map<String, Map<String, String>> _translations = {
     'radar_locked': 'Radar je zaključan.',
     'go_to_settings': 'Idi u postavke',
     'wave_sent': 'Val poslan.',
+    'wave_failed': 'Val nije poslan. Pokušaj ponovo.',
+    'greet_failed': 'Nije moguce poslati pozdrav. Pokusaj ponovo.',
     'geo_matching_paused': 'Geo uparivanje \u2014 BLE pauzirano',
     'warning': 'Upozorenje',
     'ignore_warning_body':
@@ -5104,6 +5116,8 @@ const Map<String, Map<String, String>> _translations = {
     // --- Home ---
     'scanning': 'Skeniranje...',
     'wave_sent': 'Talas poslat.',
+    'wave_failed': 'Talas nije poslan. Pokušaj ponovo.',
+    'greet_failed': 'Nije moguce poslati pozdrav. Pokusaj ponovo.',
     'geo_matching_paused': 'Geo uparivanje — BLE pauzirano',
     'warning': 'Upozorenje',
     'ignore': 'Ignoriši',
@@ -5938,6 +5952,8 @@ const Map<String, Map<String, String>> _translations = {
 
     'scanning': 'Keresés...',
     'wave_sent': 'Hullám elküldve.',
+    'wave_failed': 'Hullám küldése sikertelen. Próbáld újra.',
+    'greet_failed': 'Nem sikertult elktildeni az udvozletet. Probald ujra.',
     'geo_matching_paused': 'Geo párosítás \u2014 BLE szüneteltetve',
     'warning': 'Figyelmeztetés',
     'ignore_warning_body':

@@ -83,9 +83,10 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isGreeting = false);
+      final lang = ref.read(appLanguageProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Napaka: ${e.toString()}'),
+          content: Text(t('greet_failed', lang)),
           backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
         ),
       );
