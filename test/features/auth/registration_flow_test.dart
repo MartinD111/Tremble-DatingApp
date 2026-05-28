@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tremble/src/core/translations.dart';
 import 'package:tremble/src/features/auth/data/auth_repository.dart';
 import 'package:tremble/src/features/settings/presentation/settings_controller.dart';
 
@@ -130,6 +133,52 @@ void main() {
 
       expect(authNotifier.updateProfileCallCount, 1);
       expect(container.read(authStateProvider)?.introvertScale, 62);
+    });
+
+    test('profile name inputs match backend max length and localize counters',
+        () {
+      final userSchema = File('functions/src/modules/users/users.schema.ts')
+          .readAsStringSync();
+      final authSchema =
+          File('functions/src/modules/auth/auth.schema.ts').readAsStringSync();
+      final nameStep = File(
+        'lib/src/features/auth/presentation/widgets/registration_steps/name_step.dart',
+      ).readAsStringSync();
+      final editProfile = File(
+        'lib/src/features/profile/presentation/edit_profile_screen.dart',
+      ).readAsStringSync();
+
+      expect(userSchema,
+          contains('name: z.string().min(1).max(50).trim().optional()'));
+      expect(authSchema, contains('.max(50, "Name too long")'));
+      expect(t('name_chars_remaining', 'en'), '{count} remaining');
+      expect(t('name_chars_remaining', 'sl'), 'še {count} znakov');
+      expect(t('name_chars_remaining', 'hr'), 'još {count} znakova');
+      expect(t('name_chars_remaining', 'de'), 'noch {count} Zeichen');
+      expect(t('name_chars_remaining', 'it'), 'ancora {count} caratteri');
+      expect(t('name_chars_remaining', 'fr'), 'encore {count} caractères');
+      expect(t('name_chars_remaining', 'sr'), 'još {count} znakova');
+      expect(t('name_chars_remaining', 'hu'), 'még {count} karakter');
+
+      expect(nameStep, contains('const int nameMaxLength = 50;'));
+      expect(nameStep, contains('maxLength: nameMaxLength'));
+      expect(nameStep, contains("counterText: ''"));
+      expect(nameStep, contains("tr('name_chars_remaining')"));
+      expect(
+        nameStep,
+        contains(".replaceAll('{count}', remaining.toString())"),
+      );
+      expect(nameStep, isNot(contains(r'$remaining remaining')));
+
+      expect(editProfile, contains('static const int _nameMaxLength = 50;'));
+      expect(editProfile, contains('maxLength: _nameMaxLength'));
+      expect(
+        editProfile,
+        contains("counterText: maxLength == null ? null : ''"),
+      );
+      expect(editProfile, contains("t('name_chars_remaining', lang)"));
+      expect(editProfile, contains('remaining.toString()'));
+      expect(editProfile, isNot(contains(r'$remaining remaining')));
     });
   });
 }

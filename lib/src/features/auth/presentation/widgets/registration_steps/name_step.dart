@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
+const int nameMaxLength = 50;
+
 class NameStep extends StatelessWidget {
   const NameStep({
     super.key,
@@ -57,6 +59,7 @@ class NameStep extends StatelessWidget {
                   ],
                   TextField(
                     controller: nameController,
+                    maxLength: nameMaxLength,
                     autofocus: true,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontSize: 28,
@@ -66,6 +69,7 @@ class NameStep extends StatelessWidget {
                     onChanged: (_) {},
                     decoration: InputDecoration(
                       hintText: tr('name_hint'),
+                      counterText: '',
                       hintStyle:
                           Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 fontSize: 28,
@@ -87,6 +91,30 @@ class NameStep extends StatelessWidget {
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 24, vertical: 20),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  ListenableBuilder(
+                    listenable: nameController,
+                    builder: (context, _) {
+                      final remaining =
+                          nameMaxLength - nameController.text.length;
+                      final counterColor = remaining < 10
+                          ? const Color(0xFFF4436C)
+                          : (isDark ? Colors.white54 : Colors.black45);
+                      final counterText = tr('name_chars_remaining')
+                          .replaceAll('{count}', remaining.toString());
+
+                      return Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          counterText,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: counterColor,
+                                  ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -32,6 +32,8 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
+  static const int _nameMaxLength = 50;
+
   final _nameController = TextEditingController();
   final _locationController = TextEditingController();
   final _imagePicker = ImagePicker();
@@ -609,7 +611,37 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 textColor, iconColor),
                             const SizedBox(height: 8),
                             _buildTextField(_nameController, t('name', lang),
-                                textColor, fillColor),
+                                textColor, fillColor,
+                                maxLength: _nameMaxLength),
+                            const SizedBox(height: 6),
+                            ListenableBuilder(
+                              listenable: _nameController,
+                              builder: (context, _) {
+                                final remaining = _nameMaxLength -
+                                    _nameController.text.length;
+                                final counterColor = remaining < 10
+                                    ? const Color(0xFFF4436C)
+                                    : (isDark
+                                        ? Colors.white54
+                                        : Colors.black45);
+                                final counterText =
+                                    t('name_chars_remaining', lang).replaceAll(
+                                  '{count}',
+                                  remaining.toString(),
+                                );
+
+                                return Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(
+                                    counterText,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(color: counterColor),
+                                  ),
+                                );
+                              },
+                            ),
                             const SizedBox(height: 24),
 
                             // ── Location ──────────────────────────────────────────
@@ -1415,13 +1447,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController ctrl, String hint,
-      Color textColor, Color fillColor) {
+  Widget _buildTextField(
+      TextEditingController ctrl, String hint, Color textColor, Color fillColor,
+      {int? maxLength}) {
     return TextField(
       controller: ctrl,
+      maxLength: maxLength,
       style: TextStyle(color: textColor),
       decoration: InputDecoration(
         hintText: hint,
+        counterText: maxLength == null ? null : '',
         hintStyle: TextStyle(color: textColor.withValues(alpha: 0.3)),
         filled: true,
         fillColor: fillColor,

@@ -427,6 +427,7 @@ const Map<String, Map<String, String>> _translations = {
     // --- Registration ---
     'basic_info': 'Basic Info',
     'name': 'Name',
+    'name_chars_remaining': '{count} remaining',
     'date_of_birth': 'Date of birth',
     'email': 'Email',
     'from_where': 'Where from',
@@ -1292,6 +1293,7 @@ const Map<String, Map<String, String>> _translations = {
     'nicotine_pref_any': 'Ni važno',
     'basic_info': 'Osnovni podatki',
     'name': 'Ime',
+    'name_chars_remaining': 'še {count} znakov',
     'date_of_birth': 'Datum rojstva',
     'email': 'Email',
     'from_where': 'Kraj bivanja',
@@ -2012,6 +2014,7 @@ const Map<String, Map<String, String>> _translations = {
     // --- Registration ---
     'basic_info': 'Grundinformationen',
     'name': 'Name',
+    'name_chars_remaining': 'noch {count} Zeichen',
     'date_of_birth': 'Geburtsdatum',
     'email': 'E-Mail',
     'from_where': 'Woher',
@@ -2775,6 +2778,7 @@ const Map<String, Map<String, String>> _translations = {
     // --- Registrazione ---
     'basic_info': 'Informazioni di base',
     'name': 'Nome',
+    'name_chars_remaining': 'ancora {count} caratteri',
     'date_of_birth': 'Data di nascita',
     'email': 'Email',
     'from_where': 'Da dove vieni',
@@ -3548,6 +3552,7 @@ const Map<String, Map<String, String>> _translations = {
     // --- Inscription ---
     'basic_info': 'Infos de base',
     'name': 'Nom',
+    'name_chars_remaining': 'encore {count} caractères',
     'date_of_birth': 'Date de naissance',
     'email': 'Email',
     'from_where': 'D\'où venez-vous',
@@ -4333,6 +4338,7 @@ const Map<String, Map<String, String>> _translations = {
     // --- Registration & Profile ---
     'basic_info': 'Osnovne informacije',
     'name': 'Ime',
+    'name_chars_remaining': 'još {count} znakova',
     'date_of_birth': 'Datum rođenja',
     'email': 'Email',
     'from_where': 'Odakle ste',
@@ -5071,6 +5077,7 @@ const Map<String, Map<String, String>> _translations = {
     // --- Registration ---
     'basic_info': 'Osnovne informacije',
     'name': 'Ime',
+    'name_chars_remaining': 'još {count} znakova',
     'date_of_birth': 'Datum rođenja',
     'email': 'Email',
     'from_where': 'Odakle ste',
@@ -5897,6 +5904,7 @@ const Map<String, Map<String, String>> _translations = {
     'about_you': 'Rólad',
     'basic_info': 'Alapadatok',
     'name': 'Név',
+    'name_chars_remaining': 'még {count} karakter',
     'date_of_birth': 'Születési dátum',
     'email': 'E-mail',
     'from_where': 'Honnan',
