@@ -1,3 +1,27 @@
+## Session State — 2026-05-28 13:00 CEST
+- Active Task: Paywall GlassCard -> solid brand card fix
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/features/settings/presentation/premium_screen.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` and `flutter test` SUCCESS (110/110 tests passed).
+
+## Session Handoff
+- Completed:
+    - Replaced premium paywall card glassmorphic styling with solid Deep Graphite (`#1A1A18`) backgrounds.
+    - Configured cards to use `1px` solid borders matching plan-specific accent colors.
+    - Switched price typography to Playfair Display and card title/labels to Instrument Sans.
+    - Switched all opacity-based card text colors to solid brand colors (`#FAFAF7`, `#A0A09A`, `#6B6B63`).
+    - Changed tag and savings badge backgrounds to transparent with solid borders.
+    - Preserved circular outline design rings inside the card layout as they do not use blurs.
+    - Verified static analysis and all unit/widget tests.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Verify screen layout and card colors on a running simulator or device.
+
 ## Session State — 2026-05-28 12:36 CEST
 - Active Task: Wire WavePillService to HomeScreen FCM notifications
 - Environment: Dev backend/mobile flavors on `main`

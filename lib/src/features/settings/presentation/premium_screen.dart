@@ -63,8 +63,8 @@ const premiumPlanCards = [
     ],
     ctaBasicKey: 'premium_cta_get_premium',
     ctaPremiumKey: 'premium_cta_get_premium',
-    color: Color(0xFF1E1E22),
-    borderColor: Color(0x99F4436C),
+    color: Color(0xFF1A1A18),
+    borderColor: Color(0xFFF4436C),
     accent: Color(0xFFF4436C),
     tag: 'SIGNAL PRIME',
     icon: LucideIcons.sparkles,
@@ -84,8 +84,8 @@ const premiumPlanCards = [
     ],
     ctaBasicKey: 'premium_cta_get_weekend',
     ctaPremiumKey: 'premium_cta_get_weekend',
-    color: Color(0xFF242220),
-    borderColor: Color(0x99F5C842),
+    color: Color(0xFF1A1A18),
+    borderColor: Color(0xFFF5C842),
     accent: Color(0xFFF5C842),
     tag: 'WEEKEND ACCESS',
     icon: LucideIcons.mountain,
@@ -106,8 +106,8 @@ const premiumPlanCards = [
     ],
     ctaBasicKey: 'premium_cta_get_yearly',
     ctaPremiumKey: 'premium_cta_get_yearly',
-    color: Color(0xFF1A1F26),
-    borderColor: Color(0x9900C8FF),
+    color: Color(0xFF1A1A18),
+    borderColor: Color(0xFF00C8FF),
     accent: Color(0xFF00C8FF),
     tag: 'YEARLY ACCESS',
     icon: LucideIcons.calendarDays,
@@ -125,8 +125,8 @@ const premiumPlanCards = [
     ],
     ctaBasicKey: 'premium_cta_get_lifetime',
     ctaPremiumKey: 'premium_cta_get_lifetime',
-    color: Color(0xFF22180A),
-    borderColor: Color(0x99FFB347),
+    color: Color(0xFF1A1A18),
+    borderColor: Color(0xFFFFB347),
     accent: Color(0xFFFFB347),
     tag: 'LIFETIME ACCESS',
     icon: LucideIcons.infinity,
@@ -144,9 +144,9 @@ const premiumPlanCards = [
     ],
     ctaBasicKey: 'premium_current_plan',
     ctaPremiumKey: 'premium_switch_to_free',
-    color: Color(0xFF1C1C1E),
-    borderColor: Color(0x33FAFAF7),
-    accent: Color(0x99FAFAF7),
+    color: Color(0xFF1A1A18),
+    borderColor: Color(0xFFFAFAF7),
+    accent: Color(0xFFFAFAF7),
     tag: 'FREE SIGNAL',
     icon: LucideIcons.user,
   ),
@@ -176,23 +176,23 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     fontWeight: FontWeight.bold,
     letterSpacing: 0.5,
   );
-  late final TextStyle _cardTitleStyle = GoogleFonts.playfairDisplay(
-    color: Colors.white,
+  late final TextStyle _cardTitleStyle = GoogleFonts.instrumentSans(
+    color: const Color(0xFFFAFAF7),
     fontSize: 26,
     fontWeight: FontWeight.bold,
     height: 1.1,
   );
-  late final TextStyle _priceStyle = GoogleFonts.instrumentSans(
-    color: Colors.white,
+  late final TextStyle _priceStyle = GoogleFonts.playfairDisplay(
+    color: const Color(0xFFFAFAF7),
     fontSize: 34,
     fontWeight: FontWeight.w800,
   );
   late final TextStyle _periodStyle = GoogleFonts.instrumentSans(
-    color: Colors.white60,
+    color: const Color(0xFFA0A09A),
     fontSize: 14,
   );
   late final TextStyle _billedAsStyle = GoogleFonts.instrumentSans(
-    color: Colors.white60,
+    color: const Color(0xFFA0A09A),
     fontSize: 12,
     height: 1.3,
   );
@@ -202,13 +202,13 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     letterSpacing: 0.5,
   );
   late final TextStyle _featureTitleStyle = GoogleFonts.instrumentSans(
-    color: Colors.white38,
+    color: const Color(0xFF6B6B63),
     fontSize: 10,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.8,
   );
   late final TextStyle _featureStyle = GoogleFonts.instrumentSans(
-    color: Colors.white.withValues(alpha: 0.87),
+    color: const Color(0xFFFAFAF7),
     fontSize: 12,
     height: 1.3,
   );
@@ -742,9 +742,9 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
   Widget _buildCreditCard(PremiumPlanCard data, String lang) {
     return Container(
       decoration: BoxDecoration(
-        color: data.color,
+        color: const Color(0xFF1A1A18),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: data.borderColor, width: 1.5),
+        border: Border.all(color: data.accent, width: 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.5),
@@ -800,7 +800,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: data.accent.withValues(alpha: 0.15),
+                          border: Border.all(color: data.accent, width: 1.0),
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: Text(
@@ -860,7 +860,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: data.accent.withValues(alpha: 0.18),
+                        border: Border.all(color: data.accent, width: 1.0),
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
@@ -870,8 +870,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                     ),
                   ],
                   const SizedBox(height: 16),
-                  Divider(
-                      color: Colors.white.withValues(alpha: 0.1), height: 1),
+                  const Divider(color: Color(0xFF2E2E2C), height: 1),
                   const SizedBox(height: 16),
                   Text(
                     _t('features', lang).toUpperCase(),

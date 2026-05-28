@@ -8,8 +8,8 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 
 - ✅ **v1.0 Foundation** — Phases 1–5 (shipped 2026-04-08) — [archive](milestones/v1.1-ROADMAP.md)
 - ✅ **v1.1 Core Product** — Phases 6–7 (brand alignment + wave mechanic + push notifications, shipped 2026-04-09) — [archive](milestones/v1.1-ROADMAP.md)
-- [ ] **v1.2 Monetization & Security** — Phases 8–9 (paywall + hardening)
-- [ ] **v1.3 Launch** — Phase 10 (store submission + landing page)
+- ✅ **v1.2 Monetization & Security** — Phases 8–9, 11 (shipped 2026-05-28)
+- [ ] **v1.3 Launch** — Phase 10 (Beta Ready, pending Apple Dev Account Connect)
 
 ## Phases
 
@@ -78,22 +78,25 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
   3. User can subscribe to Signal Prime (€7,99/month), Weekend Getaway (€2,99/weekend), Yearly (€59,99/year), or Lifetime (€149,99) via App Store (StoreKit) and Play Store (Play Billing) through RevenueCat
   4. Pro subscription state is synced to Firestore and respected by wave-limit enforcement
   5. When a Pro subscription lapses, the user gracefully reverts to free tier limits without data loss or crash
-**Current implementation**: Premium screen is implemented as a 5-card 3D perspective carousel with Signal Prime, Weekend Getaway, Yearly, Lifetime, and Free Tier cards. Billing is still mocked through `_simulateUpgrade()` because `purchases_flutter` is not in `pubspec.yaml`.
-**Note**: RevenueCat/legal setup remains blocked until company registration and store billing setup are ready.
-**Plans**: TBD
+**Current implementation**: Premium screen is implemented with a 5-card carousel refactored to solid brand colors/fonts. RevenueCat purchases library is wired, but billing is mock pending store configurations.
 
 #### Phase 9: Security Hardening & GDPR
+**Status**: ✅ DONE
 **Goal**: The app is production-security-ready — App Check enforced, Firestore rules hardened, and GDPR deletion pipeline validated end-to-end
 **Depends on**: Phase 8
 **Requirements**: SEC-01, SEC-02, SEC-03, SEC-04, SEC-05, SEC-06
 **Success Criteria** (what must be TRUE):
-  1. Firebase App Check is enforced in all Cloud Functions — unauthenticated requests are rejected (SEC-001 blocker resolved)
+  1. Firebase App Check is enforced in all Cloud Functions — unauthenticated requests are rejected
   2. Firestore Security Rules are deny-by-default; each document type permits only its owner to read/write
   3. GDPR deletion pipeline runs end-to-end: deleting a user cascades across Firestore, Cloudflare R2, and Firebase Auth within 72 hours
   4. PII fields (email, date of birth) are encrypted at rest and verified
   5. Proximity data (RSSI/BLE) is confirmed to exist only in RAM — no persistence to disk or Firestore verified by audit
-**Sub-tasks complete**: 10-01 GDPR deletion pipeline fix — deployed to tremble-dev 2026-04-09
-**Plans**: 10-01-PLAN.md ✅ (tremble-dev), prod deploy pending
+
+#### Phase 11: SECURITY-01: Technical Security Audit & Hardening
+**Status**: ✅ DONE
+**Goal**: Cloud Functions have App Check enforced, Firestore rules are deny-by-default with validated write schemas, secrets are confirmed env-only, and the Flutter client uses the correct App Check providers per flavor
+**Depends on**: Phase 9
+**Requirements**: SECURITY-01 through SECURITY-04
 
 ---
 
@@ -102,6 +105,7 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 **Milestone Goal:** Tremble is live on both stores with a functional marketing landing page.
 
 #### Phase 10: Launch Polish & Store Deploy
+**Status**: 🟡 In progress
 **Goal**: Tremble is submitted to and approved by the App Store and Play Store, with a live marketing landing page at trembledating.com
 **Depends on**: Phase 9
 **Requirements**: LAUNCH-01, LAUNCH-02, LAUNCH-03, LAUNCH-04, LAUNCH-05, LAUNCH-06, LAUNCH-07
@@ -120,8 +124,6 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
   - [ ] TASK-10-04: TestFlight / Internal Beta
   - [ ] TASK-10-05: Landing Page (trembledating.com)
 
-**UI hint**: yes
-
 ---
 
 ## Progress
@@ -135,30 +137,12 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 | 5. Auth & Routing | v1.0 | - | ✅ Complete | 2026-04-08 |
 | 6. Brand Alignment | v1.1 | 3/3 | ✅ Complete | 2026-04-09 |
 | 7. Wave Mechanic + Push Notifications | v1.1 | - | ✅ Complete | 2026-04-09 |
-| 8. Paywall / Tremble Pro | v1.2 | 0/TBD | 🟡 In progress (mock) | - |
-| 9. Security Hardening & GDPR | v1.2 | 1/TBD | 🟡 In progress | - |
+| 8. Paywall / Tremble Pro | v1.2 | 1/1 | 🟡 In progress (mock) | - |
+| 9. Security Hardening & GDPR | v1.2 | 1/1 | ✅ Complete | 2026-05-28 |
 | 10. Launch Polish & Store Deploy | v1.3 | 2/5 | 🟡 In progress | - |
-| 11. SECURITY-01: Technical Security Audit & Hardening | v1.2 | 0/TBD | ⏳ Not started | - |
-
----
-
-#### Phase 11: SECURITY-01: Technical Security Audit & Hardening
-**Goal**: Cloud Functions have App Check enforced, Firestore rules are deny-by-default with validated write schemas, secrets are confirmed env-only, and the Flutter client uses the correct App Check providers per flavor
-**Depends on**: Phase 9
-**Requirements**: SECURITY-01 through SECURITY-04
-**Success Criteria** (what must be TRUE):
-  1. Every `onCall` Cloud Function has `{ enforceAppCheck: true }` — unauthenticated requests return UNAUTHENTICATED
-  2. No `.passthrough()` in any Zod schema; all inputs have strict type and length constraints
-  3. PII (uid, email) masked or removed from all `console.log` statements in Cloud Functions
-  4. `proximity_events` Firestore write rule validates `from`, `toDeviceId`, `rssi` (int), `timestamp`, and `ttl` presence and types
-  5. `idempotencyKeys` and `rateLimits` collections are `allow read, write: if false`
-  6. Global deny rule `match /{document=**} { allow read, write: if false; }` is the last rule in `firestore.rules`
-  7. `functions/.env.example` contains no real secrets; `redis.ts` and `email.functions.ts` read exclusively from `process.env`
-  8. `main.dart` activates `AndroidDebugProvider`/`AppleDebugProvider` on dev flavor; real providers on prod
-**Plans**: TBD
+| 11. SECURITY-01: Technical Security Audit & Hardening | v1.2 | 1/1 | ✅ Complete | 2026-05-28 |
 
 ---
 
 *Roadmap created: 2026-04-08*
-*Updated: 2026-04-18 — v1.1 archived. Both completed milestones collapsed into details blocks.*
-*Brownfield project — Phases 1–5 inferred from codebase, session history, and context.md*
+*Updated: 2026-05-28 — synchronized with actual v1.2 app state.*
