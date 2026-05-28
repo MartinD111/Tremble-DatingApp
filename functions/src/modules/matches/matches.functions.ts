@@ -136,6 +136,18 @@ export const onWaveCreated = onDocumentCreated(
         const receiverToken = receiverDoc.data()?.fcmToken as string | undefined;
         const senderToken = senderDoc.data()?.fcmToken as string | undefined;
 
+        let senderAge = 0;
+        const dob = senderDoc.data()?.dateOfBirth;
+        if (dob) {
+            const dobDate = dob.toDate();
+            const today = new Date();
+            senderAge = today.getFullYear() - dobDate.getFullYear();
+            const m = today.getMonth() - dobDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+                senderAge--;
+            }
+        }
+
         // Check for reciprocal wave (mutual match)
         const reciprocalQuery = await db
             .collection("waves")
@@ -285,6 +297,8 @@ export const onWaveCreated = onDocumentCreated(
                     type: "INCOMING_WAVE",
                     senderId: fromUid,
                     senderName,
+                    senderAge: senderAge.toString(),
+                    senderPhotoUrl: senderPhoto,
                     // WAVE_BACK_ACTION is handled silently in background by Flutter
                     click_action: "WAVE_BACK_ACTION",
                 },

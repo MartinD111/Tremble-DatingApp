@@ -90,6 +90,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final user = ref.read(authStateProvider);
       if (user != null) {
         NotificationService.saveToken(user.id);
+        NotificationService.initialize(
+          onForegroundWave: ({
+            required String name,
+            required int age,
+            required String imageUrl,
+            required String targetUid,
+            required bool isIncomingWave,
+          }) {
+            if (!mounted) return;
+            WavePillService.show(
+              overlay: Overlay.of(context),
+              data: WavePillData(
+                name: name,
+                age: age,
+                imageUrl: imageUrl,
+                targetUid: targetUid,
+                isIncomingWave: isIncomingWave,
+              ),
+              onWave: (uid) {
+                final user = ref.read(authStateProvider);
+                if (user?.hasReachedFreeWaveLimit == true) {
+                  PremiumPaywallBottomSheet.show(context);
+                  return;
+                }
+                ref.read(waveRepositoryProvider).sendWave(uid);
+              },
+            );
+          },
+        );
       }
       ref.read(tutorialProvider.notifier).checkFirstLaunch();
     });

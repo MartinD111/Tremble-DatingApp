@@ -715,9 +715,10 @@ export const onBleProximity = onDocumentCreated(
             data: {
                 type: "CROSSING_PATHS",
                 fromUid: fromUid,
-                name: name,
-                age: age.toString(),
-                photoUrl: photoUrl,
+                senderId: fromUid,
+                senderName: name,
+                senderAge: age.toString(),
+                senderPhotoUrl: photoUrl,
             },
             apns: {
                 payload: {

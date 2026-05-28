@@ -1,3 +1,28 @@
+## Session State — 2026-05-28 12:36 CEST
+- Active Task: Wire WavePillService to HomeScreen FCM notifications
+- Environment: Dev backend/mobile flavors on `main`
+- Modified Files:
+    - `functions/src/modules/matches/matches.functions.ts`
+    - `functions/src/modules/proximity/proximity.functions.ts`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `npm run build` SUCCESS. `npm run lint` SUCCESS. `npm test` SUCCESS (14/14 tests passed). `flutter analyze` and `flutter test` SUCCESS (110/110 tests passed).
+
+## Session Handoff
+- Completed:
+    - Integrated foreground FCM notification listener in `HomeScreen.initState` post-frame callback.
+    - Resolved naming matches and properties mismatches inside `INCOMING_WAVE` and `CROSSING_PATHS` push notification payloads.
+    - Added age computation and sender photo values in the backend payloads.
+    - Ran backend compilation/linting/tests successfully.
+    - Ran Flutter analyze and full unit/widget tests successfully.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Deploy backend changes to dev and test on real devices to verify foreground pill display.
+
 ## Session State — 2026-05-28 12:20 CEST
 - Active Task: Add rate limiting to 13 Cloud Functions
 - Environment: Dev backend flavor on `main`
