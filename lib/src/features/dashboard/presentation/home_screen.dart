@@ -108,13 +108,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 targetUid: targetUid,
                 isIncomingWave: isIncomingWave,
               ),
-              onWave: (uid) {
+              onWave: (uid) async {
                 final user = ref.read(authStateProvider);
                 if (user?.hasReachedFreeWaveLimit == true) {
                   PremiumPaywallBottomSheet.show(context);
                   return;
                 }
-                ref.read(waveRepositoryProvider).sendWave(uid);
+                try {
+                  await ref.read(waveRepositoryProvider).sendWave(uid);
+                } catch (e, st) {
+                  debugPrint('WavePill sendWave error: $e\n$st');
+                  if (context.mounted) {
+                    final lang = ref.read(appLanguageProvider);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(t('wave_failed', lang))),
+                    );
+                  }
+                }
               },
             );
           },
@@ -865,7 +875,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             unawaited(HapticFeedback.lightImpact());
                             ref
                                 .read(runClubRepositoryProvider)
-                                .sendWave(activeRunCross.id, user.id);
+                                .sendWave(activeRunCross.id, user.id)
+                                .catchError((Object e, StackTrace st) {
+                              debugPrint('LiveRunCard sendWave error: $e\n$st');
+                              if (context.mounted) {
+                                final lang = ref.read(appLanguageProvider);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(t('wave_failed', lang))),
+                                );
+                              }
+                            });
                           },
                           onDismiss: () {
                             ref

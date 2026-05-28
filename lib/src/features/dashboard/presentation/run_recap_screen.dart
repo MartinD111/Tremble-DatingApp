@@ -445,8 +445,9 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
     } catch (e, st) {
       debugPrint('sendWave error: $e\n$st');
       if (context.mounted) {
+        final lang = ref.read(appLanguageProvider);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Wave failed. Try again.')),
+          SnackBar(content: Text(t('wave_failed', lang))),
         );
       }
     }
@@ -461,6 +462,20 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
     final ttlState = shouldTrackTTL
         ? ref.watch(recapTTLProvider(widget.partnerId))
         : const RecapTTLState();
+    if (shouldTrackTTL) {
+      ref.listen<RecapTTLState>(
+        recapTTLProvider(widget.partnerId),
+        (previous, next) {
+          if (previous != null && !previous.isExpired && next.isExpired) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(t('pulse_expired', lang))),
+              );
+            }
+          }
+        },
+      );
+    }
     final isExpired = shouldTrackTTL && ttlState.isExpired;
     final isReadOnly = !widget.isPremium || widget.isHistory || isExpired;
     final showWaveButton =

@@ -1,3 +1,29 @@
+## Session State — 2026-05-28 13:20 CEST
+- Active Task: Silent wave error handling and TTL expiry notification
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/core/translations.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart`
+    - `test/features/dashboard/run_recap_defensive_paths_test.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` and `flutter test` SUCCESS (110/110 tests passed).
+
+## Session Handoff
+- Completed:
+    - Implemented FIX 1 and FIX 2 for silent wave sending errors in `home_screen.dart`.
+    - Added `wave_failed` translation keys in all 8 supported languages.
+    - Implemented a transition listener using `ref.listen` on `recapTTLProvider` in `run_recap_screen.dart` to trigger a one-time SnackBar with `pulse_expired` i18n translation at the exact moment of recap expiry.
+    - Replaced the hardcoded `'Wave failed. Try again.'` string in `run_recap_screen.dart`'s `_handleWaveTap` error handling with the existing `wave_failed` translation key.
+    - Updated `run_recap_defensive_paths_test.dart` to expect `wave_failed` instead of the literal hardcoded string in the source scan.
+    - Verified static analysis and all unit/widget tests.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions or continue production stabilization.
+
 ## Session State — 2026-05-28 13:00 CEST
 - Active Task: Paywall GlassCard -> solid brand card fix
 - Environment: Dev mobile flavor on `main`
