@@ -1,4 +1,4 @@
-# TREMBLE — MASTER IMPLEMENTATION PLAN (V4 — 2026-05-25)
+# TREMBLE — MASTER IMPLEMENTATION PLAN (V4 — 2026-05-28)
 **Status:** Production stabilization + Phase E (Pulse Intercept / F12)
 **Single Source of Truth** for the Tremble Mobile App (Flutter).
 
@@ -38,8 +38,8 @@
 | F3 | **Match Categories** | ✅ DONE | Event/Activity/Gym tabs + History filters. |
 | F4 | **Hot/Cold Nav** | ✅ DONE | RSSI-based proximity indicators. |
 | F6 | **Run Club** | ✅ DONE | Native motion bridge, 10-min TTL handshake. |
-| F7 | **Valentine Promo** | ⏸ BLOCKED | Depends on RevenueCat/legal readiness. |
-| F8 | **Pricing / Paywall** | 🔴 BLOCKED | `BLOCKER-003`: company registration/legal setup required. |
+| F7 | **Valentine Promo** | ⏸ ON HOLD | Gated on store launch. |
+| F8 | **Pricing / Paywall** | ✅ CODE DONE | RevenueCat SDK integrated & wired. Sandbox/device testing gated on `BLOCKER-005` provisioning. |
 | F9 | **Radius Logic** | ✅ DONE | 100m (Free) / 250m (Pro) Geohash filtering. |
 | F10| **Gym Mode** | ✅ DONE | Native Geofencing + Places API (Search only). |
 | F13| **Stealth & Safety**| ✅ DONE | Safe Zones + SHA-256 Contact Anonymity. |

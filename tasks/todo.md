@@ -25,10 +25,10 @@
 - [x] ADR-001 BLE background restoration resolved via NativeMotionService.
 
 ### 4. Current Open Blockers
-- [ ] **BLOCKER-003:** Legal/company registration blocks RevenueCat, paywall, and Valentine promo activation.
+- [x] **BLOCKER-003:** Legal/company registration resolved (AMS Solutions d.o.o. registered 2026-05-07).
 - [ ] **BLOCKER-005:** iOS dev provisioning for `com.pulse` blocks physical iPhone deploy and iOS tile verification.
 - [ ] **BLOCKER-006:** Real photo upload / onboarding E2E still needs device verification on `tremble-dev`.
-- [ ] **BLOCKER-007:** Live Privacy Policy, Terms, and Erasure URLs must be verified on `trembledating.com`.
+- [x] **BLOCKER-007:** Live Privacy Policy, Terms, and Erasure URLs verified on `trembledating.com`.
 
 ### 5. Backend Follow-Up
 - [ ] Verify in Firebase Console that functions newly created by the latest prod deploy are intentional.
@@ -39,4 +39,4 @@
 - [x] Agent/bootstrap docs updated to include the local pre-commit gate.
 
 ---
-*Last Updated: 2026-05-25*
+*Last Updated: 2026-05-28*

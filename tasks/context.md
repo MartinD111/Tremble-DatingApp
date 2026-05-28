@@ -1,3 +1,58 @@
+## Session State — 2026-05-28 12:20 CEST
+- Active Task: Add rate limiting to 13 Cloud Functions
+- Environment: Dev backend flavor on `main`
+- Modified Files:
+    - `functions/src/modules/matches/intercept.functions.ts`
+    - `functions/src/modules/matches/matches.functions.ts`
+    - `functions/src/modules/events/events.functions.ts`
+    - `functions/src/modules/gym/gym.functions.ts`
+    - `functions/src/modules/proximity/proximity.functions.ts`
+    - `functions/src/modules/users/users.functions.ts`
+    - `tasks/context.md`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `npm run build` SUCCESS. `npm run lint` SUCCESS. `npm test` SUCCESS (14/14 tests passed). `flutter analyze` and `flutter test` SUCCESS (110/110 tests passed).
+
+## Session Handoff
+- Completed:
+    - Added rate limiting using Firestore TTL `checkRateLimit` middleware immediately after authentication checks on 13 targeted Cloud Functions.
+    - Category limits configured:
+      - Priority 1 (stricter limit): 5 req/min (e.g. `requestPulseIntercept`, `getPulseIntercept`, `onEventModeActivate`, `onEventModeDeactivate`, `onGymModeActivate`, `onGymModeDeactivate`, `onRunModeActivate`, `onRunModeDeactivate`, `migrateMatchTypes`).
+      - Background switcher limit: 15 req/min (`setInactive`).
+      - Priority 2 (looser limit): 60 req/min (e.g. `getProfile`, `getPublicProfile`, `getMatches`).
+    - Verified compilation, clean lint status, and Jest tests.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Deploy updated functions to dev environment for client-side regression verification.
+
+## Session State — 2026-05-28 11:51 CEST
+- Active Task: Update firestore.rules whitelists and type checks
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `firestore.rules`
+    - `tasks/blockers.md`
+    - `tasks/todo.md`
+    - `tasks/MASTER_PLAN.md`
+    - `tasks/context.md`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `firebase_validate_security_rules` SUCCESS. `flutter analyze` and `flutter test` are passing (110/110).
+
+## Session Handoff
+- Completed:
+    - Updated `todo.md`, checking off `BLOCKER-003` (Legal/Company Setup) and `BLOCKER-007` (Legal web pages live).
+    - Updated `blockers.md` marking `BLOCKER-003` as resolved (AMS Solutions d.o.o. registered 2026-05-07).
+    - Updated `MASTER_PLAN.md` to reflect that F8 (Paywall) code is complete and F7 (Valentine Promo) is on hold.
+    - Updated `firestore.rules` to update `proximity/{userId}` write rule with `hasOnly()` whitelist including `isLowPowerMode` and `geoHashExpiresAt` (removing `expiresAt`), and added type validation for `isLowPowerMode` (bool), `updatedAt` (timestamp), and `geoHashExpiresAt` (timestamp). Verified syntax with `firebase_validate_security_rules`.
+- In Progress: None.
+- Blocked:
+    - iOS physical device verification / App Store Connect testing remains blocked by `BLOCKER-005`.
+- Next Action:
+    1. Await Apple Developer Account approval to resolve `BLOCKER-005` provisioning and enable full device smoke testing of photo upload E2E and RevenueCat.
+
 ## Session State — 2026-05-27 23:13 CEST
 - Active Task: RevenueCat SDK integration for Premium entitlement/paywall
 - Environment: Dev mobile flavor on `main`; no deploys; no Firestore/webhook sync

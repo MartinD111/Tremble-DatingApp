@@ -61,6 +61,7 @@ export const getProfile = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        await checkRateLimit(uid, "getProfile", { maxRequests: 60, windowMs: 60000 });
 
         const doc = await db.collection("users").doc(uid).get();
 
@@ -79,7 +80,8 @@ export const getProfile = onCall(
 export const getPublicProfile = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
-        requireVerifiedEmail(request);
+        const uid = requireVerifiedEmail(request);
+        await checkRateLimit(uid, "getPublicProfile", { maxRequests: 60, windowMs: 60000 });
 
         const { userId: rawUserId } = request.data as { userId: unknown };
         const userId = assertValidDocumentId(rawUserId, "userId");

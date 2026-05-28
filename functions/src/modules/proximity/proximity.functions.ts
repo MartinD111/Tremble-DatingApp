@@ -432,6 +432,7 @@ export const setInactive = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        await checkRateLimit(uid, "setInactive", { maxRequests: 15, windowMs: 60000 });
         const startedAt = Date.now();
         logStructured({ fn: "setInactive", event: "entry", uid });
 

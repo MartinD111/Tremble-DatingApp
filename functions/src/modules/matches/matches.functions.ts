@@ -315,6 +315,7 @@ export const getMatches = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        await checkRateLimit(uid, "getMatches", { maxRequests: 60, windowMs: 60000 });
         const userDoc = await db.collection("users").doc(uid).get();
         const blockedUsers = userDoc.data()?.blockedUserIds || [];
 
@@ -362,6 +363,7 @@ export const migrateMatchTypes = onCall(
     { maxInstances: 10, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAdmin(request);
+        await checkRateLimit(uid, "migrateMatchTypes", { maxRequests: 5, windowMs: 60000 });
 
         const matchesSnapshot = await db.collection("matches").get();
         let updatedCount = 0;

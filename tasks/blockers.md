@@ -14,11 +14,11 @@
 **Impact:** The 3-state map toggle logic was implemented and has been verified by Martin on a physical Samsung S25 Ultra.
 **Action:** None.
 
-## BLOCKER-003 — Legal/Legislative (RevenueCat)
+## BLOCKER-003 — Legal/Company Setup & App Store Agreement (RevenueCat)
 **Date:** 2026-04-18
-**Status:** 🔴 OPEN
-**Impact:** Phase 8 (Paywall) is on hold until company registration and legal entities are established.
-**Action:** Move to Phase 9 (Security Hardening) and Phase C (UI Polish) instead (now complete). Resume when company entity is confirmed.
+**Status:** ✅ RESOLVED (2026-05-07)
+**Impact:** None. Company AMS Solutions d.o.o. has been registered. Purchases library (purchases_flutter) has been wired in.
+**Action:** Real store-side testing is now gated on Apple Developer Account approval (BLOCKER-005) and store-side product configuration.
 
 ## BLOCKER-004 — F5 (Strava/Health) Integration
 **Date:** 2026-04-30

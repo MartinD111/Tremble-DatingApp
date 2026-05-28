@@ -15,6 +15,7 @@ import { getRedis } from "../../core/redis";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { assertValidDocumentId } from "../../middleware/validate";
 import { ENFORCE_APP_CHECK } from "../../config/env";
+import { checkRateLimit } from "../../middleware/rateLimit";
 
 const INTERCEPT_TTL_SECS = 600; // 10 minutes
 
@@ -37,6 +38,7 @@ export const requestPulseIntercept = onCall(
   { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
   async (request: CallableRequest) => {
     const senderUid = requireAuth(request);
+    await checkRateLimit(senderUid, "requestPulseIntercept", { maxRequests: 5, windowMs: 60000 });
     const startedAt = Date.now();
     logStructured({ fn: "requestPulseIntercept", event: "entry", uid: senderUid });
 
@@ -143,6 +145,7 @@ export const getPulseIntercept = onCall(
   { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
   async (request: CallableRequest) => {
     const myUid = requireAuth(request);
+    await checkRateLimit(myUid, "getPulseIntercept", { maxRequests: 5, windowMs: 60000 });
     const startedAt = Date.now();
     logStructured({ fn: "getPulseIntercept", event: "entry", uid: myUid });
 

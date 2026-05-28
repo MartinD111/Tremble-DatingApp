@@ -4,6 +4,7 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { assertValidDocumentId } from "../../middleware/validate";
 import { ENFORCE_APP_CHECK } from "../../config/env";
+import { checkRateLimit } from "../../middleware/rateLimit";
 
 const db = getFirestore();
 
@@ -38,6 +39,7 @@ export const onGymModeActivate = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        await checkRateLimit(uid, "onGymModeActivate", { maxRequests: 5, windowMs: 60000 });
 
         const userDoc = await db.collection("users").doc(uid).get();
         assertNotBanned(userDoc.data());
@@ -92,6 +94,7 @@ export const onGymModeDeactivate = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        await checkRateLimit(uid, "onGymModeDeactivate", { maxRequests: 5, windowMs: 60000 });
 
         const userDoc = await db.collection("users").doc(uid).get();
         assertNotBanned(userDoc.data());
@@ -152,6 +155,7 @@ export const onRunModeActivate = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        await checkRateLimit(uid, "onRunModeActivate", { maxRequests: 5, windowMs: 60000 });
 
         const userDoc = await db.collection("users").doc(uid).get();
         assertNotBanned(userDoc.data());
@@ -179,6 +183,7 @@ export const onRunModeDeactivate = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        await checkRateLimit(uid, "onRunModeDeactivate", { maxRequests: 5, windowMs: 60000 });
 
         const userDoc = await db.collection("users").doc(uid).get();
         assertNotBanned(userDoc.data());

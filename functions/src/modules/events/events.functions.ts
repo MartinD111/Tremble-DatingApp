@@ -4,6 +4,7 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { assertValidDocumentId } from "../../middleware/validate";
 import { ENFORCE_APP_CHECK } from "../../config/env";
+import { checkRateLimit } from "../../middleware/rateLimit";
 
 const db = getFirestore();
 
@@ -24,6 +25,7 @@ export const onEventModeActivate = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        await checkRateLimit(uid, "onEventModeActivate", { maxRequests: 5, windowMs: 60000 });
 
         const userDoc = await db.collection('users').doc(uid).get();
         assertNotBanned(userDoc.data());
@@ -85,6 +87,7 @@ export const onEventModeDeactivate = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
+        await checkRateLimit(uid, "onEventModeDeactivate", { maxRequests: 5, windowMs: 60000 });
 
         const userDoc = await db.collection('users').doc(uid).get();
         assertNotBanned(userDoc.data());
