@@ -435,39 +435,51 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
             padding: const EdgeInsets.fromLTRB(20, 20, 12, 0),
             child: Row(
               children: [
-                // Title — tap opens bottom sheet picker
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: _showSectionPicker,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        sectionLabel,
-                        style: TrembleTheme.displayFont(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      // Green dot when gym mode active
-                      if (activeSection == MatchSection.gym &&
-                          gymState.isActive) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            color: Colors.greenAccent,
-                            shape: BoxShape.circle,
+                // Title — tap opens bottom sheet picker.
+                // Expanded + FittedBox so long translations (e.g. Hungarian
+                // "Saját edzőterem") scale down to fit instead of overflowing.
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _showSectionPicker,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              sectionLabel,
+                              maxLines: 1,
+                              softWrap: false,
+                              style: TrembleTheme.displayFont(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
+                            ),
                           ),
                         ),
+                        // Green dot when gym mode active
+                        if (activeSection == MatchSection.gym &&
+                            gymState.isActive) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: Colors.greenAccent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
 
-                const Spacer(),
+                const SizedBox(width: 8),
 
                 // Mode activation icon — matches current section
                 _ModeIconButton(
@@ -1452,12 +1464,15 @@ class _GymEmptyPill extends StatelessWidget {
           children: [
             Icon(LucideIcons.mapPin, size: 11, color: iconColor),
             const SizedBox(width: 5),
-            Text(
-              t('no_gym_selected', lang),
-              style: GoogleFonts.instrumentSans(
-                fontSize: 12,
-                color: textColor,
-                fontWeight: FontWeight.w500,
+            Flexible(
+              child: Text(
+                t('no_gym_selected', lang),
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.instrumentSans(
+                  fontSize: 12,
+                  color: textColor,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],

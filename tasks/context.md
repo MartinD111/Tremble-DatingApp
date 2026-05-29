@@ -1,3 +1,30 @@
+## Session State — 2026-05-29 11:25 CEST
+- Active Task: Restore missing Firebase option and credential files
+- Environment: Dev and Prod mobile flavor on `main`
+- Modified Files:
+    - `lib/src/core/firebase_options_dev.dart`
+    - `lib/src/core/firebase_options_prod.dart`
+    - `android/app/src/dev/google-services.json`
+    - `android/app/src/prod/google-services.json`
+    - `ios/Runner/Firebase/Dev/GoogleService-Info.plist`
+    - `ios/Runner/Firebase/Prod/GoogleService-Info.plist`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` and `flutter test` SUCCESS (113/113 tests passed).
+
+## Session Handoff
+- Completed:
+    - Restored `firebase_options_dev.dart` and `firebase_options_prod.dart` configurations from git history.
+    - Reconstructed all flavor-specific `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) credential files by querying `firebase-tools` for dev and prod active projects.
+    - Verified all configurations are perfectly ignored by git, protecting credentials from commits.
+    - Executed flavored verification protocol: all 113/113 unit and widget tests successfully passed, and `flutter analyze` returned zero errors or warnings.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Run `flutter run --flavor dev --dart-define=FLAVOR=dev` to verify the application launch on a simulator/device.
+
+## Session State — 2026-05-29 11:25 CEST (Updated)
 ## Session State — 2026-05-28 13:20 CEST
 - Active Task: Silent wave error handling and TTL expiry notification
 - Environment: Dev mobile flavor on `main`
