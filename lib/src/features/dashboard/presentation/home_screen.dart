@@ -1320,10 +1320,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         .activate();
                                   } else if (selectedMode ==
                                       RadarModeKind.gym) {
-                                    Navigator.pop(context);
                                     GymModeSheet.show(context);
-                                  } else {
-                                    Navigator.pop(context);
+                                  } else if (selectedMode ==
+                                      RadarModeKind.event) {
+                                    ref
+                                        .read(
+                                            eventModeControllerProvider.notifier)
+                                        .activate(
+                                          eventId: 'default',
+                                          eventName: t('section_your_event', lang),
+                                        );
                                   }
                                 },
                               );
