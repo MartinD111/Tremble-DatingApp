@@ -95,10 +95,7 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-crashlytics")
 
-    // In-process LocalBroadcastManager — used by RadarStateBridge to fire
-    // ACTION_POST_RADAR_NOTIFICATION to RadarNotificationReceiver in
-    // MainApplication, regardless of whether the UI isolate is alive.
-    implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
+
     // CallStyle Notification + Person APIs
     implementation("androidx.core:core-ktx:1.13.1")
 }

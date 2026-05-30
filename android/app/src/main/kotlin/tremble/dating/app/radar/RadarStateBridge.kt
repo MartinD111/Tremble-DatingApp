@@ -4,10 +4,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import io.flutter.plugin.common.EventChannel
-import tremble.dating.app.ACTION_POST_RADAR_NOTIFICATION
-import tremble.dating.app.EXTRA_RADAR_BODY
 
 private const val PREFS_NAME = "tremble_radar"
 private const val KEY_ACTIVE = "radar_active"
@@ -33,6 +30,9 @@ object RadarStateBridge {
     private var prefs: SharedPreferences? = null
     private var appContext: Context? = null
     private var eventSink: EventChannel.EventSink? = null
+
+    /** Direct callback to replace deprecated LocalBroadcastManager. */
+    var onNotificationTrigger: ((body: String) -> Unit)? = null
 
     /** Must be called once at process start (MainApplication.onCreate). */
     fun init(context: Context) {
@@ -60,10 +60,7 @@ object RadarStateBridge {
         }
 
     private fun postLiveNotification(ctx: Context) {
-        val intent = Intent(ACTION_POST_RADAR_NOTIFICATION).apply {
-            putExtra(EXTRA_RADAR_BODY, "")
-        }
-        LocalBroadcastManager.getInstance(ctx).sendBroadcast(intent)
+        onNotificationTrigger?.invoke("")
     }
 
     private fun cancelLiveNotification(ctx: Context) {

@@ -35,6 +35,17 @@ flutter run --flavor dev --dart-define=FLAVOR=dev
 
 Local commits should pass `.git/hooks/pre-commit`, which runs Flutter format, analyze, tests with `FLAVOR=dev`, and backend lint/build/tests.
 
+## Local Setup — Required Files
+
+The following files are gitignored and must be obtained separately before the project compiles:
+
+- lib/src/core/firebase_options_dev.dart  → generate with: flutterfire configure --project=tremble-dev
+- lib/src/core/firebase_options_prod.dart → generate with: flutterfire configure --project=am---dating-app
+- android/app/google-services.json        → download from Firebase console (tremble-dev or am---dating-app)
+- ios/Runner/GoogleService-Info.plist      → download from Firebase console
+
+Without these files, flutter run will fail with import errors.
+
 ## 🔒 Security & Privacy
 
 We take user privacy seriously. Tremble utilizes localized on-device processing (Native Motion Services) for activity detection. Encounter summaries are scoped and minimized, F12 interactions expire after 10 minutes, and the product follows a zero-chat policy: no free-text chatrooms.

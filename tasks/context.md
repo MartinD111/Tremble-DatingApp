@@ -1,3 +1,30 @@
+## Session State — 2026-05-30 23:05 CEST
+- Active Task: Resolve tech-debt items (README section, main.dart comments/AppCheck, localbroadcastmanager removal)
+- Environment: Dev and Prod mobile flavor on `main`
+- Modified Files:
+    - `README.md` (added Local Setup section)
+    - `lib/main.dart` (removed stale comment, consolidated AppCheck calls)
+    - `android/app/build.gradle.kts` (removed localbroadcastmanager dependency)
+    - `android/app/src/main/kotlin/tremble/dating/app/MainApplication.kt` (removed LocalBroadcastManager and receiver, wired direct Kotlin callback)
+    - `android/app/src/main/kotlin/tremble/dating/app/radar/RadarStateBridge.kt` (removed LocalBroadcastManager and wired callback trigger)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` 0 issues, `flutter test` 113/113 passed, `flutter build apk --flavor dev` ✓.
+
+## Session Handoff
+- Completed:
+    - Added a "Local Setup — Required Files" section to the `README.md` document documenting the gitignored configuration files required for setup.
+    - Removed the stale "temporarily commented out" comment from `lib/main.dart` imports.
+    - Consolidated double `FirebaseAppCheck.instance.activate()` calls into a single call in `lib/main.dart`.
+    - Completely replaced the deprecated `androidx.localbroadcastmanager` pattern in Android Kotlin code with a clean, in-process, type-safe Kotlin callback trigger in `RadarStateBridge.kt` and `MainApplication.kt`.
+    - Removed the localbroadcastmanager implementation dependency from `android/app/build.gradle.kts`.
+    - Verified compile and runtime success with static analysis, tests, and build APK.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
 ## Session State — 2026-05-30 22:50 CEST
 - Active Task: Correct TTL policy field comment in `proximity.functions.ts`
 - Environment: Dev/Prod Cloud Functions on `main`

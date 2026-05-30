@@ -7,12 +7,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'src/app.dart';
-// This import is intentionally kept even though initializeBackgroundService()
-// is temporarily commented out below. Removing it would exclude the file from
-// the kernel snapshot, causing Dart_LookupLibrary to fail at runtime when
-// Android's foreground-service restart mechanism tries to invoke the
-// @pragma('vm:entry-point') onStart function by library name.
-// ignore: unused_import
 import 'src/core/background_service.dart';
 import 'src/core/crash_filter.dart';
 import 'src/core/firebase_options_dev.dart';
@@ -71,15 +65,6 @@ void main() async {
     providerApple:
         flavor == 'prod' ? AppleDeviceCheckProvider() : AppleDebugProvider(),
   );
-
-  if (flavor != 'prod') {
-    const debugToken = String.fromEnvironment('APP_CHECK_DEBUG_TOKEN_IOS');
-    if (debugToken.isNotEmpty) {
-      await FirebaseAppCheck.instance.activate(
-        providerApple: AppleDebugProvider(),
-      );
-    }
-  }
 
   FlutterError.onError = (details) {
     if (CrashFilter.shouldSuppressFlutterError(details)) {
