@@ -24,6 +24,7 @@ class SafeZoneLimitReachedException implements Exception {
 /// - Only a list of blocked Geohash strings is synced to Firestore.
 class SafeZoneRepository {
   static const String _prefKey = 'local_safe_zones';
+
   /// Hard cap — applies to every user regardless of subscription status.
   static const int maxZones = 3;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

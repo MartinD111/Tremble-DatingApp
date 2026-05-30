@@ -1324,11 +1324,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   } else if (selectedMode ==
                                       RadarModeKind.event) {
                                     ref
-                                        .read(
-                                            eventModeControllerProvider.notifier)
+                                        .read(eventModeControllerProvider
+                                            .notifier)
                                         .activate(
                                           eventId: 'default',
-                                          eventName: t('section_your_event', lang),
+                                          eventName:
+                                              t('section_your_event', lang),
                                         );
                                   }
                                 },

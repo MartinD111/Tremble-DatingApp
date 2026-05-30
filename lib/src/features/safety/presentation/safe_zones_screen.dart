@@ -63,7 +63,8 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('You can add up to ${SafeZoneRepository.maxZones} safe zones.'),
+            content: Text(
+                'You can add up to ${SafeZoneRepository.maxZones} safe zones.'),
             backgroundColor: TrembleTheme.rose,
           ),
         );
