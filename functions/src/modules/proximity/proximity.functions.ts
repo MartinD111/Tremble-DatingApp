@@ -227,6 +227,12 @@ export const updateLocation = onCall(
 /**
  * Find nearby users based on geohash proximity.
  *
+ * Primary identity resolution path for both iOS and Android.
+ * BLE advertisement now signals presence via Tremble service UUID only — no UID in advertisement.
+ * Caller's identity (uid from auth) + location resolves who is physically nearby.
+ * iOS CoreBluetooth ignores custom manufacturer data in background; this function is the
+ * correct resolution mechanism for all platforms.
+ *
  * F9 — Radius Logic:
  * - Radius is determined SERVER-SIDE from the user's `isPremium` status.
  *   Client-provided `radiusKm` is accepted for backward-compat but ignored.
