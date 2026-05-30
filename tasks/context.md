@@ -10,7 +10,7 @@
 - Open Problems:
     - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
     - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
-- System Status: `flutter analyze` 0 issues, `flutter test` 113/113 passed, `flutter build apk --flavor dev` ✓.
+- System Status: `flutter analyze` 0 issues, `flutter test` 113/113 passed, `flutter build apk --flavor dev` ✓, `flutter build ios --flavor dev --no-codesign` ✓.
 
 ## Session Handoff
 - Completed:
