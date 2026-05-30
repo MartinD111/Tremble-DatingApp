@@ -1,3 +1,24 @@
+## Session State — 2026-05-30 23:45 CEST
+- Active Task: Configure correct production Firestore TTL policies and deploy Firestore security rules
+- Environment: Prod Firestore (`am---dating-app`)
+- Modified Files:
+    - `tasks/context.md` (documented TTL policy update and rules deploy)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: TTL policies for `proximity_events` and `run_encounters` enabled on `expiresAt` field in `am---dating-app`. Firestore security rules successfully deployed to production.
+
+## Session Handoff
+- Completed:
+    - Enabled correct Firestore TTL policies on the `expiresAt` field for both the `proximity_events` and `run_encounters` collection groups in the `am---dating-app` project via `gcloud firestore fields ttls update`.
+    - Verified that `gcloud firestore fields ttls list` returns `expiresAt` with `state: ACTIVE` for both collection groups.
+    - Switched Firebase CLI active project to `am---dating-app` and successfully deployed `firestore.rules` using `firebase deploy --only firestore:rules`.
+    - Marked TTL policy setup and `B008` (active_run_crosses rules check) as successfully finalized in production.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
 ## Session State — 2026-05-30 23:25 CEST
 - Active Task: Disable incorrect production Firestore TTL policy on `ttl` field
 - Environment: Prod Firestore (`am---dating-app`)
