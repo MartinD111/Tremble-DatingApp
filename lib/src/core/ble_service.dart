@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -108,10 +109,11 @@ class BleService {
     final AdvertiseData advertiseData = AdvertiseData(
       serviceUuid: trembleServiceUuid,
       localName: 'Tremble',
-      // For Tremble, we use the first 20 bytes of UID as a custom ID.
+      // For Tremble, we use the first 28 bytes of UID as a custom ID.
+      // TODO(BLE-redesign): remove identity-in-advertisement after Faza 3.1
       // manufacturerId 0xFF01 indicates Run Club mode. 0xFFFF is normal.
       manufacturerId: isRunClubActive ? 0xFF01 : 0xFFFF,
-      manufacturerData: Uint8List.fromList(uid.codeUnits.take(20).toList()),
+      manufacturerData: Uint8List.fromList(uid.codeUnits.take(28).toList()),
     );
 
     if (await _peripheral.isSupported) {
@@ -220,7 +222,11 @@ class BleService {
           DateTime.now().add(const Duration(minutes: 10)),
         ),
       });
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('[BLE] proximity write failed: $e');
+      // Non-fatal — radar continues operating
+      FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
+    }
   }
 
   // ─── Battery Handling ─────────────────────────────────

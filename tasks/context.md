@@ -1,3 +1,25 @@
+## Session State — 2026-05-30 22:45 CEST
+- Active Task: Fix BLE bugs (UID truncation & silent empty catch) in `ble_service.dart`
+- Environment: Dev and Prod mobile flavor on `main`
+- Modified Files:
+    - `lib/src/core/ble_service.dart` (imported Crashlytics, increased UID take to 28, resolved silent empty catch block)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` 0 issues, `flutter test` 113/113 passed, `flutter build apk --flavor dev` ✓.
+
+## Session Handoff
+- Completed:
+    - Extended maximum UID length byte-take from 20 to 28 to prevent Firebase UID truncation in BLE advertising packets (BUG 1).
+    - Added TODO comment indicating future removal of the UID payload once Faza 3.1 is completed.
+    - Replaced the silent catch-all in Firestore proximity writes with debug logging and `FirebaseCrashlytics.instance.recordError` logging to report write issues without crashing (BUG 2).
+    - Imported `package:firebase_crashlytics/firebase_crashlytics.dart` in `ble_service.dart`.
+    - Verified with `flutter analyze`, `flutter test`, and Gradle build APK.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
 ## Session State — 2026-05-30 22:30 CEST
 - Active Task: Hide active people count pill in production builds
 - Environment: Dev and Prod mobile flavor on `main`
