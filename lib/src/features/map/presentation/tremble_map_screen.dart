@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,18 +12,8 @@ import '../../../core/theme.dart';
 import '../../../core/translations.dart';
 import '../../auth/data/auth_repository.dart';
 import 'event_pin_sheet.dart';
-import 'dart:convert';
+import '../../../core/map_provider.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
-import 'package:vector_map_tiles_pmtiles/vector_map_tiles_pmtiles.dart';
-import 'package:vector_tile_renderer/vector_tile_renderer.dart' as vtr;
-
-const _pmtilesUrl = 'https://maps.trembledating.com/planet.pmtiles';
-
-class _MapInitData {
-  final vtr.Theme theme;
-  final PmTilesVectorTileProvider tileProvider;
-  _MapInitData({required this.theme, required this.tileProvider});
-}
 
 class TrembleMapScreen extends ConsumerStatefulWidget {
   const TrembleMapScreen({super.key});
@@ -36,7 +27,6 @@ enum _MapZoom { city, nearby, national }
 class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   late final MapController _mapController;
   _MapZoom _zoom = _MapZoom.city;
-  late final Future<_MapInitData> _mapInitFuture;
 
   static const bool _isDev =
       String.fromEnvironment('FLAVOR', defaultValue: 'dev') != 'prod';
@@ -67,20 +57,6 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
     _proximityPoints = _isDev ? _generateProximityPoints() : const [];
 
     ref.read(eventGeofenceServiceProvider).setActiveEvents([]);
-    _mapInitFuture = _initializeMap();
-  }
-
-  Future<_MapInitData> _initializeMap() async {
-    final styleString = await DefaultAssetBundle.of(context)
-        .loadString('assets/map/tremble_dark_style.json');
-    final Map<String, dynamic> styleJson = jsonDecode(styleString);
-    final theme =
-        vtr.ThemeReader(logger: const vtr.Logger.console()).read(styleJson);
-
-    final tileProvider =
-        await PmTilesVectorTileProvider.fromSource(_pmtilesUrl);
-
-    return _MapInitData(theme: theme, tileProvider: tileProvider);
   }
 
   List<LatLng> _generateProximityPoints() {
@@ -227,11 +203,14 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _MapPill(
-                    text: t('active_people_count', lang)
-                        .replaceAll('{count}', '${_proximityPoints.length}'),
-                  ),
-                  const SizedBox(width: 8),
+                  if (kDebugMode ||
+                      const String.fromEnvironment('FLAVOR') == 'dev') ...[
+                    _MapPill(
+                      text: t('active_people_count', lang)
+                          .replaceAll('{count}', '${_proximityPoints.length}'),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   _MapPill(
                     text: t('tremble_events_coming_soon', lang),
                   ),
@@ -264,22 +243,8 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(22),
-                    child: FutureBuilder<_MapInitData>(
-                      future: _mapInitFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasError) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text(
-                                'Error loading map: ${snapshot.error}',
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          );
-                        }
-                        if (!snapshot.hasData) {
-                          return const Center(
+                    child: ref.watch(mapInitProvider).when(
+                          loading: () => const Center(
                             child: SizedBox(
                               width: 32,
                               height: 32,
@@ -288,38 +253,48 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                                 color: Color(0xFF007AFF),
                               ),
                             ),
-                          );
-                        }
-                        final initData = snapshot.data!;
-                        return FlutterMap(
-                          mapController: _mapController,
-                          options: MapOptions(
-                            initialCenter: _ljubljanaCenter,
-                            initialZoom: _zoomLevels[_MapZoom.city]!,
-                            maxZoom: 16.0,
-                            interactionOptions: const InteractionOptions(
-                              flags:
-                                  InteractiveFlag.all & ~InteractiveFlag.rotate,
+                          ),
+                          error: (e, _) => Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(
+                                'Error loading map: $e',
+                                style: const TextStyle(color: Colors.red),
+                              ),
                             ),
                           ),
-                          children: [
-                            VectorTileLayer(
-                              theme: initData.theme,
-                              tileProviders: TileProviders({
-                                'protomaps': initData.tileProvider,
-                              }),
+                          data: (initData) => FlutterMap(
+                            mapController: _mapController,
+                            options: MapOptions(
+                              initialCenter: _ljubljanaCenter,
+                              initialZoom: _zoomLevels[_MapZoom.city]!,
+                              maxZoom: 16.0,
+                              interactionOptions: const InteractionOptions(
+                                flags: InteractiveFlag.all &
+                                    ~InteractiveFlag.rotate,
+                              ),
                             ),
-                            CircleLayer(
-                              circles: _buildProximityCircles(effectivePremium),
-                            ),
-                            MarkerLayer(
-                              markers:
-                                  _buildEventMarkers(effectivePremium, lang),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
+                            children: [
+                              VectorTileLayer(
+                                theme: initData.theme,
+                                tileProviders: TileProviders({
+                                  'protomaps': initData.tileProvider,
+                                }),
+                                cacheFolder: () async => initData.cacheDir,
+                                fileCacheTtl: mapCacheTtl,
+                                fileCacheMaximumSizeInBytes: mapCacheMaxBytes,
+                              ),
+                              CircleLayer(
+                                circles:
+                                    _buildProximityCircles(effectivePremium),
+                              ),
+                              MarkerLayer(
+                                markers:
+                                    _buildEventMarkers(effectivePremium, lang),
+                              ),
+                            ],
+                          ),
+                        ),
                   ),
                 ),
               ),

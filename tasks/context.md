@@ -1,3 +1,71 @@
+## Session State — 2026-05-30 22:30 CEST
+- Active Task: Hide active people count pill in production builds
+- Environment: Dev and Prod mobile flavor on `main`
+- Modified Files:
+    - `lib/src/features/map/presentation/tremble_map_screen.dart` (imported foundation, wrapped active people count pill with condition)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` 0 issues, `flutter test` 113/113 passed, `flutter build apk --flavor dev` ✓.
+
+## Session Handoff
+- Completed:
+    - Added `import 'package:flutter/foundation.dart' show kDebugMode;` to `tremble_map_screen.dart`.
+    - Wrapped the `_MapPill` displaying the "active people count" along with its spacing `SizedBox` with `if (kDebugMode || const String.fromEnvironment('FLAVOR') == 'dev')`.
+    - Verified static analysis (0 issues), all 113 unit/widget tests passing, and the dev flavor APK built successfully.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
+## Session State — 2026-05-30 22:15 CEST
+- Active Task: Persistent on-disk tile cache for PmTiles map
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `pubspec.yaml` (added path_provider ^2.1.0)
+    - `lib/src/core/map_provider.dart` (cacheDir + constants)
+    - `lib/src/features/map/presentation/tremble_map_screen.dart` (VectorTileLayer cache params)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` 0 issues, `flutter test` 113/113 passed, `flutter build apk --flavor dev` ✓ Built app-dev-release.apk (79.2 MB).
+
+## Session Handoff
+- Completed:
+    - Added `path_provider: ^2.1.0` to `pubspec.yaml`.
+    - Inspected `vector_map_tiles 8.0.0` pub cache source to confirm the correct on-disk cache API: `VectorTileLayer` takes `cacheFolder` (`Future<Directory> Function()`), `fileCacheTtl` (`Duration`), and `fileCacheMaximumSizeInBytes` (`int`) — **not** a separate class like `FileTileStorage`.
+    - Extended `MapInitData` with a `cacheDir` field (`Directory`); resolved once at app start via `getApplicationDocumentsDirectory()` pointing to `<docs>/map_cache`.
+    - Exported `mapCacheMaxBytes` (200 MB) and `mapCacheTtl` (30 days) constants from `map_provider.dart`.
+    - Wired `cacheFolder`, `fileCacheTtl`, and `fileCacheMaximumSizeInBytes` onto `VectorTileLayer` in `tremble_map_screen.dart` — all other layers and UI config unchanged.
+    - Verified: `flutter analyze` clean, 113/113 tests pass, `flutter build apk --flavor dev` ✓.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
+## Session State — 2026-05-30 22:10 CEST
+- Active Task: Map init Riverpod refactor (PmTiles global FutureProvider)
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/core/map_provider.dart` [NEW]
+    - `lib/src/features/map/presentation/tremble_map_screen.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` 0 issues, `flutter test` 113/113 passed, dev APK built successfully.
+
+## Session Handoff
+- Completed:
+    - Created `lib/src/core/map_provider.dart` — global `FutureProvider<MapInitData>` (`mapInitProvider`) using `rootBundle.loadString` for the style JSON and `PmTilesVectorTileProvider.fromSource` for the tile provider. Runs once per app session, cached by Riverpod.
+    - Removed `_MapInitData`, `_mapInitFuture`, `_initializeMap()`, and the local imports for `dart:convert`, `vector_map_tiles_pmtiles`, and `vector_tile_renderer` from `tremble_map_screen.dart`.
+    - Replaced the per-screen `FutureBuilder` with `ref.watch(mapInitProvider).when(loading/error/data)` — identical UI, zero regressions.
+    - Retained `vector_map_tiles` import in the screen (needed for `VectorTileLayer` and `TileProviders`).
+    - Verified: `flutter analyze` clean, 113/113 tests pass, `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` ✓.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
 ## Session State — 2026-05-30 21:42 CEST
 - Active Task: Fix dead consent links & correct location privacy claims
 - Environment: Dev and Prod mobile flavor on `main`
