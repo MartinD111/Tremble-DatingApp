@@ -1,3 +1,22 @@
+## Session State — 2026-05-30 23:25 CEST
+- Active Task: Disable incorrect production Firestore TTL policy on `ttl` field
+- Environment: Prod Firestore (`am---dating-app`)
+- Modified Files:
+    - `tasks/context.md` (documented TTL policy update)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: TTL policy on `ttl` field successfully disabled in `am---dating-app`.
+
+## Session Handoff
+- Completed:
+    - Disabled the incorrect Firestore TTL policy targeting the `ttl` field on `proximity_events` collection group in the `am---dating-app` project via `gcloud firestore fields ttls update`.
+    - Confirmed that `gcloud firestore fields ttls list` now returns 0 items for `proximity_events`.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
 ## Session State — 2026-05-30 23:05 CEST
 - Active Task: Resolve tech-debt items (README section, main.dart comments/AppCheck, localbroadcastmanager removal)
 - Environment: Dev and Prod mobile flavor on `main`
