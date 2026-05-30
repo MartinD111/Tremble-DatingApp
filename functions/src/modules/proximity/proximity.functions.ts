@@ -587,7 +587,8 @@ export const getProximityMatchCandidates = onCall(
  * Security: onDocumentCreated receives data written by authenticated,
  * App-Check-verified clients. Input is trusted.
  *
- * Privacy: proximity_events TTL = 10 min (Firestore TTL policy on `ttl`).
+ * Firestore TTL policy for this collection must target field "expiresAt" (NOT "ttl").
+ * All writers in this file and in ble_service.dart use "expiresAt". Verify in Firebase console.
  */
 export const onBleProximity = onDocumentCreated(
     { document: "proximity_events/{eventId}", region: "europe-west1" },

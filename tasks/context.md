@@ -1,3 +1,22 @@
+## Session State — 2026-05-30 22:50 CEST
+- Active Task: Correct TTL policy field comment in `proximity.functions.ts`
+- Environment: Dev/Prod Cloud Functions on `main`
+- Modified Files:
+    - `functions/src/modules/proximity/proximity.functions.ts` (updated TTL comment)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `npm run build` SUCCESS.
+
+## Session Handoff
+- Completed:
+    - Updated comment at line ~590 in `proximity.functions.ts` to correctly note that the Firestore TTL policy targets `expiresAt` rather than `ttl`.
+    - Verified compilation of TypeScript Cloud Functions.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
 ## Session State — 2026-05-30 22:45 CEST
 - Active Task: Fix BLE bugs (UID truncation & silent empty catch) in `ble_service.dart`
 - Environment: Dev and Prod mobile flavor on `main`
