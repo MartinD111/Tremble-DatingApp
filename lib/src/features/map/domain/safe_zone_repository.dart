@@ -9,12 +9,23 @@ final safeZoneRepositoryProvider = Provider<SafeZoneRepository>((ref) {
   return SafeZoneRepository();
 });
 
+/// Thrown when a user tries to exceed the maximum safe zone count (3 for all users).
+class SafeZoneLimitReachedException implements Exception {
+  const SafeZoneLimitReachedException();
+
+  @override
+  String toString() =>
+      'SafeZoneLimitReachedException: limit reached (max ${SafeZoneRepository.maxZones} zones)';
+}
+
 /// Manages local safe zones and syncs obfuscated geohashes to the server.
 /// Adheres strictly to the Zero-Data philosophy:
 /// - Exact lat/lng coordinates NEVER leave the device.
 /// - Only a list of blocked Geohash strings is synced to Firestore.
 class SafeZoneRepository {
   static const String _prefKey = 'local_safe_zones';
+  /// Hard cap — applies to every user regardless of subscription status.
+  static const int maxZones = 3;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -26,6 +37,9 @@ class SafeZoneRepository {
 
   Future<void> addSafeZone(SafeZone zone) async {
     final zones = await getSafeZones();
+    if (zones.length >= maxZones) {
+      throw const SafeZoneLimitReachedException();
+    }
     zones.add(zone);
     await _saveLocalAndSync(zones);
   }

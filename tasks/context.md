@@ -1,3 +1,26 @@
+## Session State — 2026-05-30 21:42 CEST
+- Active Task: Fix dead consent links & correct location privacy claims
+- Environment: Dev and Prod mobile flavor on `main`
+- Modified Files:
+    - `pubspec.yaml`
+    - `lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart`
+    - `lib/src/core/translations.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` and `flutter test` SUCCESS (113/113 tests passed), dev build succeeded.
+
+## Session Handoff
+- Completed:
+    - Installed `url_launcher` dependency.
+    - Imported `package:url_launcher/url_launcher.dart` and wired `launchUrl` for Terms of Service and Privacy Policy in the registration `consent_step.dart`.
+    - Corrected false location privacy claims ("Zero location stored" / "Brez shranjevanja lokacije") in both English and Slovenian keys under `lib/src/core/translations.dart` to accurately describe the ~150m grid geohash storage.
+    - Ran the full verification protocol: static analyze clean, all 113 unit/widget tests passing, and Gradle `assembleDevDebug` build successful.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
 ## Session State — 2026-05-29 11:25 CEST
 - Active Task: Restore missing Firebase option and credential files
 - Environment: Dev and Prod mobile flavor on `main`

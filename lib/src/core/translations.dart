@@ -653,7 +653,7 @@ const Map<String, Map<String, String>> _translations = {
         'Activating BLE and GPS hybrid sensing. Tremble establishes a localized proximity net with <2% battery impact.',
     'calib2_title': 'ON-DEVICE ARCHITECTURE',
     'calib2_body':
-        'Privacy is not a policy, it is architecture. Proximity is calculated locally and discarded. Zero location stored.',
+        'Privacy is not a policy, it is architecture. Proximity is calculated locally and discarded. No precise coordinates are stored — only a coarse ~150m grid cell, discarded on a short TTL.',
     'calib3_title': 'RANGE CALIBRATION',
     'calib3_body':
         'Configuring radar for a 40-meter radius. Only physical presence triggers a signal lock.',
@@ -1475,7 +1475,7 @@ const Map<String, Map<String, String>> _translations = {
         'Aktivacija BLE in GPS zaznavanja. Tremble vzpostavlja lokalno mrežo z minimalnim vplivom na baterijo pod 2%.',
     'calib2_title': 'ON-DEVICE ARHITEKTURA',
     'calib2_body':
-        'Zasebnost ni politika, je arhitektura. Oddaljenost je izračunana lokalno in takoj zavržena. Brez shranjevanja lokacije.',
+        'Zasebnost ni politika, je arhitektura. Oddaljenost je izračunana lokalno in takoj zavržena. Natančnih koordinat ne shranjujemo — le grobo celico ~150m, ki se kmalu izbriše.',
     'calib3_title': 'KALIBRACIJA OBMOČJA',
     'calib3_body':
         'Konfiguracija radarja za radij 40 metrov. Samo fizična prisotnost sproži signal.',

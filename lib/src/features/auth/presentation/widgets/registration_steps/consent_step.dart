@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
@@ -122,7 +123,10 @@ class _ConsentStepState extends State<ConsentStep> {
                 const TextSpan(text: 'I agree to the '),
                 WidgetSpan(
                   child: GestureDetector(
-                    onTap: () {},
+                    onTap: () => launchUrl(
+                      Uri.parse('https://trembledating.com/tos'),
+                      mode: LaunchMode.externalApplication,
+                    ),
                     child: Text('Terms of Service',
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
@@ -144,7 +148,10 @@ class _ConsentStepState extends State<ConsentStep> {
                 const TextSpan(text: 'I have read and accept the '),
                 WidgetSpan(
                   child: GestureDetector(
-                    onTap: () {},
+                    onTap: () => launchUrl(
+                      Uri.parse('https://trembledating.com/privacy'),
+                      mode: LaunchMode.externalApplication,
+                    ),
                     child: Text('Privacy Policy',
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,

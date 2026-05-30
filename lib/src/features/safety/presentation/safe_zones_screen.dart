@@ -59,6 +59,17 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
   }
 
   Future<void> _addZone() async {
+    if (_zones.length >= SafeZoneRepository.maxZones) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('You can add up to ${SafeZoneRepository.maxZones} safe zones.'),
+            backgroundColor: TrembleTheme.rose,
+          ),
+        );
+      }
+      return;
+    }
     double selectedRadius = 500;
     bool isAdding = false;
     bool useAddress = false;
@@ -368,6 +379,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
     }
     final repo = ref.read(safeZoneRepositoryProvider);
     await repo.removeSafeZone(zone.id);
+    // Re-save with updated isActive flag — toggling is not consuming a new slot.
     await repo.addSafeZone(zone.copyWith(isActive: val));
     await _loadZones();
   }
