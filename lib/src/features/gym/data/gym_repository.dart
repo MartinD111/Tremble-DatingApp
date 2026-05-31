@@ -2,6 +2,43 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tremble/src/core/api_client.dart';
 
+class TrembleEvent {
+  final String id;
+  final String name;
+  final DateTime? startsAt;
+  final DateTime? endsAt;
+  final double? lat;
+  final double? lng;
+  final int radiusMeters;
+  final String? locationLabel;
+
+  const TrembleEvent({
+    required this.id,
+    required this.name,
+    this.startsAt,
+    this.endsAt,
+    this.lat,
+    this.lng,
+    this.radiusMeters = 500,
+    this.locationLabel,
+  });
+
+  factory TrembleEvent.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data() ?? {};
+    final loc = data['location'] as Map<String, dynamic>? ?? {};
+    return TrembleEvent(
+      id: doc.id,
+      name: data['name'] as String? ?? 'Event',
+      startsAt: (data['startsAt'] as Timestamp?)?.toDate(),
+      endsAt: (data['endsAt'] as Timestamp?)?.toDate(),
+      lat: (loc['lat'] as num?)?.toDouble(),
+      lng: (loc['lng'] as num?)?.toDouble(),
+      radiusMeters: data['radiusMeters'] as int? ?? 500,
+      locationLabel: data['locationLabel'] as String?,
+    );
+  }
+}
+
 class GymLocation {
   final double lat;
   final double lng;
@@ -72,14 +109,28 @@ class GymRepository {
     await _api.call('onGymModeDeactivate');
   }
 
+  /// Returns currently active events (active == true, not yet ended).
+  Future<List<TrembleEvent>> getActiveEvents() async {
+    final snap = await _db
+        .collection('events')
+        .where('active', isEqualTo: true)
+        .where('endsAt', isGreaterThan: Timestamp.now())
+        .get();
+    return snap.docs.map((doc) => TrembleEvent.fromFirestore(doc)).toList();
+  }
+
   /// Activates event mode for the current user.
+  /// [latitude] / [longitude] — backend validates the user is within the event radius.
   Future<Map<String, dynamic>> activateEventMode({
     required String eventId,
     required String eventName,
+    required double latitude,
+    required double longitude,
   }) async {
     return _api.call('onEventModeActivate', data: {
       'eventId': eventId,
-      'eventName': eventName,
+      'latitude': latitude,
+      'longitude': longitude,
     });
   }
 

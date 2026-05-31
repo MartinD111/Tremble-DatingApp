@@ -170,12 +170,19 @@ class EventModeController extends StateNotifier<SimpleModeState> {
   Future<void> activate({
     required String eventId,
     required String eventName,
+    required double latitude,
+    required double longitude,
   }) async {
     state =
         state.copyWith(status: SimpleModeStatus.loading, errorMessage: null);
 
     try {
-      await _repo.activateEventMode(eventId: eventId, eventName: eventName);
+      await _repo.activateEventMode(
+        eventId: eventId,
+        eventName: eventName,
+        latitude: latitude,
+        longitude: longitude,
+      );
       state = SimpleModeState(
         status: SimpleModeStatus.active,
         activeId: eventId,
@@ -218,6 +225,10 @@ class RunModeController extends StateNotifier<SimpleModeState> {
   RunModeController(this._repo) : super(const SimpleModeState());
 
   Future<void> activate() async {
+    // Ignore re-entrant taps while a call is already in flight. Without this,
+    // rapid toggling fires concurrent onRunModeActivate calls that blow the
+    // backend's 5 req/min rate limit (resource-exhausted).
+    if (state.status == SimpleModeStatus.loading) return;
     state =
         state.copyWith(status: SimpleModeStatus.loading, errorMessage: null);
 
@@ -233,9 +244,11 @@ class RunModeController extends StateNotifier<SimpleModeState> {
   }
 
   Future<void> deactivate() async {
-    state = const SimpleModeState();
+    if (state.status == SimpleModeStatus.loading) return;
+    state = state.copyWith(status: SimpleModeStatus.loading, errorMessage: null);
     try {
       await _repo.deactivateRunMode();
+      state = const SimpleModeState();
     } on Exception catch (e) {
       state = SimpleModeState(
         status: SimpleModeStatus.error,

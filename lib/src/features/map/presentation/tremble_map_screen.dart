@@ -171,6 +171,15 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
             inEventGeofence: geofenceService.inEventGeofence) ??
         false;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final gradientColors = TrembleTheme.getGradient(
+      isDarkMode: isDark,
+      isPrideMode: user?.isPrideMode ?? false,
+      gender: user?.gender,
+      isGenderBasedColor: user?.isGenderBasedColor ?? false,
+    );
+    final textColor = isDark ? Colors.white : Colors.black87;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
@@ -178,10 +187,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFFF8F7F3),
-              const Color(0xFFEFECE0),
-            ],
+            colors: gradientColors,
           ),
         ),
         child: SafeArea(
@@ -195,7 +201,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                   style: TrembleTheme.displayFont(
                     fontSize: 32,
                     fontWeight: FontWeight.w700,
-                    color: TrembleTheme.textColor,
+                    color: textColor,
                   ),
                 ),
               ),
@@ -227,10 +233,10 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.76),
+                    color: isDark ? const Color(0xFF1A1A18).withValues(alpha: 0.4) : Colors.white.withValues(alpha: 0.76),
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: const Color(0xFFD9D7CF).withValues(alpha: 0.95),
+                      color: isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFD9D7CF).withValues(alpha: 0.95),
                       width: 1,
                     ),
                     boxShadow: [
@@ -320,6 +326,7 @@ class _MapZoomToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClipRRect(
       borderRadius: BorderRadius.circular(100),
       child: BackdropFilter(
@@ -327,10 +334,10 @@ class _MapZoomToggle extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: isDark ? const Color(0xFF2A2A2E).withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(100),
             border: Border.all(
-              color: const Color(0xFFD9D7CF).withValues(alpha: 0.95),
+              color: isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFD9D7CF).withValues(alpha: 0.95),
             ),
             boxShadow: [
               BoxShadow(
@@ -359,7 +366,7 @@ class _MapZoomToggle extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
                     color:
-                        isActive ? const Color(0xFF007AFF) : Colors.transparent,
+                        isActive ? Theme.of(context).primaryColor : Colors.transparent,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text(
@@ -369,7 +376,7 @@ class _MapZoomToggle extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: isActive
                           ? Colors.white
-                          : TrembleTheme.textColor.withValues(alpha: 0.68),
+                          : (isDark ? Colors.white60 : TrembleTheme.textColor.withValues(alpha: 0.68)),
                     ),
                   ),
                 ),
@@ -389,6 +396,7 @@ class _MapPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClipRRect(
       borderRadius: BorderRadius.circular(100),
       child: BackdropFilter(
@@ -396,10 +404,10 @@ class _MapPill extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: isDark ? const Color(0xFF2A2A2E).withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFFD9D7CF).withValues(alpha: 0.95),
+              color: isDark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFFD9D7CF).withValues(alpha: 0.95),
             ),
             boxShadow: [
               BoxShadow(
@@ -414,7 +422,7 @@ class _MapPill extends StatelessWidget {
             style: TrembleTheme.uiFont(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: TrembleTheme.textColor.withValues(alpha: 0.72),
+              color: isDark ? Colors.white70 : TrembleTheme.textColor.withValues(alpha: 0.72),
             ),
           ),
         ),

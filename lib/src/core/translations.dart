@@ -805,6 +805,10 @@ const Map<String, Map<String, String>> _translations = {
         'Event Mode connects you with people at the same event. Your matches appear in Your Event under the People tab.',
     'event_mode_info_activate': 'Activate',
     'event_mode_info_deactivate': 'Deactivate',
+    'event_choose_title': 'Choose Your Event',
+    'event_no_nearby': 'No events nearby',
+    'event_live_now': 'Live now',
+    'event_starts_at': 'Starts at',
     'mode_info_dont_show': 'Don\'t show this again',
 
     // --- Radar search overlay ---
@@ -1622,6 +1626,10 @@ const Map<String, Map<String, String>> _translations = {
         'Event Mode te poveže z ljudmi na istem dogodku. Matchi se pojavijo v Tvojem dogodku pod zavihkom Ljudje.',
     'event_mode_info_activate': 'Aktiviraj',
     'event_mode_info_deactivate': 'Deaktiviraj',
+    'event_choose_title': 'Izberi svoj dogodek',
+    'event_no_nearby': 'Ni dogodkov v bližini',
+    'event_live_now': 'V živo',
+    'event_starts_at': 'Začetek ob',
     'mode_info_dont_show': 'Ne prikazuj več',
 
     // --- Radar search overlay ---
@@ -2369,6 +2377,10 @@ const Map<String, Map<String, String>> _translations = {
         'Der Event-Modus verbindet dich mit Leuten beim gleichen Event. Deine Matches erscheinen unter "Dein Event".',
     'event_mode_info_activate': 'Aktivieren',
     'event_mode_info_deactivate': 'Deaktivieren',
+    'event_choose_title': 'Wähle deinen Event',
+    'event_no_nearby': 'Keine Events in der Nähe',
+    'event_live_now': 'Läuft jetzt',
+    'event_starts_at': 'Beginnt um',
     'mode_info_dont_show': 'Nicht mehr anzeigen',
 
     // --- Radar search overlay ---
@@ -3134,6 +3146,10 @@ const Map<String, Map<String, String>> _translations = {
         'La Modalità Evento ti connette con le persone allo stesso evento. I match appaiono sotto "Tuo Evento".',
     'event_mode_info_activate': 'Attiva',
     'event_mode_info_deactivate': 'Disattiva',
+    'event_choose_title': 'Scegli il tuo evento',
+    'event_no_nearby': 'Nessun evento nelle vicinanze',
+    'event_live_now': 'In corso',
+    'event_starts_at': 'Inizia alle',
     'mode_info_dont_show': 'Non mostrare più',
 
     // --- Radar search overlay ---
@@ -3897,6 +3913,10 @@ const Map<String, Map<String, String>> _translations = {
         'Le Mode Événement vous connecte aux personnes au même événement. Les matchs apparaissent sous "Mon Événement".',
     'event_mode_info_activate': 'Activer',
     'event_mode_info_deactivate': 'Désactiver',
+    'event_choose_title': 'Choisissez votre événement',
+    'event_no_nearby': 'Aucun événement à proximité',
+    'event_live_now': 'En direct',
+    'event_starts_at': 'Commence à',
     'mode_info_dont_show': 'Ne plus afficher',
 
     // --- Radar search overlay ---
@@ -4673,6 +4693,10 @@ const Map<String, Map<String, String>> _translations = {
     'run_mode_info_deactivate': 'Deaktiviraj',
     'event_mode_info_activate': 'Aktiviraj',
     'event_mode_info_deactivate': 'Deaktiviraj',
+    'event_choose_title': 'Odaberi svoj događaj',
+    'event_no_nearby': 'Nema događaja u blizini',
+    'event_live_now': 'Uživo',
+    'event_starts_at': 'Počinje u',
     'anonymity_desc': 'Skriva vaš profil s radara dok vi vidite druge.',
     'hobby_name': 'Naziv hobija',
     'anonymity_mode': 'Sakrij me od kontakata',
@@ -5431,6 +5455,10 @@ const Map<String, Map<String, String>> _translations = {
         'Event Mode te povezuje sa ljudima na istom događaju. Tvoja podudaranja se pojavljuju pod Tvoj događaj u tabu Ljudi.',
     'event_mode_info_activate': 'Aktiviraj',
     'event_mode_info_deactivate': 'Deaktiviraj',
+    'event_choose_title': 'Odaberi svoj događaj',
+    'event_no_nearby': 'Nema događaja u blizini',
+    'event_live_now': 'Uživo',
+    'event_starts_at': 'Počinje u',
     'mode_info_dont_show': 'Ne prikazuj ovo ponovo',
 
     // --- Radar search overlay ---
@@ -5888,6 +5916,10 @@ const Map<String, Map<String, String>> _translations = {
         'Az Esemény mód összekapcsol az ugyanazon az eseményen résztvevő emberekkel. A párosításaid a Saját esemény alatt jelennek meg a Személyek fülön.',
     'event_mode_info_activate': 'Aktiválás',
     'event_mode_info_deactivate': 'Deaktiválás',
+    'event_choose_title': 'Válassz eseményt',
+    'event_no_nearby': 'Nincs esemény a közelben',
+    'event_live_now': 'Élő most',
+    'event_starts_at': 'Kezdés:',
     'mode_info_dont_show': 'Ne mutasd ezt újra',
     'time_remaining': 'Hátralévő idő',
     'cancel_search': 'Keresés megszakítása',

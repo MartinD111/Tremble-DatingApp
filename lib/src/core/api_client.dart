@@ -86,11 +86,17 @@ class TrembleApiClient {
   }
 
   /// Check if an error code represents a transient/retryable error.
+  ///
+  /// NOTE: 'resource-exhausted' is deliberately NOT retried. Our Cloud
+  /// Functions return it from the per-user rate limiter (e.g. 5 req/min on
+  /// onRunModeActivate) with a "try again in N seconds" message. Retrying it
+  /// 500ms/1s later just burns more of the rate-limit budget — guaranteeing
+  /// failure and hammering the App Check token endpoint ("Too many attempts").
+  /// The caller surfaces the wait message to the user instead.
   bool _isTransientError(String code) {
     return const {
       'unavailable',
       'deadline-exceeded',
-      'resource-exhausted',
       'aborted',
       'internal',
     }.contains(code);

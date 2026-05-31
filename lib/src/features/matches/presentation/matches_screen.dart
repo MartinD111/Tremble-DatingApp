@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +21,7 @@ import 'package:tremble/src/core/utils/icon_utils.dart';
 import 'package:tremble/src/features/gym/application/gym_mode_controller.dart';
 import 'package:tremble/src/features/gym/presentation/gym_mode_sheet.dart';
 import 'package:tremble/src/features/dashboard/presentation/home_screen.dart'
-    show showModeInfoDialog, RadarModeKind;
+    show showModeInfoDialog, showEventActivationFlow, RadarModeKind;
 
 enum MatchSection { gym, event, run, matches }
 
@@ -401,6 +402,8 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
             const <String>{};
     final lang = ref.watch(appLanguageProvider);
     final gymState = ref.watch(gymModeControllerProvider);
+    final runState = ref.watch(runModeControllerProvider);
+    final eventState = ref.watch(eventModeControllerProvider);
     final activeSection = ref.watch(matchSectionProvider);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -461,15 +464,18 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                             ),
                           ),
                         ),
-                        // Green dot when gym mode active
-                        if (activeSection == MatchSection.gym &&
-                            gymState.isActive) ...[
+                        // Mode active dot next to section title
+                        if ((activeSection == MatchSection.gym && gymState.isActive) ||
+                            (activeSection == MatchSection.run && runState.isActive) ||
+                            (activeSection == MatchSection.event && eventState.isActive)) ...[
                           const SizedBox(width: 6),
                           Container(
                             width: 7,
                             height: 7,
-                            decoration: const BoxDecoration(
-                              color: Colors.greenAccent,
+                            decoration: BoxDecoration(
+                              color: activeSection == MatchSection.run
+                                  ? const Color(0xFFF4436C)
+                                  : const Color(0xFFF5C842),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -1061,6 +1067,7 @@ class _ModeIconButton extends ConsumerWidget {
 
     return IconButton(
       icon: Stack(
+        alignment: Alignment.center,
         clipBehavior: Clip.none,
         children: [
           // Active circular border around icon
@@ -1112,10 +1119,7 @@ class _ModeIconButton extends ConsumerWidget {
               case MatchSection.run:
                 ref.read(runModeControllerProvider.notifier).activate();
               case MatchSection.event:
-                ref.read(eventModeControllerProvider.notifier).activate(
-                      eventId: 'default',
-                      eventName: t('section_your_event', lang),
-                    );
+                unawaited(showEventActivationFlow(context, ref, lang));
               case MatchSection.matches:
                 break;
             }
@@ -1242,10 +1246,20 @@ class _SectionPickerSheet extends ConsumerWidget {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? primary.withValues(alpha: 0.15)
-                                  : pillBg,
+                                  : (modeActive
+                                      ? (section == MatchSection.run
+                                          ? const Color(0xFFF4436C).withValues(alpha: 0.12)
+                                          : const Color(0xFFF5C842).withValues(alpha: 0.12))
+                                      : pillBg),
                               borderRadius: BorderRadius.circular(100),
                               border: Border.all(
-                                color: isSelected ? primary : pillBorder,
+                                color: isSelected
+                                    ? primary
+                                    : (modeActive
+                                        ? (section == MatchSection.run
+                                            ? const Color(0xFFF4436C).withValues(alpha: 0.4)
+                                            : const Color(0xFFF5C842).withValues(alpha: 0.4))
+                                        : pillBorder),
                                 width: isSelected ? 2 : 1,
                               ),
                             ),
@@ -1253,18 +1267,29 @@ class _SectionPickerSheet extends ConsumerWidget {
                               children: [
                                 Icon(icon,
                                     size: 18,
-                                    color: isSelected ? primary : idleIcon),
+                                    color: isSelected
+                                        ? primary
+                                        : (modeActive
+                                            ? (section == MatchSection.run
+                                                ? const Color(0xFFF4436C)
+                                                : const Color(0xFFF5C842))
+                                            : idleIcon)),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     t(labelKey, lang),
                                     style: GoogleFonts.instrumentSans(
                                       fontSize: 15,
-                                      fontWeight: isSelected
+                                      fontWeight: isSelected || modeActive
                                           ? FontWeight.w700
                                           : FontWeight.w500,
-                                      color:
-                                          isSelected ? selectedText : idleText,
+                                      color: isSelected
+                                          ? selectedText
+                                          : (modeActive
+                                              ? (section == MatchSection.run
+                                                  ? const Color(0xFFF4436C)
+                                                  : const Color(0xFFF5C842))
+                                              : idleText),
                                     ),
                                   ),
                                 ),
@@ -1272,8 +1297,10 @@ class _SectionPickerSheet extends ConsumerWidget {
                                   Container(
                                     width: 8,
                                     height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.greenAccent,
+                                    decoration: BoxDecoration(
+                                      color: section == MatchSection.run
+                                          ? const Color(0xFFF4436C)
+                                          : const Color(0xFFF5C842),
                                       shape: BoxShape.circle,
                                     ),
                                   ),

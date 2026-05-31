@@ -222,3 +222,148 @@ class LiquidNavItem {
 
   LiquidNavItem({required this.icon, required this.label});
 }
+
+/// Two-item navigation bar for compact foldable surfaces (e.g. the Galaxy
+/// Z Flip cover screen / "Flex Window"), modeled on the Samsung "Now bar".
+///
+/// Instead of rendering every destination — which does not fit a tiny
+/// near-square display — it shows just the **selected** item plus **one
+/// neighbor**:
+///
+/// - normally the neighbor to the RIGHT ([currentIndex] + 1);
+/// - when the selected item is the LAST one, the neighbor to the LEFT
+///   ([currentIndex] - 1), so there is always something to move to.
+///
+/// Tapping the neighbor selects it via [onTap]; the parent then rebuilds and
+/// the bar re-centers on the new selection (revealing ITS neighbor). Swipe
+/// gestures are handled by the caller, identical to [LiquidNavBar].
+class CompactNavBar extends StatelessWidget {
+  final int currentIndex;
+  final Function(int) onTap;
+  final List<LiquidNavItem> items;
+  final Set<int> pulsingIndexes;
+
+  const CompactNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+    required this.items,
+    this.pulsingIndexes = const {},
+  });
+
+  /// Index of the neighbor shown alongside the selection. Right neighbor
+  /// normally; left neighbor when the selection is the last item. Returns null
+  /// only in the degenerate single-item case.
+  int? neighborIndex() {
+    if (items.length < 2) return null;
+    final isLast = currentIndex >= items.length - 1;
+    return isLast ? currentIndex - 1 : currentIndex + 1;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const double navHeight = 64.0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    final safeIndex = currentIndex.clamp(0, items.length - 1);
+    final neighbor = neighborIndex();
+
+    Widget buildPill(int index, {required bool selected}) {
+      final item = items[index];
+      final isPulsing = pulsingIndexes.contains(index);
+      final fg = selected
+          ? Colors.white
+          : isPulsing
+              ? primary
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.55)
+                  : Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.55));
+
+      return GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap(index);
+        },
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutQuart,
+          height: 48,
+          padding: EdgeInsets.symmetric(horizontal: selected ? 18 : 14),
+          decoration: BoxDecoration(
+            color: selected ? primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: primary.withValues(alpha: 0.45),
+                      blurRadius: 18,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : const [],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(item.icon, color: fg, size: 24),
+              if (selected) ...[
+                const SizedBox(width: 8),
+                Text(
+                  item.label,
+                  style: TextStyle(
+                    color: fg,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Center(
+      heightFactor: 1,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(36),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            height: navHeight,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.35)
+                  : Colors.black.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(36),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 40,
+                  spreadRadius: -5,
+                  offset: const Offset(0, 15),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                buildPill(safeIndex, selected: true),
+                if (neighbor != null) ...[
+                  const SizedBox(width: 6),
+                  buildPill(neighbor, selected: false),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

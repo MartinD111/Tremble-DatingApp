@@ -9,6 +9,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../subscriptions/application/revenuecat_subscription.dart';
 import '../../../shared/ui/tremble_back_button.dart';
+import '../../../core/theme.dart';
 
 @immutable
 class PremiumPlanCard {
@@ -553,6 +554,13 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     final glowOpacity = isDark ? 0.08 : 0.05;
     final glowOpacity2 = isDark ? 0.05 : 0.03;
 
+    final bgColors = TrembleTheme.getGradient(
+      isDarkMode: isDark,
+      isPrideMode: user.isPrideMode,
+      gender: user.gender,
+      isGenderBasedColor: user.isGenderBasedColor,
+    );
+
     final genderAccent = _resolveGenderAccent(
       gender: user.gender,
       isGenderBased: user.isGenderBasedColor,
@@ -573,14 +581,22 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
-        systemNavigationBarColor: bgColor,
+        systemNavigationBarColor: bgColors.isNotEmpty ? bgColors.last : bgColor,
         systemNavigationBarIconBrightness:
             isDark ? Brightness.light : Brightness.dark,
       ),
-      child: Scaffold(
-        backgroundColor: bgColor,
-        body: Stack(
-          children: [
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: bgColors,
+          ),
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            children: [
             // Decorative glow effects
             Positioned(
               top: -100,
@@ -736,8 +752,9 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildCreditCard(PremiumPlanCard data, String lang) {
     return Container(

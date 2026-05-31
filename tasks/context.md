@@ -1,3 +1,166 @@
+## Session State — 2026-05-31 21:18 CEST
+- Active Task: visual updates on home screen (freeze stickman on stop, premium events popup dialog)
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/shared/widgets/running_stickman.dart` (removed reset from pause path)
+    - `lib/src/features/dashboard/presentation/home_screen.dart` (premium centered dialog for events.isEmpty)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` clean, all 125 unit/widget tests passing successfully.
+
+## Session Handoff
+- Completed:
+    - Modified `running_stickman.dart` to freeze the stickman exactly where he stopped instead of resetting to stride 0.
+    - Modified `home_screen.dart` to replace the simple SnackBar notification for "No events nearby" with a stunning premium center-aligned modal that matches the look of other modals (`showModeInfoDialog`).
+    - Verified compile/static analyze clean and all 125 tests passed.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Deliver updates to founder for physical device testing.
+
+## Session State — 2026-05-31 21:30 CEST
+- Active Task: Foldable / flip-phone form-factor optimization (compact "Now bar" style nav, expanded centering, cutout-safe layout)
+- Environment: Dev mobile flavor on `feature/foldable-flip-support`
+- Modified Files:
+    - `lib/src/shared/ui/form_factor.dart` [NEW]
+    - `lib/src/shared/ui/liquid_nav_bar.dart` (added `CompactNavBar`)
+    - `lib/src/features/dashboard/presentation/home_screen.dart` (form-factor selection, cutout-safe nav offset, expanded max-width centering)
+    - `test/shared/ui/form_factor_test.dart` [NEW]
+    - `test/shared/ui/compact_nav_bar_test.dart` [NEW]
+- Open Problems:
+    - Physical Z Flip cover-screen / Z Fold inner-screen smoke test still pending (no foldable device; iOS device gated by `BLOCKER-005`).
+- System Status: `flutter analyze --no-fatal-infos` 0 issues, `flutter test --dart-define=FLAVOR=dev` 125/125 passed, `flutter build apk --debug --flavor dev` ✓.
+
+## Session Handoff
+- Completed:
+    - Added `FormFactor { compact, standard, expanded }` classifier in `form_factor.dart`. STANDARD phones (incl. iPhone SE 320x568) are explicitly unchanged; only small near-square cover screens → compact, and shortestSide ≥ 600 → expanded. Pure `classifyFormFactor(Size)` is unit-tested against real device metrics; `hasFoldingHinge` reads `displayFeatures` for unfolded Folds.
+    - Added `CompactNavBar` — a two-item "Now bar" style nav showing the selected destination + one neighbor (right normally, left when on the last/Settings item). Tapping the neighbor selects it and the bar re-centers; existing swipe-to-switch wrapper retained.
+    - Wired `home_screen.dart`: compact surfaces render `CompactNavBar` (else unchanged `LiquidNavBar`); nav bottom offset adds `viewPadding.bottom` on foldables (camera-cutout/gesture-bar safe), standard phones keep the original 30px; expanded surfaces center content within `kExpandedContentMaxWidth` (560).
+    - Verified: full analyze clean, 125/125 tests (12 new), dev debug APK built.
+- In Progress: None.
+- Blocked: None (code). Physical foldable smoke test outstanding.
+- Next Action:
+    1. Smoke test on a physical Z Flip (cover screen → compact nav) and Z Fold (inner screen → centered content); tune breakpoints in `form_factor.dart` if real metrics differ.
+    2. Per-screen compact-overflow tuning for Map/People/Settings on the tiny cover screen is deferred (debt noted in plan).
+
+## Session State — 2026-05-31 21:10 CEST
+- Active Task: Upgrade screen gradient theme background match
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/features/settings/presentation/premium_screen.dart` (dynamic background gradient matching other screens via TrembleTheme)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` 0 issues, 125/125 tests passing.
+
+## Session Handoff
+- Completed:
+    - Integrated standard `TrembleTheme.getGradient(...)` dynamic background gradient matching on the Upgrade screen (`PremiumUpgradeScreen`).
+    - The screen now reactively adapts to gender selection (male/female), pride mode, and light/dark theme modes, aligning perfectly with other application views (like the map or main dashboard).
+    - Wrapped the entire viewport inside a custom `Container` with the corresponding linear gradient and set the `Scaffold`'s background to `Colors.transparent`.
+    - Automatically synced OS status and system navigation bar coloring (`systemNavigationBarColor`) to match the bottom end of the custom theme gradient.
+    - Verified static analysis compiles with zero warnings and all 125 tests passing cleanly.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next developer tasks.
+
+## Session State — 2026-05-31 15:30 CEST
+- Active Task: Event Mode center-button: nearby event picker or "No events nearby" notification
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/features/gym/data/gym_repository.dart` (TrembleEvent model, getActiveEvents, activateEventMode lat/lng)
+    - `lib/src/features/gym/application/gym_mode_controller.dart` (EventModeController.activate lat/lng)
+    - `lib/src/features/dashboard/presentation/home_screen.dart` (showEventActivationFlow, _showEventSelectionSheetFor, geolocator import)
+    - `lib/src/features/matches/presentation/matches_screen.dart` (showEventActivationFlow call, dart:async import)
+    - `lib/src/core/translations.dart` (event_choose_title, event_no_nearby, event_live_now, event_starts_at in 8 languages)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` 0 issues, 113/113 tests passing.
+
+## Session Handoff
+- Completed:
+    - Tapping the center button in Event Mode now queries Firestore `events` (active + not-yet-ended) instead of hardcoding `eventId: 'default'`.
+    - If no events found → floating SnackBar "No events nearby" (translated in all 8 languages).
+    - If events found → branded bottom sheet lists top 3 sorted by distance (nearest first) or by `startsAt` if location unavailable. Each row shows event name, live/upcoming status with green dot, and distance label.
+    - Tapping a row closes the sheet and calls `onEventModeActivate` with the real event ID and current device coordinates; backend geo-validation still applies.
+    - Same flow wired in `matches_screen.dart` (previously crashed with missing lat/lng params).
+    - Fixed `activateEventMode` API call to send `latitude`/`longitude` as required by the backend Cloud Function.
+    - `flutter analyze` 0 issues, 113/113 tests passing.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Device smoke test: select Event Mode on radar, tap center button — verify picker sheet or "No events nearby" snack depending on Firestore data.
+
+## Session State — 2026-05-31 14:41 CEST
+- Active Task: Refactor Radar selector double highlights, fix bottom sheet overflows, and enable persistent spinning active animation
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` clean, all 113 unit/widget tests passing successfully, `flutter build apk` succeeds.
+
+## Session Handoff
+- Completed:
+    - Unified standard "Tremble Radar Mode" as a first-class selection (`RadarModeKind.radar`), removing prepended code and fixing all double highlight checkmark visual issues.
+    - Wrapped the bottom sheet mode selector items inside a `SingleChildScrollView`, completely resolving the 15px layout overflow.
+    - Simplified the top-left mode icon `_PulseIcon` gestures: removed long-press and mapped `onTap` to directly trigger the mode selector bottom sheet.
+    - Swapped center circular button icon/color dynamically on selection (e.g. dumbbell and yellow when Gym Mode is selected, but not yet active). Tapping the center button in this state now successfully activates the mode.
+    - Kept the radar animation spinning persistently when any specialized mode (Gym, Run, Event) is activated.
+    - Fully verified with `flutter analyze` (0 issues), `flutter test` (113/113 passed), and Gradle APK build (Dev Debug succeeded).
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Deliver to founder for physical device smoke testing.
+
+## Session State — 2026-05-31 13:04 CEST
+- Active Task: Color and highlight Gym, Run, and Event modes when they are active
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/features/dashboard/presentation/home_screen.dart` (color active modes inside `_showModeSelector`)
+    - `lib/src/features/matches/presentation/matches_screen.dart` (align circular border concentrically, color active indicator dots next to screen title, color active modes in `_SectionPickerSheet`)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` clean, all 113 unit/widget tests passing successfully.
+
+## Session Handoff
+- Completed:
+    - Integrated dynamic highlight coloring for active Gym, Run, and Event modes inside `_showModeSelector` on the Radar screen.
+    - Added concentric stack alignment to the concentric circles of `_ModeIconButton` on the Matches page.
+    - Added dynamic indicator dots next to the section title on the Matches screen to show if the active section's mode is enabled.
+    - Highlighted active modes with their designated theme colors inside the Matches screen's `_SectionPickerSheet`.
+    - Verified static analysis (0 warnings) and all 113 tests passing successfully.
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
+## Session State — 2026-05-31 12:58 CEST
+- Active Task: Integrate light/dark themes, pride, and gender color schemes into Tremble Map background and controls
+- Environment: Dev mobile flavor on `main`
+- Modified Files:
+    - `lib/src/features/map/presentation/tremble_map_screen.dart` (dynamic background gradient, text, zoom toggle, and pill colors)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze` clean, all 113 unit/widget tests passing successfully.
+
+## Session Handoff
+- Completed:
+    - Wired reactive `Theme.of(context).brightness` inside `TrembleMapScreen` and its sub-widgets (`_MapZoomToggle` and `_MapPill`).
+    - Configured screen background gradient to pull dynamically from `TrembleTheme.getGradient(...)` respecting pride mode, dark mode, gender mode, and custom colors.
+    - Re-styled `_MapZoomToggle`, `_MapPill`, and the map container boundaries with theme-compliant borders, colors, and shadows for maximum visual polish in both themes.
+    - Switched hardcoded material blue in the zoom toggle active state to dynamic `Theme.of(context).primaryColor`.
+    - Verified static analysis (0 warnings) and complete test suite (113/113 passed).
+- In Progress: None.
+- Blocked: None.
+- Next Action:
+    1. Await next user instructions.
+
 ## Session State — 2026-05-30 23:45 CEST
 - Active Task: Configure correct production Firestore TTL policies and deploy Firestore security rules
 - Environment: Prod Firestore (`am---dating-app`)

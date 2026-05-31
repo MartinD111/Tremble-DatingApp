@@ -11,6 +11,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'radar_animation.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/liquid_nav_bar.dart'; // Import LiquidNavBar
+import '../../../shared/ui/form_factor.dart'; // Foldable form-factor adaptation
 import '../../../shared/ui/warmth_empty_state.dart';
 import '../../../shared/ui/tremble_loading_spinner.dart';
 import '../../settings/presentation/settings_screen.dart';
@@ -23,6 +24,7 @@ import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
 import '../../../core/ble_service.dart'; // BLE must run in main isolate
 import '../../../shared/widgets/tremble_radar_heart.dart';
+import '../../../shared/widgets/running_stickman.dart';
 import '../../../core/consent_service.dart'; // gdprConsentProvider
 import 'package:flutter_animate/flutter_animate.dart'; // Animations
 import '../../../core/translations.dart';
@@ -41,7 +43,9 @@ import '../application/tutorial_notifier.dart';
 import '../../match/presentation/widgets/match_notification_pill.dart';
 import '../../../shared/ui/wave_pill_service.dart';
 import '../../../shared/ui/premium_paywall.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../gym/application/gym_mode_controller.dart';
+import '../../gym/data/gym_repository.dart';
 import '../../gym/presentation/gym_mode_sheet.dart';
 import '../../gym/application/gym_dwell_service.dart';
 import '../data/run_club_repository.dart';
@@ -604,6 +608,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final hideNavBarPref = ref.watch(hideNavBarPrefProvider);
     final isNavBarVisible = ref.watch(isNavBarVisibleProvider);
 
+    // Foldable form factor. STANDARD phones keep the existing layout exactly;
+    // only the compact (flip cover) and expanded (Fold inner) surfaces adapt.
+    final formFactor = formFactorOf(context);
+    final isCompact = formFactor == FormFactor.compact;
+    final isExpanded = formFactor == FormFactor.expanded;
+    // Cutout/gesture-bar safe gap below the floating nav bar. Standard phones
+    // keep the original fixed 30px; foldables add the device's bottom inset so
+    // the bar never sits under a camera cutout or gesture handle.
+    final double navBottomGap = formFactor == FormFactor.standard
+        ? 30
+        : 30 + MediaQuery.viewPaddingOf(context).bottom;
+
     return Stack(
       key: HomeScreen.homeStackKey,
       fit: StackFit.expand,
@@ -664,7 +680,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 },
                 child: KeyedSubtree(
                   key: ValueKey<int>(safeNavIndex),
-                  child: screens[safeNavIndex],
+                  // On the unfolded Fold inner screen, keep the phone-tuned
+                  // layout centered within a max width instead of stretching
+                  // edge to edge. No effect on standard / compact surfaces.
+                  child: isExpanded
+                      ? Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: kExpandedContentMaxWidth,
+                            ),
+                            child: screens[safeNavIndex],
+                          ),
+                        )
+                      : screens[safeNavIndex],
                 ),
               ),
             ),
@@ -677,7 +705,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           curve: Curves.easeInOut,
           bottom:
               (isNavBarVisible && MediaQuery.of(context).viewInsets.bottom == 0)
-                  ? 30
+                  ? navBottomGap
                   : -100,
           left: 0,
           right: 0,
@@ -699,33 +727,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 }
               }
             },
-            child: LiquidNavBar(
-              currentIndex: safeNavIndex,
-              items: navItems,
-              pulsingIndexes: _tutorialNavPulseIndexes(tutorial, isPremium),
-              onTap: (index) {
-                ref.read(navIndexProvider.notifier).state = index;
-                _handleTutorialNavTap(index: index, isPremium: isPremium);
-              },
-              itemWrapper: (index, child) {
-                // Determine tutorial step based on index and premium status:
-                // Premium: Map (index 1) -> Step 2, People (index 2) -> Step 3, Settings (index 3) -> Step 4
-                // Free: People (index 1) -> Step 3, Settings (index 2) -> Step 4
-                final int? step = isPremium
-                    ? (index == 1
-                        ? 2
-                        : (index == 2 ? 3 : (index == 3 ? 4 : null)))
-                    : (index == 1 ? 3 : (index == 2 ? 4 : null));
+            child: isCompact
+                ? CompactNavBar(
+                    currentIndex: safeNavIndex,
+                    items: navItems,
+                    pulsingIndexes:
+                        _tutorialNavPulseIndexes(tutorial, isPremium),
+                    onTap: (index) {
+                      ref.read(navIndexProvider.notifier).state = index;
+                      _handleTutorialNavTap(index: index, isPremium: isPremium);
+                    },
+                  )
+                : LiquidNavBar(
+                    currentIndex: safeNavIndex,
+                    items: navItems,
+                    pulsingIndexes:
+                        _tutorialNavPulseIndexes(tutorial, isPremium),
+                    onTap: (index) {
+                      ref.read(navIndexProvider.notifier).state = index;
+                      _handleTutorialNavTap(index: index, isPremium: isPremium);
+                    },
+                    itemWrapper: (index, child) {
+                      // Determine tutorial step based on index and premium status:
+                      // Premium: Map (index 1) -> Step 2, People (index 2) -> Step 3, Settings (index 3) -> Step 4
+                      // Free: People (index 1) -> Step 3, Settings (index 2) -> Step 4
+                      final int? step = isPremium
+                          ? (index == 1
+                              ? 2
+                              : (index == 2 ? 3 : (index == 3 ? 4 : null)))
+                          : (index == 1 ? 3 : (index == 2 ? 4 : null));
 
-                if (step != null) {
-                  return _TutorialTarget(
-                    step: step,
-                    child: child,
-                  );
-                }
-                return child;
-              },
-            ),
+                      if (step != null) {
+                        return _TutorialTarget(
+                          step: step,
+                          child: child,
+                        );
+                      }
+                      return child;
+                    },
+                  ),
           ),
         ),
 
@@ -927,6 +967,173 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Future<void> _showDeactivateModeDialog({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String activeModeName,
+    required VoidCallback onDeactivate,
+    required String lang,
+  }) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primary = Theme.of(context).primaryColor;
+
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (ctx) => Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF1E1E1C).withValues(alpha: 0.97)
+                      : Colors.white.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: primary.withValues(alpha: 0.30),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primary.withValues(alpha: 0.12),
+                      blurRadius: 40,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(28),
+                child: Material(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.redAccent.withValues(alpha: 0.12),
+                          border: Border.all(
+                            color: Colors.redAccent.withValues(alpha: 0.45),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: const Icon(LucideIcons.power,
+                            color: Colors.redAccent, size: 24),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        lang == 'sl'
+                            ? 'Izklopi $activeModeName?'
+                            : 'Deactivate $activeModeName?',
+                        style: TrembleTheme.displayFont(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              isDark ? Colors.white : const Color(0xFF1A1A18),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        lang == 'sl'
+                            ? 'Ali ste prepričani, da želite izklopiti $activeModeName in prenehati z ujemanjem v tem načinu?'
+                            : 'Are you sure you want to turn off $activeModeName and stop matching in this mode?',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 13,
+                          color: isDark
+                              ? Colors.white60
+                              : const Color(0xFF1A1A18).withValues(alpha: 0.6),
+                          height: 1.55,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(ctx),
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 13),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.05)
+                                      : Colors.black.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(100),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.12)
+                                        : Colors.black.withValues(alpha: 0.15),
+                                  ),
+                                ),
+                                child: Text(
+                                  t('cancel', lang),
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.instrumentSans(
+                                    color: isDark
+                                        ? Colors.white60
+                                        : Colors.black54,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.pop(ctx);
+                                onDeactivate();
+                              },
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 13),
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  borderRadius: BorderRadius.circular(100),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.redAccent
+                                          .withValues(alpha: 0.30),
+                                      blurRadius: 14,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  lang == 'sl' ? 'IZKLOPI' : 'DEACTIVATE',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.instrumentSans(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildRadarView(
       WidgetRef ref,
       BuildContext context,
@@ -942,6 +1149,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       bool showNearMissEmpty,
       DevSimulationState devSim,
       int signalPulseKey) {
+    final gymState = ref.watch(gymModeControllerProvider);
+    final runState = ref.watch(runModeControllerProvider);
+    final eventState = ref.watch(eventModeControllerProvider);
+    final bool isAnyModeActive =
+        gymState.isActive || runState.isActive || eventState.isActive;
+
     final isDegraded = radarMode == 'degraded';
     final lang = ref.watch(appLanguageProvider);
     final tutorial = ref.watch(tutorialProvider);
@@ -957,7 +1170,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Positioned.fill(
                     child: RadarAnimation(
-                      isScanning: isScanning &&
+                      isScanning: (isScanning || isAnyModeActive) &&
                           !isSearchActive &&
                           bleIssue ==
                               null, // stop visual pulse if searching/blocked
@@ -1056,6 +1269,75 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           isHighlighted:
                               tutorial.isActive && tutorial.currentStep == 5,
                           onTap: () async {
+                            final selectedMode =
+                                ref.read(selectedRadarModeProvider);
+                            final gymState =
+                                ref.read(gymModeControllerProvider);
+                            final runState =
+                                ref.read(runModeControllerProvider);
+                            final eventState =
+                                ref.read(eventModeControllerProvider);
+
+                            if (selectedMode == RadarModeKind.gym) {
+                              if (gymState.isActive) {
+                                unawaited(_showDeactivateModeDialog(
+                                  context: context,
+                                  ref: ref,
+                                  activeModeName: lang == 'sl'
+                                      ? 'Način za fitnes'
+                                      : 'Gym Mode',
+                                  lang: lang,
+                                  onDeactivate: () {
+                                    ref
+                                        .read(
+                                            gymModeControllerProvider.notifier)
+                                        .deactivate();
+                                  },
+                                ));
+                              } else {
+                                GymModeSheet.show(context);
+                              }
+                              return;
+                            }
+
+                            if (selectedMode == RadarModeKind.run) {
+                              // A single tap toggles Run Mode directly — no
+                              // deactivation confirmation dialog.
+                              if (runState.isActive) {
+                                ref
+                                    .read(runModeControllerProvider.notifier)
+                                    .deactivate();
+                              } else {
+                                ref
+                                    .read(runModeControllerProvider.notifier)
+                                    .activate();
+                              }
+                              return;
+                            }
+
+                            if (selectedMode == RadarModeKind.event) {
+                              if (eventState.isActive) {
+                                unawaited(_showDeactivateModeDialog(
+                                  context: context,
+                                  ref: ref,
+                                  activeModeName: lang == 'sl'
+                                      ? 'Način za dogodke'
+                                      : 'Event Mode',
+                                  lang: lang,
+                                  onDeactivate: () {
+                                    ref
+                                        .read(eventModeControllerProvider
+                                            .notifier)
+                                        .deactivate();
+                                  },
+                                ));
+                              } else {
+                                unawaited(_activateEventMode());
+                              }
+                              return;
+                            }
+
+                            // Otherwise, selectedMode == RadarModeKind.radar (Tremble Radar Mode)
                             final newState = !isScanning;
                             ref.read(isScanningProvider.notifier).state =
                                 newState;
@@ -1253,13 +1535,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       final gymState = ref.watch(gymModeControllerProvider);
                       final runState = ref.watch(runModeControllerProvider);
                       final eventState = ref.watch(eventModeControllerProvider);
-                      final lang = ref.watch(appLanguageProvider);
                       final tutorial = ref.watch(tutorialProvider);
 
                       final isActive = switch (selectedMode) {
                         RadarModeKind.gym => gymState.isActive,
                         RadarModeKind.run => runState.isActive,
                         RadarModeKind.event => eventState.isActive,
+                        RadarModeKind.radar => isScanning,
                       };
 
                       final (modeIcon, modeColor) = switch (selectedMode) {
@@ -1275,6 +1557,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             LucideIcons.calendar,
                             const Color(0xFFF5C842)
                           ),
+                        RadarModeKind.radar => (
+                            LucideIcons.radar,
+                            Theme.of(context).primaryColor
+                          ),
                       };
 
                       return _TutorialTarget(
@@ -1286,61 +1572,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           isHighlighted:
                               tutorial.isActive && tutorial.currentStep == 0,
                           onTap: () {
-                            if (isActive) {
-                              switch (selectedMode) {
-                                case RadarModeKind.gym:
-                                  ref
-                                      .read(gymModeControllerProvider.notifier)
-                                      .deactivate();
-                                  break;
-                                case RadarModeKind.run:
-                                  ref
-                                      .read(runModeControllerProvider.notifier)
-                                      .deactivate();
-                                  break;
-                                case RadarModeKind.event:
-                                  ref
-                                      .read(
-                                          eventModeControllerProvider.notifier)
-                                      .deactivate();
-                                  break;
-                              }
-                            } else {
-                              showModeInfoDialog(
-                                context: context,
-                                ref: ref,
-                                mode: selectedMode,
-                                lang: lang,
-                                isActive: false,
-                                onActivate: () {
-                                  if (selectedMode == RadarModeKind.run) {
-                                    ref
-                                        .read(
-                                            runModeControllerProvider.notifier)
-                                        .activate();
-                                  } else if (selectedMode ==
-                                      RadarModeKind.gym) {
-                                    GymModeSheet.show(context);
-                                  } else if (selectedMode ==
-                                      RadarModeKind.event) {
-                                    ref
-                                        .read(eventModeControllerProvider
-                                            .notifier)
-                                        .activate(
-                                          eventId: 'default',
-                                          eventName:
-                                              t('section_your_event', lang),
-                                        );
-                                  }
-                                },
-                              );
-                            }
+                            _showModeSelector(context);
                             if (tutorial.isActive &&
                                 tutorial.currentStep == 0) {
                               ref.read(tutorialProvider.notifier).nextStep();
                             }
                           },
-                          onLongPress: () => _showModeSelector(context),
                         ),
                       );
                     },
@@ -1513,6 +1750,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Mode configuration
     final items = [
       (
+        RadarModeKind.radar,
+        LucideIcons.radar,
+        lang == 'sl' ? 'Tremble Radar način' : 'Tremble Radar Mode',
+        accentColor
+      ),
+      (
         RadarModeKind.gym,
         LucideIcons.dumbbell,
         t('gym_mode_info_title', lang),
@@ -1558,11 +1801,439 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               padding: EdgeInsets.fromLTRB(
-                  24, 12, 24, MediaQuery.of(ctx).padding.bottom + 32),
+                  24, 12, 24, MediaQuery.of(ctx).padding.bottom + 24),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.15)
+                            : Colors.black.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+
+                    // Title
+                    Text(
+                      t('select_radar_mode', lang),
+                      style: TrembleTheme.displayFont(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Mode List
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final currentSelected =
+                            ref.watch(selectedRadarModeProvider);
+                        final gymState = ref.watch(gymModeControllerProvider);
+                        final runState = ref.watch(runModeControllerProvider);
+                        final eventState =
+                            ref.watch(eventModeControllerProvider);
+                        final isScanning = ref.watch(isScanningProvider);
+
+                        return Column(
+                          children: items.map((item) {
+                            final (kind, icon, label, color) = item;
+                            final isSelected = kind == currentSelected;
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (kind != currentSelected) {
+                                    // Deactivate all specialized active modes since we are changing selection
+                                    if (gymState.isActive) {
+                                      ref
+                                          .read(gymModeControllerProvider
+                                              .notifier)
+                                          .deactivate();
+                                    }
+                                    if (runState.isActive) {
+                                      ref
+                                          .read(runModeControllerProvider
+                                              .notifier)
+                                          .deactivate();
+                                    }
+                                    if (eventState.isActive) {
+                                      ref
+                                          .read(eventModeControllerProvider
+                                              .notifier)
+                                          .deactivate();
+                                    }
+                                    // If scanning is active and we select a specialized mode, stop scanning
+                                    if (kind != RadarModeKind.radar &&
+                                        isScanning) {
+                                      ref
+                                          .read(isScanningProvider.notifier)
+                                          .state = false;
+                                      BleService().stop();
+                                      if (Platform.isAndroid) {
+                                        RadarIntegrationService.instance
+                                            .stopRadarService();
+                                      } else {
+                                        FlutterBackgroundService()
+                                            .invoke('stopService', null);
+                                      }
+                                      RadarIntegrationService.instance
+                                          .setRadarActive(false);
+                                    }
+                                    ref
+                                        .read(
+                                            selectedRadarModeProvider.notifier)
+                                        .state = kind;
+                                  }
+                                  Navigator.pop(ctx);
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? color.withValues(alpha: 0.15)
+                                        : (isDark
+                                            ? Colors.white
+                                                .withValues(alpha: 0.05)
+                                            : Colors.black
+                                                .withValues(alpha: 0.03)),
+                                    borderRadius: BorderRadius.circular(100),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? color.withValues(alpha: 0.5)
+                                          : (isDark
+                                              ? Colors.white
+                                                  .withValues(alpha: 0.1)
+                                              : Colors.black
+                                                  .withValues(alpha: 0.08)),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color:
+                                                  color.withValues(alpha: 0.2),
+                                              blurRadius: 15,
+                                              spreadRadius: -2,
+                                            )
+                                          ]
+                                        : [],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? color.withValues(alpha: 0.25)
+                                              : (isDark
+                                                  ? Colors.white
+                                                      .withValues(alpha: 0.08)
+                                                  : Colors.black
+                                                      .withValues(alpha: 0.05)),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          icon,
+                                          size: 22,
+                                          color: isSelected
+                                              ? color
+                                              : (isDark
+                                                  ? Colors.white60
+                                                  : Colors.black54),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Text(
+                                          label,
+                                          style: GoogleFonts.instrumentSans(
+                                            fontSize: 17,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w700
+                                                : FontWeight.w600,
+                                            color: isSelected
+                                                ? (isDark
+                                                    ? Colors.white
+                                                    : TrembleTheme.rose)
+                                                : (isDark
+                                                    ? Colors.white
+                                                    : Colors.black87),
+                                          ),
+                                        ),
+                                      ),
+                                      if (isSelected)
+                                        Icon(
+                                          Icons.check_circle_rounded,
+                                          color: color,
+                                          size: 20,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _activateEventMode() async {
+    final lang = ref.read(appLanguageProvider);
+    await showEventActivationFlow(context, ref, lang);
+  }
+}
+
+/// Fetches active events, sorts by proximity/time, and shows a selection sheet.
+/// If no events are found, shows a "No events nearby" snackbar instead.
+/// Exported so it can be called from matches_screen.dart without circular import issues.
+Future<void> showEventActivationFlow(
+  BuildContext context,
+  WidgetRef ref,
+  String lang,
+) async {
+  var permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+  }
+  if (permission == LocationPermission.denied ||
+      permission == LocationPermission.deniedForever) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(lang == 'sl'
+          ? 'Lokacija je potrebna za Event Mode.'
+          : 'Location is required for Event Mode.'),
+      behavior: SnackBarBehavior.floating,
+    ));
+    return;
+  }
+
+  final gymRepo = ref.read(gymRepositoryProvider);
+  List<TrembleEvent> events;
+  try {
+    events = await gymRepo.getActiveEvents();
+  } catch (_) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(lang == 'sl'
+          ? 'Napaka pri nalaganju dogodkov.'
+          : 'Failed to load events.'),
+      behavior: SnackBarBehavior.floating,
+    ));
+    return;
+  }
+
+  if (!context.mounted) return;
+
+  if (events.isEmpty) {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        final primary = Theme.of(ctx).colorScheme.primary;
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF1E1E1C).withValues(alpha: 0.97)
+                        : Colors.white.withValues(alpha: 0.94),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: primary.withValues(alpha: 0.30),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primary.withValues(alpha: 0.12),
+                        blurRadius: 40,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(28),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: primary.withValues(alpha: 0.12),
+                            border: Border.all(
+                              color: primary.withValues(alpha: 0.45),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Icon(
+                            LucideIcons.calendar,
+                            color: primary,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          t('event_no_nearby', lang),
+                          style: TrembleTheme.displayFont(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          switch (lang) {
+                            'sl' => 'V vaši bližini trenutno ni aktivnih dogodkov. Poskusite znova kasneje.',
+                            'hr' || 'sr' => 'Trenutno nema aktivnih događaja u vašoj blizini. Pokušajte ponovo kasnije.',
+                            'de' => 'Derzeit gibt es keine aktiven Events in Ihrer Nähe. Bitte versuchen Sie es später noch einmal.',
+                            'it' => 'Al momento non ci sono eventi attivi nelle vicinanze. Riprova più tardi.',
+                            'fr' => 'Il n\'y a actuellement aucun événement actif à proximité. Veuillez réessayer plus tard.',
+                            'hu' => 'Jelenleg nincsenek aktív események a közelben. Kérjük, próbálja meg később.',
+                            _ => 'There are currently no active events in your area. Please check back later.',
+                          },
+                          style: GoogleFonts.instrumentSans(
+                            fontSize: 15,
+                            height: 1.45,
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.70)
+                                : const Color(0xFF1A1A18).withValues(alpha: 0.70),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(
+                              t('ok', lang),
+                              style: GoogleFonts.instrumentSans(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    return;
+  }
+
+  Position? position;
+  try {
+    position = await Geolocator.getCurrentPosition(
+      locationSettings:
+          const LocationSettings(accuracy: LocationAccuracy.medium),
+    ).timeout(const Duration(seconds: 5));
+  } catch (_) {}
+
+  if (position != null) {
+    final pos = position;
+    events.sort((a, b) {
+      if (a.lat == null || a.lng == null) return 1;
+      if (b.lat == null || b.lng == null) return -1;
+      final da = Geolocator.distanceBetween(
+          pos.latitude, pos.longitude, a.lat!, a.lng!);
+      final db = Geolocator.distanceBetween(
+          pos.latitude, pos.longitude, b.lat!, b.lng!);
+      return da.compareTo(db);
+    });
+  } else {
+    events.sort((a, b) {
+      if (a.startsAt == null) return 1;
+      if (b.startsAt == null) return -1;
+      return a.startsAt!.compareTo(b.startsAt!);
+    });
+  }
+
+  if (!context.mounted) return;
+  _showEventSelectionSheetFor(
+      context, ref, events.take(3).toList(), position, lang);
+}
+
+void _showEventSelectionSheetFor(
+  BuildContext context,
+  WidgetRef ref,
+  List<TrembleEvent> events,
+  Position? position,
+  String lang,
+) {
+  final now = DateTime.now();
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.4),
+    builder: (ctx) {
+      final isDark = Theme.of(ctx).brightness == Brightness.dark;
+      return ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF1A1A18).withValues(alpha: 0.95)
+                  : Colors.white.withValues(alpha: 0.95),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(32)),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.05),
+                width: 1.5,
+              ),
+            ),
+            padding: EdgeInsets.fromLTRB(
+                24, 12, 24, MediaQuery.of(ctx).padding.bottom + 24),
+            child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Handle
                   Container(
                     width: 40,
                     height: 4,
@@ -1574,10 +2245,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-
-                  // Title
                   Text(
-                    t('select_radar_mode', lang),
+                    t('event_choose_title', lang),
                     style: TrembleTheme.displayFont(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -1585,124 +2254,190 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  ...events.map((event) {
+                    final isLive =
+                        event.startsAt == null || event.startsAt!.isBefore(now);
+                    final String timeLabel;
+                    if (isLive) {
+                      timeLabel = t('event_live_now', lang);
+                    } else {
+                      final h = event.startsAt!.hour.toString().padLeft(2, '0');
+                      final m =
+                          event.startsAt!.minute.toString().padLeft(2, '0');
+                      timeLabel = '${t('event_starts_at', lang)} $h:$m';
+                    }
 
-                  // Mode List
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final currentSelected =
-                          ref.watch(selectedRadarModeProvider);
-                      return Column(
-                        children: items.map((item) {
-                          final (kind, icon, label, color) = item;
-                          final isSelected = kind == currentSelected;
+                    String? distLabel;
+                    if (position != null &&
+                        event.lat != null &&
+                        event.lng != null) {
+                      final dist = Geolocator.distanceBetween(position.latitude,
+                          position.longitude, event.lat!, event.lng!);
+                      distLabel = dist < 1000
+                          ? '${dist.round()} m'
+                          : '${(dist / 1000).toStringAsFixed(1)} km';
+                    }
 
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: GestureDetector(
-                              onTap: () {
-                                ref
-                                    .read(selectedRadarModeProvider.notifier)
-                                    .state = kind;
-                                Navigator.pop(ctx);
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 14),
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GestureDetector(
+                        onTap: () async {
+                          Navigator.pop(ctx);
+                          Position? pos = position;
+                          if (pos == null) {
+                            try {
+                              pos = await Geolocator.getCurrentPosition(
+                                locationSettings: const LocationSettings(
+                                    accuracy: LocationAccuracy.high),
+                              );
+                            } catch (_) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(
+                                  content: Text(lang == 'sl'
+                                      ? 'Ni mogoče pridobiti lokacije.'
+                                      : 'Could not get location.'),
+                                  behavior: SnackBarBehavior.floating,
+                                ));
+                              }
+                              return;
+                            }
+                          }
+                          try {
+                            await ref
+                                .read(eventModeControllerProvider.notifier)
+                                .activate(
+                                  eventId: event.id,
+                                  eventName: event.name,
+                                  latitude: pos.latitude,
+                                  longitude: pos.longitude,
+                                );
+                          } catch (e) {
+                            if (context.mounted) {
+                              final msg = e.toString().contains('Not at event')
+                                  ? (lang == 'sl'
+                                      ? 'Niste na lokaciji tega dogodka.'
+                                      : 'You are not at the event location.')
+                                  : (lang == 'sl'
+                                      ? 'Napaka pri aktivaciji.'
+                                      : 'Failed to activate event mode.');
+                              ScaffoldMessenger.of(context)
+                                  .showSnackBar(SnackBar(
+                                content: Text(msg),
+                                behavior: SnackBarBehavior.floating,
+                              ));
+                            }
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.black.withValues(alpha: 0.03),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.10)
+                                  : Colors.black.withValues(alpha: 0.08),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? color.withValues(alpha: 0.15)
-                                      : (isDark
-                                          ? Colors.white.withValues(alpha: 0.05)
-                                          : Colors.black
-                                              .withValues(alpha: 0.03)),
-                                  borderRadius: BorderRadius.circular(100),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? color.withValues(alpha: 0.5)
-                                        : (isDark
-                                            ? Colors.white
-                                                .withValues(alpha: 0.1)
-                                            : Colors.black
-                                                .withValues(alpha: 0.08)),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: isSelected
-                                      ? [
-                                          BoxShadow(
-                                            color: color.withValues(alpha: 0.2),
-                                            blurRadius: 15,
-                                            spreadRadius: -2,
-                                          )
-                                        ]
-                                      : [],
+                                  color: const Color(0xFFF5C842)
+                                      .withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
                                 ),
-                                child: Row(
+                                child: Icon(
+                                  isLive
+                                      ? LucideIcons.zap
+                                      : LucideIcons.calendar,
+                                  size: 20,
+                                  color: const Color(0xFFF5C842),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? color.withValues(alpha: 0.25)
-                                            : (isDark
-                                                ? Colors.white
-                                                    .withValues(alpha: 0.08)
-                                                : Colors.black
-                                                    .withValues(alpha: 0.05)),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        icon,
-                                        size: 22,
-                                        color: isSelected
-                                            ? color
-                                            : (isDark
-                                                ? Colors.white60
-                                                : Colors.black54),
+                                    Text(
+                                      event.name,
+                                      style: GoogleFonts.instrumentSans(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark
+                                            ? Colors.white
+                                            : const Color(0xFF1A1A18),
                                       ),
                                     ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Text(
-                                        label,
-                                        style: GoogleFonts.instrumentSans(
-                                          fontSize: 17,
-                                          fontWeight: isSelected
-                                              ? FontWeight.w700
-                                              : FontWeight.w600,
-                                          color: isSelected
-                                              ? (isDark
-                                                  ? Colors.white
-                                                  : TrembleTheme.rose)
-                                              : (isDark
-                                                  ? Colors.white
-                                                  : Colors.black87),
+                                    const SizedBox(height: 3),
+                                    Row(
+                                      children: [
+                                        if (isLive)
+                                          Container(
+                                            width: 6,
+                                            height: 6,
+                                            margin:
+                                                const EdgeInsets.only(right: 6),
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFF2D9B6F),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        Text(
+                                          timeLabel,
+                                          style: GoogleFonts.instrumentSans(
+                                            fontSize: 12,
+                                            color: isLive
+                                                ? const Color(0xFF2D9B6F)
+                                                : (isDark
+                                                    ? Colors.white54
+                                                    : Colors.black45),
+                                            fontWeight: isLive
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
+                                          ),
                                         ),
-                                      ),
+                                        if (distLabel != null)
+                                          Text(
+                                            ' · $distLabel',
+                                            style: GoogleFonts.instrumentSans(
+                                              fontSize: 12,
+                                              color: isDark
+                                                  ? Colors.white38
+                                                  : Colors.black38,
+                                            ),
+                                          ),
+                                      ],
                                     ),
-                                    if (isSelected)
-                                      Icon(
-                                        Icons.check_circle_rounded,
-                                        color: color,
-                                        size: 20,
-                                      ),
                                   ],
                                 ),
                               ),
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    },
-                  ),
+                              Icon(
+                                LucideIcons.chevronRight,
+                                size: 18,
+                                color: isDark ? Colors.white38 : Colors.black38,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
 }
 
 // navIndexProvider is intentionally defined here (after HomeScreen) so it is
@@ -1714,7 +2449,7 @@ final navIndexProvider = StateProvider<int>((ref) => 0);
 /// Tracks which radar mode icon is selected in the top-left button.
 /// Persists across sessions within the same app run.
 final selectedRadarModeProvider =
-    StateProvider<RadarModeKind>((ref) => RadarModeKind.gym);
+    StateProvider<RadarModeKind>((ref) => RadarModeKind.radar);
 
 class _TutorialTarget extends ConsumerStatefulWidget {
   const _TutorialTarget({
@@ -1906,7 +2641,6 @@ class _PulseIcon extends StatefulWidget {
   final bool isActive;
   final bool isHighlighted;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
 
   const _PulseIcon({
     required this.icon,
@@ -1914,7 +2648,6 @@ class _PulseIcon extends StatefulWidget {
     required this.isActive,
     this.isHighlighted = false,
     required this.onTap,
-    required this.onLongPress,
   });
 
   @override
@@ -1975,7 +2708,6 @@ class _PulseIconState extends State<_PulseIcon>
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: widget.onTap,
-      onLongPress: widget.onLongPress,
       child: AnimatedBuilder(
         animation: _pulse,
         builder: (context, child) {
@@ -2024,7 +2756,7 @@ class _PulseIconState extends State<_PulseIcon>
 }
 
 // ── Mode kinds (for info popup) ───────────────────────────────────────────────
-enum RadarModeKind { gym, run, event }
+enum RadarModeKind { radar, gym, run, event }
 
 /// Shows the mode info popup for gym / run / event.
 /// [onActivate] is called when the user taps Activate.
@@ -2054,6 +2786,7 @@ Future<void> showModeInfoDialog({
         'event_mode_info_body',
         LucideIcons.calendar
       ),
+    RadarModeKind.radar => throw UnimplementedError(),
   };
 
   final dontShowNotifier = ValueNotifier<bool>(false);
@@ -2422,7 +3155,7 @@ class _PowerSavePillState extends State<_PowerSavePill>
   }
 }
 
-class _PulsingRadarButton extends StatefulWidget {
+class _PulsingRadarButton extends ConsumerStatefulWidget {
   final bool isScanning;
   final bool isHighlighted;
   final VoidCallback onTap;
@@ -2434,10 +3167,11 @@ class _PulsingRadarButton extends StatefulWidget {
   });
 
   @override
-  State<_PulsingRadarButton> createState() => _PulsingRadarButtonState();
+  ConsumerState<_PulsingRadarButton> createState() =>
+      _PulsingRadarButtonState();
 }
 
-class _PulsingRadarButtonState extends State<_PulsingRadarButton>
+class _PulsingRadarButtonState extends ConsumerState<_PulsingRadarButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
 
@@ -2474,6 +3208,31 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
 
   @override
   Widget build(BuildContext context) {
+    final selectedMode = ref.watch(selectedRadarModeProvider);
+
+    const Color buttonColor = Color(0xFFF4436C);
+
+    final Widget logoWidget = switch (selectedMode) {
+      RadarModeKind.gym =>
+        const Icon(LucideIcons.dumbbell, size: 60, color: Colors.white),
+      RadarModeKind.run => RunningStickman(
+          isRunning: ref.watch(runModeControllerProvider).isActive,
+          size: 110,
+          color: Colors.white,
+        ),
+      RadarModeKind.event =>
+        const Icon(LucideIcons.calendar, size: 60, color: Colors.white),
+      RadarModeKind.radar => SizedBox(
+          width: 100,
+          height: 100,
+          child: TrembleRadarHeart(
+            isScanning: widget.isScanning || widget.isHighlighted,
+            size: 100,
+            color: Colors.white,
+          ),
+        ),
+    };
+
     return GestureDetector(
       onTap: widget.onTap,
       // SizedBox provides a fixed canvas so ripple rings don't get clipped
@@ -2514,18 +3273,10 @@ class _PulsingRadarButtonState extends State<_PulsingRadarButton>
               height: 130,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFF4436C),
+                color: buttonColor,
               ),
               child: Center(
-                child: SizedBox(
-                  width: 100,
-                  height: 100,
-                  child: TrembleRadarHeart(
-                    isScanning: widget.isScanning || widget.isHighlighted,
-                    size: 100,
-                    color: Colors.white,
-                  ),
-                ),
+                child: logoWidget,
               ),
             ),
           ],
