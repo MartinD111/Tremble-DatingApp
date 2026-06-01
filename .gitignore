@@ -143,3 +143,5 @@ lib/firebase_options_dev.dart
 test_output.txt
 desktop.ini
 *.orig
+android/app/key.properties
+android/app/tremble-release.jks

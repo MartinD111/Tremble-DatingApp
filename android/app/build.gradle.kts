@@ -3,15 +3,11 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-    // Google services / Firebase
     id("com.google.gms.google-services")
-    // Crashlytics — native crash reporting
     id("com.google.firebase.crashlytics")
 }
 
-// Read secrets from local.properties (gitignored — never commit the actual key)
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
@@ -19,6 +15,12 @@ if (localPropertiesFile.exists()) {
 }
 val mapsApiKeyDev: String = localProperties.getProperty("MAPS_API_KEY_DEV") ?: ""
 val mapsApiKeyProd: String = localProperties.getProperty("MAPS_API_KEY_PROD") ?: ""
+
+val keyProperties = Properties()
+val keyPropertiesFile = file("key.properties")
+if (keyPropertiesFile.exists()) {
+    keyPropertiesFile.inputStream().use { keyProperties.load(it) }
+}
 
 android {
     namespace = "tremble.dating.app"
@@ -30,6 +32,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+ signingConfigs {
+    create("release") {
+        keyAlias = keyProperties["keyAlias"] as? String ?: ""
+        keyPassword = keyProperties["keyPassword"] as? String ?: ""
+        storeFile = file("tremble-release.jks")
+        storePassword = keyProperties["storePassword"] as? String ?: ""
+    }
+}
+
 
     flavorDimensions += "environment"
 
@@ -51,14 +63,13 @@ android {
     }
 
     defaultConfig {
-        // applicationId is now handled by flavors
-        minSdk = flutter.minSdkVersion  // flutter_blue_plus requires API 21+
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -85,17 +96,10 @@ kotlin {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-
-    // Native geofencing (Gym Mode) — GeofencingClient + BroadcastReceiver
     implementation("com.google.android.gms:play-services-location:21.3.0")
-
-    // Firebase BoM — manages all Firebase library versions
     implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-messaging")
     implementation("com.google.firebase:firebase-crashlytics")
-
-
-    // CallStyle Notification + Person APIs
     implementation("androidx.core:core-ktx:1.13.1")
 }
