@@ -465,9 +465,12 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                           ),
                         ),
                         // Mode active dot next to section title
-                        if ((activeSection == MatchSection.gym && gymState.isActive) ||
-                            (activeSection == MatchSection.run && runState.isActive) ||
-                            (activeSection == MatchSection.event && eventState.isActive)) ...[
+                        if ((activeSection == MatchSection.gym &&
+                                gymState.isActive) ||
+                            (activeSection == MatchSection.run &&
+                                runState.isActive) ||
+                            (activeSection == MatchSection.event &&
+                                eventState.isActive)) ...[
                           const SizedBox(width: 6),
                           Container(
                             width: 7,
@@ -1248,8 +1251,10 @@ class _SectionPickerSheet extends ConsumerWidget {
                                   ? primary.withValues(alpha: 0.15)
                                   : (modeActive
                                       ? (section == MatchSection.run
-                                          ? const Color(0xFFF4436C).withValues(alpha: 0.12)
-                                          : const Color(0xFFF5C842).withValues(alpha: 0.12))
+                                          ? const Color(0xFFF4436C)
+                                              .withValues(alpha: 0.12)
+                                          : const Color(0xFFF5C842)
+                                              .withValues(alpha: 0.12))
                                       : pillBg),
                               borderRadius: BorderRadius.circular(100),
                               border: Border.all(
@@ -1257,8 +1262,10 @@ class _SectionPickerSheet extends ConsumerWidget {
                                     ? primary
                                     : (modeActive
                                         ? (section == MatchSection.run
-                                            ? const Color(0xFFF4436C).withValues(alpha: 0.4)
-                                            : const Color(0xFFF5C842).withValues(alpha: 0.4))
+                                            ? const Color(0xFFF4436C)
+                                                .withValues(alpha: 0.4)
+                                            : const Color(0xFFF5C842)
+                                                .withValues(alpha: 0.4))
                                         : pillBorder),
                                 width: isSelected ? 2 : 1,
                               ),

@@ -2104,27 +2104,37 @@ Future<void> showEventActivationFlow(
                           style: TrembleTheme.displayFont(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                            color:
+                                isDark ? Colors.white : const Color(0xFF1A1A18),
                           ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 12),
                         Text(
                           switch (lang) {
-                            'sl' => 'V vaši bližini trenutno ni aktivnih dogodkov. Poskusite znova kasneje.',
-                            'hr' || 'sr' => 'Trenutno nema aktivnih događaja u vašoj blizini. Pokušajte ponovo kasnije.',
-                            'de' => 'Derzeit gibt es keine aktiven Events in Ihrer Nähe. Bitte versuchen Sie es später noch einmal.',
-                            'it' => 'Al momento non ci sono eventi attivi nelle vicinanze. Riprova più tardi.',
-                            'fr' => 'Il n\'y a actuellement aucun événement actif à proximité. Veuillez réessayer plus tard.',
-                            'hu' => 'Jelenleg nincsenek aktív események a közelben. Kérjük, próbálja meg később.',
-                            _ => 'There are currently no active events in your area. Please check back later.',
+                            'sl' =>
+                              'V vaši bližini trenutno ni aktivnih dogodkov. Poskusite znova kasneje.',
+                            'hr' ||
+                            'sr' =>
+                              'Trenutno nema aktivnih događaja u vašoj blizini. Pokušajte ponovo kasnije.',
+                            'de' =>
+                              'Derzeit gibt es keine aktiven Events in Ihrer Nähe. Bitte versuchen Sie es später noch einmal.',
+                            'it' =>
+                              'Al momento non ci sono eventi attivi nelle vicinanze. Riprova più tardi.',
+                            'fr' =>
+                              'Il n\'y a actuellement aucun événement actif à proximité. Veuillez réessayer plus tard.',
+                            'hu' =>
+                              'Jelenleg nincsenek aktív események a közelben. Kérjük, próbálja meg később.',
+                            _ =>
+                              'There are currently no active events in your area. Please check back later.',
                           },
                           style: GoogleFonts.instrumentSans(
                             fontSize: 15,
                             height: 1.45,
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.70)
-                                : const Color(0xFF1A1A18).withValues(alpha: 0.70),
+                                : const Color(0xFF1A1A18)
+                                    .withValues(alpha: 0.70),
                           ),
                           textAlign: TextAlign.center,
                         ),

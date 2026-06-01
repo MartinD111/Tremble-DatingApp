@@ -23,7 +23,8 @@ class TrembleEvent {
     this.locationLabel,
   });
 
-  factory TrembleEvent.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory TrembleEvent.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
     final loc = data['location'] as Map<String, dynamic>? ?? {};
     return TrembleEvent(

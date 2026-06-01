@@ -245,7 +245,8 @@ class RunModeController extends StateNotifier<SimpleModeState> {
 
   Future<void> deactivate() async {
     if (state.status == SimpleModeStatus.loading) return;
-    state = state.copyWith(status: SimpleModeStatus.loading, errorMessage: null);
+    state =
+        state.copyWith(status: SimpleModeStatus.loading, errorMessage: null);
     try {
       await _repo.deactivateRunMode();
       state = const SimpleModeState();
