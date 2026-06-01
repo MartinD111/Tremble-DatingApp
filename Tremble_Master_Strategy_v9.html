@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tremble — Master Strategy Document v9.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose: #F4436C;
+    --graphite: #1A1A18;
+    --cream: #FAFAF7;
+    --yellow: #F5C842;
+    --green: #2D9B6F;
+    --gray: #6B6B63;
+    --border: #E2E2DC;
+    --bg-subtle: #F0F0EB;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-ui: 'Instrument Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-ui);
+    background: #EAEAEA;
+    color: var(--graphite);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    background: var(--cream);
+    margin: 24px auto;
+    padding: 20mm 18mm 20mm 18mm;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    position: relative;
+  }
+
+  /* COVER PAGE */
+  .cover-page {
+    background: var(--graphite);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 297mm;
+    padding: 20mm 18mm;
+  }
+  .cover-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+  }
+  .cover-logo {
+    font-family: var(--font-display);
+    font-size: 72px;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    color: white;
+    line-height: 1;
+    margin: 40mm 0 8mm;
+  }
+  .cover-logo em { color: var(--rose); font-style: normal; }
+  .cover-tagline {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: -0.02em;
+    margin-bottom: 16mm;
+  }
+  .cover-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6mm;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 6mm;
+    margin-bottom: 8mm;
+  }
+  .cover-meta-item label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    display: block;
+    margin-bottom: 3px;
+  }
+  .cover-meta-item span {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+  }
+  .cover-footer {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.1em;
+  }
+
+  /* SECTION HEADERS */
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 4px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    color: var(--graphite);
+    line-height: 1.1;
+    margin-bottom: 6mm;
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--graphite);
+    margin: 6mm 0 3mm;
+  }
+  h3 {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin: 5mm 0 2mm;
+  }
+
+  p {
+    color: var(--gray);
+    font-size: 13px;
+    line-height: 1.75;
+    margin-bottom: 3mm;
+  }
+  p strong { color: var(--graphite); font-weight: 600; }
+
+  /* TABLES */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 4mm 0;
+    font-size: 12px;
+  }
+  th {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray);
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--graphite);
+    vertical-align: top;
+    font-size: 12px;
+  }
+  td.dim { color: var(--gray); }
+  td.green { color: var(--green); font-weight: 600; }
+  td.rose { color: var(--rose); }
+  tr:last-child td { border-bottom: none; }
+
+  /* CARDS / BOXES */
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 5mm;
+    margin: 3mm 0;
+  }
+  .card-dark {
+    background: var(--graphite);
+    border-radius: 10px;
+    padding: 5mm;
+    margin: 3mm 0;
+    color: white;
+  }
+  .card-dark p { color: rgba(255,255,255,0.6); }
+  .card-dark strong { color: white; }
+
+  .quote-block {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    color: white;
+    line-height: 1.15;
+  }
+  .quote-block em { color: var(--rose); font-style: normal; }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin: 3mm 0; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; margin: 3mm 0; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 3mm; margin: 3mm 0; }
+
+  /* PILLS / TAGS */
+  .tag {
+    display: inline-block;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--graphite);
+    margin: 2px 2px 2px 0;
+  }
+  .tag-rose { background: var(--rose); color: white; border-color: var(--rose); }
+  .tag-green { background: rgba(45,155,111,0.1); color: var(--green); border-color: rgba(45,155,111,0.3); }
+  .tag-yellow { background: rgba(245,200,66,0.15); color: #8a6d00; border-color: rgba(245,200,66,0.4); }
+
+  /* STAT BLOCKS */
+  .stat-row {
+    display: flex;
+    gap: 3mm;
+    margin: 3mm 0;
+    flex-wrap: wrap;
+  }
+  .stat-item {
+    flex: 1;
+    min-width: 28mm;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3mm;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--graphite);
+    display: block;
+  }
+  .stat-num.rose { color: var(--rose); }
+  .stat-label {
+    font-size: 10px;
+    color: var(--gray);
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* LIST STYLES */
+  ul.bullets {
+    padding-left: 5mm;
+    display: flex;
+    flex-direction: column;
+    gap: 2mm;
+  }
+  ul.bullets li {
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.5;
+  }
+  ul.bullets li strong { color: var(--graphite); }
+
+  /* PAGE FOOTER */
+  .page-footer {
+    position: absolute;
+    bottom: 10mm;
+    left: 18mm;
+    right: 18mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    padding-top: 3mm;
+  }
+  .page-footer span {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--gray);
+    letter-spacing: 0.08em;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 5mm 0;
+  }
+
+  /* CONFIDENTIAL BAND */
+  .conf-band {
+    background: var(--rose);
+    color: white;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 4px 0;
+    margin-bottom: 6mm;
+  }
+
+  /* CONTEXT BADGE */
+  .context-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(244,67,108,0.08);
+    border: 1px solid rgba(244,67,108,0.2);
+    border-radius: 100px;
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 4mm;
+  }
+  .context-badge .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--rose); }
+
+  /* PRINT */
+  @media print {
+    body { background: white; }
+    .page { margin: 0; box-shadow: none; }
+    .cover-page { page-break-after: always; }
+    .page { page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     COVER PAGE
+════════════════════════════════════════════════════════ -->
+<div class="page cover-page">
+  <div>
+    <div class="cover-eyebrow">AMS Solutions d.o.o. · May 2026 · Confidential</div>
+  </div>
+  <div>
+    <div class="cover-logo">Tremble<em>.</em></div>
+    <div class="cover-tagline">Meet Someone Real.<br>Without the App.</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item"><label>Document</label><span>Master Strategy v8.1</span></div>
+      <div class="cover-meta-item"><label>Produkt</label><span>Flutter · Firebase · BLE</span></div>
+      <div class="cover-meta-item"><label>Trg</label><span>SI · HR · Adriatic</span></div>
+      <div class="cover-meta-item"><label>Faza</label><span>Beta Ready</span></div>
+      <div class="cover-meta-item"><label>Kontakt</label><span>trembledating.com</span></div>
+      <div class="cover-meta-item"><label>Verzija</label><span>v8.1 · Beta Ready</span></div>
+    </div>
+  </div>
+  <div class="cover-footer">CONFIDENTIAL — Internal Use Only. Distribution requires written consent. trembledating.com · AMS Solutions d.o.o. · 2026</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: CHANGELOG v5
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="context-badge"><span class="dot"></span>&nbsp;v8.1 — May 2026 · Beta Ready</div>
+  <h1>Kaj je novo v v9</h1>
+  <p>Verzija 9 posodablja monetizacijski model, Free vs Premium feature tabele in pricing strukturo. Temeljne spremembe glede na v8.1:</p>
+
+  <table>
+    <thead><tr><th>Področje</th><th>Sprememba</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Terminologija: "Pro" → "Premium"</strong></td><td class="dim">Naziv tiera poenoten v celotnem dokumentu. UI naziv: "Tremble Premium". Identifikatorji v RevenueCat (monthly/weekly/yearly/lifetime) ostajajo nespremenjeni.</td></tr>
+      <tr><td><strong>Pricing — 4 tieri</strong></td><td class="dim">Signal Prime (€7,99/mes) · Weekend Getaway (€2,99/vikend, Pet 19:00–Ned 19:00) · Yearly (€59,99/leto) · Lifetime (€149,99). Vsi tieri dajejo enake Premium features — razlikuje se samo trajanje dostopa.</td></tr>
+      <tr><td><strong>Free vs Premium — posodobljene tabele</strong></td><td class="dim">Mutual wave limit: 5/mesec (Free) vs 20/mesec (Premium). Heatmap: Free vidi kroge brez podatkov znotraj, Premium vidi število + filter toggle. Map events: Free brez števca, Premium s števcem aktivnih. Run/Gym/Event: dodana "To ni več naključje" notif med aktivnostjo (Premium only). Near-Miss History: Free ne vidi taba — dobi 1×/mesec agregirano push notifikacijo (samo število, brez imen/fotografij) kot upsell trigger.</td></tr>
+      <tr><td><strong>STATUS: Pre-Launch Hardening</strong></td><td class="dim">Koda: 160 Dart datotek, 26 test datotek, ~53k LOC. RevenueCat SDK (purchases_flutter v10.2.0) popolnoma wiran. Aktivni blokerji: B010 (ToS/PP dead links — KRITIČNO), B005 bundleId, B008 prod rules deploy.</td></tr>
+      <tr><td><strong>Sprint 1 ZAKLJUČEN</strong></td><td class="dim">Firestore Security Rules dopolnjene (active_run_crosses, run_encounters, gyms). Event Recap mock profili odstranjeni → empty state. watchMatches polling loop → Firestore real-time .snapshots(). flutter analyze clean.</td></tr>
+      <tr><td><strong>Sprint 2 — Safety ZAKLJUČEN</strong></td><td class="dim">Server-side age gate (HttpsError če age &lt; 18 — ZVOP-2 čl. 14 / GDPR čl. 8). flaggedForReview filter v proximity candidates (post-query, oba endpointa). Report reasons lokalizirani v vseh 8 jezikih. isBanned + assertNotBanned + AccountSuspendedScreen (non-dismissible).</td></tr>
+      <tr><td><strong>Sprint 3 — Beta Cleanup ZAKLJUČEN</strong></td><td class="dim">isPremium: false za vse nove userje (client + CF). Mock profili v Event Recap → empty state. Hardcoded eventi na mapi → prazna lista. assertNotBanned na vseh 10 CF endpointih. Glassmorphism paket odstranjen iz pubspec.yaml.</td></tr>
+      <tr><td><strong>F12 Pulse Intercept IMPLEMENTIRAN</strong></td><td class="dim">Flutter UI + Cloud Functions backend. 2 atomska gumba na Radar overlay. 10-min Redis TTL. View-once server-side delete.</td></tr>
+      <tr><td><strong>F13 Stealth &amp; Safety IMPLEMENTIRAN</strong></td><td class="dim">Safe Zones (blokira proximity upload ko je user v zaščiteni coni), SHA-256 Contact Anonymity, Block + Report z velocity check (3 prijave / 48h → flaggedForReview).</td></tr>
+      <tr><td><strong>Screen Protection IMPLEMENTIRAN</strong></td><td class="dim">Android FLAG_SECURE, iOS ScreenProtector + RecordingShield overlay. Aktiven na ProfileDetailScreen, MatchRevealScreen, RunRecapScreen, EventRecapScreen.</td></tr>
+      <tr><td><strong>Protomaps — Google Maps zamenjava</strong></td><td class="dim">Google Maps SDK zamenjan z Protomaps + Cloudflare R2 (~€1,50/mes). Planet PMTiles (126 GB) → Worker maps.trembledating.com.</td></tr>
+      <tr><td><strong>AMS Solutions d.o.o. registrirana</strong></td><td class="dim">Registracija zaključena 07.05.2026. GDPR data controller prehaja na pravno entiteto.</td></tr>
+      <tr><td><strong>Prevodi: 8 jezikov KOMPLETNI</strong></td><td class="dim">EN/SL/DE/IT/FR/SR/HU: 608 ključev. HR: 595 ključev (13 manjka — nizka prioriteta).</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 01: MARKET POSITIONING
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">01 — Market Positioning</div>
+  <h1>Definicija problema in tržna priložnost</h1>
+
+  <p>Dating industrija v 2026 generira <strong>12 milijard USD letno</strong>. Paradoks je sistemski: platforme so optimizirane za zadrževanje uporabnikov, ne za uspešne dogovore. Tinder, Bumble in Hinge zaslužijo, ko si samski in na platformi — ne ko najdeš partnerja. Ta strukturna napaka je Tremblovo izhodišče.</p>
+
+  <p>Tri konvergentne silnice ustvarjajo priložnost zdaj:</p>
+
+  <div class="grid-3">
+    <div class="card">
+      <h3>Cultural Backlash</h3>
+      <p>78% uporabnikov (18–35 let) poroča o "dating app fatigue" — čustveni in fizični izčrpanosti od swipanja. Generacija Z beleži rekordno osamljenost kljub digitalni hiper-konektivnosti.</p>
+    </div>
+    <div class="card">
+      <h3>Tehnološka zrelost</h3>
+      <p>BLE je dovolj stabilen za zanesljivo background proximity detekcijo pri &lt;1% pasivne porabe baterije. Ni več eksperimentalna tehnologija. CMMotionActivityManager in ActivityRecognition API sta production-ready.</p>
+    </div>
+    <div class="card">
+      <h3>Regulatorna realnost</h3>
+      <p>EU AI Act (enforcement avgust 2026) udari platforme z algoritmičnim profiliranjem. Tremble nima nobenega algoritma za rangiranje — arhitekturna odločitev, ki hkrati reši pravni problem.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>1.2 Ciljni segmenti</h2>
+
+  <table>
+    <thead><tr><th>Segment</th><th>Profil</th><th>Pain point</th><th>Vrednost za Tremble</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Urban Millennial</strong><br><span style="font-size:11px;color:var(--gray);">25–38 let · primarni</span></td>
+        <td class="dim">Zaposlen, freelance, visoka digitalna pismenost. Naveličan scrollanja. Išče resno zvezo.</td>
+        <td class="dim">Ne želi preživeti večer za zaslonom — želi živeti, a ne zgrešiti priložnosti v fizičnem prostoru.</td>
+        <td class="dim">Največji konverzijski potencial. Plača za vrednost, ne za status.</td>
+      </tr>
+      <tr>
+        <td><strong>Gen Z Early Adopter</strong><br><span style="font-size:11px;color:var(--gray);">20–26 let · sekundarni</span></td>
+        <td class="dim">Digitalni nativec, zavestno omejuje screen time. Privacy-conscious. Distrust do velikih platform.</td>
+        <td class="dim">Algoritmični feed se zdi manipulativen. Išče avtentičnost.</td>
+        <td class="dim">Viralni potencial. Visok K-faktor. Nano-influencer material.</td>
+      </tr>
+      <tr>
+        <td><strong>Privacy-First User</strong><br><span style="font-size:11px;color:var(--gray);">25–40 let · tercialni</span></td>
+        <td class="dim">Pravno ozaveščen. Skrbi ga shranjevanje lokacijskih podatkov.</td>
+        <td class="dim">Obstoječe platforme prodajajo vedenjske profile oglaševalcem.</td>
+        <td class="dim">Privacy-by-architecture je dealbreaker v Tremblovo korist. Reddit r/privacy kanal.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- PAGE 01 continued: Competitive analysis -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">01 — Market Positioning (nadaljevanje)</div>
+  <h2>1.3 Konkurenčna analiza</h2>
+
+  <table>
+    <thead><tr><th>Platforma</th><th>Core mechanic</th><th>Monetizacija</th><th>Tremble diferenciator</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Tinder</strong></td><td class="dim">Binary swipe, Elo ranking</td><td class="dim">Freemium + tiers</td><td class="green">Nič swipanja. Nič algoritmičnega rangiranja. Fizična prisotnost kot edini vir resnice.</td></tr>
+      <tr><td><strong>Bumble</strong></td><td class="dim">Swipe, women first</td><td class="dim">Freemium + Spotlight</td><td class="green">Brez gender dynamics manipulacije. Proximity event je sam po sebi icebreaker.</td></tr>
+      <tr><td><strong>Hinge</strong></td><td class="dim">Prompt scroll, content-first</td><td class="dim">Subscription + Roses</td><td class="green">Tremble nima chat roomov. Profil je minimalen by design — real-world meeting je cilj.</td></tr>
+      <tr><td><strong>Happn</strong></td><td class="dim">Crossed paths, map UI</td><td class="dim">Freemium</td><td class="green">Najbližji konkurent — a brez wave mechanike, brez 30-min window, brez Run Club in Gym Mode.</td></tr>
+      <tr><td><strong>The Weekend Club</strong></td><td class="dim">AI-matched group brunch</td><td class="dim">Paid ticketing</td><td class="green">Tremble je 1:1, ne group. In je pasiven — user ne potrebuje načrtovati eventi.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>1.4 Diferenciacija — Structural Moat</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>1 — Proximity network effect</h3>
+      <p>BLE engine deluje samo pri zadostni gostoti lokalnih uporabnikov. Tinder ima bazo, nima BLE. Competitor z BLE nima baze. Graditi oboje hkrati je drago in počasno.</p>
+    </div>
+    <div class="card">
+      <h3>2 — Privacy by architecture</h3>
+      <p>Lokacija ni nikoli shranjena. RAM-only proximity log, session UUID, brez Firestore lokacijskih zapisov. Kopirati zahteva rekonstrukcijo celotnega backenda.</p>
+    </div>
+    <div class="card">
+      <h3>3 — Anti-engagement design</h3>
+      <p>Mainstream aplikacije ne morejo zmanjšati engagement, ker je to njihov business model. Tremble ga eliminira by design. To je paradoksalni USP.</p>
+    </div>
+    <div class="card">
+      <h3>4 — Multi-context detection</h3>
+      <p>Run Club (tek) in Gym Mode (fitnes) sta konteksta, ki jih nobena dating platforma ne pokriva pasivno. Dodaten moat nad Happn-ovo crossed-paths mehaniko.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>1.5 Pain Points in vedenjski insights</h2>
+  <ul class="bullets">
+    <li><strong>Gender ROI Gap:</strong> Moški swipajo desno v 60–65% primerov, ženske le v 5–9%. Tremble proximity mechanic strukturno obide ta problem — wave pošlješ samo, ko si fizično blizu.</li>
+    <li><strong>Swipe fatigue:</strong> Neskončen feed sproži paralizo odločanja. Tremble omeji izbiro na tiste, ki so fizično prisotni zdaj.</li>
+    <li><strong>Bot economy:</strong> Legacy platforme ne morejo agresivno čistiti botov. Tremble bot problem strukturno ne obstaja — fizična prisotnost je edini vir resnice.</li>
+    <li><strong>Ghosting culture:</strong> Match → chat → izginotje je standardna izkušnja. Tremble nima chat roomov. Match je poziv k fizičnemu srečanju v 30 minutah.</li>
+    <li><strong>Privacy anxiety:</strong> Obstoječe platforme shranjujejo lokacijske podatke, prodajajo vedenjske profile oglaševalcem. Za EU trg je to rastoča točka odpora.</li>
+  </ul>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 02: PRODUKTNA STRATEGIJA
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">02 — Produktna Strategija</div>
+  <h1>Core Koncept — Tool, ne App</h1>
+
+  <div class="card-dark">
+    <div class="quote-block">Tremble ni aplikacija. Je orodje.<br>Aplikacije zahtevajo tvojo pozornost.<br>Orodja opravijo delo v ozadju.</div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>Product Philosophy — Set and Forget</h2>
+
+  <p>Run Club, Gym Mode in Event Mode niso "features ki jih moraš koristiti." So konteksti ki Tremblu povedo kje si — da tool deluje boljše zate, brez da bi karkoli naredil. Pasivni radar je default. Vse ostalo je opcijska kalibracija.</p>
+
+  <div class="card" style="border-left: 3px solid var(--rose);">
+    <p style="font-size:13px;font-weight:700;margin-bottom:6px;">Filozofija v enem stavku:</p>
+    <p style="font-size:13px;color:var(--gray);">Ponujamo ti stvari kot bi jih app — ampak zato da tvoje <em>orodje</em> deluje bolje zate. Ne s teboj. Ne da ti delaš z njim. Zate.</p>
+  </div>
+
+  <p>Cilj ni da odpreš app. Cilj je da greš ven, preizkušaš nove stvari, srečuješ ljudi — in da Tremble to zazna ter ukrepa sam. Widgets, actionable notifikacije in kontekstni načini obstajajo iz enega razloga: da te app čim manj ovira in čim več naredi namesto tebe.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Kar Tremble naredi sam</h3>
+      <ul class="bullets">
+        <li>Zazna tek po 10 minutah — autostart</li>
+        <li>Zazna fitnes po 15 minutah — autostart</li>
+        <li>Zazna proximity event — tiha detekcija</li>
+        <li>Pošlje recap po aktivnosti</li>
+        <li>Zazna 2. srečanje — forced notifikacija</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Kar user naredi samo enkrat</h3>
+      <ul class="bullets">
+        <li>Nastavi profil (3–6 slik, interesi)</li>
+        <li>Nastavi preference (filtri, radius)</li>
+        <li>Opcijsko potrdi kontekst pri 5/10 min</li>
+        <li>Pošlje val — ko se odloči</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card-dark" style="margin-top:3mm;">
+    <p style="color:rgba(255,255,255,0.5);font-size:11px;margin-bottom:4px;">FILOZOFIJA</p>
+    <div class="quote-block" style="font-size:14px;">We don't want you in the app. We want you outside.</div>
+  </div>
+
+  <p>Standardna UX metrika (DAU, session length, screen time) je za Tremble napačna metrika. Prave metrike:</p>
+
+  <div class="stat-row">
+    <div class="stat-item"><span class="stat-num">→</span><span class="stat-label">Proximity events / dan</span></div>
+    <div class="stat-item"><span class="stat-num">→</span><span class="stat-label">Wave conversion rate</span></div>
+    <div class="stat-item"><span class="stat-num">→</span><span class="stat-label">Mutual match rate</span></div>
+    <div class="stat-item"><span class="stat-num">→</span><span class="stat-label">Real-world meeting rate</span></div>
+    <div class="stat-item"><span class="stat-num">→</span><span class="stat-label">30-day retention</span></div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>2.1 Tri konteksti — ena arhitektura</h2>
+
+  <table>
+    <thead><tr><th>Kontekst</th><th>Trigger</th><th>Detekcija</th><th>TTL / Vedenje</th><th>Battery</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Radar</strong><br><span class="tag">Vsakdanje življenje</span></td>
+        <td class="dim">App nameščena, radar aktiven</td>
+        <td class="dim">BLE + GPS geohash, 30s scan / 5min</td>
+        <td class="dim">30-min Trembling Window ob mutual wave</td>
+        <td class="dim">3–4% / hr active<br>&lt;1% passive</td>
+      </tr>
+      <tr>
+        <td><strong>Run Club</strong><br><span class="tag">Tek</span></td>
+        <td class="dim">5 min continuous running (CMMotionActivityManager / ActivityRecognition)</td>
+        <td class="dim">BLE Run Mode flag (0x01), RSSI 55% threshold za visoke hitrosti</td>
+        <td class="dim">10-min TTL za run encounters. Auto-stop po 15min stationary + 20min auto-deactivate</td>
+        <td class="dim">&lt;1% native motion sensor</td>
+      </tr>
+      <tr>
+        <td><strong>Gym Mode</strong><br><span class="tag">Fitnes</span></td>
+        <td class="dim">10 min geofence dwell v fitnešu (OS Geofencing API)</td>
+        <td class="dim">Static geofence 80m radius. Single activation prompt. DND med treningom.</td>
+        <td class="dim">Quiet list med treningom. Summary po izhodu. 24h Firestore TTL.</td>
+        <td class="dim">&lt;1% OS-level geofencing</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>2.2 BLE Proximity Engine — tehnični pregled</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Scan intervali</h3>
+      <table>
+        <tr><td>Normal mode</td><td class="dim">30s scan / 5min</td></tr>
+        <tr><td>Low power (&lt;20% bat)</td><td class="dim">30s scan / 15min</td></tr>
+        <tr><td>Match mode (mutual wave)</td><td class="dim">~vsako sekundo (RSSI)</td></tr>
+        <tr><td>Run Club mode</td><td class="dim">Agresivni RSSI, 55% threshold</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Data lifecycle</h3>
+      <table>
+        <tr><td>BLE proximity log</td><td class="dim">RAM only — izbriše ob koncu seje</td></tr>
+        <tr><td>Run encounter</td><td class="dim">Firestore TTL 10 minut</td></tr>
+        <tr><td>Gym session</td><td class="dim">Firestore TTL 24 ur</td></tr>
+        <tr><td>GPS koordinate</td><td class="dim">Nikoli shranjene na strežniku</td></tr>
+        <tr><td>Pulse Intercept media</td><td class="dim">Izbriše ob viewedAt ali po 10 min</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- PAGE: Wave Mechanic + Feature Hierarchy -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">02 — Produktna Strategija (nadaljevanje)</div>
+  <h2>2.3 Wave Mechanic</h2>
+
+  <p>Ni swipanja. Ob proximity eventu user vidi profilno kartico. Pošiljanje vala je <strong>transparentno</strong> — prejemnik dobi notifikacijo "[ime] waved at you" in se sam odloči. Akcija pošiljatelja ostane diskretna znotraj app. Samo mutual wave sproži match in odpre active radar.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Notification A — proximity</h3>
+      <p>"Someone nearby — [ime], [starost]"<br>Quick actions: <strong>Send wave / Don't wave</strong> — brez odpiranja app</p>
+    </div>
+    <div class="card">
+      <h3>Notification B — prejeli wave</h3>
+      <p>"[ime], [starost] waved at you"<br>Quick actions: <strong>Wave back / Not now</strong> — brez odpiranja app</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>2.4 The Trembling Window — 30 minut</h2>
+
+  <p>Ko mutual wave sproži match, se odpre 30-minutno okno. Active radar prikazuje dve premikajoči se točki. Kompas telefona zavrti radar view. Pika pušča trail. Urgentnost je realna, ne umetna.</p>
+
+  <div class="card-dark" style="margin: 3mm 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="quote-block" style="font-size:16px;">Found each other. <em>vs</em> Oh dang, better luck next time.</div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,0.3);text-align:right;">Edina dva možna izida.<br>Oba sta merljiva.</div>
+    </div>
+  </div>
+
+  <h2>2.5 Pulse Intercept (F12) — med Trembling Window</h2>
+
+  <p>Ko sta oba v aktivnem 30-min oknu in se ne moreta najti, sta na Radar overlay-u na voljo dva atomska gumba:</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>[Send Phone]</h3>
+      <p>Pošlje telefonsko številko za neposreden klic. Zahteva, da je user vnesel številko med registracijo (PhoneStep). Brez tega gumb ni prikazan.</p>
+    </div>
+    <div class="card">
+      <h3>[Send Photo]</h3>
+      <p>Pošlje "view-once" sliko okolice za orientacijo. Snap-style: izbriše se ob viewedAt ali po 10 min TTL. Ni prostega vnosa besedila.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>2.6 Feature Hierarchy</h2>
+
+  <table>
+    <thead><tr><th>Tier</th><th>Features</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Tier 1</strong><br><span class="tag-green">Core</span></td>
+        <td>BLE proximity engine (background, iOS + Android) · Wave mechanic · 30-min Trembling Window · Push notifikacije · Minimalen profil (3–6 slik, interesi)</td>
+        <td class="green">DONE</td>
+      </tr>
+      <tr>
+        <td><strong>Tier 2</strong><br><span class="tag-yellow">Diferenciatorji</span></td>
+        <td>Radar dashboard z animacijo · Match reveal screen · Privacy arhitektura · Run Club (F6) · Gym Mode (F10) · Empty state design · Pulse Intercept (F12)</td>
+        <td class="green">SPEC COMPLETE</td>
+      </tr>
+      <tr>
+        <td><strong>Tier 3</strong><br><span class="tag">Monetizacija</span></td>
+        <td>20 mutual waves/mes vs 5 free · Radius 250m vs 100m · Near-Miss History tab · Hard Filters (izključitvena pravila, server-side) · Heatmap s podatki · Število udeležencev na eventu · "To ni več naključje" notif med aktivnostjo</td>
+        <td class="dim">PENDING — čaka Apple Dev + Play računa</td>
+      </tr>
+      <tr>
+        <td><strong>Tier 4</strong><br><span class="tag">Future v2.0+</span></td>
+        <td>B2B Events API · Aggregated proximity analytics · Whitelabel za niche skupnosti</td>
+        <td class="dim">Post-launch</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 03: UX/UI
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">03 — UX/UI Smernice</div>
+  <h1>Design za odsotnost</h1>
+
+  <p><strong>Tremble je uspešen takrat, ko ga ne uporabljaš.</strong> Vsak UI element mora opravičiti svojo prisotnost z enim vprašanjem: Ali ta element pomaga uporabniku v resničnem svetu?</p>
+
+  <div class="divider"></div>
+  <h2>3.1 User Flow — od registracije do prvega matcha</h2>
+
+  <div class="card">
+    <h3>Onboarding — cilj: &lt;3 minute</h3>
+    <div style="display:flex;gap:3mm;flex-wrap:wrap;margin-top:2mm;">
+      <span class="tag">1. Email / Google Sign-In</span>
+      <span class="tag">2. Foto upload (3–6 slik)</span>
+      <span class="tag">3. Ime, starost, spol, iskanje</span>
+      <span class="tag">4. Interesi (choice-based lista)</span>
+      <span class="tag">5. Telefon (opcijsko — za Pulse Intercept)</span>
+      <span class="tag">6. Email verifikacija</span>
+      <span class="tag">7. Permission gate: BLE + lokacija</span>
+      <span class="tag">8. GDPR consent (eksplicitni opt-in)</span>
+      <span class="tag tag-rose">9. Activate Radar →</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>3.2 Run Club — aktivacijski flow</h2>
+
+  <div class="grid-2" style="margin-bottom:3mm;">
+    <div class="card">
+      <h3>Avtomatska detekcija</h3>
+      <p style="font-size:12px;color:var(--gray);">CMMotionActivityManager (iOS) / ActivityRecognition (Android). 5 min tek → vprašanje. 10 min tek → autostart brez potrditve. <strong>Brez rate limita.</strong> Matching prag: <strong>0.55</strong>.</p>
+    </div>
+    <div class="card">
+      <h3>Ročna aktivacija</h3>
+      <p style="font-size:12px;color:var(--gray);">User aktivira Run Club manualno. <strong>6-urni cooldown od konca aktivnosti.</strong> Matching prag: <strong>0.70</strong>.</p>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Trigger</th><th>Akcija</th><th>Trajanje</th></tr></thead>
+    <tbody>
+      <tr><td><strong>5 min continuous running</strong></td><td class="dim">Prompt: "Zaznan tek — vklopim Run Club?" User choice: Da / Ne.</td><td class="dim">User choice</td></tr>
+      <tr><td><strong>10 min continuous running</strong></td><td class="dim">Autostart — Run Club aktiven brez potrditve. BLE Run Mode flag (0x01). Silent Mode. Prag: 0.55. Velja tudi če je user zavrnil pri 5 min.</td><td class="dim">Avtomatično</td></tr>
+      <tr><td><strong>Manual: user aktivira ročno</strong></td><td class="dim">Run Club aktiven takoj. Prag: 0.70. 6h cooldown od konca.</td><td class="dim">User action</td></tr>
+      <tr><td><strong>Med tekom — tiho</strong></td><td class="dim">Vse notifikacije tihe. Izjema: 2. ali večkrat ista oseba blizu (po prejetem valu) → normalna notifikacija + Trembling Window ponudba.</td><td class="dim">Med aktivnostjo</td></tr>
+      <tr><td><strong>Mid-run mutual wave</strong></td><td class="dim">"[ime] ti pošilja Wave med tekom!" — override Silent Mode. 10-min TTL.</td><td class="dim">10 min TTL</td></tr>
+      <tr><td><strong>Tek doma</strong></td><td class="dim">Run Club se ne aktivira — ni fizičnih srečanj. Tremble je orodje, ne fitness tracker.</td><td class="dim">Ignored</td></tr>
+      <tr><td><strong>Tek v fitnesu</strong></td><td class="dim">Geofence zazna fitnes → app ponudi Gym Mode. Rezultat enak: tihe notifikacije, recap po koncu.</td><td class="dim">Gym Mode prevlada</td></tr>
+      <tr><td><strong>15 min stationary</strong></td><td class="dim">Deactivation prompt: "Si končal s tekom?"</td><td class="dim">User choice</td></tr>
+      <tr><td><strong>20 min stationary</strong></td><td class="dim">Auto-deactivate. Recap screen prikaže vse crosses.</td><td class="dim">Avtomatično</td></tr>
+      <tr><td><strong>Post-run recap</strong></td><td class="dim">Free: foto + ime + starost, sivina, brez akcije. Premium: barvno, odpреš kartico + 10 min TTL za val. Po izteku — arhiv, read-only.</td><td class="dim">Enkratno</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>3.3 Gym Mode — aktivacijski flow</h2>
+
+  <div class="grid-2" style="margin-bottom:3mm;">
+    <div class="card">
+      <h3>Avtomatska detekcija</h3>
+      <p style="font-size:12px;color:var(--gray);">GPS geofence + dwell time. 10 min → vprašanje. 15 min → autostart brez potrditve. <strong>Brez rate limita.</strong> Matching prag: <strong>0.55</strong>.</p>
+    </div>
+    <div class="card">
+      <h3>Ročna aktivacija</h3>
+      <p style="font-size:12px;color:var(--gray);">User aktivira manualno. <strong>6-urni cooldown od konca aktivnosti.</strong> Matching prag: <strong>0.70</strong>.</p>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Trigger</th><th>Akcija</th><th>Vedenje</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Vstop v geofence</strong></td><td class="dim">OS prebudi app za 30s. Začne dwell timer.</td><td class="dim">0 baterije, 0 API klicev</td></tr>
+      <tr><td><strong>Slab GPS signal</strong></td><td class="dim">Fallback: BLE detekcija + dwell time. Dovolj časa na lokaciji → timer teče normalno.</td><td class="dim">BLE fallback</td></tr>
+      <tr><td><strong>10 min dwell</strong></td><td class="dim">Push: "Si v [Gym name]. Vklopiš Gym Mode?" User choice: Da / Ne.</td><td class="dim">User choice</td></tr>
+      <tr><td><strong>15 min dwell</strong></td><td class="dim">Autostart — Gym Mode aktiven brez potrditve. Velja tudi če je user zavrnil pri 10 min. DND on. Quiet list. Prag: 0.55.</td><td class="dim">Avtomatično</td></tr>
+      <tr><td><strong>Med treningom — tiho</strong></td><td class="dim">Vse notifikacije tihe. Izjema: 2. ali večkrat ista oseba blizu (po prejetem valu) → normalna notifikacija + Trembling Window.</td><td class="dim">DND z izjemo</td></tr>
+      <tr><td><strong>Izhod iz geofence</strong></td><td class="dim">Timer šteje od izhoda. Gym Mode ostane aktiven.</td><td class="dim">Cooldown timer začne</td></tr>
+      <tr><td><strong>10 min po izhodu</strong></td><td class="dim">Push: "Končal/a s treningom? Poglej kdo je bil tam." Recap offer — user choice.</td><td class="dim">User choice</td></tr>
+      <tr><td><strong>20 min po izhodu</strong></td><td class="dim">Auto turn off. Recap screen se prikaže avtomatično. Free: sivina, foto + ime + starost, brez akcije. Premium: barvno, kartica + 10 min TTL za val.</td><td class="dim">Avtomatično</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>3.4 Event Mode — aktivacijski flow</h2>
+
+  <p>Tremble Events so fizične lokacije — kavarne, klubi, festivali, konference — definirane v Firebase kot GPS geofence z lat/lng koordinatami. <strong>Pridružitev je brezplačna.</strong> Kar dobiš po eventu je odvisno od subscription tiera.</p>
+
+  <div class="grid-2" style="margin-bottom:3mm;">
+    <div class="card">
+      <h3>Nearby offering</h3>
+      <p style="font-size:12px;color:var(--gray);">Ko si znotraj geofence aktivnega eventa → app prikaže prompt: "Tremble event v bližini. Pridruži se?" User potrdi ali zavrne.</p>
+    </div>
+    <div class="card">
+      <h3>Ročno pridruževanje</h3>
+      <p style="font-size:12px;color:var(--gray);">User poišče event v app in se pridruži manualno. 6-urni cooldown od konca. Matching prag: 0.70.</p>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Trigger</th><th>Akcija</th><th>Vedenje</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Nearby auto-detect</strong></td><td class="dim">Geofence zazna user v radiju aktivnega eventa. Confirmation prompt. Matching prag: 0.55.</td><td class="dim">User choice</td></tr>
+      <tr><td><strong>Event Mode aktiven</strong></td><td class="dim">Silent Mode med eventom. Proximity detection aktiven. Matching prag 0.55 (auto) / 0.70 (manual).</td><td class="dim">Med eventom</td></tr>
+      <tr><td><strong>Med eventom — tiho</strong></td><td class="dim">Vse notifikacije tihe. Izjema: 2. srečanje z isto osebo → normalna notifikacija + Trembling Window.</td><td class="dim">DND z izjemo</td></tr>
+      <tr><td><strong>Izhod iz geofence</strong></td><td class="dim">Timer šteje od izhoda. Event Mode ostane aktiven. Cooldown timer začne.</td><td class="dim">Cooldown timer začne</td></tr>
+      <tr><td><strong>10 min po izhodu</strong></td><td class="dim">Push: "Končal/a z eventom? Poglej kdo je bil tam." Recap offer — user choice.</td><td class="dim">User choice</td></tr>
+      <tr><td><strong>20 min po izhodu</strong></td><td class="dim">Auto turn off. Recap screen se prikaže avtomatično. Free: sivina, foto + ime + starost, brez akcije. Premium: barvno, kartica + 10 min TTL za val.</td><td class="dim">Avtomatično</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>3.5 History Tab — kompletna spec</h2>
+
+  <p>History tab ima tri ločene sekcije. Val je možen samo na dveh mestih: <strong>live proximity event</strong> ali <strong>10-minutni Premium recap window</strong>. Nikjer drugje. Vse ostalo je read-only za vedno.</p>
+
+  <table>
+    <thead><tr><th>Sekcija</th><th>Free</th><th>Premium</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Matches</strong><br><span class="tag">You waved · They waved · Mutual</span><br><span style="font-size:11px;color:var(--gray);">Mutual = edino tu se je odprl active radar</span></td>
+        <td class="dim">Profil kartica — omejen prikaz.</td>
+        <td class="green">Profil kartica — celoten prikaz.</td>
+      </tr>
+      <tr>
+        <td><strong>Recaps</strong><br><span class="tag">Run · Gym · Event</span><br><span style="font-size:11px;color:var(--gray);">Sproži se takoj po aktivnosti. Enkratno.</span></td>
+        <td class="dim">Foto + ime + starost. Sivina. Brez odpiranja kartice. Brez akcije. Ko zapreš — gone forever.</td>
+        <td class="green">Barvno. Odpреš kartico + <strong>10 min TTL</strong> za val. Po izteku — arhiv pod kategorijo (Run/Gym/Event). Read-only za vedno. Ob 2. srečanju z isto osebo → forced notif: <em>"To ni več naključje."</em></td>
+      </tr>
+      <tr>
+        <td><strong>Near-Miss History</strong><br><span class="tag">Nihče ni ukrepal</span><br><span style="font-size:11px;color:var(--gray);">Vsi proximity eventi brez vala z nobene strani</span></td>
+        <td class="dim">Tab ni viden. 1×/mesec agregirano push obvestilo (samo število srečanj — brez imen, brez fotografij). Upsell trigger.</td>
+        <td class="green">Odpреš kadarkoli. Celoten profil kartica. Read-only — brez akcije nikoli. Čista retrospektiva.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>3.6 Notifikacije — pravila prikaza</h2>
+
+  <table>
+    <thead><tr><th>Situacija</th><th>Tip notifikacije</th><th>Opomba</th></tr></thead>
+    <tbody>
+      <tr><td>Proximity event — nova oseba</td><td class="dim">Tiha</td><td class="dim">Vedno</td></tr>
+      <tr><td>Wave prejet</td><td class="dim">Tiha</td><td class="dim">Vedno</td></tr>
+      <tr><td>Mutual wave</td><td class="green">Normalna</td><td class="dim">Odpre active radar</td></tr>
+      <tr><td>2. ali večkrat ista oseba blizu (po poslanem valu)</td><td class="green">Normalna — "To ni več naključje."</td><td class="dim">+ Trembling Window ponudba</td></tr>
+      <tr><td>Recap po aktivnosti (Run/Gym/Event)</td><td class="green">Normalna</td><td class="dim">Enkrat, po koncu aktivnosti</td></tr>
+      <tr><td>Near-Miss History — agregirano push (Free, 1×/mesec)</td><td class="green">Normalna</td><td class="dim">Samo število srečanj, brez imen/fotografij. Upsell trigger.</td></tr>
+      <tr><td>Med Run Club / Gym / Event</td><td class="dim">Tiha</td><td class="dim">DND logika — razen mutual wave izjeme</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>3.7 Manual activation — rate limit</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Avtomatska detekcija</h3>
+      <p style="font-size:12px;color:var(--gray);">Brez rate limita. App je verificiral aktivnost sam (accelerometer / geofence / dwell time). Matching prag: <strong>0.55</strong>. Tekel si trikrat danes — dobiš tri recape.</p>
+    </div>
+    <div class="card">
+      <h3>Ročna aktivacija</h3>
+      <p style="font-size:12px;color:var(--gray);">6-urni cooldown od konca aktivnosti. Matching prag: <strong>0.70</strong>. Enkrat na 6 ur za vsak kontekst (Run / Gym / Event) ločeno.</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: HISTORY TAB CONTINUED (psihološki momenti)
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">03 — UX/UI (nadaljevanje)</div>
+
+  <h2>3.4 Psihološki momenti</h2>
+
+  <table>
+    <thead><tr><th>Moment</th><th>Mehanika</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Anticipation</strong></td><td class="dim">Notifikacija razkrije samo ime + starost. Minimum za radovednost, brez preobremenitve.</td></tr>
+      <tr><td><strong>Wave transparency</strong></td><td class="dim">Prejemnik vidi "[ime] waved at you" — zmanjšuje anksioznost, povečuje mutual wave conversion.</td></tr>
+      <tr><td><strong>Radar hunt</strong></td><td class="dim">Dve premikajoči točki na radarju. Fizično iskanje postane igra dveh letal v skupnem prostoru.</td></tr>
+      <tr><td><strong>Run cross drama</strong></td><td class="dim">"Pravkar šla mimo: Ana, 24" — 10 minut. Urgentnost brez chat buffer zone.</td></tr>
+      <tr><td><strong>Gym quiet list</strong></td><td class="dim">Brez prekinitev med treningom. Vse po koncu. Psihološka nagrada za fokus.</td></tr>
+      <tr><td><strong>Near-miss outcome</strong></td><td class="dim">"Oh dang, better luck next time!" — ne kaznuje, motivira. Naslednji proximity event je čez 30 sekund.</td></tr>
+      <tr><td><strong>Near-Miss History mirror</strong></td><td class="dim">"Ta teden si bil blizu 4 oseb, ki ustrezajo temu kar iščeš." Najboljši upsell argument — brez ene besede marketinga.</td></tr>
+      <tr><td><strong>Second encounter forced notif</strong></td><td class="dim">"To ni več naključje." — drama ki se piše sama. Nihče ni napisal ene besede.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 04: BRAND LANGUAGE
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">04 — Brand Language &amp; Tone of Voice</div>
+  <h1>Brand Essence</h1>
+
+  <p>Tremble govori kot nekdo, ki ve, da ima prav — ampak ni aroganten. Direkten brez pritiska. Samozavesten brez hvaljenja. Intimen brez sladkoblednosti. Tehničen, ko to gradi zaupanje.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Tremble piše tako</h3>
+      <ul class="bullets">
+        <li>It runs while you live.</li>
+        <li>Your location is never stored. Not policy. Architecture.</li>
+        <li>Zero swipes. One wave.</li>
+        <li>You were running. She was running. Tremble noticed.</li>
+        <li>Gym Mode: DND on. Quiet list. Summary when you're done.</li>
+        <li>30 minutes. Find each other or don't.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Tremble nikoli ne piše tako</h3>
+      <ul class="bullets">
+        <li>Experience the magic of real connections!</li>
+        <li>We take your privacy very seriously.</li>
+        <li>Revolutionary proximity matching technology!</li>
+        <li>Join millions of happy singles today!</li>
+        <li>Meet people through fitness dating!</li>
+        <li>&lt;2% baterije (posodobljeno: 3–4% aktivni radar)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>4.1 Pravila glasu</h2>
+  <ul class="bullets">
+    <li>Kratke povedi. Ena misel, en stavek. Brez nadgrajevanja.</li>
+    <li>Nagovori direktno v 2. osebi — "ti", ne "uporabniki" ali "people".</li>
+    <li>Nikoli ne obljubi čustev. Opisi mehaniko — čustva pridejo sama.</li>
+    <li>Tehnično je dovoljeno, ampak le ko gradi zaupanje (BLE, AES-256, GDPR by design, 10-min TTL).</li>
+    <li>Ne prodajaj sanje. Prodajaj vedenje — kar app dejansko počne.</li>
+    <li>Brez vzklikov in emoji v headlineih.</li>
+  </ul>
+
+  <div class="divider"></div>
+  <h2>4.2 Ključni copy lines — 18 stavkov</h2>
+
+  <table>
+    <thead><tr><th>#</th><th>Copy line</th><th>Kontekst</th></tr></thead>
+    <tbody>
+      <tr><td>01</td><td>Dating apps turned human connection into a numbers game. Tremble is different by design.</td><td class="dim">Opening</td></tr>
+      <tr><td>02</td><td>It works quietly in your pocket, asking you to go live your life.</td><td class="dim">Product truth</td></tr>
+      <tr><td>03</td><td>You don't open the app — the app works for you.</td><td class="dim">Differentiator</td></tr>
+      <tr><td>04</td><td>One signal. No noise. When someone compatible is near, you get a single, quiet nudge.</td><td class="dim">Wave mechanic</td></tr>
+      <tr><td>05</td><td>Send a wave. If they send one back — that's a match. No chat rooms, no message queues, no ghosting.</td><td class="dim">Feature</td></tr>
+      <tr><td>06</td><td>Tremble gets out of the way the moment a match happens. The rest is up to you.</td><td class="dim">Philosophy</td></tr>
+      <tr><td>07</td><td>Your location is never stored. Not policy. Architecture.</td><td class="dim">Privacy</td></tr>
+      <tr><td>08</td><td>If they show up on your radar, their phone is physically near you. This eliminates bots, fake locations, and catfishing.</td><td class="dim">Trust</td></tr>
+      <tr><td>09</td><td>You are completely anonymous until a mutual wave happens.</td><td class="dim">Privacy / Onboarding</td></tr>
+      <tr><td>10</td><td>Dating apps taught you to scroll. We're teaching you to look up.</td><td class="dim">Manifesto</td></tr>
+      <tr><td>11</td><td>Stop scrolling. Start being somewhere.</td><td class="dim">Social / Short</td></tr>
+      <tr><td>12</td><td>Dating, ki ne zahteva tvojega časa.</td><td class="dim">SLO core</td></tr>
+      <tr><td>13</td><td>You were running. She was running. Tremble noticed. You had 10 minutes.</td><td class="dim">Run Club — FOMO</td></tr>
+      <tr><td>14</td><td>Mid-run. Zero words. One wave. That's the whole mechanic.</td><td class="dim">Run Club — mechanic</td></tr>
+      <tr><td>15</td><td>You were 5 minutes into a set. She was on the treadmill. Tremble suggested nothing. It just noticed.</td><td class="dim">Gym Mode — narrative</td></tr>
+      <tr><td>16</td><td>Gym Mode: no notifications during your workout. A quiet list when you're done.</td><td class="dim">Gym Mode — DND</td></tr>
+      <tr><td>17</td><td>30 minutes. Find each other or don't. The clock is real. So is the person.</td><td class="dim">Trembling Window</td></tr>
+      <tr><td>18</td><td>Lost? Send your number. Or a photo of where you are. That's it. No chat. No typing.</td><td class="dim">Pulse Intercept</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 05: MARKETING STRATEGIJA
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">05 — CTA Strategija</div>
+  <h1>CTA Filozofija</h1>
+
+  <p>CTA je zadnji korak konverzijskega toka — ne prvi. Max 4 besede, glagol na prvem mestu, en primary CTA per sekcija.</p>
+
+  <table>
+    <thead><tr><th>Kontekst</th><th>CTA</th><th>Psihološki mehanizem</th><th>Nikoli</th></tr></thead>
+    <tbody>
+      <tr><td>App Store / Play Store</td><td><strong>Get Early Access</strong></td><td class="dim">Ekskluzivnost</td><td class="dim">Sign Up / Register</td></tr>
+      <tr><td>Waitlist (hero)</td><td><strong>Join the Waitlist</strong></td><td class="dim">Community belonging</td><td class="dim">Click here / Subscribe</td></tr>
+      <tr><td>In-app onboarding</td><td><strong>Activate Radar</strong></td><td class="dim">Funkcija, ne marketing</td><td class="dim">Start / Enable</td></tr>
+      <tr><td>Wave send</td><td><strong>Send Wave</strong></td><td class="dim">En tap, direktna akcija</td><td class="dim">Show Interest / Like</td></tr>
+      <tr><td>Run Club activation</td><td><strong>Start Run Club</strong></td><td class="dim">Kontekstualna akcija</td><td class="dim">Enable Fitness Mode</td></tr>
+      <tr><td>Gym Mode prompt</td><td><strong>Activate Gym Mode</strong></td><td class="dim">Single opt-in, jasno</td><td class="dim">Turn On / Enable</td></tr>
+      <tr><td>Pulse Intercept</td><td><strong>Send Phone / Send Photo</strong></td><td class="dim">Atomski gumb, brez chata</td><td class="dim">Share location / Message</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 06: MARKETING STRATEGIJA
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">08 — Marketing Strategija</div>
+  <h1>Go-to-Market — fazna strategija</h1>
+
+  <div class="card-dark">
+    <div class="quote-block" style="font-size:16px;">App se ne lansira globalno. Začne izključno v urbanih vozliščih z zadostno gostoto. <em>≥500 aktivnih MAU/km²</em> je kritična masa za proximity engine.</div>
+  </div>
+
+  <div class="grid-3" style="margin-top:4mm;">
+    <div class="card">
+      <h3>Faza 1 — Meseci 0–6</h3>
+      <p><strong>Hiper-lokalna dominacija.</strong> Ljubljana (Metelkova, BTC, kampusi), Koper (obalno jedro), Zagreb (Gornji Grad, Tkalčićeva).</p>
+      <p>Waitlist referral sistem. Founders vidni na Reddit / Product Hunt. Cilj: 500 waitlist signupov v prvih dveh mestih.</p>
+    </div>
+    <div class="card">
+      <h3>Faza 2 — Meseci 3–12</h3>
+      <p><strong>Nano-influencer &amp; UGC.</strong> 1k–10k sledilcev, lokalni. Engagement rate do 11.9% na TikToku pri €100–1.000/aktivacija.</p>
+      <p>Lo-fi, shaky cam format. Posnetki v prepoznavnih lokalnih okoljih. Cilj: 10.000 aktivnih userjev, K-faktor &gt;1.</p>
+    </div>
+    <div class="card">
+      <h3>Faza 3 — Meseci 12+</h3>
+      <p><strong>Paid &amp; Partnership.</strong> Meta retargeting na visoko-namerne obiskovalce. TikTok creator partnerships. B2B events.</p>
+      <p>PR kampanja z anti-app angle — Mashable, TechCrunch, Siol, 24ur.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>Growth loops in viral mehanizmi</h2>
+
+  <table>
+    <thead><tr><th>Loop</th><th>Mehanika</th><th>Učinek</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Co-Op Loop</strong></td><td class="dim">Za preskočiti waitlist, user mora povabiti vsaj enega kontakta. Wingman mehanika: prijatelj verificira profil.</td><td class="green">K-faktor &gt;1 brez oglaševanja</td></tr>
+      <tr><td><strong>Negativni TikTok hook</strong></td><td class="dim">"Ne naloži te aplikacije, če iščeš casual hookup..." — negative warning hook zaustavi scroll in vabi exact right user.</td><td class="green">Organic virality</td></tr>
+      <tr><td><strong>Near-miss storytelling</strong></td><td class="dim">"Radar je zaznal nekoga, nisem ukrepala, čas je potekel." Drama, adrenalin, avtorefleksija brez sponsored vibes.</td><td class="green">UGC material</td></tr>
+      <tr><td><strong>Run Club social challenge</strong></td><td class="dim">"Kako dolgo si iskal/a nekoga po run cross pingu?" Vsaka story o fizičnem iskanju demonstrira core mechanic.</td><td class="green">TikTok / Reels</td></tr>
+      <tr><td><strong>Radar Hunt</strong></td><td class="dim">"30 minut. Najdi jo ali ne." Timer urgentnost je shareworthy izid v obeh smereh.</td><td class="green">Story content</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>Channel mix — Faza 1</h2>
+
+  <table>
+    <thead><tr><th>Kanal</th><th>Prioriteta</th><th>Budget %</th><th>Namen</th></tr></thead>
+    <tbody>
+      <tr><td>TikTok UGC</td><td><span class="tag-rose">HIGH</span></td><td>40%</td><td class="dim">Top-of-funnel, viral acquisition</td></tr>
+      <tr><td>Instagram Reels</td><td><span class="tag-rose">HIGH</span></td><td>25%</td><td class="dim">Visual brand, creator partnerships</td></tr>
+      <tr><td>Reddit (organic)</td><td><span class="tag">MEDIUM</span></td><td>0%</td><td class="dim">Tech/privacy segmenti, authenticity</td></tr>
+      <tr><td>Product Hunt</td><td><span class="tag">MEDIUM</span></td><td>0%</td><td class="dim">Tech early adopters, press coverage</td></tr>
+      <tr><td>Meta retargeting</td><td><span class="tag">LOW</span></td><td>15%</td><td class="dim">Retargeting obiskovalcev websita</td></tr>
+      <tr><td>Offline (plakati)</td><td><span class="tag">LOW</span></td><td>20%</td><td class="dim">Lokalna gostota — Ljubljana, Koper, Zagreb</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: AD HEADLINES
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">09 — Content Strategija</div>
+  <h1>Ad Headlines &amp; Copy — v3</h1>
+
+  <table>
+    <thead><tr><th>Headline</th><th>Hook tip</th><th>Ciljna skupina</th></tr></thead>
+    <tbody>
+      <tr><td>You've swiped 3,000 times. Met 2 people.</td><td class="dim">Problem agitation</td><td class="dim">Tired swipers, 25–34</td></tr>
+      <tr><td>Dating apps turned connection into a numbers game. Tremble doesn't.</td><td class="dim">Direct contrast</td><td class="dim">Broad, 25–38</td></tr>
+      <tr><td>It works quietly in your pocket. You go live your life.</td><td class="dim">Product truth</td><td class="dim">Busy urbanites</td></tr>
+      <tr><td>She was 40 meters away. You never knew.</td><td class="dim">FOMO / specifičnost</td><td class="dim">M 25–35</td></tr>
+      <tr><td>No bots. No fake locations. If they're on your radar, they're real.</td><td class="dim">Trust / anti-bot</td><td class="dim">Skeptics</td></tr>
+      <tr><td>0% swiping. 0% algorithm. 100% real world.</td><td class="dim">Numeric contrast</td><td class="dim">Broad, any</td></tr>
+      <tr><td>The first app designed to put itself out of your way.</td><td class="dim">Paradox positioning</td><td class="dim">Tech-savvy, 25–35</td></tr>
+      <tr><td>You were running. She was running. Tremble had 10 minutes.</td><td class="dim">Run Club — near-miss</td><td class="dim">Runners, outdoor, 22–35</td></tr>
+      <tr><td>Mid-run. Zero words. One wave. The whole thing took 3 seconds.</td><td class="dim">Run Club — mechanic</td><td class="dim">Active, TikTok, 20–32</td></tr>
+      <tr><td>You lifted. She was on the treadmill. Tremble noticed. You didn't have to.</td><td class="dim">Gym Mode — passive</td><td class="dim">Gym-goers, 22–38</td></tr>
+      <tr><td>30 minutes. Find each other or don't. The clock is real. So is the person.</td><td class="dim">Trembling Window — urgency</td><td class="dim">Broad, FOMO-driven</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>Ad Copy Formula</h2>
+
+  <div class="grid-3">
+    <div class="card">
+      <h3>Hook (1 stavek)</h3>
+      <p>Problem ali provokacija. Brez "Are you tired of...". Statement, ne vprašanje.</p>
+    </div>
+    <div class="card">
+      <h3>Solution (1–2 stavka)</h3>
+      <p>Mehanika — ne benefit. Konkreten opis, kaj app dela. Brez hype besed.</p>
+    </div>
+    <div class="card">
+      <h3>CTA (1 stavek)</h3>
+      <p>Direkten glagol + vrednost. "Join 2,400 people on the waitlist."</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>Short-form video scenariji — TikTok / Reels</h2>
+
+  <ul class="bullets">
+    <li><strong>Kavarna scenario:</strong> User sedi, telefon v žepu. Vibracija — notifikacija. Quick action "Wave back". Mutual match. Radar view. Pogled po prostoru. Kontakt oči. End frame: "Zero swipes. One wave."</li>
+    <li><strong>Run Club cross:</strong> Runner na poti. Telefon zavibrira: "Ana (24) ti pošilja Wave med tekom!" Quick action. 10-minutni timer. Srečanje na poti. "We crossed paths at 7.2 km/h."</li>
+    <li><strong>Gym quiet list:</strong> Training montage. Tiho. Post-workout — phone: "3 people were with you today." Scroll. Quiet reveal.</li>
+    <li><strong>Radar hunt drama:</strong> Mutual match. Radar se odpre. Pika se premika. Timer teče. Napetost. "Found each other!"</li>
+    <li><strong>Near-miss drama:</strong> Timer poteče. "Oh dang, better luck next time!" — user se smeji. "But the radar never forgets."</li>
+    <li><strong>Founder video:</strong> Direktno v kamero. "Zakaj smo naredili aplikacijo, ki jo hočemo, da zbriše same sebe."</li>
+  </ul>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: MONETIZACIJA
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">011 — Monetizacijski Model</div>
+  <h1>Freemium logika</h1>
+
+  <p>Tremble model temelji na prodaji <strong>informacijske učinkovitosti in digitalnega miru</strong> — ne pozornosti ali frustracije. Paywall pride po dokazani vrednosti, ne pred njo.</p>
+
+  <table>
+    <thead><tr><th>Funkcija</th><th>Free</th><th>Tremble Premium</th></tr></thead>
+    <tbody>
+      <tr><td>Radius zaznave</td><td class="dim">100m</td><td class="green">250m (nevidno za okolico)</td></tr>
+      <tr><td>Mutual waves / mesec</td><td class="dim">5 valov</td><td class="green">20 valov</td></tr>
+      <tr><td>Filtri iskanja</td><td class="dim">Osnovno (spol, starost)</td><td class="green">Hard filtri — izključitvena pravila (server-side, pred proximity eventom)</td></tr>
+      <tr>
+        <td><strong>Matches tab</strong><br><span class="tag">You / They / Mutual waved</span></td>
+        <td class="dim">Profil kartica — omejen prikaz.</td>
+        <td class="green">Profil kartica — celoten prikaz.</td>
+      </tr>
+      <tr>
+        <td><strong>Recaps tab</strong><br><span class="tag">Run · Gym · Event</span></td>
+        <td class="dim">Foto + ime + starost. Sivina. Brez odpiranja kartice. Brez akcije.</td>
+        <td class="green">Barvno. Odpреš kartico + 10 min TTL za val. Po izteku — arhiv, read-only za vedno. Ob 2. srečanju z isto osebo → "To ni več naključje."</td>
+      </tr>
+      <tr>
+        <td><strong>Near-Miss History tab</strong><br><span class="tag">Nihče ni ukrepal</span></td>
+        <td class="dim">Tab ni viden. 1×/mesec agregirano push obvestilo (samo število srečanj, brez imen ali fotografij) — upsell trigger.</td>
+        <td class="green">Kadarkoli. Celoten profil kartica. Read-only — brez akcije nikoli.</td>
+      </tr>
+      <tr>
+        <td><strong>Pulse Intercept</strong><br><span class="tag">Med Trembling Window</span></td>
+        <td class="green">✓ Pošlji telefonsko številko ali view-once foto okolice. 10-min TTL. Snap-style delete ob ogledu.</td>
+        <td class="green">✓ Enako kot Free.</td>
+      </tr>
+      <tr>
+        <td><strong>Heatmap</strong><br><span class="tag">Gostota prisotnosti</span></td>
+        <td class="dim">✓ Krogi vidni na mapi, podatki znotraj kroga skriti.</td>
+        <td class="green">✓ Število aktivnih znotraj kroga + filter toggle po tipu. Phase 3.</td>
+      </tr>
+      <tr>
+        <td><strong>Map — Events</strong><br><span class="tag">Tremble eventi na mapi</span></td>
+        <td class="dim">✓ Vidni na mapi, brez števca udeležencev.</td>
+        <td class="green">✓ Število aktivnih userjev znotraj eventa.</td>
+      </tr>
+      <tr>
+        <td><strong>Run Club / Gym / Event — med aktivnostjo</strong><br><span class="tag">"To ni več naključje"</span></td>
+        <td class="dim">—</td>
+        <td class="green">✓ Notifikacija ob 2. srečanju z isto osebo med aktivnostjo.</td>
+      </tr>
+      <tr><td>Premium status vidnost</td><td class="dim">—</td><td class="green">Popolnoma skrit (ni cringe stigme)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>Upsell logika</h2>
+
+  <div class="card-dark">
+    <p style="color:rgba(255,255,255,0.5);font-size:11px;margin-bottom:4px;">PAYWALL TRIGGER COPY</p>
+    <div class="quote-block" style="font-size:15px;">"Bil/a je izven tvojega 100m radiusa. S Pro bi jo/ga zaznal/a."</div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>Unit economics cilji</h2>
+
+  <div class="stat-row">
+    <div class="stat-item"><span class="stat-num">≥3:1</span><span class="stat-label">LTV:CAC ratio</span></div>
+    <div class="stat-item"><span class="stat-num rose">&gt;8%</span><span class="stat-label">Target payer conversion</span></div>
+    <div class="stat-item"><span class="stat-num">€15–30</span><span class="stat-label">Target CAC nano-influencer</span></div>
+    <div class="stat-item"><span class="stat-num">€20–40</span><span class="stat-label">Target CAC Meta paid</span></div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>Revenue model</h2>
+
+  <table>
+    <thead><tr><th>Stream</th><th>Model</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Freemium subscription — 4 tieri</strong></td><td class="dim">Signal Prime €7,99/mes (identifikator: monthly) · Weekend Getaway €2,99/vikend Pet 19:00–Ned 19:00 (identifikator: weekly) · Yearly €59,99/leto (identifikator: yearly) · Lifetime €149,99 (identifikator: lifetime). RevenueCat integracija za iOS (StoreKit) in Android (Play Billing). App-to-web checkout za bypass 30% platform fee.</td><td class="dim">PENDING — čaka Apple Dev Account ($99) + Google Play Console ($25)</td></tr>
+      <tr><td><strong>B2B Events API</strong></td><td class="dim">Tremble-enabled event zone za organizatorje. Enterprise licenca, plačilo na event.</td><td class="dim">Post-launch v2.0</td></tr>
+      <tr><td><strong>Future: Data layer</strong></td><td class="dim">Anonimizirani proximity flow za urban planners, real estate, retail. Opt-in, GDPR-compliant.</td><td class="dim">Deferred</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: VIZUALNA IDENTITETA
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">07 — Vizualna Identiteta</div>
+  <h1>Brand Tokens — Quick Reference</h1>
+
+  <div class="grid-3">
+    <div style="background:#F4436C;border-radius:8px;padding:4mm;color:white;">
+      <div style="font-family:var(--font-mono);font-size:10px;opacity:0.7;margin-bottom:4px;">TREMBLE ROSE — Primarna</div>
+      <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;">#F4436C</div>
+      <div style="font-size:11px;opacity:0.8;margin-top:4px;">CTAs · highlights · gradient start</div>
+    </div>
+    <div style="background:#F5C842;border-radius:8px;padding:4mm;color:#1A1A18;">
+      <div style="font-family:var(--font-mono);font-size:10px;opacity:0.6;margin-bottom:4px;">SIGNAL YELLOW — Akcentna</div>
+      <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;">#F5C842</div>
+      <div style="font-size:11px;opacity:0.7;margin-top:4px;">Eyebrow labels · live indicators</div>
+    </div>
+    <div style="background:#1A1A18;border-radius:8px;padding:4mm;color:white;">
+      <div style="font-family:var(--font-mono);font-size:10px;opacity:0.5;margin-bottom:4px;">DEEP GRAPHITE — Text/Dark BG</div>
+      <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;">#1A1A18</div>
+      <div style="font-size:11px;opacity:0.6;margin-top:4px;">Primary text · dark sections</div>
+    </div>
+    <div style="background:#FAFAF7;border:1px solid #E2E2DC;border-radius:8px;padding:4mm;color:#1A1A18;">
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--gray);margin-bottom:4px;">WARM CREAM — Background</div>
+      <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;">#FAFAF7</div>
+      <div style="font-size:11px;color:var(--gray);margin-top:4px;">Website bg · namerno toplo</div>
+    </div>
+    <div style="background:#2D9B6F;border-radius:8px;padding:4mm;color:white;">
+      <div style="font-family:var(--font-mono);font-size:10px;opacity:0.7;margin-bottom:4px;">CONFIRM GREEN — Funkcionalna</div>
+      <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;">#2D9B6F</div>
+      <div style="font-size:11px;opacity:0.8;margin-top:4px;">Success · match · GDPR badges</div>
+    </div>
+    <div style="background:#6B6B63;border-radius:8px;padding:4mm;color:white;">
+      <div style="font-family:var(--font-mono);font-size:10px;opacity:0.7;margin-bottom:4px;">WARM GRAY — Sekundarno</div>
+      <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;">#6B6B63</div>
+      <div style="font-size:11px;opacity:0.8;margin-top:4px;">Body text · subtitles</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>Tipografija</h2>
+
+  <table>
+    <thead><tr><th>Vloga</th><th>Font</th><th>Specs</th><th>Uporaba</th></tr></thead>
+    <tbody>
+      <tr><td>Display / H1</td><td><strong>Playfair Display</strong></td><td class="dim">900 · 96–110px · tracking -0.04em</td><td class="dim">Naslovi, hero, quotes, manifesto</td></tr>
+      <tr><td>Body Text</td><td><strong>Lora</strong></td><td class="dim">400/500 · 16–18px · leading 1.75</td><td class="dim">Paragraphi, podnapisi</td></tr>
+      <tr><td>UI / Buttons</td><td><strong>Instrument Sans</strong></td><td class="dim">500–700 · 11–16px</td><td class="dim">Nav, gumbi, labeli, forme, CTA</td></tr>
+      <tr><td>Telemetry / Mono</td><td><strong>JetBrains Mono</strong></td><td class="dim">500 · 11–13px</td><td class="dim">Tech UI, status, HEX, radar readouts</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>UI Specifikacije</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Border radius</h3>
+      <table>
+        <tr><td>8px</td><td class="dim">Buttons, inputs</td></tr>
+        <tr><td>16px</td><td class="dim">Cards</td></tr>
+        <tr><td>24px</td><td class="dim">Modal, large</td></tr>
+        <tr><td>100px</td><td class="dim">Pills, CTAs</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Spacing scale (base 8px)</h3>
+      <table>
+        <tr><td>8px</td><td class="dim">Tight gaps</td></tr>
+        <tr><td>16px</td><td class="dim">Inner padding</td></tr>
+        <tr><td>24px</td><td class="dim">Section gaps</td></tr>
+        <tr><td>48px</td><td class="dim">Large padding</td></tr>
+        <tr><td>96px</td><td class="dim">Section spacing</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: PRIVACY & LEGAL
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">010 — Pravni vidik &amp; Privacy</div>
+  <h1>Privacy by Architecture</h1>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Kaj Tremble ne shranjuje</h3>
+      <ul class="bullets">
+        <li>GPS koordinate — nikoli na strežniku</li>
+        <li>BLE proximity log — samo RAM, izbriše ob koncu seje</li>
+        <li>Točna lokacija med run/gym — samo RSSI delta</li>
+        <li>Pulse Intercept media — izbriše ob viewedAt ali 10min TTL</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Kar Tremble shranjuje (encrypted at rest)</h3>
+      <ul class="bullets">
+        <li>Email (PII, encrypted)</li>
+        <li>Datum rojstva → starost (converted)</li>
+        <li>Geohash (precision 7, ~76m × 38m, 30-min TTL)</li>
+        <li>Telefonska številka (za Pulse Intercept, opcijsko, encrypted)</li>
+        <li>Run encounters (10-min TTL Firestore)</li>
+        <li>Gym sessions (24h TTL Firestore)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>EU AI Act Compliance (enforcement 2. avgust 2026)</h2>
+
+  <ul class="bullets">
+    <li><strong>Brez algoritmičnega rangiranja:</strong> Tremble nima nobenega AI algoritma za rangiranje ali profiliranje — arhitekturna odločitev, ki hkrati reši zahteve AI Act.</li>
+    <li><strong>Brez biometrične kategorizacije:</strong> Inferiranje starosti, spola, seksualne orientacije iz obraznih podatkov je strogo prepovedano pod AI Act — Tremble tega ne dela.</li>
+    <li><strong>Limited-Risk compliance:</strong> Nobene AI generacije icebreaker sporočil brez jasnega UI disclosurea.</li>
+  </ul>
+
+  <div class="divider"></div>
+  <h2>GDPR Deletion Pipeline</h2>
+
+  <table>
+    <thead><tr><th>Podatek</th><th>TTL / Brisanje</th><th>Metoda</th></tr></thead>
+    <tbody>
+      <tr><td>Proximity log</td><td class="dim">Ob koncu seje</td><td class="dim">RAM-only, nikoli Firestore</td></tr>
+      <tr><td>Run encounter</td><td class="dim">10 minut</td><td class="dim">Firestore TTL policy</td></tr>
+      <tr><td>Gym session</td><td class="dim">24 ur</td><td class="dim">Firestore TTL policy</td></tr>
+      <tr><td>Geohash</td><td class="dim">30 minut</td><td class="dim">Firestore TTL policy</td></tr>
+      <tr><td>Pulse Intercept media</td><td class="dim">Ob viewedAt ali 10 min</td><td class="dim">Cloud Function trigger + R2 delete</td></tr>
+      <tr><td>Celoten user account</td><td class="dim">72 ur po zahtevi</td><td class="dim">Kaskadni izbris: Firestore + R2 + Auth (GDPR Artikel 17)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>Marketing Disclaimers</h2>
+  <ul class="bullets">
+    <li>"Tremble uses Bluetooth Low Energy proximity detection. Your exact location is never stored or transmitted."</li>
+    <li>"Tremble is available to users 18+. Age verification is required at registration."</li>
+    <li>"Proximity detection requires BLE permissions and Bluetooth enabled on your device."</li>
+    <li>"Run Club and Gym Mode use on-device motion detection. No fitness data is transmitted to our servers."</li>
+  </ul>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: SWOT + ROADMAP
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">012 — SWOT Analiza</div>
+  <h1>SWOT</h1>
+
+  <div class="grid-2">
+    <div class="card" style="border-color:rgba(45,155,111,0.3);background:rgba(45,155,111,0.04);">
+      <h3 style="color:var(--green);">Strengths</h3>
+      <ul class="bullets">
+        <li>Privacy by architecture — edina dating app brez lokacijskega trackinga</li>
+        <li>BLE proximity = brez botov, catfish ali fake lokacij</li>
+        <li>Anti-engagement design — mainstream app-i tega ne morejo kopirati</li>
+        <li>EU AI Act compliance by default</li>
+        <li>Multi-context detection (Radar + Run Club + Gym Mode) — unikaten moat</li>
+        <li>City density moat: samopokrepljajoč po kritični masi</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:rgba(244,67,108,0.2);background:rgba(244,67,108,0.03);">
+      <h3 style="color:var(--rose);">Weaknesses</h3>
+      <ul class="bullets">
+        <li>Cold start problem — brez ~500 MAU/km² je proximity engine prazen</li>
+        <li>iOS background BLE omejitve so realne (ADR-001)</li>
+        <li>Brez in-app chata — radikalna odločitev, ki bo nekatere users zavrnilo</li>
+        <li>Manjši trg (SI/HR) = počasnejši organic network effect</li>
+        <li>Neznan brand — zaupanje je treba graditi od nič</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:rgba(245,200,66,0.4);background:rgba(245,200,66,0.05);">
+      <h3 style="color:#8a6d00;">Opportunities</h3>
+      <ul class="bullets">
+        <li>78% userjev poroča o dating app fatigue — nikoli večji trg</li>
+        <li>EU AI Act enforcement (avg 2026) bo udaril tekmece</li>
+        <li>Gen Z privacy consciousness raste</li>
+        <li>Run Club + Gym Mode pokrivata kontekste brez tekmece</li>
+        <li>B2B Events API je neobdelan trg</li>
+        <li>Lokalni nano-influencer ekosistem je poceni in visoko učinkovit</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:rgba(107,107,99,0.3);background:rgba(107,107,99,0.04);">
+      <h3>Threats</h3>
+      <ul class="bullets">
+        <li>Tinder/Bumble lahko dodajo BLE proximity feature s svojo bazo</li>
+        <li>Happn ima head start v nekaterih EU trgih</li>
+        <li>iOS background BLE restrictions se lahko zaostrijo</li>
+        <li>GDPR kršitev bi bila brandovno uničujoča za privacy-first pozicioniranje</li>
+        <li>Dating apps imajo inherentno visok churn — user, ki najde partnerja, odide</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: ROADMAP
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">013 — Roadmap &amp; Trenutni status</div>
+  <h1>Status — Maj 2026 · Pre-Launch Hardening</h1>
+
+  <table>
+    <thead><tr><th>Faza</th><th>Opis</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>1–5</td><td>Foundation, Core UX, BLE Engine, Infra, Auth</td><td class="green">DONE</td></tr>
+      <tr><td>6</td><td>Brand alignment (color, font, copy)</td><td class="green">DONE</td></tr>
+      <tr><td>7</td><td>Wave mechanic + push notifications</td><td class="green">DONE</td></tr>
+      <tr><td>F1</td><td>Protomaps + Cloudflare R2 (zamenjava Google Maps SDK)</td><td class="dim">IN PROGRESS — Martin: upload planet.pmtiles → R2 → Worker maps.trembledating.com</td></tr>
+      <tr><td>F2</td><td>Event Mode matching</td><td class="green">DONE</td></tr>
+      <tr><td>F3</td><td>Match categories + history filters</td><td class="green">DONE</td></tr>
+      <tr><td>F4</td><td>Hot/Cold navigation (Trembling Window)</td><td class="green">DONE</td></tr>
+      <tr><td>F6</td><td>Run Club — native bridge + UI + state machine</td><td class="green">DONE · NativeMotionService EventChannel aktiven</td></tr>
+      <tr><td>F9</td><td>Radius logic (RSSI threshold + geohash)</td><td class="green">DONE</td></tr>
+      <tr><td>F10</td><td>Gym Mode (geofence + dwell + quiet list)</td><td class="green">DONE · Firestore rules popravljene ✓</td></tr>
+      <tr><td>F12</td><td>Pulse Intercept (phone share + view-once photo)</td><td class="green">DONE · Flutter UI + CF backend živa</td></tr>
+      <tr><td>F13</td><td>Stealth &amp; Safety (Safe Zones + SHA-256 Anonymity + Block)</td><td class="green">DONE</td></tr>
+      <tr><td>Screen Protection</td><td>FLAG_SECURE Android + iOS ScreenProtector overlay (4 zasloni)</td><td class="green">DONE</td></tr>
+      <tr><td>Safety Sprint</td><td>Server-side age gate, flaggedForReview filter, report i18n, ban system (assertNotBanned × 10 endpoints)</td><td class="green">DONE</td></tr>
+      <tr><td>Beta Cleanup</td><td>isPremium false, paywall cleanup, mock profili ven, glassmorphism ven</td><td class="green">DONE</td></tr>
+      <tr><td>F8</td><td>Paywall / RevenueCat</td><td class="dim">PENDING · Čaka Apple Dev Account ($99) + Google Play Console ($25)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>Store Submission Pipeline</h2>
+
+  <table>
+    <thead><tr><th>Korak</th><th>Opis</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>1–3</td><td>Privacy Fix (dev + prod) · Docs update</td><td class="green">DONE</td></tr>
+      <tr><td>4</td><td>iOS BLE Background State Restoration (ADR-001)</td><td class="green">DONE ✓</td></tr>
+      <tr><td>5</td><td>Android BLE Background verification (Samsung S25 Ultra)</td><td class="green">DONE (Martin, S25 Ultra) ✓</td></tr>
+      <tr><td>6</td><td>Firestore Security Rules — F6 + Gym Mode</td><td class="green">DONE · Sprint 1 ✓</td></tr>
+      <tr><td>7</td><td>Apple Developer Account ($99) + Google Play Console ($25)</td><td class="dim">PENDING — nakup čaka</td></tr>
+      <tr><td>8</td><td>RevenueCat integracija + Paywall brand fix</td><td class="dim">PENDING — po koraku 7</td></tr>
+      <tr><td>9</td><td>Protomaps tile server deploy</td><td class="dim">PENDING — Martin: R2 upload</td></tr>
+      <tr><td>10</td><td>App Store metadata rewrite</td><td class="dim">PENDING</td></tr>
+      <tr><td>11</td><td>TestFlight internal beta (5–10 oseb)</td><td class="dim">Pending koraki 7–9 · Koda beta ready ✓</td></tr>
+      <tr><td>12</td><td>Store submission</td><td class="dim">Q3 2026</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>Open blockers</h2>
+
+  <table>
+    <thead><tr><th>ID</th><th>Blocker</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="green"><strong>D-44</strong></td><td>background_service.dart mock timer</td><td class="green">✅ ZAPRTO — NativeMotionService EventChannel aktiven</td></tr>
+      <tr><td class="green"><strong>BLOCKER-003</strong></td><td>AMS Solutions d.o.o. registracija</td><td class="green">✅ ZAPRTO — registracija 07.05.2026</td></tr>
+      <tr><td class="green"><strong>ADR-001</strong></td><td>iOS BLE Background State Restoration</td><td class="green">✅ ZAPRTO — NativeMotionService integracija</td></tr>
+      <tr><td class="rose"><strong>B010 — KRITIČNO</strong></td><td>ToS + PP links v consent_step.dart:124,146 so onTap:(){} no-op. url_launcher manjka v pubspec. App Store zavrnitev + GDPR Art.9 neveljavna privolitev.</td><td class="dim">AKTIVEN</td></tr>
+      <tr><td class="rose"><strong>BLE iOS</strong></td><td>manufacturerData advertising ne deluje na iOS (CoreBluetooth). UID odrezan. toDeviceId je rotirajoč BLE naslov ne UID. Redesign na service-UUID model zahtevan.</td><td class="dim">AKTIVEN</td></tr>
+      <tr><td><strong>B005</strong></td><td>Android dev applicationId še "com.pulse" (build.gradle:39). iOS pbxproj:566 com.pulse leftover.</td><td class="dim">V TEKU</td></tr>
+      <tr><td><strong>B008</strong></td><td>Firestore pravila obstajajo v repu (firestore.rules:185,195), deploy na prod nepotrjen.</td><td class="dim">V TEKU</td></tr>
+      <tr><td class="green"><strong>B007 — REŠEN</strong></td><td>purchases_flutter v10.2.0 + purchases_ui_flutter v pubspec. SDK popolnoma wiran. Manjka samo REVENUECAT_API_KEY dart-define + store produkti.</td><td class="dim">REŠEN v kodi</td></tr>
+      <tr><td class="green"><strong>B009 — REŠEN</strong></td><td>WavePillService FCM wiran v home_screen.dart:91-130.</td><td class="dim">REŠEN</td></tr>
+      <tr><td class="rose"><strong>BLOCKER-MAP</strong></td><td>planet.pmtiles upload → R2 → Worker maps.trembledating.com</td><td class="dim">AKTIVEN · Martin čaka</td></tr>
+      <tr><td class="green"><strong>D-TRANS</strong></td><td>Prevodi</td><td class="green">✅ ZAPRTO — EN/SL/DE/IT/FR/SR/HU: 608 ključev. HR: 595 (13 manjka, nizka prioriteta).</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE: APPENDIX
+════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="conf-band">Confidential — Internal Use Only</div>
+  <div class="section-num">Appendix — Referenčni podatki</div>
+  <h1>Stack &amp; Infrastructure</h1>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>A. App Stack</h3>
+      <table>
+        <tr><td>Framework</td><td class="dim">Flutter 3 + Riverpod 2 + GoRouter</td></tr>
+        <tr><td>Backend</td><td class="dim">Firebase Auth, Firestore, Cloud Functions (europe-west1, Node 22)</td></tr>
+        <tr><td>Storage</td><td class="dim">Cloudflare R2 (tremble-avatars) via media.trembledating.com</td></tr>
+        <tr><td>Redis</td><td class="dim">Upstash (rate limiting, session caching)</td></tr>
+        <tr><td>Email</td><td class="dim">Resend (info@trembledating.com)</td></tr>
+        <tr><td>Dev env</td><td class="dim">tremble-dev · com.pulse · --flavor dev</td></tr>
+        <tr><td>Prod env</td><td class="dim">am---dating-app · tremble.dating.app · --flavor prod</td></tr>
+        <tr><td>BLE UUID</td><td class="dim">73a9429f-fd01-4ac9-9e5a-eabd0d31438e</td></tr>
+        <tr><td>Run command</td><td class="dim">--flavor dev --dart-define=FLAVOR=dev</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>B. Website Stack</h3>
+      <table>
+        <tr><td>Framework</td><td class="dim">Next.js 16 + Tailwind CSS + TypeScript</td></tr>
+        <tr><td>Hosting</td><td class="dim">Cloudflare Pages</td></tr>
+        <tr><td>Monitoring</td><td class="dim">Sentry (client + server + edge) + Microsoft Clarity</td></tr>
+        <tr><td>Analytics</td><td class="dim">Cloudflare Analytics</td></tr>
+        <tr><td>Waitlist</td><td class="dim">Firestore (europe-west1) + Resend</td></tr>
+        <tr><td>Rate limiting</td><td class="dim">Upstash Redis (3 req / 10 min)</td></tr>
+        <tr><td>Lighthouse</td><td class="dim">≥90 (performance, accessibility, SEO)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>C. Infrastruktura pri 50.000 DAU</h2>
+
+  <table>
+    <thead><tr><th>Postavka</th><th>Mesečno (optimizirano)</th></tr></thead>
+    <tbody>
+      <tr><td>Cloud Functions compute</td><td class="dim">~$35</td></tr>
+      <tr><td>Firestore reads (geohash + matching)</td><td class="dim">~$45</td></tr>
+      <tr><td>Firestore writes</td><td class="dim">~$20</td></tr>
+      <tr><td>Places API (z session tokeni)</td><td class="dim">~$200–500</td></tr>
+      <tr><td>Upstash Redis</td><td class="dim">~$30</td></tr>
+      <tr><td>Cloudflare R2 (avatarji + Pulse Intercept ephemeral)</td><td class="dim">~$8</td></tr>
+      <tr><td><strong>Skupaj</strong></td><td><strong>~$338–638/mesec</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+  <h2>D. Revenue projekcija — 3% payer conversion, blended ARPU ~€7,99/mes</h2>
+
+  <p style="font-size:12px;color:var(--gray);margin-bottom:3mm;">Konzervativni model pri 3% payer conversion (industry: 1–5%). Pricing tieri: Signal Prime €7,99/mes · Weekend Getaway €2,99/vikend · Yearly €59,99/leto · Lifetime €149,99. Blended ARPU modeliran na €7,99/mes. Infrastruktura skalira sublinearno. Margin ostaja visoka.</p>
+
+  <table>
+    <thead><tr><th>DAU</th><th>Payers (3%)</th><th>MRR</th><th>Infra est.</th><th>Gross margin</th></tr></thead>
+    <tbody>
+      <tr><td><strong>10.000</strong></td><td class="dim">300</td><td class="green">€2.397/mes</td><td class="dim">~$80/mes</td><td class="dim">~97%</td></tr>
+      <tr><td><strong>50.000</strong></td><td class="dim">1.500</td><td class="green">€11.985/mes</td><td class="dim">~$450/mes</td><td class="dim">~97%</td></tr>
+      <tr><td><strong>70.000</strong></td><td class="dim">2.100</td><td class="green">€16.779/mes</td><td class="dim">~$600/mes</td><td class="dim">~97%</td></tr>
+      <tr><td><strong>100.000</strong></td><td class="dim">3.000</td><td class="green">€23.970/mes</td><td class="dim">~$800/mes</td><td class="dim">~97%</td></tr>
+      <tr><td><strong>250.000</strong></td><td class="dim">7.500</td><td class="green">€59.925/mes</td><td class="dim">~$1.800/mes</td><td class="dim">~97%</td></tr>
+      <tr><td><strong>500.000</strong></td><td class="dim">15.000</td><td class="green">€119.850/mes</td><td class="dim">~$3.200/mes</td><td class="dim">~97%</td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:12px;color:var(--gray);margin-top:2mm;">Pri 8% conversion (optimistično): MRR × 2.67. LTV:CAC cilj ≥3:1. Target CAC nano-influencer €15–30, Meta paid €20–40.</p>
+  <p style="font-size:12px;color:var(--rose);margin-top:1mm;"><strong>⚠ Največje tveganje:</strong> Places API brez session tokenov = $5.100/mes pri 50k DAU. Z session tokeni = $200–500/mes. Session token model implementiran od prvega dne.</p>
+
+  <div class="divider"></div>
+  <div class="card-dark">
+    <div style="text-align:center;">
+      <div style="font-family:var(--font-display);font-size:40px;font-weight:900;letter-spacing:-0.05em;color:white;margin-bottom:4px;">Tremble<span style="color:var(--rose);">.</span></div>
+      <div style="font-family:var(--font-ui);font-size:13px;color:rgba(255,255,255,0.4);letter-spacing:0.05em;margin-bottom:10px;">IT RUNS WHILE YOU LIVE.</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,0.25);">trembledating.com · AMS Solutions d.o.o. · Koper, Slovenija · v8.1 — May 2026</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:rgba(255,255,255,0.2);margin-top:4px;">CONFIDENTIAL — Internal Use Only. Distribution requires written consent.</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>trembledating.com · AMS Solutions d.o.o. · 2026</span>
+    <span>Master Strategy Document v9.0 — CONFIDENTIAL</span>
+  </div>
+</div>
+
+</body>
+</html>

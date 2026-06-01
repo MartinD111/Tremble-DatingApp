@@ -29,6 +29,20 @@
             ]
         },
         {
+            "collectionGroup": "proximity",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "isActive",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "updatedAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
             "collectionGroup": "matches",
             "queryScope": "COLLECTION",
             "fields": [

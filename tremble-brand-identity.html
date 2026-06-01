@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tremble — Brand Identity System v5</title>
+  <title>Tremble — Brand Identity System v6</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lora:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
@@ -1106,35 +1106,49 @@
     <div class="cover">
       <div class="cover-eyebrow">AMS Solutions d.o.o. — 2026</div>
       <div class="cover-title">Tremble<em>.</em><br>Brand Identity System</div>
-      <div class="cover-sub">v5.0 · Passive Proximity Dating · iOS & Android</div>
+      <div class="cover-sub">v6.1 · Passive Proximity Dating · iOS & Android</div>
     </div>
 
     <!-- CHANGELOG NOTE -->
     <div
       style="background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; padding: 24px 28px; margin-bottom: 48px;">
-      <div class="changelog-badge"><span class="dot"></span>&nbsp;v5.0 — May 2026</div>
+      <div class="changelog-badge"><span class="dot"></span>&nbsp;v6.1 — May 2026</div>
       <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">Kaj se je
-        spremenilo v v5</div>
+        spremenilo v v6</div>
       <ul style="padding-left: 16px; display: flex; flex-direction: column; gap: 6px;">
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>STATUS: Pre-Launch Hardening (29. maj
+            2026).</strong> Koda audit zaključen — 160 Dart datotek, 26 test datotek, ~53k LOC. RevenueCat SDK
+          (purchases_flutter v10.2.0) v pubspec, popolnoma wiran — B007 REŠEN. WavePillService FCM wiran — B009 REŠEN.
+          Aktivni blokerji: B010 (ToS/PP dead links — KRITIČNO, App Store zavrnitev), BLE iOS redesign zahtevan
+          (manufacturerData ne deluje), B005 bundleId cleanup, B008 prod rules deploy.</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Safe Zones limit:</strong> Koda nima omejitve
+          na 3 cone — addSafeZone() doda brez preverjanja. Če je bila trica načrtovana, ni implementirana.</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Privacy copy fix zahtevan:</strong>
+          translations.dart:656 "Zero location stored" je neresnica — geohash p7 IS stored (~150m celica). Reword v EN +
+          SL.</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Mapa — arhitektura odločena:</strong> tile
+          caching (FileTileStorage ~200MB/30d TTL), NE lokalni extract. Init premaknjeno v globalni Riverpod
+          FutureProvider (enkrat per app session).</li>
         <li style="font-size: 13px; color: var(--text-secondary);"><strong>Cena finalizirana: €7,99/mes</strong> (letno
-          €59,99). Odločitev maja 2026.</li>
+          €59,99).</li>
         <li style="font-size: 13px; color: var(--text-secondary);"><strong>Sprint 1 zaključen:</strong> Firestore rules
-          popravljene, watchMatches → real-time listener, Event Recap mock profili odstranjeni, 56/56 testov zelenih.
-        </li>
+          popravljene, watchMatches → real-time Firestore listener, 56/56 testov zelenih.</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Sprint 2 — Safety zaključen:</strong>
+          Server-side age gate (ZVOP-2 čl. 14), flaggedForReview proximity filter, report reasons v 8 jezikih, isBanned
+          + assertNotBanned + AccountSuspendedScreen.</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Sprint 3 — Beta Cleanup zaključen:</strong>
+          isPremium default false, paywall prikazuje samo obstoječe funkcije, mock profili ven, hardcoded eventi ven,
+          assertNotBanned na vseh 10 CF endpointih, glassmorphism paket odstranjen.</li>
         <li style="font-size: 13px; color: var(--text-secondary);"><strong>F12 Pulse Intercept IMPLEMENTIRAN:</strong>
-          Flutter UI + Cloud Functions backend živa. 2 atomska gumba. 10-min Redis TTL. View-once server delete.</li>
+          Flutter UI + CF backend. 10-min Redis TTL. View-once server delete.</li>
         <li style="font-size: 13px; color: var(--text-secondary);"><strong>F13 Stealth &amp; Safety
-            IMPLEMENTIRAN:</strong> Safe Zones, SHA-256 Contact Anonymity, Block — vse v produkciji.</li>
+            IMPLEMENTIRAN:</strong> Safe Zones, SHA-256 Contact Anonymity, Block + velocity check.</li>
         <li style="font-size: 13px; color: var(--text-secondary);"><strong>Screen Protection IMPLEMENTIRAN:</strong>
-          FLAG_SECURE (Android) + ScreenProtector overlay (iOS). Aktiven na ProfileDetail, MatchReveal, RunRecap,
-          EventRecap.</li>
-        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Paywall status:</strong> Besedilo
-          lokalizirano, GlassCard → solid brand fix PENDING (pred RevenueCat integracijo).</li>
-        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Prevajalski gap:</strong> EN/SL ~580 ključev.
-          DE=329, FR/HU/SR=~220. Razrešiti pred odprto beto.</li>
+          FLAG_SECURE (Android) + ScreenProtector overlay (iOS). Aktiven na 4 zaslonih.</li>
+        <li style="font-size: 13px; color: var(--text-secondary);"><strong>Prevodi:</strong> EN/SL/DE/IT/FR/SR/HU: 608
+          ključev. HR: 595 ključev. Vsi ključni trgi pokritih.</li>
         <li style="font-size: 13px; color: var(--text-secondary);">Vizualni sistem nespremenjen — barve, tipografija,
-          ikone, logo ostajajo enaki. 185 hard-coded HEX vrednosti v kodi (tech debt — ne vpliva na vizualno izkušnjo).
-        </li>
+          ikone, logo ostajajo enaki.</li>
       </ul>
     </div>
 
@@ -1404,8 +1418,8 @@
     <section class="doc-section" id="copy">
       <div class="section-label">02.2 — Key Copy Lines</div>
       <h2 class="section-title">18 ključnih stavkov</h2>
-      <p class="prose">Za direktno uporabo v marketingu, oglasih, onboardingu. v5 posodablja ceno (€7,99/mes), dodaja
-        status zaprte alfe ter dokumentira implementirane F12 Pulse Intercept, F13 Safety in Screen Protection.</p>
+      <p class="prose">Za direktno uporabo v marketingu, oglasih, onboardingu. v6 posodablja ceno (€7,99/mes), dodaja
+        status bete ter dokumentira implementirane F12 Pulse Intercept, F13 Safety in Screen Protection.</p>
 
       <div class="voice-lines">
         <div class="voice-line">
@@ -2508,7 +2522,7 @@
       <h2 class="section-title">Ad Headlines & Struktura</h2>
 
       <div class="spec-block">
-        <h3>Meta / Instagram / TikTok Ad Headlines — v5</h3>
+        <h3>Meta / Instagram / TikTok Ad Headlines — v6</h3>
         <table class="headline-table">
           <thead>
             <tr>
@@ -2714,7 +2728,7 @@
           style="font-family: var(--font-display); font-size: 18px; font-weight: 900; letter-spacing: -0.04em; color: var(--text-primary);">
           tremble<span style="color: var(--rose);">.</span></div>
         <div style="font-size: 12px; font-family: var(--font-mono); color: var(--text-disabled); margin-top: 4px;">Brand
-          Identity System v5.0 · May 2026</div>
+          Identity System v6.1 · May 2026</div>
       </div>
       <div style="text-align: right;">
         <div style="font-size: 12px; color: var(--text-disabled);">AMS Solutions d.o.o.</div>

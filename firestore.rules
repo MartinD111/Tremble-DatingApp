@@ -192,12 +192,20 @@ service cloud.firestore {
     // An attacker could modify an existing proximity event (change RSSI, timestamp)
     // after it was written, interfering with CF trigger processing.
     // Fix: 'allow create' only — documents are immutable once written.
+    //
+    // BLE redesign (2026-06): field schema updated to match Dart client after
+    // deviceId-based identity was removed. Client now writes:
+    //   fromUid (was: from), geohash (new), rssi, timestamp, expiresAt (was: ttl).
+    // toDeviceId removed — identity is resolved server-side via geohash (findNearby).
     match /proximity_events/{eventId} {
       allow create: if signedIn() &&
-        request.resource.data.from == request.auth.uid &&
-        request.resource.data.keys().hasAll(['from', 'toDeviceId', 'rssi', 'timestamp', 'ttl']) &&
+        request.resource.data.fromUid == request.auth.uid &&
+        request.resource.data.keys().hasAll(['fromUid', 'geohash', 'rssi', 'timestamp', 'expiresAt']) &&
+        request.resource.data.fromUid is string &&
+        request.resource.data.geohash is string &&
         request.resource.data.rssi is int &&
-        request.resource.data.timestamp is timestamp;
+        request.resource.data.timestamp is timestamp &&
+        request.resource.data.expiresAt is timestamp;
       allow read, update, delete: if false;
     }
 

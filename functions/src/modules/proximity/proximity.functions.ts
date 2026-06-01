@@ -12,6 +12,7 @@
 
 import { onCall } from "firebase-functions/v2/https";
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
@@ -576,336 +577,294 @@ export const getProximityMatchCandidates = onCall(
     }
 );
 
-// ── BLE Proximity Trigger ─────────────────────────────────────────
+// ── Scheduled Geohash-Based Encounter Detection ───────────────────
 
 /**
- * onBleProximity — Interaction System v2.1: CROSSING_PATHS
+ * scanProximityPairs — Scheduled encounter detection.
  *
- * Sends a fully anonymous CROSSING_PATHS notification.
- * No name, no photo, no identity revealed at this stage.
+ * Replaces the dead onBleProximity + onRunEncounter Firestore triggers.
  *
- * Anti-spam (Redis-backed, production-grade):
- *   1. Pair cooldown:    30 min per user pair (prox_cooldown:{a_b}).
- *      Uses SET NX EX — atomic, O(1), no Firestore reads.
- *   2. Global throttle:  max 3 CROSSING_PATHS per recipient per 10 min.
- *      Enforces "Stoic/Solid" brand — stays silent in dense crowds.
+ * Background: BLE was redesigned to presence-only advertising (iOS does not
+ * expose manufacturer data or custom UUIDs in background scans). Identity
+ * resolution via toDeviceId was no longer possible client-side. The old
+ * triggers fired on proximity_events/{eventId} docs that the client was
+ * supposed to write — those docs were never written because the BLE redesign
+ * removed the toDeviceId field from the write path.
  *
- * Security: onDocumentCreated receives data written by authenticated,
- * App-Check-verified clients. Input is trusted.
+ * New approach: Server-side geohash grouping. Every active user's geohash
+ * cell (precision 6 = ~1.2km) is known from proximity/{uid}. Users in the
+ * same cell are candidates; haversine confirms actual radius. Redis 30-min
+ * pair cooldown prevents duplicate notifications.
  *
- * Firestore TTL policy for this collection must target field "expiresAt" (NOT "ttl").
- * All writers in this file and in ble_service.dart use "expiresAt". Verify in Firebase console.
+ * Flow per invocation:
+ *   1. Query proximity/{uid} where isActive=true AND updatedAt >= now-2min
+ *   2. Group by geohash[:6] (~1.2km cell)
+ *   3. Evaluate all unique pairs per group:
+ *      a. Haversine distance ≤ effective radius (pro=250m, free=100m)
+ *      b. Redis pair cooldown check (30-min NX SET)
+ *      c. Fetch user profiles — skip blocked/flagged pairs
+ *   4. For qualifying pairs: write proximity_events doc, send CROSSING_PATHS
+ *      to both users (global throttle: max 3 per recipient per 10 min)
  */
-export const onBleProximity = onDocumentCreated(
-    { document: "proximity_events/{eventId}", region: "europe-west1" },
-    async (event) => {
-        const data = event.data?.data();
-        if (!data) return;
+export const scanProximityPairs = onSchedule(
+    {
+        schedule: "every 1 minutes",
+        region: "europe-west1",
+        timeoutSeconds: 540,
+        memory: "256MiB",
+    },
+    async () => {
+        const startedAt = Date.now();
+        logStructured({ fn: "scanProximityPairs", event: "start" });
 
-        const { from: fromUid, toDeviceId } = data as {
-            from: string;
-            toDeviceId: string;
-            timestamp: Timestamp;
-        };
-
-        if (!fromUid || !toDeviceId) return;
-
-        // Resolve toDeviceId → Tremble UID
-        const toUidSnapshot = await db
+        // 1. Query active users with a fresh proximity update (last 2 minutes)
+        const cutoff = Timestamp.fromDate(new Date(Date.now() - 2 * 60 * 1000));
+        const snapshot = await db
             .collection("proximity")
-            .where("deviceId", "==", toDeviceId)
-            .limit(1)
+            .where("isActive", "==", true)
+            .where("updatedAt", ">=", cutoff)
             .get();
 
-        if (toUidSnapshot.empty) {
-            console.log(`[BLE] Device ${toDeviceId} not registered — skipping`);
+        if (snapshot.empty) {
+            logStructured({ fn: "scanProximityPairs", event: "complete", activeUsers: 0, durationMs: Date.now() - startedAt });
             return;
         }
 
-        const toUid = toUidSnapshot.docs[0].id;
-        if (fromUid === toUid) return;
+        logStructured({ fn: "scanProximityPairs", event: "query", activeUsers: snapshot.size });
 
-        // ── Skip if already matched ───────────────────────────────
-        const matchId = [fromUid, toUid].sort().join("_");
-        const existingMatch = await db.collection("matches").doc(matchId).get();
-        if (existingMatch.exists) {
-            console.log(`[BLE] Match already exists (${matchId}) — skipping`);
-            return;
-        }
+        // 2. Group by geohash prefix (precision 6 = ~1.2km cell)
+        type ProximityEntry = { uid: string; geohash: string; radiusTier: string };
+        const groups = new Map<string, ProximityEntry[]>();
 
-        // ── Fetch target user (needed for FCM token + block list) ─
-        const toUserDoc = await db.collection("users").doc(toUid).get();
-        const fcmToken = toUserDoc.data()?.fcmToken as string | undefined;
-        const blockedIds: string[] = toUserDoc.data()?.blockedUserIds ?? [];
+        for (const doc of snapshot.docs) {
+            const data = doc.data();
+            const geohash = data.geohash as string | undefined;
+            if (!geohash || geohash.length < 6) continue;
 
-        // ── Skip if sender is blocked by recipient ────────────────
-        if (blockedIds.includes(fromUid)) {
-            console.log(`[BLE] ${fromUid.substring(0, 8)}... blocked by ${toUid.substring(0, 8)}... — skipping`);
-            return;
+            const prefix = geohash.substring(0, 6);
+            if (!groups.has(prefix)) groups.set(prefix, []);
+            groups.get(prefix)!.push({
+                uid: doc.id,
+                geohash,
+                radiusTier: (data.radiusTier as string | undefined) ?? "free",
+            });
         }
 
         const redis = getRedis();
+        const messaging = getMessaging();
+        let pairsEvaluated = 0;
+        let pairsNotified = 0;
 
-        // ── 1. Pair cooldown (Redis, 30-min TTL) ──────────────────
-        //    Atomic SET NX EX — only sets if key doesn't already exist.
-        //    If key exists → cooldown active → skip without extra reads.
-        const pairKey = proximityCooldownKey(fromUid, toUid);
-        const pairSet = await redis.set(pairKey, "1", {
-            ex: PROXIMITY_COOLDOWN_SECS,
-            nx: true,
-        });
+        // 3. Evaluate all unique pairs within each geohash cell
+        for (const [, members] of groups) {
+            if (members.length < 2) continue;
 
-        if (pairSet === null) {
-            // nx failed — key already exists, cooldown active
-            console.log(`[BLE] Pair cooldown active: ${pairKey}`);
-            return;
-        }
+            for (let i = 0; i < members.length; i++) {
+                for (let j = i + 1; j < members.length; j++) {
+                    const a = members[i];
+                    const b = members[j];
+                    pairsEvaluated++;
 
-        // ── 2. Global throttle (Redis INCR + EXPIRE) ──────────────
-        //    Sliding counter: max GLOBAL_THROTTLE_MAX pings per 10 min.
-        //    Ensures Tremble stays "Stoic" even at events or busy places.
-        const throttleKey = globalThrottleKey(toUid);
-        const currentCount = await redis.incr(throttleKey);
+                    // Effective radius: if either user is pro → 250m; both free → 100m (conservative)
+                    const radiusM = (a.radiusTier === "pro" || b.radiusTier === "pro")
+                        ? RADIUS_PRO_M
+                        : RADIUS_FREE_M;
 
-        if (currentCount === 1) {
-            // First notification this window — attach the TTL now
-            await redis.expire(throttleKey, GLOBAL_THROTTLE_SECS);
-        }
+                    // Haversine from geohash cell centers — GDPR-safe (≥75m accuracy)
+                    const aCenter = decodeGeohash(a.geohash);
+                    const bCenter = decodeGeohash(b.geohash);
+                    const distM = haversineMeters(aCenter.lat, aCenter.lng, bCenter.lat, bCenter.lng);
+                    if (distM > radiusM) continue;
 
-        if (currentCount > GLOBAL_THROTTLE_MAX) {
-            console.log(
-                `[BLE] Global throttle: ${toUid.substring(0, 8)}... at ${currentCount}/${GLOBAL_THROTTLE_MAX} — suppressing`
-            );
-            // Roll back pair cooldown so a later attempt in a quieter window succeeds
-            await redis.del(pairKey);
-            return;
-        }
+                    // Redis pair cooldown — skip if already notified within 30 min
+                    const pairKey = proximityCooldownKey(a.uid, b.uid);
+                    const pairSet = await redis.set(pairKey, "1", {
+                        ex: PROXIMITY_COOLDOWN_SECS,
+                        nx: true,
+                    });
+                    if (pairSet === null) continue; // cooldown active
 
-        // ── Send anonymous CROSSING_PATHS notification ────────────
-        if (!fcmToken) {
-            console.log(`[BLE] No FCM token for ${toUid.substring(0, 8)}...`);
-            return;
-        }
+                    // Fetch user profiles for block/flag checks and notification payload
+                    const [aUserDoc, bUserDoc] = await Promise.all([
+                        db.collection("users").doc(a.uid).get(),
+                        db.collection("users").doc(b.uid).get(),
+                    ]);
 
-        // ── Fetch sender profile (Interaction System v2.2 — Rich Notifications) ──
-        const fromUserDoc = await db.collection("users").doc(fromUid).get();
-        const fromUserData = fromUserDoc.data();
-        if (!fromUserData) {
-            console.log(`[BLE] Sender ${fromUid} not found — skipping`);
-            return;
-        }
+                    const aData = aUserDoc.data();
+                    const bData = bUserDoc.data();
 
-        const name = fromUserData.displayName || "Someone";
-        const photoUrl = fromUserData.photoUrls?.[0] || "";
-        
-        // Calculate age
-        let age = 0;
-        if (fromUserData.dateOfBirth) {
-            const dob = fromUserData.dateOfBirth.toDate();
-            const today = new Date();
-            age = today.getFullYear() - dob.getFullYear();
-            const m = today.getMonth() - dob.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-                age--;
+                    if (!aData || !bData) {
+                        // Roll back — don't hold a cooldown for unresolvable UIDs
+                        await redis.del(pairKey);
+                        continue;
+                    }
+
+                    if (aData.flaggedForReview === true || bData.flaggedForReview === true) {
+                        await redis.del(pairKey);
+                        continue;
+                    }
+
+                    const aBlocked: string[] = aData.blockedUserIds ?? [];
+                    const bBlocked: string[] = bData.blockedUserIds ?? [];
+                    if (aBlocked.includes(b.uid) || bBlocked.includes(a.uid)) {
+                        await redis.del(pairKey);
+                        continue;
+                    }
+
+                    // 4. Write proximity_events document (TTL via Firestore TTL policy on expiresAt)
+                    const expiresAt = Timestamp.fromDate(new Date(Date.now() + 10 * 60 * 1000));
+                    await db.collection("proximity_events").add({
+                        fromUid: a.uid,
+                        toUid: b.uid,
+                        geohash: a.geohash,
+                        timestamp: FieldValue.serverTimestamp(),
+                        expiresAt,
+                    });
+
+                    pairsNotified++;
+
+                    // Build sender age from dateOfBirth Timestamp
+                    const buildAge = (userData: FirebaseFirestore.DocumentData): number => {
+                        if (!userData.dateOfBirth) return 0;
+                        const dob = (userData.dateOfBirth as Timestamp).toDate();
+                        const today = new Date();
+                        let age = today.getFullYear() - dob.getFullYear();
+                        const m = today.getMonth() - dob.getMonth();
+                        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+                        return age;
+                    };
+
+                    // Send CROSSING_PATHS to one recipient about one sender
+                    const sendCrossingPaths = async (
+                        senderUid: string,
+                        senderData: FirebaseFirestore.DocumentData,
+                        recipientUid: string,
+                        recipientData: FirebaseFirestore.DocumentData,
+                    ): Promise<void> => {
+                        const fcmToken = recipientData.fcmToken as string | undefined;
+                        if (!fcmToken) return;
+
+                        // Global throttle: max GLOBAL_THROTTLE_MAX pings per 10-min window
+                        const throttleKey = globalThrottleKey(recipientUid);
+                        const count = await redis.incr(throttleKey);
+                        if (count === 1) await redis.expire(throttleKey, GLOBAL_THROTTLE_SECS);
+                        if (count > GLOBAL_THROTTLE_MAX) {
+                            logStructured({
+                                fn: "scanProximityPairs",
+                                event: "throttled",
+                                recipient: recipientUid.substring(0, 8),
+                                count,
+                            });
+                            return;
+                        }
+
+                        const name = senderData.displayName || "Someone";
+                        const photoUrl = (senderData.photoUrls as string[] | undefined)?.[0] ?? "";
+                        const age = buildAge(senderData);
+
+                        await messaging.send({
+                            token: fcmToken,
+                            notification: {
+                                title: "Tremble",
+                                body: `${name}, ${age} is nearby. Want to send a wave?`,
+                                imageUrl: photoUrl || undefined,
+                            },
+                            data: {
+                                type: "CROSSING_PATHS",
+                                fromUid: senderUid,
+                                senderId: senderUid,
+                                senderName: name,
+                                senderAge: age.toString(),
+                                senderPhotoUrl: photoUrl,
+                            },
+                            apns: {
+                                payload: {
+                                    aps: {
+                                        sound: "default",
+                                        category: "NEARBY_CATEGORY",
+                                        "alert-body-loc-key": "notify_nearby_body_rich",
+                                        "alert-body-loc-args": [name, age.toString()],
+                                    },
+                                },
+                            },
+                            android: {
+                                priority: "high",
+                                notification: {
+                                    clickAction: "NEARBY_CATEGORY",
+                                    bodyLocKey: "notify_nearby_body_rich",
+                                    bodyLocArgs: [name, age.toString()],
+                                },
+                            },
+                        });
+
+                        logStructured({
+                            fn: "scanProximityPairs",
+                            event: "notification_sent",
+                            sender: senderUid.substring(0, 8),
+                            recipient: recipientUid.substring(0, 8),
+                        });
+                    };
+
+                    // Notify both directions concurrently
+                    await Promise.allSettled([
+                        sendCrossingPaths(a.uid, aData, b.uid, bData),
+                        sendCrossingPaths(b.uid, bData, a.uid, aData),
+                    ]);
+                }
             }
         }
 
-        await getMessaging().send({
-            token: fcmToken,
-            notification: {
-                title: "Tremble",
-                // Multi-language support: app uses body_loc_key to translate locally
-                // Fallback body for devices not yet updated
-                body: `${name}, ${age} is nearby. Want to send a wave?`,
-                imageUrl: photoUrl,
-            },
-            data: {
-                type: "CROSSING_PATHS",
-                fromUid: fromUid,
-                senderId: fromUid,
-                senderName: name,
-                senderAge: age.toString(),
-                senderPhotoUrl: photoUrl,
-            },
-            apns: {
-                payload: {
-                    aps: {
-                        sound: "default",
-                        category: "NEARBY_CATEGORY",
-                        // loc_key used for client-side translation with variables
-                        "alert-body-loc-key": "notify_nearby_body_rich",
-                        "alert-body-loc-args": [name, age.toString()],
-                    },
-                },
-            },
-            android: {
-                priority: "high",
-                notification: {
-                    clickAction: "NEARBY_CATEGORY",
-                    bodyLocKey: "notify_nearby_body_rich",
-                    bodyLocArgs: [name, age.toString()],
-                },
-            },
+        logStructured({
+            fn: "scanProximityPairs",
+            event: "complete",
+            activeUsers: snapshot.size,
+            pairsEvaluated,
+            pairsNotified,
+            durationMs: Date.now() - startedAt,
         });
-
-        console.log(
-            `[BLE] CROSSING_PATHS → ${toUid.substring(0, 8)}... (throttle ${currentCount}/${GLOBAL_THROTTLE_MAX})`
-        );
     }
 );
 
-// ── F6: Run Club Proximity Trigger ────────────────────────────────
+// ── DEPRECATED: onBleProximity ────────────────────────────────────
 
 /**
- * onRunEncounter — F6 Run Club Ephemeral Handshake
- * 
- * Triggered when a runner detects another runner (flag 0x01).
- * Aggregates the encounter and sends a Run Club specific notification.
- * 
- * Security: onDocumentCreated receives data from authenticated clients.
- * Privacy: run_encounters TTL = 10 min (Jebiga Rule).
+ * @deprecated Replaced by scanProximityPairs (scheduled, 1-min interval).
+ *
+ * This trigger is dead. BLE was redesigned to presence-only advertising —
+ * iOS does not expose manufacturer data or custom UUIDs in background scans.
+ * The client no longer writes proximity_events docs with `from`/`toDeviceId`.
+ * proximity_events docs are now written server-side by scanProximityPairs
+ * using `fromUid`/`toUid`. Even if this trigger fires on a new doc, it exits
+ * immediately because `from` and `toDeviceId` are absent from the new shape.
+ *
+ * Kept as a registered no-op to avoid breaking existing deployments.
+ * Remove entirely in the next breaking deploy cycle.
+ */
+export const onBleProximity = onDocumentCreated(
+    { document: "proximity_events/{eventId}", region: "europe-west1" },
+    async (_event) => {
+        // DEPRECATED: no-op. Encounter detection moved to scanProximityPairs.
+        return;
+    }
+);
+
+// ── DEPRECATED: onRunEncounter ────────────────────────────────────
+
+/**
+ * @deprecated Dead — same root cause as onBleProximity.
+ *
+ * The run_encounters collection is no longer written to by the client after
+ * the BLE redesign removed the toDeviceId field. Run Club encounter detection
+ * is now handled by scanProximityPairs via the standard geohash grouping path.
+ * The active_run_crosses mutual wave flow (onRunCrossUpdated) remains active.
+ *
+ * Remove entirely in the next breaking deploy cycle.
  */
 export const onRunEncounter = onDocumentCreated(
     { document: "run_encounters/{eventId}", region: "europe-west1" },
-    async (event) => {
-        const data = event.data?.data();
-        if (!data) return;
-
-        const { from: fromUid, toDeviceId } = data as {
-            from: string;
-            toDeviceId: string;
-            timestamp: Timestamp;
-            expiresAt: Timestamp;
-        };
-
-        if (!fromUid || !toDeviceId) return;
-
-        // Resolve toDeviceId → Tremble UID
-        const toUidSnapshot = await db
-            .collection("proximity")
-            .where("deviceId", "==", toDeviceId)
-            .limit(1)
-            .get();
-
-        if (toUidSnapshot.empty) {
-            console.log(`[RUN_CLUB] Device ${toDeviceId} not registered — skipping`);
-            return;
-        }
-
-        const toUid = toUidSnapshot.docs[0].id;
-        if (fromUid === toUid) return;
-
-        // Fetch sender profile for the "Mid-Run Intercept" notification
-        const fromUserDoc = await db.collection("users").doc(fromUid).get();
-        const fromUserData = fromUserDoc.data();
-        if (!fromUserData) return;
-
-        const toUserDoc = await db.collection("users").doc(toUid).get();
-        const toUserData = toUserDoc.data();
-        const fcmToken = toUserData?.fcmToken as string | undefined;
-        const blockedIds: string[] = toUserData?.blockedUserIds ?? [];
-
-        if (blockedIds.includes(fromUid)) return;
-
-        const redis = getRedis();
-        
-        // 1. Run Club Cooldown: 10 minutes per pair to avoid spamming the same runner
-        const pairKey = `run_cooldown:${[fromUid, toUid].sort().join("_")}`;
-        const pairSet = await redis.set(pairKey, "1", {
-            ex: 600, // 10 minutes
-            nx: true,
-        });
-
-        if (pairSet === null) {
-            // Already notified this runner in the last 10 minutes
-            return;
-        }
-
-        // 2. Check for Repeat Encounter (Different Hours)
-        const historyKey = `run_history:${[fromUid, toUid].sort().join("_")}`;
-        const prevTimestampStr = await redis.get(historyKey);
-        const now = Date.now();
-        
-        let isRepeatEncounter = false;
-        if (prevTimestampStr) {
-            const prevTimestamp = parseInt(prevTimestampStr as string, 10);
-            // If previous encounter was more than 1 hour ago (different hours)
-            if (now - prevTimestamp > 3600000) {
-                isRepeatEncounter = true;
-            }
-        }
-        
-        // Update history timestamp for future checks (24h TTL)
-        await redis.set(historyKey, now.toString(), {
-            ex: 24 * 60 * 60,
-        });
-
-        // Upsert mutual encounter document for the Live Run Card
-        // This is what the UI listens to for the [Send Wave] action
-        const matchId = [fromUid, toUid].sort().join("_");
-        await db.collection("active_run_crosses").doc(matchId).set({
-            userIds: [fromUid, toUid],
-            status: "pending",
-            timestamp: FieldValue.serverTimestamp(),
-            expiresAt: Timestamp.fromDate(new Date(Date.now() + 10 * 60 * 1000)), // 10 min TTL
-            signals: {
-                [fromUid]: false,
-                [toUid]: false
-            }
-        }, { merge: true });
-
-        // SILENT MODE by default
-        if (!isRepeatEncounter) {
-            console.log(`[RUN_CLUB] SILENT MODE: Encounter between ${fromUid.substring(0, 8)}... and ${toUid.substring(0, 8)}...`);
-            return;
-        }
-
-        // Send High Priority Notification ONLY for repeat encounters
-        if (!fcmToken) return;
-
-        const name = fromUserData.displayName || "Nekdo";
-        let age = 0;
-        if (fromUserData.dateOfBirth) {
-            const dob = fromUserData.dateOfBirth.toDate();
-            const today = new Date();
-            age = today.getFullYear() - dob.getFullYear();
-            if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
-                age--;
-            }
-        }
-
-        // Rule #51: Mid-Run Intercept (overrides silent mode for repeat encounters)
-        await getMessaging().send({
-            token: fcmToken,
-            notification: {
-                title: "🏃 Ponovno srečanje",
-                body: `${name} (${age}) je v bližini. Poglej nazaj.`,
-            },
-            data: {
-                type: "RUN_INTERCEPT",
-                fromUid: fromUid,
-                name: name,
-                age: age.toString(),
-            },
-            android: {
-                priority: "high", // Overrides background silent state
-                notification: {
-                    clickAction: "RUN_INTERCEPT_ACTION",
-                    channelId: "tremble_run_club",
-                },
-            },
-            apns: {
-                payload: {
-                    aps: {
-                        sound: "default",
-                        category: "RUN_INTERCEPT_CATEGORY",
-                        "interruption-level": "active", // iOS override
-                    },
-                },
-            },
-        });
-
-        console.log(`[RUN_CLUB] MID-RUN INTERCEPT (Repeat) → ${toUid.substring(0, 8)}... from ${fromUid.substring(0, 8)}...`);
+    async (_event) => {
+        // DEPRECATED: no-op. Encounter detection moved to scanProximityPairs.
+        return;
     }
 );
 
