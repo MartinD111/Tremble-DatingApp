@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -121,7 +122,8 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
     final lang = ref.watch(appLanguageProvider);
     String tr(String key) => t(key, lang);
     final mediaQuery = MediaQuery.of(context);
-    final bottomPadding = mediaQuery.padding.bottom + 24;
+    final bottomPadding = mediaQuery.padding.bottom + 32;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentFlag = loginLanguageOptions
         .firstWhere((o) => o.code == lang,
             orElse: () => loginLanguageOptions.first)
@@ -129,10 +131,8 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: const Color(0xFF1A1A18),
       body: SafeArea(
         child: RadarBackground(
-          backgroundColor: const Color(0xFF1A1A18),
           child: Stack(
             children: [
               // ── Main scrollable content ────────────────────────────────────
@@ -307,14 +307,15 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                               child: _SocialSignInButton(
                                 icon: const _GoogleIcon(),
                                 text: tr('continue_with_google'),
-                                backgroundColor: const Color(0xFF1E1E1E)
-                                    .withValues(alpha: 0.86),
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.onSurface,
-                                borderColor: Theme.of(context)
-                                    .colorScheme
-                                    .outline
-                                    .withValues(alpha: 0.28),
+                                backgroundColor: isDark
+                                    ? const Color(0xFF2A2A2C)
+                                    : const Color(0xFFF1F3F4),
+                                foregroundColor: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1A1A18),
+                                borderColor: isDark
+                                    ? Colors.white24
+                                    : const Color(0xFFD0D0D0),
                                 onTap: () => _runAuthAction(
                                   () => ref
                                       .read(authStateProvider.notifier)
@@ -326,11 +327,13 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                             // Apple
                             Expanded(
                               child: _SocialSignInButton(
-                                icon: const _AppleIcon(),
+                                icon: const _AppleIcon(color: Colors.black),
                                 text: tr('continue_with_apple'),
                                 backgroundColor: Colors.white,
                                 foregroundColor: Colors.black,
-                                borderColor: Colors.white,
+                                borderColor: isDark
+                                    ? Colors.white
+                                    : const Color(0xFFCCCCCC),
                                 onTap: () => _runAuthAction(
                                   () => ref
                                       .read(authStateProvider.notifier)
@@ -355,13 +358,15 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            color: Colors.transparent,
+                            color: isDark
+                                ? const Color(0xFF2A2A2E)
+                                : const Color(0xFFE8E8E4),
                             borderRadius: BorderRadius.circular(100),
                             border: Border.all(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .outline
-                                    .withValues(alpha: 0.5)),
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.12)
+                                  : const Color(0xFFCCCCC8),
+                            ),
                           ),
                           child: Center(
                             child: Text(
@@ -378,6 +383,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
@@ -393,10 +399,14 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(100),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.18),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.18)
+                            : Colors.black.withValues(alpha: 0.12),
                       ),
                     ),
                     child: Row(
@@ -407,7 +417,10 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         const SizedBox(width: 6),
                         Icon(LucideIcons.chevronDown,
                             size: 14,
-                            color: Colors.white.withValues(alpha: 0.6)),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6)),
                       ],
                     ),
                   ),
@@ -529,125 +542,55 @@ class _LanguageSheet extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Google G icon — multicolor segments
+// Google G icon — official 4-colour SVG mark
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _GoogleIcon extends StatelessWidget {
   const _GoogleIcon();
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 20,
-      height: 20,
-      child: CustomPaint(painter: _GoogleGPainter()),
-    );
-  }
-}
-
-class _GoogleGPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final r = size.width / 2;
-    const strokeW = 3.8;
-    final rect =
-        Rect.fromCircle(center: Offset(cx, cy), radius: r - strokeW / 2);
-
-    void arc(Color color, double startDeg, double sweepDeg) {
-      final paint = Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW
-        ..strokeCap = StrokeCap.butt;
-      final startRad = startDeg * 3.14159265 / 180;
-      final sweepRad = sweepDeg * 3.14159265 / 180;
-      canvas.drawArc(rect, startRad, sweepRad, false, paint);
-    }
-
-    // Google colors: Blue, Red, Yellow, Green — roughly quartered
-    arc(const Color(0xFF4285F4), -10, 100); // Blue (top-right → bottom)
-    arc(const Color(0xFFEA4335), 90, 100); // Red (bottom → left)
-    arc(const Color(0xFFFBBC05), 190, 90); // Yellow (left → top-left)
-    arc(const Color(0xFF34A853), 280, 80); // Green (top-left → top-right)
-
-    // Horizontal bar for the G cutout
-    final barPaint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..strokeWidth = strokeW
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(cx, cy),
-      Offset(cx + r - strokeW / 2, cy),
-      barPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_GoogleGPainter old) => false;
-}
-
-class _AppleIcon extends StatelessWidget {
-  const _AppleIcon();
+  static const _svg = '''
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+</svg>
+''';
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 20,
-      height: 20,
-      child: CustomPaint(painter: _ApplePainter()),
-    );
+    return SvgPicture.string(_svg, width: 20, height: 20);
   }
-}
-
-class _ApplePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.fill;
-
-    final w = size.width;
-    final h = size.height;
-
-    // Apple logo drawn as a simple path scaled to the bounding box.
-    // Shape: round body with a bite taken from the right, and a leaf on top.
-    final path = Path();
-
-    // Body — approximate Apple logo outline
-    final body = Path();
-    // Left lobe
-    body.moveTo(w * 0.50, h * 0.28);
-    body.cubicTo(w * 0.50, h * 0.18, w * 0.36, h * 0.12, w * 0.26, h * 0.18);
-    body.cubicTo(w * 0.14, h * 0.25, w * 0.10, h * 0.42, w * 0.13, h * 0.57);
-    body.cubicTo(w * 0.17, h * 0.74, w * 0.28, h * 0.92, w * 0.40, h * 0.92);
-    body.cubicTo(w * 0.47, h * 0.92, w * 0.50, h * 0.88, w * 0.50, h * 0.88);
-    // Right lobe
-    body.cubicTo(w * 0.50, h * 0.88, w * 0.53, h * 0.92, w * 0.60, h * 0.92);
-    body.cubicTo(w * 0.72, h * 0.92, w * 0.83, h * 0.74, w * 0.87, h * 0.57);
-    body.cubicTo(w * 0.90, h * 0.42, w * 0.86, h * 0.25, w * 0.74, h * 0.18);
-    body.cubicTo(w * 0.64, h * 0.12, w * 0.50, h * 0.18, w * 0.50, h * 0.28);
-    body.close();
-
-    // Leaf (stem going up-right)
-    final leaf = Path();
-    leaf.moveTo(w * 0.50, h * 0.28);
-    leaf.cubicTo(w * 0.50, h * 0.18, w * 0.58, h * 0.06, w * 0.68, h * 0.04);
-    leaf.cubicTo(w * 0.68, h * 0.04, w * 0.62, h * 0.16, w * 0.50, h * 0.28);
-    leaf.close();
-
-    path.addPath(body, Offset.zero);
-    path.addPath(leaf, Offset.zero);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(_ApplePainter old) => false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Social sign-in button — icon is now a Widget
+// Apple logo icon — official monochrome SVG path
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AppleIcon extends StatelessWidget {
+  const _AppleIcon({required this.color});
+
+  final Color color;
+
+  static const _svg = '''
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path fill="black" d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+</svg>
+''';
+
+  @override
+  Widget build(BuildContext context) {
+    return SvgPicture.string(
+      _svg,
+      width: 20,
+      height: 20,
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Social sign-in button
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _SocialSignInButton extends StatelessWidget {

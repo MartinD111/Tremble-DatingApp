@@ -55,12 +55,14 @@ class RevenueCatCustomerInfoSnapshot {
     required this.activeSubscriptions,
     required this.purchasedProductIdentifiers,
     this.managementUrl,
+    this.premiumExpiryDate,
   });
 
   final Set<String> activeEntitlements;
   final Set<String> activeSubscriptions;
   final Set<String> purchasedProductIdentifiers;
   final String? managementUrl;
+  final DateTime? premiumExpiryDate;
 
   bool get isPremium =>
       activeEntitlements.contains(revenueCatEntitlementPremium);
@@ -68,12 +70,16 @@ class RevenueCatCustomerInfoSnapshot {
   static RevenueCatCustomerInfoSnapshot fromCustomerInfo(
     purchases.CustomerInfo customerInfo,
   ) {
+    final expiryStr = customerInfo
+        .entitlements.active[revenueCatEntitlementPremium]?.expirationDate;
     return RevenueCatCustomerInfoSnapshot(
       activeEntitlements: customerInfo.entitlements.active.keys.toSet(),
       activeSubscriptions: customerInfo.activeSubscriptions.toSet(),
       purchasedProductIdentifiers:
           customerInfo.allPurchasedProductIdentifiers.toSet(),
       managementUrl: customerInfo.managementURL,
+      premiumExpiryDate:
+          expiryStr != null ? DateTime.tryParse(expiryStr) : null,
     );
   }
 }

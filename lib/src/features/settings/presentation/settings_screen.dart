@@ -22,6 +22,7 @@ import '../../../core/theme.dart';
 import '../../dashboard/application/radar_schedule_controller.dart';
 import '../../dashboard/application/tutorial_notifier.dart';
 import '../../dashboard/presentation/widgets/radar_schedule_modal.dart';
+import '../../subscriptions/application/revenuecat_subscription.dart';
 
 final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
 
@@ -719,83 +720,84 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     );
   }
 
+  String _premiumStatusText(RevenueCatCustomerInfoSnapshot? customerInfo) {
+    if (customerInfo == null) return '👑 Premium active';
+
+    if (customerInfo.purchasedProductIdentifiers
+        .contains(revenueCatLifetimeProduct)) {
+      return '👑 Premium forever';
+    }
+
+    final expiry = customerInfo.premiumExpiryDate;
+    final subs = customerInfo.activeSubscriptions;
+
+    if ((subs.contains(revenueCatYearlyProduct) ||
+            subs.contains(revenueCatWeeklyProduct)) &&
+        expiry != null) {
+      final d = expiry.toLocal();
+      final formatted =
+          '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
+      return '👑 Premium until $formatted';
+    }
+
+    return '👑 Premium active';
+  }
+
   Widget _buildPremiumProfileAction(AuthUser user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final btnColor = isDark ? Colors.white : Colors.black87;
+    final pillStyle = OutlinedButton.styleFrom(
+      side: BorderSide(color: btnColor.withValues(alpha: 0.3)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+    );
+
     if (!user.isPremium) {
       return SizedBox(
         width: double.infinity,
-        child: ElevatedButton.icon(
+        child: OutlinedButton(
           onPressed: () => context.push('/premium'),
-          icon: const Icon(
-            LucideIcons.sparkles,
-            size: 18,
-            color: Colors.white,
-          ),
-          label: Text(
-            _t('get_tremble_premium'),
+          style: pillStyle,
+          child: Text(
+            'Free active',
             style: GoogleFonts.instrumentSans(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+              color: btnColor.withValues(alpha: 0.6),
+              fontWeight: FontWeight.w600,
             ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFF4436C),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(100),
-            ),
-            elevation: 0,
           ),
         ),
       );
     }
 
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      useGlassEffect: true,
-      child: Row(
-        children: [
-          const Icon(
-            LucideIcons.checkCircle,
-            color: Color(0xFFF5C842),
-            size: 20,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _t('active_plan'),
-                  style: GoogleFonts.instrumentSans(
-                    color: Colors.white54,
-                    fontSize: 12,
-                  ),
+    final customerInfo =
+        ref.watch(revenueCatSubscriptionProvider).customerInfo;
+    final statusText = _premiumStatusText(customerInfo);
+
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: () => context.push('/premium'),
+        style: pillStyle,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                statusText,
+                style: GoogleFonts.instrumentSans(
+                  color: btnColor,
+                  fontWeight: FontWeight.w600,
                 ),
-                Text(
-                  'Tremble Premium',
-                  style: GoogleFonts.instrumentSans(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () => context.push('/premium'),
-            child: Text(
-              _t('change_plan'),
-              style: GoogleFonts.instrumentSans(
-                color: const Color(0xFFF4436C),
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            Icon(
+              LucideIcons.pencil,
+              size: 16,
+              color: btnColor.withValues(alpha: 0.5),
+            ),
+          ],
+        ),
       ),
     );
   }

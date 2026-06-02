@@ -88,7 +88,7 @@ void main() async {
   // the user has explicitly saved it (isDark == false in SharedPreferences).
   final prefs = await SharedPreferences.getInstance();
   final isDark = prefs.getBool('themeMode');
-  final initialTheme = isDark == false ? ThemeMode.light : ThemeMode.dark;
+  final initialTheme = isDark == true ? ThemeMode.dark : ThemeMode.light;
   final initialLang = prefs.getString('appLanguage');
 
   runApp(
