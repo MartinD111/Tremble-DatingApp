@@ -122,6 +122,8 @@ class AuthUser {
   bool effectiveIsPremium({bool inEventGeofence = false}) =>
       isPremium || inEventGeofence;
 
+  // TODO(mutual-waves): This still reflects the legacy sent-wave limiter.
+  // Migrate wave count display/guards to users/{uid}.mutualWaves_YYYY_MM.
   bool get hasReachedFreeWaveLimit => !isPremium && wavesThisMonth >= 5;
 
   const AuthUser({
@@ -950,6 +952,8 @@ class AuthRepository {
 
   Future<int> _fetchMonthlyWaveCount(String uid) async {
     try {
+      // TODO(mutual-waves): This still reads the legacy sent-wave rateLimit doc.
+      // Migrate wave count display to users/{uid}.mutualWaves_YYYY_MM.
       final doc = await _db
           .collection('rateLimits')
           .doc(waveMonthlyRateLimitDocId(uid))

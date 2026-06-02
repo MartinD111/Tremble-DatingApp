@@ -93,60 +93,6 @@
             ]
         },
         {
-            "collectionGroup": "greetings",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "fromUid",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "toUid",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "status",
-                    "order": "ASCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "greetings",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "toUid",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "status",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "sentAt",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "greetings",
-            "queryScope": "COLLECTION",
-            "fields": [
-                {
-                    "fieldPath": "fromUid",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "status",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "sentAt",
-                    "order": "DESCENDING"
-                }
-            ]
-        },
-        {
             "collectionGroup": "gdprRequests",
             "queryScope": "COLLECTION",
             "fields": [

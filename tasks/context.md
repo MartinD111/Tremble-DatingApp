@@ -1,3 +1,97 @@
+## Session State — 2026-06-02 16:50 CEST
+- Active Task: Remove unused `greetings` Firestore composite indexes
+- Environment: Dev config cleanup on `main`
+- Modified Files:
+    - `firestore.indexes.json` (removed three unused `greetings` collectionGroup indexes)
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - Step 2.2 device E2E remains pending.
+    - Mobile still reads legacy `rateLimits/{uid}:wave_monthly.count` for `wavesThisMonth`; needs migration to `users/{uid}.mutualWaves_YYYY_MM`.
+    - Background Firestore trigger limit errors are not directly surfaced to the original `sendWave` callable response.
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `jq empty firestore.indexes.json` passed. `rg "greetings" firestore.indexes.json` returned no matches. No deploy run.
+
+## Session Handoff
+- Completed:
+    - Removed the three stale `greetings` composite indexes after audit confirmed no TS/Dart runtime code reads or writes the `greetings` collection.
+    - Verified JSON validity and absence of `greetings` in `firestore.indexes.json`.
+- In Progress: None.
+- Blocked: None for this cleanup.
+- Next Action: Deploy indexes only when intentionally running the next Firebase index/rules deploy step.
+
+## Session State — 2026-06-02 16:40 CEST
+- Active Task: Mark completed backend execution steps and verified strategy claims
+- Environment: Dev documentation update on `main`
+- Modified Files:
+    - `TREMBLE_BACKEND_EXECUTION_GUIDE.md` (marked 1.1, 1.2, 2.1, 2.3 done; 2.2 pending)
+    - `STRATEGY_CLAIMS.md` (marked C-WAVE-01 and C-WAVE-02 verified/deployed to dev)
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - Step 2.2 device E2E remains pending.
+    - Mobile still reads legacy `rateLimits/{uid}:wave_monthly.count` for `wavesThisMonth`; needs migration to `users/{uid}.mutualWaves_YYYY_MM`.
+    - Background Firestore trigger limit errors are not directly surfaced to the original `sendWave` callable response.
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: Documentation-only update; verified with `rg` that completion/verification markers are present.
+
+## Session Handoff
+- Completed:
+    - Marked backend guide Korak 1.1, 1.2, 2.1, and 2.3 as done with 2026-06-02 status notes.
+    - Marked Korak 2.2 as pending because the device E2E test cannot be run yet.
+    - Updated strategy claims status to partially verified and marked C-WAVE-01/C-WAVE-02 as verified against `matches.functions.ts` and deployed to dev.
+- In Progress: None.
+- Blocked: Step 2.2 device E2E cannot run yet.
+- Next Action: Run Korak 2.2 device E2E when both phones are available.
+
+## Session State — 2026-06-02 16:25 CEST
+- Active Task: Backend guide Korak 1.2 — deploy wave limit fix na dev
+- Environment: Dev backend deploy (`tremble-dev`) on `main`
+- Modified Files:
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - Mobile still reads legacy `rateLimits/{uid}:wave_monthly.count` for `wavesThisMonth`; needs migration to `users/{uid}.mutualWaves_YYYY_MM`.
+    - Background Firestore trigger limit errors are not directly surfaced to the original `sendWave` callable response.
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `dart format lib/src/features/auth/data/auth_repository.dart` ran with 0 changes. `firebase deploy --only functions:sendWave,functions:onWaveCreated --project tremble-dev` completed successfully. Recent function logs show both functions ACTIVE; only Node `punycode` deprecation warnings, no function errors observed.
+
+## Session Handoff
+- Completed:
+    - Confirmed current branch is `main`; no feature branch was created.
+    - Ran Dart format on the touched Dart auth repository file.
+    - Deployed `sendWave` and `onWaveCreated` only to `tremble-dev`.
+    - Checked recent Firebase Functions logs for both functions after deploy.
+- In Progress: None.
+- Blocked: None for Korak 1.2.
+- Next Action: Proceed to Backend Execution Guide Faza 2 only when founder is ready for dev validation/device testing.
+
+## Session State — 2026-06-02 16:05 CEST
+- Active Task: Mutual wave monthly entitlement migration audit + implementation
+- Environment: Dev backend code only; no deploy
+- Modified Files:
+    - `functions/src/modules/matches/matches.functions.ts` (sent-wave soft DoS guard, mutual-wave calendar-month transaction counters)
+    - `functions/src/__tests__/matches.test.ts` (counter helper regression tests)
+    - `lib/src/features/auth/data/auth_repository.dart` (TODO markers for legacy wave count display/guard migration)
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - Mobile still reads legacy `rateLimits/{uid}:wave_monthly.count` for `wavesThisMonth`; needs migration to `users/{uid}.mutualWaves_YYYY_MM`.
+    - Background Firestore trigger limit errors are not directly surfaced to the original `sendWave` callable response.
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: Functions focused Jest test passed; `npx tsc --noEmit` in `functions/` passed; not deployed.
+
+## Session Handoff
+- Completed:
+    - Replaced `sendWave` product limiter (`wave_monthly`, 5/20 per rolling 30 days) with a soft DoS guard (`sendWave_dos`, 100/day).
+    - Added calendar-month mutual wave counter helpers using `users/{uid}.mutualWaves_YYYY_MM`.
+    - Moved mutual match creation into a Firestore transaction that checks both users' counters before creating a match, then increments both counters and deletes both wave docs atomically.
+    - Added TODO comments at the legacy Flutter wave count guard/read sites without changing mobile behavior.
+    - Added focused Jest coverage for the counter field and free/premium limits.
+- In Progress: None.
+- Blocked: None for backend code. Mobile wave count display/guards remain a documented TODO.
+- Next Action: Migrate Flutter `wavesThisMonth` display/guard source from `rateLimits/{uid}:wave_monthly` to `users/{uid}.mutualWaves_YYYY_MM`.
+
 ## Session State — 2026-05-31 21:18 CEST
 - Active Task: visual updates on home screen (freeze stickman on stop, premium events popup dialog)
 - Environment: Dev mobile flavor on `main`

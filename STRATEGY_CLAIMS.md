@@ -2,7 +2,7 @@
 
 > **Source:** Tremble_Master_Strategy_v9.html  
 > **Purpose:** Verifiable claims extracted from strategy doc for audit against live codebase.  
-> **Status:** UNVERIFIED — extraction only, no code has been inspected.  
+> **Status:** PARTIALLY VERIFIED — wave limit claims verified against live codebase on 2026-06-02.  
 > **Instructions:** Do NOT edit code based on this file. Verify each claim separately.
 
 ---
@@ -40,8 +40,8 @@
 
 | Claim ID | Exact Quote | Section | Codebase Location | Verification Method |
 |---|---|---|---|---|
-| C-WAVE-01 | "Mutual waves / mesec Free: 5 valov" | 011 — Monetizacijski Model | `functions/src/modules/waves/` or `lib/src/features/matches/` | Grep `5` as wave monthly limit for free users |
-| C-WAVE-02 | "Mutual waves / mesec Premium: 20 valov" | 011 — Monetizacijski Model | `functions/src/modules/waves/` or `lib/src/features/matches/` | Grep `20` as wave monthly limit for premium |
+| C-WAVE-01 ✅ VERIFIED 2026-06-02 | "Mutual waves / mesec Free: 5 valov" | 011 — Monetizacijski Model | `functions/src/modules/matches/matches.functions.ts` | Implemented as `MUTUAL_WAVE_FREE_LIMIT = 5`; checked in `onWaveCreated` transaction before match creation; counter field `users/{uid}.mutualWaves_YYYY_MM`; deployed to `tremble-dev` 2026-06-02 |
+| C-WAVE-02 ✅ VERIFIED 2026-06-02 | "Mutual waves / mesec Premium: 20 valov" | 011 — Monetizacijski Model | `functions/src/modules/matches/matches.functions.ts` | Implemented as `MUTUAL_WAVE_PREMIUM_LIMIT = 20`; checked in `onWaveCreated` transaction before match creation; counter field `users/{uid}.mutualWaves_YYYY_MM`; deployed to `tremble-dev` 2026-06-02 |
 | C-WAVE-03 | "Ob proximity eventu user vidi profilno kartico" | 02 — Produktna Strategija | `lib/src/features/dashboard/presentation/home_screen.dart` | Verify proximity event surfaces profile card UI |
 | C-WAVE-04 | "Prejeli wave notifikacija: '[ime], [starost] waved at you'" | 02 — Produktna Strategija | `functions/src/modules/waves/` | Grep notification body template for wave received |
 | C-WAVE-05 | "Proximity notifikacija: 'Someone nearby — [ime], [starost]'" | 02 — Produktna Strategija | `functions/src/modules/proximity/` | Grep proximity push notification template |
@@ -215,4 +215,4 @@
 
 ---
 
-*Last updated: 2026-06-02 — extraction only, no verification performed.*
+*Last updated: 2026-06-02 — C-WAVE-01 and C-WAVE-02 verified and deployed to dev; remaining claims are still unverified unless marked otherwise.*

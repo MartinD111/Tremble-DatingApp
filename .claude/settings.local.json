@@ -95,7 +95,8 @@
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\marti\\\\AMS d.o.o\\\\Tremble-DatingApp\\\\lib\\\\src\\\\features\" -Directory | Where-Object {$_.Name -match \"match\"})",
       "PowerShell(Get-Process -Name \"java\",\"dart\",\"kotlin-daemon\",\"adb\" -ErrorAction SilentlyContinue)",
       "PowerShell(flutter clean)",
-      "PowerShell(flutter run --flavor dev --dart-define=FLAVOR=dev)"
+      "PowerShell(flutter run --flavor dev --dart-define=FLAVOR=dev)",
+      "Bash(brew upgrade:*)"
     ]
   }
 }

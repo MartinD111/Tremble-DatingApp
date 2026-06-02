@@ -31,9 +31,43 @@ function errorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
 }
 
+const MUTUAL_WAVE_FREE_LIMIT = 5;
+const MUTUAL_WAVE_PREMIUM_LIMIT = 20;
+const MUTUAL_WAVE_COUNTER_TIME_ZONE = "Europe/Ljubljana";
+
+export function mutualWaveCounterField(now = new Date()): string {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: MUTUAL_WAVE_COUNTER_TIME_ZONE,
+        year: "numeric",
+        month: "2-digit",
+    }).formatToParts(now);
+
+    const year = parts.find((part) => part.type === "year")?.value;
+    const month = parts.find((part) => part.type === "month")?.value;
+
+    if (!year || !month) {
+        throw new Error("Failed to compute mutual wave counter month");
+    }
+
+    return `mutualWaves_${year}_${month}`;
+}
+
+export function mutualWaveLimitForUser(userData: FirebaseFirestore.DocumentData | undefined): number {
+    return userData?.isPremium === true
+        ? MUTUAL_WAVE_PREMIUM_LIMIT
+        : MUTUAL_WAVE_FREE_LIMIT;
+}
+
+export function mutualWaveCountForUser(
+    userData: FirebaseFirestore.DocumentData | undefined,
+    counterField: string
+): number {
+    const value = userData?.[counterField];
+    return typeof value === "number" ? value : 0;
+}
+
 /**
- * sendWave — Callable: rate-limited wave submission.
- * Free users: 5 waves per 30 days. Premium users: 20 waves per 30 days.
+ * sendWave — Callable: wave submission with a soft DoS guard.
  * Writes to waves/ collection which triggers onWaveCreated.
  */
 export const sendWave = onCall(
@@ -49,17 +83,16 @@ export const sendWave = onCall(
             throw new HttpsError("invalid-argument", "Cannot wave at yourself");
         }
 
-        // Monthly wave limit: Free = 5, Pro = 20
+        // Read profile for ban status; sent waves are not product-limited.
         const userDoc = await db.collection("users").doc(uid).get();
         const userData = userDoc.data();
 
         assertNotBanned(userData);
 
-        const isPremium = userData?.isPremium ?? false;
-
-        await checkRateLimit(uid, "wave_monthly", {
-            maxRequests: isPremium ? 20 : 5,
-            windowMs: 30 * 24 * 60 * 60 * 1000, // 30 days
+        // Soft DoS guard only. This is not the product mutual-wave entitlement.
+        await checkRateLimit(uid, "sendWave_dos", {
+            maxRequests: 100,
+            windowMs: 24 * 60 * 60 * 1000,
         });
 
         await db.collection("waves").add({
@@ -164,49 +197,78 @@ export const onWaveCreated = onDocumentCreated(
             const uids = [fromUid, toUid].sort();
             const matchId = `${uids[0]}_${uids[1]}`;
 
-            // Dedup guard: if match already exists this trigger fired twice — skip
-            const existingMatch = await db.collection("matches").doc(matchId).get();
-            if (existingMatch.exists) {
-                console.log(`[WAVE] Match ${matchId} already exists — skipping duplicate trigger`);
-                return;
-            }
+            const userARef = db.collection("users").doc(uids[0]);
+            const userBRef = db.collection("users").doc(uids[1]);
+            const matchRef = db.collection("matches").doc(matchId);
+            const reciprocalWaveRef = reciprocalQuery.docs[0].ref;
+            const counterField = mutualWaveCounterField();
 
-            const userADoc = await db.collection("users").doc(uids[0]).get();
-            const userBDoc = await db.collection("users").doc(uids[1]).get();
-            const userAEvent = userADoc.data()?.activeEventId;
-            const userBEvent = userBDoc.data()?.activeEventId;
-            const userAGym = userADoc.data()?.activeGymId;
-            const userBGym = userBDoc.data()?.activeGymId;
+            await db.runTransaction(async (transaction) => {
+                const [matchDoc, userADoc, userBDoc] = await Promise.all([
+                    transaction.get(matchRef),
+                    transaction.get(userARef),
+                    transaction.get(userBRef),
+                ]);
 
-            let matchType = "standard";
-            let matchContext: Record<string, unknown> | null = null;
+                if (matchDoc.exists) {
+                    console.log(`[WAVE] Match ${matchId} already exists — skipping duplicate trigger`);
+                    return;
+                }
 
-            if (userAEvent && userBEvent && userAEvent === userBEvent) {
-                matchType = "event";
-                matchContext = { eventId: userAEvent };
-            } else if (userAGym && userBGym && userAGym === userBGym) {
-                matchType = "gym";
-                matchContext = { gymId: userAGym };
-            }
+                const userAData = userADoc.data();
+                const userBData = userBDoc.data();
 
-            const batch = db.batch();
+                const userACount = mutualWaveCountForUser(userAData, counterField);
+                const userBCount = mutualWaveCountForUser(userBData, counterField);
+                const userALimit = mutualWaveLimitForUser(userAData);
+                const userBLimit = mutualWaveLimitForUser(userBData);
 
-            batch.set(db.collection("matches").doc(matchId), {
-                userA: uids[0],
-                userB: uids[1],
-                userIds: uids,
-                matchType,
-                matchContext,
-                createdAt: FieldValue.serverTimestamp(),
-                expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes from now
-                status: "pending",
-                seenBy: [fromUid],
-                // No lastMessage — Tremble has no in-app chat.
+                if (userACount >= userALimit || userBCount >= userBLimit) {
+                    throw new HttpsError(
+                        "resource-exhausted",
+                        "Monthly mutual wave limit reached."
+                    );
+                }
+
+                const userAEvent = userAData?.activeEventId;
+                const userBEvent = userBData?.activeEventId;
+                const userAGym = userAData?.activeGymId;
+                const userBGym = userBData?.activeGymId;
+
+                let matchType = "standard";
+                let matchContext: Record<string, unknown> | null = null;
+
+                if (userAEvent && userBEvent && userAEvent === userBEvent) {
+                    matchType = "event";
+                    matchContext = { eventId: userAEvent };
+                } else if (userAGym && userBGym && userAGym === userBGym) {
+                    matchType = "gym";
+                    matchContext = { gymId: userAGym };
+                }
+
+                transaction.set(matchRef, {
+                    userA: uids[0],
+                    userB: uids[1],
+                    userIds: uids,
+                    matchType,
+                    matchContext,
+                    createdAt: FieldValue.serverTimestamp(),
+                    expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+                    status: "pending",
+                    seenBy: [fromUid],
+                });
+
+                transaction.update(userARef, {
+                    [counterField]: FieldValue.increment(1),
+                });
+
+                transaction.update(userBRef, {
+                    [counterField]: FieldValue.increment(1),
+                });
+
+                transaction.delete(snapshot.ref);
+                transaction.delete(reciprocalWaveRef);
             });
-
-            batch.delete(snapshot.ref);
-            batch.delete(reciprocalQuery.docs[0].ref);
-            await batch.commit();
 
             console.log(`[WAVE] Mutual wave → match created: ${matchId}`);
 
