@@ -20,9 +20,6 @@ Faze so v zaporedju. Faza 2 čaka na Fazo 1. Faza 3 čaka na Fazo 2.
 ## STATUS pred začetkom (2. junij 2026)
 
 ### Že narejeno ✓
-- Wave limit fix: sent waves unlimited; mutual waves limited per calendar month (`users/{uid}.mutualWaves_YYYY_MM`) — deployed to dev 2026-06-02
-- Dev Cloud Scheduler job `firebase-schedule-scanProximityPairs-europe-west1` verified enabled 2026-06-02
-- Dev `proximity_events` Firestore rule verified with new schema (`fromUid`, `geohash`, `rssi`, `timestamp`, `expiresAt`) 2026-06-02
 - `scanProximityPairs` deployed na dev (tremble-dev) — 1-minutni scheduler, live
 - `proximity_events` Firestore rule posodobljena (nova schema: fromUid/geohash/expiresAt)
 - `proximity/isActive+updatedAt` composite index deployed na dev
@@ -35,6 +32,7 @@ Faze so v zaporedju. Faza 2 čaka na Fazo 1. Faza 3 čaka na Fazo 2.
 - `assertNotBanned` na vseh kritičnih CF endpointih ✓
 
 ### Kritični odprti problemi
+- **Wave limit je na SENT waves, ne MUTUAL waves** — neskladje s strategijo
 - **Prod nima deployanih functions, rules, indexes**
 - **Prod TTL policy za `proximity` je napačna** (targetira `ttl`, mora biti `geoHashExpiresAt`)
 - **`greetings` kolekcija** — indexi obstajajo, ni v rules, ni jasno kaj je
@@ -44,7 +42,7 @@ Faze so v zaporedju. Faza 2 čaka na Fazo 1. Faza 3 čaka na Fazo 2.
 
 ## FAZA 1 — Wave limit fix (pred vsem drugim)
 
-### Korak 1.1 — Audit wave limit logike ✅ DONE 2026-06-02
+### Korak 1.1 — Audit wave limit logike
 
 **Kdo:** Claude Code CLI  
 **Prompt:**
@@ -80,11 +78,9 @@ Show full implementation before writing. Do NOT deploy.
 
 **Done kriterij:** Vidiš diff pred pisanjem. Preveriš logiko. Potrdiš.
 
-**Status 2026-06-02:** ✅ DONE — audit completed; implementation proposed, reviewed, then implemented.
-
 ---
 
-### Korak 1.2 — Deploy wave limit fix na dev ✅ DONE 2026-06-02
+### Korak 1.2 — Deploy wave limit fix na dev
 
 **Kdo:** Ti  
 **Ukaz:**
@@ -94,13 +90,11 @@ firebase deploy --only functions:sendWave,functions:onWaveCreated --project trem
 
 **Done kriterij:** Deploy success. Ni error v Firebase Functions logu.
 
-**Status 2026-06-02:** ✅ DONE — deployed `sendWave` and `onWaveCreated` to `tremble-dev`. Functions logs showed both functions `ACTIVE`; no function errors observed.
-
 ---
 
 ## FAZA 2 — Dev validacija (device test z Martinom)
 
-### Korak 2.1 — Preveri Cloud Scheduler ✅ DONE 2026-06-02
+### Korak 2.1 — Preveri Cloud Scheduler
 
 **Kdo:** Ti — Google Cloud Console  
 **URL:** `console.cloud.google.com/cloudscheduler?project=tremble-dev`
@@ -110,8 +104,6 @@ Status mora biti: `Enabled`
 
 **Done kriterij:** Job obstaja in je enabled. Če ni — pojdi na Korak 2.1b.
 
-**Status 2026-06-02:** ✅ DONE — founder verified scheduler job exists and is `Enabled`.
-
 **Korak 2.1b (samo če job ne obstaja):**
 ```bash
 firebase deploy --only functions:scanProximityPairs --project tremble-dev
@@ -119,7 +111,7 @@ firebase deploy --only functions:scanProximityPairs --project tremble-dev
 
 ---
 
-### Korak 2.2 — E2E device test (dva telefona) ⏳ PENDING
+### Korak 2.2 — E2E device test (dva telefona)
 
 **Kdo:** Ti + Martin  
 **Naprave:** Martin (Samsung S25 Ultra) + tvoj telefon  
@@ -141,8 +133,6 @@ flutter run --flavor dev --dart-define=FLAVOR=dev
 - [ ] CROSSING_PATHS notifikacija pride na oba telefona
 - [ ] Cloud Functions log (`console.cloud.google.com/logs` → filter `scanProximityPairs`) kaže `event: "complete", pairsNotified: 1`
 
-**Status 2026-06-02:** ⏳ PENDING — cannot run device E2E yet.
-
 **Če korak 3 ne dela (dokument ne nastane):**
 ```
 Preveri functions log za napako:
@@ -152,7 +142,7 @@ Filter: resource.type="cloud_run_revision" AND textPayload:"scanProximityPairs"
 
 ---
 
-### Korak 2.3 — Preveri proximity rule deploy ✅ DONE 2026-06-02
+### Korak 2.3 — Preveri proximity rule deploy
 
 **Kdo:** Ti  
 **Preveri:** Firebase Console dev → Firestore → Rules
@@ -172,8 +162,6 @@ firebase deploy --only firestore:rules --project tremble-dev
 ```
 
 **Done kriterij:** Rules v konzoli kažejo novo shemo.
-
-**Status 2026-06-02:** ✅ DONE — founder pasted dev rules; `proximity_events` rule uses new schema (`fromUid`, `geohash`, `rssi`, `timestamp`, `expiresAt`) and no old `from` / `toDeviceId` / `ttl` schema.
 
 ---
 
@@ -427,7 +415,7 @@ Show diff before writing. Do NOT deploy.
 | `updateProfile` | Callable | users | ✓ |
 | `getProfile` | Callable | users | ✓ |
 | `getPublicProfile` | Callable | users | ✓ |
-| `sendWave` | Callable | matches | ⚠️ Limit je na sent, ne mutual |
+| `sendWave` | Callable | matches | ⚠️ Limit je na mutual waves, ne sent waves|
 | `onWaveCreated` | Trigger | matches | ✓ |
 | `getMatches` | Callable | matches | ✓ |
 | `migrateMatchTypes` | Callable (admin) | matches | ✓ |
