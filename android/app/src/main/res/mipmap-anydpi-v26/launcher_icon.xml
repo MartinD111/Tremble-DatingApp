@@ -2,4 +2,11 @@
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
   <background android:drawable="@color/ic_launcher_background"/>
   <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+  <!--
+    Themed-icon (Android 13+) layer. Without this, the launcher falls back to the
+    legacy square raster masked to a circle -> the solid blob seen when the user
+    re-themes their icons. Reusing the foreground (white heart on transparent)
+    guarantees the themed silhouette is pixel-aligned with the normal icon.
+  -->
+  <monochrome android:drawable="@drawable/ic_launcher_foreground"/>
 </adaptive-icon>

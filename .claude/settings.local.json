@@ -97,7 +97,13 @@
       "PowerShell(flutter clean)",
       "PowerShell(flutter run --flavor dev --dart-define=FLAVOR=dev)",
       "Bash(brew upgrade:*)",
-      "Bash(git branch *)"
+      "Bash(git branch *)",
+      "Bash(adb devices *)",
+      "Bash(adb logcat *)",
+      "Bash(grep -iE 'AndroidRuntime|FATAL|tremble|RadarTile|RadarForeground|Resources$NotFound|VectorDrawable')",
+      "Bash(adb install *)",
+      "Bash(adb shell *)",
+      "Bash(adb exec-out *)"
     ]
   }
 }

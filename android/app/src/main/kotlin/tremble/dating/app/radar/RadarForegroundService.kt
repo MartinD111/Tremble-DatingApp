@@ -1,12 +1,16 @@
 package tremble.dating.app.radar
 
+import android.Manifest
+import android.app.NotificationManager
 import android.app.Service
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 
 /**
@@ -82,16 +86,30 @@ class RadarForegroundService : Service() {
         // use, so the eventual hand-off is invisible. ensureChannel is a
         // no-op after first call (channel created in MainApplication.onCreate).
         val notification = RadarNotificationBuilder.build(this)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIF_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION or
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-            )
-        } else {
-            startForeground(NOTIF_ID, notification)
+        // Android 14+ rejects the startForeground call when the asserted FGS
+        // type lacks its runtime permission (SecurityException, e.g. type
+        // `location` without ACCESS_*_LOCATION) or when the start originates
+        // from the background (ForegroundServiceStartNotAllowedException).
+        // Either throw here would crash the process; because radar-active is
+        // persisted, it would then re-crash on every launch — the user can
+        // never reach the UI to switch it off. Guard the call: assert only the
+        // types we actually hold permission for, and if the OS still refuses,
+        // force radar OFF so the loop is broken instead of crashing.
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(NOTIF_ID, notification, allowedFgsTypes())
+            } else {
+                startForeground(NOTIF_ID, notification)
+            }
+        } catch (t: Throwable) {
+            RadarStateBridge.init(applicationContext)
+            RadarStateBridge.isActive = false
+            RadarWidgetProvider.updateAll(applicationContext)
+            (getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)
+                ?.cancel(NOTIF_ID)
+            running = false
+            stopSelf()
+            return START_NOT_STICKY
         }
 
         if (intent?.action == ACTION_STOP) {
@@ -132,6 +150,38 @@ class RadarForegroundService : Service() {
         detachAndStop()
         return START_NOT_STICKY
     }
+
+    /**
+     * The FGS types we may legally assert right now. DATA_SYNC needs no runtime
+     * permission and is always included so the service always has a valid type.
+     * LOCATION and CONNECTED_DEVICE are added only when their runtime permission
+     * is actually granted — asserting either without it throws SecurityException
+     * on Android 14+. All three are declared in the manifest service entry, so
+     * any subset is a legal startForeground() type mask.
+     */
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun allowedFgsTypes(): Int {
+        var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+        if (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) ||
+            hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+        ) {
+            types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        }
+        val btGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            hasPermission(Manifest.permission.BLUETOOTH_CONNECT) ||
+                hasPermission(Manifest.permission.BLUETOOTH_SCAN)
+        } else {
+            true // pre-S Bluetooth permissions are install-time grants
+        }
+        if (btGranted) {
+            types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+        }
+        return types
+    }
+
+    private fun hasPermission(permission: String): Boolean =
+        ContextCompat.checkSelfPermission(this, permission) ==
+            PackageManager.PERMISSION_GRANTED
 
     private fun detachAndStop() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

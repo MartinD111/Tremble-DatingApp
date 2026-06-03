@@ -4,6 +4,9 @@
 
 ---
 
+**Rule #9 — Guard every `startForeground()` with a type mask on Android 14+.**
+[2026-06-03] Asserting an FGS type whose runtime permission isn't held throws `SecurityException` (e.g. `type=location` without `ACCESS_*_LOCATION`), and starting from the background throws `ForegroundServiceStartNotAllowedException`. Either crashes the process — and because radar-active is persisted in `RadarStateBridge`, it re-crashes on every launch ("can't turn it off" loop). Fix: assert only the FGS types whose permission is currently granted (DATA_SYNC always), wrap `startForeground` in try/catch, and on failure force radar OFF + cancel the notification so the loop breaks instead of crashing. Source: `RadarForegroundService.kt:86` crash, June 2026.
+
 **Rule #71 — Invalidate cached stamps when Dart SDK is missing.**
 [2026-05-28] If the Dart SDK is deleted or missing from the Flutter `bin/cache/` but the snapshot and stamp files remain (e.g., `engine-dart-sdk.stamp`), the `update_dart_sdk.sh` script will bypass bootstrapping and crash with a "No such file or directory" error. Delete `engine-dart-sdk.stamp`, `flutter_tools.snapshot`, and `flutter_tools.stamp` to force the tool to download and reconstruct the Dart SDK.
 Source: Flutter SDK bootstrapping, May 2026.

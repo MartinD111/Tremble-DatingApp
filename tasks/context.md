@@ -1,3 +1,25 @@
+## Session State — 2026-06-03 — Android icon polish + radar FGS crash fix
+- Active Task: Themed launcher icon, zoom-out foreground heart, fix radar startForeground crash
+- Environment: Dev, `main`, verified on physical Samsung SM-S938B (Android 16 / API 36)
+- Modified Files:
+    - `android/.../mipmap-anydpi-v26/launcher_icon.xml` (added `<monochrome>` → `@drawable/ic_launcher_foreground`)
+    - `android/.../res/drawable/ic_launcher_foreground.xml` (NEW — vector heart scaled 0.29 ≈ 44dp/108 for padding; serves foreground + monochrome)
+    - `android/.../res/drawable-{h,m,xh,xxh,xxxh}dpi/ic_launcher_foreground.png` (DELETED 5 — replaced by vector)
+    - `android/.../res/drawable/ic_tremble_qs_tile.xml` (NEW vector heart, no plate) + deleted `drawable-xxxhdpi/ic_tremble_qs_tile.png`
+    - `android/.../AndroidManifest.xml` (RadarTileService `android:icon` → `@drawable/ic_tremble_qs_tile`)
+    - `android/.../radar/RadarForegroundService.kt` (permission-aware FGS type mask + try/catch guard; new `allowedFgsTypes()`/`hasPermission()` helpers)
+- System Status: `flutter build apk --debug --flavor dev` ✅. On-device: app no longer crashes on launch in ANY of 3 perm states (no-loc / while-in-use / all-the-time). App icon shows heart with padding in App-info render.
+
+## Session Handoff
+- Completed:
+    - **Radar crash fixed (the reported "app keeps closing, can't turn it off").** Root cause was NOT the icon work — `RadarForegroundService.kt:86` called `startForeground(..., TYPE_LOCATION|...)`; on Android 14+ that throws `SecurityException` when location perm absent and `ForegroundServiceStartNotAllowedException` when started from background. Persisted radar-active made it a crash loop. Fixed: assert only granted FGS types, wrap in try/catch, force radar OFF on failure. See Rule #9.
+    - Themed app icon: monochrome layer added (was missing → blue-blob fallback).
+    - Foreground heart zoomed out via scaled vector (≈61% of visible safe zone), monochrome stays aligned.
+    - QS/quick-access tile left as the approved vector (per founder: "don't touch it").
+- In Progress: None.
+- Blocked: None. Note: downstream `flutter_background_service` plugin logs a non-fatal `SecurityException` for its own location-typed FGS when all-the-time location isn't effectively granted — pre-existing, not a crash, out of scope.
+- Next Action: Founder to confirm on home screen: (1) themed icon shows heart, (2) heart zoom matches brand reference. Adjust `scaleX/Y` in `ic_launcher_foreground.xml` if more/less padding wanted.
+
 ## Session State — 2026-06-02 16:50 CEST
 - Active Task: Remove unused `greetings` Firestore composite indexes
 - Environment: Dev config cleanup on `main`
