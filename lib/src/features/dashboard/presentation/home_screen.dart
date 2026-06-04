@@ -3227,7 +3227,7 @@ class _PulsingRadarButtonState extends ConsumerState<_PulsingRadarButton>
         const Icon(LucideIcons.dumbbell, size: 60, color: Colors.white),
       RadarModeKind.run => RunningStickman(
           isRunning: ref.watch(runModeControllerProvider).isActive,
-          size: 110,
+          size: 94,
           color: Colors.white,
         ),
       RadarModeKind.event =>

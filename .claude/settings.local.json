@@ -103,7 +103,9 @@
       "Bash(grep -iE 'AndroidRuntime|FATAL|tremble|RadarTile|RadarForeground|Resources$NotFound|VectorDrawable')",
       "Bash(adb install *)",
       "Bash(adb shell *)",
-      "Bash(adb exec-out *)"
+      "Bash(adb exec-out *)",
+      "Bash(python -c ' *)",
+      "Bash(awk '{print $5}')"
     ]
   }
 }

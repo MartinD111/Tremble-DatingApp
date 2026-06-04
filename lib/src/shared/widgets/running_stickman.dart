@@ -140,11 +140,11 @@ class _StickmanPainter extends CustomPainter {
     canvas
       ..translate(size.width / 2, size.height / 2)
       ..scale(s)
-      // Anchor on the rendered pose's true bounding-box center. With the 15°
+      // Anchor on the rendered pose's visual center of mass. With the 15°
       // lean shifting the head/arms right and the legs spreading, the visible
-      // figure spans roughly x[111..306], y[39..279] → center ≈ (208, 159).
-      // Centering here keeps the runner balanced in the radar circle.
-      ..translate(-208, -159);
+      // figure spans roughly x[111..306], y[39..279]. Offset slightly below
+      // the geometric midpoint so the figure sits centered in the radar circle.
+      ..translate(-208, -175);
 
     // ── Runner group: bounce (translateY) then 15° lean about pivot 200,200 ──
     canvas.save();

@@ -5,6 +5,10 @@
   Pure white strokes on transparent: the system tints by alpha for QS / status bar.
   Path coords are pre-transformed into the 220x220 viewport
   (SVG group: translate(110,110) scale(1.12) translate(-3.5,-20)); stroke 10 -> 11.2.
+
+  The heart's raw bbox centre is (110.56, 98.8) — slightly high in the viewport.
+  The <group> pivots on that centre, scales 1.15x (15% bigger), then nudges it
+  to the true viewport centre (110,110): translate = (110-110.56, 110-98.8).
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
@@ -12,35 +16,44 @@
     android:viewportWidth="220"
     android:viewportHeight="220">
 
-    <!-- Main curve (left lobe) -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="11.2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M101.6,166 C68,154.8 34.4,121.2 34.4,87.6 C34.4,48.4 68,31.6 101.6,65.2" />
+    <group
+        android:pivotX="110.56"
+        android:pivotY="98.8"
+        android:scaleX="1.15"
+        android:scaleY="1.15"
+        android:translateX="-0.56"
+        android:translateY="11.2">
 
-    <!-- Outer wave (right lobe) -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="11.2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M119.52,65.2 C153.12,31.6 186.72,48.4 186.72,87.6 C186.72,121.2 153.12,154.8 119.52,166" />
+        <!-- Main curve (left lobe) -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="11.2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M101.6,166 C68,154.8 34.4,121.2 34.4,87.6 C34.4,48.4 68,31.6 101.6,65.2" />
 
-    <!-- Mid wave -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="11.2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M119.52,93.2 C138.56,70.8 157.6,82 157.6,101.04 C157.6,118.96 138.56,134.64 119.52,143.6" />
+        <!-- Outer wave (right lobe) -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="11.2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M119.52,65.2 C153.12,31.6 186.72,48.4 186.72,87.6 C186.72,121.2 153.12,154.8 119.52,166" />
 
-    <!-- Inner wave -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="11.2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M119.52,111.12 C124,99.92 135.2,103.28 135.2,110 C135.2,116.72 124,122.32 119.52,127.92" />
+        <!-- Mid wave -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="11.2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M119.52,93.2 C138.56,70.8 157.6,82 157.6,101.04 C157.6,118.96 138.56,134.64 119.52,143.6" />
+
+        <!-- Inner wave -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="11.2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M119.52,111.12 C124,99.92 135.2,103.28 135.2,110 C135.2,116.72 124,122.32 119.52,127.92" />
+    </group>
 </vector>

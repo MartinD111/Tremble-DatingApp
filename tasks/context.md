@@ -1,3 +1,12 @@
+## Session State — 2026-06-04 — Splash white-plate removal
+- Active Task: Splash showed rose icon on a white square plate; want main logo centred on dark, no plate
+- Environment: Dev, `main`
+- Root cause: `flutter_native_splash.yaml` image was `Logo/tremble_splash_source.png`, which bakes a WHITE square behind the icon (transparent corners but white plate). Composited over `color:#1A1A18` → white plate visible.
+- Fix: switched splash `image` + `android_12.image` to `Logo/Tremble Icon Logo.png` (rose logo on alpha=0 transparent bg), re-ran `dart run flutter_native_splash:create` (android only this pass; ios flag restored to true but iOS assets NOT regenerated — gated on B005).
+- Modified Files: `flutter_native_splash.yaml`; regenerated `res/drawable*/splash.png`, `android12splash.png`, `background.png`, `launch_background.xml` (drawable + v21), `values{,-night}{,-v31}/styles.xml`; web splash also regenerated (side effect).
+- Verified: splash.png corner alpha=0 + rose centre; background.png solid #1A1A18; values-v31 splash bg #1A1A18. APK rebuilt + installed OK. On-device visual blocked by device lock screen (needs founder PIN).
+- NOT mine / left untouched: `lib/.../home_screen.dart`, `lib/.../running_stickman.dart` showed modified at this point — not edited by me.
+
 ## Session State — 2026-06-03 — Android icon polish + radar FGS crash fix
 - Active Task: Themed launcher icon, zoom-out foreground heart, fix radar startForeground crash
 - Environment: Dev, `main`, verified on physical Samsung SM-S938B (Android 16 / API 36)
