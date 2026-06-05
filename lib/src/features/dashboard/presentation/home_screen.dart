@@ -1457,6 +1457,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       .withValues(alpha: 0.7),
                                 ).copyWith(letterSpacing: 2),
                               ),
+                              if (pingDistance == null) ...[
+                                const SizedBox(height: 18),
+                                WarmthEmptyState(
+                                  title: t('radar_empty_title', lang),
+                                  subtitle: t('radar_empty_sub', lang),
+                                ),
+                              ],
                             ],
                           ).animate().fade().slideY(begin: 0.5),
                         ),
