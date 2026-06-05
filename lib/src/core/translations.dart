@@ -365,6 +365,7 @@ const Map<String, Map<String, String>> _translations = {
     'send_last_pulse': 'Send Last Pulse',
     'pulse_sent': 'Pulse sent! ✓',
     'pulse_expired': 'Window closed',
+    'event_recap_empty_title': 'No one crossed your path.',
     'event_recap_free_hint':
         'Go Pro to send a last Pulse to people you crossed',
     'no_attendees_yet': 'No attendees yet',
@@ -1147,6 +1148,7 @@ const Map<String, Map<String, String>> _translations = {
     'send_last_pulse': 'Pošlji zadnji Pulse',
     'pulse_sent': 'Pulse poslan! ✓',
     'pulse_expired': 'Okno zaprto',
+    'event_recap_empty_title': 'Nihče se ni znašel v tvoji bližini.',
     'event_recap_free_hint':
         'Postani Pro in pošlji zadnji Pulse osebam, ki si jih srečal',
 
@@ -1959,6 +1961,7 @@ const Map<String, Map<String, String>> _translations = {
     'send_last_pulse': 'Letzten Puls senden',
     'pulse_sent': 'Puls gesendet! ✓',
     'pulse_expired': 'Zeitfenster abgelaufen',
+    'event_recap_empty_title': 'Niemand hat deinen Weg gekreuzt.',
     'event_recap_free_hint':
         'Hol dir Pro, um einen letzten Puls an getroffene Personen zu senden',
     'no_attendees_yet': 'Noch keine Teilnehmer',
@@ -2728,6 +2731,7 @@ const Map<String, Map<String, String>> _translations = {
     'send_last_pulse': 'Invia ultimo Pulse',
     'pulse_sent': 'Pulse inviato! ✓',
     'pulse_expired': 'Finestra temporale scaduta',
+    'event_recap_empty_title': 'Nessuno ha incrociato il tuo cammino.',
     'event_recap_free_hint':
         'Passa a Pro per inviare un ultimo Pulse alle persone incontrate',
     'no_attendees_yet': 'Ancora nessun partecipante',
@@ -3493,6 +3497,7 @@ const Map<String, Map<String, String>> _translations = {
     'send_last_pulse': 'Envoyer un dernier Pulse',
     'pulse_sent': 'Pulse envoyé ! ✓',
     'pulse_expired': 'Fenêtre fermée',
+    'event_recap_empty_title': 'Personne n’a croisé votre chemin.',
     'event_recap_free_hint':
         'Passez Pro pour envoyer un dernier Pulse aux personnes croisées',
     'no_attendees_yet': 'Pas encore de participants',
@@ -4510,6 +4515,7 @@ const Map<String, Map<String, String>> _translations = {
     'do_you_want_children': 'Želiš li djecu?',
     'event_ends_soon': 'Event uskoro završava',
     'event_recap': 'Rezime događaja',
+    'event_recap_empty_title': 'Nitko ti se nije našao u blizini.',
     'event_recap_free_hint':
         'Postani Pro za slanje zadnjeg Pulsea ljudima koje si sreo/la',
     'found_each_other': 'PRONAŠLI SMO SE!',
@@ -5039,6 +5045,7 @@ const Map<String, Map<String, String>> _translations = {
     'send_last_pulse': 'Pošalji poslednji Pulse',
     'pulse_sent': 'Pulse poslat! ✓',
     'pulse_expired': 'Prozor je zatvoren',
+    'event_recap_empty_title': 'Niko ti se nije našao u blizini.',
     'event_recap_free_hint':
         'Postani Pro da pošalješ poslednji Pulse ljudima koje si sreo/la',
     'no_attendees_yet': 'Još nema posetilaca',
@@ -5704,6 +5711,7 @@ const Map<String, Map<String, String>> _translations = {
     'send_last_pulse': 'Utolsó Pulse küldése',
     'pulse_sent': 'Pulse elküldve! ✓',
     'pulse_expired': 'Az ablak bezárult',
+    'event_recap_empty_title': 'Senki sem került a közeledbe.',
     'event_recap_free_hint':
         'Legyél Pro, hogy elküldhesd az utolsó Pulse-t azoknak, akikkel találkoztál',
     'no_attendees_yet': 'Még nincsenek résztvevők',

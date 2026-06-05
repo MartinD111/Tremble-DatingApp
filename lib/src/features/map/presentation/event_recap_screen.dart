@@ -11,6 +11,7 @@ import '../../../core/translations.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../recap/data/viewed_recaps_repository.dart';
 import '../../safety/screen_protection_service.dart';
+import '../../../shared/ui/warmth_empty_state.dart';
 
 // (Countdown is managed as local state in _EventRecapScreenState — simpler
 //  and avoids provider initialisation ordering issues.)
@@ -185,12 +186,8 @@ class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
             Expanded(
               child: SizedBox.expand(
                 child: Center(
-                  child: Text(
-                    'Ni srečanj za ta event.',
-                    style: GoogleFonts.instrumentSans(
-                      fontSize: 15,
-                      color: Colors.white54,
-                    ),
+                  child: WarmthEmptyState(
+                    title: t('event_recap_empty_title', lang),
                   ),
                 ),
               ),
