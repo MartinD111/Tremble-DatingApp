@@ -1,3 +1,26 @@
+## Session State — 2026-06-06 00:30 CEST
+- Active Task: Update app store metadata and play console data safety declarations, audit permission gate strings
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/auth/presentation/permission_gate_screen.dart` (updated Bluetooth copy and added Notifications + Camera explanation cards)
+    - `tasks/appstore_metadata.md` (added Privacy Nutrition Labels, URLs, and checked off Support URL)
+    - `tasks/play_console_data_safety.md` (NEW — created Google Play Console Data Safety questionnaire answers)
+    - `tasks/context.md` (updated session state)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `dart format` completed. `flutter analyze --no-fatal-infos` clean. `flutter test --dart-define-from-file=.env.json` passed 131/131. Pre-commit hooks for all commits executed successfully.
+
+## Session Handoff
+- Completed:
+    - Audited and updated the permission gate screen (`permission_gate_screen.dart`) to have accurate, specific, and privacy-forward permission descriptions for Location, Bluetooth, Notifications, and Camera.
+    - Updated App Store Metadata (`appstore_metadata.md`) to select a subtitle option, specify support/marketing/privacy URLs, include App Store privacy nutrition labels, and complete checklist items.
+    - Created Google Play Console Data Safety declarations (`play_console_data_safety.md`) detailing data collection, data sharing sub-processors, security practices, and deletion policies in Q&A format.
+    - Verified all commits successfully compile, format, analyze cleanly, and pass all 131 unit and integration tests.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Proceed with on-device testing and provisioning once blockers B005/B006 are resolved by the founder.
+
 ## Session State — 2026-06-05 23:59 CEST
 - Active Task: Audit and reword location/GPS/BLE privacy claims for architectural accuracy
 - Environment: Dev, `main`
