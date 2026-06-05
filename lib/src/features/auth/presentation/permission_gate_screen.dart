@@ -128,7 +128,7 @@ class _ConsentView extends StatelessWidget {
           const SizedBox(height: 12),
 
           Text(
-            'Tremble needs access to two features on your device to detect nearby users. Here is exactly what we use and why.',
+            'Tremble requests access to these features on your device to detect nearby users and set up your profile. Here is exactly what we use and why.',
             style: textTheme.bodyLarge?.copyWith(
               color: Theme.of(context)
                   .colorScheme
@@ -183,7 +183,7 @@ class _ConsentView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Detects other Tremble users physically nearby. No messages or data are sent over Bluetooth — only an anonymous signal.',
+                        'Used to detect nearby users passively. No messages or data are sent over Bluetooth — only an anonymous signal.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context)
                                   .colorScheme
@@ -258,6 +258,122 @@ class _ConsentView extends StatelessWidget {
           ).animate().fadeIn(delay: 300.ms, duration: 500.ms).slideY(
               begin: 0.1, end: 0, duration: 450.ms, curve: Curves.easeOut),
 
+          const SizedBox(height: 12),
+
+          // Notifications card
+          GlassCard(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: TrembleTheme.getPillColor(
+                      isDark: isDark,
+                      isGenderBased: user?.isGenderBasedColor ?? false,
+                      gender: user?.gender,
+                    ).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    LucideIcons.bell,
+                    color: Color(0xFFF5C842),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Notifications',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Used to send you alerts for incoming waves and nearby proximity matches.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
+                              height: 1.45,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 400.ms, duration: 500.ms).slideY(
+              begin: 0.1, end: 0, duration: 450.ms, curve: Curves.easeOut),
+
+          const SizedBox(height: 12),
+
+          // Camera card
+          GlassCard(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: TrembleTheme.getPillColor(
+                      isDark: isDark,
+                      isGenderBased: user?.isGenderBasedColor ?? false,
+                      gender: user?.gender,
+                    ).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    LucideIcons.camera,
+                    color: Color(0xFF2D9B6F),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Camera',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Used only to capture your profile photo during onboarding or editing.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
+                              height: 1.45,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 500.ms, duration: 500.ms).slideY(
+              begin: 0.1, end: 0, duration: 450.ms, curve: Curves.easeOut),
+
           const SizedBox(height: 16),
 
           // GDPR footnote
@@ -270,7 +386,7 @@ class _ConsentView extends StatelessWidget {
                       .withValues(alpha: 0.4),
                   height: 1.5,
                 ),
-          ).animate().fadeIn(delay: 400.ms, duration: 400.ms),
+          ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
 
           const SizedBox(height: 48),
 
@@ -278,7 +394,7 @@ class _ConsentView extends StatelessWidget {
           PrimaryButton(
             text: isLoading ? 'Enabling...' : 'Allow Access',
             onPressed: isLoading ? () {} : onAccept,
-          ).animate().fadeIn(delay: 450.ms, duration: 400.ms).slideY(
+          ).animate().fadeIn(delay: 650.ms, duration: 400.ms).slideY(
               begin: 0.1, end: 0, duration: 400.ms, curve: Curves.easeOut),
 
           const SizedBox(height: 12),
@@ -287,7 +403,7 @@ class _ConsentView extends StatelessWidget {
             text: 'Not Now',
             isSecondary: true,
             onPressed: isLoading ? () {} : onDecline,
-          ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
+          ).animate().fadeIn(delay: 700.ms, duration: 400.ms),
 
           const SizedBox(height: 32),
         ],
