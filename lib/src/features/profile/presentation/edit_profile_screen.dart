@@ -456,7 +456,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${t('upload_failed', _lang)}: $e'),
+              content: Text(
+                '${t('upload_failed', _lang)}. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
+              ),
               backgroundColor: Colors.red,
             ),
           );

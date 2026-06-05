@@ -9,11 +9,13 @@ class ConsentStep extends StatefulWidget {
     required this.onBack,
     required this.onComplete,
     required this.tr,
+    this.photoUploadError,
   });
 
   final VoidCallback onBack;
   final VoidCallback onComplete;
   final String Function(String) tr;
+  final String? photoUploadError;
 
   @override
   State<ConsentStep> createState() => _ConsentStepState();
@@ -174,7 +176,7 @@ class _ConsentStepState extends State<ConsentStep> {
                     text:
                         'I explicitly consent to the processing of my sensitive personal data '
                         '(interests, preferences, religion, ethnicity) for the purpose of matchmaking. '
-                        'I understand this data is encrypted, never sold, and I can withdraw consent '
+                        'I understand this data is protected by Google Cloud infrastructure-level encryption at rest, never sold, and I can withdraw consent '
                         'at any time from Settings.'),
               ],
             ),
@@ -240,6 +242,20 @@ class _ConsentStepState extends State<ConsentStep> {
             ),
           ),
           const SizedBox(height: 24),
+          if (widget.photoUploadError != null) ...[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                widget.photoUploadError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.red.shade400,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
           ContinueButton(
             enabled: _consentGiven,
             onTap: widget.onComplete,

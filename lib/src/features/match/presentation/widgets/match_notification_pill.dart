@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/theme.dart';
 import '../../../../core/utils/icon_utils.dart';
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -43,7 +45,7 @@ class MatchNotificationPill extends StatefulWidget {
   /// Null → female/rose (Tremble default).
   final String? gender;
 
-  final VoidCallback onWave;
+  final FutureOr<void> Function() onWave;
 
   /// Called ONCE after dismiss animation ends.
   final VoidCallback onIgnore;
@@ -107,6 +109,7 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
   // ── Swipe state ───────────────────────────────────────────────────────────
   double _swipeDx = 0.0;
   bool _swipeCommitted = false;
+  String? _waveErrorText;
 
   // ── Controllers ───────────────────────────────────────────────────────────
   late final AnimationController _dropCtrl;
@@ -246,7 +249,18 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
     final capturedOnWave = widget.onWave;
     final capturedOnMatch = widget.onMatch;
 
-    capturedOnWave();
+    setState(() => _waveErrorText = null);
+
+    try {
+      await Future<void>.sync(capturedOnWave);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _stage = _Stage.idle;
+        _waveErrorText = 'Ni uspelo. Poskusi znova.';
+      });
+      return;
+    }
 
     setState(() => _stage = _Stage.shaking);
     _shakeCtrl.reset();
@@ -399,6 +413,9 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
         final showHint = widget.showSwipeHint &&
             _stage != _Stage.success &&
             _stage != _Stage.dismissing;
+        final showError = _waveErrorText != null &&
+            _stage != _Stage.success &&
+            _stage != _Stage.dismissing;
 
         return Transform.translate(
           offset: Offset(shakeX + swipeX, dy),
@@ -419,6 +436,18 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
                     textC: textC,
                   ),
                 ),
+                if (showError)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      _waveErrorText!,
+                      style: GoogleFonts.instrumentSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: TrembleTheme.rose,
+                      ),
+                    ),
+                  ),
                 if (showHint)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),

@@ -118,17 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   PremiumPaywallBottomSheet.show(context);
                   return;
                 }
-                try {
-                  await ref.read(waveRepositoryProvider).sendWave(uid);
-                } catch (e, st) {
-                  debugPrint('WavePill sendWave error: $e\n$st');
-                  if (context.mounted) {
-                    final lang = ref.read(appLanguageProvider);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(t('wave_failed', lang))),
-                    );
-                  }
-                }
+                await ref.read(waveRepositoryProvider).sendWave(uid);
               },
             );
           },
@@ -913,19 +903,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           age: profile.age,
                           onWave: () {
                             unawaited(HapticFeedback.lightImpact());
-                            ref
+                            return ref
                                 .read(runClubRepositoryProvider)
-                                .sendWave(activeRunCross.id, user.id)
-                                .catchError((Object e, StackTrace st) {
-                              debugPrint('LiveRunCard sendWave error: $e\n$st');
-                              if (context.mounted) {
-                                final lang = ref.read(appLanguageProvider);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(t('wave_failed', lang))),
-                                );
-                              }
-                            });
+                                .sendWave(activeRunCross.id, user.id);
                           },
                           onDismiss: () {
                             ref
@@ -1245,6 +1225,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       data: (p) => buildOverlay(p.name),
                                       loading: () => TrembleLoadingSpinner(
                                         style: LoadingStyle.dynamic,
+                                        duration: const Duration(seconds: 2),
                                         messages: [
                                           t('loading_scanning', lang),
                                           t('loading_connecting', lang),

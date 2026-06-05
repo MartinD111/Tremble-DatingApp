@@ -8,6 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
 import 'package:tremble/src/shared/ui/primary_button.dart';
 import 'package:tremble/src/shared/ui/premium_paywall.dart';
+import 'package:tremble/src/shared/ui/skeleton.dart';
 import 'package:tremble/src/shared/ui/warmth_empty_state.dart';
 import 'package:tremble/src/features/matches/data/match_repository.dart';
 import 'package:tremble/src/features/auth/data/auth_repository.dart';
@@ -604,9 +605,18 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: filteredAsync.when(
-                loading: () => Center(
-                  child:
-                      CircularProgressIndicator(color: primary, strokeWidth: 2),
+                loading: () => DelayedChild(
+                  child: ListView(
+                    padding: const EdgeInsets.only(top: 8, bottom: 12),
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: const [
+                      _MatchCardSkeleton(),
+                      SizedBox(height: 12),
+                      _MatchCardSkeleton(),
+                      SizedBox(height: 12),
+                      _MatchCardSkeleton(),
+                    ],
+                  ),
                 ),
                 error: (err, _) => Center(
                   child: Column(
@@ -1567,4 +1577,38 @@ class _MatchDisplayItem {
   final MatchProfile profile;
   final bool isLocked;
   _MatchDisplayItem({required this.profile, required this.isLocked});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _MatchCardSkeleton — placeholder that mirrors the encounter card layout
+// ─────────────────────────────────────────────────────────────────────────────
+class _MatchCardSkeleton extends StatelessWidget {
+  const _MatchCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      opacity: 0.15,
+      borderRadius: 999,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        children: [
+          const SkeletonBox(width: 64, height: 64, borderRadius: 32),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                SkeletonBox(height: 20),
+                SizedBox(height: 6),
+                SkeletonBox(width: 100, height: 14),
+              ],
+            ),
+          ),
+          const SizedBox(width: 48),
+          const SizedBox(width: 5),
+        ],
+      ),
+    );
+  }
 }

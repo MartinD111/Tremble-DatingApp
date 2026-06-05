@@ -180,8 +180,11 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
                               setState(() => _isProcessing = false);
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text('Failed: ${e.toString()}')),
+                                  const SnackBar(
+                                    content: Text(
+                                      'Anonimnega načina ni bilo mogoče posodobiti. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
+                                    ),
+                                  ),
                                 );
                               }
                             }

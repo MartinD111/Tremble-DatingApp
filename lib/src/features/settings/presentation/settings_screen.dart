@@ -507,9 +507,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                             setDialogState(() => isLoading = false);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        'Deletion failed: ${e.toString()}')),
+                                const SnackBar(
+                                  content: Text(
+                                    'Računa ni bilo mogoče izbrisati. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
+                                  ),
+                                ),
                               );
                             }
                           }
@@ -769,8 +771,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       );
     }
 
-    final customerInfo =
-        ref.watch(revenueCatSubscriptionProvider).customerInfo;
+    final customerInfo = ref.watch(revenueCatSubscriptionProvider).customerInfo;
     final statusText = _premiumStatusText(customerInfo);
 
     return SizedBox(

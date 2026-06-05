@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
@@ -6,6 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:tremble/src/features/match/application/match_service.dart';
 import 'package:tremble/src/features/match/data/wave_repository.dart';
+import 'package:tremble/src/features/match/presentation/wave_controller.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/tremble_header.dart';
 import '../../matches/data/match_repository.dart';
@@ -528,7 +531,11 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
         : TrembleTheme.rose.withValues(alpha: 0.6);
 
     // Determine wave state from Firestore match doc
-    final iWaved = matchDoc?.hasWaved(myUid) ?? false;
+    final waveSendState = ref.watch(waveControllerProvider).valueOrNull;
+    final optimisticWaveSent =
+        waveSendState?.isOptimisticFor(match.id) ?? false;
+    final inlineErrorMessage = waveSendState?.inlineErrorFor(match.id);
+    final iWaved = (matchDoc?.hasWaved(myUid) ?? false) || optimisticWaveSent;
     final theyWaved = matchDoc?.hasWaved(match.id) ?? false;
     final isMutual = matchDoc?.isMutual ?? false;
 
@@ -546,30 +553,26 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
       isSent = true;
     }
 
-    Future<bool> Function() onGreet = () async {
+    void onGreet() {
       final user = ref.read(authStateProvider);
       if (user?.hasReachedFreeWaveLimit == true) {
         PremiumPaywallBottomSheet.show(context);
-        return false;
+        return;
       }
 
-      try {
-        if (matchDoc != null) {
-          await ref.read(waveRepositoryProvider).sendGesture(matchDoc.id);
-        } else {
-          await ref.read(matchControllerProvider.notifier).greet();
-        }
-        return true;
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Napaka: $e'),
-            backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-          ));
-        }
-        return false;
-      }
-    };
+      unawaited(
+        ref.read(waveControllerProvider.notifier).handleWave(
+          match.id,
+          writeWave: () async {
+            if (matchDoc != null) {
+              await ref.read(waveRepositoryProvider).sendGesture(matchDoc.id);
+            } else {
+              await ref.read(matchControllerProvider.notifier).greet();
+            }
+          },
+        ),
+      );
+    }
 
     return Row(
       children: [
@@ -587,11 +590,30 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: _WaveButton(
-            text: waveText,
-            color: isSent ? primaryColor.withValues(alpha: 0.5) : primaryColor,
-            onTap: isSent ? null : onGreet,
-            theyWaved: _waveAnimTriggered,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _WaveButton(
+                text: waveText,
+                color:
+                    isSent ? primaryColor.withValues(alpha: 0.5) : primaryColor,
+                isSent: isSent,
+                onTap: isSent ? null : onGreet,
+                theyWaved: _waveAnimTriggered,
+              ),
+              if (inlineErrorMessage != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  inlineErrorMessage,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.instrumentSans(
+                    color: TrembleTheme.rose,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ],
@@ -1134,12 +1156,14 @@ class _ActionTextButton extends StatelessWidget {
 class _WaveButton extends StatefulWidget {
   final String text;
   final Color color;
-  final Future<bool> Function()? onTap;
+  final bool isSent;
+  final VoidCallback? onTap;
   final bool theyWaved;
 
   const _WaveButton({
     required this.text,
     required this.color,
+    required this.isSent,
     this.onTap,
     this.theyWaved = false,
   });
@@ -1164,7 +1188,6 @@ class _WaveButtonState extends State<_WaveButton>
   late final AnimationController _rainbowCtrl;
   late final Animation<double> _shakeX;
   bool _rainbowActive = false;
-  bool _sent = false;
   // True when the current shake was triggered by the user tapping Wave
   // (not by theyWaved), so rainbow doesn't activate afterwards.
   bool _shakeForSent = false;
@@ -1204,6 +1227,10 @@ class _WaveButtonState extends State<_WaveButton>
   @override
   void didUpdateWidget(_WaveButton old) {
     super.didUpdateWidget(old);
+    if (!old.isSent && widget.isSent) {
+      _shakeForSent = true;
+      _shakeCtrl.forward(from: 0);
+    }
     if (!old.theyWaved && widget.theyWaved) {
       _shakeForSent = false;
       _shakeCtrl.forward(from: 0);
@@ -1217,31 +1244,22 @@ class _WaveButtonState extends State<_WaveButton>
     super.dispose();
   }
 
-  Future<void> _handleTap() async {
-    if (_sent || widget.onTap == null) return;
-    final didSend = await widget.onTap!();
-    if (!didSend || !mounted) return;
-
-    setState(() {
-      _sent = true;
-      _shakeForSent = true;
-    });
-    _shakeCtrl.forward(from: 0);
-    HapticFeedback.lightImpact();
+  void _handleTap() {
+    if (widget.isSent || widget.onTap == null) return;
     widget.onTap!();
   }
 
   @override
   Widget build(BuildContext context) {
-    final displayColor = _sent ? Colors.amber : widget.color;
-    final displayText = _sent ? 'Wave sent' : widget.text;
+    final displayColor = widget.isSent ? Colors.amber : widget.color;
+    final displayText = widget.isSent ? 'Wave sent' : widget.text;
 
     return AnimatedBuilder(
       animation: Listenable.merge([_shakeCtrl, _rainbowCtrl]),
       builder: (_, __) => Transform.translate(
         offset: Offset(_shakeCtrl.isAnimating ? _shakeX.value : 0, 0),
         child: GestureDetector(
-          onTap: _sent ? null : _handleTap,
+          onTap: widget.isSent ? null : _handleTap,
           child: CustomPaint(
             foregroundPainter: _rainbowActive
                 ? _RainbowBorderPainter(_rainbowCtrl.value, _rainbow)

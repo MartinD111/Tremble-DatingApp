@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../../core/places_service.dart';
+import '../../../../../core/theme.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 
@@ -136,10 +137,10 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
       color = Colors.amber;
     } else if (strength < 0.9) {
       label = widget.tr('strong');
-      color = const Color(0xFF2D9B6F);
+      color = TrembleTheme.successGreen;
     } else {
       label = widget.tr('very_strong');
-      color = const Color(0xFF2D9B6F);
+      color = TrembleTheme.successGreen;
     }
     setState(() {
       _passwordStrength = strength;
@@ -291,7 +292,7 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final unmetIconColor = isDark ? Colors.white30 : Colors.black26;
     final unmetTextColor = isDark ? Colors.white38 : Colors.black45;
-    final successColor = isDark ? Colors.greenAccent : const Color(0xFF2D9B6F);
+    const successColor = TrembleTheme.successGreen;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 3),
@@ -301,10 +302,7 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
         const SizedBox(width: 6),
         Text(text,
             style: TextStyle(
-                fontSize: 12,
-                color: met ? successColor : unmetTextColor,
-                decoration: met ? TextDecoration.lineThrough : null,
-                decorationColor: successColor.withValues(alpha: 0.5))),
+                fontSize: 12, color: met ? successColor : unmetTextColor)),
       ]),
     );
   }
@@ -530,8 +528,6 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
                   if (!isVerifiedPasswordUser && !isSocialUser) ...[
                     const SizedBox(height: 20),
                     _passwordInputField(),
-                    const SizedBox(height: 20),
-                    _confirmPasswordInputField(),
                     if (widget.passwordController.text.isNotEmpty) ...[
                       const SizedBox(height: 12),
                       _passwordStrengthBar(),
@@ -540,12 +536,9 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
                       _pwReq(widget.tr('pw_uppercase'), _hasUppercase),
                       _pwReq(widget.tr('pw_digit'), _hasDigit),
                       _pwReq(widget.tr('pw_special'), _hasSpecialChar),
-                      _pwReq(
-                          widget.tr('confirm_password'),
-                          widget.passwordController.text ==
-                                  _confirmPasswordController.text &&
-                              _confirmPasswordController.text.isNotEmpty),
                     ],
+                    const SizedBox(height: 20),
+                    _confirmPasswordInputField(),
                   ],
                   const SizedBox(height: 24),
                   _buildPremiumPill(),

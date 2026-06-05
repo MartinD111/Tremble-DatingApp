@@ -49,7 +49,7 @@ void main() {
     expect(runRecap, contains('RecapProvider error:'));
     expect(runRecap, isNot(contains('error: (_, __) =>')));
     expect(runRecap, contains('sendWave error:'));
-    expect(runRecap, contains('wave_failed'));
+    expect(runRecap, contains('Ni uspelo. Poskusi znova.'));
     expect(runRecap, contains('viewedRecaps write failed:'));
     expect(eventRecap, contains('viewedRecaps write failed:'));
     expect(gymSheet, isNot(contains('ref.read(authStateProvider)!')));

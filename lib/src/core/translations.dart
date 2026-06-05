@@ -138,9 +138,9 @@ const Map<String, Map<String, String>> _translations = {
     'undo': 'Undo',
     'system_nominal': 'System Nominal',
     'searching_signals': 'Searching for signals...',
-    'loading_scanning': 'Scanning for nearby matches...',
-    'loading_connecting': 'Connecting to the radar...',
-    'loading_signals': 'Looking for signals...',
+    'loading_scanning': 'Starting radar.',
+    'loading_connecting': 'Searching nearby.',
+    'loading_signals': 'Radar active.',
     'outage_title': 'Connection Interrupted',
     'outage_subtitle':
         'Your profile, matches, and logs are completely safe. We are reconnecting...',
@@ -1016,9 +1016,9 @@ const Map<String, Map<String, String>> _translations = {
     'undo': 'Razveljavi',
     'system_nominal': 'Sistem deluje',
     'searching_signals': 'Iskanje signalov...',
-    'loading_scanning': 'Iskanje ujemanj v bližini...',
-    'loading_connecting': 'Povezovanje z radarjem...',
-    'loading_signals': 'Iskanje signalov...',
+    'loading_scanning': 'Zaganjam radar.',
+    'loading_connecting': 'Iskanje v blizini.',
+    'loading_signals': 'Radar je aktiven.',
     'outage_title': 'Povezava prekinjena',
     'outage_subtitle':
         'Vaš profil, ujemanja in zgodovina so popolnoma varni. Ponovno se povezujemo...',
@@ -1775,9 +1775,9 @@ const Map<String, Map<String, String>> _translations = {
     'undo': 'Rückgängig',
     'system_nominal': 'System Nominal',
     'searching_signals': 'Suche nach Signalen...',
-    'loading_scanning': 'Suche nach Partnern in der Nähe...',
-    'loading_connecting': 'Verbindung zum Radar wird hergestellt...',
-    'loading_signals': 'Nach Signalen suchen...',
+    'loading_scanning': 'Radar wird gestartet.',
+    'loading_connecting': 'Suche in der Nähe.',
+    'loading_signals': 'Radar ist aktiv.',
     'outage_title': 'Verbindung unterbrochen',
     'outage_subtitle':
         'Dein Profil, deine Übereinstimmungen und deine Protokolle sind absolut sicher. Wir verbinden uns neu...',
@@ -2486,6 +2486,8 @@ const Map<String, Map<String, String>> _translations = {
     'missed': 'VERPASST',
     'history_subtitle': 'Liste der Personen, die deinen Kriterien entsprachen.',
     'no_encounters_history': 'Hier hat sich nichts bewegt.',
+    'radar_empty_title': 'Draußen ist es ruhig.',
+    'radar_empty_sub': 'Leb deinen Tag — wir passen auf.',
 
     // --- Anonymity & Safe Zones (F13) ---
     'privacy_and_stealth': 'Privatsphäre & Tarnung',
@@ -2545,9 +2547,9 @@ const Map<String, Map<String, String>> _translations = {
     'undo': 'Annulla',
     'system_nominal': 'Sistema Nominale',
     'searching_signals': 'Ricerca segnali...',
-    'loading_scanning': 'Ricerca di profili nelle vicinanze...',
-    'loading_connecting': 'Connessione al radar...',
-    'loading_signals': 'Ricerca di segnali...',
+    'loading_scanning': 'Avvio radar.',
+    'loading_connecting': 'Ricerca nelle vicinanze.',
+    'loading_signals': 'Radar attivo.',
     'outage_title': 'Connessione interrotta',
     'outage_subtitle':
         'Il tuo profilo, i tuoi match e la tua cronologia sono al sicuro. Riconnessione in corso...',
@@ -3256,6 +3258,8 @@ const Map<String, Map<String, String>> _translations = {
     'missed': 'PERSO',
     'history_subtitle': 'Persone che corrispondevano ai tuoi criteri.',
     'no_encounters_history': 'Niente di nuovo qui.',
+    'radar_empty_title': 'Là fuori è tranquillo.',
+    'radar_empty_sub': 'Vivi la tua giornata — noi teniamo d\'occhio.',
 
     // --- Anonimato e Zone Sicure (F13) ---
     'privacy_and_stealth': 'Privacy e Anonimato',
@@ -3310,9 +3314,9 @@ const Map<String, Map<String, String>> _translations = {
     'undo': 'Annuler',
     'system_nominal': 'Système Nominal',
     'searching_signals': 'Recherche de signaux...',
-    'loading_scanning': 'Recherche de profils à proximité...',
-    'loading_connecting': 'Connexion au radar...',
-    'loading_signals': 'Recherche de signaux...',
+    'loading_scanning': 'Démarrage du radar.',
+    'loading_connecting': 'Recherche à proximité.',
+    'loading_signals': 'Radar actif.',
     'outage_title': 'Connexion interrompue',
     'outage_subtitle':
         'Votre profil, vos matchs et vos historiques sont en parfaite sécurité. Reconnexion en cours...',
@@ -4034,6 +4038,8 @@ const Map<String, Map<String, String>> _translations = {
     'both_sent_wave': 'Vous avez tous les deux envoyé une wave',
 
     // --- Run Club ---
+    'radar_empty_title': 'C\'est calme dehors.',
+    'radar_empty_sub': 'Vivez votre journée — on veille.',
 
     // --- Anonymat et Zones Sécurisées ---
     'privacy_and_stealth': 'Confidentialité et Furtivité',
@@ -4313,9 +4319,9 @@ const Map<String, Map<String, String>> _translations = {
     'school_hint': 'npr. Sveučilište u Zagrebu',
     'battery_warning':
         'Ova značajka troši {percent}% više baterije nego uobičajeno.',
-    'loading_scanning': 'Traženje spojeva u blizini...',
-    'loading_connecting': 'Povezivanje s radarom...',
-    'loading_signals': 'Traženje signala...',
+    'loading_scanning': 'Pokrećem radar.',
+    'loading_connecting': 'Pretraživanje u blizini.',
+    'loading_signals': 'Radar je aktivan.',
     'outage_title': 'Veza prekinuta',
     'outage_subtitle':
         'Vaš profil, spojevi i povijest potpuno su sigurni. Ponovno se povezujemo...',
@@ -4858,9 +4864,9 @@ const Map<String, Map<String, String>> _translations = {
     'undo': 'Opozovi',
     'system_nominal': 'Sistem Nominalan',
     'searching_signals': 'Tražim signale...',
-    'loading_scanning': 'Traženje spojeva u blizini...',
-    'loading_connecting': 'Povezivanje sa radarom...',
-    'loading_signals': 'Traženje signala...',
+    'loading_scanning': 'Pokretam radar.',
+    'loading_connecting': 'Pretraživanje u blizini.',
+    'loading_signals': 'Radar je aktivan.',
     'outage_title': 'Veza prekinuta',
     'outage_subtitle':
         'Vaš profil, spojevi i istorija su potpuno sigurni. Ponovo se povezujemo...',
@@ -5566,6 +5572,8 @@ const Map<String, Map<String, String>> _translations = {
     'missed': 'PROPUŠTENO',
     'history_subtitle': 'Lista ljudi koji su odgovarali tvojim kriterijumima.',
     'no_encounters_history': 'Ništa se nije pomerilo ovde.',
+    'radar_empty_title': 'Tiho je napolju.',
+    'radar_empty_sub': 'Živi svoj dan — mi pazimo.',
 
     // --- Anonymity & Safe Zones (F13) ---
     'privacy_and_stealth': 'Privatnost i nevidljivost',
@@ -5633,9 +5641,9 @@ const Map<String, Map<String, String>> _translations = {
     'undo': 'Visszavonás',
     'system_nominal': 'Rendszer üzemkész',
     'searching_signals': 'Jelek keresése...',
-    'loading_scanning': 'Közeli párok keresése...',
-    'loading_connecting': 'Kapcsolódás a radarhoz...',
-    'loading_signals': 'Jelek keresése...',
+    'loading_scanning': 'Radar indítása.',
+    'loading_connecting': 'Keresés a közelben.',
+    'loading_signals': 'Radar aktív.',
     'outage_title': 'Kapcsolat megszakadt',
     'outage_subtitle':
         'A profilod, párjaid és előzményeid teljesen biztonságban vannak. Újrakapcsolódás...',
@@ -6297,6 +6305,8 @@ const Map<String, Map<String, String>> _translations = {
     'missed': 'ELMÚLT',
     'history_subtitle': 'A kritériumidnak megfelelő személyek listája.',
     'no_encounters_history': 'Itt semmi sem mozdult.',
+    'radar_empty_title': 'Csend van odakint.',
+    'radar_empty_sub': 'Éld a napod — mi figyelünk.',
     // --- UGC Safety ---
     'prompt_coffee': 'Nagyon jó kávét készítek...',
     'prompt_concert': 'A legjobb koncert volt...',

@@ -1,3 +1,221 @@
+## Session State — 2026-06-05 18:30 CEST
+- Active Task: Format source controlled files and prepare for pre-commit checks
+- Environment: Dev, `main`
+- Modified Files:
+    - All modified files under `lib/` and `test/` formatted and staged
+    - `tasks/context.md` (updated session handoff)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `dart format` successfully completed and staged. `flutter analyze --no-fatal-infos` clean. `flutter test --dart-define=FLAVOR=dev` 131/131 passed. Backend build and test checks passing.
+
+## Session Handoff
+- Completed:
+    - Formatted all Dart source code files under `lib/` and `test/` using `dart format`.
+    - Staged the formatted changes for `registration_flow.dart` and `home_screen.dart` so they pass the pre-commit formatter checks.
+    - Verified all quality gates locally (Flutter analysis, Flutter tests, backend build, backend lint, and backend tests).
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Proceed with `git commit` and sync.
+
+## Session State — 2026-06-05 18:00 CEST
+- Active Task: Skeleton screens for matches and run recap loading states
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/shared/ui/skeleton.dart` (NEW — SkeletonBox + DelayedChild reusable widgets)
+    - `lib/src/features/matches/presentation/matches_screen.dart` (replaced spinner with _MatchCardSkeleton × 3)
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart` (replaced history spinner with _RecapItemSkeleton × 2)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze --no-fatal-infos` passed (0 issues). `flutter test --dart-define=FLAVOR=dev` 131/131 passed.
+
+## Session Handoff
+- Completed:
+    - Created `lib/src/shared/ui/skeleton.dart` with `SkeletonBox` (pulsing shimmer, 1.2s oscillation, dark/light theme-aware) and `DelayedChild` (300ms gate).
+    - Replaced matches_screen spinner with 3 `_MatchCardSkeleton` pill cards (64×64 circle + 2 text lines) inside a `DelayedChild`.
+    - Replaced run_recap_screen history spinner with 2 `_RecapItemSkeleton` cards (34×34 circle + name line + timestamp) inside a `DelayedChild`.
+    - Active section loading in run_recap_screen kept as `SizedBox.shrink()` — was not a spinner.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Continue launch-polish work when founder provides the next task.
+
+## Session State — 2026-06-05 17:30 CEST
+- Active Task: Loading states — BLE init + photo upload (Lesson #7)
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/core/translations.dart` (updated loading_scanning/connecting/signals for all 8 languages)
+    - `lib/src/core/upload_service.dart` (added onProgress callback via chunked HttpClient)
+    - `lib/src/features/auth/presentation/registration_flow.dart` (upload progress overlay)
+    - `lib/src/features/dashboard/presentation/home_screen.dart` (spinner duration 2s)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `flutter analyze --no-fatal-infos` passed (0 issues).
+
+## Session Handoff
+- Completed:
+    - Updated all 8 language translations for `loading_scanning`, `loading_connecting`, `loading_signals` to match the BLE initialization sequence: "Starting radar → Searching nearby → Radar active" (SL: 'Zaganjam radar.' / 'Iskanje v blizini.' / 'Radar je aktiven.').
+    - Changed radar match-overlay spinner interval from 2500ms to 2000ms.
+    - Rewrote `UploadService.uploadPhoto()` to stream bytes in 64 KB chunks using raw `HttpClient`, exposing an optional `onProgress(bytes, total)` callback. `IOClient` dependency removed (same error types retained).
+    - Added `_isUploadingPhotos`, `_uploadProgress`, `_uploadLongRunning` state vars to `_RegistrationFlowState`.
+    - During `completeRegistration()`, per-photo byte progress is aggregated and fed to a full-screen overlay (`_buildUploadOverlay`) shown above the PageView.
+    - Overlay: `LinearProgressIndicator` (Rose #F4436C fill, 0–1 value), 'Nalaganje slike...' label, 'Še traja, ne zapri aplikacije.' appears if upload exceeds 10 seconds. `_isHardLocking` overlay still fires afterward as before.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Continue launch-polish work when founder provides the next task.
+
+## Session State — 2026-06-05 16:24 CEST
+- Active Task: Error placement for BLE/GPS denied states, Wave write failures, and raw Firebase UI strings
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/core/router.dart`
+    - `lib/src/features/auth/presentation/forgot_password_screen.dart`
+    - `lib/src/features/auth/presentation/registration_flow.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `lib/src/features/dashboard/presentation/run_recap_screen.dart`
+    - `lib/src/features/dashboard/presentation/widgets/live_run_card.dart`
+    - `lib/src/features/match/presentation/widgets/match_notification_pill.dart`
+    - `lib/src/features/matches/presentation/match_dialog.dart`
+    - `lib/src/features/profile/presentation/edit_profile_screen.dart`
+    - `lib/src/features/safety/presentation/anonymous_mode_screen.dart`
+    - `lib/src/features/safety/presentation/blocked_users_screen.dart`
+    - `lib/src/features/safety/presentation/safe_zones_screen.dart`
+    - `lib/src/features/safety/presentation/widgets/ugc_action_sheet.dart`
+    - `lib/src/features/settings/presentation/settings_screen.dart`
+    - `lib/src/shared/ui/wave_pill_service.dart`
+    - `test/features/auth/registration_flow_test.dart`
+    - `test/features/dashboard/run_recap_defensive_paths_test.dart`
+    - `test/features/match/near_miss_locked_state_test.dart`
+    - `test/features/match/wave_limit_guard_wiring_test.dart`
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `dart format` completed; focused error-placement tests passed; `flutter analyze --no-fatal-infos` passed; full `flutter test --dart-define=FLAVOR=dev` passed; `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` passed.
+
+## Session Handoff
+- Completed:
+    - Confirmed radar BLE denied/off state is already rendered inline through `RadarBleIssueMessage`; blocking permission-gate UI was left unchanged.
+    - Moved Wave write failures out of SnackBars for foreground wave pill, live run card, run recap, and match dialog surfaces.
+    - Added local optimistic/rollback state where needed so failed Wave writes show `Ni uspelo. Poskusi znova.` inline next to the Wave action.
+    - Returned/awaited existing Wave write futures from foreground pill call sites so the pill can catch failures without changing repository write logic.
+    - Replaced user-visible raw exception strings with action-specific, user-friendly copy in forgot password, profile upload, account deletion, and safety flows.
+    - Added regression coverage for inline Wave failure placement and filtered reset-password errors.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Continue launch-polish work when founder provides the next task.
+
+## Session State — 2026-06-05 16:02 CEST
+- Active Task: Wave optimistic UI with rollback
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/match/presentation/wave_controller.dart`
+    - `lib/src/features/match/presentation/wave_controller.g.dart`
+    - `lib/src/features/profile/presentation/profile_detail_screen.dart`
+    - `test/features/match/wave_limit_guard_wiring_test.dart`
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: focused Wave tests passed; `flutter analyze --no-fatal-infos` passed; full `flutter test --dart-define=FLAVOR=dev` passed; `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` passed.
+
+## Session Handoff
+- Completed:
+    - Added `WaveSendState` to `WaveController` so wave taps set `AsyncData(optimisticValue)` before awaiting the existing write.
+    - Preserved existing write logic in `ProfileDetailScreen`: `sendGesture(matchDoc.id)` when a match doc exists, otherwise `matchController.greet()`.
+    - Fired the write via `unawaited(...)` from the Wave button path so UI updates immediately and the network write runs in the background.
+    - On exception or timeout, rolled back the optimistic sent state and exposed the inline error: `Wave ni bil poslan. Poskusi znova.`
+    - Removed the profile Wave button double-submit path by making sent state derive from Firestore/optimistic Riverpod state instead of calling `onTap` twice.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Continue launch-polish work when founder provides the next task.
+
+## Session State — 2026-06-05 15:53 CEST
+- Active Task: Privacy consent encryption copy correction
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart`
+    - `test/features/auth/registration_flow_test.dart`
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: focused registration flow test passed; targeted `flutter analyze --no-fatal-infos lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart` passed.
+
+## Session Handoff
+- Completed:
+    - Found the current consent step at `lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart`; the requested `features/registration/...` path does not exist.
+    - Replaced the inaccurate "this data is encrypted" claim with "protected by Google Cloud infrastructure-level encryption at rest" while preserving the surrounding sentence.
+    - Added focused regression coverage to prevent the app-level encryption overclaim from returning.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Continue launch-polish work when founder provides the next task.
+
+## Session State — 2026-06-05 15:51 CEST
+- Active Task: Password field live checklist alignment
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/auth/presentation/widgets/registration_steps/email_location_step.dart`
+    - `test/features/auth/registration_flow_test.dart`
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - Firebase Console password policy is not represented locally; app-side registration currently enforces 8+ chars, uppercase, digit, and special char before calling Firebase Auth.
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `dart format` completed; focused registration flow test passed; `flutter analyze --no-fatal-infos` passed; `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev` passed.
+
+## Session Handoff
+- Completed:
+    - Confirmed password validation source in `email_location_step.dart`: min length, uppercase, digit, and special character are required before the next button enables.
+    - Updated the live password checklist to use `TrembleTheme.successGreen` (`#2D9B6F`) for met items and grey styling for unmet items.
+    - Kept the next button disabled until local password requirements and confirm-password match pass; it updates from existing `onChanged` state changes without an extra tap.
+    - Added focused regression coverage for the enforced checklist requirements and styling contract.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Continue launch-polish work when founder provides the next task.
+
+## Session State — 2026-06-05 15:46 CEST
+- Active Task: Bio field character counter investigation
+- Environment: Dev, `main`
+- Modified Files:
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - Requested onboarding bio input does not exist in the current flow. `registration_flow.dart` has `// Prompt (Removed)` and sends `prompts: const {}`.
+    - `firestore.rules` allows `bio` up to 500 chars, but `completeOnboardingSchema` and `updateProfileSchema` are strict and do not accept `bio`.
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: Investigation only; no Dart files changed for this task.
+
+## Session Handoff
+- Completed:
+    - Read `tasks/lessons.md` before implementation.
+    - Verified the direct Firestore `bio` size limit is 500 characters.
+    - Confirmed no current onboarding bio/prompt text input exists to patch narrowly.
+- In Progress: None.
+- Blocked:
+    - Adding the requested counter requires first restoring/creating a bio or prompt input and wiring it through strict Cloud Function schemas, which is outside a narrow "do not change anything else" patch.
+- Next Action: Founder to confirm whether to restore/create a bio/prompt onboarding step despite the zero-writing onboarding rule.
+
+## Session State — 2026-06-05 15:40 CEST
+- Active Task: Radar empty-state translation key coverage
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/core/translations.dart` (added missing `radar_empty_title` / `radar_empty_sub` keys for DE, IT, FR, SR, HU)
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: focused translation-key presence check passed; `flutter analyze --no-fatal-infos lib/src/core/translations.dart` passed.
+
+## Session Handoff
+- Completed:
+    - Verified `radar_empty_title` and `radar_empty_sub` across EN, SL, DE, IT, FR, SR, HU, HR.
+    - Added the missing keys only for DE, IT, FR, SR, and HU.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Continue launch-polish work when founder provides the next task.
+
 ## Session State — 2026-06-04 — Splash white-plate removal
 - Active Task: Splash showed rose icon on a white square plate; want main logo centred on dark, no plate
 - Environment: Dev, `main`

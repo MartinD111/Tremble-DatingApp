@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme.dart';
 import '../../../shared/ui/glass_card.dart';
+import '../../../shared/ui/skeleton.dart';
 import '../../../shared/ui/warmth_empty_state.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../matches/data/match_repository.dart';
@@ -358,11 +359,17 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
                   ),
                 );
               },
-              loading: () => const SliverToBoxAdapter(
-                child: Center(
+              loading: () => SliverToBoxAdapter(
+                child: DelayedChild(
                   child: Padding(
-                    padding: EdgeInsets.all(20),
-                    child: CircularProgressIndicator(strokeWidth: 1),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        const _RecapItemSkeleton(),
+                        const SizedBox(height: 10),
+                        const _RecapItemSkeleton(),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -399,6 +406,9 @@ class _RecapItem extends ConsumerStatefulWidget {
 
 class _RecapItemState extends ConsumerState<_RecapItem> {
   bool _ttlStarted = false;
+  bool _isSendingWave = false;
+  bool _optimisticWaveSent = false;
+  String? _waveErrorMessage;
 
   @override
   void initState() {
@@ -435,21 +445,28 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
         '${(remainingSeconds % 60).toString().padLeft(2, '0')}';
   }
 
-  Future<void> _handleWaveTap(BuildContext context) async {
+  Future<void> _handleWaveTap() async {
     unawaited(HapticFeedback.lightImpact());
     final onWave = widget.onWave;
     if (onWave == null) return;
 
     try {
+      setState(() {
+        _isSendingWave = true;
+        _optimisticWaveSent = true;
+        _waveErrorMessage = null;
+      });
       await onWave();
+      if (!mounted) return;
+      setState(() => _isSendingWave = false);
     } catch (e, st) {
       debugPrint('sendWave error: $e\n$st');
-      if (context.mounted) {
-        final lang = ref.read(appLanguageProvider);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t('wave_failed', lang))),
-        );
-      }
+      if (!mounted) return;
+      setState(() {
+        _isSendingWave = false;
+        _optimisticWaveSent = false;
+        _waveErrorMessage = 'Ni uspelo. Poskusi znova.';
+      });
     }
   }
 
@@ -478,8 +495,11 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
     }
     final isExpired = shouldTrackTTL && ttlState.isExpired;
     final isReadOnly = !widget.isPremium || widget.isHistory || isExpired;
-    final showWaveButton =
-        shouldTrackTTL && !widget.iWaved && !isExpired && widget.onWave != null;
+    final effectiveIWaved = widget.iWaved || _optimisticWaveSent;
+    final showWaveButton = shouldTrackTTL &&
+        !effectiveIWaved &&
+        !isExpired &&
+        widget.onWave != null;
 
     return profileAsync.when(
       data: (profile) => GestureDetector(
@@ -552,7 +572,7 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
                         letterSpacing: 1.2,
                       ),
                     )
-                  else if (widget.iWaved)
+                  else if (effectiveIWaved)
                     Text(
                       t('run_wave_sent', lang).toUpperCase(),
                       style: GoogleFonts.jetBrainsMono(
@@ -564,12 +584,15 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
                     )
                   else if (showWaveButton)
                     GestureDetector(
-                      onTap: () => unawaited(_handleWaveTap(context)),
+                      onTap: _isSendingWave
+                          ? null
+                          : () => unawaited(_handleWaveTap()),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 9),
                         decoration: BoxDecoration(
-                          color: TrembleTheme.rose.withValues(alpha: 0.9),
+                          color: TrembleTheme.rose
+                              .withValues(alpha: _isSendingWave ? 0.45 : 0.9),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
@@ -595,14 +618,37 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
                 ],
               );
 
-              if (widget.isPremium) return content;
+              final contentWithError = Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  content,
+                  if (_waveErrorMessage != null) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        _waveErrorMessage!,
+                        textAlign: TextAlign.right,
+                        style: GoogleFonts.instrumentSans(
+                          color: TrembleTheme.rose,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              );
+
+              if (widget.isPremium) return contentWithError;
 
               return ColorFiltered(
                 colorFilter: const ColorFilter.mode(
                   Colors.grey,
                   BlendMode.saturation,
                 ),
-                child: content,
+                child: contentWithError,
               );
             },
           ),
@@ -612,6 +658,29 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
       error: (e, st) => SizedBox(
         height: 80,
         child: recapProviderErrorContent(e, st),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _RecapItemSkeleton — placeholder that mirrors the _RecapItem layout
+// ─────────────────────────────────────────────────────────────────────────────
+class _RecapItemSkeleton extends StatelessWidget {
+  const _RecapItemSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      child: Row(
+        children: const [
+          SkeletonBox(width: 34, height: 34, borderRadius: 17),
+          SizedBox(width: 14),
+          Expanded(child: SkeletonBox(height: 17)),
+          SizedBox(width: 10),
+          SkeletonBox(width: 40, height: 14),
+        ],
       ),
     );
   }

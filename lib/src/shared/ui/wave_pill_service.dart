@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -82,7 +84,7 @@ class WavePillService {
   static void show({
     required OverlayState overlay,
     required WavePillData data,
-    required void Function(String targetUid) onWave,
+    required FutureOr<void> Function(String targetUid) onWave,
     VoidCallback? onTap,
   }) {
     // Replace any existing pill instead of stacking.

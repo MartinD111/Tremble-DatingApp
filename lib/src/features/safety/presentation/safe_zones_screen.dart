@@ -322,7 +322,11 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                             setDialogState(() => isAdding = false);
                             if (ctx.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $e')),
+                                const SnackBar(
+                                  content: Text(
+                                    'Varnega območja ni bilo mogoče shraniti. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
+                                  ),
+                                ),
                               );
                             }
                           }

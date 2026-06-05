@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -31,6 +32,22 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     super.dispose();
   }
 
+  String _resetErrorMessage(Object error) {
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'invalid-email':
+          return 'Ni bilo mogoče poslati povezave. E-poštni naslov ni veljaven. Preveri naslov in poskusi znova.';
+        case 'network-request-failed':
+          return 'Ni bilo mogoče poslati povezave. Internetna povezava ni uspela. Preveri povezavo in poskusi znova.';
+        case 'too-many-requests':
+          return 'Ni bilo mogoče poslati povezave. Preveč poskusov je bilo v kratkem času. Počakaj trenutek in poskusi znova.';
+        default:
+          return 'Ni bilo mogoče poslati povezave. Prišlo je do napake pri prijavi. Poskusi znova.';
+      }
+    }
+    return 'Ni bilo mogoče poslati povezave. Prišlo je do napake pri prijavi. Poskusi znova.';
+  }
+
   Future<void> _sendResetEmail() async {
     final email = _emailController.text.trim();
     if (email.isEmpty || !email.contains('@')) {
@@ -48,7 +65,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
+          SnackBar(content: Text(_resetErrorMessage(e))),
         );
       }
     } finally {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -43,6 +44,7 @@ import '../../../features/gym/domain/selected_gym.dart';
 import 'widgets/registration_steps/ritual_step.dart';
 import 'widgets/registration_steps/android_system_integration_step.dart';
 import 'widgets/ping_overlay.dart';
+import '../../../core/api_client.dart';
 import '../../../core/upload_service.dart';
 import '../../../shared/ui/tremble_logo.dart';
 
@@ -93,6 +95,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   late PageController _pageController;
   late int _currentPage;
   bool _isRegistering = false; // Added for loading state
+  double _uploadProgress = 0.0;
+  bool _uploadLongRunning = false;
+  bool _isUploadingPhotos = false;
+  String? _photoUploadError;
 
   // Language - initialize from global provider
   late String _selectedLanguage;
@@ -1020,6 +1026,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       onBack: () => _goToPage(_currentPage - 1),
                       onComplete: completeRegistration,
                       tr: tr,
+                      photoUploadError: _photoUploadError,
                     ),
                     RitualStep(
                       tr: tr,
@@ -1040,6 +1047,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               right: 0,
               child: _buildProgressBar(),
             ),
+            if (_isUploadingPhotos)
+              Positioned.fill(
+                child: _buildUploadOverlay(),
+              ),
             if (_isHardLocking)
               Positioned.fill(
                 child: _buildHardLockOverlay(),
@@ -1668,6 +1679,22 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ══════════════════════════════════════════════════════
   // COMPLETE REGISTRATION
   // ══════════════════════════════════════════════════════
+
+  String _mapUploadError(Object error) {
+    if (error is TrembleApiException) {
+      return switch (error.code) {
+        'invalid-argument' =>
+          'Ta slika ni podprta. Izberi JPG ali PNG, manjši od 10 MB.',
+        'internal' =>
+          'Naložitev je prekinjena. Poskusi znova ali izberi drugo sliko.',
+        'unavailable' =>
+          'Slike ni bilo mogoče naložiti. Preveri povezavo in poskusi znova.',
+        _ => 'Naložitev ni uspela. Poskusi znova.',
+      };
+    }
+    return 'Naložitev ni uspela. Poskusi znova.';
+  }
+
   void completeRegistration() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     final uid =
@@ -1675,7 +1702,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
     AuthUser? user;
     try {
-      setState(() => _isRegistering = true);
+      setState(() {
+        _isRegistering = true;
+        _isUploadingPhotos = true;
+        _uploadProgress = 0.0;
+        _uploadLongRunning = false;
+        _photoUploadError = null;
+      });
+
+      // Trigger slow-upload warning after 10 seconds
+      final uploadLongRunTimer = Timer(const Duration(seconds: 10), () {
+        if (mounted) setState(() => _uploadLongRunning = true);
+      });
 
       // Step 0: Upload photos in parallel to Cloudflare R2
       final validPhotos = _photos.whereType<File>().toList();
@@ -1685,10 +1723,37 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             '[RegistrationFlow] Starting upload of ${validPhotos.length} photos...');
       }
 
+      // Track per-photo byte progress and aggregate to overall 0–1 value.
+      final photoBytesSent = List<int>.filled(validPhotos.length, 0);
+      final photoTotals = List<int>.filled(validPhotos.length, 1);
+
+      void onPhotoProgress(int idx, int sent, int total) {
+        photoBytesSent[idx] = sent;
+        photoTotals[idx] = total > 0 ? total : 1;
+        final totalSent = photoBytesSent.fold(0, (a, b) => a + b);
+        final grandTotal = photoTotals.fold(0, (a, b) => a + b);
+        if (mounted) {
+          setState(() => _uploadProgress = totalSent / grandTotal);
+        }
+      }
+
       final photoUrls = await Future.wait(
-        validPhotos.map((file) =>
-            ref.read(uploadServiceProvider).uploadPhotoFromPath(file.path)),
+        validPhotos.indexed.map((entry) {
+          final (idx, file) = entry;
+          return ref.read(uploadServiceProvider).uploadPhotoFromPath(
+                file.path,
+                onProgress: (sent, total) => onPhotoProgress(idx, sent, total),
+              );
+        }),
       );
+
+      uploadLongRunTimer.cancel();
+      if (mounted) {
+        setState(() {
+          _isUploadingPhotos = false;
+          _uploadLongRunning = false;
+        });
+      }
 
       if (kDebugMode) {
         debugPrint('[RegistrationFlow] Uploads complete. URLs: $photoUrls');
@@ -1819,7 +1884,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('[DEV] Error bypassed: $e',
+                content: Text('[DEV] Error bypassed. Onboarding will continue.',
                     style: GoogleFonts.instrumentSans()),
                 backgroundColor: Colors.orange.shade800,
                 duration: const Duration(seconds: 5),
@@ -1835,11 +1900,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           }
         } else {
           // Photo upload itself failed — user not yet built; let them retry.
-          setState(() => _isRegistering = false);
+          setState(() {
+            _isRegistering = false;
+            _isUploadingPhotos = false;
+            _uploadLongRunning = false;
+            _photoUploadError = _mapUploadError(e);
+          });
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('[DEV] Photo upload failed — retry: $e',
+                content: Text(
+                    '[DEV] Photo upload failed. Check connection and retry.',
                     style: GoogleFonts.instrumentSans()),
                 backgroundColor: Colors.red.shade800,
                 duration: const Duration(seconds: 6),
@@ -1848,21 +1919,77 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           }
         }
       } else {
-        setState(() => _isRegistering = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(tr('registration_error'),
-                  style: GoogleFonts.instrumentSans()),
-              backgroundColor: Colors.red.shade800,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+        if (user == null) {
+          // Photo upload failed — show inline error above retry button.
+          setState(() {
+            _isRegistering = false;
+            _isUploadingPhotos = false;
+            _uploadLongRunning = false;
+            _photoUploadError = _mapUploadError(e);
+          });
+        } else {
+          setState(() => _isRegistering = false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(tr('registration_error'),
+                    style: GoogleFonts.instrumentSans()),
+                backgroundColor: Colors.red.shade800,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+            );
+          }
         }
       }
     }
+  }
+
+  Widget _buildUploadOverlay() {
+    return Container(
+      color: Colors.black.withValues(alpha: 0.92),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 240,
+                child: LinearProgressIndicator(
+                  value: _uploadProgress,
+                  minHeight: 4,
+                  color: const Color(0xFFF4436C),
+                  backgroundColor:
+                      const Color(0xFFF4436C).withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Nalaganje slike...',
+                style: GoogleFonts.instrumentSans(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              if (_uploadLongRunning) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Še traja, ne zapri aplikacije.',
+                  style: GoogleFonts.instrumentSans(
+                    color: Colors.white38,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildHardLockOverlay() {

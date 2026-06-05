@@ -138,7 +138,7 @@ void main() {
       'lib/src/features/matches/presentation/match_dialog.dart',
     ).readAsStringSync();
 
-    expect(matchDialog, contains("t('greet_failed', lang)"));
+    expect(matchDialog, contains('Ni uspelo. Poskusi znova.'));
     expect(matchDialog, isNot(contains("t('wave_failed', lang)")));
     expect(matchDialog, isNot(contains('Napaka: \${e.toString()}')));
   });

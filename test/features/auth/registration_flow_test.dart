@@ -180,5 +180,55 @@ void main() {
       expect(editProfile, contains('remaining.toString()'));
       expect(editProfile, isNot(contains(r'$remaining remaining')));
     });
+
+    test('registration password checklist matches enforced requirements', () {
+      final emailLocationStep = File(
+        'lib/src/features/auth/presentation/widgets/registration_steps/email_location_step.dart',
+      ).readAsStringSync();
+
+      expect(emailLocationStep,
+          contains("import '../../../../../core/theme.dart';"));
+      expect(emailLocationStep, contains('TrembleTheme.successGreen'));
+      expect(emailLocationStep, contains('pw.length >= 8'));
+      expect(emailLocationStep, contains("RegExp(r'[A-Z]')"));
+      expect(emailLocationStep, contains("RegExp(r'[0-9]')"));
+      expect(emailLocationStep, contains('_hasSpecialChar'));
+      expect(emailLocationStep, contains("widget.tr('pw_min_length')"));
+      expect(emailLocationStep, contains("widget.tr('pw_uppercase')"));
+      expect(emailLocationStep, contains("widget.tr('pw_digit')"));
+      expect(emailLocationStep, contains("widget.tr('pw_special')"));
+      expect(emailLocationStep, contains('LucideIcons.checkCircle2'));
+      expect(emailLocationStep, contains('LucideIcons.circle'));
+      expect(emailLocationStep, isNot(contains('TextDecoration.lineThrough')));
+      expect(emailLocationStep, contains('_hasMinLength &&'));
+      expect(emailLocationStep, contains('_hasUppercase &&'));
+      expect(emailLocationStep, contains('_hasDigit &&'));
+      expect(emailLocationStep, contains('_hasSpecialChar'));
+      expect(emailLocationStep, contains('_isPasswordValid &&'));
+    });
+
+    test('consent copy does not overclaim app-level encryption', () {
+      final consentStep = File(
+        'lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart',
+      ).readAsStringSync();
+
+      expect(
+        consentStep,
+        contains(
+            'protected by Google Cloud infrastructure-level encryption at rest'),
+      );
+      expect(consentStep, isNot(contains('this data is encrypted')));
+    });
+
+    test('forgot password errors do not expose raw Firebase strings', () {
+      final forgotPassword = File(
+        'lib/src/features/auth/presentation/forgot_password_screen.dart',
+      ).readAsStringSync();
+
+      expect(forgotPassword, contains('_resetErrorMessage'));
+      expect(forgotPassword, isNot(contains("Error: \${e.toString()}")));
+      expect(forgotPassword, isNot(contains('e.toString()')));
+      expect(forgotPassword, contains('Ni bilo mogoče poslati povezave.'));
+    });
   });
 }

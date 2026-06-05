@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../data/match_repository.dart';
 import '../../../core/api_client.dart';
+import '../../../core/theme.dart';
 import '../../../core/translations.dart';
 import '../../../shared/ui/premium_paywall.dart';
 import '../../auth/data/auth_repository.dart';
@@ -24,6 +25,7 @@ class MatchDialog extends ConsumerStatefulWidget {
 class _MatchDialogState extends ConsumerState<MatchDialog>
     with SingleTickerProviderStateMixin {
   bool _isGreeting = false;
+  String? _greetErrorMessage;
   late AnimationController _waveController;
 
   @override
@@ -49,7 +51,10 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
       return;
     }
 
-    setState(() => _isGreeting = true);
+    setState(() {
+      _isGreeting = true;
+      _greetErrorMessage = null;
+    });
     try {
       await HapticFeedback.lightImpact();
       // Calls WaveRepository.sendWave() through MatchController
@@ -82,14 +87,10 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
       context.go('/account-suspended');
     } catch (e) {
       if (!mounted) return;
-      setState(() => _isGreeting = false);
-      final lang = ref.read(appLanguageProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(t('greet_failed', lang)),
-          backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-        ),
-      );
+      setState(() {
+        _isGreeting = false;
+        _greetErrorMessage = 'Ni uspelo. Poskusi znova.';
+      });
     }
   }
 
@@ -455,6 +456,19 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
                   ),
                 ],
               ),
+
+              if (_greetErrorMessage != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  _greetErrorMessage!,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.instrumentSans(
+                    color: TrembleTheme.rose,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 16),
 

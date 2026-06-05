@@ -142,7 +142,11 @@ class UgcActionSheet extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString())),
+                    const SnackBar(
+                      content: Text(
+                        'Uporabnika ni bilo mogoče blokirati. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
+                      ),
+                    ),
                   );
                 }
               }
@@ -223,7 +227,11 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
       if (mounted) {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          const SnackBar(
+            content: Text(
+              'Prijave ni bilo mogoče poslati. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
+            ),
+          ),
         );
       }
     }

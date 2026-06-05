@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,10 +8,10 @@ import '../../../../core/theme.dart';
 import '../../../../core/translations.dart';
 import '../../../../shared/ui/glass_card.dart';
 
-class LiveRunCard extends ConsumerWidget {
+class LiveRunCard extends ConsumerStatefulWidget {
   final String name;
   final int age;
-  final VoidCallback onWave;
+  final FutureOr<void> Function() onWave;
   final VoidCallback onDismiss;
 
   const LiveRunCard({
@@ -21,8 +23,40 @@ class LiveRunCard extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LiveRunCard> createState() => _LiveRunCardState();
+}
+
+class _LiveRunCardState extends ConsumerState<LiveRunCard> {
+  bool _isSending = false;
+  bool _isSent = false;
+  String? _errorMessage;
+
+  Future<void> _handleWaveTap() async {
+    if (_isSending || _isSent) return;
+    setState(() {
+      _isSending = true;
+      _isSent = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await Future<void>.sync(widget.onWave);
+      if (!mounted) return;
+      setState(() => _isSending = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isSending = false;
+        _isSent = false;
+        _errorMessage = 'Ni uspelo. Poskusi znova.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
+    final isDisabled = _isSending || _isSent;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -63,7 +97,7 @@ class LiveRunCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$name, $age',
+                      '${widget.name}, ${widget.age}',
                       style: TrembleTheme.displayFont(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -76,34 +110,56 @@ class LiveRunCard extends ConsumerWidget {
 
               // Wave Action
               GestureDetector(
-                onTap: onWave,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: TrembleTheme.rose.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        LucideIcons.hand,
-                        color: Colors.white,
-                        size: 16,
+                onTap: isDisabled ? null : () => unawaited(_handleWaveTap()),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
                       ),
-                      const SizedBox(width: 6),
+                      decoration: BoxDecoration(
+                        color: TrembleTheme.rose
+                            .withValues(alpha: isDisabled ? 0.45 : 0.9),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _isSent ? LucideIcons.check : LucideIcons.hand,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _isSent
+                                ? t('run_wave_sent', lang)
+                                : t('wave', lang),
+                            style: GoogleFonts.jetBrainsMono(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 6),
                       Text(
-                        t('wave', lang),
-                        style: GoogleFonts.jetBrainsMono(
-                          color: Colors.white,
+                        _errorMessage!,
+                        textAlign: TextAlign.right,
+                        style: GoogleFonts.instrumentSans(
+                          color: TrembleTheme.rose,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          fontSize: 13,
                         ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -115,7 +171,7 @@ class LiveRunCard extends ConsumerWidget {
           top: -8,
           right: -8,
           child: GestureDetector(
-            onTap: onDismiss,
+            onTap: widget.onDismiss,
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(

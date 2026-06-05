@@ -1,7 +1,11 @@
 import 'dart:io'
-    show HandshakeException, HttpClient, SocketException, TlsException;
+    show
+        HandshakeException,
+        HttpClient,
+        HttpHeaders,
+        SocketException,
+        TlsException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/io_client.dart';
 import 'package:image_picker/image_picker.dart';
 import 'api_client.dart';
 
@@ -21,9 +25,13 @@ class UploadService {
   /// Upload a photo to Cloudflare R2.
   ///
   /// [file] — file picked via `image_picker`
+  /// [onProgress] — optional callback called with (bytesSent, totalBytes)
   /// Returns the public URL to store in `photoUrls`.
   /// Throws [TrembleApiException] on failure.
-  Future<String> uploadPhoto(XFile file) async {
+  Future<String> uploadPhoto(
+    XFile file, {
+    void Function(int bytes, int total)? onProgress,
+  }) async {
     final bytes = await file.readAsBytes();
     final fileSize = bytes.length;
     final mimeType = _mimeTypeFromPath(file.path);
@@ -47,15 +55,22 @@ class UploadService {
     final uploadUrl = result['uploadUrl'] as String;
     final publicUrl = result['publicUrl'] as String;
 
-    // Step 2: PUT directly to R2 via IOClient
-    final ioHttpClient = HttpClient();
-    final client = IOClient(ioHttpClient);
+    // Step 2: PUT directly to R2, streaming in chunks for progress reporting
+    final httpClient = HttpClient();
     try {
-      final response = await client.put(
-        Uri.parse(uploadUrl),
-        headers: {'Content-Type': mimeType},
-        body: bytes,
-      );
+      final request = await httpClient.putUrl(Uri.parse(uploadUrl));
+      request.headers.set(HttpHeaders.contentTypeHeader, mimeType);
+      request.contentLength = fileSize;
+
+      const chunkSize = 65536; // 64 KB
+      for (var i = 0; i < bytes.length; i += chunkSize) {
+        final end = (i + chunkSize).clamp(0, bytes.length);
+        request.add(bytes.sublist(i, end));
+        onProgress?.call(end, fileSize);
+      }
+
+      final response = await request.close();
+      await response.drain<void>();
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw TrembleApiException(
@@ -81,14 +96,17 @@ class UploadService {
         message: 'TLS error uploading to R2: $e',
       );
     } finally {
-      client.close();
+      httpClient.close();
     }
   }
 
   /// Upload a photo from a file path (for profile editing).
-  Future<String> uploadPhotoFromPath(String path) async {
+  Future<String> uploadPhotoFromPath(
+    String path, {
+    void Function(int bytes, int total)? onProgress,
+  }) async {
     final file = XFile(path);
-    return uploadPhoto(file);
+    return uploadPhoto(file, onProgress: onProgress);
   }
 
   String _mimeTypeFromPath(String path) {

@@ -140,7 +140,11 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                               } catch (e) {
                                 if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error: $e')),
+                                  const SnackBar(
+                                    content: Text(
+                                      'Uporabnika ni bilo mogoče odblokirati. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
+                                    ),
+                                  ),
                                 );
                               }
                             },
@@ -157,8 +161,10 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
               child: CircularProgressIndicator(),
             ),
             error: (error, stack) => Center(
-              child: Text('Error: $error',
-                  style: const TextStyle(color: Colors.red)),
+              child: Text(
+                'Blokiranih uporabnikov ni bilo mogoče naložiti. Preveri povezavo in poskusi znova.',
+                style: const TextStyle(color: Colors.red),
+              ),
             ),
           ),
           ValueListenableBuilder<double>(

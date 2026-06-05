@@ -519,13 +519,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           targetUid: targetUid,
           isIncomingWave: isIncomingWave,
         ),
-        onWave: (uid) {
+        onWave: (uid) async {
           final user = ref.read(authStateProvider);
           if (user?.hasReachedFreeWaveLimit == true) {
             PremiumPaywallBottomSheet.show(context);
             return;
           }
-          unawaited(ref.read(waveRepositoryProvider).sendWave(uid));
+          await ref.read(waveRepositoryProvider).sendWave(uid);
         },
       );
     },
