@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../core/api_client.dart';
 import '../../../core/event_geofence_service.dart';
@@ -1001,6 +1002,8 @@ class AuthRepository {
 
   // ── Logout ────────────────────────────────────────────────────────────────
   Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('local_safe_zones');
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
