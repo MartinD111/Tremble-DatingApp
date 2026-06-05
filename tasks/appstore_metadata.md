@@ -12,6 +12,7 @@
 *Appears below the name.*
 **Option A:** Meet who you cross paths with
 **Option B:** No endless chat. Just meet.
+*(Current choice: **Option A: Meet who you cross paths with**)*
 
 ### 3. Promotional Text (Max 170 chars)
 *Appears at the top of the description and can be changed without a new version update.*
@@ -87,7 +88,7 @@ Tvoja natančna lokacija ni nikoli shranjena. Ne na naših strežnikih.
 Nikjer. Shranjujemo samo signal bližine — in samo dokler je aktiven.
 
 VAL:
-En signal. Brez hrupa. Če oba pošljeta val, se odpre 30-minutno okno.
+En gumb. Brez hrupa. Če oba pošljeta val, se odpre 30-minutno okno.
 Najdeta se ali ne. Ura je resnična. Resnična je tudi oseba.
 
 RUN CLUB:
@@ -109,11 +110,44 @@ lokacije v ozadju.
 
 ---
 
+## 🔒 Privacy Nutrition Labels & Data Declarations
+
+### 1. URLs
+* **Support URL:** https://trembledating.com
+* **Marketing URL:** https://trembledating.com
+* **Privacy Policy URL:** https://trembledating.com/privacy
+
+### 2. Data Usage Declarations
+
+#### LOCATION:
+* **Collection:** YES — approximate location (geohash precision 7, ~75m cell)
+* **Use:** App functionality (proximity detection)
+* **Linked to user:** NO — geohash only, not precise coordinates
+* **Tracking:** NO
+* **Background location:** YES — radar runs in background
+* **Note:** precise GPS coordinates processed only in Cloud Function RAM, never stored
+
+#### BLUETOOTH:
+* **Collection:** NO — BLE signal used for proximity detection only, no data stored
+* **Use:** App functionality
+* **Background:** YES — passive scanning
+
+#### CONTACTS:
+* **Collection:** NO
+
+#### HEALTH:
+* **Collection:** NO
+
+#### FINANCIAL:
+* **Collection:** NO — IAP handled entirely by App Store/Play Store via RevenueCat
+
+---
+
 ## 🍏 App Store Review Checklist (Pre-Flight)
 - [x] **Privacy Policy URL:** Must provide and verify a valid web URL hosted on `trembledating.com` (`BLOCKER-007`).
 - [x] **Terms URL:** Must provide and verify a valid Terms page on `trembledating.com` (`BLOCKER-007`).
 - [x] **Account Erasure URL:** Must provide and verify a valid erasure form/page on `trembledating.com` (`BLOCKER-007`).
-- [ ] **Support URL:** Must provide a valid contact form or support page URL.
+- [x] **Support URL:** Must provide a valid contact form or support page URL (https://trembledating.com).
 - [ ] **Data Explanations:** Info.plist completely filled with clear usage descriptions (Verified completed in Session 27).
 - [ ] **UGC Mechanism:** Block & Report features implemented and functional (Verified).
 - [ ] **Reviewer Demo Account:** Provide a test account (username + password) in App Store Connect notes.
