@@ -1,3 +1,71 @@
+## Session State — 2026-06-05 23:59 CEST
+- Active Task: Audit and reword location/GPS/BLE privacy claims for architectural accuracy
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/core/translations.dart` (reworded location privacy calib2_body strings in DE, IT, FR, HR, SR, HU)
+    - `lib/src/features/auth/presentation/permission_gate_screen.dart` (reworded fallback description to alongside Bluetooth)
+    - `lib/src/features/safety/presentation/safe_zones_screen.dart` (updated geohash block size and coordinates processing description)
+    - `tasks/context.md` (updated session log)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `dart format` completed. `flutter analyze --no-fatal-infos` passed. `flutter test --dart-define-from-file=.env.json` 131/131 passed.
+
+## Session Handoff
+- Completed:
+    - Audited all user-facing strings in `lib/src/core/translations.dart` and hardcoded UI files for location/BLE/GPS claims.
+    - Updated `calib2_body` descriptions in German, Italian, French, Croatian, Serbian, and Hungarian to correctly state that coarse geohash grid cells (~150m) are stored on the server and no precise coordinates are saved.
+    - Rewrote the fallback location claim in `permission_gate_screen.dart` to clarify that GPS location is used alongside Bluetooth, not as a fallback.
+    - Corrected the geohash block size and device-exclusive coordinates storage claims in `safe_zones_screen.dart`.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Commit and sync the staged changes.
+
+## Session State — 2026-06-05 23:43 CEST
+- Active Task: Update dev run command docs and fix PlacesService Dart define lookup
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/core/places_service.dart` (replaced nested `String.fromEnvironment` with separate dev/prod/flavor constants and getter)
+    - `AGENTS.md`, `CLAUDE.md`, `README.md`, `GEMINI-app.md`, `BOOTSTRAP.md`, `TREMBLE_BACKEND_EXECUTION_GUIDE.md`, `Tremble MPC Workflow.md`, `tasks/decisions/ADR-003-brand-alignment.md` (updated current dev `flutter run` guidance)
+    - `tasks/lessons.md` (aligned Rule #1 with `.env.json` dev runs)
+    - `tasks/context.md` (updated active run guidance and session handoff)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `dart format lib/src/core/places_service.dart` completed with 0 changes after edit. `flutter analyze --no-fatal-infos` passed. `flutter test --dart-define-from-file=.env.json` passed 131/131.
+
+## Session Handoff
+- Completed:
+    - Replaced the nested PlacesService API-key `String.fromEnvironment` lookup with explicit `PLACES_KEY_DEV`, `PLACES_KEY_PROD`, and `FLAVOR` constants plus an `_apiKey` getter.
+    - Updated current dev run documentation to `flutter run --dart-define-from-file=.env.json`.
+    - Left historical blocker evidence and archived plan run commands unchanged.
+    - Ran requested formatting, analysis, and test verification.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Commit the accumulated map-style, PlacesService, and command-documentation changes when ready.
+
+## Session State — 2026-06-05 23:31 CEST
+- Active Task: Map style boundary zoom, capital labels, and water source-layer verification
+- Environment: Dev, `main`
+- Modified Files:
+    - `assets/map/tremble_dark_style.json` (updated boundaries maxzoom/opacity; inserted `place_capital`; water layers verified unchanged)
+    - `tasks/context.md` (session handoff)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: `python3 -c "import json; json.load(open('assets/map/tremble_dark_style.json'))"` passed.
+
+## Session Handoff
+- Completed:
+    - Changed `boundaries.maxzoom` from 9 to 14.
+    - Changed `boundaries.paint.line-opacity` from 0.3 to 0.55.
+    - Inserted `place_capital` immediately before `place_city`.
+    - Confirmed `water` and `water_lines` both already use `"source-layer": "water"` and left them unchanged.
+    - Verified `assets/map/tremble_dark_style.json` parses as valid JSON.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Review the map visually on-device or in the map surface when convenient.
+
 ## Session State — 2026-06-05 18:45 CEST
 - Active Task: Translate photo upload errors and replace hardcoded Slovenian strings
 - Environment: Dev, `main`
@@ -729,7 +797,7 @@
 - In Progress: None.
 - Blocked: None.
 - Next Action:
-    1. Run `flutter run --flavor dev --dart-define=FLAVOR=dev` to verify the application launch on a simulator/device.
+    1. Run `flutter run --dart-define-from-file=.env.json` to verify the application launch on a simulator/device.
 
 ## Session State — 2026-05-29 11:25 CEST (Updated)
 ## Session State — 2026-05-28 13:20 CEST
@@ -898,7 +966,7 @@
 - Blocked:
     - Real purchase/device validation remains blocked by store-side product readiness and existing Apple Developer provisioning blocker.
 - Next Action:
-    1. Run the app with `--flavor dev --dart-define=FLAVOR=dev --dart-define=REVENUECAT_API_KEY=<dev sandbox key>` on a device/simulator after RevenueCat offering/paywall/products are configured.
+    1. Run the app with `flutter run --dart-define-from-file=.env.json` on a device/simulator after RevenueCat offering/paywall/products are configured.
 
 ## Session State — 2026-05-26 23:53 CEST
 - Active Task: History empty states for Matches, Recaps, and Near-Miss
@@ -1454,7 +1522,7 @@
 - In Progress: None.
 - Blocked: None.
 - Next Action:
-    1. Visual and interaction verification on physical device/emulator. Run the app with: `flutter run --flavor dev --dart-define=FLAVOR=dev`
+    1. Visual and interaction verification on physical device/emulator. Run the app with: `flutter run --dart-define-from-file=.env.json`
 
 ## Session State — 2026-05-21 22:00 CEST
 - Active Task: Foreground wave pill — animation overhaul + OverlayEntry service
@@ -1668,7 +1736,7 @@
   - BLOCKER-003: RevenueCat/legal (company registration required).
   - BLOCKER-005: iOS provisioning for `com.pulse`.
 - Next Action:
-  1. Run the mobile app (`flutter run --flavor dev --dart-define=FLAVOR=dev`) on a device/simulator to visually inspect the premium dark map styling.
+  1. Run the mobile app (`flutter run --dart-define-from-file=.env.json`) on a device/simulator to visually inspect the premium dark map styling.
 
 
 

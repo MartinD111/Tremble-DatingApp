@@ -2241,7 +2241,7 @@ const Map<String, Map<String, String>> _translations = {
         'Aktivierung des BLE und GPS Hybrid-Sensors. Tremble baut ein lokales Näherungsnetz mit <2% Akkubelastung auf.',
     'calib2_title': 'ON-DEVICE ARCHITEKTUR',
     'calib2_body':
-        'Privatsphäre ist keine Richtlinie, es ist Architektur. Die Nähe wird lokal berechnet und verworfen. Null Standortspeicherung.',
+        'Privatsphäre ist keine Richtlinie, es ist Architektur. Die Nähe wird lokal berechnet und verworfen. Keine genauen Koordinaten werden gespeichert — nur eine grobe ~150m Gitterzelle, die nach einer kurzen TTL verworfen wird.',
     'calib3_title': 'REICHWEITEN-KALIBRIERUNG',
     'calib3_body':
         'Konfiguration des Radars für einen 40-Meter-Radius. Nur physische Anwesenheit löst ein Signal aus.',
@@ -3019,7 +3019,7 @@ const Map<String, Map<String, String>> _translations = {
         'Attivazione del sensore ibrido BLE e GPS. Tremble crea una rete di prossimità locale con <2% di consumo batteria.',
     'calib2_title': 'ARCHITETTURA ON-DEVICE',
     'calib2_body':
-        'La privacy non è una policy, è architettura. La prossimità viene calcolata localmente e cancellata. Zero storico posizioni.',
+        'La privacy non è una policy, è architettura. La prossimità viene calcolata localmente e cancellata. Nessuna coordinata precisa memorizzata — solo una cella di rete grossolana di ~150m, eliminata dopo un breve TTL.',
     'calib3_title': 'CALIBRAZIONE RAGGIO',
     'calib3_body':
         'Configurazione del radar per un raggio di 40 metri. Solo la presenza fisica attiva un segnale.',
@@ -3796,7 +3796,7 @@ const Map<String, Map<String, String>> _translations = {
         'Activation du capteur hybride BLE et GPS. Tremble crée un réseau de proximité local avec <2% de consommation batterie.',
     'calib2_title': 'ARCHITECTURE ON-DEVICE',
     'calib2_body':
-        'La vie privée n\'est pas une politique, c\'est une architecture. La proximité est calculée localement et effacée. Zéro historique de positions.',
+        'La vie privée n\'est pas une politique, c\'est une architecture. La proximité est calculée localement et effacée. Aucune coordonnée précise n\'est stockée — seulement une cellule de grille grossière de ~150m, supprimée après une courte durée de vie (TTL).',
     'calib3_title': 'CALIBRATION RAYON',
     'calib3_body':
         'Configuration du radar pour un rayon de 40 mètres. Seule la présence physique déclenche un signal.',
@@ -4660,7 +4660,7 @@ const Map<String, Map<String, String>> _translations = {
         'Aktivacija BLE i GPS hibridnog senzora. Tremble gradi lokalnu mrežu blizine uz <2% opterećenja baterije.',
     'calib2_title': 'ON-DEVICE ARHITEKTURA',
     'calib2_body':
-        'Privatnost nije pravilo, to je arhitektura. Blizina se računa lokalno i briše se. Nula pohrane lokacije.',
+        'Privatnost nije pravilo, to je arhitektura. Blizina se računa lokalno i briše se. Ne spremaju se točne koordinate — samo gruba ćelija mreže od ~150m, koja se brzo briše.',
     'calib3_title': 'KALIBRACIJA DOMETA',
     'calib3_body':
         'Konfiguracija radara za radijus od 40 metara. Samo fizička prisutnost pokreće signal.',
@@ -5357,7 +5357,7 @@ const Map<String, Map<String, String>> _translations = {
         'Aktivacija BLE i GPS hibridnog senzora. Tremble uspostavlja lokalizovanu mrežu blizine sa <2% uticaja na bateriju.',
     'calib2_title': 'ON-DEVICE ARHITEKTURA',
     'calib2_body':
-        'Privatnost nije polisa, već arhitektura. Blizina se računa lokalno i odbacuje. Lokacija se ne čuva.',
+        'Privatnost nije polisa, već arhitektura. Blizina se računa lokalno i odbacuje. Ne čuvaju se tačne koordinate — samo gruba ćelija mreže od ~150m, koja se brzo briše.',
     'calib3_title': 'KALIBRACIJA DOMETA',
     'calib3_body':
         'Konfigurisanje radara na radijus od 40 metara. Samo fizičko prisustvo aktivira signal lock.',
@@ -6185,7 +6185,7 @@ const Map<String, Map<String, String>> _translations = {
         'BLE és GPS hibrid érzékelés aktiválása. A Tremble egy lokalizált közelségi hálózatot hoz létre <2% akkumulátorhasználattal.',
     'calib2_title': 'ESZKÖZÖN BELÜLI ARCHITEKTÚRA',
     'calib2_body':
-        'Az adatvédelem nem egy irányelv, hanem architektúra. A közelséget helyben számoljuk ki és töröljük. Nulla helyadat tárolása.',
+        'Az adatvédelem nem egy irányelv, hanem architektúra. A közelséget helyben számoljuk ki és töröljük. Nincsenek pontos koordináták tárolva — csak egy durva, ~150 méteres rácscsella, ami rövid idő után törlődik.',
     'calib3_title': 'HATÓTÁVOLSÁG KALIBRÁLÁSA',
     'calib3_body':
         'A radar 40 méteres sugarú körre való beállítása. Csak a fizikai jelenlét vált ki jelzést.',

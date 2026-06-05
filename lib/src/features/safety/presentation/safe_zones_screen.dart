@@ -442,7 +442,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                   icon: LucideIcons.locateOff,
                   title: 'Your exact location is never stored',
                   body:
-                      'Only coarse geohash cells (roughly 1–2 km blocks) are synced to our servers. Your GPS coordinates never leave your device. You can enter a nearby address instead of your real one — we build a range around it and that is all we use.',
+                      'Only coarse geohash cells (roughly ~150m blocks) are stored on our servers. Your precise GPS coordinates are never stored. You can enter a nearby address instead of your real one — we build a range around it and that is all we use.',
                   textColor: textColor,
                   subColor: subColor,
                   cardBg: cardBg,

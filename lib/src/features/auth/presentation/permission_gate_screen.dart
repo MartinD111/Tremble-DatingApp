@@ -241,7 +241,7 @@ class _ConsentView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Used as a fallback for proximity when Bluetooth is unavailable. Your precise coordinates are never stored or shared.',
+                        'Used alongside Bluetooth to establish proximity. Your precise coordinates are never stored or shared.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context)
                                   .colorScheme
