@@ -18,16 +18,19 @@ class ProximityPingController extends _$ProximityPingController {
   @override
   bool build() {
     final search = ref.watch(currentSearchProvider);
+    final isPremium = ref.watch(effectiveIsPremiumProvider);
     final ble = ref.watch(bleServiceProvider);
+
+    if (search != null && isPremium) {
+      ble.setHighFrequencyMode(true);
+    } else {
+      ble.setHighFrequencyMode(false);
+    }
 
     if (search == null) {
       _stopPingLoop();
-      ble.setHighFrequencyMode(false);
       return false;
     }
-
-    // Enable high frequency scanning when a search is active
-    ble.setHighFrequencyMode(true);
 
     // Listen to RSSI updates for the partner
     final partnerId =

@@ -117,7 +117,7 @@ firebase deploy --only functions:scanProximityPairs --project tremble-dev
 **Naprave:** Martin (Samsung S25 Ultra) + tvoj telefon  
 **Build:**
 ```bash
-flutter run --flavor dev --dart-define=FLAVOR=dev
+flutter run --dart-define-from-file=.env.json
 ```
 
 **Testni scenarij:**

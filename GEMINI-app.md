@@ -29,15 +29,15 @@ Read `tasks/context.md` and `tasks/blockers.md` before code changes. If `/tasks`
 Never mix dev and prod resources. Cross-contamination is a critical failure.
 
 ## Safe Local Commands
-Run Flutter only with an explicit flavor:
+Run Flutter dev sessions with the checked-in Dart define file:
 
 ```bash
-flutter run --flavor dev --dart-define=FLAVOR=dev
+flutter run --dart-define-from-file=.env.json
 flutter test --coverage --dart-define=FLAVOR=dev
 flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev
 ```
 
-Never run unflavored `flutter run` or `flutter build`.
+Never run unflavored `flutter build`. For dev `flutter run`, use `.env.json`.
 
 ## Local Pre-Commit Gate
 The local Git hook `.git/hooks/pre-commit` runs:

@@ -41,7 +41,7 @@ DISCOVER → PLAN → BUILD → TEST → MERGE → DEPLOY → OPERATE
 - No iOS TestFlight build until all platform gates pass
 - No free-text chatrooms; all user communication is button-triggered
 - Local commits must pass `.git/hooks/pre-commit` when present
-- Never run unflavored `flutter run` or `flutter build`
+- Never run unflavored `flutter build`; for dev `flutter run`, use `flutter run --dart-define-from-file=.env.json`
 
 ### Engineering Priorities (app-specific)
 

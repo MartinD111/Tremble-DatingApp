@@ -245,6 +245,6 @@ Source: Phase 10 Polish, April 2026.
 **Rule #2 — Never bypass Riverpod strictly typed state.**
 [2026-03] Do not mutate state directly in the UI layer. Always use typed providers and notifiers.
 
-**Rule #1 — Never run un-flavored Flutter commands.**
-[2026-03] Always provide `--flavor dev --dart-define=FLAVOR=dev` (or prod equivalents). An un-flavored build is a misconfigured build.
+**Rule #1 — Never run un-flavored Flutter build commands.**
+[2026-03] For dev runs, use `flutter run --dart-define-from-file=.env.json`. For builds, always provide the explicit dev or prod flavor flags. An un-flavored build is a misconfigured build.
 Source: Multi-Env Setup, March 2026.

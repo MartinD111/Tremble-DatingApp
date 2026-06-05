@@ -504,7 +504,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         user?.isAdmin == true ||
         bypassRadar ||
         localAdmin;
-    final bool isPremium = user?.isPremium == true;
+    final bool isPremium = ref.watch(effectiveIsPremiumProvider);
 
     // ── Active Search State ──────────────────────────────────────────────
     final activeMatch = ref.watch(currentSearchProvider);

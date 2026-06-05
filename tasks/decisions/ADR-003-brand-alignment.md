@@ -123,7 +123,7 @@ _stepHeader('Create your account'),
 
 ### Task E — AppCheck Debug Token (Aleksandar)
 **Manual step before simulator testing:**
-1. Run app in iOS simulator: `flutter run --flavor dev --dart-define=FLAVOR=dev`
+1. Run app in iOS simulator: `flutter run --dart-define-from-file=.env.json`
 2. In Xcode console look for line: `[AppCheck] Debug token: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX`
 3. Go to: Firebase Console → am---dating-app → App Check → Apps → Tremble iOS (dev)
 4. Add debug token
@@ -145,4 +145,3 @@ _stepHeader('Create your account'),
 
 Tasks A & B together = full brand alignment. Tasks C & D = copy alignment.  
 Martin can do C+D as touch-ups. A+B recommended for Aleksandar (deeper theme work).
-

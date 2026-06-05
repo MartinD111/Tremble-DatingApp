@@ -69,12 +69,13 @@ class PlacesService {
   static const String _detailsEndpoint =
       'https://places.googleapis.com/v1/places';
 
-  static const String _apiKey = String.fromEnvironment(
-    String.fromEnvironment('FLAVOR', defaultValue: 'dev') == 'prod'
-        ? 'PLACES_KEY_PROD'
-        : 'PLACES_KEY_DEV',
-    defaultValue: '',
-  );
+  static const String _apiKeyDev =
+      String.fromEnvironment('PLACES_KEY_DEV', defaultValue: '');
+  static const String _apiKeyProd =
+      String.fromEnvironment('PLACES_KEY_PROD', defaultValue: '');
+  static const String _flavor =
+      String.fromEnvironment('FLAVOR', defaultValue: 'dev');
+  static String get _apiKey => _flavor == 'prod' ? _apiKeyProd : _apiKeyDev;
 
   final _uuid = const Uuid();
   String? _sessionToken;

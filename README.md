@@ -27,10 +27,10 @@ Tremble is built using a modern, scalable stack designed for global performance:
 
 This repository is governed by MPC. Read `tasks/context.md` and `tasks/blockers.md` before code changes.
 
-Run the app only with an explicit flavor:
+Run the app with the checked-in Dart define file:
 
 ```bash
-flutter run --flavor dev --dart-define=FLAVOR=dev
+flutter run --dart-define-from-file=.env.json
 ```
 
 Local commits should pass `.git/hooks/pre-commit`, which runs Flutter format, analyze, tests with `FLAVOR=dev`, and backend lint/build/tests.

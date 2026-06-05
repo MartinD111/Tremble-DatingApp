@@ -50,7 +50,7 @@ Domain: trembledating.com
 |--|-----|------|
 | Firebase | `tremble-dev` | `am---dating-app` |
 | Bundle ID | `com.pulse` | TBD — confirm in Firebase console |
-| Run command | `--flavor dev --dart-define=FLAVOR=dev` | `--flavor prod --dart-define=FLAVOR=prod` |
+| Run command | `flutter run --dart-define-from-file=.env.json` | `--flavor prod --dart-define=FLAVOR=prod` |
 
 Cross-contamination between environments = critical failure. Stop and escalate.
 
@@ -69,7 +69,7 @@ DISCOVER → PLAN → BUILD → VERIFY → OPERATE → EVOLVE
 - No generic AI output — every visual decision must align with the Tremble brand system.
 - No assumptions about permissions (BLE, Location) or auth flows.
 - No autonomous action on Firebase Security Rules, Cloud Functions, or native iOS/Android config without founder approval.
-- Never run un-flavored `flutter build` or `flutter run`.
+- Never run un-flavored `flutter build`. For dev `flutter run`, use `flutter run --dart-define-from-file=.env.json`.
 - GlassCard: useGlassEffect defaults to false. Only enable explicitly where glass effect is intentional (light theme contexts).
 
 ---
@@ -128,7 +128,7 @@ Phase does not close until all exit criteria pass.
 
 ## Lessons (Permanent — Never Deleted)
 
-**Rule #1** — Never run un-flavored `flutter build` or `flutter run`. Always provide `--flavor dev --dart-define=FLAVOR=dev`.
+**Rule #1** — Never run un-flavored `flutter build`. For dev `flutter run`, use `flutter run --dart-define-from-file=.env.json`.
 Source: Multi-Env Setup, March 2026.
 
 **Rule #2** — Do not bypass Riverpod strictly typed state. Never mutate state directly in UI layer.
@@ -269,7 +269,7 @@ style_contract:
 ## Deploy Pipeline
 
 ```
-Local (flutter run --flavor dev)
+Local (flutter run --dart-define-from-file=.env.json)
         ↓
 flutter analyze --no-fatal-infos + flutter test --dart-define=FLAVOR=dev (GitHub Actions)
         ↓

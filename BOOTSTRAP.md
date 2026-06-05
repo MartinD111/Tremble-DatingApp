@@ -64,10 +64,10 @@ Run the Flutter app in the dev flavor:
 ```bash
 # Return to the root directory
 cd ..
-flutter run --flavor dev --dart-define=FLAVOR=dev
+flutter run --dart-define-from-file=.env.json
 ```
 
-Never run unflavored `flutter run` or `flutter build` in this repository.
+Never run unflavored `flutter build` in this repository. For dev `flutter run`, use `.env.json`.
 
 ## 5. Local Pre-Commit Hook
 Set up the local Git hook so commits run the same minimum checks locally:
