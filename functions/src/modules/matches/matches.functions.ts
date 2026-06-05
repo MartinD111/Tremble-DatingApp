@@ -99,6 +99,7 @@ export const sendWave = onCall(
             fromUid: uid,
             toUid: targetUid,
             createdAt: FieldValue.serverTimestamp(),
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         });
 
         logStructured({ fn: "sendWave", event: "success", uid, targetUid, durationMs: Date.now() - startedAt });
