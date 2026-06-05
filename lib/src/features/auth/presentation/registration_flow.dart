@@ -1681,18 +1681,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ══════════════════════════════════════════════════════
 
   String _mapUploadError(Object error) {
+    final lang = _selectedLanguage.isNotEmpty ? _selectedLanguage : 'sl';
     if (error is TrembleApiException) {
       return switch (error.code) {
-        'invalid-argument' =>
-          'Ta slika ni podprta. Izberi JPG ali PNG, manjši od 10 MB.',
-        'internal' =>
-          'Naložitev je prekinjena. Poskusi znova ali izberi drugo sliko.',
-        'unavailable' =>
-          'Slike ni bilo mogoče naložiti. Preveri povezavo in poskusi znova.',
-        _ => 'Naložitev ni uspela. Poskusi znova.',
+        'invalid-argument' => t('photo_upload_error_format', lang),
+        'internal' => t('photo_upload_error_interrupted', lang),
+        'unavailable' => t('photo_upload_error_network', lang),
+        _ => t('photo_upload_error_generic', lang),
       };
     }
-    return 'Naložitev ni uspela. Poskusi znova.';
+    return t('photo_upload_error_generic', lang);
   }
 
   void completeRegistration() async {

@@ -36,7 +36,7 @@ isPremium prihaja iz ref.read(effectiveIsPremiumProvider) — dostopen prek Rive
 ---
 ## FAZA 1 — App Store Blockers (pred submissionom, nič od tega ni opcijsko)
 
-### 1.1 — B010: Funkcionalne ToS / PP povezave `[founder + dev]`
+### 1.1 — B010: Funkcionalne ToS / PP povezave `[DONE]` `[founder + dev]`
 **Problem:** `consent_step.dart:124,146` — povezavi imata `onTap: () {}`. User sprejme dokumenta, ki ju ne more odpreti. Hkrati `:166` zbira privolitev za posebne kategorije (vera, etničnost, GDPR čl. 9). Garantirana App Store zavrnitev + neveljavna privolitev.
 
 **Founder pred mergeom:** potrdi, da so live strani `trembledating.com/tos` in `/privacy` deployane (EN + SL).
@@ -65,7 +65,7 @@ onTap: () => launchUrl(
 
 ---
 
-### 1.2 — Privacy copy: "Zero location stored" je NERESNICA `[dev autonomous]`
+### 1.2 — Privacy copy: "Zero location stored" je NERESNICA `[DONE]` `[dev autonomous]`
 **Problem:** `translations.dart:656` trdi "Zero location stored." Geohash p7 JE shranjen v Firestore (`geo_service.dart:186-189`), reverzibilen na ~150m×76m celico (tvoj komentar `:167` to prizna). Pravna izpostavljenost + kršitev brand pravila "describe mechanics, don't promise".
 
 **Fix (EN + SL):**
@@ -86,7 +86,7 @@ onTap: () => launchUrl(
 
 ---
 
-### 1.4 — B008: Deploy Firestore pravil na prod `[founder]`
+### 1.4 — B008: Deploy Firestore pravil na prod `[DONE]` `[founder]`
 Pravili obstajata v repu: `firestore.rules:185` (active_run_crosses), `:195` (proximity_events). Niso potrjeno deployana na prod (`am---dating-app`).
 ```bash
 firebase deploy --only firestore:rules --project prod
@@ -95,7 +95,7 @@ Preveri v konzoli, da prod ruleset ustreza repu.
 
 ---
 
-### 1.5 — B006 + B009: Verifikacija (koda je gotova) `[founder/dev]`
+### 1.5 — B006 + B009: Verifikacija (koda je gotova) `[DONE]` `[founder/dev]`
 - **B006 (photo upload):** `upload_service.dart` + `uploads.functions.ts` sta produkcijska. Preveri: R2 CORS dovoli PUT, prod env ima R2 ključe, `media.trembledating.com` mapira na public URL, run camera→R2→Firestore na S25 Ultra + iOS.
 - **B009 (WavePill FCM):** wiring je narejen (`home_screen.dart:91-130`). Preveri, da FCM payload (`type`/`clickAction`, `notification_service.dart:25,200`) ustreza temu, kar pošlje CF. Test push E2E.
 
@@ -103,7 +103,7 @@ Preveri v konzoli, da prod ruleset ustreza repu.
 
 ## FAZA 2 — Map Performance (vzporedno s Fazo 1, čisto autonomno)
 
-### 2.1 — Premakni init iz `initState` v globalni Riverpod provider
+### 2.1 — Premakni init iz `initState` v globalni Riverpod provider `[DONE]`
 **Vzrok počasnosti:** `tremble_map_screen.dart:74` kliče `_initializeMap()` v `initState` → `PmTilesVectorTileProvider.fromSource()` dela HTTP fetch headerja/indexa ob VSAKEM odprtju tabice. Tab switch = re-fetch.
 
 **Korak 1 — nova datoteka `lib/src/core/map_provider.dart`:**
@@ -148,7 +148,7 @@ return mapInit.when(
 
 ---
 
-### 2.2 — On-disk tile cache (KONČNA odločitev: caching, NE lokalni extract)
+### 2.2 — On-disk tile cache `[DONE]` (KONČNA odločitev: caching, NE lokalni extract)
 **Vzrok jitter-ja:** vsak tile je HTTP range request na `maps.trembledating.com`. Pan/zoom = round-trip + decode + render per tile. Brez persistence med sejami.
 
 **Zakaj caching in ne lokalni extract:** lokalni regionalni extract se ne skalira čez ~20 mest — postaneš distributer map podatkov, obvladovati moraš file verzioniranje. Caching deluje enako pri 3 mestih kot pri 200.
@@ -167,7 +167,7 @@ Prvi ogled območja zadane omrežje; vsak ponovni ogled bere z diska (brez laten
 
 ---
 
-### 2.3 — Cleanup map prod path `[dev]`
+### 2.3 — Cleanup map prod path `[DONE]` `[dev]`
 - `tremble_map_screen.dart:62` generira dev mock proximity kroge; v prod je `const []`. Skrij "active people count" pill (`:230`) v prod, da ne kaže "0", ali poveži realni stream (Phase 3 heatmap, PRO only — šele po F1 device testu).
 - Tile provider lifecycle: `MapController` je disposed (`:116`); ko init živi v `mapInitProvider`, namerno traja celo sejo. `ref.invalidate(mapInitProvider)` samo ob memory pressure, ne ob vsakem izhodu.
 
@@ -185,12 +185,12 @@ Prvi ogled območja zadane omrežje; vsak ponovni ogled bere z diska (brez laten
 
 **Founder review na arhitekturo pred implementacijo.**
 
-### 3.2 — Fix UID truncation + napačen identifier `[dev]`
+### 3.2 — Fix UID truncation + napačen identifier `[DONE]` `[dev]`
 - `:112` `uid.codeUnits.take(20)` reže 28-znakovni UID → `:172` dobi odrezan UID, ki ne matcha nikogar.
 - `:209` shrani `toDeviceId: result.device.remoteId.str` = rotirajoč BLE naslov, ne UID.
 - Reši kot del 3.1 — nehaj kodirati identiteto v advertisement.
 
-### 3.3 — Logiraj namesto tihega požiranja `[dev]`
+### 3.3 — Logiraj namesto tihega požiranja `[DONE]` `[dev]`
 `:223` `catch (_) {}` požre Firestore write failure. Dodaj `debugPrint` + Crashlytics non-fatal.
 
 ### 3.4 — Device test na realni strojni opremi `[founder/Martin]`
@@ -212,21 +212,21 @@ SDK je popolnoma wired: `revenuecat_subscription.dart` (configure :177, paywall 
 
 ## FAZA 5 — Privacy & Legal Integrity (poleg 1.1/1.2)
 
-**5.1 TTL field mismatch `[founder]`:** komentar `proximity.functions.ts:590` pravi policy na `ttl`, vsi pisci uporabljajo `expiresAt` (`ble_service.dart:219`, `proximity.functions.ts:843,948`, `rateLimit.ts:54`). Če je deployana policy na `ttl`, podatki nikoli ne potečejo. Preveri policy na `proximity_events` + `run_encounters` da targeta `expiresAt`. Popravi komentar.
+**5.1 TTL field mismatch `[DONE]` `[founder]`:** komentar `proximity.functions.ts:590` pravi policy na `ttl`, vsi pisci uporabljajo `expiresAt` (`ble_service.dart:219`, `proximity.functions.ts:843,948`, `rateLimit.ts:54`). Če je deployana policy na `ttl`, podatki nikoli ne potečejo. Preveri policy na `proximity_events` + `run_encounters` da targeta `expiresAt`. Popravi komentar.
 
-**5.2 "Encrypted" trditev `[founder/legal]`:** `consent_step.dart:166` pravi, da so občutljivi podatki "encrypted". V kodi ni field-level enkripcije — samo Firestore at-rest (infra). Kvalificiraj wording ali implementiraj field-level enkripcijo za posebne kategorije.
+**5.2 "Encrypted" trditev `[DONE]` `[founder/legal]`:** `consent_step.dart:166` pravi, da so občutljivi podatki "encrypted". V kodi ni field-level enkripcije — samo Firestore at-rest (infra). Kvalificiraj wording ali implementiraj field-level enkripcijo za posebne kategorije.
 
-**5.3 Safe Zones erasure `[dev]`:** `safe_zone_repository.dart:42` hrani home/work lat-lng v SharedPreferences (local-only, nešifrirano). Potrdi, da se počisti ob logout + GDPR erasure flow.
+**5.3 Safe Zones erasure `[DONE]` `[dev]`:** `safe_zone_repository.dart:42` hrani home/work lat-lng v SharedPreferences (local-only, nešifrirano). Potrdi, da se počisti ob logout + GDPR erasure flow.
 
 ---
 
 ## FAZA 6 — Tech Debt & Refactor (PO submissionu)
 
-- **README:** dokumentiraj gitignored `firebase_options_*.dart` + `google-services.json` (fresh clone se ne prevede). `[dev]`
-- **main.dart cleanup:** zbriši zastarel komentar `:10-14`; združi dvojni App Check activate `:62/:78`. `[dev]`
-- **D32:** zamenjaj deprecated `LocalBroadcastManager` (`MainApplication.kt:7,38`). Nizka prioriteta. `[dev]`
+- **README:** `[DONE]` dokumentiraj gitignored `firebase_options_*.dart` + `google-services.json` (fresh clone se ne prevede). `[dev]`
+- **main.dart cleanup:** `[DONE]` zbriši zastarel komentar `:10-14`; združi dvojni App Check activate `:62/:78`. `[dev]`
+- **D32:** `[DONE]` zamenjaj deprecated `LocalBroadcastManager` (`MainApplication.kt:7,38`). Nizka prioriteta. `[dev]`
 - **Refactor:** `edit_profile_screen.dart` (2677), `home_screen.dart` (2535) → pod-widgeti + controller. PO submissionu. `[dev]`
-- **Testi:** ~4% coverage; dodaj widget teste za wave→mutual-wave→30min window in photo upload (mocked R2). `[dev]`
+- **Testi:** `[DONE]` ~4% coverage; dodaj widget teste za wave→mutual-wave→30min window in photo upload (mocked R2). `[dev]`
 
 ---
 

@@ -400,7 +400,7 @@ Show diff before writing. Do NOT deploy.
 | Deploy ukaz | `--project tremble-dev` | `--project am---dating-app` |
 | Cloud Functions | `europe-west1` | `europe-west1` |
 | Firestore backup | Disabled | Enabled |
-| scanProximityPairs | ✓ Live | ✗ Čaka deploy |
+| scanProximityPairs | ✓ Live | ✓ Live |
 | TTL policies | proximity ✓, gdprRequests ✓ | proximity_events ✓, run_encounters ✓, gdprRequests ✓, rateLimits ✓ |
 
 ---
@@ -425,7 +425,7 @@ Show diff before writing. Do NOT deploy.
 | `updateLocation` | Callable | proximity | ✓ |
 | `findNearby` | Callable | proximity | ⚠️ 0.55 samo Event mode |
 | `setInactive` | Callable | proximity | ✓ |
-| `scanProximityPairs` | Scheduled 1min | proximity | ✓ Dev / ✗ Prod |
+| `scanProximityPairs` | Scheduled 1min | proximity | ✓ Live |
 | `onBleProximity` | Trigger (no-op) | proximity | DEPRECATED |
 | `getProximityMatchCandidates` | Callable | proximity | ✓ |
 | `onRunEncounter` | Trigger (no-op) | proximity | DEPRECATED |

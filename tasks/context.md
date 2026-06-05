@@ -1,22 +1,24 @@
-## Session State — 2026-06-05 18:30 CEST
-- Active Task: Format source controlled files and prepare for pre-commit checks
+## Session State — 2026-06-05 18:45 CEST
+- Active Task: Translate photo upload errors and replace hardcoded Slovenian strings
 - Environment: Dev, `main`
 - Modified Files:
-    - All modified files under `lib/` and `test/` formatted and staged
+    - `lib/src/core/translations.dart` (added photo_upload_error_* translation keys for all 8 languages)
+    - `lib/src/features/auth/presentation/registration_flow.dart` (replaced hardcoded strings with translation keys)
     - `tasks/context.md` (updated session handoff)
 - Open Problems:
     - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
     - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
-- System Status: `dart format` successfully completed and staged. `flutter analyze --no-fatal-infos` clean. `flutter test --dart-define=FLAVOR=dev` 131/131 passed. Backend build and test checks passing.
+- System Status: `dart format` successfully completed and staged. `flutter analyze --no-fatal-infos` clean. `flutter test --dart-define=FLAVOR=dev` 131/131 passed.
 
 ## Session Handoff
 - Completed:
-    - Formatted all Dart source code files under `lib/` and `test/` using `dart format`.
-    - Staged the formatted changes for `registration_flow.dart` and `home_screen.dart` so they pass the pre-commit formatter checks.
-    - Verified all quality gates locally (Flutter analysis, Flutter tests, backend build, backend lint, and backend tests).
+    - Added translation keys `photo_upload_error_format`, `photo_upload_error_interrupted`, `photo_upload_error_network`, and `photo_upload_error_generic` in EN, SL, DE, IT, FR, HR, SR, HU.
+    - Replaced hardcoded Slovenian strings in `_mapUploadError` within `registration_flow.dart` with localized lookups using the selected app language.
+    - Verified that no hardcoded strings remain via `grep`.
+    - Ran all local quality checks (formatting, analysis, tests) cleanly.
 - In Progress: None.
 - Blocked: None for this task.
-- Next Action: Proceed with `git commit` and sync.
+- Next Action: Commit and push the staged changes.
 
 ## Session State — 2026-06-05 18:00 CEST
 - Active Task: Skeleton screens for matches and run recap loading states

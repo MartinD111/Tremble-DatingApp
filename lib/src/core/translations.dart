@@ -948,6 +948,13 @@ const Map<String, Map<String, String>> _translations = {
     'safe_zone_delete': 'Delete zone',
     'safe_zone_confirm_off':
         'Are you sure? This will make you visible at this location again.',
+    'photo_upload_error_format':
+        'This image is not supported. Choose a JPG or PNG under 10 MB.',
+    'photo_upload_error_interrupted':
+        'Upload interrupted. Try again or choose a different photo.',
+    'photo_upload_error_network':
+        'Image could not be uploaded. Check your connection and try again.',
+    'photo_upload_error_generic': 'Upload failed. Try again.',
   },
 
   // ═══════════════════════════════════════════
@@ -1739,6 +1746,13 @@ const Map<String, Map<String, String>> _translations = {
     'safe_zone_delete': 'Izbriši območje',
     'safe_zone_confirm_off':
         'Ali si prepričan/a? S tem boš ponovno viden/a na tej lokaciji.',
+    'photo_upload_error_format':
+        'Ta slika ni podprta. Izberi JPG ali PNG, manjši od 10 MB.',
+    'photo_upload_error_interrupted':
+        'Naložitev je prekinjena. Poskusi znova ali izberi drugo sliko.',
+    'photo_upload_error_network':
+        'Slike ni bilo mogoče naložiti. Preveri povezavo in poskusi znova.',
+    'photo_upload_error_generic': 'Naložitev ni uspela. Poskusi znova.',
   },
 
   // ═══════════════════════════════════════════
@@ -2511,6 +2525,13 @@ const Map<String, Map<String, String>> _translations = {
     'safe_zone_delete': 'Zone l\u00f6schen',
     'safe_zone_confirm_off':
         'Bist du sicher? Dadurch wirst du an diesem Ort wieder sichtbar.',
+    'photo_upload_error_format':
+        'Dieses Bild wird nicht unterstützt. Wähle ein JPG oder PNG unter 10 MB.',
+    'photo_upload_error_interrupted':
+        'Upload unterbrochen. Versuche es erneut oder wähle ein anderes Foto.',
+    'photo_upload_error_network':
+        'Bild konnte nicht hochgeladen werden. Überprüfe deine Verbindung und versuche es erneut.',
+    'photo_upload_error_generic': 'Upload fehlgeschlagen. Versuche es erneut.',
   },
 
   // ═══════════════════════════════════════════
@@ -3282,6 +3303,13 @@ const Map<String, Map<String, String>> _translations = {
     'safe_zone_delete': 'Elimina zona',
     'safe_zone_confirm_off':
         'Sei sicuro? Questo ti renderà di nuovo visibile in questo luogo.',
+    'photo_upload_error_format':
+        'Questa immagine non è supportata. Scegli un JPG o PNG inferiore a 10 MB.',
+    'photo_upload_error_interrupted':
+        'Caricamento interrotto. Riprova o scegli una foto diversa.',
+    'photo_upload_error_network':
+        'Impossibile caricare l\'immagine. Controlla la tua connessione e riprova.',
+    'photo_upload_error_generic': 'Caricamento fallito. Riprova.',
   },
   'fr': {
     // --- Général ---
@@ -4060,6 +4088,13 @@ const Map<String, Map<String, String>> _translations = {
     'safe_zone_delete': 'Supprimer la zone',
     'safe_zone_confirm_off':
         'Êtes-vous sûr ? Cela vous rendra à nouveau visible dans ce lieu.',
+    'photo_upload_error_format':
+        'Cette image n\'est pas supportée. Choisissez un JPG ou PNG de moins de 10 Mo.',
+    'photo_upload_error_interrupted':
+        'Téléchargement interrompu. Réessayez ou choisissez une autre photo.',
+    'photo_upload_error_network':
+        'L\'image n\'a pas pu être téléchargée. Vérifiez votre connexion et réessayez.',
+    'photo_upload_error_generic': 'Échec du téléchargement. Réessayez.',
   },
 
   // ═══════════════════════════════════════════
@@ -4832,6 +4867,13 @@ const Map<String, Map<String, String>> _translations = {
     'tutorial_step5_title': 'Postavi i zaboravi',
     'tutorial_step5_desc':
         'Tremble je dizajniran da bude zatvoren. Dovrši profil, postavi kriterije, i pusti aplikaciju da tiho radi u pozadini. Živite život — obavijestit ćemo te čim se otkrije pravi fizički spoj.',
+    'photo_upload_error_format':
+        'Ova slika nije podržana. Odaberi JPG ili PNG manji od 10 MB.',
+    'photo_upload_error_interrupted':
+        'Prijenos je prekinut. Pokušaj ponovno ili odaberi drugu sliku.',
+    'photo_upload_error_network':
+        'Sliku nije bilo moguće prenijeti. Provjeri vezu i pokušaj ponovno.',
+    'photo_upload_error_generic': 'Prijenos nije uspio. Pokušaj ponovno.',
   },
   'sr': {
     // --- General ---
@@ -5597,6 +5639,13 @@ const Map<String, Map<String, String>> _translations = {
     'safe_zone_delete': 'Obriši zonu',
     'safe_zone_confirm_off':
         'Da li si siguran? Ovo će te ponovo učiniti vidljivim na ovoj lokaciji.',
+    'photo_upload_error_format':
+        'Ova slika nije podržana. Izaberi JPG ili PNG manji od 10 MB.',
+    'photo_upload_error_interrupted':
+        'Otpremanje je prekinuto. Pokušaj ponovo ili izaberi drugu sliku.',
+    'photo_upload_error_network':
+        'Sliku nije bilo moguće otpremiti. Proveri vezu i pokušaj ponovo.',
+    'photo_upload_error_generic': 'Otpremanje nije uspelo. Pokušaj ponovo.',
   },
 
   // ═══════════════════════════════════════════
@@ -6322,6 +6371,13 @@ const Map<String, Map<String, String>> _translations = {
     'pw_uppercase': 'Legalább 1 nagybetű (A-Z)',
     'pw_digit': 'Legalább 1 számjegy (0-9)',
     'pw_special': 'Legalább 1 speciális karakter (!@#...)',
+    'photo_upload_error_format':
+        'Ez a kép nem támogatott. Válassz egy 10 MB alatti JPG vagy PNG képet.',
+    'photo_upload_error_interrupted':
+        'Feltöltés megszakadt. Próbáld újra, vagy válassz másik képet.',
+    'photo_upload_error_network':
+        'A képet nem sikerült feltölteni. Ellenőrizd a kapcsolatot és próbáld újra.',
+    'photo_upload_error_generic': 'Feltöltés sikertelen. Próbáld újra.',
   },
 };
 
