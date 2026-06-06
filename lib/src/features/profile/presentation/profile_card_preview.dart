@@ -187,16 +187,16 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                                     height: 30,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: const Color(0xFFF4436C)
+                                      color: TrembleTheme.rose
                                           .withValues(alpha: 0.14),
                                       border: Border.all(
-                                        color: const Color(0xFFF4436C)
+                                        color: TrembleTheme.rose
                                             .withValues(alpha: 0.42),
                                       ),
                                     ),
                                     child: const Icon(
                                       LucideIcons.plane,
-                                      color: Color(0xFFF4436C),
+                                      color: TrembleTheme.rose,
                                       size: 15,
                                     ),
                                   ),

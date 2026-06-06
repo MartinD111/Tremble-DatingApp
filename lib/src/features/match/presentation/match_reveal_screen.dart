@@ -13,6 +13,7 @@ import '../domain/match.dart';
 import '../../../features/safety/screen_protection_service.dart';
 import '../application/match_service.dart';
 import '../../../shared/ui/tremble_loading_spinner.dart';
+import '../../../core/theme.dart';
 
 // ── Pep talk data ────────────────────────────────────────────────────────────
 
@@ -162,9 +163,9 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
   static const _bgDeep = Color(0xFF0B0B09);
   static const _bgMid = Color(0xFF13130F);
   static const _bgBottom = Color(0xFF0E0E0C);
-  static const _greenDark = Color(0xFF2D9B6F);
+  static const _greenDark = TrembleTheme.successGreen;
   static const _greenLight = Color(0xFF5BBF93);
-  static const _cream = Color(0xFFFAFAF7);
+  static const _cream = TrembleTheme.backgroundColor;
 
   late final AnimationController _ctrl;
   late final _Pep _pep;
@@ -727,9 +728,9 @@ class _PulseInterceptButton extends StatelessWidget {
     required this.onPressed,
   });
 
-  static const _greenDark = Color(0xFF2D9B6F);
+  static const _greenDark = TrembleTheme.successGreen;
   static const _greenLight = Color(0xFF5BBF93);
-  static const _cream = Color(0xFFFAFAF7);
+  static const _cream = TrembleTheme.backgroundColor;
 
   final String label;
   final String sentLabel;

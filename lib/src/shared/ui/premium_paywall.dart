@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme.dart';
 import '../../features/subscriptions/application/revenuecat_subscription.dart';
 
 class PremiumPaywallBottomSheet {
@@ -20,14 +21,14 @@ class PremiumPaywallBottomSheet {
         messenger?.showSnackBar(
           const SnackBar(
             content: Text('Premium activated.'),
-            backgroundColor: Color(0xFFF4436C),
+            backgroundColor: TrembleTheme.rose,
           ),
         );
       case RevenueCatPaywallOutcome.restored:
         messenger?.showSnackBar(
           const SnackBar(
             content: Text('Purchases restored.'),
-            backgroundColor: Color(0xFFF4436C),
+            backgroundColor: TrembleTheme.rose,
           ),
         );
       case RevenueCatPaywallOutcome.error:
@@ -38,7 +39,7 @@ class PremiumPaywallBottomSheet {
         messenger?.showSnackBar(
           SnackBar(
             content: Text(error),
-            backgroundColor: const Color(0xFFF4436C),
+            backgroundColor: TrembleTheme.rose,
           ),
         );
       case RevenueCatPaywallOutcome.notPresented:

@@ -6,9 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../shared/ui/primary_button.dart';
 import '../../data/safety_repository.dart';
 import '../../../../core/translations.dart';
-
-const _kDeepGraphite = Color(0xFF1A1A18);
-const _kPrimaryRose = Color(0xFFF4436C);
+import '../../../../core/theme.dart';
 
 /// A generic bottom sheet that offers "Report User" and "Block User" options.
 class UgcActionSheet extends ConsumerWidget {
@@ -40,7 +38,7 @@ class UgcActionSheet extends ConsumerWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: _kDeepGraphite,
+        color: TrembleTheme.textColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
@@ -58,11 +56,11 @@ class UgcActionSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(LucideIcons.flag, color: _kPrimaryRose),
+              leading: const Icon(LucideIcons.flag, color: TrembleTheme.rose),
               title: Text(
                 t('report_user', lang).replaceAll('{name}', targetName),
                 style: GoogleFonts.instrumentSans(
-                  color: _kPrimaryRose,
+                  color: TrembleTheme.rose,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -73,11 +71,11 @@ class UgcActionSheet extends ConsumerWidget {
             ),
             Divider(color: Colors.white12, height: 1),
             ListTile(
-              leading: const Icon(LucideIcons.ban, color: _kPrimaryRose),
+              leading: const Icon(LucideIcons.ban, color: TrembleTheme.rose),
               title: Text(
                 t('block_user', lang).replaceAll('{name}', targetName),
                 style: GoogleFonts.instrumentSans(
-                  color: _kPrimaryRose,
+                  color: TrembleTheme.rose,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -97,7 +95,7 @@ class UgcActionSheet extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _kDeepGraphite,
+        backgroundColor: TrembleTheme.textColor,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
@@ -121,7 +119,7 @@ class UgcActionSheet extends ConsumerWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: _kPrimaryRose,
+              backgroundColor: TrembleTheme.rose,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(100)),
@@ -243,7 +241,7 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
     final canSubmit = _selectedReasons.isNotEmpty && !_isSubmitting;
 
     return AlertDialog(
-      backgroundColor: _kDeepGraphite,
+      backgroundColor: TrembleTheme.textColor,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
@@ -273,7 +271,7 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
                     style: GoogleFonts.instrumentSans(color: Colors.white),
                   ),
                   value: _selectedReasons.contains(reason),
-                  activeColor: _kPrimaryRose,
+                  activeColor: TrembleTheme.rose,
                   checkColor: Colors.white,
                   dense: true,
                   contentPadding: EdgeInsets.zero,
@@ -318,7 +316,7 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
                 t('report_auto_block_warning', lang),
                 style: GoogleFonts.instrumentSans(
                   fontWeight: FontWeight.bold,
-                  color: _kPrimaryRose,
+                  color: TrembleTheme.rose,
                 ),
               ),
               const SizedBox(height: 20),

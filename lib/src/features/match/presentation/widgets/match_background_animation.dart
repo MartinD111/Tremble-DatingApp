@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme.dart';
 
 class MatchBackgroundAnimation extends StatefulWidget {
   const MatchBackgroundAnimation({super.key});
@@ -45,7 +46,7 @@ class _PulsePainter extends CustomPainter {
   final double progress;
   _PulsePainter(this.progress);
 
-  static const Color _rose = Color(0xFFF4436C);
+  static const Color _rose = TrembleTheme.rose;
 
   @override
   void paint(Canvas canvas, Size size) {

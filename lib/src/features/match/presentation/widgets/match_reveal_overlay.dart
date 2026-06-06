@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MatchRevealOverlay
@@ -62,12 +63,12 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
   // ── Ring gradient ────────────────────────────────────────────────────────
 
   static const _ringColors = [
-    Color(0xFFF4436C), // rose
+    TrembleTheme.rose, // rose
     Color(0xFFFF8FAB), // blush
-    Color(0xFFF5C842), // gold
+    TrembleTheme.accentYellow, // gold
     Color(0xFFFFE082), // champagne
     Color(0xFFFFB3C6), // petal
-    Color(0xFFF4436C), // back to rose — seamless
+    TrembleTheme.rose, // back to rose — seamless
   ];
 
   // Photo diameter inside the ring (must fit within ring radius − stroke)
@@ -272,7 +273,7 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
             end: Alignment.bottomRight,
             colors: [
               Color(0xFFFFD0DF), // soft petal
-              Color(0xFFF4436C), // brand rose
+              TrembleTheme.rose, // brand rose
               Color(0xFFFFD700), // gold shimmer
             ],
             stops: [0.0, 0.55, 1.0],
@@ -328,7 +329,7 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
                 shape: BoxShape.circle,
                 color: const Color(0xFF3A0015),
                 border: Border.all(
-                  color: const Color(0xFFF4436C).withValues(alpha: 0.35),
+                  color: TrembleTheme.rose.withValues(alpha: 0.35),
                   width: 2,
                 ),
               ),
@@ -364,7 +365,7 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
     return const ColoredBox(
       color: Color(0xFF3A0015),
       child: Center(
-        child: Icon(Icons.person_rounded, color: Color(0xFFF4436C), size: 64),
+        child: Icon(Icons.person_rounded, color: TrembleTheme.rose, size: 64),
       ),
     );
   }
@@ -390,8 +391,8 @@ class _RingPainter extends CustomPainter {
     final glowPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 22
-      ..color = const Color(0xFFF4436C)
-          .withValues(alpha: 0.14 * progress.clamp(0.0, 1.0))
+      ..color =
+          TrembleTheme.rose.withValues(alpha: 0.14 * progress.clamp(0.0, 1.0))
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
     canvas.drawCircle(center, radius, glowPaint);
 
@@ -463,9 +464,9 @@ class _Particle {
         isCircle = rng.nextBool();
 
   static const _colors = [
-    Color(0xFFF4436C),
+    TrembleTheme.rose,
     Color(0xFFFF8FAB),
-    Color(0xFFF5C842),
+    TrembleTheme.accentYellow,
     Color(0xFFFFE082),
     Color(0xFFFFFFFF),
     Color(0xFFFF6B9D),

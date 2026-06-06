@@ -7,6 +7,7 @@ import '../../../../../shared/ui/tremble_back_button.dart';
 import '../../../../../features/gym/domain/selected_gym.dart';
 import '../../../../../features/gym/presentation/gym_search_widget.dart';
 import 'step_shared.dart';
+import '../../../../../core/theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GymStep — onboarding step where users can add up to 3 personal gyms.
@@ -30,7 +31,7 @@ class GymStep extends ConsumerWidget {
   final VoidCallback? onBack;
   final String Function(String) tr;
 
-  static const _brandRose = Color(0xFFF4436C);
+  static const _brandRose = TrembleTheme.rose;
 
   void _openAddGymSheet(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -205,7 +206,7 @@ class _GymTile extends StatelessWidget {
   final VoidCallback onRemove;
   final bool isDark;
 
-  static const _brandRose = Color(0xFFF4436C);
+  static const _brandRose = TrembleTheme.rose;
 
   @override
   Widget build(BuildContext context) {

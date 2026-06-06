@@ -293,13 +293,13 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
                                                             BoxDecoration(
                                                           shape:
                                                               BoxShape.circle,
-                                                          color: const Color(
-                                                                  0xFFF4436C)
+                                                          color: TrembleTheme
+                                                              .rose
                                                               .withValues(
                                                                   alpha: 0.18),
                                                           border: Border.all(
-                                                            color: const Color(
-                                                                    0xFFF4436C)
+                                                            color: TrembleTheme
+                                                                .rose
                                                                 .withValues(
                                                                     alpha: 0.5),
                                                           ),
@@ -307,7 +307,7 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
                                                         child: const Icon(
                                                           LucideIcons.plane,
                                                           color:
-                                                              Color(0xFFF4436C),
+                                                              TrembleTheme.rose,
                                                           size: 15,
                                                         ),
                                                       ),

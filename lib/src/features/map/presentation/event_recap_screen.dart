@@ -105,8 +105,7 @@ class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
     final countdown = _countdown;
 
     final textPrimary = isDark ? Colors.white : TrembleTheme.textColor;
-    final surfaceBg =
-        isDark ? const Color(0xFF1A1A18) : const Color(0xFFF5F5F5);
+    final surfaceBg = isDark ? TrembleTheme.textColor : const Color(0xFFF5F5F5);
 
     return Scaffold(
       backgroundColor: surfaceBg,
@@ -225,7 +224,7 @@ class _PulseCountdownBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFF4436C), Color(0xFFFF8C42)],
+          colors: [TrembleTheme.rose, Color(0xFFFF8C42)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

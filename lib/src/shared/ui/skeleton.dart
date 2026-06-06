@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/theme.dart';
 
 /// A single skeleton placeholder rectangle with a pulsing shimmer animation.
 ///
@@ -55,7 +56,7 @@ class _SkeletonBoxState extends State<SkeletonBox>
         decoration: BoxDecoration(
           color: isDark
               ? Colors.white.withValues(alpha: _opacity.value)
-              : const Color(0xFF1A1A18).withValues(alpha: _opacity.value),
+              : TrembleTheme.textColor.withValues(alpha: _opacity.value),
           borderRadius: BorderRadius.circular(widget.borderRadius),
         ),
       ),

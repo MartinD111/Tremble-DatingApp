@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
+import '../../../../../core/theme.dart';
 
 const int nameMaxLength = 50;
 
@@ -99,7 +100,7 @@ class NameStep extends StatelessWidget {
                       final remaining =
                           nameMaxLength - nameController.text.length;
                       final counterColor = remaining < 10
-                          ? const Color(0xFFF4436C)
+                          ? TrembleTheme.rose
                           : (isDark ? Colors.white54 : Colors.black45);
                       final counterText = tr('name_chars_remaining')
                           .replaceAll('{count}', remaining.toString());

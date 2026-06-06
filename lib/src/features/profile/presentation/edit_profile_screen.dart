@@ -620,7 +620,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 final remaining = _nameMaxLength -
                                     _nameController.text.length;
                                 final counterColor = remaining < 10
-                                    ? const Color(0xFFF4436C)
+                                    ? TrembleTheme.rose
                                     : (isDark
                                         ? Colors.white54
                                         : Colors.black45);

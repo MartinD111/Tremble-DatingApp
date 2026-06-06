@@ -164,7 +164,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             borderRadius: 24,
             useGlassEffect: false,
             solidDarkBg: const Color(0xFF2A2A3E),
-            borderColor: const Color(0xFFF4436C).withValues(alpha: 0.28),
+            borderColor: TrembleTheme.rose.withValues(alpha: 0.28),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -202,7 +202,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF4436C),
+                          backgroundColor: TrembleTheme.rose,
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -283,7 +283,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: GlassCard(
               borderRadius: 24,
-              borderColor: const Color(0xFFF4436C).withValues(alpha: 0.34),
+              borderColor: TrembleTheme.rose.withValues(alpha: 0.34),
               child: Material(
                 color: Colors.transparent,
                 child: Column(
@@ -312,7 +312,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       alignment: Alignment.centerRight,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF4436C),
+                          backgroundColor: TrembleTheme.rose,
                           foregroundColor: Colors.white,
                         ),
                         onPressed: () {
@@ -1027,8 +1027,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         style: TrembleTheme.displayFont(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color:
-                              isDark ? Colors.white : const Color(0xFF1A1A18),
+                          color: isDark ? Colors.white : TrembleTheme.textColor,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -1042,7 +1041,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           fontSize: 13,
                           color: isDark
                               ? Colors.white60
-                              : const Color(0xFF1A1A18).withValues(alpha: 0.6),
+                              : TrembleTheme.textColor.withValues(alpha: 0.6),
                           height: 1.55,
                         ),
                       ),
@@ -1553,15 +1552,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       final (modeIcon, modeColor) = switch (selectedMode) {
                         RadarModeKind.gym => (
                             LucideIcons.dumbbell,
-                            const Color(0xFFF5C842)
+                            TrembleTheme.accentYellow
                           ),
                         RadarModeKind.run => (
                             LucideIcons.footprints,
-                            const Color(0xFFF4436C)
+                            TrembleTheme.rose
                           ),
                         RadarModeKind.event => (
                             LucideIcons.calendar,
-                            const Color(0xFFF5C842)
+                            TrembleTheme.accentYellow
                           ),
                         RadarModeKind.radar => (
                             LucideIcons.radar,
@@ -1795,7 +1794,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Container(
               decoration: BoxDecoration(
                 color: isDark
-                    ? const Color(0xFF1A1A18).withValues(alpha: 0.95)
+                    ? TrembleTheme.textColor.withValues(alpha: 0.95)
                     : Colors.white.withValues(alpha: 0.95),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(32)),
@@ -1831,7 +1830,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       style: TrembleTheme.displayFont(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                        color: isDark ? Colors.white : TrembleTheme.textColor,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -2111,7 +2110,7 @@ Future<void> showEventActivationFlow(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color:
-                                isDark ? Colors.white : const Color(0xFF1A1A18),
+                                isDark ? Colors.white : TrembleTheme.textColor,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -2139,7 +2138,7 @@ Future<void> showEventActivationFlow(
                             height: 1.45,
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.70)
-                                : const Color(0xFF1A1A18)
+                                : TrembleTheme.textColor
                                     .withValues(alpha: 0.70),
                           ),
                           textAlign: TextAlign.center,
@@ -2233,7 +2232,7 @@ void _showEventSelectionSheetFor(
           child: Container(
             decoration: BoxDecoration(
               color: isDark
-                  ? const Color(0xFF1A1A18).withValues(alpha: 0.95)
+                  ? TrembleTheme.textColor.withValues(alpha: 0.95)
                   : Colors.white.withValues(alpha: 0.95),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(32)),
@@ -2266,7 +2265,7 @@ void _showEventSelectionSheetFor(
                     style: TrembleTheme.displayFont(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                      color: isDark ? Colors.white : TrembleTheme.textColor,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -2365,7 +2364,7 @@ void _showEventSelectionSheetFor(
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF5C842)
+                                  color: TrembleTheme.accentYellow
                                       .withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                 ),
@@ -2374,7 +2373,7 @@ void _showEventSelectionSheetFor(
                                       ? LucideIcons.zap
                                       : LucideIcons.calendar,
                                   size: 20,
-                                  color: const Color(0xFFF5C842),
+                                  color: TrembleTheme.accentYellow,
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -2389,7 +2388,7 @@ void _showEventSelectionSheetFor(
                                         fontWeight: FontWeight.w700,
                                         color: isDark
                                             ? Colors.white
-                                            : const Color(0xFF1A1A18),
+                                            : TrembleTheme.textColor,
                                       ),
                                     ),
                                     const SizedBox(height: 3),
@@ -2402,7 +2401,7 @@ void _showEventSelectionSheetFor(
                                             margin:
                                                 const EdgeInsets.only(right: 6),
                                             decoration: const BoxDecoration(
-                                              color: Color(0xFF2D9B6F),
+                                              color: TrembleTheme.successGreen,
                                               shape: BoxShape.circle,
                                             ),
                                           ),
@@ -2411,7 +2410,7 @@ void _showEventSelectionSheetFor(
                                           style: GoogleFonts.instrumentSans(
                                             fontSize: 12,
                                             color: isLive
-                                                ? const Color(0xFF2D9B6F)
+                                                ? TrembleTheme.successGreen
                                                 : (isDark
                                                     ? Colors.white54
                                                     : Colors.black45),
@@ -2618,7 +2617,7 @@ class _RadarScheduleButton extends ConsumerWidget {
               : Colors.black.withValues(alpha: 0.05),
           border: Border.all(
             color: isHighlighted
-                ? const Color(0xFFF4436C).withValues(alpha: 0.62)
+                ? TrembleTheme.rose.withValues(alpha: 0.62)
                 : isDark
                     ? Colors.white.withValues(alpha: 0.12)
                     : Colors.black.withValues(alpha: 0.08),
@@ -2809,7 +2808,7 @@ Future<void> showModeInfoDialog({
 
   final primary = Theme.of(context).colorScheme.primary;
   final isDark = Theme.of(context).brightness == Brightness.dark;
-  const gold = Color(0xFFF5C842);
+  const gold = TrembleTheme.accentYellow;
   final ringColor = isActive ? gold : primary;
 
   await showDialog<void>(
@@ -2868,7 +2867,7 @@ Future<void> showModeInfoDialog({
                       style: TrembleTheme.displayFont(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                        color: isDark ? Colors.white : TrembleTheme.textColor,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -2882,7 +2881,7 @@ Future<void> showModeInfoDialog({
                         fontSize: 13,
                         color: isDark
                             ? Colors.white60
-                            : const Color(0xFF1A1A18).withValues(alpha: 0.6),
+                            : TrembleTheme.textColor.withValues(alpha: 0.6),
                         height: 1.55,
                       ),
                     ),
@@ -2980,7 +2979,7 @@ Future<void> showModeInfoDialog({
                               padding: const EdgeInsets.symmetric(vertical: 13),
                               decoration: BoxDecoration(
                                 color: isActive
-                                    ? Colors.redAccent.withValues(alpha: 0.85)
+                                    ? TrembleTheme.rose.withValues(alpha: 0.85)
                                     : primary,
                                 borderRadius: BorderRadius.circular(100),
                                 boxShadow: [
@@ -3226,7 +3225,7 @@ class _PulsingRadarButtonState extends ConsumerState<_PulsingRadarButton>
   Widget build(BuildContext context) {
     final selectedMode = ref.watch(selectedRadarModeProvider);
 
-    const Color buttonColor = Color(0xFFF4436C);
+    const Color buttonColor = TrembleTheme.rose;
 
     final Widget logoWidget = switch (selectedMode) {
       RadarModeKind.gym =>
@@ -3273,7 +3272,7 @@ class _PulsingRadarButtonState extends ConsumerState<_PulsingRadarButton>
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: (widget.isHighlighted
-                                  ? const Color(0xFFF4436C)
+                                  ? TrembleTheme.rose
                                   : Theme.of(context).colorScheme.onSurface)
                               .withValues(alpha: 1.0 - progress),
                           width: 1.5,

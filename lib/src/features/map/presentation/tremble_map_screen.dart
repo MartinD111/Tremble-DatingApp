@@ -114,8 +114,8 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
             point: point,
             radius: 120,
             useRadiusInMeter: true,
-            color: const Color(0xFFF4436C).withValues(alpha: 0.12),
-            borderColor: const Color(0xFFF4436C).withValues(alpha: 0.35),
+            color: TrembleTheme.rose.withValues(alpha: 0.12),
+            borderColor: TrembleTheme.rose.withValues(alpha: 0.35),
             borderStrokeWidth: 1.5,
           ),
         )
@@ -231,7 +231,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? const Color(0xFF1A1A18).withValues(alpha: 0.4)
+                        ? TrembleTheme.textColor.withValues(alpha: 0.4)
                         : Colors.white.withValues(alpha: 0.76),
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(

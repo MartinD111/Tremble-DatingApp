@@ -11,6 +11,7 @@ import '../../../shared/ui/primary_button.dart';
 import '../../../core/translations.dart';
 import '../data/auth_repository.dart';
 import 'radar_background.dart';
+import '../../../core/theme.dart';
 
 @immutable
 class LoginLanguageOption {
@@ -312,7 +313,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                                     : const Color(0xFFF1F3F4),
                                 foregroundColor: isDark
                                     ? Colors.white
-                                    : const Color(0xFF1A1A18),
+                                    : TrembleTheme.textColor,
                                 borderColor: isDark
                                     ? Colors.white24
                                     : const Color(0xFFD0D0D0),
@@ -498,12 +499,12 @@ class _LanguageSheet extends StatelessWidget {
                         horizontal: 20, vertical: 14),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFFF4436C).withValues(alpha: 0.18)
+                          ? TrembleTheme.rose.withValues(alpha: 0.18)
                           : Colors.white.withValues(alpha: 0.07),
                       borderRadius: BorderRadius.circular(100),
                       border: Border.all(
                         color: isSelected
-                            ? const Color(0xFFF4436C)
+                            ? TrembleTheme.rose
                             : Colors.white.withValues(alpha: 0.15),
                         width: isSelected ? 2 : 1,
                       ),
@@ -527,7 +528,7 @@ class _LanguageSheet extends StatelessWidget {
                         ),
                         if (isSelected)
                           const Icon(Icons.check_circle,
-                              color: Color(0xFFF4436C), size: 20),
+                              color: TrembleTheme.rose, size: 20),
                       ],
                     ),
                   ),

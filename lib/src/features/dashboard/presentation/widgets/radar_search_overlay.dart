@@ -11,6 +11,7 @@ import 'package:tremble/src/features/dashboard/domain/warmth_direction.dart';
 import 'package:tremble/src/features/dashboard/application/radar_search_session.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
 import '../../../../core/translations.dart';
+import '../../../../core/theme.dart';
 
 /// Compact bottom-anchored search controller for an active mutual-wave session.
 ///
@@ -168,7 +169,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
     final lang = ref.watch(appLanguageProvider);
     final label = isWarmer ? t('getting_closer', lang) : t('moving_away', lang);
     final color = isWarmer
-        ? const Color(0xFFF4436C)
+        ? TrembleTheme.rose
         : colorScheme.onSurface.withValues(alpha: 0.5);
     final icon = isWarmer ? LucideIcons.trendingUp : LucideIcons.trendingDown;
 
@@ -212,7 +213,7 @@ class _MutualWaveFlash extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [primary.withValues(alpha: 0.95), const Color(0xFFF5C842)],
+          colors: [primary.withValues(alpha: 0.95), TrembleTheme.accentYellow],
         ),
         borderRadius: BorderRadius.circular(100),
         boxShadow: [

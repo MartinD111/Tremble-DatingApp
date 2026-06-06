@@ -159,7 +159,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
     if (!isGenderBased) return fallback;
     return switch (gender?.toLowerCase()) {
       'male' => const Color(0xFF4A9EFF),
-      'female' => const Color(0xFFF4436C),
+      'female' => TrembleTheme.rose,
       _ => fallback,
     };
   }
@@ -478,8 +478,8 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                             height: 7,
                             decoration: BoxDecoration(
                               color: activeSection == MatchSection.run
-                                  ? const Color(0xFFF4436C)
-                                  : const Color(0xFFF5C842),
+                                  ? TrembleTheme.rose
+                                  : TrembleTheme.accentYellow,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -873,14 +873,13 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                                         horizontal: 8,
                                                         vertical: 3),
                                                 decoration: BoxDecoration(
-                                                  color: const Color(0xFFF4436C)
+                                                  color: TrembleTheme.rose
                                                       .withValues(alpha: 0.15),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           100),
                                                   border: Border.all(
-                                                      color: const Color(
-                                                              0xFFF4436C)
+                                                      color: TrembleTheme.rose
                                                           .withValues(
                                                               alpha: 0.3)),
                                                 ),
@@ -890,8 +889,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                                       .instrumentSans(
                                                     fontSize: 9,
                                                     fontWeight: FontWeight.w700,
-                                                    color:
-                                                        const Color(0xFFF4436C),
+                                                    color: TrembleTheme.rose,
                                                     letterSpacing: 0.5,
                                                   ),
                                                 ),
@@ -1043,8 +1041,8 @@ class _ModeIconButton extends ConsumerWidget {
     required this.lang,
   });
 
-  static const _gold = Color(0xFFF5C842);
-  static const _rose = Color(0xFFF4436C);
+  static const _gold = TrembleTheme.accentYellow;
+  static const _rose = TrembleTheme.rose;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1109,7 +1107,7 @@ class _ModeIconButton extends ConsumerWidget {
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF1A1A18)
+                        ? TrembleTheme.textColor
                         : Colors.white,
                     width: 1,
                   ),
@@ -1261,9 +1259,9 @@ class _SectionPickerSheet extends ConsumerWidget {
                                   ? primary.withValues(alpha: 0.15)
                                   : (modeActive
                                       ? (section == MatchSection.run
-                                          ? const Color(0xFFF4436C)
+                                          ? TrembleTheme.rose
                                               .withValues(alpha: 0.12)
-                                          : const Color(0xFFF5C842)
+                                          : TrembleTheme.accentYellow
                                               .withValues(alpha: 0.12))
                                       : pillBg),
                               borderRadius: BorderRadius.circular(100),
@@ -1272,9 +1270,9 @@ class _SectionPickerSheet extends ConsumerWidget {
                                     ? primary
                                     : (modeActive
                                         ? (section == MatchSection.run
-                                            ? const Color(0xFFF4436C)
+                                            ? TrembleTheme.rose
                                                 .withValues(alpha: 0.4)
-                                            : const Color(0xFFF5C842)
+                                            : TrembleTheme.accentYellow
                                                 .withValues(alpha: 0.4))
                                         : pillBorder),
                                 width: isSelected ? 2 : 1,
@@ -1288,8 +1286,8 @@ class _SectionPickerSheet extends ConsumerWidget {
                                         ? primary
                                         : (modeActive
                                             ? (section == MatchSection.run
-                                                ? const Color(0xFFF4436C)
-                                                : const Color(0xFFF5C842))
+                                                ? TrembleTheme.rose
+                                                : TrembleTheme.accentYellow)
                                             : idleIcon)),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -1304,8 +1302,8 @@ class _SectionPickerSheet extends ConsumerWidget {
                                           ? selectedText
                                           : (modeActive
                                               ? (section == MatchSection.run
-                                                  ? const Color(0xFFF4436C)
-                                                  : const Color(0xFFF5C842))
+                                                  ? TrembleTheme.rose
+                                                  : TrembleTheme.accentYellow)
                                               : idleText),
                                     ),
                                   ),
@@ -1316,8 +1314,8 @@ class _SectionPickerSheet extends ConsumerWidget {
                                     height: 8,
                                     decoration: BoxDecoration(
                                       color: section == MatchSection.run
-                                          ? const Color(0xFFF4436C)
-                                          : const Color(0xFFF5C842),
+                                          ? TrembleTheme.rose
+                                          : TrembleTheme.accentYellow,
                                       shape: BoxShape.circle,
                                     ),
                                   ),

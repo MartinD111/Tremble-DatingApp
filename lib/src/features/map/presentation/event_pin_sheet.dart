@@ -480,7 +480,7 @@ class _UnlockButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.workspace_premium_rounded,
-                color: Color(0xFFF5C842), size: 18),
+                color: TrembleTheme.accentYellow, size: 18),
             const SizedBox(width: 8),
             Text(
               t('upgrade_to_pro', lang),

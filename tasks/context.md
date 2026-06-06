@@ -1,3 +1,51 @@
+## Session State — 2026-06-07 00:29 CEST
+- Active Task: Conditionally Silent FCM Notifications on Activity Modes & Read Optimization
+- Environment: Dev, `main`
+- Modified Files:
+    - `functions/src/modules/proximity/proximity.functions.ts`
+    - `functions/src/modules/matches/matches.functions.ts`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: TypeScript compile clean. Backend ESLint clean.
+
+## Session Handoff
+- Completed:
+    - Implemented a dynamic check for the recipient's activity modes (`isRunModeActive`, `activeGymId`, `activeEventId`) before sending FCM push notifications.
+    - For both `CROSSING_PATHS` (proximity engine) and `INCOMING_WAVE` (individual wave), formatted notifications to be data-only and silent (root `notification` key absent and APNS `contentAvailable: true` set) when any active mode is found.
+    - Reused the already-fetched Firestore document data in both modules instead of initiating redundant Firestore gets, optimizing database read costs and latency.
+    - Kept the `MUTUAL_WAVE` branch completely unchanged.
+    - Validated types using `tsc --noEmit` and code cleanliness using `npm run lint`.
+- In Progress: None.
+- Blocked: None.
+- Next Action: None (ready for testing/verification against emulator suite).
+
+## Session State — 2026-06-07 00:22 CEST
+- Active Task: Refactor Brand Colors to use TrembleTheme Tokens
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/profile/presentation/profile_card_preview.dart`
+    - `lib/src/features/profile/presentation/profile_detail_screen.dart`
+    - `lib/src/features/profile/presentation/edit_profile_screen.dart`
+    - `lib/src/features/gym/presentation/my_gyms_screen.dart`
+    - `lib/src/shared/ui/premium_paywall.dart`
+    - `lib/src/shared/ui/gradient_scaffold.dart`
+    - `lib/src/shared/ui/tremble_outage_screen.dart`
+    - `lib/src/shared/ui/skeleton.dart`
+    - `lib/src/shared/widgets/radar_painter.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: `dart format` completed. `flutter analyze` clean. `flutter test` passed 148/148.
+
+## Session Handoff
+- Completed:
+    - Replaced hardcoded brand colors with `TrembleTheme` tokens across the remaining 9 UI files (for a total of 39 files in this refactoring milestone).
+    - Verified clean static analysis and passing test suite with all 148 tests passing.
+- In Progress: None.
+- Blocked: None.
+- Next Action: None (milestone completed).
+
 ## Session State — 2026-06-06 23:17 CEST
 - Active Task: Remove deprecated no-op proximity exports from Cloud Functions index
 - Environment: Dev, `main`

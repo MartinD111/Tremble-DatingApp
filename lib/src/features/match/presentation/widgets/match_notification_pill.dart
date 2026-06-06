@@ -366,7 +366,7 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
   /// Accent: rose (female/default) or sky-blue (male).
   Color _accent(bool isDark) => _isMale
       ? (isDark ? const Color(0xFF64B5F6) : const Color(0xFF1565C0))
-      : const Color(0xFFF4436C);
+      : TrembleTheme.rose;
 
   /// Background: dark graphite / light rose-tint (female) or blue-tint (male).
   Color _bg(bool isDark) {

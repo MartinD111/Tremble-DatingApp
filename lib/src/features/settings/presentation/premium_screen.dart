@@ -64,9 +64,9 @@ const premiumPlanCards = [
     ],
     ctaBasicKey: 'premium_cta_get_premium',
     ctaPremiumKey: 'premium_cta_get_premium',
-    color: Color(0xFF1A1A18),
-    borderColor: Color(0xFFF4436C),
-    accent: Color(0xFFF4436C),
+    color: TrembleTheme.textColor,
+    borderColor: TrembleTheme.rose,
+    accent: TrembleTheme.rose,
     tag: 'SIGNAL PRIME',
     icon: LucideIcons.sparkles,
     productIdentifier: revenueCatMonthlyProduct,
@@ -85,9 +85,9 @@ const premiumPlanCards = [
     ],
     ctaBasicKey: 'premium_cta_get_weekend',
     ctaPremiumKey: 'premium_cta_get_weekend',
-    color: Color(0xFF1A1A18),
-    borderColor: Color(0xFFF5C842),
-    accent: Color(0xFFF5C842),
+    color: TrembleTheme.textColor,
+    borderColor: TrembleTheme.accentYellow,
+    accent: TrembleTheme.accentYellow,
     tag: 'WEEKEND ACCESS',
     icon: LucideIcons.mountain,
     productIdentifier: revenueCatWeeklyProduct,
@@ -107,7 +107,7 @@ const premiumPlanCards = [
     ],
     ctaBasicKey: 'premium_cta_get_yearly',
     ctaPremiumKey: 'premium_cta_get_yearly',
-    color: Color(0xFF1A1A18),
+    color: TrembleTheme.textColor,
     borderColor: Color(0xFF00C8FF),
     accent: Color(0xFF00C8FF),
     tag: 'YEARLY ACCESS',
@@ -126,7 +126,7 @@ const premiumPlanCards = [
     ],
     ctaBasicKey: 'premium_cta_get_lifetime',
     ctaPremiumKey: 'premium_cta_get_lifetime',
-    color: Color(0xFF1A1A18),
+    color: TrembleTheme.textColor,
     borderColor: Color(0xFFFFB347),
     accent: Color(0xFFFFB347),
     tag: 'LIFETIME ACCESS',
@@ -145,9 +145,9 @@ const premiumPlanCards = [
     ],
     ctaBasicKey: 'premium_current_plan',
     ctaPremiumKey: 'premium_switch_to_free',
-    color: Color(0xFF1A1A18),
-    borderColor: Color(0xFFFAFAF7),
-    accent: Color(0xFFFAFAF7),
+    color: TrembleTheme.textColor,
+    borderColor: TrembleTheme.backgroundColor,
+    accent: TrembleTheme.backgroundColor,
     tag: 'FREE SIGNAL',
     icon: LucideIcons.user,
   ),
@@ -178,13 +178,13 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     letterSpacing: 0.5,
   );
   late final TextStyle _cardTitleStyle = GoogleFonts.instrumentSans(
-    color: const Color(0xFFFAFAF7),
+    color: TrembleTheme.backgroundColor,
     fontSize: 26,
     fontWeight: FontWeight.bold,
     height: 1.1,
   );
   late final TextStyle _priceStyle = GoogleFonts.playfairDisplay(
-    color: const Color(0xFFFAFAF7),
+    color: TrembleTheme.backgroundColor,
     fontSize: 34,
     fontWeight: FontWeight.w800,
   );
@@ -209,7 +209,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     letterSpacing: 0.8,
   );
   late final TextStyle _featureStyle = GoogleFonts.instrumentSans(
-    color: const Color(0xFFFAFAF7),
+    color: TrembleTheme.backgroundColor,
     fontSize: 12,
     height: 1.3,
   );
@@ -223,7 +223,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     if (!isGenderBased) return fallback;
     return switch (gender?.toLowerCase()) {
       'male' => const Color(0xFF4A9EFF),
-      'female' => const Color(0xFFF4436C),
+      'female' => TrembleTheme.rose,
       _ => fallback,
     };
   }
@@ -461,7 +461,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: const Color(0xFFF4436C),
+        backgroundColor: TrembleTheme.rose,
       ),
     );
   }
@@ -474,7 +474,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Dialog(
       backgroundColor:
-          isDark ? const Color(0xFF1A1A18) : const Color(0xFFF2F2F7),
+          isDark ? TrembleTheme.textColor : const Color(0xFFF2F2F7),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -484,7 +484,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: const BoxDecoration(
-                color: Color(0xFFF4436C),
+                color: TrembleTheme.rose,
                 shape: BoxShape.circle,
               ),
               child: const Icon(LucideIcons.sparkles,
@@ -518,7 +518,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
                   context.pop();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF4436C),
+                  backgroundColor: TrembleTheme.rose,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -548,7 +548,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF1A1A18) : const Color(0xFFF2F2F7);
+    final bgColor = isDark ? TrembleTheme.textColor : const Color(0xFFF2F2F7);
     final textColor = isDark ? Colors.white : Colors.black87;
     final subtextColor = isDark ? Colors.white70 : Colors.black54;
     final glowOpacity = isDark ? 0.08 : 0.05;
@@ -564,7 +564,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     final genderAccent = _resolveGenderAccent(
       gender: user.gender,
       isGenderBased: user.isGenderBasedColor,
-      fallback: const Color(0xFFF4436C),
+      fallback: TrembleTheme.rose,
     );
 
     final screenTitleStyle = GoogleFonts.playfairDisplay(
@@ -761,7 +761,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
   Widget _buildCreditCard(PremiumPlanCard data, String lang) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A18),
+        color: TrembleTheme.textColor,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: data.accent, width: 1.0),
         boxShadow: [
@@ -998,14 +998,14 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     // Index 0 (premium card) uses gender-based accent; others keep their card accent.
     final buttonBg = switch (index) {
       0 => genderAccent,
-      1 => const Color(0xFFF5C842),
+      1 => TrembleTheme.accentYellow,
       2 => const Color(0xFF00C8FF),
       3 => const Color(0xFFFFB347),
       _ => data.accent,
     };
 
     final textColor =
-        (index == 1 || index == 3) ? const Color(0xFF1A1A18) : Colors.white;
+        (index == 1 || index == 3) ? TrembleTheme.textColor : Colors.white;
 
     return SizedBox(
       width: double.infinity,

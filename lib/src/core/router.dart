@@ -33,6 +33,7 @@ import '../shared/ui/premium_paywall.dart';
 import '../shared/ui/wave_pill_service.dart';
 import 'consent_service.dart';
 import 'notification_service.dart';
+import 'theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // ── Navigator Key ─────────────────────────────────────────────────────────────
@@ -159,10 +160,10 @@ class _SplashLoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Color(0xFF1A1A18), // Deep graphite
+      backgroundColor: TrembleTheme.textColor, // Deep graphite
       body: Center(
         child: CircularProgressIndicator(
-          color: Color(0xFFF4436C), // Primary rose
+          color: TrembleTheme.rose, // Primary rose
           strokeWidth: 2.5,
         ),
       ),

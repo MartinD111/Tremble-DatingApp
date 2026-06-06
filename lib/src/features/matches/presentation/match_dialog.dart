@@ -109,10 +109,10 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
               child: Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A18).withValues(alpha: 0.92),
+                  color: TrembleTheme.textColor.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
-                    color: const Color(0xFFF4436C).withValues(alpha: 0.4),
+                    color: TrembleTheme.rose.withValues(alpha: 0.4),
                     width: 1.5,
                   ),
                 ),
@@ -124,7 +124,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: Color(0xFFF4436C),
+                        color: TrembleTheme.rose,
                         shape: BoxShape.circle,
                       ),
                     )
@@ -157,12 +157,11 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
                         width: double.infinity,
                         height: 52,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF4436C),
+                          color: TrembleTheme.rose,
                           borderRadius: BorderRadius.circular(26),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFF4436C)
-                                  .withValues(alpha: 0.35),
+                              color: TrembleTheme.rose.withValues(alpha: 0.35),
                               blurRadius: 20,
                               spreadRadius: 1,
                             ),
@@ -218,7 +217,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
                     filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A18).withValues(alpha: 0.88),
+                        color: TrembleTheme.textColor.withValues(alpha: 0.88),
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.10),
@@ -256,7 +255,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
                                     end: Alignment.bottomCenter,
                                     colors: [
                                       Colors.transparent,
-                                      const Color(0xFF1A1A18)
+                                      TrembleTheme.textColor
                                           .withValues(alpha: 0.7),
                                     ],
                                     stops: const [0.45, 1.0],

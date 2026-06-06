@@ -48,7 +48,7 @@ class _AnonymousModeScreenState extends ConsumerState<AnonymousModeScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF1A1A18);
+    final textColor = isDark ? Colors.white : TrembleTheme.textColor;
     final subColor = isDark ? Colors.white70 : Colors.black54;
     final cardBg = isDark
         ? Colors.white.withValues(alpha: 0.05)

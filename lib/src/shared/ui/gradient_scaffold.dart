@@ -71,7 +71,7 @@ class GradientScaffold extends ConsumerWidget {
             child: DefaultTextStyle(
               style: GoogleFonts.instrumentSans(
                 // Theme-aware: dark mode → white text; light mode → near-black text
-                color: isDark ? Colors.white : const Color(0xFF1A1A18),
+                color: isDark ? Colors.white : TrembleTheme.textColor,
                 fontSize: 14,
               ),
               child: child,

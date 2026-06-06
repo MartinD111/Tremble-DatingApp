@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/translations.dart';
+import '../../../core/theme.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/tremble_header.dart';
@@ -126,7 +127,7 @@ class _BlockedUsersScreenState extends ConsumerState<BlockedUsersScreen> {
                           ),
                           TextButton(
                             style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFFF4436C),
+                              foregroundColor: TrembleTheme.rose,
                             ),
                             onPressed: () async {
                               final repo = ref.read(safetyRepositoryProvider);

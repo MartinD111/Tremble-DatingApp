@@ -138,7 +138,7 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
             const <String>{};
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A18),
+      backgroundColor: TrembleTheme.textColor,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [

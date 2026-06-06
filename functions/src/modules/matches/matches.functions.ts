@@ -347,29 +347,57 @@ export const onWaveCreated = onDocumentCreated(
                 return;
             }
 
-            await messaging.send({
-                token: receiverToken,
-                data: {
-                    type: "INCOMING_WAVE",
-                    senderId: fromUid,
-                    senderName,
-                    senderAge: senderAge.toString(),
-                    senderPhotoUrl: senderPhoto,
-                    // WAVE_BACK_ACTION is handled silently in background by Flutter
-                    click_action: "WAVE_BACK_ACTION",
-                },
-                apns: {
-                    payload: {
-                        aps: {
-                            contentAvailable: true,
-                            // WAVE_CATEGORY enables action buttons on iOS
-                            category: "WAVE_CATEGORY",
-                            "mutable-content": 1,
+            const recipientData = receiverDoc.data();
+            const isSilent = recipientData?.isRunModeActive === true 
+                || !!recipientData?.activeGymId 
+                || !!recipientData?.activeEventId;
+
+            if (isSilent) {
+                await messaging.send({
+                    token: receiverToken,
+                    data: {
+                        type: "INCOMING_WAVE",
+                        senderId: fromUid,
+                        senderName,
+                        senderAge: senderAge.toString(),
+                        senderPhotoUrl: senderPhoto,
+                        // WAVE_BACK_ACTION is handled silently in background by Flutter
+                        click_action: "WAVE_BACK_ACTION",
+                    },
+                    apns: {
+                        payload: {
+                            aps: {
+                                contentAvailable: true,
+                            },
                         },
                     },
-                },
-                android: { priority: "high" },
-            });
+                    android: { priority: "high" },
+                });
+            } else {
+                await messaging.send({
+                    token: receiverToken,
+                    data: {
+                        type: "INCOMING_WAVE",
+                        senderId: fromUid,
+                        senderName,
+                        senderAge: senderAge.toString(),
+                        senderPhotoUrl: senderPhoto,
+                        // WAVE_BACK_ACTION is handled silently in background by Flutter
+                        click_action: "WAVE_BACK_ACTION",
+                    },
+                    apns: {
+                        payload: {
+                            aps: {
+                                contentAvailable: true,
+                                // WAVE_CATEGORY enables action buttons on iOS
+                                category: "WAVE_CATEGORY",
+                                "mutable-content": 1,
+                            },
+                        },
+                    },
+                    android: { priority: "high" },
+                });
+            }
 
             console.log(`[WAVE] INCOMING_WAVE sent: ${fromUid} → ${toUid}`);
             logStructured({ fn: "onWaveCreated", event: "success", uid: fromUid, result: "incoming_wave", durationMs: Date.now() - startedAt });

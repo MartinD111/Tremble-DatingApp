@@ -776,34 +776,62 @@ export const scanProximityPairs = onSchedule(
                             return;
                         }
 
+                        const isSilent = recipientData?.isRunModeActive === true 
+                            || !!recipientData?.activeGymId 
+                            || !!recipientData?.activeEventId;
+
                         const name = senderData.displayName || "Someone";
                         const photoUrl = (senderData.photoUrls as string[] | undefined)?.[0] ?? "";
                         const age = buildAge(senderData);
 
-                        await messaging.send({
-                            token: fcmToken,
-                            data: {
-                                type: "CROSSING_PATHS",
-                                fromUid: senderUid,
-                                senderId: senderUid,
-                                senderName: name,
-                                senderAge: age.toString(),
-                                senderPhotoUrl: photoUrl,
-                            },
-                            apns: {
-                                payload: {
-                                    aps: {
-                                        contentAvailable: true,
-                                        category: "NEARBY_CATEGORY",
-                                        "alert-body-loc-key": "notify_nearby_body_rich",
-                                        "alert-body-loc-args": [name, age.toString()],
+                        if (isSilent) {
+                            await messaging.send({
+                                token: fcmToken,
+                                data: {
+                                    type: "CROSSING_PATHS",
+                                    fromUid: senderUid,
+                                    senderId: senderUid,
+                                    senderName: name,
+                                    senderAge: age.toString(),
+                                    senderPhotoUrl: photoUrl,
+                                },
+                                apns: {
+                                    payload: {
+                                        aps: {
+                                            contentAvailable: true,
+                                        },
                                     },
                                 },
-                            },
-                            android: {
-                                priority: "high",
-                            },
-                        });
+                                android: {
+                                    priority: "high",
+                                },
+                            });
+                        } else {
+                            await messaging.send({
+                                token: fcmToken,
+                                data: {
+                                    type: "CROSSING_PATHS",
+                                    fromUid: senderUid,
+                                    senderId: senderUid,
+                                    senderName: name,
+                                    senderAge: age.toString(),
+                                    senderPhotoUrl: photoUrl,
+                                },
+                                apns: {
+                                    payload: {
+                                        aps: {
+                                            contentAvailable: true,
+                                            category: "NEARBY_CATEGORY",
+                                            "alert-body-loc-key": "notify_nearby_body_rich",
+                                            "alert-body-loc-args": [name, age.toString()],
+                                        },
+                                    },
+                                },
+                                android: {
+                                    priority: "high",
+                                },
+                            });
+                        }
 
                         logStructured({
                             fn: "scanProximityPairs",

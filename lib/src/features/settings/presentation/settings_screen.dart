@@ -589,14 +589,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     Container(
                       color: isDark
                           ? Colors.white.withValues(alpha: 0.06)
-                          : const Color(0xFF1A1A18).withValues(alpha: 0.06),
+                          : TrembleTheme.textColor.withValues(alpha: 0.06),
                       child: Center(
                         child: Icon(
                           Icons.person,
                           size: 80,
                           color: isDark
                               ? Colors.white24
-                              : const Color(0xFF1A1A18).withValues(alpha: 0.25),
+                              : TrembleTheme.textColor.withValues(alpha: 0.25),
                         ),
                       ),
                     ),
@@ -812,7 +812,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }) {
     final isExpanded = _expandedSection == sectionKey;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF1A1A18);
+    final textColor = isDark ? Colors.white : TrembleTheme.textColor;
     final user = ref.watch(authStateProvider);
 
     // Dark mode expandable sections use pill color as background
@@ -996,7 +996,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           contentPadding: EdgeInsets.zero,
           leading: const Icon(
             LucideIcons.helpCircle,
-            color: Color(0xFFF4436C),
+            color: TrembleTheme.rose,
           ),
           title: Text(
             'Spoznaj Tremble ponovno',

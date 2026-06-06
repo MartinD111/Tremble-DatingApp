@@ -45,6 +45,7 @@ import 'widgets/registration_steps/android_system_integration_step.dart';
 import 'widgets/ping_overlay.dart';
 import '../../../core/api_client.dart';
 import '../../../core/upload_service.dart';
+import '../../../core/theme.dart';
 import '../../../shared/ui/tremble_logo.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -624,7 +625,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
 
     // Default dark gradient — Deep Graphite brand tokens
-    Color topColor = isDark ? const Color(0xFF1A1A18) : const Color(0xFFFAFAF7);
+    Color topColor =
+        isDark ? TrembleTheme.textColor : TrembleTheme.backgroundColor;
     Color bottomColor =
         isDark ? const Color(0xFF1F1F1D) : const Color(0xFFF0F0EB);
 
@@ -1957,9 +1959,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 child: LinearProgressIndicator(
                   value: _uploadProgress,
                   minHeight: 4,
-                  color: const Color(0xFFF4436C),
-                  backgroundColor:
-                      const Color(0xFFF4436C).withValues(alpha: 0.18),
+                  color: TrembleTheme.rose,
+                  backgroundColor: TrembleTheme.rose.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

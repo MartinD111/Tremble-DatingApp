@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../../core/theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PreferenceRangeSlider — unified two-way RangeSlider with label + edit icon.
@@ -53,7 +54,7 @@ class PreferenceRangeSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     final brandRose = Theme.of(context).colorScheme.primary;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final labelColor = isDark ? Colors.white : const Color(0xFF1A1A18);
+    final labelColor = isDark ? Colors.white : TrembleTheme.textColor;
     final valueColor =
         isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black54;
     final endLabelColor =

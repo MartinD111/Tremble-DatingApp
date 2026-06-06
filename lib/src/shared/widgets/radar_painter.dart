@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import '../../core/theme.dart';
 
 class RadarPainter extends CustomPainter {
   final double radarProgress;
@@ -19,7 +20,7 @@ class RadarPainter extends CustomPainter {
     required this.activationProgress,
     this.pingDistance,
     this.pingAngle = 0,
-    this.brandColor = const Color(0xFFF4436C),
+    this.brandColor = TrembleTheme.rose,
     this.gridColor = Colors.white,
     this.signalPulseProgress = 0.0,
   });

@@ -336,7 +336,7 @@ class _ConsentView extends StatelessWidget {
                   ),
                   child: const Icon(
                     LucideIcons.camera,
-                    color: Color(0xFF2D9B6F),
+                    color: TrembleTheme.successGreen,
                     size: 22,
                   ),
                 ),

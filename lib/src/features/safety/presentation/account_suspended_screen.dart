@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:tremble/src/core/theme.dart';
 
 /// Shown when the backend rejects a request with permission-denied + "suspended".
 ///
@@ -12,7 +13,7 @@ class AccountSuspendedScreen extends StatelessWidget {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: const Color(0xFF1A1A18),
+        backgroundColor: TrembleTheme.textColor,
         body: SafeArea(
           child: Center(
             child: Padding(
@@ -25,7 +26,7 @@ class AccountSuspendedScreen extends StatelessWidget {
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 42,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFF4436C),
+                      color: TrembleTheme.rose,
                       letterSpacing: 1.5,
                     ),
                   ),

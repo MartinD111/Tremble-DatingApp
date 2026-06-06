@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../../core/theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phone edit bottom-sheet modal. Mirrors the onboarding PhoneStep UI:
@@ -393,7 +394,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bg = widget.isDark ? const Color(0xFF1A1A18) : Colors.white;
+    final bg = widget.isDark ? TrembleTheme.textColor : Colors.white;
     final borderColor =
         widget.isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.1);
     final hintColor = widget.isDark ? Colors.white38 : Colors.black38;

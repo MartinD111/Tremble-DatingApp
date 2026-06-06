@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:screen_protector/screen_protector.dart';
+import '../../core/theme.dart';
 
 /// Blocks screenshots and screen recordings on sensitive screens.
 ///
@@ -21,7 +22,7 @@ class ScreenProtectionService {
     ScreenProtector.preventScreenshotOn();
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
-      ScreenProtector.protectDataLeakageWithColor(const Color(0xFF1A1A18));
+      ScreenProtector.protectDataLeakageWithColor(TrembleTheme.textColor);
     }
   }
 
@@ -64,14 +65,14 @@ class RecordingShield extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF1A1A18),
+      color: TrembleTheme.textColor,
       child: Center(
         child: SvgPicture.asset(
           'Logo/tremble_icon_clean_transparent.svg',
           width: 80,
           height: 80,
           colorFilter: const ColorFilter.mode(
-            Color(0xFFFAFAF7),
+            TrembleTheme.backgroundColor,
             BlendMode.srcIn,
           ),
         ),

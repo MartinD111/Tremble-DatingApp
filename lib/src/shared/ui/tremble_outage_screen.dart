@@ -173,7 +173,7 @@ class _TrembleOutageScreenState extends State<TrembleOutageScreen> {
         .replaceAll('{seconds}', _secondsRemaining.toString());
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A18),
+      backgroundColor: TrembleTheme.textColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
