@@ -123,9 +123,12 @@ class AuthUser {
   bool effectiveIsPremium({bool inEventGeofence = false}) =>
       isPremium || inEventGeofence;
 
-  // TODO(mutual-waves): This still reflects the legacy sent-wave limiter.
-  // Migrate wave count display/guards to users/{uid}.mutualWaves_YYYY_MM.
   bool get hasReachedFreeWaveLimit => !isPremium && wavesThisMonth >= 5;
+
+  bool get hasReachedProWaveLimit => isPremium && wavesThisMonth >= 20;
+
+  bool get hasReachedWaveLimit =>
+      isPremium ? hasReachedProWaveLimit : hasReachedFreeWaveLimit;
 
   const AuthUser({
     required this.id,

@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../data/auth_repository.dart';
 import '../../../core/translations.dart';
@@ -109,7 +108,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final lang = ref.read(appLanguageProvider);
     _selectedLanguage = lang.isNotEmpty ? lang : 'sl';
 
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = ref.read(firebaseAuthProvider).currentUser;
     final isGoogleUser =
         currentUser?.providerData.any((p) => p.providerId == 'google.com') ??
             false;
@@ -311,7 +310,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Future<void> _saveCheckpoint(int index) async {
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = ref.read(firebaseAuthProvider).currentUser;
     if (currentUser == null) return;
 
     try {
@@ -372,7 +371,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Future<void> _registerUser() async {
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = ref.read(firebaseAuthProvider).currentUser;
 
     if (kDebugMode) {
       debugPrint(
@@ -423,7 +422,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
       if (kDebugMode) {
         debugPrint(
-          '[TREMBLE_AUTH_FLOW] Register succeeded. Firebase currentUser=${FirebaseAuth.instance.currentUser?.email}',
+          '[TREMBLE_AUTH_FLOW] Register succeeded. Firebase currentUser=${ref.read(firebaseAuthProvider).currentUser?.email}',
         );
       }
 
@@ -726,10 +725,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       onBack: () => _goToPage(_currentPage - 1),
                       onNext: _nextPage,
                       tr: tr,
-                      verificationBanner: (!(FirebaseAuth
-                                      .instance.currentUser?.emailVerified ??
+                      verificationBanner: (!(ref
+                                      .watch(firebaseAuthProvider)
+                                      .currentUser
+                                      ?.emailVerified ??
                                   true) &&
-                              (FirebaseAuth.instance.currentUser?.providerData
+                              (ref
+                                      .watch(firebaseAuthProvider)
+                                      .currentUser
+                                      ?.providerData
                                       .any((p) => p.providerId == 'password') ??
                                   false))
                           ? _buildEmailVerificationBanner()
@@ -1065,7 +1069,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // PAGE 2 – NAME
   // ══════════════════════════════════════════════════════
   Widget _buildEmailVerificationBanner() {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = ref.read(firebaseAuthProvider).currentUser;
     final email = user?.email ?? '';
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
@@ -1682,23 +1686,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   String _mapUploadError(Object error) {
     final lang = _selectedLanguage.isNotEmpty ? _selectedLanguage : 'sl';
-    if (error is TrembleApiException) {
-      return switch (error.code) {
-        'invalid-argument' => t('photo_upload_error_format', lang),
-        'internal' => t('photo_upload_error_interrupted', lang),
-        'unavailable' => t('photo_upload_error_network', lang),
-        _ => t('photo_upload_error_generic', lang),
-      };
-    }
-    return t('photo_upload_error_generic', lang);
+    return mapUploadError(error, lang);
   }
 
   void completeRegistration() async {
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = ref.read(firebaseAuthProvider).currentUser;
     final uid =
         currentUser?.uid ?? 'generated_id'; // Fallback only if somehow null
 
     AuthUser? user;
+    Timer? uploadLongRunTimer;
     try {
       setState(() {
         _isRegistering = true;
@@ -1709,7 +1706,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       });
 
       // Trigger slow-upload warning after 10 seconds
-      final uploadLongRunTimer = Timer(const Duration(seconds: 10), () {
+      uploadLongRunTimer = Timer(const Duration(seconds: 10), () {
         if (mounted) setState(() => _uploadLongRunning = true);
       });
 
@@ -1941,6 +1938,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           }
         }
       }
+    } finally {
+      uploadLongRunTimer?.cancel();
     }
   }
 
@@ -2043,4 +2042,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       ),
     );
   }
+}
+
+@visibleForTesting
+String mapUploadError(Object error, String lang) {
+  if (error is TrembleApiException) {
+    return switch (error.code) {
+      'invalid-argument' => t('photo_upload_error_format', lang),
+      'internal' => t('photo_upload_error_interrupted', lang),
+      'unavailable' => t('photo_upload_error_network', lang),
+      _ => t('photo_upload_error_generic', lang),
+    };
+  }
+  return t('photo_upload_error_generic', lang);
 }

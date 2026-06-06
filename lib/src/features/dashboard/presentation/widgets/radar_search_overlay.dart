@@ -23,6 +23,10 @@ import '../../../../core/translations.dart';
 /// Stop action is direct — no confirmation dialog. The mutual-wave window is
 /// short (30 min) and the user explicitly tapped Stop; surfacing a modal here
 /// would obstruct the radar (the very thing we just optimised to expose).
+final currentTimeProvider = Provider<DateTime Function()>(
+  (ref) => () => DateTime.now(),
+);
+
 class RadarSearchOverlay extends ConsumerStatefulWidget {
   final RadarSearchSession session;
 
@@ -51,7 +55,8 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
   }
 
   void _calculateRemaining() {
-    _remaining = widget.session.expiresAt.difference(DateTime.now());
+    _remaining =
+        widget.session.expiresAt.difference(ref.read(currentTimeProvider)());
     if (_remaining.isNegative) _remaining = Duration.zero;
   }
 
@@ -70,7 +75,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isUrgent = _remaining.inMinutes < 5;
+    final isUrgent = _remaining.inMinutes < 5 && _remaining.inSeconds > 0;
     final timerColor = isUrgent ? colorScheme.primary : colorScheme.onSurface;
     final warmth = ref.watch(warmthControllerProvider);
     final lang = ref.watch(appLanguageProvider);

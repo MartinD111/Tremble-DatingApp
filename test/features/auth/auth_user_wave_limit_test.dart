@@ -44,5 +44,55 @@ void main() {
       expect(user.wavesThisMonth, 5);
       expect(user.hasReachedFreeWaveLimit, isTrue);
     });
+
+    test('pro users at twenty monthly waves should see limit reached', () {
+      const userUnder = AuthUser(
+        id: 'pro-user',
+        isPremium: true,
+        wavesThisMonth: 19,
+      );
+      const userLimit = AuthUser(
+        id: 'pro-user',
+        isPremium: true,
+        wavesThisMonth: 20,
+      );
+      const userOver = AuthUser(
+        id: 'pro-user',
+        isPremium: true,
+        wavesThisMonth: 21,
+      );
+
+      expect(userUnder.hasReachedProWaveLimit, isFalse);
+      expect(userLimit.hasReachedProWaveLimit, isTrue);
+      expect(userOver.hasReachedProWaveLimit, isTrue);
+    });
+
+    test('hasReachedWaveLimit delegates correctly based on premium status', () {
+      const freeUnder = AuthUser(
+        id: 'free-user',
+        isPremium: false,
+        wavesThisMonth: 4,
+      );
+      const freeLimit = AuthUser(
+        id: 'free-user',
+        isPremium: false,
+        wavesThisMonth: 5,
+      );
+      const proUnder = AuthUser(
+        id: 'pro-user',
+        isPremium: true,
+        wavesThisMonth: 19,
+      );
+      const proLimit = AuthUser(
+        id: 'pro-user',
+        isPremium: true,
+        wavesThisMonth: 20,
+      );
+
+      expect(freeUnder.hasReachedWaveLimit, isFalse);
+      expect(freeLimit.hasReachedWaveLimit, isTrue);
+      expect(proUnder.hasReachedWaveLimit, isFalse);
+      expect(proLimit.hasReachedWaveLimit, isTrue);
+    });
   });
 }

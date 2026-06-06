@@ -1,3 +1,29 @@
+## Session State — 2026-06-06 10:25 CEST
+- Active Task: Implement, test, and verify wave limit properties and photo upload registration flow
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/auth/data/auth_repository.dart`
+    - `lib/src/features/auth/presentation/registration_flow.dart`
+    - `lib/src/features/dashboard/presentation/widgets/radar_search_overlay.dart`
+    - `test/features/auth/auth_user_wave_limit_test.dart`
+    - `test/features/auth/photo_upload_registration_test.dart`
+    - `test/features/match/trembling_window_test.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: Flutter tests passing cleanly (143/143). Static analysis (flutter analyze) clean with zero warnings.
+
+## Session Handoff
+- Completed:
+    - Added `hasReachedProWaveLimit` and `hasReachedWaveLimit` getters on `AuthUser` in `auth_repository.dart`.
+    - Added unit tests for new wave limit getters in `auth_user_wave_limit_test.dart`.
+    - Refactored `registration_flow.dart` and `radar_search_overlay.dart` to support mocking/testing (swapped direct `FirebaseAuth.instance` calls, exposed `mapUploadError`, and parameterized clock using a Riverpod provider).
+    - Created comprehensive unit and widget tests for the trembling window (expiration, ticking timer, mutual wave UI) and the photo upload flow (progress overlays, upload errors, retry).
+    - Added the missing `package:flutter/material.dart` import in `photo_upload_registration_test.dart` and verified that the entire mobile test suite compiles and runs cleanly.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Proceed with on-device testing/provisioning or App Store / Play Console deployment preparation.
+
 ## Session State — 2026-06-06 09:15 CEST
 - Active Task: Remove unused migrateMatchTypes function export
 - Environment: Dev, `main`
