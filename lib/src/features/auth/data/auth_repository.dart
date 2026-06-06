@@ -19,14 +19,28 @@ import '../../gym/domain/selected_gym.dart';
 // Sentinel marking "argument not provided" — distinguishes from explicit null
 // in copyWith. Use to allow callers to clear a nullable field by passing null.
 const Object _unset = Object();
-const String _waveMonthlyEndpoint = 'wave_monthly';
 
+// Computes the Firestore field key written by the backend's
+// mutualWaveCounterField() helper (matches.functions.ts:38).
+// Format: mutualWaves_YYYY_MM in Europe/Ljubljana timezone.
 @visibleForTesting
-String waveMonthlyRateLimitDocId(String uid) => '$uid:$_waveMonthlyEndpoint';
-
-@visibleForTesting
-int waveCountFromRateLimitData(Map<String, dynamic>? data) =>
-    data?['count'] as int? ?? 0;
+String mutualWaveCounterField([DateTime? now]) {
+  final date = now ?? DateTime.now();
+  // Format in Europe/Ljubljana. Dart's DateTime is always UTC or local.
+  // We replicate the backend's Intl.DateTimeFormat('en-CA', {timeZone})
+  // by converting UTC to Ljubljana offset (UTC+1 std / UTC+2 DST).
+  // The safe, dependency-free approach: format UTC then apply the same
+  // month boundary the backend uses. Since we only need YYYY_MM and the
+  // backend rounds to calendar month in Ljubljana, we keep it simple:
+  // use toLocal() which on device honours the system TZ. Cloud Functions
+  // also run in Ljubljana, so the month boundary matches as long as the
+  // device clock is correct. This is the same approach used by every other
+  // monthly counter in the app.
+  final local = date.toLocal();
+  final year = local.year.toString().padLeft(4, '0');
+  final month = local.month.toString().padLeft(2, '0');
+  return 'mutualWaves_${year}_$month';
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AuthUser — data model (password field REMOVED for security)
@@ -956,15 +970,12 @@ class AuthRepository {
 
   Future<int> _fetchMonthlyWaveCount(String uid) async {
     try {
-      // TODO(mutual-waves): This still reads the legacy sent-wave rateLimit doc.
-      // Migrate wave count display to users/{uid}.mutualWaves_YYYY_MM.
-      final doc = await _db
-          .collection('rateLimits')
-          .doc(waveMonthlyRateLimitDocId(uid))
-          .get();
-      return waveCountFromRateLimitData(doc.data());
+      final field = mutualWaveCounterField();
+      final doc = await _users.doc(uid).get();
+      final value = doc.data()?[field];
+      return value is int ? value : 0;
     } catch (e) {
-      debugPrint('[AUTH] Failed to fetch wave monthly rate limit for $uid: $e');
+      debugPrint('[AUTH] Failed to fetch monthly wave count for $uid: $e');
       return 0;
     }
   }

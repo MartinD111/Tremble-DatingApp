@@ -33,14 +33,26 @@ void main() {
       expect(user.hasReachedFreeWaveLimit, isFalse);
     });
 
-    test('maps wavesThisMonth from the rateLimits wave_monthly count', () {
+    test(
+        'mutualWaveCounterField produces the correct field name for a known date',
+        () {
+      // 2026-06-06 UTC → June 2026 → 'mutualWaves_2026_06'
+      final field = mutualWaveCounterField(DateTime.utc(2026, 6, 6, 10, 0, 0));
+      expect(field, 'mutualWaves_2026_06');
+    });
+
+    test('mutualWaveCounterField uses two-digit zero-padded month', () {
+      final field = mutualWaveCounterField(DateTime.utc(2026, 1, 15, 8, 0, 0));
+      expect(field, 'mutualWaves_2026_01');
+    });
+
+    test('maps wavesThisMonth from users/{uid}.mutualWaves_YYYY_MM field', () {
       final user = AuthUser.fromFirestore(
         'free-user',
         const {},
-        wavesThisMonth: waveCountFromRateLimitData({'count': 5}),
+        wavesThisMonth: 5,
       );
 
-      expect(waveMonthlyRateLimitDocId('free-user'), 'free-user:wave_monthly');
       expect(user.wavesThisMonth, 5);
       expect(user.hasReachedFreeWaveLimit, isTrue);
     });
