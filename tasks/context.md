@@ -1,3 +1,22 @@
+## Session State — 2026-06-06 09:15 CEST
+- Active Task: Remove unused migrateMatchTypes function export
+- Environment: Dev, `main`
+- Modified Files:
+    - `functions/src/index.ts` (removed migrateMatchTypes export)
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (`BLOCKER-005`) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (`BLOCKER-006`) still needs device verification.
+- System Status: TS build and lint verification clean. Jest backend tests passing. Pre-commit hooks for the commit executed successfully.
+
+## Session Handoff
+- Completed:
+    - Removed the unused `migrateMatchTypes` export and its associated imports/references inside `functions/src/index.ts`.
+    - Confirmed that the backend builds (`tsc`) and lints (`eslint`) successfully.
+    - Ran all backend Jest tests and confirmed they pass successfully.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Ready for deploy or further mobile/backend tasks.
+
 ## Session State — 2026-06-06 00:30 CEST
 - Active Task: Update app store metadata and play console data safety declarations, audit permission gate strings
 - Environment: Dev, `main`
