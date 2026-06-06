@@ -8,7 +8,7 @@ import 'package:tremble/src/features/match/presentation/wave_controller.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('Wave UI call sites guard free monthly limit before sendWave', () {
+  test('Wave UI call sites guard monthly limit (Free+Pro) before sendWave', () {
     final profileDetail =
         File('lib/src/features/profile/presentation/profile_detail_screen.dart')
             .readAsStringSync();
@@ -18,7 +18,7 @@ void main() {
     final router = File('lib/src/core/router.dart').readAsStringSync();
 
     for (final source in [profileDetail, matchDialog, router]) {
-      expect(source, contains('hasReachedFreeWaveLimit'));
+      expect(source, contains('hasReachedWaveLimit'));
       expect(source, contains('PremiumPaywallBottomSheet.show(context)'));
     }
   });

@@ -521,7 +521,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
         onWave: (uid) async {
           final user = ref.read(authStateProvider);
-          if (user?.hasReachedFreeWaveLimit == true) {
+          if (user?.hasReachedWaveLimit == true) {
             PremiumPaywallBottomSheet.show(context);
             return;
           }

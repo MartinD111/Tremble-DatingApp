@@ -46,7 +46,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
   Future<void> _sendGreet() async {
     if (_isGreeting) return;
     final user = ref.read(authStateProvider);
-    if (user?.hasReachedFreeWaveLimit == true) {
+    if (user?.hasReachedWaveLimit == true) {
       PremiumPaywallBottomSheet.show(context);
       return;
     }
