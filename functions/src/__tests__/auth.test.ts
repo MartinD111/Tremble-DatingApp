@@ -90,6 +90,29 @@ describe("Auth Module", () => {
             expect(result.success).toBe(true);
         });
 
+        it("should validate onboarding schema — accept nicotine fields", async () => {
+            const { completeOnboardingSchema } = await import(
+                "../../src/modules/auth/auth.schema"
+            );
+
+            const result = completeOnboardingSchema.safeParse({
+                name: "Ana",
+                birthDate: "1995-06-15",
+                gender: "female",
+                interestedIn: "male",
+                photoUrls: ["https://r2.example.com/photo.jpg"],
+                nicotineUse: "vaping",
+                nicotineFilter: "no_smoking",
+                consentGiven: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.nicotineUse).toBe("vaping");
+                expect(result.data.nicotineFilter).toBe("no_smoking");
+            }
+        });
+
         it("should validate onboarding schema — accept Flutter interestedIn list payload", async () => {
             const { completeOnboardingSchema } = await import(
                 "../../src/modules/auth/auth.schema"

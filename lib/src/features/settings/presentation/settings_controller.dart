@@ -95,7 +95,7 @@ class SettingsController {
 
   void updateHeightRange(RangeValues values) {
     final user = _user;
-    if (user == null || !user.isPremium) return;
+    if (user == null || !_ref.read(effectiveIsPremiumProvider)) return;
     updateUser((u) => u.copyWith(
           heightRangeStart: values.start.round(),
           heightRangeEnd: values.end.round(),
@@ -182,7 +182,7 @@ class SettingsController {
   }) async {
     final user = _user;
     if (user == null) return;
-    if (isPremium && !user.isPremium) {
+    if (isPremium && !_ref.read(effectiveIsPremiumProvider)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(t('premium_account', _lang)),
@@ -224,7 +224,7 @@ class SettingsController {
   }) async {
     final user = _user;
     if (user == null) return;
-    if (isPremium && !user.isPremium) {
+    if (isPremium && !_ref.read(effectiveIsPremiumProvider)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(t('premium_account', _lang)),

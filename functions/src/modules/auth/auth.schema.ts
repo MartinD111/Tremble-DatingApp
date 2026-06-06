@@ -37,6 +37,8 @@ export const completeOnboardingSchema = z.object({
     location: z.string().max(100).optional(),
     photoUrls: z.array(z.string().url()).min(1).max(6),
     isSmoker: z.boolean().optional(),
+    nicotineUse: z.string().max(50).optional(),
+    nicotineFilter: z.string().max(50).optional(),
     partnerSmokingPreference: z.string().max(50).optional(),
     drinkingHabit: z.string().max(50).optional(),
     exerciseHabit: z.string().max(50).optional(),

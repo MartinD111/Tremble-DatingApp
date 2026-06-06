@@ -1,3 +1,48 @@
+## Session State — 2026-06-06 12:29 CEST
+- Active Task: Add Pulse Intercept actions to MatchRevealScreen
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/match/presentation/match_reveal_screen.dart`
+    - `test/features/match/trembling_window_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: `dart format` completed. `flutter analyze` clean. `flutter test --dart-define-from-file=.env.json` passed 147/147.
+
+## Session Handoff
+- Completed:
+    - Added Send Phone and Send Photo actions inside the match reveal Trembling Window UI.
+    - Production path calls `requestPulseIntercept` through `TrembleApiClient` with `targetUid` and `type` set to `phone` or `photo`.
+    - Kept Pulse Intercept available identically to Free and Premium users; no premium gate and no text input were added.
+    - Added per-action loading, sent confirmation labels, and inline API error rendering.
+    - Added widget coverage for phone/photo request payloads and inline error display.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Verify Pulse Intercept end-to-end against deployed backend on an authenticated dev app session when device/provisioning constraints allow.
+
+## Session State — 2026-06-06 11:10 CEST
+- Active Task: Strategy Compliance Audit — Step 4 (History / Recaps)
+- Environment: Dev, `main` — READ ONLY (no code changes)
+- Modified Files:
+    - `tasks/audit_step4_history.md` (created — audit results)
+- Open Problems:
+    - ISSUE-H1 (MEDIUM): Near-Miss tab IS visible to Free users (strategy says hidden). Founder decision needed.
+    - ISSUE-H2 (LOW): "To ni več naključje" 2nd-encounter notification not implemented.
+    - ISSUE-H3 (LOW): Near-Miss monthly aggregate push for Free not implemented.
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: Build untouched — still 145/145 passing from prior session.
+
+## Session Handoff
+- Completed:
+    - Full audit of C-HISTORY-01 through C-HISTORY-09 + compatibility score check.
+    - 7 MATCH, 2 MISMATCH (not implemented), 1 MISMATCH (tab visibility design gap).
+    - Findings saved to `tasks/audit_step4_history.md`.
+- In Progress: None.
+- Blocked: Founder decision required on ISSUE-H1 (Near-Miss tab visibility for Free).
+- Next Action: Founder to review ISSUE-H1 and decide: (a) keep current upsell-tab UX or (b) hide tab for Free per strategy literal. After decision, proceed to implement ISSUE-H2 and ISSUE-H3 if desired, or move to next audit domain.
+
 ## Session State — 2026-06-06 10:25 CEST
 - Active Task: Implement, test, and verify wave limit properties and photo upload registration flow
 - Environment: Dev, `main`

@@ -279,14 +279,14 @@ export const findNearby = onCall(
         const blockedUsers: string[] = requesterData.blockedUserIds ?? [];
         const blockedGeohashes: string[] = requesterData.blockedGeohashes ?? [];
 
-        // F11: Nicotine preferences
-        const myNicotineUse: string[] = requesterData.nicotineUse ?? [];
-        const myNicotineFilter: string = requesterData.nicotineFilter ?? "any";
-
         // F9: radius is server-determined from isPremium — never trust the client
         const isPremium = requesterData.isPremium === true;
         const radiusM = isPremium ? RADIUS_PRO_M : RADIUS_FREE_M;
         const radiusTier = isPremium ? "pro" : "free";
+
+        // F11: Nicotine preferences — filter only active for Premium users
+        const myNicotineUse: string[] = requesterData.nicotineUse ?? [];
+        const myNicotineFilter: string = isPremium ? (requesterData.nicotineFilter ?? "any") : "any";
 
         // Query at precision 6 (~1.2km cell) to cast a wide net, then
         // haversine-filter to the actual tier radius below.
@@ -503,9 +503,9 @@ export const getProximityMatchCandidates = onCall(
         const blockedUsers: string[] = requesterData.blockedUserIds ?? [];
         const blockedGeohashes: string[] = requesterData.blockedGeohashes ?? [];
 
-        // F11: Nicotine preferences
+        // F11: Nicotine preferences — filter only active for Premium users
         const myNicotineUse: string[] = requesterData.nicotineUse ?? [];
-        const myNicotineFilter: string = requesterData.nicotineFilter ?? "any";
+        const myNicotineFilter: string = isPremium ? (requesterData.nicotineFilter ?? "any") : "any";
 
         // Precision 6 (~1.2km × 600m) — wide enough to contain all candidates
         // within 250m (pro radius), then haversine-filter to actual radius.
@@ -764,11 +764,6 @@ export const scanProximityPairs = onSchedule(
 
                         await messaging.send({
                             token: fcmToken,
-                            notification: {
-                                title: "Tremble",
-                                body: `${name}, ${age} is nearby. Want to send a wave?`,
-                                imageUrl: photoUrl || undefined,
-                            },
                             data: {
                                 type: "CROSSING_PATHS",
                                 fromUid: senderUid,
@@ -780,7 +775,7 @@ export const scanProximityPairs = onSchedule(
                             apns: {
                                 payload: {
                                     aps: {
-                                        sound: "default",
+                                        contentAvailable: true,
                                         category: "NEARBY_CATEGORY",
                                         "alert-body-loc-key": "notify_nearby_body_rich",
                                         "alert-body-loc-args": [name, age.toString()],
@@ -789,11 +784,6 @@ export const scanProximityPairs = onSchedule(
                             },
                             android: {
                                 priority: "high",
-                                notification: {
-                                    clickAction: "NEARBY_CATEGORY",
-                                    bodyLocKey: "notify_nearby_body_rich",
-                                    bodyLocArgs: [name, age.toString()],
-                                },
                             },
                         });
 

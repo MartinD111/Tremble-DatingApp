@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:go_router/go_router.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/api_client.dart';
+import '../../auth/data/auth_repository.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../../features/profile/domain/public_profile.dart';
 import '../domain/match.dart';
@@ -136,9 +137,20 @@ _Pep _pickPep() => _pepTalks[math.Random().nextInt(_pepTalks.length)];
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
+typedef PulseInterceptRequester = Future<void> Function({
+  required String targetUid,
+  required String type,
+});
+
 class MatchRevealScreen extends ConsumerStatefulWidget {
   final Match match;
-  const MatchRevealScreen({super.key, required this.match});
+  final PulseInterceptRequester? requestPulseIntercept;
+
+  const MatchRevealScreen({
+    super.key,
+    required this.match,
+    this.requestPulseIntercept,
+  });
 
   @override
   ConsumerState<MatchRevealScreen> createState() => _MatchRevealScreenState();
@@ -157,6 +169,9 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
   late final AnimationController _ctrl;
   late final _Pep _pep;
   bool _isRecording = false;
+  String? _pulseSendingType;
+  String? _pulseInterceptError;
+  final Set<String> _sentPulseTypes = <String>{};
   late final void Function(bool) _recordingListener;
 
   @override
@@ -204,13 +219,57 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
   static double _easeOutBack(double x) =>
       Curves.easeOutBack.transform(x.clamp(0.0, 1.0));
 
+  Future<void> _sendPulseIntercept({
+    required String targetUid,
+    required String type,
+  }) async {
+    if (_sentPulseTypes.contains(type) || _pulseSendingType != null) return;
+
+    setState(() {
+      _pulseSendingType = type;
+      _pulseInterceptError = null;
+    });
+
+    try {
+      final requester =
+          widget.requestPulseIntercept ?? _requestPulseInterceptViaApiClient;
+      await requester(targetUid: targetUid, type: type);
+      if (!mounted) return;
+      setState(() => _sentPulseTypes.add(type));
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _pulseInterceptError = _mapPulseInterceptError(error));
+    } finally {
+      if (!mounted) return;
+      setState(() => _pulseSendingType = null);
+    }
+  }
+
+  Future<void> _requestPulseInterceptViaApiClient({
+    required String targetUid,
+    required String type,
+  }) async {
+    await TrembleApiClient().call(
+      'requestPulseIntercept',
+      data: {
+        'targetUid': targetUid,
+        'type': type,
+      },
+    );
+  }
+
+  String _mapPulseInterceptError(Object error) {
+    if (error is TrembleApiException) return error.message;
+    return 'Could not send this right now. Please try again.';
+  }
+
   // ── Build ────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     if (_isRecording) return const RecordingShield();
 
-    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    final myUid = ref.watch(firebaseAuthProvider).currentUser?.uid;
     if (myUid == null) {
       return const Scaffold(
         backgroundColor: _bgDeep,
@@ -251,13 +310,17 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
         behavior: HitTestBehavior.opaque,
         child: AnimatedBuilder(
           animation: _ctrl,
-          builder: (context, _) => _buildScene(context, profile),
+          builder: (context, _) => _buildScene(context, profile, partnerId),
         ),
       ),
     );
   }
 
-  Widget _buildScene(BuildContext context, PublicProfile? profile) {
+  Widget _buildScene(
+    BuildContext context,
+    PublicProfile? profile,
+    String partnerId,
+  ) {
     final size = MediaQuery.of(context).size;
 
     // t: elapsed seconds (0 → 4.4)
@@ -475,12 +538,67 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
                         ),
                       ),
                     ),
+                    const SizedBox(height: 18),
+                    Opacity(
+                      opacity: hintOp,
+                      child: _buildPulseInterceptActions(partnerId),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildPulseInterceptActions(String targetUid) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _PulseInterceptButton(
+                label: 'Send Phone',
+                sentLabel: 'Phone Sent',
+                isSending: _pulseSendingType == 'phone',
+                isSent: _sentPulseTypes.contains('phone'),
+                isBlocked: _pulseSendingType != null,
+                onPressed: () => unawaited(
+                  _sendPulseIntercept(targetUid: targetUid, type: 'phone'),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _PulseInterceptButton(
+                label: 'Send Photo',
+                sentLabel: 'Photo Sent',
+                isSending: _pulseSendingType == 'photo',
+                isSent: _sentPulseTypes.contains('photo'),
+                isBlocked: _pulseSendingType != null,
+                onPressed: () => unawaited(
+                  _sendPulseIntercept(targetUid: targetUid, type: 'photo'),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (_pulseInterceptError != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _pulseInterceptError!,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.instrumentSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFFFF8A9D),
+              height: 1.35,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -595,6 +713,93 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PulseInterceptButton extends StatelessWidget {
+  const _PulseInterceptButton({
+    required this.label,
+    required this.sentLabel,
+    required this.isSending,
+    required this.isSent,
+    required this.isBlocked,
+    required this.onPressed,
+  });
+
+  static const _greenDark = Color(0xFF2D9B6F);
+  static const _greenLight = Color(0xFF5BBF93);
+  static const _cream = Color(0xFFFAFAF7);
+
+  final String label;
+  final String sentLabel;
+  final bool isSending;
+  final bool isSent;
+  final bool isBlocked;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDisabled = isSent || isBlocked;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: isDisabled ? null : onPressed,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 46,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isSent
+                  ? [
+                      _greenDark.withValues(alpha: 0.46),
+                      _greenLight.withValues(alpha: 0.34),
+                    ]
+                  : const [_greenLight, _greenDark],
+            ),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: isSent ? 0.16 : 0.24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _greenLight.withValues(alpha: isSent ? 0.12 : 0.22),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 160),
+            child: isSending
+                ? const SizedBox(
+                    key: ValueKey('sending'),
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(_cream),
+                    ),
+                  )
+                : Text(
+                    isSent ? sentLabel : label,
+                    key: ValueKey(isSent ? sentLabel : label),
+                    style: GoogleFonts.instrumentSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: _cream,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+          ),
+        ),
+      ),
     );
   }
 }

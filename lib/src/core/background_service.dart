@@ -157,6 +157,8 @@ void onStart(ServiceInstance service) async {
   final geoService = GeoService();
   final battery = Battery();
   final prefs = await SharedPreferences.getInstance();
+  var effectiveIsPremium =
+      prefs.getBool(geoServiceEffectivePremiumPrefsKey) ?? false;
 
   // The rich DecoratedCustomViewStyle notification is posted natively by
   // RadarStateBridge → RadarNotificationReceiver on the same ID (888) the
@@ -167,8 +169,17 @@ void onStart(ServiceInstance service) async {
   // GDPR consent gate
   final hasConsent = prefs.getBool('gdpr_ble_location_consent') ?? false;
   if (hasConsent) {
-    await geoService.start();
+    await geoService.start(isPremium: effectiveIsPremium);
   }
+
+  service.on('effectivePremiumChanged').listen((event) async {
+    effectiveIsPremium = event?['isPremium'] == true;
+    await prefs.setBool(
+      geoServiceEffectivePremiumPrefsKey,
+      effectiveIsPremium,
+    );
+    geoService.updatePremiumTier(isPremium: effectiveIsPremium);
+  });
 
   // Listen for radar mode commands from UI.
   service.on('stopService').listen((_) async {
@@ -183,7 +194,7 @@ void onStart(ServiceInstance service) async {
   service.on('resumeRadar').listen((_) async {
     final consentAtResume = prefs.getBool('gdpr_ble_location_consent') ?? false;
     if (consentAtResume) {
-      await geoService.start();
+      await geoService.start(isPremium: effectiveIsPremium);
     }
   });
 

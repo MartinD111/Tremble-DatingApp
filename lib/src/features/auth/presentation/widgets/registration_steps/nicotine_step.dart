@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../data/auth_repository.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
 import 'partner_preference_modal.dart';
@@ -21,7 +23,7 @@ class NicotineOptions {
 // ─────────────────────────────────────────────────────────────────────────────
 // NicotineStep — multi-select chips + separate cannabis toggle
 // ─────────────────────────────────────────────────────────────────────────────
-class NicotineStep extends StatefulWidget {
+class NicotineStep extends ConsumerStatefulWidget {
   const NicotineStep({
     super.key,
     required this.selected,
@@ -40,10 +42,10 @@ class NicotineStep extends StatefulWidget {
   final String Function(String) tr;
 
   @override
-  State<NicotineStep> createState() => _NicotineStepState();
+  ConsumerState<NicotineStep> createState() => _NicotineStepState();
 }
 
-class _NicotineStepState extends State<NicotineStep> {
+class _NicotineStepState extends ConsumerState<NicotineStep> {
   bool _showCannabisDisclaimer = false;
 
   bool get _noneSelected => widget.selected.isEmpty;
@@ -138,6 +140,12 @@ class _NicotineStepState extends State<NicotineStep> {
               label: widget.tr('continue_btn'),
               onTap: () {
                 if (_noneSelected) {
+                  final isPremium = ref.read(effectiveIsPremiumProvider);
+                  if (!isPremium) {
+                    widget.onSavePartner(null);
+                    widget.onNext();
+                    return;
+                  }
                   showPartnerPreferenceModal(
                     context,
                     title: widget.tr('nicotine_partner_q'),

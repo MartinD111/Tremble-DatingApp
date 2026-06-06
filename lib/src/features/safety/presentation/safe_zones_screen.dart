@@ -236,7 +236,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'You can enter a nearby street or intersection instead of your exact address. We build a range around it — your real location is never stored.',
+                        'You can enter a nearby street or intersection instead of your exact address. We build a range around it — your precise location is never stored.',
                         style: GoogleFonts.instrumentSans(
                             color: subColor.withValues(alpha: 0.7),
                             fontSize: 11,

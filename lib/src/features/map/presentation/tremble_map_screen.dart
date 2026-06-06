@@ -83,7 +83,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   ) {
     final geofenceService = ref.read(eventGeofenceServiceProvider);
     final isTasteOfPremium = geofenceService.inEventGeofence &&
-        !ref.read(authStateProvider)!.isPremium;
+        !ref.read(effectiveIsPremiumProvider);
 
     showModalBottomSheet(
       context: context,
@@ -166,10 +166,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider);
     final lang = user?.appLanguage ?? 'sl';
-    final geofenceService = ref.watch(eventGeofenceServiceProvider);
-    final effectivePremium = user?.effectiveIsPremium(
-            inEventGeofence: geofenceService.inEventGeofence) ??
-        false;
+    final effectivePremium = ref.watch(effectiveIsPremiumProvider);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final gradientColors = TrembleTheme.getGradient(

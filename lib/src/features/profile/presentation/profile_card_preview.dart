@@ -60,6 +60,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider);
+    final isPremium = ref.watch(effectiveIsPremiumProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final subColor = isDark ? Colors.white60 : Colors.black54;
@@ -292,7 +293,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                               spacing: 6,
                               runSpacing: 6,
                               alignment: WrapAlignment.center,
-                              children: (user.isPremium
+                              children: (isPremium
                                       ? user.lookingFor
                                       : user.lookingFor
                                           .where((item) =>

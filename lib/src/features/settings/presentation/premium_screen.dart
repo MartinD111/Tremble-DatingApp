@@ -935,7 +935,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
 
   Widget _buildCTAButton(
       int index, PremiumPlanCard data, AuthUser user, Color genderAccent) {
-    final isPremium = user.isPremium;
+    final isPremium = ref.watch(effectiveIsPremiumProvider);
 
     if (index == 4) {
       if (isPremium) {

@@ -396,7 +396,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
     final activeMatchesAsync = ref.watch(activeMatchesStreamProvider);
     final activeFilter = ref.watch(matchFilterProvider);
     final user = ref.watch(authStateProvider);
-    final isPremium = user?.isPremium == true;
+    final isPremium = ref.watch(effectiveIsPremiumProvider);
     final viewedRecapIds = isPremium || user == null
         ? const <String>{}
         : ref.watch(viewedRecapIdsProvider(user.id)).valueOrNull ??

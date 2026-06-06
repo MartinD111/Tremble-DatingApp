@@ -349,13 +349,6 @@ export const onWaveCreated = onDocumentCreated(
 
             await messaging.send({
                 token: receiverToken,
-                notification: {
-                    title: `${senderName} ti je pomahal-a`,
-                    body: "Pomahaš nazaj?",
-                    // imageUrl requires iOS Notification Service Extension for display.
-                    // Android renders it natively.
-                    imageUrl: senderPhoto || undefined,
-                },
                 data: {
                     type: "INCOMING_WAVE",
                     senderId: fromUid,
@@ -368,7 +361,7 @@ export const onWaveCreated = onDocumentCreated(
                 apns: {
                     payload: {
                         aps: {
-                            sound: "default",
+                            contentAvailable: true,
                             // WAVE_CATEGORY enables action buttons on iOS
                             category: "WAVE_CATEGORY",
                             "mutable-content": 1,

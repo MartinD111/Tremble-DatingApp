@@ -214,6 +214,7 @@ Future<void> handleNotificationNavigation(
   // 2. Handle navigation for Mutual Waves (Matches)
   final matchId = data['matchId'] as String?;
   if (type == 'MUTUAL_WAVE' && matchId != null) {
+    final path = data['path'] as String?;
     try {
       final doc = await FirebaseFirestore.instance
           .collection('matches')
@@ -229,7 +230,13 @@ Future<void> handleNotificationNavigation(
 
       final ctx = rootNavigatorKey.currentContext;
       if (ctx != null && ctx.mounted) {
-        ctx.pushNamed('match_reveal', extra: match);
+        if (path == '/radar') {
+          // Ensure radar is the root so it's visible after the reveal closes.
+          ctx.go('/');
+          ctx.pushNamed('match_reveal', extra: match);
+        } else {
+          ctx.pushNamed('match_reveal', extra: match);
+        }
       }
     } catch (e) {
       debugPrint('[ROUTER] Notification navigation failed: $e');

@@ -747,6 +747,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
   Widget _buildPremiumProfileAction(AuthUser user) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isPremium = ref.watch(effectiveIsPremiumProvider);
     final btnColor = isDark ? Colors.white : Colors.black87;
     final pillStyle = OutlinedButton.styleFrom(
       side: BorderSide(color: btnColor.withValues(alpha: 0.3)),
@@ -754,7 +755,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
     );
 
-    if (!user.isPremium) {
+    if (!isPremium) {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton(
@@ -1035,6 +1036,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }
 
   Widget _buildPreferencesContent(AuthUser user) {
+    final isPremium = ref.watch(effectiveIsPremiumProvider);
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1074,7 +1077,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           divisions: 120,
           start: (user.heightRangeStart ?? 130).toDouble(),
           end: (user.heightRangeEnd ?? 250).toDouble(),
-          isPremium: !user.isPremium,
+          isPremium: !isPremium,
           onEdit: () => _ctrl.openSliderEditModal(
             context: context,
             title: _t('height_label'),
@@ -1086,7 +1089,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               (user.heightRangeEnd ?? 250).toDouble(),
             ),
             unit: ' cm',
-            isPremium: !user.isPremium,
+            isPremium: !isPremium,
             onUpdate: _ctrl.updateHeightRange,
             rowIcon: LucideIcons.ruler,
           ),
@@ -1191,7 +1194,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           label: _t('religion'),
           icon: LucideIcons.heart,
           currentValue: user.religionPreference,
-          isPremium: !user.isPremium,
+          isPremium: !isPremium,
           options: [
             {
               'label': _t('christianity'),
@@ -1240,7 +1243,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           label: _t('ethnicity'),
           icon: LucideIcons.users,
           currentValue: user.ethnicityPreference,
-          isPremium: !user.isPremium,
+          isPremium: !isPremium,
           options: [
             {'label': _t('ethnicity_white'), 'value': 'white'},
             {'label': _t('ethnicity_black'), 'value': 'black'},
@@ -1257,7 +1260,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           label: _t('hair_color'),
           icon: LucideIcons.scissors,
           currentValue: user.hairColorPreference,
-          isPremium: !user.isPremium,
+          isPremium: !isPremium,
           options: [
             {
               'label': _t('hair_blonde'),
@@ -1375,6 +1378,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   Widget _nicotinePrefRow({
     required BuildContext context,
     required AuthUser user,
+    bool isPremium = false,
   }) {
     final label = _t('nicotine_title');
     final options = [
@@ -1446,11 +1450,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       label: label,
       values: [currentValue],
       formatter: formatter,
+      isPremium: isPremium,
       onEdit: () => _ctrl.openPillEditModal(
         context: context,
         title: label,
         options: options,
         currentValue: currentValue,
+        isPremium: isPremium,
         onUpdate: (val) =>
             _ctrl.updateUser((u) => u.copyWith(nicotineFilter: val)),
         rowIcon: LucideIcons.wind,
@@ -1533,6 +1539,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }
 
   Widget _buildAccountContent(AuthUser user) {
+    final isPremium = ref.watch(effectiveIsPremiumProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     final dividerColor =
@@ -1552,7 +1559,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       TextStyle(color: textColor, fontWeight: FontWeight.bold)),
             ],
           ),
-          value: user.isPremium,
+          value: isPremium,
           activeThumbColor: Colors.amber,
           activeTrackColor: Colors.amber.withValues(alpha: 0.5),
           inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
@@ -1738,6 +1745,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }
 
   Widget _buildLifestyleContent(AuthUser user) {
+    final isPremium = ref.watch(effectiveIsPremiumProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1793,7 +1801,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               _ctrl.updateUser((u) => u.copyWith(drinkingHabit: val)),
         ),
         const SizedBox(height: 16),
-        _nicotinePrefRow(context: context, user: user),
+        _nicotinePrefRow(context: context, user: user, isPremium: !isPremium),
         const SizedBox(height: 16),
         _prefPillRow(
           context: context,

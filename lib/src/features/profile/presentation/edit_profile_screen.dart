@@ -40,7 +40,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   bool _hasChanges = false;
   double _distancePreference = 50.0;
-  bool _isPremium = false;
   bool _isUploading = false;
 
   // Places API — session token model
@@ -204,7 +203,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _hobbies = List.from(user.hobbies);
       _languages = List.from(user.languages);
       _distancePreference = user.maxDistance.toDouble();
-      _isPremium = user.isPremium;
       _birthDate = user.birthDate;
 
       // Political affiliation mapping: String -> Double
@@ -2155,7 +2153,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _buildDistanceSlider(String lang, bool isDark, Color subColor) {
-    final maxDist = _isPremium ? 100.0 : 50.0;
+    final isPremium = ref.watch(effectiveIsPremiumProvider);
+    final maxDist = isPremium ? 100.0 : 50.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [

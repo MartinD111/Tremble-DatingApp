@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'radar_animation.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/liquid_nav_bar.dart'; // Import LiquidNavBar
@@ -23,6 +24,7 @@ import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
 import '../../../core/ble_service.dart'; // BLE must run in main isolate
+import '../../../core/geo_service.dart';
 import '../../../shared/widgets/tremble_radar_heart.dart';
 import '../../../shared/widgets/running_stickman.dart';
 import '../../../core/consent_service.dart'; // gdprConsentProvider
@@ -126,6 +128,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       ref.read(tutorialProvider.notifier).checkFirstLaunch();
     });
+  }
+
+  Future<void> _syncBackgroundEffectivePremium(bool isPremium) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(geoServiceEffectivePremiumPrefsKey, isPremium);
+    FlutterBackgroundService().invoke(
+      'effectivePremiumChanged',
+      {'isPremium': isPremium},
+    );
   }
 
   Future<void> _showTutorialOptInSheet() async {
@@ -375,6 +386,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (active == current) return; // already in sync
       ref.read(isScanningProvider.notifier).state = active;
       if (active) {
+        unawaited(
+          _syncBackgroundEffectivePremium(ref.read(effectiveIsPremiumProvider)),
+        );
         // Android: trampoline service satisfies the 5s startForeground
         // deadline before relay-starting the plugin. iOS: no-op.
         if (Platform.isAndroid) {
@@ -449,10 +463,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // Reactive mapping of active nav index during Premium/Free transitions
     ref.listen<bool>(
-      authStateProvider.select((user) => user?.isPremium == true),
+      effectiveIsPremiumProvider,
       (previous, next) {
         if (previous == null) return;
         if (previous != next) {
+          unawaited(_syncBackgroundEffectivePremium(next));
           final currentIndex = ref.read(navIndexProvider);
           if (next) {
             // Downgrade to Upgrade: Free (3 tabs) -> Premium (4 tabs)
@@ -855,8 +870,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   // the pill itself). Premium users see the profile; free
                   // users see the paywall (existing gate).
                   onTap: () {
-                    final tapUser = ref.read(authStateProvider);
-                    final tapIsPremium = tapUser?.isPremium == true;
+                    final tapIsPremium = ref.read(effectiveIsPremiumProvider);
                     if (!tapIsPremium) {
                       PremiumPaywallBottomSheet.show(context);
                       return;
@@ -1347,9 +1361,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               // the original plugin path. Same NOTIF_ID 888 +
                               // channel tremble_radar_v2 → no flicker on swap.
                               if (Platform.isAndroid) {
+                                await _syncBackgroundEffectivePremium(
+                                    isPremium);
                                 await RadarIntegrationService.instance
                                     .startRadarService();
                               } else {
+                                await _syncBackgroundEffectivePremium(
+                                    isPremium);
                                 FlutterBackgroundService().startService();
                               }
                               // Flip RadarStateBridge → tile + widget re-tint and

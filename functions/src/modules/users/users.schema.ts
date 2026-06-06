@@ -25,6 +25,8 @@ export const updateProfileSchema = z
         photoUrls: z.array(z.string().url()).min(1).max(6).optional(),
         height: z.number().int().min(100).max(250).optional(),
         isSmoker: z.boolean().optional(),
+        nicotineUse: z.string().max(50).optional(),
+        nicotineFilter: z.string().max(50).optional(),
         hasChildren: z.boolean().optional(),
         partnerSmokingPreference: z.string().max(50).optional(),
         drinkingHabit: z.string().max(50).optional(),

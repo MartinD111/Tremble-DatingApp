@@ -6,6 +6,8 @@ import 'package:dart_geohash/dart_geohash.dart';
 import 'package:battery_plus/battery_plus.dart';
 import '../features/map/domain/safe_zone_repository.dart';
 
+const geoServiceEffectivePremiumPrefsKey = 'geo_effective_is_premium';
+
 /// Geo Service — uploads minimized location data to Firestore periodically.
 ///
 /// GDPR Compliance (Art. 5 — Data Minimization):
@@ -47,24 +49,15 @@ class GeoService {
   /// Start uploading location data.
   /// MUST only be called after the user has explicitly consented via
   /// the in-app location consent screen (locationConsentGiven == true).
-  Future<void> start() async {
-    await _fetchUserTier();
+  Future<void> start({required bool isPremium}) async {
+    _isPremium = isPremium;
     await _checkBatteryState();
     _listenBatteryChanges();
     _scheduleUpdate();
   }
 
-  /// Reads the user's `isPremium` flag from Firestore once at service start.
-  /// Result is cached for the lifetime of this radar session.
-  Future<void> _fetchUserTier() async {
-    try {
-      final uid = _auth.currentUser?.uid;
-      if (uid == null) return;
-      final doc = await _firestore.collection('users').doc(uid).get();
-      _isPremium = doc.data()?['isPremium'] as bool? ?? false;
-    } catch (_) {
-      _isPremium = false;
-    }
+  void updatePremiumTier({required bool isPremium}) {
+    _isPremium = isPremium;
   }
 
   /// Stop all geo updates and mark user as inactive in Firestore.
@@ -172,9 +165,8 @@ class GeoService {
         precision: _geohashPrecision,
       );
 
-      // Radius tier — written server-side so Cloud Functions can apply
-      // the correct GPS pre-filter without trusting the client.
-      // isPremium is read from Firestore once at start() — not from client.
+      // Radius tier mirrors the app's effective premium resolution at radar
+      // start/update time so RevenueCat-only premium users are treated correctly.
       final radiusTier = _isPremium ? 'pro' : 'free';
 
       // TTL: proximity doc auto-expires after 30 min without refresh.

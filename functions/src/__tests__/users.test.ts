@@ -20,5 +20,22 @@ describe("Users Module", () => {
                 expect(result.data.interestedIn).toEqual(["male", "female"]);
             }
         });
+
+        it("should accept nicotine fields", async () => {
+            const { updateProfileSchema } = await import(
+                "../../src/modules/users/users.schema"
+            );
+
+            const result = updateProfileSchema.safeParse({
+                nicotineUse: "vaping",
+                nicotineFilter: "no_smoking",
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.nicotineUse).toBe("vaping");
+                expect(result.data.nicotineFilter).toBe("no_smoking");
+            }
+        });
     });
 });
