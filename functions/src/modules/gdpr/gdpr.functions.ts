@@ -196,7 +196,8 @@ export const exportUserData = onCall(
  *   - proximity/{uid}                      (location/BLE state)
  *   - waves where fromUid == uid           (waves sent)
  *   - waves where toUid == uid             (waves received)
- *   - proximity_events where from == uid   (BLE proximity events)
+ *   - proximity_events where fromUid == uid (encounters sent)
+ *   - proximity_events where toUid == uid   (encounters received)
  *   - proximity_notifications where users array-contains uid
  *   - idempotencyKeys range {uid}:*        (deduplication keys)
  *   - reports where reporterId == uid      (reports filed by user — hard delete)
@@ -248,13 +249,18 @@ export const deleteUserAccount = onCall(
             const wavesReceived = await db.collection("waves").where("toUid", "==", uid).get();
             await deleteBatch(wavesReceived.docs.map((d) => d.ref));
 
-            // 4. Delete proximity_events authored by user
-            //    Field name: "from" (see proximity.functions.ts onBleProximity trigger)
-            const proximityEvents = await db
+            // 4. Delete proximity_events involving user
+            const proximityEventsSent = await db
                 .collection("proximity_events")
-                .where("from", "==", uid)
+                .where("fromUid", "==", uid)
                 .get();
-            await deleteBatch(proximityEvents.docs.map((d) => d.ref));
+            await deleteBatch(proximityEventsSent.docs.map((d) => d.ref));
+
+            const proximityEventsReceived = await db
+                .collection("proximity_events")
+                .where("toUid", "==", uid)
+                .get();
+            await deleteBatch(proximityEventsReceived.docs.map((d) => d.ref));
 
             // 5. Delete proximity_notifications involving user
             //    Documents store users: [fromUid, toUid] array

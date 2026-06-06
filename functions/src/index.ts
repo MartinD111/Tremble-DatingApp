@@ -45,9 +45,7 @@ export {
     findNearby,
     setInactive,
     scanProximityPairs,            // replaces onBleProximity + onRunEncounter
-    onBleProximity,                // DEPRECATED no-op — remove in next breaking deploy
     getProximityMatchCandidates,
-    onRunEncounter,                // DEPRECATED no-op — remove in next breaking deploy
     onRunCrossUpdated,
 } from "./modules/proximity/proximity.functions";
 

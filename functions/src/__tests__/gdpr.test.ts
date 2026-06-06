@@ -81,8 +81,9 @@ function fakeSnapshot(count: number) {
 
 /** Records every .collection(name) call and returns controlled snapshots */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildMockDb(collectionOverrides: Record<string, number> = {}): { mockDb: any; calledWith: string[]; batchCommitMock: jest.Mock; batchDeleteMock: jest.Mock } {
+function buildMockDb(collectionOverrides: Record<string, number> = {}): { mockDb: any; calledWith: string[]; whereCalls: Array<{ collection: string; fieldPath: string; opStr: string; value: unknown }>; batchCommitMock: jest.Mock; batchDeleteMock: jest.Mock } {
     const calledWith: string[] = [];
+    const whereCalls: Array<{ collection: string; fieldPath: string; opStr: string; value: unknown }> = [];
     const batchCommitMock = jest.fn().mockImplementation(() => Promise.resolve());
     const batchDeleteMock = jest.fn();
 
@@ -96,7 +97,7 @@ function buildMockDb(collectionOverrides: Record<string, number> = {}): { mockDb
         collection: jest.fn((name: string) => {
             calledWith.push(name);
             const count = collectionOverrides[name] ?? 0;
-            return {
+            const collectionRef = {
                 doc: jest.fn(() => ({
                     get: jest.fn().mockImplementation(() => Promise.resolve({ exists: true, data: () => ({}) })),
                     update: jest.fn().mockImplementation(() => Promise.resolve()),
@@ -108,14 +109,18 @@ function buildMockDb(collectionOverrides: Record<string, number> = {}): { mockDb
                     id: "gdpr-doc-id",
                     update: jest.fn().mockImplementation(() => Promise.resolve()),
                 })),
-                where: jest.fn().mockReturnThis(),
+                where: jest.fn((fieldPath: string, opStr: string, value: unknown) => {
+                    whereCalls.push({ collection: name, fieldPath, opStr, value });
+                    return collectionRef;
+                }),
                 get: jest.fn().mockImplementation(() => Promise.resolve(fakeSnapshot(count))),
             };
+            return collectionRef;
         }),
         batch: jest.fn(() => mockBatch),
     };
 
-    return { mockDb, calledWith, batchCommitMock, batchDeleteMock };
+    return { mockDb, calledWith, whereCalls, batchCommitMock, batchDeleteMock };
 }
 
 // ── Firestore module mock (set up before imports) ─────────────────────────
@@ -180,7 +185,7 @@ describe("GDPR Functions", () => {
 
     describe("Case 2 — deleteUserAccount queries all 12 expected collections", () => {
         it("calls collection() for all required collections and deletes auth", async () => {
-            const { mockDb, calledWith } = buildMockDb({
+            const { mockDb, calledWith, whereCalls } = buildMockDb({
                 waves: 1,
                 proximity_events: 1,
                 proximity_notifications: 1,
@@ -212,6 +217,12 @@ describe("GDPR Functions", () => {
             expect(calledWith.filter((c) => c === "waves").length).toBeGreaterThanOrEqual(2);
             // matches queried twice: userA + userB
             expect(calledWith.filter((c) => c === "matches").length).toBeGreaterThanOrEqual(2);
+
+            const proximityEventWhereCalls = whereCalls.filter((call) => call.collection === "proximity_events");
+            expect(proximityEventWhereCalls).toEqual([
+                { collection: "proximity_events", fieldPath: "fromUid", opStr: "==", value: TEST_UID },
+                { collection: "proximity_events", fieldPath: "toUid", opStr: "==", value: TEST_UID },
+            ]);
 
             // Auth account deleted
             expect(mockDeleteUser).toHaveBeenCalledWith(TEST_UID);

@@ -1,3 +1,64 @@
+## Session State — 2026-06-06 23:17 CEST
+- Active Task: Remove deprecated no-op proximity exports from Cloud Functions index
+- Environment: Dev, `main`
+- Modified Files:
+    - `functions/src/index.ts`
+    - `tasks/context.md`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: Backend TypeScript compile clean. Backend Jest suite passing 19/19.
+
+## Session Handoff
+- Completed:
+    - Removed `onBleProximity` and `onRunEncounter` from the Cloud Functions export surface in `functions/src/index.ts`.
+    - Left the deprecated no-op implementations in `proximity.functions.ts` untouched.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Deploy Cloud Functions only after explicit founder approval.
+
+## Session State — 2026-06-06 23:16 CEST
+- Active Task: Fix GDPR deletion for proximity_events fromUid/toUid fields
+- Environment: Dev, `main`
+- Modified Files:
+    - `functions/src/modules/gdpr/gdpr.functions.ts`
+    - `functions/src/__tests__/gdpr.test.ts`
+    - `tasks/context.md`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: Backend TypeScript compile clean. Backend Jest suite passing 19/19.
+
+## Session Handoff
+- Completed:
+    - Changed GDPR proximity event deletion from legacy `from` to `fromUid`.
+    - Added `toUid` deletion coverage for received proximity events.
+    - Added regression coverage asserting both proximity event query directions.
+    - Verified RED before the production fix and GREEN after the fix.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Deploy Cloud Functions only after explicit founder approval.
+
+## Session State — 2026-06-06 23:13 CEST
+- Active Task: Add both-premium nicotine hard filter to scheduled proximity scan
+- Environment: Dev, `main`
+- Modified Files:
+    - `functions/src/modules/proximity/proximity.functions.ts`
+    - `functions/src/__tests__/uploads_proximity.test.ts`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: Backend TypeScript compile clean. Backend Jest suite passing 19/19.
+
+## Session Handoff
+- Completed:
+    - Inserted both-premium nicotine compatibility hard filter after block/flag checks in `scanProximityPairs`.
+    - Added regression coverage for incompatible both-premium nicotine filters in `uploads_proximity.test.ts`.
+    - Verified targeted RED before the production fix and GREEN after the fix.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Deploy Cloud Functions only after explicit founder approval.
+
 ## Session State — 2026-06-06 12:29 CEST
 - Active Task: Add Pulse Intercept actions to MatchRevealScreen
 - Environment: Dev, `main`

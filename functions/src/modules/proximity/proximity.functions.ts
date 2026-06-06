@@ -711,6 +711,24 @@ export const scanProximityPairs = onSchedule(
                         continue;
                     }
 
+                    const bothPremium = aData.isPremium === true && bData.isPremium === true;
+                    if (bothPremium) {
+                        const aNicotineUse: string[] = aData.nicotineUse ?? [];
+                        const aNicotineFilter: string = aData.nicotineFilter ?? "any";
+                        const bNicotineUse: string[] = bData.nicotineUse ?? [];
+                        const bNicotineFilter: string = bData.nicotineFilter ?? "any";
+
+                        if (!nicotineCompatible(
+                            aNicotineUse,
+                            aNicotineFilter,
+                            bNicotineUse,
+                            bNicotineFilter,
+                        )) {
+                            await redis.del(pairKey);
+                            continue;
+                        }
+                    }
+
                     // 4. Write proximity_events document (TTL via Firestore TTL policy on expiresAt)
                     const expiresAt = Timestamp.fromDate(new Date(Date.now() + 10 * 60 * 1000));
                     await db.collection("proximity_events").add({
