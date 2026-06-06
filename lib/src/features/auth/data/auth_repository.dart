@@ -99,6 +99,7 @@ class AuthUser {
   final bool isEmailVerified;
   final bool isAdmin;
   final bool isPremium;
+  final String? weekendPassStatus;
   final int wavesThisMonth;
   final bool isDarkMode;
   final bool isPrideMode;
@@ -131,11 +132,13 @@ class AuthUser {
   /// Written directly to Firestore — NOT sent via Cloud Function API (strict Zod schema).
   final List<SelectedGym> selectedGyms;
 
-  /// Returns true if user has real Premium OR is inside an active event
-  /// geofence (Taste of Premium). The [inEventGeofence] flag comes from
-  /// EventGeofenceService — it is runtime-only and never persisted.
+  bool get hasActiveWeekendPass => weekendPassStatus == 'active';
+
+  /// Returns true if user has real Premium, an active Weekend Pass, OR is inside
+  /// an active event geofence (Taste of Premium). The [inEventGeofence] flag
+  /// comes from EventGeofenceService — it is runtime-only and never persisted.
   bool effectiveIsPremium({bool inEventGeofence = false}) =>
-      isPremium || inEventGeofence;
+      isPremium || hasActiveWeekendPass || inEventGeofence;
 
   bool get hasReachedFreeWaveLimit => !isPremium && wavesThisMonth >= 5;
 
@@ -192,6 +195,7 @@ class AuthUser {
     this.isEmailVerified = false,
     this.isAdmin = false,
     this.isPremium = false,
+    this.weekendPassStatus,
     this.wavesThisMonth = 0,
     this.isDarkMode = false,
     this.isPrideMode = false,
@@ -385,6 +389,7 @@ class AuthUser {
       prompts: Map<String, String>.from(data['prompts'] ?? {}),
       isAdmin: data['isAdmin'] as bool? ?? false,
       isPremium: data['isPremium'] as bool? ?? false,
+      weekendPassStatus: data['weekendPassStatus'] as String?,
       wavesThisMonth: wavesThisMonth,
       isDarkMode: data['isDarkMode'] as bool? ?? false,
       isPrideMode: data['isPrideMode'] as bool? ?? false,
@@ -466,6 +471,7 @@ class AuthUser {
     bool? isEmailVerified,
     bool? isAdmin,
     bool? isPremium,
+    Object? weekendPassStatus = _unset,
     int? wavesThisMonth,
     bool? isDarkMode,
     bool? isPrideMode,
@@ -574,6 +580,9 @@ class AuthUser {
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
       isAdmin: isAdmin ?? this.isAdmin,
       isPremium: isPremium ?? this.isPremium,
+      weekendPassStatus: identical(weekendPassStatus, _unset)
+          ? this.weekendPassStatus
+          : weekendPassStatus as String?,
       wavesThisMonth: wavesThisMonth ?? this.wavesThisMonth,
       isDarkMode: isDarkMode ?? this.isDarkMode,
       isPrideMode: isPrideMode ?? this.isPrideMode,
@@ -1076,14 +1085,16 @@ class AuthRepository {
 /// [eventGeofenceServiceProvider] into a single boolean. Widgets that need
 /// effective-premium status can watch this instead of computing it inline.
 ///
-/// Returns true when the user has real Premium OR is inside an active event
-/// geofence (Taste of Premium). Updates reactively on both auth and geofence
-/// state changes — no app restart required.
+/// Returns true when the user has real Premium, an active Weekend Pass, OR is
+/// inside an active event geofence (Taste of Premium). Updates reactively on
+/// auth, Firestore user doc, RevenueCat, and geofence state changes — no app
+/// restart required.
 final effectiveIsPremiumProvider = Provider<bool>((ref) {
   final user = ref.watch(authStateProvider);
   final geofence = ref.watch(eventGeofenceServiceProvider);
   final revenueCatPremium = ref.watch(revenueCatIsPremiumProvider);
   return revenueCatPremium ||
+      user?.weekendPassStatus == 'active' ||
       (user?.effectiveIsPremium(inEventGeofence: geofence.inEventGeofence) ??
           false);
 });

@@ -336,7 +336,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_feature_unlimited_geofence': 'Neomejeni geofence pingi',
       'premium_feature_custom_themes': 'Prilagojene teme',
       'premium_feature_advanced_filters': 'Napredna matrika filtrov',
-      'premium_feature_weekend_window': 'Aktivno pet 19:00 – ned 19:00 tvoj čas',
+      'premium_feature_weekend_window':
+          'Aktivno pet 19:00 – ned 19:00 tvoj čas',
       'premium_feature_all_premium': 'Vse Premium funkcije',
       'premium_feature_yearly_access': '12 mesecev neprekinjenega dostopa',
       'premium_feature_cancel_anytime': 'Odpoveš kadarkoli',
@@ -363,7 +364,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     'it': {
       'premium_card_weekend_window':
           'Si attiva il prossimo venerdì alle 19:00 – domenica alle 19:00 (ora locale). Si rinnova automaticamente ogni settimana. Disdici in qualsiasi momento.',
-      'premium_feature_weekend_window': 'Attivo ven 19:00 – dom 19:00 ora locale',
+      'premium_feature_weekend_window':
+          'Attivo ven 19:00 – dom 19:00 ora locale',
       'premium_cta_get_weekend': 'Attiva questo fine settimana',
     },
     'es': {
@@ -375,7 +377,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     'fr': {
       'premium_card_weekend_window':
           'S’active le vendredi suivant à 19h00 – dimanche à 19h00 (votre heure locale). Renouvellement hebdomadaire automatique. Annulez à tout moment.',
-      'premium_feature_weekend_window': 'Actif ven 19h00 – dim 19h00 votre heure',
+      'premium_feature_weekend_window':
+          'Actif ven 19h00 – dim 19h00 votre heure',
       'premium_cta_get_weekend': 'Profiter de ce week-end',
     },
     'pt': {

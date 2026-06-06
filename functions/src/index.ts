@@ -83,3 +83,9 @@ export {
     onRunModeDeactivate,
     expireRunModes,
 } from "./modules/gym/gym.functions";
+
+// ── Subscriptions Module ───────────────────────────────────
+export {
+    activateWeekendPass,
+    processWeekendPasses,
+} from "./modules/subscriptions/subscriptions.functions";
