@@ -28,7 +28,6 @@ export {
 export {
     onWaveCreated,
     getMatches,
-    migrateMatchTypes,
     sendWave,
 } from "./modules/matches/matches.functions";
 
