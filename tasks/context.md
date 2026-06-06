@@ -1,3 +1,65 @@
+## Session State — 2026-06-07 01:31 CEST
+- Active Task: Update premium screen weekend getaway translations across 8 languages
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/settings/presentation/premium_screen.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: Static analysis compiles clean with zero issues. Flutter test suite runs and passes cleanly (148/148 tests).
+
+## Session Handoff
+- Completed:
+    - Updated translation mappings for English and Slovenian for the weekend getaway cards.
+    - Added translation maps for German, Croatian, Italian, Spanish, French, and Portuguese for weekend getaway keys.
+    - Refactored `_t` string resolution function to dynamically resolve any code defined in `_localTranslations`.
+    - Confirmed zero analyzer issues and 148/148 tests passing.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Ready for testing on dev environment.
+
+## Session State — 2026-06-07 01:25 CEST
+- Active Task: Implement 2nd-Encounter notification flow in proximity scanner
+- Environment: Dev, `main`
+- Modified Files:
+    - `functions/src/modules/proximity/proximity.functions.ts`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: TypeScript compiler clean. Backend ESLint clean. Backend Jest suite passing 19/19.
+
+## Session Handoff
+- Completed:
+    - Implemented Redis-based encounter count incrementation and gating in `functions/src/modules/proximity/proximity.functions.ts` within `scanProximityPairs`.
+    - Added a 90-day TTL (7776000 seconds) on first encounter.
+    - Triggered a normal FCM push notification on exactly the second encounter using translation keys `notify_second_encounter_title` and `notify_second_encounter_body`.
+    - Verified compilation (`npx tsc --noEmit`) and linter check (`npm run lint`) pass with no issues.
+    - Verified the Jest test suite (19/19) passes cleanly.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Deploy Cloud Functions to dev environment only after explicit founder approval.
+
+## Session State — 2026-06-07 01:20 CEST
+- Active Task: Near-Miss monthly recap push scheduled Cloud Function
+- Environment: Dev, `main`
+- Modified Files:
+    - `functions/src/modules/notifications.functions.ts`
+    - `firestore.indexes.json`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: TypeScript compiler clean. Backend ESLint clean. Backend Jest suite passing 19/19.
+
+## Session Handoff
+- Completed:
+    - Created the scheduled Cloud Function `monthlyNearMissRecap` in a new file `functions/src/modules/notifications.functions.ts`.
+    - Added the two composite indexes to `firestore.indexes.json` for `proximity_events` (`fromUid` ASC + `timestamp` ASC, and `toUid` ASC + `timestamp` ASC).
+    - Verified compilation (`npx tsc --noEmit`) and ESLint (`npm run lint`) pass with no errors or warnings.
+    - Verified existing backend Jest tests (19/19) pass successfully.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Add function export to `index.ts` and deploy Cloud Functions only after explicit founder approval.
+
 ## Session State — 2026-06-07 01:08 CEST
 - Active Task: active_run_crosses creation fix & app.dart Crashlytics Sync
 - Environment: Dev, `main`

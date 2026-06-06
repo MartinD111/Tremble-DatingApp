@@ -757,6 +757,43 @@ export const scanProximityPairs = onSchedule(
                         expiresAt,
                     });
 
+                    // Track encounter count using Redis and notify on 2nd encounter
+                    const encounterCountKey = `encounter_count:${[a.uid, b.uid].sort().join("_")}`;
+                    const encounterCount = await redis.incr(encounterCountKey);
+                    if (encounterCount === 1) {
+                        await redis.expire(encounterCountKey, 7776000); // 90 days
+                    }
+                    if (encounterCount === 2) {
+                        const fcmTokens = [aData.fcmToken, bData.fcmToken].filter(
+                            (token): token is string => typeof token === "string" && token.trim() !== ""
+                        );
+                        for (const token of fcmTokens) {
+                            try {
+                                // i18n keys needed: notify_second_encounter_title, notify_second_encounter_body
+                                await messaging.send({
+                                    token,
+                                    data: {
+                                        type: "SECOND_ENCOUNTER",
+                                    },
+                                    apns: {
+                                        payload: {
+                                            aps: {
+                                                contentAvailable: true,
+                                                "alert-title-loc-key": "notify_second_encounter_title",
+                                                "alert-body-loc-key": "notify_second_encounter_body",
+                                            },
+                                        },
+                                    },
+                                    android: {
+                                        priority: "high",
+                                    },
+                                });
+                            } catch (e) {
+                                console.error(`[NEAR_MISS_2ND] Failed to send push to token ${token}`, e);
+                            }
+                        }
+                    }
+
                     pairsNotified++;
 
                     // Build sender age from dateOfBirth Timestamp

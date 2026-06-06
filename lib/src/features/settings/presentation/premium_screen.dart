@@ -228,13 +228,13 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
     };
   }
 
-  // self-contained localized dictionary for English and Slovenian languages
+  // self-contained localized dictionary for English, Slovenian, German, Croatian, Italian, Spanish, French, and Portuguese languages
   final Map<String, Map<String, String>> _localTranslations = {
     'en': {
       'premium_title': 'Tremble Upgrade',
       'premium_subtitle': 'Elevate your connection game. Discover physically.',
       'premium_cta_get_premium': 'Get the Tremble Premium Plan',
-      'premium_cta_get_weekend': 'Get the Weekend Getaway Plan',
+      'premium_cta_get_weekend': 'Get This Weekend',
       'premium_cta_get_yearly': 'Activate Yearly — 59.99 € / year',
       'premium_cta_get_lifetime': 'Activate Lifetime — 149.99 €',
       'premium_current_plan': 'Current Plan',
@@ -264,7 +264,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_card_premium_period': '/ Month',
       'premium_card_weekend_title': 'Weekend Getaway',
       'premium_card_weekend_period': '/ Weekend',
-      'premium_card_weekend_window': 'Friday 7:00 PM to Sunday 7:00 PM',
+      'premium_card_weekend_window':
+          'Activates next Friday 7 PM – Sunday 7 PM (your local time). Auto-renews weekly. Cancel anytime.',
       'premium_card_yearly_title': 'Yearly',
       'premium_card_yearly_period': '/ month',
       'premium_card_yearly_billed_as': 'billed as 59.99 € / year',
@@ -277,7 +278,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_feature_unlimited_geofence': 'Unlimited geofence pings',
       'premium_feature_custom_themes': 'Custom themes',
       'premium_feature_advanced_filters': 'Advanced filtering matrix',
-      'premium_feature_weekend_window': 'Active during the getaway window',
+      'premium_feature_weekend_window': 'Active Fri 7 PM – Sun 7 PM your time',
       'premium_feature_all_premium': 'All Premium features',
       'premium_feature_yearly_access': '12 months of uninterrupted access',
       'premium_feature_cancel_anytime': 'Cancel anytime',
@@ -291,7 +292,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_title': 'Tremble Nadgradnja',
       'premium_subtitle': 'Dvigni raven spoznavanja. Odkrij fizično.',
       'premium_cta_get_premium': 'Aktiviraj Tremble Premium',
-      'premium_cta_get_weekend': 'Aktiviraj Weekend Getaway',
+      'premium_cta_get_weekend': 'Aktiviraj ta vikend',
       'premium_cta_get_yearly': 'Aktiviraj Yearly — 59,99 € / leto',
       'premium_cta_get_lifetime': 'Aktiviraj Lifetime — 149,99 €',
       'premium_current_plan': 'Trenutni plan',
@@ -321,7 +322,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_card_premium_period': '/ mesec',
       'premium_card_weekend_title': 'Weekend Getaway',
       'premium_card_weekend_period': '/ vikend',
-      'premium_card_weekend_window': 'Petek 19:00 do nedelja 19:00',
+      'premium_card_weekend_window':
+          'Aktivira se naslednji petek ob 19:00 – nedelja 19:00 (tvoj lokalni čas). Samodejno se obnovi. Odpoveš kadarkoli.',
       'premium_card_yearly_title': 'Yearly',
       'premium_card_yearly_period': '/ mesec',
       'premium_card_yearly_billed_as': 'obračunano kot 59,99 € / leto',
@@ -334,7 +336,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_feature_unlimited_geofence': 'Neomejeni geofence pingi',
       'premium_feature_custom_themes': 'Prilagojene teme',
       'premium_feature_advanced_filters': 'Napredna matrika filtrov',
-      'premium_feature_weekend_window': 'Aktivno med getaway oknom',
+      'premium_feature_weekend_window': 'Aktivno pet 19:00 – ned 19:00 tvoj čas',
       'premium_feature_all_premium': 'Vse Premium funkcije',
       'premium_feature_yearly_access': '12 mesecev neprekinjenega dostopa',
       'premium_feature_cancel_anytime': 'Odpoveš kadarkoli',
@@ -343,11 +345,50 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_free_gym_mode': 'Dostop do Gym načina',
       'premium_free_local_radar': '30-min lokalni radar',
       'premium_free_wave_limit': 'Standardna omejitev mutual wave',
+    },
+    'de': {
+      'premium_card_weekend_window':
+          'Aktiviert sich am nächsten Freitag um 19:00 Uhr – Sonntag um 19:00 Uhr (deine Ortszeit). Verlängert sich automatisch wöchentlich. Jederzeit kündbar.',
+      'premium_feature_weekend_window':
+          'Aktiv Fr 19:00 – So 19:00 Uhr deiner Zeit',
+      'premium_cta_get_weekend': 'Hol dir dieses Wochenende',
+    },
+    'hr': {
+      'premium_card_weekend_window':
+          'Aktivira se sljedeći petak u 19:00 – nedjelja u 19:00 (tvoje lokalno vrijeme). Automatski se obnavlja tjedno. Otkaži bilo kada.',
+      'premium_feature_weekend_window':
+          'Aktivno pet 19:00 – ned 19:00 tvoje vrijeme',
+      'premium_cta_get_weekend': 'Aktiviraj ovaj vikend',
+    },
+    'it': {
+      'premium_card_weekend_window':
+          'Si attiva il prossimo venerdì alle 19:00 – domenica alle 19:00 (ora locale). Si rinnova automaticamente ogni settimana. Disdici in qualsiasi momento.',
+      'premium_feature_weekend_window': 'Attivo ven 19:00 – dom 19:00 ora locale',
+      'premium_cta_get_weekend': 'Attiva questo fine settimana',
+    },
+    'es': {
+      'premium_card_weekend_window':
+          'Se activa el próximo viernes a las 19:00 – domingo a las 19:00 (tu hora local). Se renueva automáticamente cada semana. Cancela en cualquier momento.',
+      'premium_feature_weekend_window': 'Activo vie 19:00 – dom 19:00 tu hora',
+      'premium_cta_get_weekend': 'Obtén este fin de semana',
+    },
+    'fr': {
+      'premium_card_weekend_window':
+          'S’active le vendredi suivant à 19h00 – dimanche à 19h00 (votre heure locale). Renouvellement hebdomadaire automatique. Annulez à tout moment.',
+      'premium_feature_weekend_window': 'Actif ven 19h00 – dim 19h00 votre heure',
+      'premium_cta_get_weekend': 'Profiter de ce week-end',
+    },
+    'pt': {
+      'premium_card_weekend_window':
+          'Ativa na próxima sexta-feira às 19:00 – domingo às 19:00 (seu horário local). Renova automaticamente toda semana. Cancele a qualquer momento.',
+      'premium_feature_weekend_window':
+          'Ativo sex 19:00 – dom 19:00 seu horário',
+      'premium_cta_get_weekend': 'Obter este fim de semana',
     }
   };
 
   String _t(String key, String lang) {
-    final code = (lang == 'sl') ? 'sl' : 'en';
+    final code = _localTranslations.containsKey(lang) ? lang : 'en';
     return _localTranslations[code]?[key] ??
         _localTranslations['en']?[key] ??
         key;
