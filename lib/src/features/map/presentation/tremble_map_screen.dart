@@ -107,7 +107,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   }
 
   List<CircleMarker> _buildProximityCircles(bool effectivePremium) {
-    if (!effectivePremium || _proximityPoints.isEmpty) return const [];
+    if (_proximityPoints.isEmpty) return const [];
     return _proximityPoints
         .map(
           (point) => CircleMarker(
@@ -117,6 +117,40 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
             color: TrembleTheme.rose.withValues(alpha: 0.12),
             borderColor: TrembleTheme.rose.withValues(alpha: 0.35),
             borderStrokeWidth: 1.5,
+          ),
+        )
+        .toList();
+  }
+
+  List<Marker> _buildProximityCountBadges() {
+    return _proximityPoints
+        .map(
+          (point) => Marker(
+            point: point,
+            width: 30,
+            height: 30,
+            child: Container(
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                _proximityPoints.length.toString(),
+                style: const TextStyle(
+                  color: TrembleTheme.rose,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
           ),
         )
         .toList();
@@ -270,35 +304,58 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                               ),
                             ),
                           ),
-                          data: (initData) => FlutterMap(
-                            mapController: _mapController,
-                            options: MapOptions(
-                              initialCenter: _ljubljanaCenter,
-                              initialZoom: _zoomLevels[_MapZoom.city]!,
-                              maxZoom: 16.0,
-                              interactionOptions: const InteractionOptions(
-                                flags: InteractiveFlag.all &
-                                    ~InteractiveFlag.rotate,
-                              ),
-                            ),
+                          data: (initData) => Stack(
                             children: [
-                              VectorTileLayer(
-                                theme: initData.theme,
-                                tileProviders: TileProviders({
-                                  'protomaps': initData.tileProvider,
-                                }),
-                                cacheFolder: () async => initData.cacheDir,
-                                fileCacheTtl: mapCacheTtl,
-                                fileCacheMaximumSizeInBytes: mapCacheMaxBytes,
+                              FlutterMap(
+                                mapController: _mapController,
+                                options: MapOptions(
+                                  initialCenter: _ljubljanaCenter,
+                                  initialZoom: _zoomLevels[_MapZoom.city]!,
+                                  maxZoom: 16.0,
+                                  interactionOptions: const InteractionOptions(
+                                    flags: InteractiveFlag.all &
+                                        ~InteractiveFlag.rotate,
+                                  ),
+                                ),
+                                children: [
+                                  VectorTileLayer(
+                                    theme: initData.theme,
+                                    tileProviders: TileProviders({
+                                      'protomaps': initData.tileProvider,
+                                    }),
+                                    cacheFolder: () async => initData.cacheDir,
+                                    fileCacheTtl: mapCacheTtl,
+                                    fileCacheMaximumSizeInBytes:
+                                        mapCacheMaxBytes,
+                                  ),
+                                  CircleLayer(
+                                    circles: _buildProximityCircles(
+                                        effectivePremium),
+                                  ),
+                                  if (effectivePremium)
+                                    MarkerLayer(
+                                      markers: _buildProximityCountBadges(),
+                                    ),
+                                  MarkerLayer(
+                                    markers: _buildEventMarkers(
+                                        effectivePremium, lang),
+                                  ),
+                                ],
                               ),
-                              CircleLayer(
-                                circles:
-                                    _buildProximityCircles(effectivePremium),
-                              ),
-                              MarkerLayer(
-                                markers:
-                                    _buildEventMarkers(effectivePremium, lang),
-                              ),
+                              if (effectivePremium)
+                                Positioned(
+                                  top: 16,
+                                  right: 16,
+                                  child: CircleAvatar(
+                                    backgroundColor: isDark
+                                        ? const Color(0xFF2A2A2E)
+                                        : Colors.white,
+                                    child: const Icon(
+                                      Icons.filter_list,
+                                      color: TrembleTheme.rose,
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),

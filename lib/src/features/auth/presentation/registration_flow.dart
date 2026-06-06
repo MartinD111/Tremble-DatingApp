@@ -1833,8 +1833,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         prompts: const {},
         isOnboarded: true,
         isEmailVerified: false,
-        ageRangeStart: 18,
-        ageRangeEnd: 45,
+        ageRangeStart: _ageRangePref.start.round(),
+        ageRangeEnd: _ageRangePref.end.round(),
         appLanguage: _selectedLanguage,
         isPremium: true, // Auto-premium in development mode as per request
         isClassicAppearance: _isClassicAppearance,

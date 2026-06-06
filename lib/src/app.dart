@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme.dart';
@@ -62,9 +63,20 @@ class TrembleApp extends ConsumerWidget {
                 .contains(revenueCatEntitlementPremium) ??
             false;
         unawaited(
-          FirebaseFirestore.instance.collection('users').doc(uid).update(
-            {'isPremium': isPremium},
-          ),
+          () async {
+            try {
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(uid)
+                  .update({'isPremium': isPremium});
+            } catch (e, stack) {
+              await FirebaseCrashlytics.instance.recordError(
+                e,
+                stack,
+                reason: 'RevenueCat isPremium sync failed',
+              );
+            }
+          }(),
         );
       },
     );

@@ -729,6 +729,24 @@ export const scanProximityPairs = onSchedule(
                         }
                     }
 
+                    const bothRunMode = aData.isRunModeActive === true && bData.isRunModeActive === true;
+
+                    if (bothRunMode) {
+                        const crossId = [a.uid, b.uid].sort().join("_");
+                        const existingCross = await db.collection("active_run_crosses").doc(crossId).get();
+                        if (!existingCross.exists || existingCross.data()?.status !== "pending") {
+                            await db.collection("active_run_crosses").doc(crossId).set({
+                                userIds: [a.uid, b.uid].sort(),
+                                signals: {},
+                                dismissedBy: [],
+                                status: "pending",
+                                expiresAt: Timestamp.fromDate(new Date(Date.now() + 30 * 60 * 1000)),
+                                timestamp: FieldValue.serverTimestamp(),
+                            });
+                            logStructured({ fn: "scanProximityPairs", event: "run_cross_created", crossId });
+                        }
+                    }
+
                     // 4. Write proximity_events document (TTL via Firestore TTL policy on expiresAt)
                     const expiresAt = Timestamp.fromDate(new Date(Date.now() + 10 * 60 * 1000));
                     await db.collection("proximity_events").add({

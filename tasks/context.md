@@ -1,3 +1,65 @@
+## Session State — 2026-06-07 01:08 CEST
+- Active Task: active_run_crosses creation fix & app.dart Crashlytics Sync
+- Environment: Dev, `main`
+- Modified Files:
+    - `functions/src/modules/proximity/proximity.functions.ts`
+    - `lib/src/app.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: TypeScript compiler clean. Backend ESLint clean. Backend Jest suite passing 19/19. `flutter analyze` clean. `flutter test` passed 148/148.
+
+## Session Handoff
+- Completed:
+    - Added `bothRunMode` detection inside `scanProximityPairs` in `proximity.functions.ts`.
+    - Implemented logic to check for existing active run crosses with `"pending"` status, sorting candidate UIDs, and creating a new `active_run_crosses` document when both users are in active Run Mode.
+    - Wrapped the RevenueCat `isPremium` Firestore update sync call in `lib/src/app.dart` in a try/catch, logging failures using `FirebaseCrashlytics.instance.recordError(e, stack, reason: 'RevenueCat isPremium sync failed')`.
+    - Verified backend types (`tsc --noEmit`) and backend linter (`eslint`) pass cleanly.
+    - Verified backend tests (`jest`) pass successfully (19/19 tests).
+    - Verified static analysis (`flutter analyze --no-fatal-infos`) and Flutter test suite pass successfully (148/148 tests).
+- In Progress: None.
+- Blocked: None.
+- Next Action: None (ready for manual testing on-device).
+
+## Session State — 2026-06-07 00:56 CEST
+- Active Task: Proximity Circles Gating & Filter Toggle on Map
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/map/presentation/tremble_map_screen.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: `flutter analyze` clean. `flutter test` passed 148/148.
+
+## Session Handoff
+- Completed:
+    - Adjusted `_buildProximityCircles` to render identical circles for both Free and Premium users.
+    - Implemented `_buildProximityCountBadges` returning a list of `Marker` widgets with count badges for Premium users.
+    - Wrapped the map screen's `FlutterMap` in a `Stack` and overlayed a premium-only filter toggle (`CircleAvatar` containing `Icon(Icons.filter_list)`).
+    - Verified static analysis compiles with no warnings and the 148-test suite runs successfully.
+- In Progress: None.
+- Blocked: None.
+- Next Action: None.
+
+## Session State — 2026-06-07 00:33 CEST
+- Active Task: Dynamic Onboarding Age Range Selection Mapping
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/auth/presentation/registration_flow.dart`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: `dart format` completed. `flutter analyze` clean. `flutter test` passed 148/148.
+
+## Session Handoff
+- Completed:
+    - Replaced the hardcoded onboarding age preferences (`18`, `45`) inside the `completeOnboarding` registration flow call with dynamic user values (`_ageRangePref.start.round()`, `_ageRangePref.end.round()`).
+    - Verified compile clean via `flutter analyze`.
+    - Verified test suite passes cleanly with all 148 tests passing.
+- In Progress: None.
+- Blocked: None.
+- Next Action: None (onboarding flow alignment complete).
+
 ## Session State — 2026-06-07 00:29 CEST
 - Active Task: Conditionally Silent FCM Notifications on Activity Modes & Read Optimization
 - Environment: Dev, `main`
