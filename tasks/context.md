@@ -1,3 +1,26 @@
+## Session State — 2026-06-07 22:55 CEST
+- Active Task: Onboarding completeOnboarding serialization contract fix
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/auth/data/auth_repository.dart`
+    - `test/features/auth/auth_user_wave_limit_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Photo picker/upload E2E still unverified; code trace shows dev builds can continue from PhotosStep with zero selected photos.
+- System Status: Focused AuthUser payload test passing. `flutter analyze --no-fatal-infos` clean.
+
+## Session Handoff
+- Completed:
+    - Normalized `AuthUser.toApiPayload()` hobbies to a `List<String>` instead of sending hobby maps.
+    - Normalized `nicotineUse` to the first selected string or null instead of sending a list.
+    - Omitted `nicotineFilter` from the payload when it is null.
+    - Added a regression test for the completeOnboarding payload contract.
+    - Traced photo picker to upload path and identified why `RegistrationFlow` can upload 0 photos in dev builds.
+- In Progress: None.
+- Blocked: Photo upload itself not fixed by request; physical/E2E verification remains BLOCKER-006.
+- Next Action: Decide whether dev builds should keep bypassing the photo requirement, then verify picker -> upload -> photoUrls on-device/simulator.
+
 ## Session State — 2026-06-07 17:38 CEST
 - Active Task: Extract edit profile sections through `_HobbiesSection`
 - Environment: Dev, `main`
