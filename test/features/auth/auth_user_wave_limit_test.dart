@@ -107,4 +107,23 @@ void main() {
       expect(proLimit.hasReachedWaveLimit, isTrue);
     });
   });
+
+  group('AuthUser API payload', () {
+    test('serializes onboarding fields for the Cloud Function contract', () {
+      const user = AuthUser(
+        id: 'onboarding-user',
+        nicotineUse: ['vape'],
+        hobbies: [
+          {'id': 'running', 'label': 'Running'},
+          {'id': 'music', 'label': 'Music'},
+        ],
+      );
+
+      final payload = user.toApiPayload();
+
+      expect(payload['hobbies'], ['running', 'music']);
+      expect(payload['nicotineUse'], 'vape');
+      expect(payload.containsKey('nicotineFilter'), isFalse);
+    });
+  });
 }

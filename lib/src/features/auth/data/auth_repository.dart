@@ -228,6 +228,10 @@ class AuthUser {
   // NOTE: isAdmin/isPremium are NEVER sent to the server — they are
   // server-managed fields. The Cloud Functions .strict() schema rejects them.
   Map<String, dynamic> toApiPayload() {
+    final nicotineUseValue = nicotineUse.isNotEmpty ? nicotineUse.first : null;
+    final hobbyIds =
+        hobbies.map((h) => (h['id'] ?? h['name']) as String).toList();
+
     return {
       if (name != null) 'name': name,
       'onboardingCheckpoint': onboardingCheckpoint,
@@ -239,8 +243,8 @@ class AuthUser {
       'height': height,
       'heightRangeStart': heightRangeStart,
       'heightRangeEnd': heightRangeEnd,
-      'nicotineUse': nicotineUse,
-      'nicotineFilter': nicotineFilter,
+      'nicotineUse': nicotineUseValue,
+      if (nicotineFilter != null) 'nicotineFilter': nicotineFilter,
       'jobStatus': jobStatus,
       'occupation': occupation,
       'drinkingHabit': drinkingHabit,
@@ -270,7 +274,7 @@ class AuthUser {
         'partnerChildrenPreference': partnerChildrenPreference,
       'lookingFor': lookingFor,
       'languages': languages,
-      'hobbies': hobbies,
+      'hobbies': hobbyIds,
       'prompts': prompts,
       'isDarkMode': isDarkMode,
       'isPrideMode': isPrideMode,
