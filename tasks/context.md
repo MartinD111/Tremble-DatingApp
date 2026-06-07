@@ -1,3 +1,29 @@
+## Session State — 2026-06-07 23:10 CEST
+- Active Task: Onboarding photo compression before R2 upload
+- Environment: Dev, `main`
+- Modified Files:
+    - `pubspec.yaml`
+    - `pubspec.lock`
+    - `lib/src/features/auth/presentation/registration_flow.dart`
+    - `test/features/auth/photo_upload_registration_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Photo upload/onboarding E2E still needs real device or simulator verification against `tremble-dev`.
+- System Status: Focused photo upload tests passing. `flutter analyze --no-fatal-infos` clean.
+
+## Session Handoff
+- Completed:
+    - Added `flutter_image_compress` because it was not present in `pubspec.yaml`.
+    - Added registration photo upload preparation that skips files under 200KB.
+    - Compresses larger onboarding photos to JPEG quality 85 with the longest side capped at 1200px.
+    - Writes compressed files into `getTemporaryDirectory()` before passing paths to R2 upload.
+    - Kept picker UI unchanged.
+    - Added regression tests for skip/compress behavior and updated existing upload widget tests to use real temp files.
+- In Progress: None.
+- Blocked: None for code path; E2E remains blocked by existing provisioning/App Check setup constraints.
+- Next Action: Run a real onboarding photo upload against `tremble-dev` when device/simulator setup is available.
+
 ## Session State — 2026-06-07 22:55 CEST
 - Active Task: Onboarding completeOnboarding serialization contract fix
 - Environment: Dev, `main`

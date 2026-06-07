@@ -285,6 +285,36 @@ Production (flutter build ipa/appbundle --flavor prod)
 TestFlight currently gated on B005 iOS provisioning (Apple Developer account pending approval).
 
 ---
+## Tremble Skills
+
+Custom skills za Tremble-specifične workflowe. Preberi relevanten skill preden začneš task v tistem domenu.
+
+Lokacija: `.claude/skills/`
+
+| Task | Skill |
+|---|---|
+| BLE / proximity / radar / geo_service | `.claude/skills/flutter-ble-proximity.md` |
+| Cloud Functions / Firestore rules / App Check / TTL | `.claude/skills/firebase-security.md` |
+| Deploy na tremble-dev ali prod | `.claude/skills/tremble-deploy-workflow.md` |
+| Preverjanje kode proti strategiji + brandu | `.claude/skills/tremble-compliance-checker.md` |
+| Pisanje Codex ali Claude Code promptov | `.claude/skills/tremble-codex-prompt-writer.md` |
+| Ustvarjanje ali zapiranje Todoist taskov | `.claude/skills/tremble-task-manager.md` |
+| Konec sesije — zapiranje taskov + context update | `.claude/skills/tremble-session-closer.md` |
+| Security audit pred prod deployom | `.claude/skills/agents/security-reviewer.md` |
+| Pisanje ali review kateregakoli copyja | `.claude/skills/agents/brand-voice-agent.md` |
+
+References (berejo jih skills, ne ti direktno):
+- TTL field map: `.claude/skills/references/ttl-field-map.md`
+- Brand rules: `.claude/skills/references/brand-rules.md`
+- Session summary template: `.claude/skills/references/session_summary_template.md`
+
+## Project Management
+
+Todoist project: `6fxxh6MXfmh2q3FP`
+Sections: Blockers=`6gj5rPJfRwPCfMGw` | App=`6ggWg86gP3qF3Hfw` | Website=`6ggWg86XHJp37fjw`
+          Marketing=`6ghmF6Gxjc9FP9rP` | Legal=`6ggWg85rFC7jqXcP` | Infra=`6gj5rPP2hwh8WmfP`
+
+Notion main page: `315b7419-2f1e-80a1-999e-fdeb5b425aea`
 
 ## Session End Checklist
 
