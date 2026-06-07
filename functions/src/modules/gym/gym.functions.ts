@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { assertValidDocumentId } from "../../middleware/validate";
 import { ENFORCE_APP_CHECK } from "../../config/env";
@@ -126,16 +127,36 @@ export const expireGymSessions = onSchedule(
 
         const batch = db.batch();
         let count = 0;
+        const recapPushes: Array<{ uid: string; token: string }> = [];
 
         expired.docs.forEach((doc) => {
-            if (doc.data().activeGymId) {
+            const data = doc.data();
+            if (data.activeGymId) {
                 batch.update(doc.ref, { activeGymId: null, gymModeUntil: null });
+                if (typeof data.fcmToken === "string" && data.fcmToken.trim() !== "") {
+                    recapPushes.push({ uid: doc.id, token: data.fcmToken });
+                }
                 count++;
             }
         });
 
         if (count > 0) {
             await batch.commit();
+
+            const messaging = getMessaging();
+            for (const push of recapPushes) {
+                try {
+                    await messaging.send({
+                        token: push.token,
+                        data: { type: "GYM_SESSION_RECAP" },
+                        apns: { payload: { aps: { contentAvailable: true } } },
+                        android: { priority: "high" },
+                    });
+                } catch (error) {
+                    console.error(`[GYM] Failed to send recap push for ${push.uid}`, error);
+                }
+            }
+
             console.log(`[GYM] Expired gym sessions for ${count} users.`);
         }
     }
@@ -215,16 +236,36 @@ export const expireRunModes = onSchedule(
 
         const batch = db.batch();
         let count = 0;
+        const recapPushes: Array<{ uid: string; token: string }> = [];
 
         expired.docs.forEach((doc) => {
-            if (doc.data().isRunModeActive) {
+            const data = doc.data();
+            if (data.isRunModeActive) {
                 batch.update(doc.ref, { isRunModeActive: false, runModeUntil: null });
+                if (typeof data.fcmToken === "string" && data.fcmToken.trim() !== "") {
+                    recapPushes.push({ uid: doc.id, token: data.fcmToken });
+                }
                 count++;
             }
         });
 
         if (count > 0) {
             await batch.commit();
+
+            const messaging = getMessaging();
+            for (const push of recapPushes) {
+                try {
+                    await messaging.send({
+                        token: push.token,
+                        data: { type: "RUN_SESSION_RECAP" },
+                        apns: { payload: { aps: { contentAvailable: true } } },
+                        android: { priority: "high" },
+                    });
+                } catch (error) {
+                    console.error(`[RUN] Failed to send recap push for ${push.uid}`, error);
+                }
+            }
+
             console.log(`[RUN] Expired run modes for ${count} users.`);
         }
     }

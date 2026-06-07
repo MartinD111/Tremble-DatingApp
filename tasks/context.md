@@ -1,3 +1,25 @@
+## Session State — 2026-06-07 15:46 CEST
+- Active Task: Activity recap silent FCM pushes after expired Gym/Run/Event sessions
+- Environment: Dev, `main`
+- Modified Files:
+    - `functions/src/modules/events/events.functions.ts`
+    - `functions/src/modules/gym/gym.functions.ts`
+    - `tasks/context.md`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: `dart format .` completed with 0 changed files. Backend lint clean. TypeScript compile clean.
+
+## Session Handoff
+- Completed:
+    - Added data-only silent recap FCM pushes after `expireGymSessions`, `expireRunModes`, and `expireEventModes` clear expired mode fields.
+    - Reused already-read user document data for `fcmToken`; no additional Firestore reads were added.
+    - Wrapped each `messaging.send()` in `try/catch` so push failure does not abort expiry processing.
+    - Verified `npm run lint` and `npx tsc --noEmit` from `functions/`.
+- In Progress: Commit and sync to remote `main`.
+- Blocked: None for this task.
+- Next Action: Deploy Cloud Functions only after explicit founder approval.
+
 ## Session State — 2026-06-07 01:53 CEST
 - Active Task: Weekend Pass backend activation, scheduled processing, and client premium gating
 - Environment: Dev, `main`

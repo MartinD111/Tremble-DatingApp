@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { assertValidDocumentId } from "../../middleware/validate";
 import { ENFORCE_APP_CHECK } from "../../config/env";
@@ -114,17 +115,37 @@ export const expireEventModes = onSchedule(
 
         const batch = db.batch();
         let count = 0;
+        const recapPushes: Array<{ uid: string; token: string }> = [];
 
         expired.docs.forEach(doc => {
+            const data = doc.data();
             // Only update if activeEventId is set to avoid unnecessary writes
-            if (doc.data().activeEventId) {
+            if (data.activeEventId) {
                 batch.update(doc.ref, { activeEventId: null, eventModeUntil: null });
+                if (typeof data.fcmToken === "string" && data.fcmToken.trim() !== "") {
+                    recapPushes.push({ uid: doc.id, token: data.fcmToken });
+                }
                 count++;
             }
         });
 
         if (count > 0) {
             await batch.commit();
+
+            const messaging = getMessaging();
+            for (const push of recapPushes) {
+                try {
+                    await messaging.send({
+                        token: push.token,
+                        data: { type: "EVENT_SESSION_RECAP" },
+                        apns: { payload: { aps: { contentAvailable: true } } },
+                        android: { priority: "high" },
+                    });
+                } catch (error) {
+                    console.error(`[EVENTS] Failed to send recap push for ${push.uid}`, error);
+                }
+            }
+
             console.log(`[EVENTS] Expired event modes for ${count} users.`);
         }
     }
