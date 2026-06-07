@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:flutter/services.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
 import '../../../shared/widgets/radar_painter.dart';
 import '../../../shared/ui/tremble_logo.dart';
 
@@ -74,14 +73,14 @@ class _RadarAnimationState extends State<RadarAnimation>
     if (widget.isScanning) {
       _radarController.repeat();
       _logoController.repeat(reverse: true);
-      _activationController.forward();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _activationController.forward();
+      });
     }
 
     if (widget.pingDistance != null) {
       _pingController.repeat();
     }
-
-    _initBackgroundService();
   }
 
   void _handlePingAnimation() {
@@ -101,11 +100,6 @@ class _RadarAnimationState extends State<RadarAnimation>
     // 1.0 distance -> 2000ms
     final ms = (250 + (pow(distance, 1.5) * 1750)).toInt();
     return Duration(milliseconds: ms);
-  }
-
-  void _initBackgroundService() async {
-    final service = FlutterBackgroundService();
-    service.on('update').listen((event) {});
   }
 
   @override

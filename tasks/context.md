@@ -1,3 +1,37 @@
+## Session State — 2026-06-07 17:07 CEST
+- Active Task: Extract edit profile sections through `_HobbiesSection`
+- Environment: Dev, `main`
+- Modified Files:
+    - `lib/src/features/profile/presentation/edit_profile_screen.dart`
+    - `.env.json` (untracked local file; fixed missing comma so test defines parse)
+    - `tasks/context.md`
+- Open Problems:
+    - iOS dev provisioning for `com.pulse` (BLOCKER-005) blocks physical iPhone deploy.
+    - Real photo upload / onboarding E2E (BLOCKER-006) still needs device verification.
+- System Status: `flutter analyze --no-fatal-infos` clean. `flutter test --dart-define-from-file=.env.json` passed 148/148.
+
+## Session Handoff
+- Completed:
+    - Replaced the inline Identity block in `EditProfileScreen.build()` with `_IdentitySection(...)`.
+    - Replaced the inline Lifestyle block in `EditProfileScreen.build()` with `_LifestyleSection(...)`.
+    - Replaced the inline Metrics block in `EditProfileScreen.build()` with `_MetricsSection(...)`.
+    - Replaced the inline Looking For/Languages block in `EditProfileScreen.build()` with `_PreferencesSection(...)`.
+    - Replaced the inline Hobbies block in `EditProfileScreen.build()` with `_HobbiesSection(...)`.
+    - Added private `_IdentitySection` at the bottom of `edit_profile_screen.dart`.
+    - Added private `_LifestyleSection` at the bottom of `edit_profile_screen.dart`.
+    - Added private `_MetricsSection` at the bottom of `edit_profile_screen.dart`.
+    - Added private `_PreferencesSection` at the bottom of `edit_profile_screen.dart`.
+    - Added private `_HobbiesSection` at the bottom of `edit_profile_screen.dart`.
+    - Removed dead state-level identity helper methods flagged by analysis.
+    - Removed dead state-level nicotine/children helper methods after Lifestyle extraction.
+    - Removed dead state-level slider and section-label helper methods after Metrics extraction.
+    - Removed dead state-level `_multiPill` helper after Preferences extraction.
+    - Removed dead state-level Hobbies helper methods after Hobbies extraction.
+    - Preserved the extracted Basic Info name-field helper shape required by the existing source-text regression test.
+- In Progress: None.
+- Blocked: None for this task.
+- Next Action: Review diff and commit when ready.
+
 ## Session State — 2026-06-07 15:46 CEST
 - Active Task: Activity recap silent FCM pushes after expired Gym/Run/Event sessions
 - Environment: Dev, `main`
