@@ -156,8 +156,97 @@ class FakeRunClubRepository implements RunClubRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+File _createSmallPhotoFixture(String prefix) {
+  final tempDir = Directory.systemTemp.createTempSync(prefix);
+  addTearDown(() => tempDir.deleteSync(recursive: true));
+  return File('${tempDir.path}/photo.jpg')
+    ..writeAsBytesSync(List<int>.filled(32 * 1024, 1));
+}
+
+Future<void> _pumpUntil(
+  WidgetTester tester,
+  bool Function() condition,
+) async {
+  for (var i = 0; i < 20; i++) {
+    if (condition()) return;
+    await tester.pump(const Duration(milliseconds: 10));
+  }
+  fail('condition was not met before timeout');
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('registration photo upload preparation', () {
+    test('skips compression for files under 200KB', () async {
+      final tempDir = Directory.systemTemp.createTempSync('photo-prep-small-');
+      addTearDown(() => tempDir.deleteSync(recursive: true));
+      final photo = File('${tempDir.path}/small.jpg')
+        ..writeAsBytesSync(List<int>.filled(199 * 1024, 1));
+
+      final prepared = await prepareRegistrationPhotoForUpload(
+        photo,
+        tempDirectoryProvider: () async {
+          fail('small photos should not request a temp directory');
+        },
+        readImageSize: (_) async {
+          fail('small photos should not read dimensions');
+        },
+        compressor: (
+          sourcePath,
+          targetPath, {
+          required minWidth,
+          required minHeight,
+          required quality,
+        }) async {
+          fail('small photos should not be compressed');
+        },
+      );
+
+      expect(prepared.path, photo.path);
+    });
+
+    test('compresses large photos to a temp JPEG with 1200px longest side',
+        () async {
+      final tempDir = Directory.systemTemp.createTempSync('photo-prep-large-');
+      addTearDown(() => tempDir.deleteSync(recursive: true));
+      final photo = File('${tempDir.path}/large.png')
+        ..writeAsBytesSync(List<int>.filled(201 * 1024, 1));
+
+      String? capturedSourcePath;
+      String? capturedTargetPath;
+      int? capturedMinWidth;
+      int? capturedMinHeight;
+      int? capturedQuality;
+
+      final prepared = await prepareRegistrationPhotoForUpload(
+        photo,
+        tempDirectoryProvider: () async => tempDir,
+        readImageSize: (_) async => const Size(4000, 2000),
+        compressor: (
+          sourcePath,
+          targetPath, {
+          required minWidth,
+          required minHeight,
+          required quality,
+        }) async {
+          capturedSourcePath = sourcePath;
+          capturedTargetPath = targetPath;
+          capturedMinWidth = minWidth;
+          capturedMinHeight = minHeight;
+          capturedQuality = quality;
+          return XFile(targetPath);
+        },
+      );
+
+      expect(capturedSourcePath, photo.path);
+      expect(capturedTargetPath, endsWith('.jpg'));
+      expect(capturedMinWidth, 1200);
+      expect(capturedMinHeight, 600);
+      expect(capturedQuality, 85);
+      expect(prepared.path, capturedTargetPath);
+    });
+  });
 
   group('mapUploadError unit tests', () {
     test('translates TrembleApiException invalid-argument code', () {
@@ -249,7 +338,9 @@ void main() {
       });
 
       final uploadCompleter = Completer<String>();
+      var uploadStarted = false;
       mockUploadService.uploadPhotoFromPathHandler = (path, {onProgress}) {
+        uploadStarted = true;
         return uploadCompleter.future;
       };
 
@@ -261,7 +352,7 @@ void main() {
 
       // Mutate photos list to add a photo
       final PhotosStep photosStep = tester.widget(find.byType(PhotosStep));
-      photosStep.photos[0] = File('dummy.png');
+      photosStep.photos[0] = _createSmallPhotoFixture('upload-progress-');
 
       // Trigger completeRegistration directly on the state
       final state = tester.state(find.byType(RegistrationFlow)) as dynamic;
@@ -278,6 +369,8 @@ void main() {
       // Verify progress overlay is visible and shows progress bar
       expect(uploadProgressFinder, findsOneWidget);
       expect(find.text('Nalaganje slike...'), findsOneWidget);
+
+      await _pumpUntil(tester, () => uploadStarted);
 
       // Complete the upload
       uploadCompleter.complete('https://example.com/uploaded.png');
@@ -307,7 +400,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final PhotosStep photosStep = tester.widget(find.byType(PhotosStep));
-      photosStep.photos[0] = File('dummy.png');
+      photosStep.photos[0] = _createSmallPhotoFixture('upload-progress-value-');
 
       final state = tester.state(find.byType(RegistrationFlow)) as dynamic;
       state.completeRegistration();
@@ -316,6 +409,8 @@ void main() {
       final uploadProgressFinder = find.byWidgetPredicate(
         (widget) => widget is LinearProgressIndicator && widget.minHeight == 4,
       );
+
+      await _pumpUntil(tester, () => progressCallback != null);
 
       // Trigger progress updates
       progressCallback?.call(50, 100);
@@ -347,8 +442,10 @@ void main() {
       });
 
       // Setup error response
+      var uploadAttempted = false;
       mockUploadService.uploadPhotoFromPathHandler =
           (path, {onProgress}) async {
+        uploadAttempted = true;
         throw TrembleApiException(
             code: 'unavailable', message: 'No internet connection');
       };
@@ -358,7 +455,7 @@ void main() {
 
       // Put photo in the list
       final PhotosStep photosStep = tester.widget(find.byType(PhotosStep));
-      photosStep.photos[0] = File('dummy.png');
+      photosStep.photos[0] = _createSmallPhotoFixture('upload-error-');
 
       // Navigate from PhotosStep to GymStep, then to ConsentStep
       // Tap "Continue" on PhotosStep
@@ -379,6 +476,7 @@ void main() {
 
       // Tap "Continue" on ConsentStep (triggers completeRegistration)
       await tester.tap(find.text('Continue'));
+      await _pumpUntil(tester, () => uploadAttempted);
       await tester.pumpAndSettle();
 
       // Verify inline error message is shown (from t('photo_upload_error_network', 'en'))

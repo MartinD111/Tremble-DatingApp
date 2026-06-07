@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
 import '../data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/theme_provider.dart';
@@ -47,6 +49,99 @@ import '../../../core/api_client.dart';
 import '../../../core/upload_service.dart';
 import '../../../core/theme.dart';
 import '../../../shared/ui/tremble_logo.dart';
+
+const int _registrationPhotoCompressionSkipBytes = 200 * 1024;
+const int _registrationPhotoMaxDimension = 1200;
+const int _registrationPhotoJpegQuality = 85;
+
+typedef RegistrationPhotoTempDirectoryProvider = Future<Directory> Function();
+typedef RegistrationPhotoSizeReader = Future<Size> Function(File file);
+typedef RegistrationPhotoCompressor = Future<XFile?> Function(
+  String sourcePath,
+  String targetPath, {
+  required int minWidth,
+  required int minHeight,
+  required int quality,
+});
+
+@visibleForTesting
+Future<File> prepareRegistrationPhotoForUpload(
+  File photo, {
+  RegistrationPhotoTempDirectoryProvider? tempDirectoryProvider,
+  RegistrationPhotoSizeReader? readImageSize,
+  RegistrationPhotoCompressor? compressor,
+}) async {
+  if (photo.lengthSync() < _registrationPhotoCompressionSkipBytes) {
+    return photo;
+  }
+
+  final tempDir = await (tempDirectoryProvider ?? getTemporaryDirectory)();
+  final targetPath =
+      '${tempDir.path}/registration_photo_${DateTime.now().microsecondsSinceEpoch}_${photo.path.hashCode}.jpg';
+  final size = await (readImageSize ?? _readRegistrationPhotoSize)(photo);
+  final targetSize = _registrationPhotoTargetSize(size);
+  final compressed = await (compressor ?? _compressRegistrationPhoto)(
+    photo.path,
+    targetPath,
+    minWidth: targetSize.width,
+    minHeight: targetSize.height,
+    quality: _registrationPhotoJpegQuality,
+  );
+
+  return compressed != null ? File(compressed.path) : photo;
+}
+
+Future<Size> _readRegistrationPhotoSize(File photo) async {
+  final image = await decodeImageFromList(await photo.readAsBytes());
+  final size = Size(image.width.toDouble(), image.height.toDouble());
+  image.dispose();
+  return size;
+}
+
+({int width, int height}) _registrationPhotoTargetSize(Size sourceSize) {
+  final width = sourceSize.width;
+  final height = sourceSize.height;
+  if (width <= 0 || height <= 0) {
+    return (
+      width: _registrationPhotoMaxDimension,
+      height: _registrationPhotoMaxDimension
+    );
+  }
+
+  final longestSide = width >= height ? width : height;
+  final targetLongest = longestSide <= _registrationPhotoMaxDimension
+      ? longestSide.round()
+      : _registrationPhotoMaxDimension;
+
+  if (width >= height) {
+    return (
+      width: targetLongest,
+      height: (height / width * targetLongest).round().clamp(1, targetLongest),
+    );
+  }
+
+  return (
+    width: (width / height * targetLongest).round().clamp(1, targetLongest),
+    height: targetLongest,
+  );
+}
+
+Future<XFile?> _compressRegistrationPhoto(
+  String sourcePath,
+  String targetPath, {
+  required int minWidth,
+  required int minHeight,
+  required int quality,
+}) {
+  return FlutterImageCompress.compressAndGetFile(
+    sourcePath,
+    targetPath,
+    minWidth: minWidth,
+    minHeight: minHeight,
+    quality: quality,
+    format: CompressFormat.jpeg,
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE INDICES (actual PageView order)
@@ -1712,8 +1807,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         if (mounted) setState(() => _uploadLongRunning = true);
       });
 
-      // Step 0: Upload photos in parallel to Cloudflare R2
-      final validPhotos = _photos.whereType<File>().toList();
+      // Step 0: Prepare and upload photos in parallel to Cloudflare R2
+      final validPhotos = await Future.wait(
+        _photos.whereType<File>().map(prepareRegistrationPhotoForUpload),
+      );
 
       if (kDebugMode) {
         debugPrint(
