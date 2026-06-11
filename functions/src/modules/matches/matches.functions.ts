@@ -31,6 +31,10 @@ function errorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
 }
 
+function redactUid(uid: string): string {
+    return `${uid.substring(0, 8)}...`;
+}
+
 const MUTUAL_WAVE_FREE_LIMIT = 5;
 const MUTUAL_WAVE_PREMIUM_LIMIT = 20;
 const MUTUAL_WAVE_COUNTER_TIME_ZONE = "Europe/Ljubljana";
@@ -75,7 +79,7 @@ export const sendWave = onCall(
     async (request) => {
         const uid = requireAuth(request);
         const startedAt = Date.now();
-        logStructured({ fn: "sendWave", event: "entry", uid });
+        logStructured({ fn: "sendWave", event: "entry", uid: redactUid(uid) });
 
         try {
         const targetUid = assertValidDocumentId(request.data?.targetUid, "targetUid");
@@ -88,6 +92,19 @@ export const sendWave = onCall(
         const userData = userDoc.data();
 
         assertNotBanned(userData);
+
+        const targetDoc = await db.collection("users").doc(targetUid).get();
+        if (!targetDoc.exists) {
+            throw new HttpsError("not-found", "User not found.");
+        }
+
+        const targetData = targetDoc.data();
+        assertNotBanned(targetData);
+
+        const targetBlockedIds: string[] = targetData?.blockedUserIds ?? [];
+        if (targetBlockedIds.includes(uid)) {
+            throw new HttpsError("permission-denied", "Cannot wave at this user.");
+        }
 
         // Soft DoS guard only. This is not the product mutual-wave entitlement.
         await checkRateLimit(uid, "sendWave_dos", {
@@ -102,10 +119,22 @@ export const sendWave = onCall(
             expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         });
 
-        logStructured({ fn: "sendWave", event: "success", uid, targetUid, durationMs: Date.now() - startedAt });
+        logStructured({
+            fn: "sendWave",
+            event: "success",
+            uid: redactUid(uid),
+            targetUid: redactUid(targetUid),
+            durationMs: Date.now() - startedAt,
+        });
         return { success: true };
         } catch (error) {
-            logStructured({ fn: "sendWave", event: "error", uid, error: errorMessage(error), durationMs: Date.now() - startedAt });
+            logStructured({
+                fn: "sendWave",
+                event: "error",
+                uid: redactUid(uid),
+                error: errorMessage(error),
+                durationMs: Date.now() - startedAt,
+            });
             throw error;
         }
     }
@@ -413,7 +442,7 @@ export const getMatches = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireAuth(request);
-        await checkRateLimit(uid, "getMatches", { maxRequests: 60, windowMs: 60000 });
+        await checkRateLimit(uid, "getMatches", { maxRequests: 30, windowMs: 60000 });
         const userDoc = await db.collection("users").doc(uid).get();
         const blockedUsers = userDoc.data()?.blockedUserIds || [];
 

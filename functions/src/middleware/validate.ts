@@ -34,7 +34,13 @@ export function validateRequest<T>(schema: ZodSchema<T>, data: unknown): T {
 }
 
 export function assertValidDocumentId(value: unknown, label = "ID"): string {
-    if (typeof value !== "string" || value.length === 0 || value.includes("/")) {
+    if (
+        typeof value !== "string" ||
+        value.length === 0 ||
+        value.length > 128 ||
+        value.includes("/") ||
+        !/^[a-zA-Z0-9_-]+$/.test(value)
+    ) {
         throw new HttpsError("invalid-argument", `Invalid ${label}`);
     }
     return value;

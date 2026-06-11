@@ -135,6 +135,26 @@ void main() {
       expect(container.read(authStateProvider)?.introvertScale, 62);
     });
 
+    test('completeOnboarding premium flag is false outside dev flavor', () {
+      final registrationFlow = File(
+        'lib/src/features/auth/presentation/registration_flow.dart',
+      ).readAsStringSync();
+
+      expect(registrationFlow, isNot(contains('isPremium: true')));
+      expect(
+        registrationFlow,
+        contains("isPremium: const String.fromEnvironment('FLAVOR') == 'dev',"),
+      );
+
+      const flavor = String.fromEnvironment('FLAVOR');
+      const isPremiumPassedToCompleteOnboarding =
+          String.fromEnvironment('FLAVOR') == 'dev';
+
+      if (flavor != 'dev') {
+        expect(isPremiumPassedToCompleteOnboarding, isFalse);
+      }
+    });
+
     test('profile name inputs match backend max length and localize counters',
         () {
       final userSchema = File('functions/src/modules/users/users.schema.ts')
@@ -205,6 +225,41 @@ void main() {
       expect(emailLocationStep, contains('_hasDigit &&'));
       expect(emailLocationStep, contains('_hasSpecialChar'));
       expect(emailLocationStep, contains('_isPasswordValid &&'));
+    });
+
+    test('profile location input is constrained to city selector options', () {
+      final authSchema =
+          File('functions/src/modules/auth/auth.schema.ts').readAsStringSync();
+      final userSchema = File('functions/src/modules/users/users.schema.ts')
+          .readAsStringSync();
+      final stepShared = File(
+        'lib/src/features/auth/presentation/widgets/registration_steps/step_shared.dart',
+      ).readAsStringSync();
+      final emailLocationStep = File(
+        'lib/src/features/auth/presentation/widgets/registration_steps/email_location_step.dart',
+      ).readAsStringSync();
+      final editProfile = File(
+        'lib/src/features/profile/presentation/edit_profile_screen.dart',
+      ).readAsStringSync();
+
+      const enumShape =
+          'z.enum(["Ljubljana", "Koper", "Zagreb", "Other"]).optional()';
+
+      expect(authSchema, contains(enumShape));
+      expect(userSchema, contains(enumShape));
+      expect(stepShared, contains('const List<String> profileLocationOptions'));
+      for (final city in ['Ljubljana', 'Koper', 'Zagreb', 'Other']) {
+        expect(stepShared, contains("'$city'"));
+      }
+
+      expect(emailLocationStep, contains('profileLocationOptions.map'));
+      expect(emailLocationStep, contains('OptionPill('));
+      expect(emailLocationStep, isNot(contains('PlacesService')));
+      expect(emailLocationStep, isNot(contains('_locationAutocomplete')));
+
+      expect(editProfile, contains('profileLocationOptions.map'));
+      expect(editProfile, isNot(contains('PlacesService')));
+      expect(editProfile, isNot(contains('locationPredictions')));
     });
 
     test('consent copy does not overclaim app-level encryption', () {

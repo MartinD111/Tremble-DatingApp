@@ -270,6 +270,22 @@ export const deleteUserAccount = onCall(
                 .get();
             await deleteBatch(proximityNotifs.docs.map((d) => d.ref));
 
+            // 5b. Remove deleted user UID from other users' block arrays (GDPR Art. 17)
+            const blockersOf = await db.collection("users")
+                .where("blockedUserIds", "array-contains", uid)
+                .get();
+            if (!blockersOf.empty) {
+                const cleanBatch = db.batch();
+                blockersOf.docs.forEach((doc) => {
+                    cleanBatch.update(doc.ref, {
+                        blockedUserIds: FieldValue.arrayRemove(uid),
+                        blockedBy: FieldValue.arrayRemove(uid),
+                    });
+                });
+                await cleanBatch.commit();
+                console.log(`[GDPR] Removed block references from ${blockersOf.size} user(s) for ${uid.substring(0, 8)}...`);
+            }
+
             // 6. Delete idempotency keys for this user (format: {uid}:{requestId})
             const idempotencyKeys = await db
                 .collection("idempotencyKeys")

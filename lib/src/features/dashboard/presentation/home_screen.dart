@@ -2185,7 +2185,9 @@ Future<void> showEventActivationFlow(
       locationSettings:
           const LocationSettings(accuracy: LocationAccuracy.medium),
     ).timeout(const Duration(seconds: 5));
-  } catch (_) {}
+  } catch (e, st) {
+    debugPrint('[HomeScreen] caught: $e\n$st');
+  }
 
   if (position != null) {
     final pos = position;

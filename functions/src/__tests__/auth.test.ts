@@ -73,6 +73,7 @@ describe("Auth Module", () => {
                 birthDate: "1995-06-15",
                 gender: "female",
                 interestedIn: "male",
+                location: "Ljubljana",
                 photoUrls: ["https://r2.example.com/photo.jpg"],
                 lookingFor: ["long_term"],
                 languages: ["Slovenian"],
@@ -88,6 +89,24 @@ describe("Auth Module", () => {
                 consentGiven: true,
             });
             expect(result.success).toBe(true);
+        });
+
+        it("should validate onboarding schema — reject precise free-text location", async () => {
+            const { completeOnboardingSchema } = await import(
+                "../../src/modules/auth/auth.schema"
+            );
+
+            const result = completeOnboardingSchema.safeParse({
+                name: "Ana",
+                birthDate: "1995-06-15",
+                gender: "female",
+                interestedIn: "male",
+                location: "Prešernova cesta 10, Ljubljana",
+                photoUrls: ["https://r2.example.com/photo.jpg"],
+                consentGiven: true,
+            });
+
+            expect(result.success).toBe(false);
         });
 
         it("should validate onboarding schema — accept nicotine fields", async () => {

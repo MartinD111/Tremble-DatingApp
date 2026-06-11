@@ -112,17 +112,16 @@ describe("Uploads Module", () => {
 });
 
 describe("Proximity Module", () => {
-    describe("findNearbySchema / updateLocationSchema", () => {
+    describe("coordinate schema", () => {
         it("should reject invalid coordinates", async () => {
-            // We test the schemas defined inside proximity.functions.ts inline
             const { z } = await import("zod");
-            const updateLocationSchema = z.object({
+            const coordinateSchema = z.object({
                 latitude: z.number().min(-90).max(90),
                 longitude: z.number().min(-180).max(180),
             });
 
-            expect(updateLocationSchema.safeParse({ latitude: 200, longitude: 0 }).success).toBe(false);
-            expect(updateLocationSchema.safeParse({ latitude: 46.05, longitude: 14.5 }).success).toBe(true);
+            expect(coordinateSchema.safeParse({ latitude: 200, longitude: 0 }).success).toBe(false);
+            expect(coordinateSchema.safeParse({ latitude: 46.05, longitude: 14.5 }).success).toBe(true);
         });
     });
 

@@ -81,7 +81,7 @@ export const getPublicProfile = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
         const uid = requireVerifiedEmail(request);
-        await checkRateLimit(uid, "getPublicProfile", { maxRequests: 60, windowMs: 60000 });
+        await checkRateLimit(uid, "getPublicProfile", { maxRequests: 20, windowMs: 60000 });
 
         const { userId: rawUserId } = request.data as { userId: unknown };
         const userId = assertValidDocumentId(rawUserId, "userId");
@@ -92,6 +92,16 @@ export const getPublicProfile = onCall(
         }
 
         const data = doc.data()!;
+        const blockedBy: string[] = data.blockedBy ?? [];
+        if (blockedBy.includes(uid)) {
+            return { profile: null };
+        }
+
+        const matchId = [uid, userId].sort().join("_");
+        const matchDoc = await db.collection("matches").doc(matchId).get();
+        if (!matchDoc.exists) {
+            return { profile: null };
+        }
 
         // Return only public fields — never expose email, admin status, etc.
         return {

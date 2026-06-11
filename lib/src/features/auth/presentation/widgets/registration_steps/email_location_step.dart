@@ -1,10 +1,8 @@
-import 'dart:async';
 import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import '../../../../../core/places_service.dart';
 import '../../../../../core/theme.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
 import 'step_shared.dart';
@@ -46,60 +44,15 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
   bool _hasDigit = false;
   bool _hasSpecialChar = false;
 
-  // Places API
-  final PlacesService _placesService = PlacesService();
-  List<PlacePrediction> _locationPredictions = [];
-  Timer? _debounce;
-  bool _showSuggestions = false;
-  final FocusNode _locationFocus = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _locationFocus.addListener(() {
-      if (_locationFocus.hasFocus) {
-        _placesService.startSession();
-      }
-    });
-  }
-
   @override
   void dispose() {
     _confirmPasswordController.dispose();
-    _debounce?.cancel();
-    _locationFocus.dispose();
     super.dispose();
   }
 
-  void _onLocationChanged(String value) {
+  void _onLocationSelected(String value) {
     widget.locationController.text = value;
-    _debounce?.cancel();
-    if (value.trim().length < 2) {
-      setState(() {
-        _locationPredictions = [];
-        _showSuggestions = false;
-      });
-      return;
-    }
-    _debounce = Timer(const Duration(milliseconds: 300), () async {
-      final results = await _placesService.autocomplete(value);
-      if (mounted) {
-        setState(() {
-          _locationPredictions = results;
-          _showSuggestions = results.isNotEmpty;
-        });
-      }
-    });
-  }
-
-  void _onLocationSelected(PlacePrediction prediction) {
-    widget.locationController.text = prediction.displayName;
-    _placesService.endSession();
-    setState(() {
-      _locationPredictions = [];
-      _showSuggestions = false;
-    });
-    _locationFocus.unfocus();
+    setState(() {});
   }
 
   bool get _isPasswordValid =>
@@ -307,70 +260,38 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
     );
   }
 
-  Widget _locationAutocomplete() {
+  Widget _locationSelector() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final hintColor = isDark ? Colors.white60 : Colors.black54;
     final iconColor = isDark ? Colors.white38 : Colors.black38;
-    final borderColor = isDark ? Colors.white30 : Colors.black26;
-    final borderFocusColor = isDark ? Colors.white : Colors.black;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: widget.locationController,
-          focusNode: _locationFocus,
-          style: TextStyle(color: textColor, fontSize: 17),
-          onChanged: _onLocationChanged,
-          decoration: InputDecoration(
-            labelText: widget.tr('from_where'),
-            labelStyle: TextStyle(color: hintColor),
-            prefixIcon: Icon(LucideIcons.mapPin, color: iconColor, size: 20),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(100),
-                borderSide: BorderSide(color: borderColor)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(100),
-                borderSide: BorderSide(color: borderFocusColor, width: 2)),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          child: Row(
+            children: [
+              Icon(LucideIcons.mapPin, color: iconColor, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                widget.tr('from_where'),
+                style: GoogleFonts.instrumentSans(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
-        if (_showSuggestions && _locationPredictions.isNotEmpty)
-          Material(
-            elevation: 8,
-            color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 200),
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                shrinkWrap: true,
-                itemCount: _locationPredictions.length,
-                itemBuilder: (ctx, i) {
-                  final p = _locationPredictions[i];
-                  return ListTile(
-                    dense: true,
-                    leading: Icon(LucideIcons.mapPin,
-                        size: 14,
-                        color: isDark ? Colors.white54 : Colors.black54),
-                    title: Text(
-                      p.mainText ?? p.description,
-                      style: TextStyle(color: textColor, fontSize: 14),
-                    ),
-                    subtitle: p.secondaryText != null
-                        ? Text(
-                            p.secondaryText!,
-                            style: TextStyle(color: hintColor, fontSize: 12),
-                          )
-                        : null,
-                    onTap: () => _onLocationSelected(p),
-                  );
-                },
-              ),
-            ),
+        ...profileLocationOptions.map(
+          (location) => OptionPill(
+            label: location,
+            selected: widget.locationController.text == location,
+            onTap: () => _onLocationSelected(location),
+            icon: LucideIcons.mapPin,
           ),
+        ),
       ],
     );
   }
@@ -524,7 +445,7 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
                           readOnly: false),
                     const SizedBox(height: 20),
                   ],
-                  _locationAutocomplete(),
+                  _locationSelector(),
                   if (!isVerifiedPasswordUser && !isSocialUser) ...[
                     const SizedBox(height: 20),
                     _passwordInputField(),

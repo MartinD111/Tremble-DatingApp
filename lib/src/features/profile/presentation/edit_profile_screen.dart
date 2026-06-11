@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,12 +9,11 @@ import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/tremble_header.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
-import '../../../core/places_service.dart';
 import '../../settings/presentation/widgets/preference_edit_modal.dart';
 import '../../settings/presentation/widgets/preference_pill_row.dart';
 import '../../auth/presentation/widgets/registration_steps/hobbies_step.dart';
 import '../../auth/presentation/widgets/registration_steps/step_shared.dart'
-    show DrumPicker;
+    show DrumPicker, profileLocationOptions;
 import '../../../shared/ui/center_notification.dart';
 import '../../../shared/ui/discard_changes_modal.dart';
 import '../../../core/upload_service.dart';
@@ -39,13 +37,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _hasChanges = false;
   double _distancePreference = 50.0;
   bool _isUploading = false;
-
-  // Places API — session token model
-  final PlacesService _placesService = PlacesService();
-  List<PlacePrediction> _locationPredictions = [];
-  Timer? _locationDebounce;
-  bool _showLocationSuggestions = false;
-  final FocusNode _locationFocus = FocusNode();
 
   List<String> _photoUrls = [];
   final ValueNotifier<double> _titleOpacity = ValueNotifier(1.0);
@@ -84,16 +75,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _locationFocus.addListener(() {
-      if (_locationFocus.hasFocus) {
-        _placesService.startSession();
-      }
-    });
     final user = ref.read(authStateProvider);
     if (user != null) {
       _lang = user.appLanguage;
       _nameController.text = user.name ?? '';
-      _locationController.text = user.location ?? '';
+      _locationController.text = profileLocationOptions.contains(user.location)
+          ? user.location!
+          : 'Other';
       _photoUrls = List.from(user.photoUrls);
       _gender = _normalizeLegacyValue(user.gender, {
         'Moški': 'male',
@@ -244,8 +232,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _graduatedUniversityController.dispose();
     _titleOpacity.dispose();
     _buttonsOpacity.dispose();
-    _locationDebounce?.cancel();
-    _locationFocus.dispose();
     super.dispose();
   }
 
@@ -619,45 +605,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               isDark: isDark,
                               iconColor: iconColor,
                               subColor: subColor,
-                              locationPredictions: _locationPredictions,
-                              showLocationSuggestions: _showLocationSuggestions,
-                              onLocationChanged: (val) {
+                              onLocationSelected: (val) {
                                 _locationController.text = val;
                                 _markChanged();
-                                _locationDebounce?.cancel();
-                                if (val.trim().length < 2) {
-                                  setState(() {
-                                    _locationPredictions = [];
-                                    _showLocationSuggestions = false;
-                                  });
-                                  return;
-                                }
-                                _locationDebounce = Timer(
-                                  const Duration(milliseconds: 300),
-                                  () async {
-                                    final results =
-                                        await _placesService.autocomplete(val);
-                                    if (mounted) {
-                                      setState(() {
-                                        _locationPredictions = results;
-                                        _showLocationSuggestions =
-                                            results.isNotEmpty;
-                                      });
-                                    }
-                                  },
-                                );
+                                setState(() {});
                               },
-                              onLocationSelected: (p) {
-                                _locationController.text = p.displayName;
-                                _placesService.endSession();
-                                _markChanged();
-                                setState(() {
-                                  _locationPredictions = [];
-                                  _showLocationSuggestions = false;
-                                });
-                                _locationFocus.unfocus();
-                              },
-                              locationFocus: _locationFocus,
                               birthDate: _birthDate,
                               onBirthDateTap: _showAgePickerModal,
                               pillBg: pillBg,
@@ -1345,11 +1297,7 @@ class _BasicInfoSection extends StatelessWidget {
     required this.isDark,
     required this.iconColor,
     required this.subColor,
-    required this.locationPredictions,
-    required this.showLocationSuggestions,
-    required this.onLocationChanged,
     required this.onLocationSelected,
-    required this.locationFocus,
     required this.birthDate,
     required this.onBirthDateTap,
     required this.pillBg,
@@ -1365,18 +1313,13 @@ class _BasicInfoSection extends StatelessWidget {
   final bool isDark;
   final Color iconColor;
   final Color subColor;
-  final List<PlacePrediction> locationPredictions;
-  final bool showLocationSuggestions;
-  final void Function(String) onLocationChanged;
-  final void Function(PlacePrediction) onLocationSelected;
-  final FocusNode locationFocus;
+  final void Function(String) onLocationSelected;
   final DateTime? birthDate;
   final void Function() onBirthDateTap;
   final Color pillBg;
 
   @override
   Widget build(BuildContext context) {
-    final hintColor = textColor.withValues(alpha: 0.3);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1446,67 +1389,64 @@ class _BasicInfoSection extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: locationController,
-              focusNode: locationFocus,
-              style: TextStyle(color: textColor),
-              onChanged: onLocationChanged,
-              decoration: InputDecoration(
-                hintText: t('location_hint', lang),
-                hintStyle: TextStyle(color: hintColor),
-                filled: true,
-                fillColor: fillColor,
-                prefixIcon:
-                    Icon(LucideIcons.mapPin, size: 18, color: iconColor),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              ),
-            ),
-            if (showLocationSuggestions && locationPredictions.isNotEmpty)
-              Material(
-                elevation: 8,
-                color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                child: ConstrainedBox(
-                  constraints:
-                      const BoxConstraints(maxHeight: 200, maxWidth: 340),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    shrinkWrap: true,
-                    itemCount: locationPredictions.length,
-                    itemBuilder: (ctx, i) {
-                      final p = locationPredictions[i];
-                      return ListTile(
-                        dense: true,
-                        leading: Icon(LucideIcons.mapPin,
-                            size: 16,
-                            color: isDark ? Colors.white54 : Colors.black45),
-                        title: Text(
-                          p.mainText ?? p.description,
-                          style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontSize: 14),
+            ...profileLocationOptions.map(
+              (location) => GestureDetector(
+                onTap: () => onLocationSelected(location),
+                child: Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: locationController.text == location
+                        ? Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.15)
+                        : pillBg,
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(
+                      color: locationController.text == location
+                          ? Theme.of(context).colorScheme.primary
+                          : (isDark
+                              ? const Color(0xFF3A3A3E)
+                              : const Color(0xFFD8DCE0)),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.mapPin,
+                        size: 18,
+                        color: locationController.text == location
+                            ? Theme.of(context).colorScheme.primary
+                            : iconColor,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          location,
+                          style: GoogleFonts.instrumentSans(
+                            color: locationController.text == location
+                                ? Theme.of(context).colorScheme.primary
+                                : textColor,
+                            fontWeight: locationController.text == location
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                          ),
                         ),
-                        subtitle: p.secondaryText != null
-                            ? Text(
-                                p.secondaryText!,
-                                style: TextStyle(
-                                    color: isDark
-                                        ? Colors.white54
-                                        : Colors.black45,
-                                    fontSize: 12),
-                              )
-                            : null,
-                        onTap: () => onLocationSelected(p),
-                      );
-                    },
+                      ),
+                      if (locationController.text == location)
+                        Icon(
+                          LucideIcons.checkCircle,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
+                    ],
                   ),
                 ),
               ),
+            ),
           ],
         ),
         const SizedBox(height: 12),

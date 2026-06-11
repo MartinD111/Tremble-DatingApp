@@ -34,7 +34,7 @@ export const completeOnboardingSchema = z.object({
     gender: z.enum(["male", "female", "non_binary"]),
     interestedIn: interestedInSchema,
     height: z.number().int().min(100).max(250).optional(),
-    location: z.string().max(100).optional(),
+    location: z.enum(["Ljubljana", "Koper", "Zagreb", "Other"]).optional(),
     photoUrls: z.array(z.string().url()).min(1).max(6),
     isSmoker: z.boolean().optional(),
     nicotineUse: z.string().max(50).optional(),

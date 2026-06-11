@@ -52,11 +52,6 @@ function errorMessage(error: unknown): string {
 
 // ── Schemas ──────────────────────────────────────────────
 
-const updateLocationSchema = z.object({
-    latitude: z.number().min(-90).max(90),
-    longitude: z.number().min(-180).max(180),
-});
-
 const findNearbySchema = z.object({
     latitude: z.number().min(-90).max(90),
     longitude: z.number().min(-180).max(180),
@@ -178,52 +173,6 @@ function nicotineCompatible(
 }
 
 // ── Cloud Functions ──────────────────────────────────────
-
-/**
- * Update user's current location.
- * Called periodically by the background service.
- */
-export const updateLocation = onCall(
-    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
-    async (request) => {
-        const uid = requireAuth(request);
-        const startedAt = Date.now();
-        logStructured({ fn: "updateLocation", event: "entry", uid });
-
-        try {
-            await checkRateLimit(uid, "updateLocation", {
-                maxRequests: 60,
-                windowMs: 60_000,
-            });
-
-            const data = validateRequest(updateLocationSchema, request.data);
-
-            const userDoc = await db.collection("users").doc(uid).get();
-            assertNotBanned(userDoc.data());
-
-            const geohash = encodeGeohash(data.latitude, data.longitude);
-
-            await db
-                .collection("proximity")
-                .doc(uid)
-                .set(
-                    {
-                        geohash,
-                        lastSeen: FieldValue.serverTimestamp(),
-                        isActive: true,
-                    },
-                    { merge: true }
-                );
-
-            logStructured({ fn: "updateLocation", event: "success", uid, geohash, durationMs: Date.now() - startedAt });
-
-            return { success: true, geohash };
-        } catch (error) {
-            logStructured({ fn: "updateLocation", event: "error", uid, error: errorMessage(error), durationMs: Date.now() - startedAt });
-            throw error;
-        }
-    }
-);
 
 /**
  * Find nearby users based on geohash proximity.

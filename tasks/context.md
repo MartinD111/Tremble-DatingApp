@@ -1,3 +1,296 @@
+## Session State — 2026-06-11 19:28 CEST
+- Active Task: Delete dead `checkIdempotency` function from `functions/src/middleware/rateLimit.ts`
+- Environment: Dev/local Functions only, `main`
+- Modified Files:
+    - `functions/src/middleware/rateLimit.ts`
+    - `tasks/context.md`
+    - Prior prompt changes remain uncommitted in the same worktree.
+- Open Problems:
+    - Existing blockers remain: iOS provisioning (B005) and photo upload/onboarding E2E (B006).
+    - No deploy, Flutter code, Firestore rules, or native config edits performed for this task.
+- System Status: Functions TypeScript compile and Jest suite passing (29/29).
+
+## Session Handoff
+- Completed:
+    - Confirmed `grep -rn 'checkIdempotency' functions/src/` returned only the definition at `rateLimit.ts:95` — zero call sites.
+    - Deleted the entire `checkIdempotency` function (JSDoc + implementation) from `functions/src/middleware/rateLimit.ts`.
+    - Verified `grep -rn 'checkIdempotency' functions/src/` returns zero results.
+    - Verified `npx tsc --noEmit` exits 0.
+    - Verified `npm test -- --runInBand` passes all 29 tests across 6 suites.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Review and commit the accumulated prompt batch before any deploy; deploy only after explicit founder approval.
+
+## Session State — 2026-06-11 19:22 CEST
+- Active Task: Lower read endpoint rate limits for `getPublicProfile` and `getMatches`
+- Environment: Dev/local Functions only, `main`
+- Modified Files:
+    - `functions/src/modules/users/users.functions.ts`
+    - `functions/src/modules/matches/matches.functions.ts`
+    - `functions/src/__tests__/users.test.ts`
+    - `functions/src/__tests__/matches.test.ts`
+    - `tasks/context.md`
+    - Prior prompt changes remain uncommitted in the same worktree.
+- Open Problems:
+    - Existing blockers remain: iOS provisioning (B005) and photo upload/onboarding E2E (B006).
+    - No deploy, Flutter code, Firestore rules, or native config edits performed for this task.
+- System Status: Functions TypeScript compile and Jest suite passing.
+
+## Session Handoff
+- Completed:
+    - Added RED/GREEN regression coverage asserting `getPublicProfile` uses `{ maxRequests: 20, windowMs: 60000 }`.
+    - Added RED/GREEN regression coverage asserting `getMatches` uses `{ maxRequests: 30, windowMs: 60000 }`.
+    - Lowered `getPublicProfile` from 60/min to 20/min.
+    - Lowered `getMatches` from 60/min to 30/min.
+    - Verified the targeted tests failed before the code change with received `maxRequests: 60`.
+    - Verified `npm test -- users.test.ts matches.test.ts --runInBand`, `npx tsc --noEmit`, `npm test -- --runInBand`, and `git diff --check`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Review and commit the accumulated prompt batch before any deploy; deploy only after explicit founder approval.
+
+## Session State — 2026-06-11 19:18 CEST
+- Active Task: City-level enum for profile `location` field
+- Environment: Dev/local Functions + Flutter, `main`
+- Modified Files:
+    - `functions/src/modules/users/users.schema.ts`
+    - `functions/src/modules/auth/auth.schema.ts`
+    - `functions/src/__tests__/auth.test.ts`
+    - `functions/src/__tests__/users.test.ts`
+    - `lib/src/features/auth/presentation/widgets/registration_steps/step_shared.dart`
+    - `lib/src/features/auth/presentation/widgets/registration_steps/email_location_step.dart`
+    - `lib/src/features/profile/presentation/edit_profile_screen.dart`
+    - `test/features/auth/registration_flow_test.dart`
+    - `tasks/context.md`
+    - Prior prompt changes remain uncommitted in the same worktree.
+- Open Problems:
+    - Existing blockers remain: iOS provisioning (B005) and photo upload/onboarding E2E (B006).
+    - `settings_screen.dart` only displays location/profile preview; the actual editable settings/profile write path is `/edit-profile`, implemented in `edit_profile_screen.dart`.
+    - No deploy, push, Firestore rules, or native config edits performed.
+- System Status: Functions compile/lint/tests passing. Flutter analyze and full test suite passing.
+
+## Session Handoff
+- Completed:
+    - Replaced backend onboarding/update profile `location` validation with `z.enum(["Ljubljana", "Koper", "Zagreb", "Other"]).optional()`.
+    - Added Functions schema coverage that accepts enum city values and rejects precise free-text street-address style locations.
+    - Added shared Flutter `profileLocationOptions` with the four allowed values.
+    - Replaced registration Places autocomplete/free-text location input with existing `OptionPill` selector pattern.
+    - Replaced the actual profile edit free-text/autocomplete location field with the same four-option selector and normalized legacy non-enum values to `Other` on edit load.
+    - Added Flutter source regression coverage that pins the enum schema shape and ensures registration/edit-profile no longer use `PlacesService` for profile location.
+    - Verified `npx tsc --noEmit`, `npm test -- --runInBand`, `npm run lint`, `flutter analyze --no-fatal-infos`, and `flutter test --dart-define-from-file=.env.json`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Review and commit the accumulated prompt batch before any deploy; deploy only after explicit founder approval.
+
+## Session State — 2026-06-11 19:06 CEST
+- Active Task: Remove dead `updateLocation` Cloud Function export
+- Environment: Dev/local Functions only, `main`
+- Modified Files:
+    - `functions/src/index.ts`
+    - `functions/src/modules/proximity/proximity.functions.ts`
+    - `functions/src/__tests__/uploads_proximity.test.ts`
+    - `functions/src/middleware/validate.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/validate.test.ts` (prior prompt, still uncommitted)
+    - `test/features/auth/api_payload_contract_test.dart` (prior prompt, still uncommitted)
+    - `lib/src/features/auth/presentation/registration_flow.dart` (prior prompt, still uncommitted)
+    - `test/features/auth/registration_flow_test.dart` (prior prompt, still uncommitted)
+    - `lib/src/features/dashboard/presentation/home_screen.dart` (prior prompt, still uncommitted)
+    - `lib/src/features/dashboard/application/dev_simulation_controller.dart` (prior prompt, still uncommitted)
+    - `functions/src/modules/users/users.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/users.test.ts` (prior prompt, still uncommitted)
+    - `functions/src/modules/matches/matches.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/matches.test.ts` (prior prompt, still uncommitted)
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: iOS provisioning (B005) and photo upload/onboarding E2E (B006).
+    - No deploy, Flutter code, Firestore rules, or native config edits performed for this task.
+- System Status: Functions TypeScript compile, lint, and Jest suite passing.
+
+## Session Handoff
+- Completed:
+    - Removed `updateLocation` from the proximity export block in `functions/src/index.ts`.
+    - Deleted the `updateLocationSchema` and entire `updateLocation` callable from `proximity.functions.ts`.
+    - Renamed stale proximity schema test text/local variable so `grep -rn 'updateLocation' functions/src/` returns zero results.
+    - Verified `grep -rn 'updateLocation' functions/src/` returned no output.
+    - Verified `npx tsc --noEmit`, `npm test -- --runInBand`, and `npm run lint` from `functions/`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Deploy Cloud Functions only after explicit founder approval.
+
+## Session State — 2026-06-11 19:03 CEST
+- Active Task: Cloud Functions `assertValidDocumentId` length and character validation
+- Environment: Dev/local Functions only, `main`
+- Modified Files:
+    - `functions/src/middleware/validate.ts`
+    - `functions/src/__tests__/validate.test.ts`
+    - `test/features/auth/api_payload_contract_test.dart` (prior prompt, still uncommitted)
+    - `lib/src/features/auth/presentation/registration_flow.dart` (prior prompt, still uncommitted)
+    - `test/features/auth/registration_flow_test.dart` (prior prompt, still uncommitted)
+    - `lib/src/features/dashboard/presentation/home_screen.dart` (prior prompt, still uncommitted)
+    - `lib/src/features/dashboard/application/dev_simulation_controller.dart` (prior prompt, still uncommitted)
+    - `functions/src/modules/users/users.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/users.test.ts` (prior prompt, still uncommitted)
+    - `functions/src/modules/matches/matches.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/matches.test.ts` (prior prompt, still uncommitted)
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: iOS provisioning (B005) and photo upload/onboarding E2E (B006).
+    - No deploy, Firestore rules, Flutter code, or native config edits performed for this task.
+- System Status: Functions TypeScript compile, lint, and Jest suite passing.
+
+## Session Handoff
+- Completed:
+    - Added validator coverage for accepted 128-character `[a-zA-Z0-9_-]` document IDs.
+    - Verified the RED state: IDs over 128 chars and dotted IDs did not throw before the middleware fix.
+    - Replaced `assertValidDocumentId` body with the requested empty/string/slash/length/regex guard.
+    - Added rejection coverage for strings over 128 characters and IDs containing disallowed punctuation/spaces.
+    - Verified `npm test -- validate.test.ts --runInBand`, `npx tsc --noEmit`, `npm test -- --runInBand`, and `npm run lint` from `functions/`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Deploy Cloud Functions only after explicit founder approval.
+
+## Session State — 2026-06-11 18:57 CEST
+- Active Task: AuthUser `toApiPayload()` contract regression tests
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `test/features/auth/api_payload_contract_test.dart`
+    - `lib/src/features/auth/presentation/registration_flow.dart` (prior prompt, still uncommitted)
+    - `test/features/auth/registration_flow_test.dart` (prior prompt, still uncommitted)
+    - `lib/src/features/dashboard/presentation/home_screen.dart` (prior prompt, still uncommitted)
+    - `lib/src/features/dashboard/application/dev_simulation_controller.dart` (prior prompt, still uncommitted)
+    - `functions/src/modules/users/users.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/users.test.ts` (prior prompt, still uncommitted)
+    - `functions/src/modules/matches/matches.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/matches.test.ts` (prior prompt, still uncommitted)
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: iOS provisioning (B005) and photo upload/onboarding E2E (B006).
+    - No production code, push, deploy, or native config edits performed for this task.
+- System Status: Flutter analyze clean. Flutter test suite passing.
+
+## Session Handoff
+- Completed:
+    - Created `test/features/auth/api_payload_contract_test.dart`.
+    - Pinned `AuthUser.toApiPayload()` hobbies serialization as `List<String>` IDs, not maps.
+    - Pinned `nicotineUse` serialization as a single string or null, never a list.
+    - Pinned null `nicotineFilter` as absent from the payload.
+    - Pinned `lookingFor` as `List<String>`.
+    - Pinned server-managed `isPremium` and `isAdmin` as absent from the payload even when true in local `AuthUser`.
+    - Added a file-level comment documenting that failures should trigger a separate serialization fix task.
+    - Verified `flutter test test/features/auth/api_payload_contract_test.dart --dart-define-from-file=.env.json`, `dart format`, `flutter analyze --no-fatal-infos`, and `flutter test --dart-define-from-file=.env.json`.
+- In Progress: None.
+- Blocked: None for this test task.
+- Next Action: Run B006 device/simulator E2E when provisioning/App Check setup is available.
+
+## Session State — 2026-06-11 18:51 CEST
+- Active Task: Registration `isPremium` dev override flavor guard
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/features/auth/presentation/registration_flow.dart`
+    - `test/features/auth/registration_flow_test.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart` (prior prompt, still uncommitted)
+    - `lib/src/features/dashboard/application/dev_simulation_controller.dart` (prior prompt, still uncommitted)
+    - `functions/src/modules/users/users.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/users.test.ts` (prior prompt, still uncommitted)
+    - `functions/src/modules/matches/matches.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/matches.test.ts` (prior prompt, still uncommitted)
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: iOS provisioning (B005) and photo upload/onboarding E2E (B006).
+    - No push, deploy, or native config edits performed.
+- System Status: Flutter analyze clean. Flutter test suite passing.
+
+## Session Handoff
+- Completed:
+    - Replaced registration `isPremium: true` with `isPremium: const String.fromEnvironment('FLAVOR') == 'dev'`.
+    - Preserved dev behavior because `.env.json` defines `FLAVOR=dev`.
+    - Added regression coverage in `test/features/auth/registration_flow_test.dart` ensuring the hardcoded `isPremium: true` source is absent, the FLAVOR guard is present, and non-dev compiled FLAVOR resolves the local completeOnboarding premium flag to false.
+    - Verified the focused regression failed before the production change due to the hardcoded `isPremium: true`.
+    - Verified focused non-dev test with `flutter test test/features/auth/registration_flow_test.dart --name "completeOnboarding premium flag is false outside dev flavor"` (without dart defines).
+    - Verified `dart format`, `flutter analyze --no-fatal-infos`, and `flutter test --dart-define-from-file=.env.json`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Run B006 device/simulator E2E when provisioning/App Check setup is available.
+
+## Session State — 2026-06-11 18:47 CEST
+- Active Task: Flutter silent catch instrumentation
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/features/auth/presentation/registration_flow.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `lib/src/features/dashboard/application/dev_simulation_controller.dart`
+    - `functions/src/modules/users/users.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/users.test.ts` (prior prompt, still uncommitted)
+    - `functions/src/modules/matches/matches.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/matches.test.ts` (prior prompt, still uncommitted)
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: iOS provisioning (B005) and photo upload/onboarding E2E (B006).
+    - No push, deploy, or native config edits performed.
+- System Status: Flutter analyze clean. Flutter test suite passing.
+
+## Session Handoff
+- Completed:
+    - Replaced the silent resend-verification catch in `RegistrationFlow` with `debugPrint('[RegistrationFlow] caught: $e\n$st')`.
+    - Replaced the silent location lookup catch in `HomeScreen` event activation flow with `debugPrint('[HomeScreen] caught: $e\n$st')`.
+    - Replaced the silent dev heads-up notification cancel catch in `DevSimulationController` with `debugPrint('[DevSimController] caught: $e\n$st')`.
+    - Verified the exact `catch (_) {}` pattern is gone from the three requested files.
+    - Ran `dart format` on the three touched Dart files; no formatting changes were needed.
+    - Verified `flutter analyze --no-fatal-infos` and `flutter test --dart-define-from-file=.env.json`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Run B006 device/simulator E2E when provisioning/App Check setup is available.
+
+## Session State — 2026-06-11 18:42 CEST
+- Active Task: Cloud Functions `getPublicProfile` authz and block filter
+- Environment: Dev/local Functions only, `main`
+- Modified Files:
+    - `functions/src/modules/users/users.functions.ts`
+    - `functions/src/__tests__/users.test.ts`
+    - `functions/src/modules/matches/matches.functions.ts` (prior prompt, still uncommitted)
+    - `functions/src/__tests__/matches.test.ts` (prior prompt, still uncommitted)
+    - `tasks/context.md`
+- Open Problems:
+    - No deploy performed. Deploy to `tremble-dev` or `am---dating-app` still requires explicit approval.
+    - Existing blockers remain: iOS provisioning (B005) and photo upload/onboarding E2E (B006).
+- System Status: Functions TypeScript compile, lint, and Jest suite passing.
+
+## Session Handoff
+- Completed:
+    - Added `getPublicProfile` target-side block filter immediately after target user fetch.
+    - Added deterministic match relationship gate using `[uid, userId].sort().join("_")`.
+    - Normalized no-profile, target-blocked, and no-match responses to `{ profile: null }`.
+    - Added regression tests for unrelated callers and callers blocked by the target.
+    - Verified the focused RED state before implementation: both new tests initially returned special-category profile fields.
+    - Verified `npm test -- users.test.ts --runInBand`, `npx tsc --noEmit`, `npm run lint`, and `npm test -- --runInBand` from `functions/`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Deploy Cloud Functions only after explicit founder approval.
+
+## Session State — 2026-06-11 18:38 CEST
+- Active Task: Cloud Functions `sendWave` target block check
+- Environment: Dev/local Functions only, `main`
+- Modified Files:
+    - `functions/src/modules/matches/matches.functions.ts`
+    - `functions/src/__tests__/matches.test.ts`
+    - `tasks/context.md`
+- Open Problems:
+    - No deploy performed. Deploy to `tremble-dev` or `am---dating-app` still requires explicit approval.
+    - Existing blockers remain: iOS provisioning (B005) and photo upload/onboarding E2E (B006).
+- System Status: Functions TypeScript compile, lint, and Jest suite passing.
+
+## Session Handoff
+- Completed:
+    - Added a `sendWave` target user read after sender ban validation.
+    - Rejects missing target users with `not-found`.
+    - Applies `assertNotBanned` to the target user before wave creation.
+    - Rejects waves with generic `permission-denied` when `target.blockedUserIds` contains the sender UID.
+    - Truncated touched `sendWave` log UID fields via `uid.substring(0, 8) + '...'`.
+    - Added a Jest regression test proving blocked senders do not create wave documents or consume the soft DoS rate limit.
+    - Verified `npm test -- matches.test.ts --runInBand`, `npx tsc --noEmit`, `npm test -- --runInBand`, and `npm run lint` from `functions/`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Deploy Cloud Functions only after explicit founder approval.
+
 ## Session State — 2026-06-07 23:10 CEST
 - Active Task: Onboarding photo compression before R2 upload
 - Environment: Dev, `main`

@@ -344,7 +344,9 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
   Future<void> _dismissHeadsUpNotification() async {
     try {
       await NotificationService.notifications.cancel(_kHeadsUpNotificationId);
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('[DevSimController] caught: $e\n$st');
+    }
   }
 
   @override

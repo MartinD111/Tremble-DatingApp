@@ -41,7 +41,6 @@ export { generateUploadUrl } from "./modules/uploads/uploads.functions";
 
 // ── Proximity Module ─────────────────────────────────────
 export {
-    updateLocation,
     findNearby,
     setInactive,
     scanProximityPairs,            // replaces onBleProximity + onRunEncounter

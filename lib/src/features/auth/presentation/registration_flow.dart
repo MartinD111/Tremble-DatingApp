@@ -1220,7 +1220,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     ),
                   );
                 }
-              } catch (_) {}
+              } catch (e, st) {
+                debugPrint('[RegistrationFlow] caught: $e\n$st');
+              }
             },
             style: TextButton.styleFrom(
                 padding: EdgeInsets.zero, minimumSize: Size.zero),
@@ -1933,7 +1935,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         ageRangeStart: _ageRangePref.start.round(),
         ageRangeEnd: _ageRangePref.end.round(),
         appLanguage: _selectedLanguage,
-        isPremium: true, // Auto-premium in development mode as per request
+        isPremium: const String.fromEnvironment('FLAVOR') == 'dev',
         isClassicAppearance: _isClassicAppearance,
         isGenderBasedColor: !_isClassicAppearance,
       );

@@ -84,30 +84,3 @@ export async function checkRateLimit(
         });
     });
 }
-
-/**
- * Idempotency check — prevents duplicate operations.
- *
- * @param requestId - Unique request identifier (from client)
- * @param ttlMs - How long to keep the idempotency key (default 10 minutes)
- * @returns true if this is a new request, false if duplicate
- */
-export async function checkIdempotency(
-    requestId: string,
-    ttlMs: number = 600_000
-): Promise<boolean> {
-    const db = getFirestore();
-    const docRef = db.collection("idempotencyKeys").doc(requestId);
-
-    const doc = await docRef.get();
-    if (doc.exists) {
-        return false; // Duplicate request
-    }
-
-    await docRef.set({
-        createdAt: FieldValue.serverTimestamp(),
-        expiresAt: new Date(Date.now() + ttlMs),
-    });
-
-    return true;
-}
