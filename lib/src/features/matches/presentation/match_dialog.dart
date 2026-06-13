@@ -85,6 +85,12 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
     } on AccountSuspendedException {
       if (!mounted) return;
       context.go('/account-suspended');
+    } on TrembleApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isGreeting = false;
+        _greetErrorMessage = e.message;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {

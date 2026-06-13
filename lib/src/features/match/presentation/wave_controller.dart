@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/api_client.dart';
 import '../data/wave_repository.dart';
 
 part 'wave_controller.g.dart';
@@ -21,10 +22,13 @@ class WaveSendState {
     return WaveSendState(optimisticTargetUid: targetUid);
   }
 
-  WaveSendState withInlineError(String targetUid) {
+  WaveSendState withInlineError(
+    String targetUid, {
+    String message = 'Wave ni bil poslan. Poskusi znova.',
+  }) {
     return WaveSendState(
       inlineErrorTargetUid: targetUid,
-      inlineErrorMessage: 'Wave ni bil poslan. Poskusi znova.',
+      inlineErrorMessage: message,
     );
   }
 
@@ -55,8 +59,16 @@ class WaveController extends _$WaveController {
       final operation = writeWave ??
           () => ref.read(waveRepositoryProvider).sendWave(targetUid);
       await operation().timeout(timeout);
-    } catch (_) {
-      state = AsyncData(previousValue.withInlineError(targetUid));
+    } catch (error) {
+      state = AsyncData(previousValue.withInlineError(
+        targetUid,
+        message: _mapWaveError(error),
+      ));
     }
+  }
+
+  String _mapWaveError(Object error) {
+    if (error is TrembleApiException) return error.message;
+    return 'Wave ni bil poslan. Poskusi znova.';
   }
 }

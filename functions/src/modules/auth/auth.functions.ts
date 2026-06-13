@@ -175,7 +175,7 @@ export const verifyGoogleToken = onCall(
 
         if (!webClientId) {
             console.error("[AUTH] GOOGLE_WEB_CLIENT_ID not set in environment.");
-            throw new Error("Server configuration error");
+            throw new HttpsError("internal", "Server configuration error");
         }
 
         try {
@@ -186,7 +186,7 @@ export const verifyGoogleToken = onCall(
             const payload = ticket.getPayload();
 
             if (!payload || !payload.email) {
-                throw new Error("Invalid token payload");
+                throw new HttpsError("unauthenticated", "Invalid token payload");
             }
 
             return {
@@ -197,7 +197,10 @@ export const verifyGoogleToken = onCall(
             };
         } catch (error) {
             console.error("[AUTH] Google verification failed:", error);
-            throw new Error("Invalid Google Token");
+            if (error instanceof HttpsError) {
+                throw error;
+            }
+            throw new HttpsError("unauthenticated", "Invalid Google token");
         }
     }
 );

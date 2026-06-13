@@ -4,6 +4,8 @@
  * Exports all callable functions for Firebase deployment.
  * Each module is organized by domain (auth, users, matches, etc.).
  */
+import { initSentry } from './core/sentry';
+initSentry();
 
 import { initializeApp } from "firebase-admin/app";
 

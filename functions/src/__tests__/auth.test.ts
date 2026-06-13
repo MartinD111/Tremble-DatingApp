@@ -4,6 +4,8 @@
 
 import { describe, it, expect, jest } from "@jest/globals";
 
+const mockVerifyIdToken = jest.fn<() => Promise<unknown>>();
+
 // We mock the firebase-admin module before importing anything that needs it
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 jest.mock("firebase-admin/firestore", () => {
@@ -32,6 +34,12 @@ jest.mock("firebase-functions/v2/identity", () => ({
     beforeUserCreated: jest.fn((handler) => handler),
 }));
 
+jest.mock("google-auth-library", () => ({
+    OAuth2Client: jest.fn(() => ({
+        verifyIdToken: mockVerifyIdToken,
+    })),
+}));
+
 jest.mock("firebase-functions/v2/https", () => ({
     onCall: jest.fn((_, handler) => handler),
     HttpsError: class HttpsError extends Error {
@@ -41,6 +49,10 @@ jest.mock("firebase-functions/v2/https", () => ({
             this.code = code;
         }
     },
+}));
+
+jest.mock("../../src/middleware/rateLimit", () => ({
+    checkRateLimit: jest.fn(() => Promise.resolve()),
 }));
 
 describe("Auth Module", () => {
@@ -196,6 +208,38 @@ describe("Auth Module", () => {
                     i.message.toLowerCase().includes("18")
                 );
                 expect(ageError).toBeDefined();
+            }
+        });
+    });
+
+    describe("verifyGoogleToken", () => {
+        it("throws HttpsError for invalid Google tokens", async () => {
+            const originalClientId = process.env.GOOGLE_WEB_CLIENT_ID;
+            process.env.GOOGLE_WEB_CLIENT_ID = "test-web-client-id";
+            mockVerifyIdToken.mockRejectedValueOnce(new Error("bad token"));
+
+            const { verifyGoogleToken } = await import(
+                "../../src/modules/auth/auth.functions"
+            );
+            const { HttpsError } = await import("firebase-functions/v2/https");
+            const callableVerifyGoogleToken = verifyGoogleToken as unknown as (
+                request: unknown
+            ) => Promise<unknown>;
+
+            try {
+                await callableVerifyGoogleToken({
+                    rawRequest: { ip: "127.0.0.1" },
+                    data: { idToken: "invalid-id-token" },
+                });
+                throw new Error("Expected verifyGoogleToken to throw");
+            } catch (error) {
+                expect(error).toBeInstanceOf(HttpsError);
+                expect(error).toMatchObject({
+                    code: "unauthenticated",
+                    message: "Invalid Google token",
+                });
+            } finally {
+                process.env.GOOGLE_WEB_CLIENT_ID = originalClientId;
             }
         });
     });

@@ -1,3 +1,86 @@
+## Session State — 2026-06-13 08:51 CEST
+- Active Task: Fix failing pre-commit/CI checks, commit, and sync `main`
+- Environment: Dev/local Functions + Flutter, `main`
+- Modified Files:
+    - `functions/src/modules/proximity/proximity.functions.ts`
+    - `android/build.gradle.kts`
+    - Existing staged Functions, Flutter, Sentry, dependency, and generated plugin files from prior work
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: B005 iOS dev provisioning and B006 photo upload/onboarding E2E unverified.
+    - `coverage/lcov.info` changed from local test output and was intentionally left unstaged.
+    - No deploy, Firestore rules, AndroidManifest.xml, Info.plist, google-services.json, or Firebase config file edits performed in this session.
+- System Status: Functions lint/build/tests passing. Flutter analyze/tests passing. Dev debug APK build passing.
+
+## Session Handoff
+- Completed:
+    - Reproduced the failing Functions regression: `uploads_proximity.test.ts` failed because `scanProximityPairs` threw `Sentry CF connectivity test — delete after confirming`.
+    - Removed the temporary Sentry connectivity throw from `scanProximityPairs`.
+    - Verified the focused Functions test now passes and the scheduled function reaches its normal completion path.
+    - Fixed the Android debug build failure introduced by `sentry_flutter-8.14.2` forcing Kotlin `languageVersion = "1.6"` under the project Kotlin 2.x toolchain by overriding Kotlin compile language/API level to 2.0 for Android subprojects.
+    - Verified `dart format .` made no changes.
+    - Verified `npm test -- uploads_proximity.test.ts --runInBand`, `npm run lint`, `npm run build`, and `npm test -- --runInBand` from `functions/`.
+    - Verified `flutter analyze --no-fatal-infos`, `flutter test --dart-define=FLAVOR=dev`, and `flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev`.
+- In Progress: Commit and push to `origin/main`.
+- Blocked: None for this task.
+- Next Action: Commit staged work with a conventional commit and push `main`.
+
+## Session State — 2026-06-13 00:24 CEST
+- Active Task: Route `WaveRepository.sendWave` through `TrembleApiClient` and surface generic block-safe wave errors
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/features/match/data/wave_repository.dart`
+    - `lib/src/features/match/presentation/wave_controller.dart`
+    - `lib/src/features/matches/presentation/match_dialog.dart`
+    - `test/features/match/wave_limit_guard_wiring_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: B005 iOS dev provisioning and B006 photo upload/onboarding E2E unverified.
+    - `lib/src/core/contact_service.dart` still uses raw `FirebaseFunctions.instance.httpsCallable('onContactAnonymityCheck')`; noted as a separate-scope raw bypass and left unchanged.
+    - Pre-existing unrelated Functions, Flutter/native, pubspec, and macOS Podfile worktree changes remain untouched.
+    - No deploy, Firestore rules, AndroidManifest.xml, Info.plist, google-services.json, or native config edits performed for this task.
+- System Status: Flutter analyze clean. Flutter full test suite passing (160/160).
+
+## Session Handoff
+- Completed:
+    - Added RED/GREEN regression coverage proving `WaveRepository.sendWave` is routed through `TrembleApiClient` instead of raw `httpsCallable('sendWave')`.
+    - Added RED/GREEN regression coverage proving `WaveController` surfaces a typed permission-denied API message inline.
+    - Replaced the raw `FirebaseFunctions.instanceFor(...).httpsCallable('sendWave')` path with `_api.call('sendWave', data: {'targetUid': targetUid})`.
+    - Preserved account-suspended routing and mapped non-suspension `permission-denied` from `sendWave` to the generic copy: `"You can't wave at this person right now."`
+    - Updated `WaveController` and `MatchDialog` to display `TrembleApiException.message` while retaining existing fallback copy for unknown errors.
+    - Verified `flutter test test/features/match/wave_limit_guard_wiring_test.dart --dart-define-from-file=.env.json` passes all 6 focused tests.
+    - Verified `flutter analyze --no-fatal-infos` reports no issues.
+    - Verified `flutter test --dart-define-from-file=.env.json` passes all 160 tests.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Review and commit the scoped Flutter diff when ready; handle `contact_service.dart` raw bypass in a separate task if desired.
+
+## Session State — 2026-06-13 00:17 CEST
+- Active Task: Convert `verifyGoogleToken` raw callable errors to `HttpsError`
+- Environment: Dev/local Functions only, `main`
+- Modified Files:
+    - `functions/src/modules/auth/auth.functions.ts`
+    - `functions/src/__tests__/auth.test.ts`
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: B005 iOS dev provisioning and B006 photo upload/onboarding E2E unverified.
+    - Pre-existing unrelated Flutter/native/pubspec worktree changes remain untouched.
+    - No deploy, Flutter code, Firestore rules, Redis error handling, or native config edits performed for this task.
+- System Status: Functions TypeScript compile and Jest suite passing (30/30).
+
+## Session Handoff
+- Completed:
+    - Added a RED/GREEN Jest regression for invalid Google tokens proving `verifyGoogleToken` now throws Firebase `HttpsError` with `code: "unauthenticated"` and message `"Invalid Google token"`.
+    - Replaced raw `Error("Server configuration error")` with `HttpsError("internal", "Server configuration error")`.
+    - Replaced raw `Error("Invalid token payload")` with `HttpsError("unauthenticated", "Invalid token payload")`.
+    - Replaced raw invalid-token wrapping with `HttpsError("unauthenticated", "Invalid Google token")` while preserving already-classified `HttpsError` instances thrown inside the try block.
+    - Verified `mutualWaveCounterField()` in `matches.functions.ts` is only used from the `onWaveCreated` Firestore trigger path and left its helper `Error("Failed to compute mutual wave counter month")` unchanged.
+    - Verified `npx tsc --noEmit` exits 0 from `functions/`.
+    - Verified `npm test -- --runInBand` passes all 30 tests across 6 suites from `functions/`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Review and commit the scoped Functions diff when ready; deploy only after explicit founder approval.
+
 ## Session State — 2026-06-11 19:28 CEST
 - Active Task: Delete dead `checkIdempotency` function from `functions/src/middleware/rateLimit.ts`
 - Environment: Dev/local Functions only, `main`

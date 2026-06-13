@@ -1,3 +1,4 @@
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,7 +18,7 @@ import 'src/core/translations.dart';
 
 import 'package:flutter/services.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await GoogleFonts.pendingFonts([
@@ -26,7 +27,6 @@ void main() async {
     GoogleFonts.instrumentSans(),
   ]);
 
-  // Ensure system navigation bar is transparent and consistent
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -37,15 +37,12 @@ void main() async {
   );
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-  // Determine environment flavor, defaulting to 'dev'.
   const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
 
-  // Select the appropriate FirebaseOptions.
   final firebaseOptions = flavor == 'prod'
       ? ProdFirebaseOptions.currentPlatform
       : DevFirebaseOptions.currentPlatform;
 
-  // Initialize Firebase
   await Firebase.initializeApp(
     options: firebaseOptions,
   );
@@ -55,9 +52,6 @@ void main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  // AppCheck — prod only. Dev uses debug provider so Firebase SDK doesn't
-  // inject an empty token and cause INTERNAL errors on every CF call.
-  // SEC-001: full enforcement (Play Integrity / Device Check) pending paid developer accounts.
   await FirebaseAppCheck.instance.activate(
     providerAndroid: flavor == 'prod'
         ? AndroidPlayIntegrityProvider()
@@ -72,39 +66,40 @@ void main() async {
       return;
     }
     FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    Sentry.captureException(
+      details.exception,
+      stackTrace: details.stack,
+    );
   };
 
-  // Register FCM background handler BEFORE runApp().
-  // Must be called here — Firebase requires this to be registered before
-  // the app is fully running, in a top-level context.
   NotificationService.registerBackgroundHandler();
 
-  // Initialize background service for Radar scanning.
   await initializeBackgroundService();
 
-  // Pre-load theme before first frame to prevent Dark Mode flash on navigation.
-  // Default to dark when no local preference is saved (fresh install / new device)
-  // because the entire UI is designed dark-first. Light mode is only used when
-  // the user has explicitly saved it (isDark == false in SharedPreferences).
   final prefs = await SharedPreferences.getInstance();
   final isDark = prefs.getBool('themeMode');
   final initialTheme = isDark == true ? ThemeMode.dark : ThemeMode.light;
   final initialLang = prefs.getString('appLanguage');
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        // Seed the ThemeModeNotifier with the already-loaded value —
-        // avoids the async gap that caused the Light→Dark flash.
-        themeModeProvider.overrideWith(
-          (ref) => ThemeModeNotifier.withInitial(initialTheme),
-        ),
-        // Seed language provider to avoid 'sl' flash on startup
-        appLanguageProvider.overrideWith(
-          () => AppLanguageNotifier(initialLang),
-        ),
-      ],
-      child: const TrembleApp(),
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = const String.fromEnvironment('SENTRY_DSN');
+      options.environment = flavor;
+      options.tracesSampleRate = flavor == 'prod' ? 0.1 : 0.0;
+      options.attachStacktrace = true;
+    },
+    appRunner: () => runApp(
+      ProviderScope(
+        overrides: [
+          themeModeProvider.overrideWith(
+            (ref) => ThemeModeNotifier.withInitial(initialTheme),
+          ),
+          appLanguageProvider.overrideWith(
+            () => AppLanguageNotifier(initialLang),
+          ),
+        ],
+        child: const TrembleApp(),
+      ),
     ),
   );
 }

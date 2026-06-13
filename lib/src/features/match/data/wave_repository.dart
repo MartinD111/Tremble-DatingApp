@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/api_client.dart';
@@ -9,23 +8,27 @@ part 'wave_repository.g.dart';
 class WaveRepository {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final TrembleApiClient _api;
 
-  WaveRepository(this._firestore, this._auth);
+  WaveRepository(this._firestore, this._auth, {TrembleApiClient? api})
+      : _api = api ?? TrembleApiClient();
 
   /// Pošlje wave prek Cloud Function (rate-limited za free userje: 5/30 dni).
   Future<void> sendWave(String targetUid) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) throw Exception('Uporabnik ni prijavljen.');
 
-    final callable = FirebaseFunctions.instanceFor(region: 'europe-west1')
-        .httpsCallable('sendWave');
-
     try {
-      await callable.call({'targetUid': targetUid});
-    } on FirebaseFunctionsException catch (e) {
-      if (e.code == 'permission-denied' &&
-          (e.message?.contains('suspended') ?? false)) {
-        throw AccountSuspendedException();
+      await _api.call('sendWave', data: {'targetUid': targetUid});
+    } on AccountSuspendedException {
+      rethrow;
+    } on TrembleApiException catch (e) {
+      if (e.code == 'permission-denied') {
+        throw TrembleApiException(
+          code: e.code,
+          message: "You can't wave at this person right now.",
+          details: e.details,
+        );
       }
       rethrow;
     }

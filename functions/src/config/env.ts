@@ -33,15 +33,16 @@ export interface AppConfig {
  * True only when running against the production Firebase project (am---dating-app).
  * Used to gate App Check enforcement so iOS simulator / dev builds aren't blocked.
  */
+export const TREMBLE_ENV = process.env.TREMBLE_ENV ?? 'dev';
+export const SENTRY_DSN = process.env.SENTRY_DSN ?? '';
 export const ENFORCE_APP_CHECK = process.env.TREMBLE_ENV === "prod";
-
 /**
  * Load configuration from environment.
  * Secrets (API keys) come from Firebase Secret Manager via process.env.
  */
 export function getConfig(): AppConfig {
     const env = (process.env.TREMBLE_ENV as AppConfig["environment"]) || "dev";
-    
+
     // We expect these to be populated by Firebase Secret Manager in production.
     // In local emulator, these should be loaded from .env.local
     const r2AccountId = process.env.R2_ACCOUNT_ID || "missing_account_id";

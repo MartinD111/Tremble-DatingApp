@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tremble/src/core/api_client.dart';
 import 'package:tremble/src/features/match/presentation/wave_controller.dart';
 
 void main() {
@@ -44,6 +45,17 @@ void main() {
       isNot(contains(
           "SnackBar(content: Text('Wave ni bil poslan. Poskusi znova.'))")),
     );
+  });
+
+  test('WaveRepository routes sendWave through TrembleApiClient', () {
+    final waveRepository =
+        File('lib/src/features/match/data/wave_repository.dart')
+            .readAsStringSync();
+
+    expect(waveRepository, contains("TrembleApiClient()"));
+    expect(waveRepository, contains("_api.call('sendWave'"));
+    expect(waveRepository, isNot(contains("httpsCallable('sendWave')")));
+    expect(waveRepository, isNot(contains('FirebaseFunctions.instanceFor')));
   });
 
   test('Wave write failures render inline instead of SnackBars', () {
@@ -103,6 +115,28 @@ void main() {
     expect(
       rolledBack.inlineErrorFor('target-user'),
       'Wave ni bil poslan. Poskusi znova.',
+    );
+  });
+
+  test('WaveController surfaces actionable permission-denied API message',
+      () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    await container.read(waveControllerProvider.notifier).handleWave(
+      'target-user',
+      writeWave: () async {
+        throw TrembleApiException(
+          code: 'permission-denied',
+          message: "You can't wave at this person right now.",
+        );
+      },
+    );
+
+    final rolledBack = container.read(waveControllerProvider).requireValue;
+    expect(
+      rolledBack.inlineErrorFor('target-user'),
+      "You can't wave at this person right now.",
     );
   });
 }
