@@ -1,3 +1,70 @@
+## Session State — 2026-06-14 00:36 CEST
+- Active Task: Replace hardcoded Slovenian gym enable label with i18n
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/core/translations.dart`
+    - `lib/src/features/gym/presentation/gym_mode_sheet.dart`
+    - `test/features/gym/gym_mode_sheet_i18n_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - Pre-existing uncommitted Functions changes and `tasks/context.md` handoff entries were preserved.
+    - No deploy, native config, Firestore rules, or Firebase config edits performed.
+- System Status: Flutter analyze clean. Flutter full test suite passing (161/161).
+
+## Session Handoff
+- Completed:
+    - Added `enable` translations for English (`Enable`) and Slovenian (`Omogoči`).
+    - Replaced the approved hardcoded `Text('Omogoči')` in `gym_mode_sheet.dart` with `Text(t('enable', lang))`.
+    - Added focused regression coverage for the gym enable translation and source wiring.
+    - Grepped `lib/src/features/gym` and `lib/src/features/dashboard` for hardcoded `Text()` labels matching the requested Slovenian word list; no additional matches remained after the fix.
+    - Left `Zavrni` untouched per explicit scope.
+    - Verified `flutter analyze --no-fatal-infos` and `flutter test --dart-define-from-file=.env.json`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Review and commit the scoped Flutter i18n diff when ready.
+
+## Session State — 2026-06-14 00:29 CEST
+- Active Task: Batch partner profile reads in Cloud Functions `getMatches`
+- Environment: Dev/local Functions only, `main`
+- Modified Files:
+    - `functions/src/modules/matches/matches.functions.ts`
+    - `functions/src/__tests__/matches.test.ts`
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - Pre-existing `tasks/context.md` uncommitted handoff entry was preserved.
+    - No deploy, Flutter code, Firestore rules, native config, or Firebase config edits performed.
+- System Status: Functions TypeScript compile and Jest suite passing (31/31).
+
+## Session Handoff
+- Completed:
+    - Added RED/GREEN regression coverage proving `getMatches` batches partner profile reads with one `db.getAll(...)` call.
+    - Replaced per-partner `db.collection("users").doc(partnerId).get()` reads inside the match map with ordered `db.getAll(...partnerRefs)` over unblocked partner refs.
+    - Preserved the block filter, missing profile skip, and returned match field set exactly.
+    - Verified `npm test -- matches.test.ts --runInBand`, `npx tsc --noEmit`, and `npm test` from `functions/`.
+- In Progress: None.
+- Blocked: None for this code change.
+- Next Action: Review and commit the scoped Functions diff when ready; deploy only after explicit founder approval.
+
+## Session State — 2026-06-14 00:30 CEST
+- Active Task: Resolve IDE-reported JDK path mismatch error (Supplied javaHome is not a valid folder)
+- Environment: Dev
+- Modified Files: `android/local.properties` (gitignored path configuration)
+- Open Problems: None for this task.
+- System Status: Flutter analyze clean, Flutter tests passing (160/160), dev debug APK build passing.
+
+## Session Handoff
+- Completed:
+    - Diagnosed that Homebrew updated `openjdk@17` from `17.0.18` to `17.0.19`, breaking the hardcached/cached path in the IDE/Gradle daemon.
+    - Deleted the incorrect temporary symlink `/opt/homebrew/Cellar/openjdk@17/17.0.18`.
+    - Appended the correct `org.gradle.java.home=/opt/homebrew/Cellar/openjdk@17/17.0.19/libexec/openjdk.jdk/Contents/Home` path configuration to the gitignored `android/local.properties` file.
+    - Stopped stale Gradle daemons to force path re-evaluation.
+    - Verified environment sanity: `flutter analyze` clean, full test suite (160/160) passing, and successful dev debug APK build.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Proceed with features or testing.
+
 ## Session State — 2026-06-13 08:51 CEST
 - Active Task: Fix failing pre-commit/CI checks, commit, and sync `main`
 - Environment: Dev/local Functions + Flutter, `main`

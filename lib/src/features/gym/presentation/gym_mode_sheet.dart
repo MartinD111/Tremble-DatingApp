@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:tremble/src/core/translations.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
 import 'package:tremble/src/core/theme.dart';
 import '../../auth/data/auth_repository.dart';
@@ -44,6 +45,7 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
     final user = ref.read(authStateProvider);
     if (!mounted || user == null) return;
     if (user.gymNotificationsEnabled != null) return; // already decided
+    final lang = ref.read(appLanguageProvider);
 
     showDialog<void>(
       context: context,
@@ -118,7 +120,7 @@ class _GymModeSheetState extends ConsumerState<GymModeSheet> {
                           Navigator.pop(dialogContext);
                           _saveGymNotificationsPref(enabled: true);
                         },
-                        child: const Text('Omogoči'),
+                        child: Text(t('enable', lang)),
                       ),
                     ),
                   ],

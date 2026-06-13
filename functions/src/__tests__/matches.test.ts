@@ -7,6 +7,7 @@ import { describe, it, expect, jest } from "@jest/globals";
 const mockDb = {
     collection: jest.fn(),
     batch: jest.fn(),
+    getAll: jest.fn<(...refs: unknown[]) => Promise<unknown[]>>(),
     runTransaction: jest.fn(),
 };
 
@@ -90,6 +91,135 @@ describe("Matches Module", () => {
                 "getMatches",
                 { maxRequests: 30, windowMs: 60000 }
             );
+        });
+
+        it("batches partner profile reads with getAll while preserving match filtering and shape", async () => {
+            jest.clearAllMocks();
+            const authGuard = await import("../../src/middleware/authGuard");
+            const rateLimit = await import("../../src/middleware/rateLimit");
+            const { getMatches } = await import("../../src/modules/matches/matches.functions");
+
+            jest.mocked(authGuard.requireAuth).mockReturnValue("callerUid");
+            jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+
+            const matchedAt = {
+                toDate: () => new Date("2026-06-14T08:30:00.000Z"),
+            };
+            const matchDocs = [
+                {
+                    data: () => ({
+                        userA: "callerUid",
+                        userB: "partnerUid",
+                        matchType: "event",
+                        matchContext: { eventId: "event-1" },
+                        createdAt: matchedAt,
+                    }),
+                },
+                {
+                    data: () => ({
+                        userA: "callerUid",
+                        userB: "blockedUid",
+                        createdAt: matchedAt,
+                    }),
+                },
+                {
+                    data: () => ({
+                        userA: "missingUid",
+                        userB: "callerUid",
+                        createdAt: null,
+                    }),
+                },
+            ];
+            const partnerRef = { path: "users/partnerUid" };
+            const blockedRef = { path: "users/blockedUid" };
+            const missingRef = { path: "users/missingUid" };
+            const partnerDoc = {
+                exists: true,
+                data: () => ({
+                    name: "Nika",
+                    age: 29,
+                    photoUrls: ["https://example.test/nika.jpg"],
+                    hobbies: ["running"],
+                    lookingFor: ["dates"],
+                    isTraveler: true,
+                }),
+            };
+            const missingDoc = {
+                exists: false,
+                data: () => undefined,
+            };
+            const partnerGet = jest.fn(async () => partnerDoc);
+            const missingGet = jest.fn(async () => missingDoc);
+
+            const docMock = jest.fn((docId: unknown) => {
+                if (docId === "callerUid") {
+                    return {
+                        get: jest.fn(async () => ({
+                            data: () => ({ blockedUserIds: ["blockedUid"] }),
+                        })),
+                    };
+                }
+                if (docId === "partnerUid") {
+                    return { ...partnerRef, get: partnerGet };
+                }
+                if (docId === "blockedUid") {
+                    return blockedRef;
+                }
+                if (docId === "missingUid") {
+                    return { ...missingRef, get: missingGet };
+                }
+                throw new Error(`Unexpected user doc: ${String(docId)}`);
+            });
+
+            const matchesGet = jest.fn(async () => ({ docs: matchDocs }));
+            mockDb.collection.mockImplementation((collectionName: unknown) => {
+                if (collectionName === "users") {
+                    return { doc: docMock };
+                }
+                if (collectionName === "matches") {
+                    return {
+                        where: jest.fn(() => ({
+                            orderBy: jest.fn(() => ({
+                                limit: jest.fn(() => ({
+                                    get: matchesGet,
+                                })),
+                            })),
+                        })),
+                    };
+                }
+                throw new Error(`Unexpected collection: ${collectionName}`);
+            });
+            mockDb.getAll.mockResolvedValue([partnerDoc, missingDoc]);
+
+            const callableGetMatches = getMatches as unknown as (request: unknown) => Promise<unknown>;
+
+            await expect(callableGetMatches({
+                auth: { uid: "callerUid", token: {} },
+                data: {},
+            })).resolves.toEqual({
+                matches: [
+                    {
+                        id: "partnerUid",
+                        name: "Nika",
+                        age: 29,
+                        photoUrls: ["https://example.test/nika.jpg"],
+                        hobbies: ["running"],
+                        lookingFor: ["dates"],
+                        matchType: "event",
+                        matchContext: { eventId: "event-1" },
+                        matchedAt: "2026-06-14T08:30:00.000Z",
+                        isTraveler: true,
+                    },
+                ],
+            });
+
+            expect(mockDb.getAll).toHaveBeenCalledWith(
+                expect.objectContaining(partnerRef),
+                expect.objectContaining(missingRef)
+            );
+            expect(partnerGet).not.toHaveBeenCalled();
+            expect(missingGet).not.toHaveBeenCalled();
+            expect(docMock).not.toHaveBeenCalledWith("blockedUid");
         });
     });
 

@@ -110,6 +110,7 @@ const Map<String, Map<String, String>> _translations = {
   'en': {
     // --- General ---
     'settings': 'Settings',
+    'enable': 'Enable',
     'save': 'Save',
     'Profile updated': 'Profile updated',
     'cancel': 'Cancel',
@@ -962,6 +963,7 @@ const Map<String, Map<String, String>> _translations = {
   // ═══════════════════════════════════════════
   'sl': {
     'settings': 'Nastavitve',
+    'enable': 'Omogoči',
     'save': 'Shrani',
     'Profile updated': 'Profil posodobljen',
     'cancel': 'Prekliči',

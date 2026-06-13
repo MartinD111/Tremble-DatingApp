@@ -453,34 +453,47 @@ export const getMatches = onCall(
             .limit(50)
             .get();
 
-        const profiles = await Promise.all(
-            matchesQuery.docs.map(async (doc) => {
+        const matchEntries = matchesQuery.docs
+            .map((doc) => {
                 const matchData = doc.data();
                 const partnerId = matchData.userA === uid ? matchData.userB : matchData.userA;
 
                 if (blockedUsers.includes(partnerId)) return null;
 
-                const profileDoc = await db.collection("users").doc(partnerId).get();
-                if (!profileDoc.exists) return null;
-                const pData = profileDoc.data()!;
-
                 return {
-                    id: partnerId,
-                    name: pData.name,
-                    age: pData.age,
-                    photoUrls: pData.photoUrls ?? [],
-                    hobbies: pData.hobbies ?? [],
-                    lookingFor: pData.lookingFor ?? [],
-                    // F3 — match categorisation fields from the match document
-                    matchType: (matchData.matchType as string | undefined) ?? "standard",
-                    matchContext: (matchData.matchContext as Record<string, unknown> | undefined) ?? null,
-                    matchedAt: matchData.createdAt != null
-                        ? (matchData.createdAt as FirebaseFirestore.Timestamp).toDate().toISOString()
-                        : null,
-                    isTraveler: (pData.isTraveler as boolean | undefined) ?? false,
+                    matchData,
+                    partnerId,
+                    partnerRef: db.collection("users").doc(partnerId),
                 };
             })
-        );
+            .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+        const partnerDocs = matchEntries.length
+            ? await db.getAll(...matchEntries.map((entry) => entry.partnerRef))
+            : [];
+
+        const profiles = partnerDocs.map((profileDoc, index) => {
+            const { matchData, partnerId } = matchEntries[index];
+
+            if (!profileDoc.exists) return null;
+            const pData = profileDoc.data()!;
+
+            return {
+                id: partnerId,
+                name: pData.name,
+                age: pData.age,
+                photoUrls: pData.photoUrls ?? [],
+                hobbies: pData.hobbies ?? [],
+                lookingFor: pData.lookingFor ?? [],
+                // F3 — match categorisation fields from the match document
+                matchType: (matchData.matchType as string | undefined) ?? "standard",
+                matchContext: (matchData.matchContext as Record<string, unknown> | undefined) ?? null,
+                matchedAt: matchData.createdAt != null
+                    ? (matchData.createdAt as FirebaseFirestore.Timestamp).toDate().toISOString()
+                    : null,
+                isTraveler: (pData.isTraveler as boolean | undefined) ?? false,
+            };
+        });
 
         return { matches: profiles.filter(Boolean) };
     }
