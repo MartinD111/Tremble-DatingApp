@@ -8,7 +8,7 @@ final viewedRecapsRepositoryProvider = Provider<ViewedRecapsRepository>((ref) {
 });
 
 final viewedRecapIdsProvider =
-    StreamProvider.family<Set<String>, String>((ref, uid) {
+    StreamProvider.autoDispose.family<Set<String>, String>((ref, uid) {
   if (uid.isEmpty) return const Stream.empty();
 
   return FirebaseFirestore.instance

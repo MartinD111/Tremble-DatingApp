@@ -275,14 +275,18 @@ export const deleteUserAccount = onCall(
                 .where("blockedUserIds", "array-contains", uid)
                 .get();
             if (!blockersOf.empty) {
-                const cleanBatch = db.batch();
-                blockersOf.docs.forEach((doc) => {
-                    cleanBatch.update(doc.ref, {
-                        blockedUserIds: FieldValue.arrayRemove(uid),
-                        blockedBy: FieldValue.arrayRemove(uid),
+                const BATCH_LIMIT = 499;
+                for (let i = 0; i < blockersOf.docs.length; i += BATCH_LIMIT) {
+                    const chunk = blockersOf.docs.slice(i, i + BATCH_LIMIT);
+                    const cleanBatch = db.batch();
+                    chunk.forEach((doc) => {
+                        cleanBatch.update(doc.ref, {
+                            blockedUserIds: FieldValue.arrayRemove(uid),
+                            blockedBy: FieldValue.arrayRemove(uid),
+                        });
                     });
-                });
-                await cleanBatch.commit();
+                    await cleanBatch.commit();
+                }
                 console.log(`[GDPR] Removed block references from ${blockersOf.size} user(s) for ${uid.substring(0, 8)}...`);
             }
 

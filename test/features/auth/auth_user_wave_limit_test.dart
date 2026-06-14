@@ -122,7 +122,7 @@ void main() {
       final payload = user.toApiPayload();
 
       expect(payload['hobbies'], ['running', 'music']);
-      expect(payload['nicotineUse'], 'vape');
+      expect(payload['nicotineUse'], ['vape']);
       expect(payload.containsKey('nicotineFilter'), isFalse);
     });
   });

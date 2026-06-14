@@ -31,6 +31,10 @@ export const updateProfile = onCall(
 
         // Validate — .strict() rejects unknown fields
         const data = validateRequest(updateProfileSchema, request.data);
+        const rawNicotine = data.nicotineUse;
+        const nicotineUse = Array.isArray(rawNicotine)
+            ? rawNicotine
+            : rawNicotine != null ? [rawNicotine] : [];
 
         // Only write the fields that were actually provided
         const updateData: Record<string, unknown> = {
@@ -41,6 +45,9 @@ export const updateProfile = onCall(
             if (value !== undefined) {
                 updateData[key] = value;
             }
+        }
+        if (rawNicotine !== undefined) {
+            updateData.nicotineUse = nicotineUse;
         }
 
         await db.collection("users").doc(uid).update(updateData);

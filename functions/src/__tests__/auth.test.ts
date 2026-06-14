@@ -5,18 +5,20 @@
 import { describe, it, expect, jest } from "@jest/globals";
 
 const mockVerifyIdToken = jest.fn<() => Promise<unknown>>();
+const mockUserDocSet = jest.fn(() => Promise.resolve());
+const mockUserDocGet = jest.fn(() =>
+    Promise.resolve({
+        exists: true,
+        data: () => ({ email: "test@example.com", name: "Test" }),
+    })
+);
 
 // We mock the firebase-admin module before importing anything that needs it
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 jest.mock("firebase-admin/firestore", () => {
     const mockDocRef = {
-        set: jest.fn(() => Promise.resolve()),
-        get: jest.fn(() =>
-            Promise.resolve({
-                exists: true,
-                data: () => ({ email: "test@example.com", name: "Test" }),
-            })
-        ),
+        set: mockUserDocSet,
+        get: mockUserDocGet,
     };
     return {
         getFirestore: jest.fn(() => ({
@@ -57,6 +59,38 @@ jest.mock("../../src/middleware/rateLimit", () => ({
 
 describe("Auth Module", () => {
     describe("completeOnboarding", () => {
+        it("normalises nicotineUse to an array before writing profile data", async () => {
+            jest.clearAllMocks();
+            mockUserDocSet.mockResolvedValue(undefined);
+            mockUserDocGet.mockResolvedValue({
+                exists: true,
+                data: () => ({ email: "test@example.com", name: "Ana" }),
+            });
+            const { completeOnboarding } = await import("../../src/modules/auth/auth.functions");
+
+            const callableCompleteOnboarding = completeOnboarding as unknown as (request: unknown) => Promise<unknown>;
+
+            await expect(callableCompleteOnboarding({
+                auth: { uid: "userUid" },
+                data: {
+                    name: "Ana",
+                    birthDate: "1995-06-15",
+                    gender: "female",
+                    interestedIn: "male",
+                    photoUrls: ["https://r2.example.com/photo.jpg"],
+                    nicotineUse: ["cigarettes", "vape", "shisha"],
+                    consentGiven: true,
+                },
+            })).resolves.toEqual({ success: true });
+
+            expect(mockUserDocSet).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    nicotineUse: ["cigarettes", "vape", "shisha"],
+                }),
+                { merge: true }
+            );
+        });
+
         it("should reject unauthenticated requests", async () => {
             const { requireAuth } = await import("../../src/middleware/authGuard");
 
@@ -141,6 +175,27 @@ describe("Auth Module", () => {
             if (result.success) {
                 expect(result.data.nicotineUse).toBe("vaping");
                 expect(result.data.nicotineFilter).toBe("no_smoking");
+            }
+        });
+
+        it("should validate onboarding schema — accept multi-select nicotineUse arrays", async () => {
+            const { completeOnboardingSchema } = await import(
+                "../../src/modules/auth/auth.schema"
+            );
+
+            const result = completeOnboardingSchema.safeParse({
+                name: "Ana",
+                birthDate: "1995-06-15",
+                gender: "female",
+                interestedIn: "male",
+                photoUrls: ["https://r2.example.com/photo.jpg"],
+                nicotineUse: ["cigarettes", "vape", "shisha"],
+                consentGiven: true,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.nicotineUse).toEqual(["cigarettes", "vape", "shisha"]);
             }
         });
 

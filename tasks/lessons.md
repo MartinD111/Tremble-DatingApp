@@ -4,6 +4,10 @@
 
 ---
 
+**Rule #72 — GDPR block-ref cleanup (gdpr.functions.ts step 5b) uses a single Firestore batch (500-write cap).**
+If a deleted user was blocked by >500 others, the batch throws and deletion fails. Add chunking before user base scales past ~200 DAU. Pattern: split blockersOf.docs into chunks of 499, commit each batch sequentially.
+Source: Security audit, 11 Jun 2026.
+
 **Rule #9 — Guard every `startForeground()` with a type mask on Android 14+.**
 [2026-06-03] Asserting an FGS type whose runtime permission isn't held throws `SecurityException` (e.g. `type=location` without `ACCESS_*_LOCATION`), and starting from the background throws `ForegroundServiceStartNotAllowedException`. Either crashes the process — and because radar-active is persisted in `RadarStateBridge`, it re-crashes on every launch ("can't turn it off" loop). Fix: assert only the FGS types whose permission is currently granted (DATA_SYNC always), wrap `startForeground` in try/catch, and on failure force radar OFF + cancel the notification so the loop breaks instead of crashing. Source: `RadarForegroundService.kt:86` crash, June 2026.
 

@@ -1996,6 +1996,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           }
         } else {
           // Photo upload itself failed — user not yet built; let them retry.
+          debugPrint(
+              '[DEV] Upload error: ${e is TrembleApiException ? e.code : e.runtimeType} — ${e is TrembleApiException ? e.message : e}');
           setState(() {
             _isRegistering = false;
             _isUploadingPhotos = false;

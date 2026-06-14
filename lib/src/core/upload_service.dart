@@ -60,7 +60,6 @@ class UploadService {
     try {
       final request = await httpClient.putUrl(Uri.parse(uploadUrl));
       request.headers.set(HttpHeaders.contentTypeHeader, mimeType);
-      request.contentLength = fileSize;
 
       const chunkSize = 65536; // 64 KB
       for (var i = 0; i < bytes.length; i += chunkSize) {

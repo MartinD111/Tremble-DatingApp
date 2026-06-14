@@ -26,24 +26,32 @@ void main() {
       expect(hobbies, isNot(contains(isA<Map<dynamic, dynamic>>())));
     });
 
-    test('nicotineUse serializes as a single String or null, never a list', () {
+    test('nicotineUse serializes as the full List<String>', () {
       const nicotineUser = AuthUser(
         id: 'user-1',
-        nicotineUse: ['vape', 'cigarettes'],
+        nicotineUse: ['cigarettes', 'vape', 'shisha'],
       );
       final nicotinePayload = nicotineUser.toApiPayload();
 
       expect(nicotinePayload, contains('nicotineUse'));
-      expect(nicotinePayload['nicotineUse'], isA<String>());
-      expect(nicotinePayload['nicotineUse'], 'vape');
-      expect(nicotinePayload['nicotineUse'], isNot(isA<List<dynamic>>()));
+      expect(nicotinePayload['nicotineUse'], isA<List<String>>());
+      expect(nicotinePayload['nicotineUse'], ['cigarettes', 'vape', 'shisha']);
 
       const nicotineFreeUser = AuthUser(id: 'user-2');
       final nicotineFreePayload = nicotineFreeUser.toApiPayload();
 
       expect(nicotineFreePayload, contains('nicotineUse'));
-      expect(nicotineFreePayload['nicotineUse'], isNull);
-      expect(nicotineFreePayload['nicotineUse'], isNot(isA<List<dynamic>>()));
+      expect(nicotineFreePayload['nicotineUse'], isA<List<String>>());
+      expect(nicotineFreePayload['nicotineUse'], isEmpty);
+    });
+
+    test('fromFirestore parses legacy String nicotineUse as a one-item list',
+        () {
+      final user = AuthUser.fromFirestore('user-legacy', {
+        'nicotineUse': 'vape',
+      });
+
+      expect(user.nicotineUse, ['vape']);
     });
 
     test('nicotineFilter is absent when null', () {

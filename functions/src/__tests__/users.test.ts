@@ -38,6 +38,66 @@ jest.mock("../../src/config/env", () => ({
 }));
 
 describe("Users Module", () => {
+    describe("updateProfile", () => {
+        it("normalises nicotineUse string input to an array before writing", async () => {
+            jest.clearAllMocks();
+            const authGuard = await import("../../src/middleware/authGuard");
+            const rateLimit = await import("../../src/middleware/rateLimit");
+            const validate = await import("../../src/middleware/validate");
+            const { updateProfile } = await import("../../src/modules/users/users.functions");
+
+            const update = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+            mockDb.collection.mockReturnValue({
+                doc: jest.fn(() => ({ update })),
+            });
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userUid");
+            jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+            jest.mocked(validate.validateRequest).mockReturnValue({
+                nicotineUse: "vape",
+            });
+
+            const callableUpdateProfile = updateProfile as unknown as (request: unknown) => Promise<unknown>;
+
+            await expect(callableUpdateProfile({
+                auth: { uid: "userUid" },
+                data: { nicotineUse: "vape" },
+            })).resolves.toEqual({ success: true });
+
+            expect(update).toHaveBeenCalledWith(expect.objectContaining({
+                nicotineUse: ["vape"],
+            }));
+        });
+
+        it("preserves multi-select nicotineUse arrays before writing", async () => {
+            jest.clearAllMocks();
+            const authGuard = await import("../../src/middleware/authGuard");
+            const rateLimit = await import("../../src/middleware/rateLimit");
+            const validate = await import("../../src/middleware/validate");
+            const { updateProfile } = await import("../../src/modules/users/users.functions");
+
+            const update = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+            mockDb.collection.mockReturnValue({
+                doc: jest.fn(() => ({ update })),
+            });
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userUid");
+            jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+            jest.mocked(validate.validateRequest).mockReturnValue({
+                nicotineUse: ["cigarettes", "vape", "shisha"],
+            });
+
+            const callableUpdateProfile = updateProfile as unknown as (request: unknown) => Promise<unknown>;
+
+            await expect(callableUpdateProfile({
+                auth: { uid: "userUid" },
+                data: { nicotineUse: ["cigarettes", "vape", "shisha"] },
+            })).resolves.toEqual({ success: true });
+
+            expect(update).toHaveBeenCalledWith(expect.objectContaining({
+                nicotineUse: ["cigarettes", "vape", "shisha"],
+            }));
+        });
+    });
+
     describe("getPublicProfile", () => {
         it("uses the lower read endpoint rate limit", async () => {
             jest.clearAllMocks();
@@ -185,6 +245,21 @@ describe("Users Module", () => {
             if (result.success) {
                 expect(result.data.nicotineUse).toBe("vaping");
                 expect(result.data.nicotineFilter).toBe("no_smoking");
+            }
+        });
+
+        it("should accept multi-select nicotineUse arrays", async () => {
+            const { updateProfileSchema } = await import(
+                "../../src/modules/users/users.schema"
+            );
+
+            const result = updateProfileSchema.safeParse({
+                nicotineUse: ["cigarettes", "vape", "shisha"],
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.nicotineUse).toEqual(["cigarettes", "vape", "shisha"]);
             }
         });
 

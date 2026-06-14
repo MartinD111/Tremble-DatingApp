@@ -144,6 +144,7 @@ jest.mock("firebase-admin/firestore", () => ({
     FieldValue: {
         serverTimestamp: jest.fn(() => "SERVER_TIMESTAMP"),
         arrayUnion: jest.fn((...args: unknown[]) => args),
+        arrayRemove: jest.fn((...args: unknown[]) => args),
     },
     Timestamp: {
         fromDate: jest.fn((d: Date) => ({ _seconds: Math.floor(d.getTime() / 1000) })),
@@ -276,6 +277,77 @@ describe("GDPR Functions", () => {
 
             // 501 docs in waves alone → at least 2 batch commits (500 + 1)
             expect(batchCommitMock.mock.calls.length).toBeGreaterThanOrEqual(2);
+        });
+    });
+
+    // ── Case 3b: block-reference cleanup chunks update batches ───────────
+
+    describe("Case 3b — block-reference cleanup chunks update batches", () => {
+        it("commits block reference cleanup in multiple batches for 501 blockers", async () => {
+            const blockerDocs = Array.from({ length: 501 }, (_, i) => ({
+                id: `blocker-${i}`,
+                ref: { id: `blocker-${i}` },
+                data: () => ({}),
+            }));
+
+            const batches: Array<{
+                delete: jest.Mock;
+                update: jest.Mock;
+                commit: jest.Mock;
+            }> = [];
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const mockDb: any = {
+                collection: jest.fn((name: string) => {
+                    const collectionRef = {
+                        doc: jest.fn(() => ({
+                            get: jest.fn().mockImplementation(() => Promise.resolve({ exists: true, data: () => ({}) })),
+                            update: jest.fn().mockImplementation(() => Promise.resolve()),
+                            set: jest.fn().mockImplementation(() => Promise.resolve()),
+                        })),
+                        add: jest.fn().mockImplementation(() => Promise.resolve({
+                            id: "gdpr-ref",
+                            update: jest.fn().mockImplementation(() => Promise.resolve()),
+                        })),
+                        where: jest.fn((fieldPath: string) => {
+                            const queryRef = {
+                                where: jest.fn().mockReturnThis(),
+                                get: jest.fn().mockImplementation(async () => {
+                                    if (name === "users" && fieldPath === "blockedUserIds") {
+                                        return { docs: blockerDocs, empty: false, size: blockerDocs.length };
+                                    }
+                                    return { docs: [], empty: true, size: 0 };
+                                }),
+                            };
+                            return queryRef;
+                        }),
+                        get: jest.fn().mockImplementation(() => Promise.resolve({ docs: [], empty: true, size: 0 })),
+                    };
+                    return collectionRef;
+                }),
+                batch: jest.fn(() => {
+                    const batch = {
+                        delete: jest.fn(),
+                        update: jest.fn(),
+                        commit: jest.fn().mockImplementation(() => Promise.resolve()),
+                    };
+                    batches.push(batch);
+                    return batch;
+                }),
+            };
+
+            firestoreMockState.mockDb = mockDb;
+
+            const { deleteUserAccount } = await import("../modules/gdpr/gdpr.functions");
+            const handler = deleteUserAccount as unknown as (req: unknown) => Promise<unknown>;
+
+            await handler({ auth: { uid: TEST_UID } });
+
+            const blockCleanupBatches = batches.filter((batch) => batch.update.mock.calls.length > 0);
+            expect(blockCleanupBatches).toHaveLength(2);
+            expect(blockCleanupBatches[0].update).toHaveBeenCalledTimes(499);
+            expect(blockCleanupBatches[1].update).toHaveBeenCalledTimes(2);
+            expect(blockCleanupBatches.every((batch) => batch.commit.mock.calls.length === 1)).toBe(true);
         });
     });
 

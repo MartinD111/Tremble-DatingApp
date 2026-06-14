@@ -228,7 +228,6 @@ class AuthUser {
   // NOTE: isAdmin/isPremium are NEVER sent to the server — they are
   // server-managed fields. The Cloud Functions .strict() schema rejects them.
   Map<String, dynamic> toApiPayload() {
-    final nicotineUseValue = nicotineUse.isNotEmpty ? nicotineUse.first : null;
     final hobbyIds =
         hobbies.map((h) => (h['id'] ?? h['name']) as String).toList();
 
@@ -243,7 +242,7 @@ class AuthUser {
       'height': height,
       'heightRangeStart': heightRangeStart,
       'heightRangeEnd': heightRangeEnd,
-      'nicotineUse': nicotineUseValue,
+      'nicotineUse': nicotineUse,
       if (nicotineFilter != null) 'nicotineFilter': nicotineFilter,
       'jobStatus': jobStatus,
       'occupation': occupation,
@@ -359,7 +358,13 @@ class AuthUser {
       height: data['height'] as int?,
       heightRangeStart: data['heightRangeStart'] as int?,
       heightRangeEnd: data['heightRangeEnd'] as int?,
-      nicotineUse: List<String>.from(data['nicotineUse'] ?? []),
+      nicotineUse: () {
+        final raw = data['nicotineUse'];
+        if (raw == null) return <String>[];
+        if (raw is List) return List<String>.from(raw);
+        if (raw is String && raw.isNotEmpty) return [raw];
+        return <String>[];
+      }(),
       nicotineFilter: data['nicotineFilter'] as String?,
       jobStatus: data['jobStatus'] as String?,
       occupation: data['occupation'] as String?,

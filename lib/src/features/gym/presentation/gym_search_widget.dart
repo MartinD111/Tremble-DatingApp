@@ -61,6 +61,7 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
   Timer? _debounce;
   List<PlacePrediction> _predictions = [];
   bool _isSearching = false;
+  bool _searchError = false;
 
   FocusNode get _searchFocus => widget.focusNode ?? _internalFocus;
 
@@ -90,17 +91,28 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
       setState(() {
         _predictions = [];
         _isSearching = false;
+        _searchError = false;
       });
       return;
     }
     setState(() {});
     _debounce = Timer(const Duration(milliseconds: _debounceMs), () async {
-      setState(() => _isSearching = true);
-      final results = await _gymAutocomplete(value);
+      setState(() {
+        _isSearching = true;
+        _searchError = false;
+      });
+      var searchError = false;
+      var results = <PlacePrediction>[];
+      try {
+        results = await _gymAutocomplete(value);
+      } on Exception catch (_) {
+        searchError = true;
+      }
       if (!mounted) return;
       setState(() {
         _predictions = results;
         _isSearching = false;
+        _searchError = searchError;
       });
     });
   }
@@ -114,24 +126,37 @@ class _GymSearchWidgetState extends ConsumerState<GymSearchWidget> {
       setState(() {
         _predictions = [];
         _isSearching = false;
+        _searchError = false;
       });
       return;
     }
 
-    setState(() => _isSearching = true);
-    final results = await _gymAutocomplete(query);
+    setState(() {
+      _isSearching = true;
+      _searchError = false;
+    });
+    var searchError = false;
+    var results = <PlacePrediction>[];
+    try {
+      results = await _gymAutocomplete(query);
+    } on Exception catch (_) {
+      searchError = true;
+    }
     if (!mounted) return;
 
     setState(() {
       _predictions = results;
       _isSearching = false;
+      _searchError = searchError;
     });
 
     if (results.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'No gyms found nearby. Try another gym name.',
+            _searchError
+                ? 'Gym search unavailable. Check connection.'
+                : 'No gyms found nearby. Try another gym name.',
             style: GoogleFonts.instrumentSans(
               color: Colors.white,
               fontWeight: FontWeight.w600,

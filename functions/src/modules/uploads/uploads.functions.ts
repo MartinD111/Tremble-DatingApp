@@ -61,12 +61,7 @@ export const generateUploadUrl = onCall(
             Bucket: config.r2.bucketName,
             Key: objectKey,
             ContentType: data.mimeType,
-            ContentLength: data.fileSizeBytes,
-            // Metadata stored with the object
-            Metadata: {
-                uploader: uid,
-                originalName: data.fileName,
-            },
+            // ContentLength + Metadata removed — become signed headers client cannot echo → 403
         });
 
         const uploadUrl = await getSignedUrl(s3Client, command, {

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Stream of active run encounters targeted at the current user.
 // Returns a list of documents from 'active_run_crosses' where userIds contains myId and status == 'pending'.
-final activeRunCrossesProvider =
-    StreamProvider.family<List<QueryDocumentSnapshot>, String>((ref, userId) {
+final activeRunCrossesProvider = StreamProvider.autoDispose
+    .family<List<QueryDocumentSnapshot>, String>((ref, userId) {
   if (userId.isEmpty) return const Stream.empty();
 
   return FirebaseFirestore.instance
@@ -74,8 +74,8 @@ final runClubRepositoryProvider = Provider((ref) => RunClubRepository());
 // Stream of ALL run encounters for the current user — including ones already
 // waved — filtered only by expiresAt > now and not dismissed.
 // Used by RunRecapScreen to show the full list of who the user crossed paths with.
-final recentRunCrossesProvider =
-    StreamProvider.family<List<QueryDocumentSnapshot>, String>((ref, userId) {
+final recentRunCrossesProvider = StreamProvider.autoDispose
+    .family<List<QueryDocumentSnapshot>, String>((ref, userId) {
   if (userId.isEmpty) return const Stream.empty();
 
   return FirebaseFirestore.instance
@@ -111,8 +111,8 @@ final recentRunCrossesProvider =
 
 // Stream of permanent run encounters (History) for the current user.
 // These are logged by Cloud Functions and do not expire.
-final runHistoryProvider =
-    StreamProvider.family<List<QueryDocumentSnapshot>, String>((ref, userId) {
+final runHistoryProvider = StreamProvider.autoDispose
+    .family<List<QueryDocumentSnapshot>, String>((ref, userId) {
   if (userId.isEmpty) return const Stream.empty();
 
   return FirebaseFirestore.instance

@@ -159,7 +159,8 @@ class PlacesService {
   }) async {
     if (input.trim().isEmpty) return [];
     if (_apiKey.isEmpty) {
-      debugPrint('[PlacesService] ⚠️ No API key for gym autocomplete.');
+      debugPrint(
+          '[PlacesService] PLACES_KEY_DEV is empty. Pass via --dart-define=PLACES_KEY_DEV=AIza...');
       return [];
     }
 
@@ -198,7 +199,11 @@ class PlacesService {
 
       if (response.statusCode != 200) {
         debugPrint(
-            '[PlacesService] Gym autocomplete error ${response.statusCode}');
+            '[PlacesService] Gym autocomplete error ${response.statusCode}: ${response.body}');
+        if (kDebugMode && response.statusCode == 403) {
+          debugPrint(
+              '[PlacesService] 403 on gym search — check: (1) PLACES_KEY_DEV in .env.json, (2) no Android app restrictions on key, (3) Places API (New) enabled in GCP.');
+        }
         return [];
       }
 

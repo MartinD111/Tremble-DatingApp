@@ -2,14 +2,18 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
-import 'package:cloud_functions/cloud_functions.dart';
+
+import 'api_client.dart';
 
 /// Service responsible for handling local contact fetching,
 /// normalizing, hashing, and syncing with the backend for Anonymity Mode.
 class ContactService {
   /// Entry point to process contacts and block matching users.
   /// Returns the number of new users blocked.
-  static Future<int> secureAndSyncContacts(String countryCode) async {
+  static Future<int> secureAndSyncContacts(
+    String countryCode, {
+    TrembleApiClient? api,
+  }) async {
     // 1. Request permission
     final status =
         await FlutterContacts.permissions.request(PermissionType.read);
@@ -40,13 +44,29 @@ class ContactService {
     );
 
     // 5. Send to backend for Zero-Data comparison
-    final callable =
-        FirebaseFunctions.instance.httpsCallable('onContactAnonymityCheck');
-    final response = await callable.call({
-      'hashedContacts': hashedPhones,
-    });
+    final Map<String, dynamic> response;
+    try {
+      response = await (api ?? TrembleApiClient()).call(
+        'onContactAnonymityCheck',
+        data: {
+          'hashedContacts': hashedPhones,
+        },
+        timeout: const Duration(seconds: 120),
+      );
+    } on AccountSuspendedException {
+      rethrow;
+    } on TrembleApiException catch (e) {
+      if (e.code == 'resource-exhausted') {
+        throw TrembleApiException(
+          code: e.code,
+          message: 'Too many contact checks. Please wait a moment.',
+          details: e.details,
+        );
+      }
+      rethrow;
+    }
 
-    final int blockedCount = response.data['matchesFound'] as int? ?? 0;
+    final int blockedCount = response['matchesFound'] as int? ?? 0;
     return blockedCount;
   }
 }

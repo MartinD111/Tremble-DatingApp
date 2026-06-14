@@ -1,3 +1,158 @@
+## Session State — 2026-06-14 23:51 CEST
+- Active Task: Chunk GDPR `deleteUserAccount` block-reference cleanup batches
+- Environment: Dev/local Functions only, `main`
+- Modified Files:
+    - `functions/src/modules/gdpr/gdpr.functions.ts`
+    - `functions/src/__tests__/gdpr.test.ts`
+    - `tasks/lessons.md`
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - Pre-existing unrelated dirty worktree changes remain in Functions, Flutter, tests, and `tasks/context.md`.
+    - `tasks/plan.md` is missing, so current phase was read from project roadmap instead.
+    - No deploy performed.
+- System Status: Functions TypeScript compile and Jest suite passing.
+
+## Session Handoff
+- Completed:
+    - Added Rule #72 to `tasks/lessons.md` documenting the Firestore 500-write cap risk for GDPR block-reference cleanup.
+    - Added RED/GREEN regression coverage proving 501 users blocking the deleted UID are cleaned through two update batches of 499 and 2 writes.
+    - Changed `deleteUserAccount` step 5b to split `blockersOf.docs` into 499-document chunks and commit each cleanup batch sequentially.
+    - Verified RED before implementation with `npm test -- gdpr.test.ts --runInBand`.
+    - Verified GREEN after implementation with `npm test -- gdpr.test.ts --runInBand`.
+    - Verified `npx tsc --noEmit` exits 0 from `functions/`.
+    - Verified `npm test` exits 0 from `functions/` with 39 passing tests.
+- In Progress: None.
+- Blocked: None for this local code change.
+- Next Action: Review and commit the scoped GDPR diff when ready; do not deploy unless explicitly approved.
+
+## Session State — 2026-06-14 23:47 CEST
+- Active Task: Preserve multi-select `nicotineUse` through onboarding/profile writes
+- Environment: Dev/local Functions + Flutter only, `main`
+- Modified Files:
+    - `functions/src/modules/users/users.schema.ts`
+    - `functions/src/modules/users/users.functions.ts`
+    - `functions/src/modules/auth/auth.schema.ts`
+    - `functions/src/modules/auth/auth.functions.ts`
+    - `functions/src/__tests__/users.test.ts`
+    - `functions/src/__tests__/auth.test.ts`
+    - `lib/src/features/auth/data/auth_repository.dart`
+    - `test/features/auth/api_payload_contract_test.dart`
+    - `test/features/auth/auth_user_wave_limit_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - Exact `flutter run --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev` cannot start because Flutter detects both `macos` and `chrome` and requires `-d`.
+    - Firestore device verification (`cigarettes` + `vape` + `shisha` through real onboarding) was not run because no device target/deploy was available in this session.
+    - Pre-existing/parallel worktree changes remain from R2 upload, contact service, gym search, and partner preference modal tasks.
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - No deploy to `am---dating-app`, nicotine UI, AndroidManifest.xml, Info.plist, google-services.json, Firestore rules, or Firebase config changes performed.
+- System Status: Functions lint/build/tests passing, Flutter tests passing, Flutter analyze clean, dev debug APK build passing.
+
+## Session Handoff
+- Completed:
+    - Updated Flutter `AuthUser.toApiPayload()` to send the full `List<String>` for `nicotineUse` instead of `nicotineUse.first`.
+    - Updated Flutter `AuthUser.fromFirestore()` to parse both new array values and legacy single-string `nicotineUse` values.
+    - Updated `updateProfileSchema` and actual `completeOnboardingSchema` to accept `nicotineUse` as either `string[]` or legacy `string`.
+    - Normalized `nicotineUse` inside `updateProfile` and `completeOnboarding` so Firestore writes always store an array.
+    - Added RED/GREEN Flutter contract coverage for full multi-select payloads and legacy Firestore string parsing.
+    - Added RED/GREEN Functions schema and handler coverage proving arrays are accepted and written as arrays.
+    - Verified `cd functions && npm run lint`, `npm run build`, and `npm run test` pass. Active Functions suite is now 38/38 due added tests.
+    - Verified `flutter test` passes all 164 active Flutter tests.
+    - Verified `flutter analyze --no-fatal-infos` reports no issues.
+    - Verified `flutter build apk --debug --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev` builds `build/app/outputs/flutter-apk/app-dev-debug.apk`.
+- In Progress: None.
+- Blocked: Real Firestore confirmation requires a dev deploy plus mobile run with `-d <deviceId>`.
+- Next Action: After explicit founder approval, deploy only the relevant dev Functions and run onboarding on a real dev target selecting Cigarettes + Vape + Shisha; confirm `users/{uid}.nicotineUse == ['cigarettes','vape','shisha']`.
+
+## Session State — 2026-06-14 23:38 CEST
+- Active Task: Route `onContactAnonymityCheck` through `TrembleApiClient`
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/core/contact_service.dart`
+    - `test/core/contact_service_wiring_test.dart`
+    - `test/features/gym/gym_search_widget_test.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - Exact `grep -rn 'httpsCallable' lib/` still reports the intentional central caller in `lib/src/core/api_client.dart:46`; `lib/src/core/contact_service.dart` has no `httpsCallable` matches.
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - Pre-existing local changes remain in Functions/upload/auth/gym files outside this scoped task.
+    - No deploy, AndroidManifest.xml, Info.plist, google-services.json, Firestore rules, or Firebase config edits performed.
+- System Status: Flutter analyze clean, full Flutter test suite passing.
+
+## Session Handoff
+- Completed:
+    - Added a focused RED/GREEN regression proving `ContactService` routes `onContactAnonymityCheck` through `TrembleApiClient`.
+    - Removed the raw `FirebaseFunctions.instance.httpsCallable('onContactAnonymityCheck')` path from `contact_service.dart`.
+    - Preserved the 120-second callable timeout through `TrembleApiClient.call(...)`.
+    - Let central Firebase Functions error mapping flow through `TrembleApiClient` and specialized the contact-check rate-limit message to `Too many contact checks. Please wait a moment.`
+    - Removed one unused import from `test/features/gym/gym_search_widget_test.dart` to restore analyzer-clean status.
+    - Verified `flutter analyze --no-fatal-infos` is clean.
+    - Verified `flutter test --dart-define-from-file=.env.json` passes all 163 Flutter tests.
+    - Verified `grep -rn 'httpsCallable' lib/src/core/contact_service.dart` returns no matches.
+- In Progress: None.
+- Blocked: Exact repo-wide `grep -rn 'httpsCallable' lib/` returns the central API client by design.
+- Next Action: Review and commit the scoped Flutter diff when ready; do not deploy.
+
+## Session State — 2026-06-14 23:40 CEST
+- Active Task: Improve gym search error visibility for Places autocomplete failures
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/core/places_service.dart`
+    - `lib/src/features/gym/presentation/gym_search_widget.dart`
+    - `test/features/gym/gym_search_widget_test.dart`
+    - `lib/src/core/contact_service.dart` (pre-existing raw-call bypass worktree change; only call-line formatting adjusted so active source guard passes)
+    - `tasks/context.md`
+- Open Problems:
+    - Exact `flutter run --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev` still cannot start because Flutter detects both `macos` and `chrome` and requires `-d`.
+    - Pre-existing/parallel worktree changes remain in R2 upload files, `partner_preference_modal.dart`, and untracked `test/core/contact_service_wiring_test.dart`.
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - No Places endpoint/request body, API key hardcoding, AndroidManifest.xml, Info.plist, google-services.json, Firestore rules, or deploy changes performed.
+- System Status: Flutter tests passing, Flutter analyze clean, dev debug APK build passing.
+
+## Session Handoff
+- Completed:
+    - Added full response-body logging for non-200 gym autocomplete responses in `PlacesService`.
+    - Added debug-only 403 guidance for gym search covering `PLACES_KEY_DEV`, Android key restrictions, and Places API (New).
+    - Replaced the gym autocomplete empty-key log with the explicit `PLACES_KEY_DEV` `--dart-define` guidance.
+    - Added `_searchError` state to `GymSearchWidget`, reset it on new/empty searches, and set it when `_gymAutocomplete` throws.
+    - Updated submitted-search snackbar copy so genuine empty results show `No gyms found nearby. Try another gym name.` and thrown search failures show `Gym search unavailable. Check connection.`
+    - Added a focused widget regression proving thrown gym autocomplete failures show the unavailable snackbar instead of the empty-result snackbar.
+    - Verified RED for the new widget test before production changes, then verified GREEN after the fix.
+    - Verified `flutter test` passes all 163 active tests.
+    - Verified `flutter analyze --no-fatal-infos` reports no issues.
+    - Verified `flutter build apk --debug --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev` builds `build/app/outputs/flutter-apk/app-dev-debug.apk`.
+- In Progress: None.
+- Blocked: Device-specific `flutter run` remains blocked until a target is specified, e.g. an Android/iOS device ID.
+- Next Action: Run gym search on a real dev mobile target with `-d <deviceId>` and confirm 403/body diagnostics appear in debug logs when the API rejects the request.
+
+## Session State — 2026-06-14 23:28 CEST
+- Active Task: Fix R2 presigned URL 403 during onboarding photo upload
+- Environment: Dev/local Functions + Flutter only, `main`
+- Modified Files:
+    - `functions/src/modules/uploads/uploads.functions.ts`
+    - `lib/src/core/upload_service.dart`
+    - `lib/src/features/auth/presentation/registration_flow.dart`
+    - `tasks/context.md`
+- Open Problems:
+    - Exact `flutter run --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev` could not start because Flutter detected both `macos` and `chrome` and required `-d`.
+    - `flutter run -d macos --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev` also could not run because the macOS Xcode project has only `Flutter Assemble` and `Runner` schemes, not a `dev` scheme.
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - No deploy, uploads Zod schema, AndroidManifest.xml, Info.plist, google-services.json, Firestore rules, or Firebase config edits performed.
+- System Status: Functions tests passing, Flutter tests passing, Flutter analyze clean, dev debug APK build passing.
+
+## Session Handoff
+- Completed:
+    - Removed `ContentLength` and `Metadata` from the R2 `PutObjectCommand` used by `generateUploadUrl` so those values no longer become required signed headers for the Flutter PUT request.
+    - Removed manual `request.contentLength = fileSize` assignment from `UploadService.uploadPhoto` while keeping the existing chunked upload progress logic unchanged.
+    - Added debug-only upload failure logging in the `completeRegistration()` catch path where `user == null`, without changing retry/bypass logic.
+    - Verified `cd functions && npm run test` passes all 33 Cloud Functions tests.
+    - Verified `flutter test` passes all 161 Flutter tests.
+    - Verified `flutter analyze --no-fatal-infos` is clean.
+    - Verified `flutter build apk --debug --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev` builds `build/app/outputs/flutter-apk/app-dev-debug.apk`.
+- In Progress: None.
+- Blocked: Physical onboarding photo upload E2E remains blocked/unverified until a real mobile target/dev setup is available.
+- Next Action: Deploy `generateUploadUrl` only to `tremble-dev` after explicit founder approval, then run authenticated picker -> R2 PUT -> `photoUrls` -> `completeOnboarding` E2E.
+
 ## Session State — 2026-06-14 08:37 CEST
 - Active Task: Align Functions rate limit TTL field with prod Firestore TTL policy
 - Environment: Dev/local Functions only, `main`

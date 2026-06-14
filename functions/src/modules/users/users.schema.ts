@@ -14,6 +14,11 @@ const interestedInSchema = z.preprocess((value) => {
     return value;
 }, z.array(interestedInValueSchema).min(1).max(3));
 
+const nicotineUseSchema = z.union([
+    z.array(z.string().max(50)).max(10),
+    z.string().max(50),
+]);
+
 /** Schema for partial profile updates (settings/preferences) */
 export const updateProfileSchema = z
     .object({
@@ -25,7 +30,7 @@ export const updateProfileSchema = z
         photoUrls: z.array(z.string().url()).min(1).max(6).optional(),
         height: z.number().int().min(100).max(250).optional(),
         isSmoker: z.boolean().optional(),
-        nicotineUse: z.string().max(50).optional(),
+        nicotineUse: nicotineUseSchema.optional(),
         nicotineFilter: z.string().max(50).optional(),
         hasChildren: z.boolean().optional(),
         partnerSmokingPreference: z.string().max(50).optional(),

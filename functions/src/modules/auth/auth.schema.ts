@@ -14,6 +14,11 @@ const interestedInSchema = z.preprocess((value) => {
     return value;
 }, z.array(interestedInValueSchema).min(1).max(3));
 
+const nicotineUseSchema = z.union([
+    z.array(z.string().max(50)).max(10),
+    z.string().max(50),
+]);
+
 /** Schema for completing the onboarding profile */
 export const completeOnboardingSchema = z.object({
     name: z
@@ -37,7 +42,7 @@ export const completeOnboardingSchema = z.object({
     location: z.enum(["Ljubljana", "Koper", "Zagreb", "Other"]).optional(),
     photoUrls: z.array(z.string().url()).min(1).max(6),
     isSmoker: z.boolean().optional(),
-    nicotineUse: z.string().max(50).optional(),
+    nicotineUse: nicotineUseSchema.optional(),
     nicotineFilter: z.string().max(50).optional(),
     partnerSmokingPreference: z.string().max(50).optional(),
     drinkingHabit: z.string().max(50).optional(),

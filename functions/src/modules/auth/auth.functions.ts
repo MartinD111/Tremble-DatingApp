@@ -80,6 +80,10 @@ export const completeOnboarding = onCall(
 
         // Validate input
         const data = validateRequest(completeOnboardingSchema, request.data);
+        const rawNicotine = data.nicotineUse;
+        const nicotineUse = Array.isArray(rawNicotine)
+            ? rawNicotine
+            : rawNicotine != null ? [rawNicotine] : [];
 
         // Calculate age from birthDate
         const birthDate = new Date(data.birthDate);
@@ -109,6 +113,7 @@ export const completeOnboarding = onCall(
                     location: data.location || null,
                     photoUrls: data.photoUrls,
                     isSmoker: data.isSmoker ?? null,
+                    nicotineUse,
                     partnerSmokingPreference: data.partnerSmokingPreference || null,
                     drinkingHabit: data.drinkingHabit || null,
                     exerciseHabit: data.exerciseHabit || null,
