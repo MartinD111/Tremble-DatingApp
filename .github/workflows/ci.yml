@@ -227,7 +227,9 @@ jobs:
 
       - name: Run tests
         run: npm test -- --passWithNoTests
-
+      - name: Audit CF dependencies
+        working-directory: functions
+        run: npm audit --audit-level=high
   # ── ⑤ MPC: Security Scans ──────────────────────────────────────────────
   mpc-security:
     name: "⑤ MPC — Security Scans"
