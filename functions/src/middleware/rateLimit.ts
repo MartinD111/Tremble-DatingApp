@@ -51,7 +51,7 @@ export async function checkRateLimit(
             transaction.set(docRef, {
                 count: 1,
                 windowStart: now,
-                expiresAt: new Date(now + windowMs), // Firestore TTL
+                ttl: new Date(now + windowMs), // Firestore TTL
             });
             return;
         }
@@ -65,7 +65,7 @@ export async function checkRateLimit(
             transaction.set(docRef, {
                 count: 1,
                 windowStart: now,
-                expiresAt: new Date(now + windowMs),
+                ttl: new Date(now + windowMs),
             });
             return;
         }

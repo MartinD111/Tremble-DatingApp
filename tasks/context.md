@@ -1,3 +1,49 @@
+## Session State — 2026-06-14 08:37 CEST
+- Active Task: Align Functions rate limit TTL field with prod Firestore TTL policy
+- Environment: Dev/local Functions only, `main`
+- Modified Files:
+    - `functions/src/middleware/rateLimit.ts`
+    - `functions/src/__tests__/rateLimit.test.ts`
+    - `tasks/context.md`
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - Pre-existing local changes remain: `coverage/lcov.info` and prior `tasks/context.md` entries.
+    - No deploy, Flutter code, Firestore rules, native config, or Firebase config edits performed.
+- System Status: Functions TypeScript compile and Jest suite passing.
+
+## Session Handoff
+- Completed:
+    - Confirmed `functions/src/middleware/rateLimit.ts` wrote `expiresAt` for both new `rateLimits/{uid}:{endpoint}` documents and expired-window resets.
+    - Took Option A: changed both Firestore rate limit document writes from `expiresAt` to `ttl` to match the existing prod TTL policy on `am---dating-app`.
+    - Added focused regression coverage proving rate limit creation and reset writes include `ttl` and omit `expiresAt`.
+    - Verified RED failure before the implementation change showed received `expiresAt` instead of expected `ttl`.
+    - Verified `npm test -- rateLimit.test.ts --runInBand`, `npx tsc --noEmit`, and `npm test -- --runInBand` from `functions/`.
+- In Progress: None.
+- Blocked: None for this local code change.
+- Next Action: Review and commit the scoped Functions diff; deploy only after explicit founder approval.
+
+## Session State — 2026-06-14 00:48 CEST
+- Active Task: Deploy updated `getMatches` Cloud Function to production
+- Environment: Prod Firebase Functions, project `am---dating-app`, `main`
+- Modified Files:
+    - `tasks/context.md`
+- Open Problems:
+    - Full `firebase deploy --only functions --project am---dating-app` aborted before deploying because prod has functions not present in local source: `migrateMatchTypes`, `onBleProximity`, `onRunEncounter`, `updateLocation`.
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - `coverage/lcov.info` remains a pre-existing local unstaged test-output change.
+- System Status: Targeted `getMatches(europe-west1)` production deploy completed successfully.
+
+## Session Handoff
+- Completed:
+    - Confirmed current branch is `main`, `.firebaserc` maps prod to `am---dating-app`, and local commit `9a91e6d` contains the `getMatches` batching change.
+    - Ran `firebase deploy --only functions --project am---dating-app`; Firebase uploaded source but aborted deletion checks in non-interactive mode before function updates.
+    - Avoided forcing deletion of unrelated deployed prod functions.
+    - Ran safe targeted deploy: `firebase deploy --only functions:getMatches --project am---dating-app`.
+    - Verified Firebase CLI reported `functions[getMatches(europe-west1)] Successful update operation` and `Deploy complete`.
+- In Progress: None.
+- Blocked: Full all-functions deploy still needs an explicit cleanup/deletion decision for stale deployed functions before it can run non-interactively.
+- Next Action: If full Functions deploy is required later, decide whether stale prod functions should be retained, deleted, or reintroduced locally before using `--force`.
+
 ## Session State — 2026-06-14 00:36 CEST
 - Active Task: Replace hardcoded Slovenian gym enable label with i18n
 - Environment: Dev/local Flutter only, `main`
