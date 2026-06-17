@@ -1,3 +1,75 @@
+## Session State — 2026-06-17 23:16 CEST
+- Active Task: Fix R2 photo upload TLS failure on iOS (SSLV3_ALERT_HANDSHAKE_FAILURE)
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/core/upload_service.dart`
+    - `test/core/upload_service_ios_tls_test.dart` [NEW]
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - Physical device verification still gated on B005.
+    - No deploy performed.
+- System Status: Build passing. Flutter analyze clean. Flutter 170/170 tests passing.
+
+## Session Handoff
+- Completed:
+    - Root cause: upload_service.dart used dart:io HttpClient for the presigned R2 PUT. dart:io uses Dart's own TLS stack which triggers SSLV3_ALERT_HANDSHAKE_FAILURE on iOS against Cloudflare R2's S3 endpoint. Android works because Android's TLS stack handles Cloudflare's cipher requirements.
+    - Fix: Replaced dart:io HttpClient with package:http http.put(). package:http delegates to NSURLSession on iOS (Apple's Network.framework) which handles Cloudflare R2 TLS correctly.
+    - package:http ^1.2.2 was already in pubspec.yaml — no pubspec changes needed.
+    - Progress callback preserved: fires once at 100% on completion (bytes fully buffered before upload, so streaming progress was cosmetic only).
+    - Added test/core/upload_service_ios_tls_test.dart with 3 regression tests pinning: (1) package:http imported, (2) HttpClient() not used, (3) http.put() used.
+    - Verified flutter analyze --no-fatal-infos: No issues found.
+    - Verified flutter test --dart-define-from-file=.env.json: 170/170 tests pass.
+    - Added Rule #73 to tasks/lessons.md.
+- In Progress: None.
+- Blocked: B005 iOS provisioning. B006 photo upload E2E unverified on physical device.
+- Next Action: After B005 resolves, test onboarding photo upload on physical iPhone to confirm TLS fix works end-to-end.
+
+## Session State — 2026-06-17 23:13 CEST
+- Active Task: Fix Places API radius error — cap at 50,000 m
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/core/places_service.dart`
+    - `test/core/places_service_radius_test.dart` [NEW]
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - No deploy performed.
+- System Status: Build passing. Flutter analyze clean. Flutter 167/167 tests passing.
+
+## Session Handoff
+- Completed:
+    - Diagnosed two `'radius': 2000000.0` literals (2,000 km) in places_service.dart that exceed the Google Places API (New) hard cap of 50,000 m causing "Invalid circle.radius" 400 errors.
+    - Fixed autocomplete() city-search fallback: line 122 → 50000.0.
+    - Fixed gymAutocomplete() no-location fallback: line 179 → 50000.0.
+    - The user-location gym path (line 173) was already 50000.0 — left unchanged.
+    - Added test/core/places_service_radius_test.dart with 3 regression tests (source-text scan, cap assertion, exact-value pin).
+    - Verified flutter analyze --no-fatal-infos: No issues found.
+    - Verified flutter test --dart-define-from-file=.env.json: 167/167 tests pass.
+- In Progress: None.
+- Blocked: B005 iOS provisioning. B006 photo upload E2E unverified.
+- Next Action: No further code changes needed. Deploy CF / Flutter only after explicit founder approval.
+
+## Session State — 2026-06-17 23:10 CEST
+- Active Task: CODEX audit — verify nicotineUse serialization in toApiPayload()
+- Environment: Dev/local Flutter only, `main`
+- Modified Files: None (no changes required — fix already applied)
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - APK build in progress (awaiting gradle completion).
+- System Status: Build passing. Flutter analyze clean. Flutter 164/164 tests passing. Dev APK built.
+
+## Session Handoff
+- Completed:
+    - CODEX prompt claimed nicotineUse sends List<String> but CF schema expects a single string.
+    - Audit confirmed the previous session (2026-06-14 23:47) already resolved this: CF schemas (auth.schema.ts + users.schema.ts) were updated to accept z.union([z.array(z.string()), z.string()]) — both arrays and strings pass validation.
+    - toApiPayload() at line 245 correctly sends the full List<String> for nicotineUse (multi-select preserved).
+    - api_payload_contract_test.dart pins the List<String> serialization as the expected format.
+    - Verified flutter test --dart-define-from-file=.env.json: 164/164 tests pass.
+    - Verified flutter analyze --no-fatal-infos: No issues found.
+    - Verified flutter build apk --debug --flavor dev: ✓ Built build/app/outputs/flutter-apk/app-dev-debug.apk.
+- In Progress: None.
+- Blocked: B005 iOS provisioning. B006 photo upload E2E unverified.
+- Next Action: After build confirms green, no further changes needed for this CODEX task. Physical device E2E still gated on B005.
+
 ## Session State — 2026-06-14 23:51 CEST
 - Active Task: Chunk GDPR `deleteUserAccount` block-reference cleanup batches
 - Environment: Dev/local Functions only, `main`

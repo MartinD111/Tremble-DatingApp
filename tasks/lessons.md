@@ -4,6 +4,10 @@
 
 ---
 
+**Rule #73 — Never use dart:io HttpClient for HTTPS requests to Cloudflare R2 on iOS.**
+[2026-06-17] dart:io HttpClient uses Dart's own TLS stack. On iOS this triggers SSLV3_ALERT_HANDSHAKE_FAILURE when connecting to Cloudflare R2's S3-compatible endpoint (*.r2.cloudflarestorage.com) because Dart's TLS implementation does not negotiate cipher suites Cloudflare requires. Android is unaffected. Fix: use package:http (delegates to NSURLSession / Apple Network.framework on iOS). package:http ^1.2.2 is already in pubspec.yaml.
+Source: R2 photo upload iOS TLS fix, June 2026.
+
 **Rule #72 — GDPR block-ref cleanup (gdpr.functions.ts step 5b) uses a single Firestore batch (500-write cap).**
 If a deleted user was blocked by >500 others, the batch throws and deletion fails. Add chunking before user base scales past ~200 DAU. Pattern: split blockersOf.docs into chunks of 499, commit each batch sequentially.
 Source: Security audit, 11 Jun 2026.
