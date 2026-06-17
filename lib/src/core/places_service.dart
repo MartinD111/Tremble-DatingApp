@@ -119,7 +119,8 @@ class PlacesService {
               'locationBias': {
                 'circle': {
                   'center': {'latitude': 46.1512, 'longitude': 14.9955},
-                  'radius': 2000000.0,
+                  // Google Places API (New) max radius is 50,000 m.
+                  'radius': 50000.0,
                 },
               },
               'languageCode': 'en',
@@ -176,7 +177,8 @@ class PlacesService {
         : {
             'circle': {
               'center': {'latitude': 46.1512, 'longitude': 14.9955},
-              'radius': 2000000.0,
+              // Google Places API (New) max radius is 50,000 m.
+              'radius': 50000.0,
             },
           };
 

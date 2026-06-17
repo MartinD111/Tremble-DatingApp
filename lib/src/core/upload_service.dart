@@ -1,11 +1,6 @@
-import 'dart:io'
-    show
-        HandshakeException,
-        HttpClient,
-        HttpHeaders,
-        SocketException,
-        TlsException;
+import 'dart:io' show SocketException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'api_client.dart';
 
@@ -13,8 +8,16 @@ import 'api_client.dart';
 ///
 /// Flow:
 ///   1. Call `uploadPhoto(xFile)` — this calls the Cloud Function to get a presigned URL
-///   2. The function then PUTs the file directly to R2
+///   2. The service then PUTs the file directly to R2 using `package:http`
 ///   3. Returns the final public URL to store in the user's profile
+///
+/// WHY package:http instead of dart:io HttpClient:
+///   dart:io HttpClient uses Dart's own TLS stack. On iOS this triggers
+///   SSLV3_ALERT_HANDSHAKE_FAILURE against Cloudflare R2's S3 endpoint because
+///   Dart's TLS implementation does not negotiate the cipher suites Cloudflare
+///   requires. package:http delegates to NSURLSession on iOS (Apple's native
+///   Network.framework TLS stack) which handles Cloudflare R2 correctly.
+///   Android is unaffected — both paths work, but package:http is consistent.
 class UploadService {
   static final UploadService _instance = UploadService._internal();
   factory UploadService() => _instance;
@@ -25,7 +28,9 @@ class UploadService {
   /// Upload a photo to Cloudflare R2.
   ///
   /// [file] — file picked via `image_picker`
-  /// [onProgress] — optional callback called with (bytesSent, totalBytes)
+  /// [onProgress] — optional callback called with (bytesSent, totalBytes).
+  ///   Because bytes are fully buffered before upload, this fires once at
+  ///   100 % when the upload completes (sufficient for the spinner UX).
   /// Returns the public URL to store in `photoUrls`.
   /// Throws [TrembleApiException] on failure.
   Future<String> uploadPhoto(
@@ -37,7 +42,7 @@ class UploadService {
     final mimeType = _mimeTypeFromPath(file.path);
     final fileName = _sanitizeFileName(file.name);
 
-    // Validate size client-side (10MB max)
+    // Validate size client-side (10 MB max)
     if (fileSize > 10 * 1024 * 1024) {
       throw TrembleApiException(
         code: 'invalid-argument',
@@ -45,7 +50,7 @@ class UploadService {
       );
     }
 
-    // Step 1: Get presigned upload URL from server
+    // Step 1: Get presigned upload URL from Cloud Function
     final result = await _api.call('generateUploadUrl', data: {
       'fileName': fileName,
       'mimeType': mimeType,
@@ -55,21 +60,21 @@ class UploadService {
     final uploadUrl = result['uploadUrl'] as String;
     final publicUrl = result['publicUrl'] as String;
 
-    // Step 2: PUT directly to R2, streaming in chunks for progress reporting
-    final httpClient = HttpClient();
+    // Step 2: PUT directly to R2 using package:http.
+    //
+    // package:http uses NSURLSession on iOS (Apple's native TLS stack) which
+    // correctly negotiates TLS 1.3 with Cloudflare R2. dart:io HttpClient uses
+    // Dart's own TLS implementation, which triggers SSLV3_ALERT_HANDSHAKE_FAILURE
+    // on iOS against Cloudflare's S3-compatible endpoint.
     try {
-      final request = await httpClient.putUrl(Uri.parse(uploadUrl));
-      request.headers.set(HttpHeaders.contentTypeHeader, mimeType);
+      final response = await http.put(
+        Uri.parse(uploadUrl),
+        headers: {'Content-Type': mimeType},
+        body: bytes,
+      );
 
-      const chunkSize = 65536; // 64 KB
-      for (var i = 0; i < bytes.length; i += chunkSize) {
-        final end = (i + chunkSize).clamp(0, bytes.length);
-        request.add(bytes.sublist(i, end));
-        onProgress?.call(end, fileSize);
-      }
-
-      final response = await request.close();
-      await response.drain<void>();
+      // Report 100 % completion to any progress listener.
+      onProgress?.call(fileSize, fileSize);
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw TrembleApiException(
@@ -79,23 +84,20 @@ class UploadService {
       }
 
       return publicUrl;
-    } on HandshakeException catch (e) {
-      throw TrembleApiException(
-        code: 'unavailable',
-        message: 'TLS handshake failed uploading to R2: $e',
-      );
+    } on TrembleApiException {
+      rethrow;
     } on SocketException catch (e) {
       throw TrembleApiException(
         code: 'unavailable',
         message: 'Network error uploading to R2: $e',
       );
-    } on TlsException catch (e) {
+    } catch (e) {
+      // Catches http.ClientException, TlsException forwarded by http package,
+      // and any other unexpected errors.
       throw TrembleApiException(
         code: 'unavailable',
-        message: 'TLS error uploading to R2: $e',
+        message: 'Upload to R2 failed: $e',
       );
-    } finally {
-      httpClient.close();
     }
   }
 
