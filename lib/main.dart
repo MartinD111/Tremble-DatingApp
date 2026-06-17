@@ -56,8 +56,16 @@ Future<void> main() async {
     providerAndroid: flavor == 'prod'
         ? AndroidPlayIntegrityProvider()
         : AndroidDebugProvider(),
-    providerApple:
-        flavor == 'prod' ? AppleDeviceCheckProvider() : AppleDebugProvider(),
+    // Dev: pin the registered Firebase console debug token so App Check
+    // bypass works consistently. AppleDebugProvider() without debugToken
+    // generates a random token each run — it never matches the console entry.
+    // This token is dev-only and revocable; safe to commit.
+    // Prod: DeviceCheck provides hardware attestation.
+    providerApple: flavor == 'prod'
+        ? AppleDeviceCheckProvider()
+        : AppleDebugProvider(
+            debugToken: '26697195-D797-4FFE-ADEA-9631258A1C88',
+          ),
   );
 
   FlutterError.onError = (details) {

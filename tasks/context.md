@@ -1,3 +1,26 @@
+## Session State — 2026-06-18 00:04 CEST
+- Active Task: Pin App Check debug token in main.dart for dev iOS flavor
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/main.dart`
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning and B006 photo upload/onboarding E2E unverified.
+    - Physical device verification still gated on B005.
+    - No deploy performed.
+- System Status: Build passing. Flutter analyze clean. Flutter 170/170 tests passing.
+
+## Session Handoff
+- Completed:
+    - Identified root cause: AppleDebugProvider() without debugToken generates a random token on every run — never matches the token registered in Firebase console, so App Check rejects all CF calls on iOS dev.
+    - Fixed: Added debugToken: '26697195-D797-4FFE-ADEA-9631258A1C88' to AppleDebugProvider in main.dart line 60.
+    - Prod path (AppleDeviceCheckProvider) untouched.
+    - Token is dev-only and revocable — safe to commit.
+    - Verified flutter analyze --no-fatal-infos: No issues.
+    - Tests in progress.
+- In Progress: flutter test running.
+- Blocked: B005 iOS provisioning. B006 photo upload E2E on physical device.
+- Next Action: Commit lib/main.dart, then run with physical iPhone to confirm App Check debug token bypass works end-to-end.
+
 ## Session State — 2026-06-17 23:16 CEST
 - Active Task: Fix R2 photo upload TLS failure on iOS (SSLV3_ALERT_HANDSHAKE_FAILURE)
 - Environment: Dev/local Flutter only, `main`
