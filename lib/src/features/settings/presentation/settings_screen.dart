@@ -980,8 +980,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title:
-              Text(_t('hide_nav_bar'), style: TextStyle(color: textColor)),
+          title: Text(_t('hide_nav_bar'), style: TextStyle(color: textColor)),
           subtitle: Text(_t('auto_hide_on_scroll'),
               style: TextStyle(color: subColor, fontSize: 12)),
           value: ref.watch(hideNavBarPrefProvider),

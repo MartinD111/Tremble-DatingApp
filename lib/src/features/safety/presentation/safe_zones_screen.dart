@@ -105,151 +105,153 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                 behavior: HitTestBehavior.opaque,
                 onTap: () => FocusScope.of(ctx).unfocus(),
                 child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Zone name
-                    Text('Zone name',
-                        style: GoogleFonts.instrumentSans(
-                            color: subColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: nameController,
-                      style: TextStyle(color: textColor, fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: 'e.g. Home, Work, Gym…',
-                        hintStyle:
-                            TextStyle(color: subColor.withValues(alpha: 0.6)),
-                        filled: true,
-                        fillColor: inputFill,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(color: borderColor),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide: BorderSide(color: borderColor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          borderSide:
-                              BorderSide(color: TrembleTheme.rose, width: 1.5),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Radius selector
-                    Text('Radius',
-                        style: GoogleFonts.instrumentSans(
-                            color: subColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [100.0, 250.0, 500.0].map((r) {
-                        final isSelected = selectedRadius == r;
-                        return GestureDetector(
-                          onTap: () => setDialogState(() => selectedRadius = r),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: isSelected ? TrembleTheme.rose : inputFill,
-                              borderRadius: BorderRadius.circular(100),
-                              border: Border.all(
-                                color: isSelected
-                                    ? TrembleTheme.rose
-                                    : borderColor,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Text(
-                              '${r.round()}m',
-                              style: GoogleFonts.instrumentSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: isSelected ? Colors.white : subColor,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Location source toggle
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Use address instead of GPS',
-                            style: GoogleFonts.instrumentSans(
-                                color: subColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        Switch(
-                          value: useAddress,
-                          activeTrackColor: TrembleTheme.rose,
-                          activeThumbColor: Colors.white,
-                          onChanged: (val) =>
-                              setDialogState(() => useAddress = val),
-                        ),
-                      ],
-                    ),
-
-                    if (useAddress) ...[
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Zone name
+                      Text('Zone name',
+                          style: GoogleFonts.instrumentSans(
+                              color: subColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600)),
                       const SizedBox(height: 6),
                       TextField(
-                        controller: addressController,
+                        controller: nameController,
                         style: TextStyle(color: textColor, fontSize: 14),
                         decoration: InputDecoration(
-                          hintText: 'Enter a nearby address (not exact)',
-                          hintStyle: TextStyle(
-                              color: subColor.withValues(alpha: 0.6),
-                              fontSize: 13),
+                          hintText: 'e.g. Home, Work, Gym…',
+                          hintStyle:
+                              TextStyle(color: subColor.withValues(alpha: 0.6)),
                           filled: true,
                           fillColor: inputFill,
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(100),
                             borderSide: BorderSide(color: borderColor),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(100),
                             borderSide: BorderSide(color: borderColor),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(100),
                             borderSide: BorderSide(
                                 color: TrembleTheme.rose, width: 1.5),
                           ),
                         ),
-                        maxLines: 2,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'You can enter a nearby street or intersection instead of your exact address. We build a range around it — your precise location is never stored.',
-                        style: GoogleFonts.instrumentSans(
-                            color: subColor.withValues(alpha: 0.7),
-                            fontSize: 11,
-                            height: 1.5),
+                      const SizedBox(height: 20),
+
+                      // Radius selector
+                      Text('Radius',
+                          style: GoogleFonts.instrumentSans(
+                              color: subColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [100.0, 250.0, 500.0].map((r) {
+                          final isSelected = selectedRadius == r;
+                          return GestureDetector(
+                            onTap: () =>
+                                setDialogState(() => selectedRadius = r),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected ? TrembleTheme.rose : inputFill,
+                                borderRadius: BorderRadius.circular(100),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? TrembleTheme.rose
+                                      : borderColor,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Text(
+                                '${r.round()}m',
+                                style: GoogleFonts.instrumentSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected ? Colors.white : subColor,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
+                      const SizedBox(height: 20),
+
+                      // Location source toggle
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Use address instead of GPS',
+                              style: GoogleFonts.instrumentSans(
+                                  color: subColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          Switch(
+                            value: useAddress,
+                            activeTrackColor: TrembleTheme.rose,
+                            activeThumbColor: Colors.white,
+                            onChanged: (val) =>
+                                setDialogState(() => useAddress = val),
+                          ),
+                        ],
+                      ),
+
+                      if (useAddress) ...[
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: addressController,
+                          style: TextStyle(color: textColor, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Enter a nearby address (not exact)',
+                            hintStyle: TextStyle(
+                                color: subColor.withValues(alpha: 0.6),
+                                fontSize: 13),
+                            filled: true,
+                            fillColor: inputFill,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(color: borderColor),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(color: borderColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                  color: TrembleTheme.rose, width: 1.5),
+                            ),
+                          ),
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'You can enter a nearby street or intersection instead of your exact address. We build a range around it — your precise location is never stored.',
+                          style: GoogleFonts.instrumentSans(
+                              color: subColor.withValues(alpha: 0.7),
+                              fontSize: 11,
+                              height: 1.5),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
               actions: [
                 TextButton(
                   onPressed: isAdding ? null : () => Navigator.pop(ctx),
@@ -409,186 +411,191 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
         onTap: () => FocusScope.of(context).unfocus(),
         child: Stack(
           children: [
-          SingleChildScrollView(
-            controller: _scrollController,
-            padding: EdgeInsets.fromLTRB(24, topPad + 80, 24, 40),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Hero icon
-                Center(
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: TrembleTheme.rose.withValues(alpha: 0.12),
-                      border: Border.all(
-                        color: TrembleTheme.rose.withValues(alpha: 0.35),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: const Icon(LucideIcons.mapPin,
-                        color: TrembleTheme.rose, size: 28),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                _InfoBlock(
-                  icon: LucideIcons.mapPin,
-                  title: 'What Safe Zones do',
-                  body:
-                      'A Safe Zone is an area where you will never appear in anyone\'s radar — and no one will appear in yours. Useful for home, work, or any location where you want complete privacy.',
-                  textColor: textColor,
-                  subColor: subColor,
-                  cardBg: cardBg,
-                ),
-                const SizedBox(height: 12),
-
-                _InfoBlock(
-                  icon: LucideIcons.locateOff,
-                  title: 'Your exact location is never stored',
-                  body:
-                      'Only coarse geohash cells (roughly ~150m blocks) are stored on our servers. Your precise GPS coordinates are never stored. You can enter a nearby address instead of your real one — we build a range around it and that is all we use.',
-                  textColor: textColor,
-                  subColor: subColor,
-                  cardBg: cardBg,
-                ),
-                const SizedBox(height: 12),
-
-                _InfoBlock(
-                  icon: LucideIcons.shieldCheck,
-                  title: 'No judgment, no questions',
-                  body:
-                      'We do not ask why you want a Safe Zone. We do not track how many you add or when you activate them. There are no logs and no history. Your privacy decisions are entirely yours.',
-                  textColor: textColor,
-                  subColor: subColor,
-                  cardBg: cardBg,
-                ),
-
-                const SizedBox(height: 32),
-
-                // Zone list
-                if (_loading)
-                  const Center(child: CircularProgressIndicator())
-                else if (_zones.isEmpty)
+            SingleChildScrollView(
+              controller: _scrollController,
+              padding: EdgeInsets.fromLTRB(24, topPad + 80, 24, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Hero icon
                   Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Text(
-                        'No safe zones added yet.',
-                        style: GoogleFonts.instrumentSans(
-                            color: subColor, fontSize: 14),
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: TrembleTheme.rose.withValues(alpha: 0.12),
+                        border: Border.all(
+                          color: TrembleTheme.rose.withValues(alpha: 0.35),
+                          width: 1.5,
+                        ),
                       ),
+                      child: const Icon(LucideIcons.mapPin,
+                          color: TrembleTheme.rose, size: 28),
                     ),
-                  )
-                else
-                  ...(_zones.map((zone) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: cardBg,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: zone.isActive
-                                  ? TrembleTheme.rose.withValues(alpha: 0.3)
-                                  : Colors.transparent,
-                              width: 1,
+                  ),
+                  const SizedBox(height: 24),
+
+                  _InfoBlock(
+                    icon: LucideIcons.mapPin,
+                    title: 'What Safe Zones do',
+                    body:
+                        'A Safe Zone is an area where you will never appear in anyone\'s radar — and no one will appear in yours. Useful for home, work, or any location where you want complete privacy.',
+                    textColor: textColor,
+                    subColor: subColor,
+                    cardBg: cardBg,
+                  ),
+                  const SizedBox(height: 12),
+
+                  _InfoBlock(
+                    icon: LucideIcons.locateOff,
+                    title: 'Your exact location is never stored',
+                    body:
+                        'Only coarse geohash cells (roughly ~150m blocks) are stored on our servers. Your precise GPS coordinates are never stored. You can enter a nearby address instead of your real one — we build a range around it and that is all we use.',
+                    textColor: textColor,
+                    subColor: subColor,
+                    cardBg: cardBg,
+                  ),
+                  const SizedBox(height: 12),
+
+                  _InfoBlock(
+                    icon: LucideIcons.shieldCheck,
+                    title: 'No judgment, no questions',
+                    body:
+                        'We do not ask why you want a Safe Zone. We do not track how many you add or when you activate them. There are no logs and no history. Your privacy decisions are entirely yours.',
+                    textColor: textColor,
+                    subColor: subColor,
+                    cardBg: cardBg,
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Zone list
+                  if (_loading)
+                    const Center(child: CircularProgressIndicator())
+                  else if (_zones.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Text(
+                          'No safe zones added yet.',
+                          style: GoogleFonts.instrumentSans(
+                              color: subColor, fontSize: 14),
+                        ),
+                      ),
+                    )
+                  else
+                    ...(_zones.map((zone) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: cardBg,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: zone.isActive
+                                    ? TrembleTheme.rose.withValues(alpha: 0.3)
+                                    : Colors.transparent,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.mapPin,
+                                  color: zone.isActive
+                                      ? TrembleTheme.rose
+                                      : subColor,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        zone.name,
+                                        style: GoogleFonts.instrumentSans(
+                                          color: textColor,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      Text(
+                                        _t('safe_zone_radius').replaceAll(
+                                            '{radius}',
+                                            zone.radiusMeters
+                                                .round()
+                                                .toString()),
+                                        style: GoogleFonts.instrumentSans(
+                                            color: subColor, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Switch(
+                                  value: zone.isActive,
+                                  activeTrackColor: TrembleTheme.rose,
+                                  activeThumbColor: Colors.white,
+                                  onChanged: (val) => _toggleZone(zone, val),
+                                ),
+                                IconButton(
+                                  icon: const Icon(LucideIcons.trash2,
+                                      color: Colors.redAccent, size: 18),
+                                  onPressed: () async {
+                                    await ref
+                                        .read(safeZoneRepositoryProvider)
+                                        .removeSafeZone(zone.id);
+                                    await _loadZones();
+                                  },
+                                ),
+                              ],
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                LucideIcons.mapPin,
-                                color: zone.isActive
-                                    ? TrembleTheme.rose
-                                    : subColor,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      zone.name,
-                                      style: GoogleFonts.instrumentSans(
-                                        color: textColor,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    Text(
-                                      _t('safe_zone_radius').replaceAll(
-                                          '{radius}',
-                                          zone.radiusMeters.round().toString()),
-                                      style: GoogleFonts.instrumentSans(
-                                          color: subColor, fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Switch(
-                                value: zone.isActive,
-                                activeTrackColor: TrembleTheme.rose,
-                                activeThumbColor: Colors.white,
-                                onChanged: (val) => _toggleZone(zone, val),
-                              ),
-                              IconButton(
-                                icon: const Icon(LucideIcons.trash2,
-                                    color: Colors.redAccent, size: 18),
-                                onPressed: () async {
-                                  await ref
-                                      .read(safeZoneRepositoryProvider)
-                                      .removeSafeZone(zone.id);
-                                  await _loadZones();
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ))),
+                        ))),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: TrembleTheme.rose.withValues(alpha: 0.1),
-                      foregroundColor: TrembleTheme.rose,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100),
-                          side: BorderSide(
-                              color: TrembleTheme.rose.withValues(alpha: 0.3))),
-                    ),
-                    onPressed: _addZone,
-                    icon: const Icon(LucideIcons.plus, size: 18),
-                    label: Text(
-                      _t('safe_zone_add'),
-                      style: GoogleFonts.instrumentSans(
-                          fontWeight: FontWeight.w600),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            TrembleTheme.rose.withValues(alpha: 0.1),
+                        foregroundColor: TrembleTheme.rose,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100),
+                            side: BorderSide(
+                                color:
+                                    TrembleTheme.rose.withValues(alpha: 0.3))),
+                      ),
+                      onPressed: _addZone,
+                      icon: const Icon(LucideIcons.plus, size: 18),
+                      label: Text(
+                        _t('safe_zone_add'),
+                        style: GoogleFonts.instrumentSans(
+                            fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          ValueListenableBuilder<double>(
-            valueListenable: _titleOpacity,
-            builder: (context, opacity, _) => TrembleHeader(
-              title: 'Safe Zones',
-              titleOpacity: opacity,
-              buttonsOpacity: opacity,
+            ValueListenableBuilder<double>(
+              valueListenable: _titleOpacity,
+              builder: (context, opacity, _) => TrembleHeader(
+                title: 'Safe Zones',
+                titleOpacity: opacity,
+                buttonsOpacity: opacity,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 }
