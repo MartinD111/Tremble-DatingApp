@@ -805,10 +805,15 @@ class AuthRepository {
       _db.collection('users');
 
   // ── Registration Draft (Checkpointing) ───────────────────────────────────
+  // Drafts go to drafts/{uid} (open to owner), NOT users/{uid} (strict typed
+  // schema + protected-keys allowlist). Writing drafts to users/{uid} fails
+  // Rules validation and Firestore's optimistic-write rollback flips the
+  // router's profileStatusProvider between Ready/NotFound, bouncing the user
+  // off /permission-gate.
   Future<void> updateRegistrationDraft(
       String uid, Map<String, dynamic> draftData) async {
     try {
-      await _users.doc(uid).set(
+      await _db.collection('drafts').doc(uid).set(
             draftData,
             SetOptions(merge: true),
           );

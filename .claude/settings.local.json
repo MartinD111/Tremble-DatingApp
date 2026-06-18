@@ -105,7 +105,9 @@
       "Bash(adb shell *)",
       "Bash(adb exec-out *)",
       "Bash(python -c ' *)",
-      "Bash(awk '{print $5}')"
+      "Bash(awk '{print $5}')",
+      "Bash(grep -A2 \"firebase_app_check:$\" /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/pubspec.lock)",
+      "Bash(pod install *)"
     ]
   }
 }

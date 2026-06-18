@@ -101,7 +101,10 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                 style: GoogleFonts.instrumentSans(
                     color: textColor, fontWeight: FontWeight.bold),
               ),
-              content: SingleChildScrollView(
+              content: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(ctx).unfocus(),
+                child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,6 +249,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
                   ],
                 ),
               ),
+            ),
               actions: [
                 TextButton(
                   onPressed: isAdding ? null : () => Navigator.pop(ctx),
@@ -400,8 +404,11 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
     final topPad = MediaQuery.of(context).padding.top;
 
     return GradientScaffold(
-      child: Stack(
-        children: [
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          children: [
           SingleChildScrollView(
             controller: _scrollController,
             padding: EdgeInsets.fromLTRB(24, topPad + 80, 24, 40),
@@ -581,6 +588,7 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }

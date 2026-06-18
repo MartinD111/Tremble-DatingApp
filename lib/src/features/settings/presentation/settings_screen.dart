@@ -981,8 +981,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title:
-              Text('Hide Navigation bar', style: TextStyle(color: textColor)),
-          subtitle: Text('Auto-hide on scroll',
+              Text(_t('hide_nav_bar'), style: TextStyle(color: textColor)),
+          subtitle: Text(_t('auto_hide_on_scroll'),
               style: TextStyle(color: subColor, fontSize: 12)),
           value: ref.watch(hideNavBarPrefProvider),
           activeThumbColor: Colors.white,
@@ -999,11 +999,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             color: TrembleTheme.rose,
           ),
           title: Text(
-            'Spoznaj Tremble ponovno',
+            _t('tutorial_replay_title'),
             style: TextStyle(color: textColor),
           ),
           subtitle: Text(
-            'Ponovni ogled kratkega interaktivnega vodiča',
+            _t('tutorial_replay_subtitle'),
             style: TextStyle(color: subColor, fontSize: 12),
           ),
           trailing: Icon(

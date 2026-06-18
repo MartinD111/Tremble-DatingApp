@@ -256,3 +256,7 @@ Source: Phase 10 Polish, April 2026.
 **Rule #1 — Never run un-flavored Flutter build commands.**
 [2026-03] For dev runs, use `flutter run --dart-define-from-file=.env.json`. For builds, always provide the explicit dev or prod flavor flags. An un-flavored build is a misconfigured build.
 Source: Multi-Env Setup, March 2026.
+
+**Rule #74 — `package:http` does NOT use NSURLSession on iOS by default.**
+[2026-06-18] It wraps `dart:io HttpClient` (BoringSSL), whose TLS stack fails the handshake against Cloudflare R2 with `SSLV3_ALERT_HANDSHAKE_FAILURE`. For R2 — or any endpoint failing TLS on iOS — use `cupertino_http`'s `CupertinoClient` (NSURLSession / Network.framework). See `lib/src/core/upload_service.dart`.
+Source: R2 upload TLS sprint, June 2026.

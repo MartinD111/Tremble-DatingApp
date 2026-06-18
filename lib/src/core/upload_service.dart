@@ -1,4 +1,5 @@
-import 'dart:io' show SocketException;
+import 'dart:io' show Platform, SocketException;
+import 'package:cupertino_http/cupertino_http.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -6,18 +7,9 @@ import 'api_client.dart';
 
 /// Service that handles photo uploads via Cloudflare R2 presigned URLs.
 ///
-/// Flow:
-///   1. Call `uploadPhoto(xFile)` — this calls the Cloud Function to get a presigned URL
-///   2. The service then PUTs the file directly to R2 using `package:http`
-///   3. Returns the final public URL to store in the user's profile
-///
-/// WHY package:http instead of dart:io HttpClient:
-///   dart:io HttpClient uses Dart's own TLS stack. On iOS this triggers
-///   SSLV3_ALERT_HANDSHAKE_FAILURE against Cloudflare R2's S3 endpoint because
-///   Dart's TLS implementation does not negotiate the cipher suites Cloudflare
-///   requires. package:http delegates to NSURLSession on iOS (Apple's native
-///   Network.framework TLS stack) which handles Cloudflare R2 correctly.
-///   Android is unaffected — both paths work, but package:http is consistent.
+/// On iOS the PUT is sent through `CupertinoClient` (NSURLSession). The default
+/// `package:http` client wraps `dart:io HttpClient`, whose TLS stack fails the
+/// handshake against Cloudflare R2 with SSLV3_ALERT_HANDSHAKE_FAILURE.
 class UploadService {
   static final UploadService _instance = UploadService._internal();
   factory UploadService() => _instance;
@@ -60,20 +52,15 @@ class UploadService {
     final uploadUrl = result['uploadUrl'] as String;
     final publicUrl = result['publicUrl'] as String;
 
-    // Step 2: PUT directly to R2 using package:http.
-    //
-    // package:http uses NSURLSession on iOS (Apple's native TLS stack) which
-    // correctly negotiates TLS 1.3 with Cloudflare R2. dart:io HttpClient uses
-    // Dart's own TLS implementation, which triggers SSLV3_ALERT_HANDSHAKE_FAILURE
-    // on iOS against Cloudflare's S3-compatible endpoint.
+    // Step 2: PUT directly to R2 via the platform-appropriate client.
+    final client = _platformClient();
     try {
-      final response = await http.put(
+      final response = await client.put(
         Uri.parse(uploadUrl),
         headers: {'Content-Type': mimeType},
         body: bytes,
       );
 
-      // Report 100 % completion to any progress listener.
       onProgress?.call(fileSize, fileSize);
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -92,13 +79,21 @@ class UploadService {
         message: 'Network error uploading to R2: $e',
       );
     } catch (e) {
-      // Catches http.ClientException, TlsException forwarded by http package,
-      // and any other unexpected errors.
       throw TrembleApiException(
         code: 'unavailable',
         message: 'Upload to R2 failed: $e',
       );
+    } finally {
+      client.close();
     }
+  }
+
+  http.Client _platformClient() {
+    if (Platform.isIOS) {
+      final config = URLSessionConfiguration.defaultSessionConfiguration();
+      return CupertinoClient.fromSessionConfiguration(config);
+    }
+    return http.Client();
   }
 
   /// Upload a photo from a file path (for profile editing).
