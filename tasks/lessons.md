@@ -4,6 +4,30 @@
 
 ---
 
+## iOS Build & App Store
+
+### ITMS-90683: Missing NSUsageDescription keys
+**When:** Any time a new SDK is added to pubspec.yaml or Podfile.
+**Root cause:** Third-party SDKs (Firebase, Google Sign-In, flutter_contacts, image_picker, etc.) internally reference iOS APIs that require purpose strings in Info.plist. Apple validates these at upload time, not at build time — the error only surfaces after xcrun altool upload.
+**Prevention:** Before every prod build, run:
+`grep -c "UsageDescription" ios/Runner/Info.plist`
+Cross-reference with all packages in pubspec.yaml that touch: contacts, camera, photos, location, Bluetooth, microphone, calendar, health, face ID, motion, speech.
+**Known required keys for Tremble (as of build 5):**
+- NSBluetoothAlwaysUsageDescription ✅
+- NSBluetoothPeripheralUsageDescription ✅
+- NSCameraUsageDescription ✅
+- NSContactsUsageDescription ✅ (Firebase SDK references CNContactStore)
+- NSLocationAlwaysAndWhenInUseUsageDescription ✅
+- NSLocationAlwaysUsageDescription ✅
+- NSLocationWhenInUseUsageDescription ✅
+- NSMotionUsageDescription ✅
+- NSPhotoLibraryAddUsageDescription ✅
+- NSPhotoLibraryUsageDescription ✅
+**If a new package is added:** grep the package source for "CNContact\|PHPhoto\|AVCapture\|CLLocation\|CMMotion\|CBCentral\|CBPeripheral\|NSMicrophone\|NSCalendar\|NSFaceID\|NSSpeech" and add the corresponding key before the next prod build.
+
+---
+
+
 **Rule #73 — Never use dart:io HttpClient for HTTPS requests to Cloudflare R2 on iOS.**
 [2026-06-17] dart:io HttpClient uses Dart's own TLS stack. On iOS this triggers SSLV3_ALERT_HANDSHAKE_FAILURE when connecting to Cloudflare R2's S3-compatible endpoint (*.r2.cloudflarestorage.com) because Dart's TLS implementation does not negotiate cipher suites Cloudflare requires. Android is unaffected. Fix: use package:http (delegates to NSURLSession / Apple Network.framework on iOS). package:http ^1.2.2 is already in pubspec.yaml.
 Source: R2 photo upload iOS TLS fix, June 2026.
