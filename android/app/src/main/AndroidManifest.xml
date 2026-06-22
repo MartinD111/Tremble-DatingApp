@@ -21,6 +21,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
     <!-- Location permissions -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
 
     <!-- Activity Recognition (Run Club) -->
@@ -36,6 +38,13 @@
 
     <!-- BLE hardware feature (optional — allows non-BLE devices to still install) -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false"/>
+
+    <!-- Camera + photo library (profile photos in onboarding and edit profile) -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
 
     <application
         android:label="Tremble"
@@ -63,6 +72,18 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- ── FCM default notification channel + icon ──────────────────────
+             Used when an incoming FCM notification message omits an explicit
+             channel_id. Must match a channel created in NotificationService
+             (see lib/src/core/notification_service.dart — 'tremble_wave').
+        -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="tremble_wave"/>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher"/>
 
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"

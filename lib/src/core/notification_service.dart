@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -70,6 +72,17 @@ abstract class TrembleNotificationType {
 class NotificationService {
   static final FlutterLocalNotificationsPlugin notifications =
       FlutterLocalNotificationsPlugin();
+
+  /// Subscription to FCM token rotations. Rotations happen on OS update, app
+  /// reinstall, or notification-cache clear; a stale token silently breaks
+  /// push delivery, so the new token must be persisted to Firestore.
+  static StreamSubscription<String>? _tokenRefreshSubscription;
+
+  /// Foreground FCM message subscription.
+  static StreamSubscription<RemoteMessage>? _onMessageSub;
+
+  /// App-opened-from-background notification subscription.
+  static StreamSubscription<RemoteMessage>? _onMessageOpenedAppSub;
 
   /// Call ONCE before runApp() in main.dart.
   /// Registers the background handler so it's ready before any notification arrives.
@@ -197,7 +210,9 @@ class NotificationService {
     // Protects against BLE + FCM race conditions arriving near-simultaneously.
     DateTime? _lastHapticAt;
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    // Guard against re-subscription if initialize() is called twice.
+    await _onMessageSub?.cancel();
+    _onMessageSub = FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final type = message.data['type'];
       final notification = message.notification;
 
@@ -247,17 +262,54 @@ class NotificationService {
     });
 
     // ── App opened from background notification ───────────
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    await _onMessageOpenedAppSub?.cancel();
+    _onMessageOpenedAppSub =
+        FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       if (onNotificationTap != null) {
         onNotificationTap(message.data);
       }
     });
+
+    // ── FCM token refresh ─────────────────────────────────
+    // Persist rotated tokens so pushes keep landing on the active install.
+    // Guard against re-subscription if initialize() is called twice.
+    await _tokenRefreshSubscription?.cancel();
+    _tokenRefreshSubscription =
+        FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .update({'fcmToken': newToken});
+        debugPrint('[NOTIFY] FCM Token refreshed for $uid');
+      } on FirebaseException catch (e) {
+        debugPrint('[NOTIFY] Error persisting refreshed FCM token: $e');
+      }
+    });
+  }
+
+  /// Cancels long-lived stream subscriptions owned by the service.
+  /// Safe to call multiple times.
+  static Future<void> dispose() async {
+    await _tokenRefreshSubscription?.cancel();
+    _tokenRefreshSubscription = null;
+    await _onMessageSub?.cancel();
+    _onMessageSub = null;
+    await _onMessageOpenedAppSub?.cancel();
+    _onMessageOpenedAppSub = null;
   }
 
   /// Saves the FCM token to the user's Firestore document.
   /// Must be called after the user is authenticated.
   static Future<void> saveToken(String userId) async {
     try {
+      // iOS: FCM cannot issue a token until APNs registration completes.
+      // Without this await, getToken() returns null on first install.
+      if (Platform.isIOS) {
+        await FirebaseMessaging.instance.getAPNSToken();
+      }
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
         await FirebaseFirestore.instance

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -33,15 +34,17 @@ class MapInitData {
 const mapCacheMaxBytes = _cacheMaxBytes;
 const mapCacheTtl = _cacheTtl;
 
-/// Global singleton — runs once per app session, cached by Riverpod.
 /// Resolves the map style, the PmTiles provider, and the on-disk cache root.
-final mapInitProvider = FutureProvider<MapInitData>((ref) async {
+/// AutoDispose: closes the PMTiles archive file handle when no screen is
+/// watching the map, preventing tile-provider leaks across navigation.
+final mapInitProvider = FutureProvider.autoDispose<MapInitData>((ref) async {
   final styleString =
       await rootBundle.loadString('assets/map/tremble_dark_style.json');
   final theme = vtr.ThemeReader(logger: const vtr.Logger.console())
       .read(jsonDecode(styleString) as Map<String, dynamic>);
 
   final tileProvider = await PmTilesVectorTileProvider.fromSource(_pmtilesUrl);
+  ref.onDispose(() => unawaited(tileProvider.archive.close()));
 
   final docsDir = await getApplicationDocumentsDirectory();
   final cacheDir = Directory('${docsDir.path}/map_cache');

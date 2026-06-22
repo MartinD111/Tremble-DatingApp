@@ -1,8 +1,26 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
+
+import 'package:cupertino_http/cupertino_http.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
+
+/// Builds a platform-aware HTTP client.
+///
+/// On iOS: [CupertinoClient] backed by NSURLSession / Apple Network.framework.
+/// This avoids the SSLV3_ALERT_HANDSHAKE_FAILURE that dart:io's BoringSSL
+/// TLS stack triggers on some endpoints (same fix applied to upload_service.dart).
+///
+/// On Android / other: standard [http.Client] (dart:io HttpClient).
+http.Client _buildHttpClient() {
+  if (Platform.isIOS) {
+    final config = URLSessionConfiguration.defaultSessionConfiguration();
+    return CupertinoClient.fromSessionConfiguration(config);
+  }
+  return http.Client();
+}
 
 /// Prediction returned from the Places API (New) Autocomplete endpoint.
 class PlacePrediction {
@@ -77,8 +95,16 @@ class PlacesService {
       String.fromEnvironment('FLAVOR', defaultValue: 'dev');
   static String get _apiKey => _flavor == 'prod' ? _apiKeyProd : _apiKeyDev;
 
+  /// Platform-aware HTTP client. Uses NSURLSession on iOS to avoid TLS
+  /// fragility with BoringSSL. Closed in [dispose].
+  final http.Client _client = _buildHttpClient();
+
   final _uuid = const Uuid();
   String? _sessionToken;
+
+  /// Releases the underlying HTTP client. Called automatically by the
+  /// [placesServiceProvider] via [ref.onDispose].
+  void dispose() => _client.close();
 
   /// Start a new billing session. Call when the autocomplete field gets focus.
   void startSession() {
@@ -105,7 +131,7 @@ class PlacesService {
     _sessionToken ??= _uuid.v4();
 
     try {
-      final response = await http
+      final response = await _client
           .post(
             Uri.parse(_autocompleteEndpoint),
             headers: {
@@ -183,7 +209,7 @@ class PlacesService {
           };
 
     try {
-      final response = await http
+      final response = await _client
           .post(
             Uri.parse(_autocompleteEndpoint),
             headers: {
@@ -238,7 +264,7 @@ class PlacesService {
         queryParameters: token != null ? {'sessionToken': token} : null,
       );
 
-      final response = await http.get(
+      final response = await _client.get(
         uri,
         headers: {
           'X-Goog-Api-Key': _apiKey,
@@ -278,4 +304,8 @@ class PlacesService {
 
 /// Singleton provider for PlacesService.
 /// Use `ref.read(placesServiceProvider)` in widgets and notifiers.
-final placesServiceProvider = Provider<PlacesService>((ref) => PlacesService());
+final placesServiceProvider = Provider<PlacesService>((ref) {
+  final service = PlacesService();
+  ref.onDispose(service.dispose);
+  return service;
+});

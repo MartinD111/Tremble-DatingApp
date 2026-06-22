@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,14 +29,16 @@ Future<void> main() async {
     GoogleFonts.instrumentSans(),
   ]);
 
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarDividerColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
-  );
+  if (Platform.isAndroid) {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
+  }
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');

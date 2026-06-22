@@ -1,4 +1,97 @@
+## Session State — 2026-06-22 08:40 CEST
+- Active Task: Add ITMS-90683 NSUsageDescription lesson (build 5 post-mortem)
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `tasks/lessons.md`
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning, B006 photo upload E2E unverified.
+- System Status: Build passing.
+## Session Handoff
+- Completed:
+    - Added the `ITMS-90683: Missing NSUsageDescription keys` lesson under a new `## iOS Build & App Store` section in `tasks/lessons.md`.
+    - Committed the changes with message: `"docs: add ITMS-90683 NSUsageDescription lesson (build 5 post-mortem)"`.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Proceed with other tasks in the roadmap.
+
+## Session State — 2026-06-21 23:41 CEST
+- Active Task: H9 — Places API uses bare http.* on iOS
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/core/places_service.dart`
+    - `test/core/places_service_cupertino_client_test.dart` [NEW]
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning, B006 photo upload E2E unverified.
+    - Physical device E2E for Places TLS still gated on B005.
+    - No deploy performed.
+- System Status: Scoped analyze (places_service.dart): No issues. Full suite: running.
+ 
+## Session Handoff
+- Completed:
+    - Added `_buildHttpClient()` top-level helper: returns `CupertinoClient.fromSessionConfiguration(config)` on iOS, `http.Client()` elsewhere.
+    - Added `final http.Client _client = _buildHttpClient()` instance field on `PlacesService`.
+    - Replaced all 3 bare calls: `http.post(...)` → `_client.post(...)` in `autocomplete()` and `gymAutocomplete()`; `http.get(...)` → `_client.get(...)` in `getPlaceDetails()`.
+    - Added `void dispose() => _client.close()` on `PlacesService`.
+    - Wired `ref.onDispose(service.dispose)` in `placesServiceProvider` (was a one-liner, now properly cleans up).
+    - Added `dart:io` Platform and `cupertino_http` imports.
+    - Added 13 regression tests in `test/core/places_service_cupertino_client_test.dart` — 13/13 GREEN.
+    - `flutter analyze lib/src/core/places_service.dart`: No issues.
+    - Full flutter test: running (pending).
+- In Progress: None.
+- Blocked: B005. Physical device Places API TLS verification pending.
+- Next Action: Full test suite result. If clean, commit this batch. Then H7 — matchesStreamProvider.autoDispose.autoDispose.
+
+## Session State — 2026-06-21 23:29 CEST
+
+- Active Task: H6 — profileStatusProvider non-autoDispose leak fix
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/features/auth/data/auth_repository.dart` (line 731 — one-word change)
+    - `test/features/auth/profile_status_provider_auto_dispose_test.dart` [NEW]
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning, B006 photo upload E2E unverified.
+    - Pre-existing `home_screen.dart` analyzer error (`_MatchNotificationPillOverlay` creation_with_non_type + 2 warnings) in dirty worktree — NOT introduced by this session.
+    - No deploy performed.
+- System Status: Scoped analyze (changed files only): No issues. Full-suite flutter test: running.
+
+## Session Handoff
+- Completed:
+    - Changed `StreamProvider<ProfileStatus>` → `StreamProvider.autoDispose<ProfileStatus>` at `auth_repository.dart:731`.
+    - Audited all consumers: `router.dart` uses `_ref.listen` (keeps alive via router's own Provider lifetime) and `_ref.read` (snapshot read, not a subscription). `profileExistsProvider` uses `ref.watch(profileStatusProvider.future)` — deprecated, no keepAlive. No consumer requires persistent subscription beyond the router.
+    - Added 5 regression tests in `test/features/auth/profile_status_provider_auto_dispose_test.dart` (all GREEN).
+    - `flutter analyze` on changed files: No issues.
+    - `flutter test` full suite: pending (running).
+- In Progress: None.
+- Blocked: B005 iOS provisioning. Pre-existing home_screen.dart errors are unrelated to this session.
+- Next Action: H7 — matchesStreamProvider non-autoDispose (same pattern, match_repository.dart:342).
+
+## Session State — 2026-06-21 23:26 CEST
+
+- Active Task: H2 — Location "Always" tier never requested
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `lib/src/core/consent_service.dart`
+    - `test/core/consent_service_location_always_test.dart` [NEW]
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning, B006 photo upload E2E unverified on physical device.
+    - The `NSLocationAlwaysAndWhenInUseUsageDescription` key in Info.plist must be verified — if missing, iOS will silently drop the second permission dialog (FOUNDER ACTION: check Info.plist).
+    - No deploy performed.
+- System Status: flutter analyze clean. 179/179 tests passing (8 new H2 regression tests). Build untested (not run this session).
+
+## Session Handoff
+- Completed:
+    - Diagnosed: `ConsentService.requestLocation()` was a one-liner calling only `Permission.locationWhenInUse.request()`. Background BLE geohash updates on iOS require the "Always" location tier, which must be explicitly requested at runtime in a separate second call.
+    - Fixed: Expanded `requestLocation()` to an async two-step escalation — (1) `locationWhenInUse.request()`, (2) if `.isGranted` AND `Platform.isIOS`, then `locationAlways.request()`. Android is unaffected (uses manifest-level `ACCESS_BACKGROUND_LOCATION`).
+    - Added `dart:io` Platform import; kept all existing imports and methods untouched.
+    - Added 8 regression tests in `test/core/consent_service_location_always_test.dart` (source-text contract pins).
+    - Verified `flutter analyze --no-fatal-infos`: No issues found.
+    - Verified `flutter test --dart-define-from-file=.env.json`: 179/179 all pass.
+- In Progress: None.
+- Blocked: Physical device verification gated on B005. `NSLocationAlwaysAndWhenInUseUsageDescription` in Info.plist needs FOUNDER verification.
+- Next Action: FOUNDER — verify `NSLocationAlwaysAndWhenInUseUsageDescription` is present in `ios/Runner/Info.plist`. Without it, the second iOS dialog will not appear even though the Dart call is now in place.
+
 ## Session State — 2026-06-18 00:04 CEST
+
 - Active Task: Pin App Check debug token in main.dart for dev iOS flavor
 - Environment: Dev/local Flutter only, `main`
 - Modified Files:

@@ -107,7 +107,11 @@
       "Bash(python -c ' *)",
       "Bash(awk '{print $5}')",
       "Bash(grep -A2 \"firebase_app_check:$\" /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/pubspec.lock)",
-      "Bash(pod install *)"
+      "Bash(pod install *)",
+      "Bash(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' __TRACKED_VAR__/Info.plist)",
+      "Bash(xcrun altool *)",
+      "Bash(/usr/libexec/PlistBuddy *)",
+      "Bash(awk *)"
     ]
   }
 }

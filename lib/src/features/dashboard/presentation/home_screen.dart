@@ -78,16 +78,16 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
   // Prevents duplicate recap prompts for the same run session transition.
   bool _runRecapShown = false;
   bool _tutorialOptInShowing = false;
-  // Snapshot of shouldShowHint taken when the dev-sim pill becomes visible.
-  bool _devSimShowHint = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Pre-warm the swipe-hint counter so shouldShowHint is accurate on first pill show.
     WavePillService.preloadHintCount();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -128,6 +128,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       ref.read(tutorialProvider.notifier).checkFirstLaunch();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      BleService().stop();
+    } else if (state == AppLifecycleState.resumed) {
+      BleService().start();
+    }
   }
 
   Future<void> _syncBackgroundEffectivePremium(bool isPremium) async {
@@ -229,18 +244,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (mounted) {
       _tutorialOptInShowing = false;
     }
-  }
-
-  Set<int> _tutorialNavPulseIndexes({
-    required bool isActive,
-    required int currentStep,
-    required bool isPremium,
-  }) {
-    if (!isActive) return const {};
-    if (currentStep == 2 && isPremium) return const {1};
-    if (currentStep == 3) return {isPremium ? 2 : 1};
-    if (currentStep == 4) return {isPremium ? 3 : 2};
-    return const {};
   }
 
   void _handleTutorialNavTap({
@@ -447,26 +450,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(pingDistanceProvider.notifier).state = null;
         ref.read(pingAngleProvider.notifier).state = null;
       }
-
-      // Snapshot hint state when the dev-sim pill first becomes visible.
-      final wasVisible = prev?.hasPillVisible ?? false;
-      if (!wasVisible && next.hasPillVisible) {
-        final hint = WavePillService.shouldShowHint;
-        if (hint) unawaited(WavePillService.recordPillShown());
-        if (mounted) setState(() => _devSimShowHint = hint);
-      }
     });
 
     final lang = ref.watch(appLanguageProvider);
     final navIndex = ref.watch(navIndexProvider);
-    final tutorialNavState = ref.watch(
-      tutorialProvider.select(
-        (state) => (
-          isActive: state.isActive,
-          currentStep: state.currentStep,
-        ),
-      ),
-    );
 
     // Reactive mapping of active nav index during Premium/Free transitions
     ref.listen<bool>(
@@ -520,71 +507,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Define Screens and Nav Items
     final List<Widget> screens;
     final List<LiquidNavItem> navItems;
-    final radarScreen = Consumer(
-      builder: (context, ref, child) {
-        final user = ref.watch(authStateProvider);
-        final isScanning = ref.watch(isScanningProvider);
-        final pingDistance = ref.watch(pingDistanceProvider);
-        final pingAngle = ref.watch(pingAngleProvider);
-        final radarMode = ref.watch(radarModeProvider);
-        final batteryLevel = ref.watch(radarBatteryLevelProvider);
-        final bool bypassRadar = ref.watch(bypassRadarProvider);
-        final bool localAdmin = kDebugMode && ref.watch(localAdminModeProvider);
-        final bool canAccessRadar = user?.isEmailVerified == true ||
-            user?.isAdmin == true ||
-            bypassRadar ||
-            localAdmin;
-        final activeMatch = ref.watch(currentSearchProvider);
-        final devSim = ref.watch(devSimulationControllerProvider);
-        final gymModeActive = ref.watch(
-          gymModeControllerProvider.select((state) => state.isActive),
-        );
-        final runModeActive = ref.watch(
-          runModeControllerProvider.select((state) => state.isActive),
-        );
-        final eventModeActive = ref.watch(
-          eventModeControllerProvider.select((state) => state.isActive),
-        );
-        final runCrossesAsync = user != null
-            ? ref.watch(activeRunCrossesProvider(user.id))
-            : const AsyncValue.data([]);
-        final DocumentSnapshot? activeRunCross = runCrossesAsync.maybeWhen(
-          data: (docs) => docs.isNotEmpty ? docs.first : null,
-          orElse: () => null,
-        );
-        final showNearMissEmpty = isScanning &&
-            runModeActive &&
-            activeRunCross == null &&
-            runCrossesAsync.maybeWhen(
-              data: (_) => true,
-              orElse: () => false,
-            );
-        final int signalPulseKey = runCrossesAsync.maybeWhen(
-          data: (docs) => docs.length,
-          orElse: () => 0,
-        );
-
-        return _buildRadarView(
-          ref,
-          context,
-          user,
-          canAccessRadar,
-          isScanning,
-          isPremium,
-          pingDistance,
-          pingAngle,
-          radarMode,
-          batteryLevel,
-          activeMatch,
-          showNearMissEmpty,
-          devSim,
-          signalPulseKey,
-          lang,
-          gymModeActive,
-          runModeActive,
-          eventModeActive,
-        );
-      },
+    final radarScreen = _RadarSection(
+      isPremium: isPremium,
+      lang: lang,
+      builder: _buildRadarView,
     );
 
     if (isPremium) {
@@ -714,79 +640,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
 
         // Floating Liquid Navigation Bar
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          bottom:
-              (isNavBarVisible && MediaQuery.of(context).viewInsets.bottom == 0)
-                  ? navBottomGap
-                  : -100,
-          left: 0,
-          right: 0,
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragEnd: (details) {
-              final velocity = details.primaryVelocity ?? 0;
-              if (velocity < -300) {
-                final next = (safeNavIndex + 1).clamp(0, screens.length - 1);
-                if (next != safeNavIndex) {
-                  HapticFeedback.selectionClick();
-                  ref.read(navIndexProvider.notifier).state = next;
-                }
-              } else if (velocity > 300) {
-                final prev = (safeNavIndex - 1).clamp(0, screens.length - 1);
-                if (prev != safeNavIndex) {
-                  HapticFeedback.selectionClick();
-                  ref.read(navIndexProvider.notifier).state = prev;
-                }
-              }
-            },
-            child: isCompact
-                ? CompactNavBar(
-                    currentIndex: safeNavIndex,
-                    items: navItems,
-                    pulsingIndexes: _tutorialNavPulseIndexes(
-                      isActive: tutorialNavState.isActive,
-                      currentStep: tutorialNavState.currentStep,
-                      isPremium: isPremium,
-                    ),
-                    onTap: (index) {
-                      ref.read(navIndexProvider.notifier).state = index;
-                      _handleTutorialNavTap(index: index, isPremium: isPremium);
-                    },
-                  )
-                : LiquidNavBar(
-                    currentIndex: safeNavIndex,
-                    items: navItems,
-                    pulsingIndexes: _tutorialNavPulseIndexes(
-                      isActive: tutorialNavState.isActive,
-                      currentStep: tutorialNavState.currentStep,
-                      isPremium: isPremium,
-                    ),
-                    onTap: (index) {
-                      ref.read(navIndexProvider.notifier).state = index;
-                      _handleTutorialNavTap(index: index, isPremium: isPremium);
-                    },
-                    itemWrapper: (index, child) {
-                      // Determine tutorial step based on index and premium status:
-                      // Premium: Map (index 1) -> Step 2, People (index 2) -> Step 3, Settings (index 3) -> Step 4
-                      // Free: People (index 1) -> Step 3, Settings (index 2) -> Step 4
-                      final int? step = isPremium
-                          ? (index == 1
-                              ? 2
-                              : (index == 2 ? 3 : (index == 3 ? 4 : null)))
-                          : (index == 1 ? 3 : (index == 2 ? 4 : null));
-
-                      if (step != null) {
-                        return _TutorialTarget(
-                          step: step,
-                          child: child,
-                        );
-                      }
-                      return child;
-                    },
-                  ),
-          ),
+        _BottomNavBar(
+          navItems: navItems,
+          screensLength: screens.length,
+          isPremium: isPremium,
+          isCompact: isCompact,
+          navBottomGap: navBottomGap,
+          onTutorialNavTap: _handleTutorialNavTap,
         ),
 
         // ── Global Match Notification Pill ───────────────────────────────
@@ -794,253 +654,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // the LiquidNavBar so a wave is impossible to miss regardless of which
         // tab the user is on. Driven by DevSimulationController; in production
         // the same hook will be fed by the BLE wave controller.
-        Consumer(
-          builder: (context, ref, child) {
-            final devSimPill = ref.watch(
-              devSimulationControllerProvider.select(
-                (state) => (
-                  phase: state.phase,
-                  profile: state.profile,
-                ),
-              ),
-            );
-            final profile = devSimPill.profile;
-            final hasPillVisible =
-                devSimPill.phase == DevSimPhase.waitingForAction ||
-                    devSimPill.phase == DevSimPhase.waveSent ||
-                    devSimPill.phase == DevSimPhase.waveReceived;
-            if (!hasPillVisible || profile == null) {
-              return const SizedBox.shrink();
-            }
+        const _MatchNotificationPillOverlay(),
 
-            return Positioned(
-              top: MediaQuery.of(context).padding.top + 80,
-              left: 0,
-              right: 0,
-              child: SafeArea(
-                bottom: false,
-                child: Center(
-                  child: MatchNotificationPill(
-                    name: profile.name,
-                    age: profile.age,
-                    imageUrl: profile.imageUrl,
-                    birthDate: profile.birthDate,
-                    pillState: _phaseToPillState(devSimPill.phase),
-                    onWave: () {
-                      unawaited(HapticFeedback.lightImpact());
-                      final notifier =
-                          ref.read(devSimulationControllerProvider.notifier);
-                      if (devSimPill.phase == DevSimPhase.waitingForAction) {
-                        // Outgoing wave: pill stays visible (waveSent), so the
-                        // pill's own onMatch callback fires reliably after its
-                        // shake animation completes. Nothing else to do here.
-                        notifier.onUserWave();
-                      } else if (devSimPill.phase == DevSimPhase.waveReceived) {
-                        // Wave-back: navigate FIRST, then transition sim state.
-                        // The pill's onMatch is unreliable on this path — the
-                        // state transition flips devSim.hasPillVisible to false
-                        // on the same frame, unmounting the pill mid-await
-                        // before onMatch ever runs. Driving the navigation here
-                        // guarantees the reveal animation always shows.
-                        final matchUser = ref.read(authStateProvider);
-                        final now = DateTime.now();
-                        final synthesized = wave_match.Match(
-                          id: 'dev-${now.microsecondsSinceEpoch}',
-                          userIds: [
-                            matchUser?.id ?? 'dev-self',
-                            profile.id,
-                          ],
-                          createdAt: now,
-                          seenBy: [matchUser?.id ?? 'dev-self'],
-                          status: 'found',
-                          isFound: true,
-                          gestures: {
-                            (matchUser?.id ?? 'dev-self'): true,
-                            profile.id: true,
-                          },
-                          expiresAt: now.add(const Duration(minutes: 30)),
-                        );
-                        context.pushNamed('match_reveal', extra: synthesized);
-                        notifier.onUserWaveBack();
-                      }
-                    },
-                    onIgnore: () => ref
-                        .read(devSimulationControllerProvider.notifier)
-                        .onIgnore(),
-                    onMatch: () {
-                      // Only the outgoing-wave path (waitingForAction → tap) is
-                      // routed through here. The wave-back path navigates from
-                      // onWave directly (see above) to sidestep the pill unmount
-                      // race, so reaching this callback while devSim was already
-                      // past waitingForAction means it's stale — bail to avoid
-                      // double-pushing the reveal screen.
-                      if (devSimPill.phase != DevSimPhase.waitingForAction) {
-                        return;
-                      }
-                      WavePillService.dismiss();
-                      final matchUser = ref.read(authStateProvider);
-                      final now = DateTime.now();
-                      final synthesized = wave_match.Match(
-                        id: 'dev-${now.microsecondsSinceEpoch}',
-                        userIds: [
-                          matchUser?.id ?? 'dev-self',
-                          profile.id,
-                        ],
-                        createdAt: now,
-                        seenBy: [matchUser?.id ?? 'dev-self'],
-                        status: 'found',
-                        isFound: true,
-                        gestures: {
-                          (matchUser?.id ?? 'dev-self'): true,
-                          profile.id: true,
-                        },
-                        expiresAt: now.add(const Duration(minutes: 30)),
-                      );
-                      context.pushNamed('match_reveal', extra: synthesized);
-                    },
-                    // Tap on the pill avatar → open the full profile card with
-                    // Wave / Ignore actions. The match reveal animation is NOT
-                    // shown here — it's reserved for the actual mutual-wave
-                    // moment (outgoing wave accepted, or wave-back tapped from
-                    // the pill itself). Premium users see the profile; free
-                    // users see the paywall (existing gate).
-                    onTap: () {
-                      final tapIsPremium = ref.read(effectiveIsPremiumProvider);
-                      if (!tapIsPremium) {
-                        PremiumPaywallBottomSheet.show(context);
-                        return;
-                      }
-                      context.push('/profile', extra: profile);
-                    },
-                    showSwipeHint: _devSimShowHint,
-                  )
-                      .animate()
-                      .fadeIn(duration: 250.ms)
-                      .slideY(begin: -0.4, curve: Curves.easeOutCubic),
-                ),
-              ),
-            );
-          },
-        ),
-
-        // ── Global Live Run / Near-Miss Overlay ──────────────────────────
-        Consumer(
-          builder: (context, ref, child) {
-            final user = ref.watch(authStateProvider);
-            if (user == null) return const SizedBox.shrink();
-
-            final runCrossesAsync =
-                ref.watch(activeRunCrossesProvider(user.id));
-            final activeRunCross = runCrossesAsync.maybeWhen(
-              data: (docs) => docs.isNotEmpty ? docs.first : null,
-              orElse: () => null,
-            );
-            final isScanning = ref.watch(isScanningProvider);
-            final runModeActive = ref.watch(
-              runModeControllerProvider.select((state) => state.isActive),
-            );
-            final showNearMissEmpty = isScanning &&
-                runModeActive &&
-                activeRunCross == null &&
-                runCrossesAsync.maybeWhen(
-                  data: (_) => true,
-                  orElse: () => false,
-                );
-
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                if (activeRunCross != null)
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 80,
-                    left: 20,
-                    right: 20,
-                    child: SafeArea(
-                      bottom: false,
-                      child: Center(
-                        child: Consumer(
-                          builder: (context, ref, child) {
-                            final data =
-                                activeRunCross.data() as Map<String, dynamic>;
-                            final userIds =
-                                List<String>.from(data['userIds'] ?? []);
-                            final partnerId = userIds.firstWhere(
-                              (id) => id != user.id,
-                              orElse: () => '',
-                            );
-                            if (partnerId.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-
-                            final dismissedBy =
-                                List<String>.from(data['dismissedBy'] ?? []);
-                            if (dismissedBy.contains(user.id)) {
-                              return const SizedBox.shrink();
-                            }
-
-                            final profileAsync =
-                                ref.watch(publicProfileProvider(partnerId));
-                            return profileAsync.when(
-                              data: (profile) {
-                                return LiveRunCard(
-                                  name: profile.name,
-                                  age: profile.age,
-                                  onWave: () {
-                                    unawaited(HapticFeedback.lightImpact());
-                                    return ref
-                                        .read(runClubRepositoryProvider)
-                                        .sendWave(activeRunCross.id, user.id);
-                                  },
-                                  onDismiss: () {
-                                    ref
-                                        .read(runClubRepositoryProvider)
-                                        .dismissEncounter(
-                                            activeRunCross.id, user.id);
-                                  },
-                                ).animate().fadeIn(duration: 250.ms).slideY(
-                                      begin: -0.4,
-                                      curve: Curves.easeOutCubic,
-                                    );
-                              },
-                              loading: () => const SizedBox.shrink(),
-                              error: (_, __) => const SizedBox.shrink(),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                if (showNearMissEmpty)
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 80,
-                    left: 20,
-                    right: 20,
-                    child: SafeArea(
-                      bottom: false,
-                      child: WarmthEmptyState(
-                        title: t('near_miss_empty_title', lang),
-                        subtitle: t('near_miss_empty_sub', lang),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 16,
-                        ),
-                        maxWidth: 320,
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-        Consumer(
-          builder: (context, ref, child) {
-            // Keep the gym dwell service alive as long as HomeScreen is in the tree.
-            ref.watch(gymDwellServiceProvider);
-            return const SizedBox.shrink();
-          },
-        ),
-
-        const PremiumTutorialOverlay(),
+        // ── Global Live Run / Near-Miss Overlay + Gym Dwell + Tutorial ──
+        _OverlayStack(lang: lang),
       ],
     );
   }
@@ -1842,18 +1459,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  PillState _phaseToPillState(DevSimPhase phase) {
-    switch (phase) {
-      case DevSimPhase.waveSent:
-        return PillState.waveSent;
-      case DevSimPhase.waveReceived:
-        return PillState.waveReceived;
-      case DevSimPhase.waitingForAction:
-      default:
-        return PillState.waitingForAction;
-    }
-  }
-
   void _showModeSelector(BuildContext context) {
     final lang = ref.read(appLanguageProvider);
     final accentColor = Theme.of(context).primaryColor;
@@ -2576,6 +2181,516 @@ final navIndexProvider = StateProvider<int>((ref) => 0);
 /// Persists across sessions within the same app run.
 final selectedRadarModeProvider =
     StateProvider<RadarModeKind>((ref) => RadarModeKind.radar);
+
+typedef _RadarViewBuilder = Widget Function(
+  WidgetRef ref,
+  BuildContext context,
+  AuthUser? user,
+  bool canAccessRadar,
+  bool isScanning,
+  bool isPremium,
+  double? pingDistance,
+  double? pingAngle,
+  String radarMode,
+  int batteryLevel,
+  wave_match.Match? activeMatch,
+  bool showNearMissEmpty,
+  DevSimulationState devSim,
+  int signalPulseKey,
+  String lang,
+  bool gymModeActive,
+  bool runModeActive,
+  bool eventModeActive,
+);
+
+class _RadarSection extends ConsumerWidget {
+  const _RadarSection({
+    required this.isPremium,
+    required this.lang,
+    required this.builder,
+  });
+
+  final bool isPremium;
+  final String lang;
+  final _RadarViewBuilder builder;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider);
+    final isScanning = ref.watch(isScanningProvider);
+    final pingDistance = ref.watch(pingDistanceProvider);
+    final pingAngle = ref.watch(pingAngleProvider);
+    final radarMode = ref.watch(radarModeProvider);
+    final batteryLevel = ref.watch(radarBatteryLevelProvider);
+    final bool bypassRadar = ref.watch(bypassRadarProvider);
+    final bool localAdmin = kDebugMode && ref.watch(localAdminModeProvider);
+    final bool canAccessRadar = user?.isEmailVerified == true ||
+        user?.isAdmin == true ||
+        bypassRadar ||
+        localAdmin;
+    final activeMatch = ref.watch(currentSearchProvider);
+    final devSim = ref.watch(devSimulationControllerProvider);
+    final gymModeActive = ref.watch(
+      gymModeControllerProvider.select((state) => state.isActive),
+    );
+    final runModeActive = ref.watch(
+      runModeControllerProvider.select((state) => state.isActive),
+    );
+    final eventModeActive = ref.watch(
+      eventModeControllerProvider.select((state) => state.isActive),
+    );
+    final runCrossesAsync = user != null
+        ? ref.watch(activeRunCrossesProvider(user.id))
+        : const AsyncValue.data([]);
+    final DocumentSnapshot? activeRunCross = runCrossesAsync.maybeWhen(
+      data: (docs) => docs.isNotEmpty ? docs.first : null,
+      orElse: () => null,
+    );
+    final showNearMissEmpty = isScanning &&
+        runModeActive &&
+        activeRunCross == null &&
+        runCrossesAsync.maybeWhen(
+          data: (_) => true,
+          orElse: () => false,
+        );
+    final int signalPulseKey = runCrossesAsync.maybeWhen(
+      data: (docs) => docs.length,
+      orElse: () => 0,
+    );
+
+    return builder(
+      ref,
+      context,
+      user,
+      canAccessRadar,
+      isScanning,
+      isPremium,
+      pingDistance,
+      pingAngle,
+      radarMode,
+      batteryLevel,
+      activeMatch,
+      showNearMissEmpty,
+      devSim,
+      signalPulseKey,
+      lang,
+      gymModeActive,
+      runModeActive,
+      eventModeActive,
+    );
+  }
+}
+
+class _BottomNavBar extends ConsumerWidget {
+  const _BottomNavBar({
+    required this.navItems,
+    required this.screensLength,
+    required this.isPremium,
+    required this.isCompact,
+    required this.navBottomGap,
+    required this.onTutorialNavTap,
+  });
+
+  final List<LiquidNavItem> navItems;
+  final int screensLength;
+  final bool isPremium;
+  final bool isCompact;
+  final double navBottomGap;
+  final void Function({required int index, required bool isPremium})
+      onTutorialNavTap;
+
+  Set<int> _pulsingIndexes({
+    required bool isActive,
+    required int currentStep,
+  }) {
+    if (!isActive) return const {};
+    if (currentStep == 2 && isPremium) return const {1};
+    if (currentStep == 3) return {isPremium ? 2 : 1};
+    if (currentStep == 4) return {isPremium ? 3 : 2};
+    return const {};
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final navIndex = ref.watch(navIndexProvider);
+    final tutorialNavState = ref.watch(
+      tutorialProvider.select(
+        (state) => (
+          isActive: state.isActive,
+          currentStep: state.currentStep,
+        ),
+      ),
+    );
+    final isNavBarVisible = ref.watch(isNavBarVisibleProvider);
+    final safeNavIndex = navIndex.clamp(0, screensLength - 1);
+    final pulsing = _pulsingIndexes(
+      isActive: tutorialNavState.isActive,
+      currentStep: tutorialNavState.currentStep,
+    );
+
+    void handleSwipe(DragEndDetails details) {
+      final velocity = details.primaryVelocity ?? 0;
+      if (velocity < -300) {
+        final next = (safeNavIndex + 1).clamp(0, screensLength - 1);
+        if (next != safeNavIndex) {
+          HapticFeedback.selectionClick();
+          ref.read(navIndexProvider.notifier).state = next;
+        }
+      } else if (velocity > 300) {
+        final prev = (safeNavIndex - 1).clamp(0, screensLength - 1);
+        if (prev != safeNavIndex) {
+          HapticFeedback.selectionClick();
+          ref.read(navIndexProvider.notifier).state = prev;
+        }
+      }
+    }
+
+    void handleTap(int index) {
+      ref.read(navIndexProvider.notifier).state = index;
+      onTutorialNavTap(index: index, isPremium: isPremium);
+    }
+
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      bottom: (isNavBarVisible && MediaQuery.of(context).viewInsets.bottom == 0)
+          ? navBottomGap
+          : -100,
+      left: 0,
+      right: 0,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragEnd: handleSwipe,
+        child: isCompact
+            ? CompactNavBar(
+                currentIndex: safeNavIndex,
+                items: navItems,
+                pulsingIndexes: pulsing,
+                onTap: handleTap,
+              )
+            : LiquidNavBar(
+                currentIndex: safeNavIndex,
+                items: navItems,
+                pulsingIndexes: pulsing,
+                onTap: handleTap,
+                itemWrapper: (index, child) {
+                  // Premium: Map (1)->Step 2, People (2)->Step 3, Settings (3)->Step 4
+                  // Free: People (1)->Step 3, Settings (2)->Step 4
+                  final int? step = isPremium
+                      ? (index == 1
+                          ? 2
+                          : (index == 2 ? 3 : (index == 3 ? 4 : null)))
+                      : (index == 1 ? 3 : (index == 2 ? 4 : null));
+                  if (step != null) {
+                    return _TutorialTarget(step: step, child: child);
+                  }
+                  return child;
+                },
+              ),
+      ),
+    );
+  }
+}
+
+class _OverlayStack extends StatelessWidget {
+  const _OverlayStack({required this.lang});
+
+  final String lang;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        _LiveRunNearMissOverlay(lang: lang),
+        const _GymDwellKeepAlive(),
+        const PremiumTutorialOverlay(),
+      ],
+    );
+  }
+}
+
+class _LiveRunNearMissOverlay extends ConsumerWidget {
+  const _LiveRunNearMissOverlay({required this.lang});
+
+  final String lang;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider);
+    if (user == null) return const SizedBox.shrink();
+
+    final runCrossesAsync = ref.watch(activeRunCrossesProvider(user.id));
+    final activeRunCross = runCrossesAsync.maybeWhen(
+      data: (docs) => docs.isNotEmpty ? docs.first : null,
+      orElse: () => null,
+    );
+    final isScanning = ref.watch(isScanningProvider);
+    final runModeActive = ref.watch(
+      runModeControllerProvider.select((state) => state.isActive),
+    );
+    final showNearMissEmpty = isScanning &&
+        runModeActive &&
+        activeRunCross == null &&
+        runCrossesAsync.maybeWhen(
+          data: (_) => true,
+          orElse: () => false,
+        );
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (activeRunCross != null)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 80,
+            left: 20,
+            right: 20,
+            child: SafeArea(
+              bottom: false,
+              child: Center(
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final data = activeRunCross.data() as Map<String, dynamic>;
+                    final userIds = List<String>.from(data['userIds'] ?? []);
+                    final partnerId = userIds.firstWhere(
+                      (id) => id != user.id,
+                      orElse: () => '',
+                    );
+                    if (partnerId.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+
+                    final dismissedBy =
+                        List<String>.from(data['dismissedBy'] ?? []);
+                    if (dismissedBy.contains(user.id)) {
+                      return const SizedBox.shrink();
+                    }
+
+                    final profileAsync =
+                        ref.watch(publicProfileProvider(partnerId));
+                    return profileAsync.when(
+                      data: (profile) {
+                        return LiveRunCard(
+                          name: profile.name,
+                          age: profile.age,
+                          onWave: () {
+                            unawaited(HapticFeedback.lightImpact());
+                            return ref
+                                .read(runClubRepositoryProvider)
+                                .sendWave(activeRunCross.id, user.id);
+                          },
+                          onDismiss: () {
+                            ref
+                                .read(runClubRepositoryProvider)
+                                .dismissEncounter(activeRunCross.id, user.id);
+                          },
+                        ).animate().fadeIn(duration: 250.ms).slideY(
+                              begin: -0.4,
+                              curve: Curves.easeOutCubic,
+                            );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        if (showNearMissEmpty)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 80,
+            left: 20,
+            right: 20,
+            child: SafeArea(
+              bottom: false,
+              child: WarmthEmptyState(
+                title: t('near_miss_empty_title', lang),
+                subtitle: t('near_miss_empty_sub', lang),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
+                maxWidth: 320,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _GymDwellKeepAlive extends ConsumerWidget {
+  const _GymDwellKeepAlive();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Keep the gym dwell service alive as long as HomeScreen is in the tree.
+    ref.watch(gymDwellServiceProvider);
+    return const SizedBox.shrink();
+  }
+}
+
+class _MatchNotificationPillOverlay extends ConsumerStatefulWidget {
+  const _MatchNotificationPillOverlay();
+
+  @override
+  ConsumerState<_MatchNotificationPillOverlay> createState() =>
+      _MatchNotificationPillOverlayState();
+}
+
+class _MatchNotificationPillOverlayState
+    extends ConsumerState<_MatchNotificationPillOverlay> {
+  bool _showSwipeHint = false;
+
+  PillState _phaseToPillState(DevSimPhase phase) {
+    switch (phase) {
+      case DevSimPhase.waveSent:
+        return PillState.waveSent;
+      case DevSimPhase.waveReceived:
+        return PillState.waveReceived;
+      case DevSimPhase.waitingForAction:
+      default:
+        return PillState.waitingForAction;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Snapshot hint state when the pill first becomes visible.
+    ref.listen(devSimulationControllerProvider, (prev, next) {
+      final wasVisible = prev?.hasPillVisible ?? false;
+      if (!wasVisible && next.hasPillVisible) {
+        final hint = WavePillService.shouldShowHint;
+        if (hint) unawaited(WavePillService.recordPillShown());
+        if (mounted) setState(() => _showSwipeHint = hint);
+      }
+    });
+
+    final devSimPill = ref.watch(
+      devSimulationControllerProvider.select(
+        (state) => (
+          phase: state.phase,
+          profile: state.profile,
+        ),
+      ),
+    );
+    final profile = devSimPill.profile;
+    final hasPillVisible = devSimPill.phase == DevSimPhase.waitingForAction ||
+        devSimPill.phase == DevSimPhase.waveSent ||
+        devSimPill.phase == DevSimPhase.waveReceived;
+    if (!hasPillVisible || profile == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 80,
+      left: 0,
+      right: 0,
+      child: SafeArea(
+        bottom: false,
+        child: Center(
+          child: MatchNotificationPill(
+            name: profile.name,
+            age: profile.age,
+            imageUrl: profile.imageUrl,
+            birthDate: profile.birthDate,
+            pillState: _phaseToPillState(devSimPill.phase),
+            onWave: () {
+              unawaited(HapticFeedback.lightImpact());
+              final notifier =
+                  ref.read(devSimulationControllerProvider.notifier);
+              if (devSimPill.phase == DevSimPhase.waitingForAction) {
+                // Outgoing wave: pill stays visible (waveSent), so the
+                // pill's own onMatch callback fires reliably after its
+                // shake animation completes. Nothing else to do here.
+                notifier.onUserWave();
+              } else if (devSimPill.phase == DevSimPhase.waveReceived) {
+                // Wave-back: navigate FIRST, then transition sim state.
+                // The pill's onMatch is unreliable on this path — the
+                // state transition flips devSim.hasPillVisible to false
+                // on the same frame, unmounting the pill mid-await
+                // before onMatch ever runs. Driving the navigation here
+                // guarantees the reveal animation always shows.
+                final matchUser = ref.read(authStateProvider);
+                final now = DateTime.now();
+                final synthesized = wave_match.Match(
+                  id: 'dev-${now.microsecondsSinceEpoch}',
+                  userIds: [
+                    matchUser?.id ?? 'dev-self',
+                    profile.id,
+                  ],
+                  createdAt: now,
+                  seenBy: [matchUser?.id ?? 'dev-self'],
+                  status: 'found',
+                  isFound: true,
+                  gestures: {
+                    (matchUser?.id ?? 'dev-self'): true,
+                    profile.id: true,
+                  },
+                  expiresAt: now.add(const Duration(minutes: 30)),
+                );
+                context.pushNamed('match_reveal', extra: synthesized);
+                notifier.onUserWaveBack();
+              }
+            },
+            onIgnore: () =>
+                ref.read(devSimulationControllerProvider.notifier).onIgnore(),
+            onMatch: () {
+              // Only the outgoing-wave path (waitingForAction → tap) is
+              // routed through here. The wave-back path navigates from
+              // onWave directly (see above) to sidestep the pill unmount
+              // race, so reaching this callback while devSim was already
+              // past waitingForAction means it's stale — bail to avoid
+              // double-pushing the reveal screen.
+              if (devSimPill.phase != DevSimPhase.waitingForAction) {
+                return;
+              }
+              WavePillService.dismiss();
+              final matchUser = ref.read(authStateProvider);
+              final now = DateTime.now();
+              final synthesized = wave_match.Match(
+                id: 'dev-${now.microsecondsSinceEpoch}',
+                userIds: [
+                  matchUser?.id ?? 'dev-self',
+                  profile.id,
+                ],
+                createdAt: now,
+                seenBy: [matchUser?.id ?? 'dev-self'],
+                status: 'found',
+                isFound: true,
+                gestures: {
+                  (matchUser?.id ?? 'dev-self'): true,
+                  profile.id: true,
+                },
+                expiresAt: now.add(const Duration(minutes: 30)),
+              );
+              context.pushNamed('match_reveal', extra: synthesized);
+            },
+            // Tap on the pill avatar → open the full profile card with
+            // Wave / Ignore actions. The match reveal animation is NOT
+            // shown here — it's reserved for the actual mutual-wave
+            // moment (outgoing wave accepted, or wave-back tapped from
+            // the pill itself). Premium users see the profile; free
+            // users see the paywall (existing gate).
+            onTap: () {
+              final tapIsPremium = ref.read(effectiveIsPremiumProvider);
+              if (!tapIsPremium) {
+                PremiumPaywallBottomSheet.show(context);
+                return;
+              }
+              context.push('/profile', extra: profile);
+            },
+            showSwipeHint: _showSwipeHint,
+          )
+              .animate()
+              .fadeIn(duration: 250.ms)
+              .slideY(begin: -0.4, curve: Curves.easeOutCubic),
+        ),
+      ),
+    );
+  }
+}
 
 class _TutorialTarget extends ConsumerStatefulWidget {
   const _TutorialTarget({

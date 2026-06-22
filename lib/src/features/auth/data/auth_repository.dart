@@ -728,7 +728,7 @@ final class ProfileStatusReady extends ProfileStatus {
 /// Because this is a StreamProvider, it stays [AsyncLoading] until the first
 /// snapshot arrives — the router returns null during that window, keeping the
 /// user on a full-screen loading indicator rather than routing prematurely.
-final profileStatusProvider = StreamProvider<ProfileStatus>((ref) {
+final profileStatusProvider = StreamProvider.autoDispose<ProfileStatus>((ref) {
   final authState = ref.watch(authStateProvider);
 
   if (authState == null) {

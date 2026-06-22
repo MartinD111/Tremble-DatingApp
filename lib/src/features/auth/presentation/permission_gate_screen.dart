@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../core/consent_service.dart';
 import '../../../core/theme.dart';
 import '../../../core/theme_provider.dart';
@@ -27,6 +28,7 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
 
     await ConsentService.requestLocation();
     await ConsentService.requestBluetooth();
+    await ConsentService.requestNotification();
 
     if (mounted) {
       await ref.read(gdprConsentProvider.notifier).grantConsent();
@@ -468,6 +470,14 @@ class _DeclinedView extends StatelessWidget {
             text: 'Try Again',
             onPressed: onTryAgain,
           ).animate().fadeIn(delay: 150.ms, duration: 400.ms),
+          const SizedBox(height: 12),
+          PrimaryButton(
+            text: 'Open Settings',
+            isSecondary: true,
+            onPressed: () {
+              openAppSettings();
+            },
+          ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
           const SizedBox(height: 32),
         ],
       ),

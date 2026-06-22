@@ -339,7 +339,8 @@ final matchRepositoryProvider = Provider((ref) => MatchRepository());
 /// matches produced by completed proximity simulations.
 /// Dev mocks are prepended so they appear at the top of the People tab.
 /// In release builds the dev mock merge is skipped entirely.
-final matchesStreamProvider = StreamProvider<List<MatchProfile>>((ref) {
+final matchesStreamProvider =
+    StreamProvider.autoDispose<List<MatchProfile>>((ref) {
   final uid = ref.watch(authStateProvider)?.id;
   if (uid == null) return const Stream.empty();
 
@@ -414,7 +415,8 @@ final matchFilterProvider = StateProvider<MatchFilterState>(
 /// Applies the active [MatchFilterState] in-memory via
 /// [MatchRepository.filterMatches]. Rebuilds whenever the upstream stream
 /// emits a new list or the filter state changes.
-final filteredMatchesProvider = Provider<AsyncValue<List<MatchProfile>>>((ref) {
+final filteredMatchesProvider =
+    Provider.autoDispose<AsyncValue<List<MatchProfile>>>((ref) {
   final allMatches = ref.watch(matchesStreamProvider);
   final filter = ref.watch(matchFilterProvider);
 
