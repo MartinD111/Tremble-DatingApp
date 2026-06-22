@@ -1,3 +1,30 @@
+## Session State — 2026-06-22 12:26 CEST
+- Active Task: H4 — Implement iOS BLE Background State Restoration
+- Environment: Dev/local Flutter only, `main`
+- Modified Files:
+    - `ios/Runner/BleRestoreBridge.swift` [NEW]
+    - `ios/Runner/AppDelegate.swift`
+    - `ios/Runner.xcodeproj/project.pbxproj`
+    - `lib/src/core/ble_restore_service.dart` [NEW]
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `lib/src/core/notification_service.dart`
+- Open Problems:
+    - Existing blockers remain: B005 iOS provisioning, B006 photo upload E2E unverified.
+- System Status: Build passing. `flutter analyze` clean. All 197 Flutter tests passing. Cloud Functions `tsc` clean.
+
+## Session Handoff
+- Completed:
+    - Implemented `BleRestoreBridge.swift` to initialize a background `CBCentralManager` with restoration ID `app.tremble.ble.central`.
+    - Wired iOS EventChannel and MethodChannel in `AppDelegate.swift`.
+    - Added `BleRestoreBridge.swift` to Xcode `project.pbxproj`.
+    - Created `BleRestoreService` in Dart to listen to restoration events and write `rssi` and `uuid` to `proximity_events` in Firestore.
+    - Updated `HomeScreen.initState` to initialize `BleRestoreService`.
+    - Updated `notification_service.dart` to handle `CROSSING_PATHS` and `SECOND_ENCOUNTER` silent push pings by keeping `proximity/{uid}.updatedAt` fresh.
+    - Fixed a test failure by making `FirebaseAuth.instance` and `FirebaseFirestore.instance` initialization lazy inside `BleRestoreService._onNativeEvent`.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Proceed with other tasks in the roadmap.
+
 ## Session State — 2026-06-22 08:40 CEST
 - Active Task: Add ITMS-90683 NSUsageDescription lesson (build 5 post-mortem)
 - Environment: Dev/local Flutter only, `main`

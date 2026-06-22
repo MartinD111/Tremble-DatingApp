@@ -10,6 +10,8 @@ public class TrembleNativePlugin: NSObject, FlutterPlugin {
     private var geofenceChannel: FlutterMethodChannel?
     private var motionMethodChannel: FlutterMethodChannel?
     private var motionEventChannel: FlutterEventChannel?
+    private var bleRestoreMethodChannel: FlutterMethodChannel?
+    private var bleRestoreEventChannel: FlutterEventChannel?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = TrembleNativePlugin()
@@ -102,6 +104,26 @@ public class TrembleNativePlugin: NSObject, FlutterPlugin {
             case "stopMonitoring":
                 MotionService.shared.stopMonitoring()
                 result(nil)
+            default:
+                result(FlutterMethodNotImplemented)
+            }
+        }
+
+        // ── BLE State Restoration ─────────────────────────────────────────────
+        bleRestoreEventChannel = FlutterEventChannel(
+            name: "app.tremble/ble/restore/events",
+            binaryMessenger: binaryMessenger
+        )
+        bleRestoreEventChannel?.setStreamHandler(BleRestoreBridge.shared)
+
+        bleRestoreMethodChannel = FlutterMethodChannel(
+            name: "app.tremble/ble/restore",
+            binaryMessenger: binaryMessenger
+        )
+        bleRestoreMethodChannel?.setMethodCallHandler { call, result in
+            switch call.method {
+            case "bootstrap":
+                result(nil) // No-op — debug confirmation
             default:
                 result(FlutterMethodNotImplemented)
             }

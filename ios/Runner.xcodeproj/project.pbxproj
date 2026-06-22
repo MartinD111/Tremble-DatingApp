@@ -25,6 +25,7 @@
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		B680005BCA24327A9B7F8154 /* Pods_ImageNotification.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 010754A61BACEE2627293B8B /* Pods_ImageNotification.framework */; };
 		BA2DA3243D04CABB236456C3 /* GymGeofenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8083F7DCFECFCDFB14138E45 /* GymGeofenceManager.swift */; };
+		C1A2B3D4E5F60718A9B0C1D2 /* BleRestoreBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E3F4A5B6C70829BADCE3F4 /* BleRestoreBridge.swift */; };
 		D8F93D8FCBCE05E514500184 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 42D3B36F7432576238DFB6E9 /* Pods_Runner.framework */; };
 		DAC8CB596D1B96D9B2DDAE98 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F1DB84FBE07B3938755CB /* Pods_RunnerTests.framework */; };
 /* End PBXBuildFile section */
@@ -120,6 +121,7 @@
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		7F33D351E1E130D28E89CF37 /* Pods-TrembleRadarWidgetExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrembleRadarWidgetExtension.release.xcconfig"; path = "Target Support Files/Pods-TrembleRadarWidgetExtension/Pods-TrembleRadarWidgetExtension.release.xcconfig"; sourceTree = "<group>"; };
 		8083F7DCFECFCDFB14138E45 /* GymGeofenceManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GymGeofenceManager.swift; sourceTree = "<group>"; };
+		D2E3F4A5B6C70829BADCE3F4 /* BleRestoreBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BleRestoreBridge.swift; sourceTree = "<group>"; };
 		8848556D5A28550B51A5DA00 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		8A36DD4DDB30FD1C3E304026 /* Pods-RunnerTests.debug-dev.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-dev.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-dev.xcconfig"; sourceTree = "<group>"; };
 		968F1DB84FBE07B3938755CB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -339,6 +341,7 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				8083F7DCFECFCDFB14138E45 /* GymGeofenceManager.swift */,
+				D2E3F4A5B6C70829BADCE3F4 /* BleRestoreBridge.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -748,6 +751,7 @@
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				2F0C05B82FAA8C2C005AD314 /* RadarStateBridge.swift in Sources */,
 				BA2DA3243D04CABB236456C3 /* GymGeofenceManager.swift in Sources */,
+				C1A2B3D4E5F60718A9B0C1D2 /* BleRestoreBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

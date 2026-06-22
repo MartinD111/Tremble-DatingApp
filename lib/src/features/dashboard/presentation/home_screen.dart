@@ -24,6 +24,7 @@ import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
 import '../../../core/ble_service.dart'; // BLE must run in main isolate
+import '../../../core/ble_restore_service.dart'; // iOS BLE state restoration
 import '../../../core/geo_service.dart';
 import '../../../shared/widgets/tremble_radar_heart.dart';
 import '../../../shared/widgets/running_stickman.dart';
@@ -96,6 +97,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final user = ref.read(authStateProvider);
       if (user != null) {
         NotificationService.saveToken(user.id);
+        BleRestoreService().initialize();
         NotificationService.initialize(
           onForegroundWave: ({
             required String name,

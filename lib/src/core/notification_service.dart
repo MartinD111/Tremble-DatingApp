@@ -45,6 +45,23 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       }
     }
   }
+
+  // Keep proximity.updatedAt fresh on silent push wake so
+  // scanProximityPairs does not exclude this user via 2-minute cutoff.
+  if (type == 'CROSSING_PATHS' || type == 'SECOND_ENCOUNTER') {
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    if (myUid != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('proximity')
+            .doc(myUid)
+            .update({'updatedAt': FieldValue.serverTimestamp()});
+        debugPrint('[NOTIFY] Proximity updatedAt refreshed for $myUid');
+      } catch (e) {
+        debugPrint('[NOTIFY] Proximity updatedAt refresh failed: $e');
+      }
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
