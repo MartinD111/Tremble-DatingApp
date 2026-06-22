@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>app.tremble.radar</string>
-	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -34,17 +30,18 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.442962390280-6qd7h0n5hetk6iv4norsl5bnghi7gqod</string>
-				<string>com.googleusercontent.apps.442962390280-vh68rob086tndpv1bfoj98q5k4tu5btn</string>
 				<string>com.googleusercontent.apps.343655004163-dv5k1tev5h39cg4kn0r078hksid53bhh</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
+	<key>FirebaseAppCheckDebugToken</key>
+	<string>5F693050-D975-4416-AE08-3DBB7EA42B4C</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>MAPS_API_KEY</key>
+	<string>$(MAPS_API_KEY)</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Tremble requires Bluetooth to calibrate signals and detect proximity with other nearby devices passively.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
@@ -52,7 +49,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Tremble uses your camera to take a profile photo.</string>
 	<key>NSContactsUsageDescription</key>
-	<string>Tremble requires access to your contacts to enable Anonymous mode, allowing you to block people you know.</string>
+	<string>A third-party library used by Tremble references the Contacts framework. Tremble itself does not access or store any contact data.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Tremble finds other signals nearby even when your phone is in your pocket. This is how we find your next connection.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
@@ -62,7 +59,7 @@
 	<key>NSMotionUsageDescription</key>
 	<string>Tremble uses your device's motion sensors to intelligently activate and deactivate Run Club, conserving battery when you are stationary.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Tremble saves photos to your library.</string>
+	<string>Tremble saves your profile photo to your library only when you explicitly choose to.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Tremble needs access to your photo library to set a profile photo.</string>
 	<key>UIApplicationSceneManifest</key>
@@ -86,19 +83,6 @@
 			</array>
 		</dict>
 	</dict>
-	<key>UIApplicationShortcutItems</key>
-	<array>
-		<dict>
-			<key>UIApplicationShortcutItemIconType</key>
-			<string>UIApplicationShortcutIconTypeSearch</string>
-			<key>UIApplicationShortcutItemSubtitle</key>
-			<string>Toggle radar on/off</string>
-			<key>UIApplicationShortcutItemTitle</key>
-			<string>Radar</string>
-			<key>UIApplicationShortcutItemType</key>
-			<string>app.tremble.radar.toggle</string>
-		</dict>
-	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
