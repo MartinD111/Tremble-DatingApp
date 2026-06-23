@@ -499,6 +499,11 @@ export const scanProximityPairs = onSchedule(
             for (const [, members] of groups) {
                 if (members.length < 2) continue;
 
+                const pairCount = (members.length * (members.length - 1)) / 2;
+                if (pairCount > 100) {
+                    console.warn(`[scanProximityPairs] High pair count: ${pairCount} pairs in bucket — add per-scan cap before scaling`);
+                }
+
                 for (let i = 0; i < members.length; i++) {
                     for (let j = i + 1; j < members.length; j++) {
                         const a = members[i];
@@ -549,6 +554,44 @@ export const scanProximityPairs = onSchedule(
                             continue;
                         }
 
+                        // Mutual gender preference — mirrors findNearby:246-253.
+                        // CHEAP: reads fields already loaded; no Firestore I/O.
+                        const aGender = safeA.gender;
+                        const aInterest = safeA.interestedIn;
+                        const bGender = safeB.gender;
+                        const bInterest = safeB.interestedIn;
+
+                        const aMatchesB =
+                            Array.isArray(aInterest)
+                                ? aInterest.includes(bGender)
+                                : aInterest === "Oba" || aInterest === "Both" || aInterest === bGender;
+                        const bMatchesA =
+                            Array.isArray(bInterest)
+                                ? bInterest.includes(aGender)
+                                : bInterest === "Oba" || bInterest === "Both" || bInterest === aGender;
+
+                        if (!aMatchesB || !bMatchesA) {
+                            await redis.del(pairKey);
+                            continue;
+                        }
+
+                        // Mutual age range — mirrors findNearby:254-255.
+                        // CHEAP: reads already-loaded fields; falsy age passes (matches findNearby semantics).
+                        const aAge = safeA.age;
+                        const bAge = safeB.age;
+                        const aMinAge = safeA.ageRangeStart ?? 18;
+                        const aMaxAge = safeA.ageRangeEnd ?? 100;
+                        const bMinAge = safeB.ageRangeStart ?? 18;
+                        const bMaxAge = safeB.ageRangeEnd ?? 100;
+
+                        const bAgeMatchesA = !bAge || (bAge >= aMinAge && bAge <= aMaxAge);
+                        const aAgeMatchesB = !aAge || (aAge >= bMinAge && aAge <= bMaxAge);
+
+                        if (!bAgeMatchesA || !aAgeMatchesB) {
+                            await redis.del(pairKey);
+                            continue;
+                        }
+
                         const bothPremium = safeA.isPremium === true && safeB.isPremium === true;
                         if (bothPremium) {
                             const aNicotineUse: string[] = safeA.nicotineUse ?? [];
@@ -565,6 +608,62 @@ export const scanProximityPairs = onSchedule(
                                 await redis.del(pairKey);
                                 continue;
                             }
+                        }
+
+                        // Compatibility score — mirrors findNearby:259-304.
+                        // EXPENSIVE: only runs after gender + age + nicotine gates pass.
+                        const compatibilityScore = calculateCompatibilityScore(
+                            {
+                                uid: a.uid,
+                                hobbies: safeA.hobbies ?? [],
+                                introvertScale: safeA.introvertScale,
+                                nicotineUse: safeA.nicotineUse ?? [],
+                                nicotineFilter: safeA.nicotineFilter ?? "any",
+                                drinkingHabit: safeA.drinkingHabit,
+                                partnerDrinkingHabit: safeA.partnerDrinkingHabit,
+                                exerciseHabit: safeA.exerciseHabit,
+                                sleepSchedule: safeA.sleepSchedule,
+                                religion: safeA.religion,
+                                religionPreference: safeA.religionPreference,
+                                lookingFor: safeA.lookingFor ?? [],
+                                isPremium: safeA.isPremium ?? false,
+                            },
+                            {
+                                uid: b.uid,
+                                hobbies: safeB.hobbies ?? [],
+                                introvertScale: safeB.introvertScale,
+                                nicotineUse: safeB.nicotineUse ?? [],
+                                nicotineFilter: safeB.nicotineFilter ?? "any",
+                                drinkingHabit: safeB.drinkingHabit,
+                                partnerDrinkingHabit: safeB.partnerDrinkingHabit,
+                                exerciseHabit: safeB.exerciseHabit,
+                                sleepSchedule: safeB.sleepSchedule,
+                                religion: safeB.religion,
+                                religionPreference: safeB.religionPreference,
+                                lookingFor: safeB.lookingFor ?? [],
+                                isPremium: safeB.isPremium ?? false,
+                            },
+                        );
+
+                        // Special social contexts lower the threshold to 0.55:
+                        //   - shared active event (both users at the same event)
+                        //   - either user in Run Club mode
+                        //   - either user in a gym session
+                        // Rationale: in these contexts the user is actively open to socializing.
+                        const sharedEvent =
+                            safeA.activeEventId &&
+                            safeB.activeEventId &&
+                            safeA.activeEventId === safeB.activeEventId;
+                        const aInRun = safeA.isRunModeActive === true;
+                        const bInRun = safeB.isRunModeActive === true;
+                        const aInGym = safeA.activeGymId != null;
+                        const bInGym = safeB.activeGymId != null;
+                        const sharedContext = sharedEvent || aInRun || bInRun || aInGym || bInGym;
+                        const scoreThreshold = sharedContext ? 0.55 : 0.70;
+
+                        if (compatibilityScore < scoreThreshold) {
+                            await redis.del(pairKey);
+                            continue;
                         }
 
                         const bothRunMode = safeA.isRunModeActive === true && safeB.isRunModeActive === true;

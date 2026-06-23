@@ -110,8 +110,11 @@ function calculateHobbyScore(
   const aHobbies = a.hobbies ?? [];
   const bHobbies = b.hobbies ?? [];
 
-  // Neutral če nimata hobijev
-  if (aHobbies.length === 0 || bHobbies.length === 0) return 0.5;
+  // Empty-hobby profiles get a penalised neutral (0.30 instead of 0.50).
+  // Rationale: an unconfigured profile shouldn't out-score a thoughtful but mismatched one,
+  // and an incomplete profile won't clear the 0.70 standard threshold on its own — it can
+  // still pass the 0.55 special-context (event / run / gym) threshold when other signals align.
+  if (aHobbies.length === 0 || bHobbies.length === 0) return 0.30;
 
   let score = 0;
   const maxScore = 85;
