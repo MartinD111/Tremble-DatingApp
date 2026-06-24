@@ -1943,21 +1943,28 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       // Step 1: Firebase Auth user is ALREADY created on page 5 (_registerUser)
       // We skip register() here to avoid 'email-already-in-use' exception.
 
+      // Capture notifier references before awaits — completeOnboarding may
+      // trigger an auth-state emit that redirects the router and disposes
+      // this widget. Using `ref` after that throws StateError.
+      final authNotifier = ref.read(authStateProvider.notifier);
+      final gdprNotifier = ref.read(gdprConsentProvider.notifier);
+
       // Step 2: Save profile via Cloud Function.
       // In debug mode, API failures are bypassed inside the notifier and
       // isOnboarded is still set to true locally.
-      await ref.read(authStateProvider.notifier).completeOnboarding(user);
+      await authNotifier.completeOnboarding(user);
+      if (!mounted) return;
 
       // Step 3: Persist selected gyms directly to Firestore (bypasses Cloud Function
       // strict Zod schema — selectedGyms is not part of the completeOnboarding payload).
       if (_selectedGymsForRegistration.isNotEmpty) {
-        await ref
-            .read(authStateProvider.notifier)
-            .updateSelectedGyms(_selectedGymsForRegistration);
+        await authNotifier.updateSelectedGyms(_selectedGymsForRegistration);
+        if (!mounted) return;
       }
 
       // Reset GDPR consent so the permission gate always shows after fresh registration.
-      await ref.read(gdprConsentProvider.notifier).resetConsent();
+      await gdprNotifier.resetConsent();
+      if (!mounted) return;
 
       if (mounted) {
         setState(() => _isHardLocking = true);
@@ -1973,10 +1980,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         debugPrint('[DEV] Registration error (bypassed): $e');
         if (user != null) {
           // Photo upload succeeded — force-complete onboarding locally.
+          if (!mounted) return;
           ref.read(authStateProvider.notifier).setUser(
                 user.copyWith(isOnboarded: true),
               );
+          if (!mounted) return;
           await ref.read(gdprConsentProvider.notifier).resetConsent();
+          if (!mounted) return;
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

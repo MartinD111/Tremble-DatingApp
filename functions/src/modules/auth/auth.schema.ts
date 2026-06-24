@@ -19,6 +19,11 @@ const nicotineUseSchema = z.union([
     z.string().max(50),
 ]);
 
+// Optional fields use `.nullish()` (T | null | undefined) because the Dart
+// client serializes unset values as JSON `null`, which `.optional()` rejects.
+// Required fields kept strict: name, birthDate, gender, interestedIn,
+// photoUrls, consentGiven.
+
 /** Schema for completing the onboarding profile */
 export const completeOnboardingSchema = z.object({
     name: z
@@ -38,27 +43,51 @@ export const completeOnboardingSchema = z.object({
     ),
     gender: z.enum(["male", "female", "non_binary"]),
     interestedIn: interestedInSchema,
-    height: z.number().int().min(100).max(250).optional(),
-    location: z.enum(["Ljubljana", "Koper", "Zagreb", "Other"]).optional(),
+    height: z.number().int().min(100).max(250).nullish(),
+    heightRangeStart: z.number().int().min(100).max(250).nullish(),
+    heightRangeEnd: z.number().int().min(100).max(250).nullish(),
+    location: z.enum(["Ljubljana", "Koper", "Zagreb", "Other"]).nullish(),
     photoUrls: z.array(z.string().url()).min(1).max(6),
-    isSmoker: z.boolean().optional(),
-    nicotineUse: nicotineUseSchema.optional(),
-    nicotineFilter: z.string().max(50).optional(),
-    partnerSmokingPreference: z.string().max(50).optional(),
-    drinkingHabit: z.string().max(50).optional(),
-    exerciseHabit: z.string().max(50).optional(),
-    sleepSchedule: z.string().max(50).optional(),
-    petPreference: z.string().max(50).optional(),
-    childrenPreference: z.string().max(50).optional(),
-    introvertScale: z.number().int().min(0).max(100).optional(),
-    occupation: z.string().max(100).optional(),
-    religion: z.string().max(50).optional(),
-    ethnicity: z.string().max(50).optional(),
-    hairColor: z.string().max(50).optional(),
-    politicalAffiliation: z.string().max(50).optional(),
-    lookingFor: z.array(z.string().max(50)).max(5).default([]),
-    languages: z.array(z.string().max(50)).max(5).default([]),
-    hobbies: z.array(z.string().max(50)).max(20).default([]),
+    isSmoker: z.boolean().nullish(),
+    nicotineUse: nicotineUseSchema.nullish(),
+    nicotineFilter: z.string().max(50).nullish(),
+    partnerSmokingPreference: z.string().max(50).nullish(),
+    drinkingHabit: z.string().max(50).nullish(),
+    exerciseHabit: z.string().max(50).nullish(),
+    sleepSchedule: z.string().max(50).nullish(),
+    petPreference: z.string().max(50).nullish(),
+    childrenPreference: z.string().max(50).nullish(),
+    introvertScale: z.number().int().min(0).max(100).nullish(),
+    selfIntrovertMin: z.number().int().min(0).max(100).nullish(),
+    selfIntrovertMax: z.number().int().min(0).max(100).nullish(),
+    occupation: z.string().max(100).nullish(),
+    school: z.string().max(100).nullish(),
+    religion: z.string().max(50).nullish(),
+    ethnicity: z.string().max(50).nullish(),
+    hairColor: z.string().max(50).nullish(),
+    politicalAffiliation: z.string().max(50).nullish(),
+    partnerDrinkingHabit: z.string().max(500).nullish(),
+    partnerExerciseHabit: z.string().max(500).nullish(),
+    partnerSleepSchedule: z.string().max(500).nullish(),
+    partnerIntrovertPreference: z.string().max(500).nullish(),
+    hasChildren: z.boolean().nullish(),
+    lookingForNewJob: z.boolean().nullish(),
+    isTraveler: z.boolean().nullish(),
+    lookingFor: z
+        .array(z.string().max(50))
+        .max(5)
+        .nullish()
+        .transform((v) => v ?? []),
+    languages: z
+        .array(z.string().max(50))
+        .max(5)
+        .nullish()
+        .transform((v) => v ?? []),
+    hobbies: z
+        .array(z.string().max(50))
+        .max(20)
+        .nullish()
+        .transform((v) => v ?? []),
     prompts: z
         .record(z.string().max(50), z.string().max(300))
         .default({}),
@@ -68,8 +97,14 @@ export const completeOnboardingSchema = z.object({
     showPingAnimation: z.boolean().default(true),
     ageRangeStart: z.number().int().min(18).max(100).default(18),
     ageRangeEnd: z.number().int().min(18).max(100).default(100),
-    maxDistance: z.number().int().min(1).max(500).default(50),
-    jobStatus: z.string().max(50).optional(),
+    maxDistance: z
+        .number()
+        .int()
+        .min(1)
+        .max(500)
+        .nullish()
+        .transform((v) => v ?? 50),
+    jobStatus: z.string().max(50).nullish(),
     consentGiven: z.boolean().refine((val) => val === true, {
         message: "GDPR consent is required",
     }),

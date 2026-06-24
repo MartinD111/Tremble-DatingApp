@@ -230,6 +230,91 @@ describe("Auth Module", () => {
             }
         });
 
+        it("accepts null for all optional fields", async () => {
+            const { completeOnboardingSchema } = await import(
+                "../../src/modules/auth/auth.schema"
+            );
+
+            const result = completeOnboardingSchema.safeParse({
+                // Required fields
+                name: "Ana",
+                birthDate: "1995-06-15",
+                gender: "female",
+                interestedIn: "male",
+                photoUrls: ["https://r2.example.com/photo.jpg"],
+                consentGiven: true,
+                // All optional fields explicitly null — mirrors the Dart
+                // payload when the user skipped optional pickers.
+                height: null,
+                heightRangeStart: null,
+                heightRangeEnd: null,
+                location: null,
+                isSmoker: null,
+                nicotineUse: null,
+                nicotineFilter: null,
+                partnerSmokingPreference: null,
+                drinkingHabit: null,
+                exerciseHabit: null,
+                sleepSchedule: null,
+                petPreference: null,
+                childrenPreference: null,
+                introvertScale: null,
+                selfIntrovertMin: null,
+                selfIntrovertMax: null,
+                occupation: null,
+                school: null,
+                religion: null,
+                ethnicity: null,
+                hairColor: null,
+                politicalAffiliation: null,
+                partnerDrinkingHabit: null,
+                partnerExerciseHabit: null,
+                partnerSleepSchedule: null,
+                partnerIntrovertPreference: null,
+                hasChildren: null,
+                lookingForNewJob: null,
+                isTraveler: null,
+                lookingFor: null,
+                languages: null,
+                hobbies: null,
+                maxDistance: null,
+                jobStatus: null,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                // Arrays transform null → []
+                expect(result.data.lookingFor).toEqual([]);
+                expect(result.data.languages).toEqual([]);
+                expect(result.data.hobbies).toEqual([]);
+                // maxDistance transforms null → 50
+                expect(result.data.maxDistance).toBe(50);
+            }
+        });
+
+        it("rejects missing required field photoUrls", async () => {
+            const { completeOnboardingSchema } = await import(
+                "../../src/modules/auth/auth.schema"
+            );
+
+            const result = completeOnboardingSchema.safeParse({
+                name: "Ana",
+                birthDate: "1995-06-15",
+                gender: "female",
+                interestedIn: "male",
+                consentGiven: true,
+                // photoUrls intentionally omitted
+            });
+
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                const photoUrlsError = result.error.issues.find((i) =>
+                    i.path.includes("photoUrls")
+                );
+                expect(photoUrlsError).toBeDefined();
+            }
+        });
+
         it("should reject a user under 18", async () => {
             const { completeOnboardingSchema } = await import(
                 "../../src/modules/auth/auth.schema"

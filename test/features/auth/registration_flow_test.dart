@@ -242,11 +242,12 @@ void main() {
         'lib/src/features/profile/presentation/edit_profile_screen.dart',
       ).readAsStringSync();
 
-      const enumShape =
-          'z.enum(["Ljubljana", "Koper", "Zagreb", "Other"]).optional()';
-
-      expect(authSchema, contains(enumShape));
-      expect(userSchema, contains(enumShape));
+      // auth.schema.ts uses `.nullish()` so the Dart client can send explicit
+      // `null` for unset fields; users.schema.ts (profile updates) still uses
+      // `.optional()` because that path never serializes null literals.
+      const enumPrefix = 'z.enum(["Ljubljana", "Koper", "Zagreb", "Other"])';
+      expect(authSchema, contains('$enumPrefix.nullish()'));
+      expect(userSchema, contains('$enumPrefix.optional()'));
       expect(stepShared, contains('const List<String> profileLocationOptions'));
       for (final city in ['Ljubljana', 'Koper', 'Zagreb', 'Other']) {
         expect(stepShared, contains("'$city'"));
