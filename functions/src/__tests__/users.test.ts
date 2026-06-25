@@ -277,5 +277,107 @@ describe("Users Module", () => {
                 }).success
             ).toBe(false);
         });
+
+        it("should accept payload with all optional fields explicitly null", async () => {
+            const { updateProfileSchema } = await import(
+                "../../src/modules/users/users.schema"
+            );
+
+            const result = updateProfileSchema.safeParse({
+                name: null,
+                age: null,
+                birthDate: null,
+                gender: null,
+                location: null,
+                photoUrls: null,
+                height: null,
+                isSmoker: null,
+                nicotineUse: null,
+                nicotineFilter: null,
+                hasChildren: null,
+                drinkingHabit: null,
+                exerciseHabit: null,
+                sleepSchedule: null,
+                petPreference: null,
+                childrenPreference: null,
+                introvertScale: null,
+                occupation: null,
+                company: null,
+                school: null,
+                jobStatus: null,
+                religion: null,
+                ethnicity: null,
+                hairColor: null,
+                politicalAffiliation: null,
+                interestedIn: null,
+                lookingFor: null,
+                languages: null,
+                hobbies: null,
+                prompts: null,
+                appLanguage: null,
+                isDarkMode: null,
+                isPrideMode: null,
+                ageRangeStart: null,
+                ageRangeEnd: null,
+                maxDistance: null,
+                isTraveler: null,
+            });
+
+            expect(result.success).toBe(true);
+        });
+
+        it("should accept newly added client fields", async () => {
+            const { updateProfileSchema } = await import(
+                "../../src/modules/users/users.schema"
+            );
+
+            const result = updateProfileSchema.safeParse({
+                selfIntrovertMin: 20,
+                selfIntrovertMax: 80,
+                lookingForNewJob: true,
+                graduatedUniversity: "University of Ljubljana",
+                onboardingCheckpoint: 5,
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.selfIntrovertMin).toBe(20);
+                expect(result.data.selfIntrovertMax).toBe(80);
+                expect(result.data.lookingForNewJob).toBe(true);
+                expect(result.data.graduatedUniversity).toBe(
+                    "University of Ljubljana"
+                );
+                expect(result.data.onboardingCheckpoint).toBe(5);
+            }
+        });
+
+        it("should accept newly added client fields explicitly set to null", async () => {
+            const { updateProfileSchema } = await import(
+                "../../src/modules/users/users.schema"
+            );
+
+            const result = updateProfileSchema.safeParse({
+                selfIntrovertMin: null,
+                selfIntrovertMax: null,
+                lookingForNewJob: null,
+                graduatedUniversity: null,
+                onboardingCheckpoint: null,
+            });
+
+            expect(result.success).toBe(true);
+        });
+
+        it("should still reject unknown fields (strict mode preserved)", async () => {
+            const { updateProfileSchema } = await import(
+                "../../src/modules/users/users.schema"
+            );
+
+            const result = updateProfileSchema.safeParse({
+                isAdmin: true,
+                isPremium: true,
+            });
+
+            expect(result.success).toBe(false);
+        });
     });
 });

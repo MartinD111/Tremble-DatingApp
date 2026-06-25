@@ -169,7 +169,7 @@ void main() {
       ).readAsStringSync();
 
       expect(userSchema,
-          contains('name: z.string().min(1).max(50).trim().optional()'));
+          contains('name: z.string().min(1).max(50).trim().nullish()'));
       expect(authSchema, contains('.max(50, "Name too long")'));
       expect(t('name_chars_remaining', 'en'), '{count} remaining');
       expect(t('name_chars_remaining', 'sl'), 'še {count} znakov');
@@ -242,12 +242,11 @@ void main() {
         'lib/src/features/profile/presentation/edit_profile_screen.dart',
       ).readAsStringSync();
 
-      // auth.schema.ts uses `.nullish()` so the Dart client can send explicit
-      // `null` for unset fields; users.schema.ts (profile updates) still uses
-      // `.optional()` because that path never serializes null literals.
+      // Both schemas use `.nullish()` so the Dart client can send explicit
+      // `null` for unset fields without tripping strict-mode validation.
       const enumPrefix = 'z.enum(["Ljubljana", "Koper", "Zagreb", "Other"])';
       expect(authSchema, contains('$enumPrefix.nullish()'));
-      expect(userSchema, contains('$enumPrefix.optional()'));
+      expect(userSchema, contains('$enumPrefix.nullish()'));
       expect(stepShared, contains('const List<String> profileLocationOptions'));
       for (final city in ['Ljubljana', 'Koper', 'Zagreb', 'Other']) {
         expect(stepShared, contains("'$city'"));

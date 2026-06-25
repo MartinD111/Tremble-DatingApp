@@ -47,9 +47,11 @@ Future<void> main() async {
       ? ProdFirebaseOptions.currentPlatform
       : DevFirebaseOptions.currentPlatform;
 
-  await Firebase.initializeApp(
-    options: firebaseOptions,
-  );
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(
+      options: firebaseOptions,
+    );
+  }
 
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
@@ -64,9 +66,9 @@ Future<void> main() async {
     // bypass works consistently. AppleDebugProvider() without debugToken
     // generates a random token each run — it never matches the console entry.
     // This token is dev-only and revocable; safe to commit.
-    // Prod: DeviceCheck provides hardware attestation.
+    // Prod: App Attest provides hardware-backed attestation (iOS 14+).
     providerApple: flavor == 'prod'
-        ? AppleDeviceCheckProvider()
+        ? AppleAppAttestProvider()
         : AppleDebugProvider(
             debugToken: '26697195-D797-4FFE-ADEA-9631258A1C88',
           ),
