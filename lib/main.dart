@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,11 +24,11 @@ import 'package:flutter/services.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await GoogleFonts.pendingFonts([
-    GoogleFonts.playfairDisplay(),
-    GoogleFonts.lora(),
-    GoogleFonts.instrumentSans(),
-  ]);
+// await GoogleFonts.pendingFonts([
+//   GoogleFonts.playfairDisplay(),
+//   GoogleFonts.lora(),
+//   GoogleFonts.instrumentSans(),
+// ]);
 
   if (Platform.isAndroid) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -67,11 +68,11 @@ Future<void> main() async {
     // generates a random token each run — it never matches the console entry.
     // This token is dev-only and revocable; safe to commit.
     // Prod: App Attest provides hardware-backed attestation (iOS 14+).
-    providerApple: flavor == 'prod'
-        ? AppleAppAttestProvider()
-        : AppleDebugProvider(
+    providerApple: kDebugMode
+        ? AppleDebugProvider(
             debugToken: '26697195-D797-4FFE-ADEA-9631258A1C88',
-          ),
+          )
+        : AppleAppAttestProvider(),
   );
 
   FlutterError.onError = (details) {

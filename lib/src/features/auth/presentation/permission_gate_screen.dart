@@ -18,21 +18,63 @@ class PermissionGateScreen extends ConsumerStatefulWidget {
       _PermissionGateScreenState();
 }
 
-class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
+class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen>
+    with WidgetsBindingObserver {
   bool _showDeclined = false;
   bool _isRequesting = false;
+  bool _showSettingsPrompt = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _showSettingsPrompt) {
+      _recheckLocationOnResume();
+    }
+  }
+
+  Future<void> _recheckLocationOnResume() async {
+    final status = await Permission.locationWhenInUse.status;
+    if (status.isGranted || status.isLimited) {
+      if (mounted) {
+        setState(() => _showSettingsPrompt = false);
+        await ref.read(gdprConsentProvider.notifier).grantConsent();
+      }
+    }
+  }
 
   Future<void> _onAccept() async {
     if (_isRequesting) return;
     setState(() => _isRequesting = true);
 
-    await ConsentService.requestLocation();
     await ConsentService.requestBluetooth();
     await ConsentService.requestNotification();
+    await ConsentService.requestLocation();
 
-    if (mounted) {
+    final locationStatus = await Permission.locationWhenInUse.status;
+
+    if (!mounted) return;
+
+    if (locationStatus.isGranted || locationStatus.isLimited) {
       await ref.read(gdprConsentProvider.notifier).grantConsent();
       // Router redirect fires automatically once consent state updates.
+    } else {
+      // iOS denied or permanently denied — must go to Settings.
+      // Do NOT call grantConsent(); show inline Settings prompt instead.
+      setState(() {
+        _isRequesting = false;
+        _showSettingsPrompt = true;
+      });
     }
   }
 
@@ -69,19 +111,25 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: _showDeclined
-                ? _DeclinedView(
-                    onTryAgain: _onTryAgain,
+            child: _showSettingsPrompt
+                ? _SettingsRequiredView(
+                    onOpenSettings: () => openAppSettings(),
                     user: user,
                     isDark: isDark,
                   )
-                : _ConsentView(
-                    isLoading: _isRequesting,
-                    onAccept: _onAccept,
-                    onDecline: _onDecline,
-                    user: user,
-                    isDark: isDark,
-                  ),
+                : _showDeclined
+                    ? _DeclinedView(
+                        onTryAgain: _onTryAgain,
+                        user: user,
+                        isDark: isDark,
+                      )
+                    : _ConsentView(
+                        isLoading: _isRequesting,
+                        onAccept: _onAccept,
+                        onDecline: _onDecline,
+                        user: user,
+                        isDark: isDark,
+                      ),
           ),
         ),
       ),
@@ -478,6 +526,73 @@ class _DeclinedView extends StatelessWidget {
               openAppSettings();
             },
           ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Settings-required prompt (iOS denied location) ────────────────────────
+// Shown after _onAccept() detects Permission.locationWhenInUse is not granted.
+// The screen does NOT route away — the user opens iOS Settings, grants
+// location, and didChangeAppLifecycleState picks up the change on resume,
+// auto-completing the consent flow.
+
+class _SettingsRequiredView extends StatelessWidget {
+  final VoidCallback onOpenSettings;
+  final AuthUser? user;
+  final bool isDark;
+
+  const _SettingsRequiredView({
+    required this.onOpenSettings,
+    required this.user,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 80),
+          Icon(
+            LucideIcons.mapPin,
+            color: Theme.of(context).colorScheme.primary,
+            size: 48,
+          ).animate().fadeIn(duration: 400.ms).scale(
+              begin: const Offset(0.8, 0.8),
+              duration: 400.ms,
+              curve: Curves.easeOut),
+          const SizedBox(height: 28),
+          Text(
+            'Location access\nis required for radar',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                  height: 1.15,
+                ),
+          ).animate().fadeIn(duration: 400.ms),
+          const SizedBox(height: 16),
+          GlassCard(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              "Open iOS Settings → Privacy & Security → Location Services → find this app → set to 'While Using'.\n\nReturn to Tremble and the radar will unlock automatically.",
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.7),
+                    height: 1.6,
+                  ),
+            ),
+          ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
+          const SizedBox(height: 48),
+          PrimaryButton(
+            text: 'Open Settings',
+            onPressed: onOpenSettings,
+          ).animate().fadeIn(delay: 150.ms, duration: 400.ms),
           const SizedBox(height: 32),
         ],
       ),
