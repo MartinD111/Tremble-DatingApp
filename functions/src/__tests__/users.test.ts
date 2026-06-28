@@ -367,6 +367,36 @@ describe("Users Module", () => {
             expect(result.success).toBe(true);
         });
 
+        it("should accept gymNotificationsEnabled and phoneNumber", async () => {
+            const { updateProfileSchema } = await import(
+                "../../src/modules/users/users.schema"
+            );
+
+            const result = updateProfileSchema.safeParse({
+                gymNotificationsEnabled: true,
+                phoneNumber: "+38641000000",
+            });
+
+            expect(result.success).toBe(true);
+            if (result.success) {
+                expect(result.data.gymNotificationsEnabled).toBe(true);
+                expect(result.data.phoneNumber).toBe("+38641000000");
+            }
+        });
+
+        it("should accept gymNotificationsEnabled and phoneNumber explicitly null", async () => {
+            const { updateProfileSchema } = await import(
+                "../../src/modules/users/users.schema"
+            );
+
+            const result = updateProfileSchema.safeParse({
+                gymNotificationsEnabled: null,
+                phoneNumber: null,
+            });
+
+            expect(result.success).toBe(true);
+        });
+
         it("should still reject unknown fields (strict mode preserved)", async () => {
             const { updateProfileSchema } = await import(
                 "../../src/modules/users/users.schema"

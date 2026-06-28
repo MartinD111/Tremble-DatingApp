@@ -111,7 +111,8 @@
       "Bash(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' __TRACKED_VAR__/Info.plist)",
       "Bash(xcrun altool *)",
       "Bash(/usr/libexec/PlistBuddy *)",
-      "Bash(awk *)"
+      "Bash(awk *)",
+      "Bash(plutil *)"
     ]
   }
 }

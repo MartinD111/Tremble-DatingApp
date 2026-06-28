@@ -1198,23 +1198,18 @@ class _PremiumCarouselCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final offset = virtualPage - currentPage;
+    final absOffset = offset.abs();
 
-    final double translationX;
-    final double scale;
-    final double rotY;
-    final double opacity;
-
-    if (offset >= 0) {
-      translationX = -offset * (screenWidth * 0.44);
-      scale = 1.0 - (offset * 0.12);
-      rotY = -offset * 0.24;
-      opacity = (1.0 - (offset * 0.4)).clamp(0.0, 1.0);
-    } else {
-      translationX = offset * (screenWidth * 0.12);
-      scale = 1.0 - (offset.abs() * 0.08);
-      rotY = -offset * 0.16;
-      opacity = (1.0 - (offset.abs() * 0.3)).clamp(0.0, 1.0);
-    }
+    // Symmetric, directional layout: future cards (offset > 0) sit to the
+    // RIGHT of center, past cards (offset < 0) sit to the LEFT. A left swipe
+    // therefore visibly pulls the next card in from the right, and a right
+    // swipe pulls the previous card in from the left. Scale, rotation, and
+    // opacity fall off identically on both sides so neither direction looks
+    // privileged.
+    final translationX = offset * (screenWidth * 0.32);
+    final scale = (1.0 - (absOffset * 0.10)).clamp(0.0, 1.0);
+    final rotY = -offset * 0.20;
+    final opacity = (1.0 - (absOffset * 0.35)).clamp(0.0, 1.0);
 
     return RepaintBoundary(
       child: Transform(

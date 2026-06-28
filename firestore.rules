@@ -57,13 +57,53 @@ service cloud.firestore {
           && (!data.keys().hasAny(['gender'])         || data.gender is string)
           && (!data.keys().hasAny(['lookingFor'])     || data.lookingFor is string)
           && (!data.keys().hasAny(['radarActive'])    || data.radarActive is bool)
-          && (!data.keys().hasAny(['isActive'])       || data.isActive is bool);
+          && (!data.keys().hasAny(['isActive'])       || data.isActive is bool)
+          && (!data.keys().hasAny(['fcmToken'])       || data.fcmToken is string);
     }
 
     function validUserSizes(data) {
       return (!data.keys().hasAny(['displayName'])   || data.displayName.size() <= 50)
           && (!data.keys().hasAny(['bio'])            || data.bio.size() <= 500)
-          && (!data.keys().hasAny(['photoUrls'])      || data.photoUrls.size() <= 6);
+          && (!data.keys().hasAny(['photoUrls'])      || data.photoUrls.size() <= 6)
+          && (!data.keys().hasAny(['fcmToken'])       || data.fcmToken.size() <= 4096);
+    }
+
+    // For updates, validate only the fields that are actually being changed.
+    // request.resource.data is the merged post-update document, so applying
+    // strict type checks to ALL keys would deny writes whenever a pre-existing
+    // field happens to be null or legacy-typed (e.g. bio: null), even for an
+    // unrelated update such as saving an fcmToken. Limiting validation to the
+    // affected keys keeps the contract on what the client is actually writing.
+    function validUserUpdateTypes() {
+      return (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName'])
+                || request.resource.data.displayName is string)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['bio'])
+                || request.resource.data.bio is string)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['age'])
+                || request.resource.data.age is int)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['photoUrls'])
+                || request.resource.data.photoUrls is list)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['gender'])
+                || request.resource.data.gender is string)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lookingFor'])
+                || request.resource.data.lookingFor is string)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['radarActive'])
+                || request.resource.data.radarActive is bool)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isActive'])
+                || request.resource.data.isActive is bool)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fcmToken'])
+                || request.resource.data.fcmToken is string);
+    }
+
+    function validUserUpdateSizes() {
+      return (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName'])
+                || request.resource.data.displayName.size() <= 50)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['bio'])
+                || request.resource.data.bio.size() <= 500)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['photoUrls'])
+                || request.resource.data.photoUrls.size() <= 6)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fcmToken'])
+                || request.resource.data.fcmToken.size() <= 4096);
     }
 
     function isWaveParticipant(data) {
@@ -99,8 +139,8 @@ service cloud.firestore {
                     && validUserSizes(request.resource.data);
       allow update: if isSelf(userId)
                     && validUpdateKeys()
-                    && validUserTypes(request.resource.data)
-                    && validUserSizes(request.resource.data);
+                    && validUserUpdateTypes()
+                    && validUserUpdateSizes();
       allow delete: if isSelf(userId);
     }
 
@@ -149,6 +189,12 @@ service cloud.firestore {
 
     // EVENTS — authenticated read, backend-only writes.
     match /events/{eventId} {
+      allow read: if signedIn();
+      allow create, update, delete: if false;
+    }
+
+    // GYMS — authenticated read for Gym Mode picker; writes via Admin SDK only.
+    match /gyms/{gymId} {
       allow read: if signedIn();
       allow create, update, delete: if false;
     }

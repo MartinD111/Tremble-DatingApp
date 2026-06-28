@@ -91,7 +91,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     WidgetsBinding.instance.addObserver(this);
     // Pre-warm the swipe-hint counter so shouldShowHint is accurate on first pill show.
     WavePillService.preloadHintCount();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      // TEMP DEBUG — location permission diagnostic
+      final whenInUse = await Permission.locationWhenInUse.status;
+      final always = await Permission.locationAlways.status;
+      final prefs = await SharedPreferences.getInstance();
+      final gdprFlag = prefs.getBool('gdpr_ble_location_consent');
+      debugPrint('[LOCATION_DIAG] locationWhenInUse: $whenInUse');
+      debugPrint('[LOCATION_DIAG] locationAlways: $always');
+      debugPrint('[LOCATION_DIAG] gdpr_ble_location_consent flag: $gdprFlag');
       if (!mounted) return;
       // Register FCM Token on dashboard load
       final user = ref.read(authStateProvider);
@@ -144,6 +153,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       BleService().stop();
     } else if (state == AppLifecycleState.resumed) {
       BleService().start();
+      ref.invalidate(bluetoothPermissionStatusProvider);
     }
   }
 
@@ -1046,8 +1056,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 newState;
 
                             if (newState) {
-                              debugPrint(
-                                  "📍 Location Captured: mock_lat: 46.05, mock_lng: 14.50 [Ljubljana]");
+                              if (kDebugMode) {
+                                debugPrint(
+                                    '[Radar] location captured by GeoService');
+                              }
                               // Android 13+: POST_NOTIFICATIONS is a runtime grant.
                               // Without this the foreground service notification
                               // (and our CallStyle live activity) is invisible.
@@ -3276,7 +3288,7 @@ class RadarBleIssueMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isBluetoothOff = issue == RadarBleIssue.bluetoothOff;
     final message = isBluetoothOff
-        ? 'Bluetooth is off. Tremble needs it to detect people nearby.'
+        ? 'Bluetooth is off. Turn it on in Control Center to use radar.'
         : 'Bluetooth permission required.';
     final actionLabel = isBluetoothOff ? 'Open Settings' : 'Grant Permission';
     final action = isBluetoothOff ? onOpenSettings : onGrantPermission;

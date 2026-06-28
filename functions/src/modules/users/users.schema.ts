@@ -86,6 +86,8 @@ export const updateProfileSchema = z
         maxDistance: z.number().int().min(1).max(500).nullish(),
         isTraveler: z.boolean().nullish(),
         onboardingCheckpoint: z.number().int().min(0).max(20).nullish(),
+        gymNotificationsEnabled: z.boolean().nullish(),
+        phoneNumber: z.string().max(30).nullish(),
     })
     .strict(); // Reject unknown fields — prevents injection of isAdmin/isPremium
 

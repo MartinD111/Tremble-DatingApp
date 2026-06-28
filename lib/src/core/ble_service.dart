@@ -236,18 +236,35 @@ enum RadarBleIssue {
 RadarBleIssue? resolveRadarBleIssue({
   required BluetoothAdapterState? adapterState,
   required PermissionStatus? permissionStatus,
+  TargetPlatform? platform,
 }) {
-  if (adapterState == BluetoothAdapterState.off) {
-    return RadarBleIssue.bluetoothOff;
+  final effectivePlatform = platform ?? defaultTargetPlatform;
+  switch (adapterState) {
+    case BluetoothAdapterState.off:
+    case BluetoothAdapterState.unavailable:
+    case BluetoothAdapterState.turningOff:
+      return RadarBleIssue.bluetoothOff;
+    case BluetoothAdapterState.unauthorized:
+      return RadarBleIssue.permissionDenied;
+    case BluetoothAdapterState.unknown:
+    case BluetoothAdapterState.turningOn:
+    case null:
+      return null;
+    case BluetoothAdapterState.on:
+      // On iOS, CoreBluetooth only reports adapterState == .on when the app
+      // is authorized (unauthorized apps get .unauthorized). The permission
+      // read is therefore redundant — and unreliable, since Permission.bluetooth
+      // on iOS can lag the CBCentralManager authorization callback.
+      if (effectivePlatform == TargetPlatform.iOS) {
+        return null;
+      }
+      if (permissionStatus == PermissionStatus.denied ||
+          permissionStatus == PermissionStatus.permanentlyDenied ||
+          permissionStatus == PermissionStatus.restricted) {
+        return RadarBleIssue.permissionDenied;
+      }
+      return null;
   }
-
-  if (permissionStatus == PermissionStatus.denied ||
-      permissionStatus == PermissionStatus.permanentlyDenied ||
-      permissionStatus == PermissionStatus.restricted) {
-    return RadarBleIssue.permissionDenied;
-  }
-
-  return null;
 }
 
 final bluetoothAdapterStateProvider =
@@ -255,8 +272,19 @@ final bluetoothAdapterStateProvider =
   return FlutterBluePlus.adapterState;
 });
 
+/// Platform-aware Bluetooth authorization read.
+///
+/// On iOS, `Permission.bluetoothScan` / `bluetoothAdvertise` / `bluetoothConnect`
+/// are Android-12+ runtime permissions that have no iOS analogue —
+/// permission_handler's iOS backend falls through to `UnknownPermissionStrategy`
+/// and returns `PermissionStatusDenied` unconditionally for these. The only
+/// iOS-recognized BT permission is `Permission.bluetooth`, which is backed by
+/// `CBCentralManager.authorization`.
 final bluetoothPermissionStatusProvider =
     FutureProvider<PermissionStatus>((ref) {
+  if (defaultTargetPlatform == TargetPlatform.iOS) {
+    return Permission.bluetooth.status;
+  }
   return Permission.bluetoothScan.status;
 });
 

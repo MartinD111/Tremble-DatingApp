@@ -21,7 +21,7 @@ void main() {
     );
 
     expect(
-      find.text('Bluetooth is off. Tremble needs it to detect people nearby.'),
+      find.text('Bluetooth is off. Turn it on in Control Center to use radar.'),
       findsOneWidget,
     );
     expect(find.text('Open Settings'), findsOneWidget);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -5,6 +6,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/event_geofence_service.dart';
@@ -31,7 +33,16 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   static const bool _isDev =
       String.fromEnvironment('FLAVOR', defaultValue: 'dev') != 'prod';
 
+  // Last-resort fallback when no last-known device position is available
+  // (first launch, permission denied, location services off). Not used in
+  // any always-on path — see [_effectiveCenter].
   static const LatLng _ljubljanaCenter = LatLng(46.0569, 14.5058);
+
+  // Resolved from Geolocator.getLastKnownPosition() on init. Null until that
+  // returns; UI uses [_effectiveCenter] which falls back to [_ljubljanaCenter].
+  LatLng? _userCenter;
+
+  LatLng get _effectiveCenter => _userCenter ?? _ljubljanaCenter;
 
   static const _zoomLevels = {
     _MapZoom.city: 13.5,
@@ -57,6 +68,25 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
     _proximityPoints = _isDev ? _generateProximityPoints() : const [];
 
     ref.read(eventGeofenceServiceProvider).setActiveEvents([]);
+    unawaited(_resolveUserCenter());
+  }
+
+  /// Pulls the cached device position without triggering a permission dialog.
+  /// If a usable position is returned, we snap the map (and any future zoom
+  /// toggles) to it; otherwise we keep the [_ljubljanaCenter] fallback.
+  Future<void> _resolveUserCenter() async {
+    try {
+      final pos = await Geolocator.getLastKnownPosition();
+      if (pos == null || !mounted) return;
+      setState(() {
+        _userCenter = LatLng(pos.latitude, pos.longitude);
+      });
+      if (_mapController.camera.zoom > 0) {
+        _mapController.move(_userCenter!, _zoomLevels[_zoom]!);
+      }
+    } catch (_) {
+      // Permission denied / location services off — keep the fallback.
+    }
   }
 
   List<LatLng> _generateProximityPoints() {
@@ -73,7 +103,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
 
   void _setZoom(_MapZoom zoom) {
     setState(() => _zoom = zoom);
-    _mapController.move(_ljubljanaCenter, _zoomLevels[zoom]!);
+    _mapController.move(_effectiveCenter, _zoomLevels[zoom]!);
   }
 
   void _showEventPinSheet(
@@ -157,6 +187,10 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   }
 
   List<Marker> _buildEventMarkers(bool effectivePremium, String lang) {
+    // Hardcoded Ljubljana venue coordinates in [_eventLocations] must never
+    // reach a prod render path. Until venue coords are sourced from Firestore
+    // they are dev-only fixtures.
+    if (!_isDev) return const [];
     return _events.map((event) {
       final location = _eventLocations[event.id]!;
       final accent = event.isActive ? TrembleTheme.azure : TrembleTheme.rose;
@@ -309,7 +343,7 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                               FlutterMap(
                                 mapController: _mapController,
                                 options: MapOptions(
-                                  initialCenter: _ljubljanaCenter,
+                                  initialCenter: _effectiveCenter,
                                   initialZoom: _zoomLevels[_MapZoom.city]!,
                                   maxZoom: 16.0,
                                   interactionOptions: const InteractionOptions(

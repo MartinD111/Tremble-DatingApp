@@ -205,122 +205,123 @@ void onStart(ServiceInstance service) async {
   bool askedToActivate = false;
   bool askedToDeactivate = false;
 
-  importNativeMotion() {
-    // MissingPluginException is thrown when this runs in the background isolate
-    // (flutter_background_service), which has no access to MainActivity's
-    // registered MethodChannel/EventChannel handlers. Swallow it gracefully so
-    // the background isolate keeps running — motion events simply won't fire.
-    try {
-      NativeMotionService.instance.motionStateChanges.listen((state) async {
-        // Reload active state from prefs in case it was changed via notification action
-        runClubActive = prefs.getBool('run_club_active') ?? false;
-        final now = DateTime.now();
+  // Motion ownership lives in the main isolate (see MotionBridge). It
+  // forwards each state via FlutterBackgroundService().invoke and we receive
+  // it here. The Run-Club timer/notification logic below is preserved
+  // verbatim — only the channel that delivers the state has changed.
+  //
+  // The native channel `app.tremble/motion` is registered by
+  // TrembleNativePlugin in AppDelegate.didFinishLaunchingWithOptions, i.e.
+  // on the main FlutterEngine only. Calling NativeMotionService from this
+  // (background) isolate would raise MissingPluginException, which is what
+  // we are fixing.
+  service.on('motionStateChanged').listen((event) async {
+    final stateName = event?['state'] as String?;
+    final state = switch (stateName) {
+      'running' => MotionState.running,
+      'stationary' => MotionState.stationary,
+      'walking' => MotionState.walking,
+      _ => MotionState.unknown,
+    };
 
-        if (state == MotionState.running) {
-          lastStationaryStart = null;
-          askedToDeactivate = false;
-          lastRunningStart ??= now;
+    // Reload active state from prefs in case it was changed via notification action
+    runClubActive = prefs.getBool('run_club_active') ?? false;
+    final now = DateTime.now();
 
-          if (!runClubActive &&
-              !askedToActivate &&
-              now.difference(lastRunningStart!).inMinutes >= 5) {
-            askedToActivate = true;
+    if (state == MotionState.running) {
+      lastStationaryStart = null;
+      askedToDeactivate = false;
+      lastRunningStart ??= now;
 
-            await notificationsPlugin.show(
-              2,
-              '🔔 Zaznali smo tek',
-              'Želiš vklopiti Run Club?',
-              const NotificationDetails(
-                android: AndroidNotificationDetails(
-                  'tremble_run_club',
-                  'Tremble Run Club',
-                  importance: Importance.high,
-                  priority: Priority.high,
-                  actions: [
-                    AndroidNotificationAction('RUN_CLUB_ACTIVATE', 'Vklopi',
-                        showsUserInterface: false),
-                    AndroidNotificationAction('RUN_CLUB_IGNORE', 'Prezri',
-                        showsUserInterface: false),
-                  ],
-                ),
-                iOS: DarwinNotificationDetails(
-                    categoryIdentifier: 'RUN_CLUB_ACTIVATION_CATEGORY'),
+      if (!runClubActive &&
+          !askedToActivate &&
+          now.difference(lastRunningStart!).inMinutes >= 5) {
+        askedToActivate = true;
+
+        await notificationsPlugin.show(
+          2,
+          '🔔 Zaznali smo tek',
+          'Želiš vklopiti Run Club?',
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'tremble_run_club',
+              'Tremble Run Club',
+              importance: Importance.high,
+              priority: Priority.high,
+              actions: [
+                AndroidNotificationAction('RUN_CLUB_ACTIVATE', 'Vklopi',
+                    showsUserInterface: false),
+                AndroidNotificationAction('RUN_CLUB_IGNORE', 'Prezri',
+                    showsUserInterface: false),
+              ],
+            ),
+            iOS: DarwinNotificationDetails(
+                categoryIdentifier: 'RUN_CLUB_ACTIVATION_CATEGORY'),
+          ),
+          payload: 'run_club_prompt',
+        );
+      }
+    } else if (state == MotionState.stationary) {
+      // We only reset the running timer if stationary (not walking)
+      lastRunningStart = null;
+      askedToActivate = false;
+      lastStationaryStart ??= now;
+
+      final stationaryMinutes = now.difference(lastStationaryStart!).inMinutes;
+
+      if (runClubActive) {
+        if (stationaryMinutes >= 20) {
+          runClubActive = false;
+          await prefs.setBool('run_club_active', false);
+          service.invoke('onRunClubStateChanged', {'active': false});
+
+          await notificationsPlugin.show(
+            3,
+            '💤 Run Club izklopljen',
+            'Upamo, da je bil dober tek.',
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'tremble_run_club',
+                'Tremble Run Club',
+                importance: Importance.defaultImportance,
+                priority: Priority.defaultPriority,
               ),
-              payload: 'run_club_prompt',
-            );
-          }
-        } else if (state == MotionState.stationary) {
-          // We only reset the running timer if stationary (not walking)
-          lastRunningStart = null;
-          askedToActivate = false;
-          lastStationaryStart ??= now;
+              iOS: DarwinNotificationDetails(),
+            ),
+            payload: 'run_club_deactivated',
+          );
+        } else if (stationaryMinutes >= 15 && !askedToDeactivate) {
+          askedToDeactivate = true;
 
-          final stationaryMinutes =
-              now.difference(lastStationaryStart!).inMinutes;
-
-          if (runClubActive) {
-            if (stationaryMinutes >= 20) {
-              runClubActive = false;
-              await prefs.setBool('run_club_active', false);
-              service.invoke('onRunClubStateChanged', {'active': false});
-
-              await notificationsPlugin.show(
-                3,
-                '💤 Run Club izklopljen',
-                'Upamo, da je bil dober tek.',
-                const NotificationDetails(
-                  android: AndroidNotificationDetails(
-                    'tremble_run_club',
-                    'Tremble Run Club',
-                    importance: Importance.defaultImportance,
-                    priority: Priority.defaultPriority,
-                  ),
-                  iOS: DarwinNotificationDetails(),
-                ),
-                payload: 'run_club_deactivated',
-              );
-            } else if (stationaryMinutes >= 15 && !askedToDeactivate) {
-              askedToDeactivate = true;
-
-              await notificationsPlugin.show(
-                3,
-                '⏸️ Si končal s tekom?',
-                'Run Club je še vedno aktiven.',
-                const NotificationDetails(
-                  android: AndroidNotificationDetails(
-                    'tremble_run_club',
-                    'Tremble Run Club',
-                    importance: Importance.defaultImportance,
-                    priority: Priority.defaultPriority,
-                    actions: [
-                      AndroidNotificationAction(
-                          'RUN_CLUB_DEACTIVATE', 'Izklopi',
-                          showsUserInterface: false),
-                      AndroidNotificationAction(
-                          'RUN_CLUB_KEEP_ACTIVE', 'Pusti aktivno',
-                          showsUserInterface: false),
-                    ],
-                  ),
-                  iOS: DarwinNotificationDetails(
-                      categoryIdentifier: 'RUN_CLUB_DEACTIVATION_CATEGORY'),
-                ),
-                payload: 'run_club_prompt',
-              );
-            }
-          }
-        } else if (state == MotionState.walking) {
-          // Brief walking doesn't reset either timer
+          await notificationsPlugin.show(
+            3,
+            '⏸️ Si končal s tekom?',
+            'Run Club je še vedno aktiven.',
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'tremble_run_club',
+                'Tremble Run Club',
+                importance: Importance.defaultImportance,
+                priority: Priority.defaultPriority,
+                actions: [
+                  AndroidNotificationAction('RUN_CLUB_DEACTIVATE', 'Izklopi',
+                      showsUserInterface: false),
+                  AndroidNotificationAction(
+                      'RUN_CLUB_KEEP_ACTIVE', 'Pusti aktivno',
+                      showsUserInterface: false),
+                ],
+              ),
+              iOS: DarwinNotificationDetails(
+                  categoryIdentifier: 'RUN_CLUB_DEACTIVATION_CATEGORY'),
+            ),
+            payload: 'run_club_prompt',
+          );
         }
-      });
-      NativeMotionService.instance.startMonitoring();
-    } catch (_) {
-      // MissingPluginException: background isolate has no access to
-      // MainActivity's channel handlers. Motion detection unavailable —
-      // Run Club auto-detection is disabled on this platform/context.
+      }
+    } else if (state == MotionState.walking) {
+      // Brief walking doesn't reset either timer
     }
-  }
-
-  importNativeMotion();
+  });
 
   // Update the persistent notification and emit radarState to UI every 60s
   Timer.periodic(const Duration(seconds: 60), (_) async {
