@@ -1,3 +1,24 @@
+## Session State — 2026-06-30 00:07 CEST (Session 38)
+- Active Task: Fix updateProfile HTTP 400 for phoneNumber/gymNotificationsEnabled
+- Environment: Dev (tremble-dev)
+- Modified Files: None (schema already correct — deploy gap only)
+- Open Problems:
+    - Existing blockers remain (B005 iOS provisioning, B006 photo upload E2E unverified).
+- System Status: `npx tsc --noEmit` clean. `npm test` 52/52 passing. `updateProfile(europe-west1)` deployed to tremble-dev.
+
+## Session Handoff
+- Completed:
+    - Diagnosed updateProfile HTTP 400 "Unrecognized key(s): phoneNumber, gymNotificationsEnabled" as a deploy gap — not a schema bug.
+    - Verified `users.schema.ts` already contains `phoneNumber: z.string().max(30).nullish()` (line 90) and `gymNotificationsEnabled: z.boolean().nullish()` (line 89).
+    - Confirmed compiled `lib/modules/users/users.schema.js` also contains both fields.
+    - Confirmed ONE input schema path: `users.functions.ts:33` → `updateProfileSchema` from `users.schema.ts:23` with `.strict()` at line 92. No downstream Firestore write validator.
+    - Verified `npx tsc --noEmit`: clean.
+    - Verified `npm test -- --runInBand`: 52/52 tests pass (7 suites).
+    - Deployed: `firebase deploy --only functions:updateProfile --project tremble-dev` → `✔ functions[updateProfile(europe-west1)] Successful update operation.` → `✔ Deploy complete!`
+- In Progress: None.
+- Blocked: None.
+- Next Action: Test from device to confirm updateProfile now accepts phoneNumber and gymNotificationsEnabled payloads without 400.
+
 ## Session State — 2026-06-28 19:40 CEST (Session 37)
 - Active Task: Resolve main.dart analyzer unused import & verify formatting
 - Environment: Dev
