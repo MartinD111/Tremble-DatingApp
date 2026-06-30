@@ -68,6 +68,8 @@ google-services.json
 android/app/google-services.json
 GoogleService-Info.plist
 ios/Runner/GoogleService-Info.plist
+ios/Runner/GoogleService-Info-Dev.plist
+ios/Runner/GoogleService-Info-Prod.plist
 lib/src/core/firebase_options.dart
 
 // ─── ENVIRONMENT & SECRETS ────────────────────────────────────────────────────

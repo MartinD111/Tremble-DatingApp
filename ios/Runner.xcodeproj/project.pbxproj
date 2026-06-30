@@ -566,7 +566,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Skripta za menjavo Firebase config datotek glede na Flavor\ncase \"${PRODUCT_BUNDLE_IDENTIFIER}\" in\n  \"com.pulse.dev.aleks\" | \"com.pulse\" | \"tremble.dating.app.dev\")\n    cp -v \"${PROJECT_DIR}/Runner/Firebase/Dev/GoogleService-Info.plist\" \"${PROJECT_DIR}/Runner/GoogleService-Info.plist\"\n    ;;\n  \"tremble.dating.app\")\n    cp -v \"${PROJECT_DIR}/Runner/Firebase/Prod/GoogleService-Info.plist\" \"${PROJECT_DIR}/Runner/GoogleService-Info.plist\"\n    ;;\n  *)\n    ;;\nesac\n";
+			shellScript = "# Select Firebase config based on build configuration.\n# *-prod configs (Debug-prod/Release-prod/Profile-prod) use the prod plist.\n# All others (Debug/Release/Profile and Debug-dev/Release-dev/Profile-dev) use the dev plist.\nset -e\nSRC_DEV=\"${PROJECT_DIR}/Runner/GoogleService-Info-Dev.plist\"\nSRC_PROD=\"${PROJECT_DIR}/Runner/GoogleService-Info-Prod.plist\"\nDEST=\"${PROJECT_DIR}/Runner/GoogleService-Info.plist\"\ncase \"${CONFIGURATION}\" in\n  *-prod)\n    SRC=\"${SRC_PROD}\"\n    FLAVOR=\"prod\"\n    ;;\n  Debug|Release|Profile|*-dev)\n    SRC=\"${SRC_DEV}\"\n    FLAVOR=\"dev\"\n    ;;\n  *)\n    echo \"error: Unknown CONFIGURATION '${CONFIGURATION}'. Expected Debug/Release/Profile, *-dev, or *-prod.\" >&2\n    exit 1\n    ;;\nesac\nif [ ! -f \"${SRC}\" ]; then\n  echo \"error: Firebase config not found: ${SRC}\" >&2\n  exit 1\nfi\necho \"Firebase config: ${FLAVOR} (CONFIGURATION=${CONFIGURATION})\"\ncp -f \"${SRC}\" \"${DEST}\"\n";
 		};
 		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
 			isa = PBXShellScriptBuildPhase;
