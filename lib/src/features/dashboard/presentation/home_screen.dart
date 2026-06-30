@@ -93,15 +93,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     WavePillService.preloadHintCount();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      // TEMP DEBUG — location permission diagnostic
-      final whenInUse = await Permission.locationWhenInUse.status;
-      final always = await Permission.locationAlways.status;
-      final prefs = await SharedPreferences.getInstance();
-      final gdprFlag = prefs.getBool('gdpr_ble_location_consent');
-      debugPrint('[LOCATION_DIAG] locationWhenInUse: $whenInUse');
-      debugPrint('[LOCATION_DIAG] locationAlways: $always');
-      debugPrint('[LOCATION_DIAG] gdpr_ble_location_consent flag: $gdprFlag');
-      if (!mounted) return;
       // Register FCM Token on dashboard load
       final user = ref.read(authStateProvider);
       if (user != null) {

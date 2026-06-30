@@ -112,7 +112,8 @@
       "Bash(xcrun altool *)",
       "Bash(/usr/libexec/PlistBuddy *)",
       "Bash(awk *)",
-      "Bash(plutil *)"
+      "Bash(plutil *)",
+      "Bash(grep -A45 '__TRACKED_VAR__ /\\\\*' /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app/ios/Runner.xcodeproj/project.pbxproj)"
     ]
   }
 }
