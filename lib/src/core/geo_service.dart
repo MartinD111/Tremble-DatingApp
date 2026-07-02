@@ -30,13 +30,25 @@ class GeoService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final Battery _battery = Battery();
 
-  Timer? _geoTimer;
+  StreamSubscription<Position>? _positionSub;
   StreamSubscription<BatteryState>? _batterySub;
+  Timer? _fallbackTimer;
   bool _isLowPowerMode = false;
   bool _isPremium = false;
 
-  static const Duration _normalInterval = Duration(seconds: 60);
-  static const Duration _lowPowerInterval = Duration(minutes: 5);
+  // Distance filters (metres). iOS location background mode keeps the process
+  // alive while getPositionStream is active — this replaces the wall-clock
+  // timer which froze under iOS process suspension.
+  static const int _normalDistanceFilter = 50;
+  static const int _lowPowerDistanceFilter = 200;
+
+  // Stationary-user fallback: the position stream only fires on 50m+ movement,
+  // so a user sitting at a café / lecture / gym would otherwise drop off all
+  // radars. This timer forces a heartbeat every 90s regardless of movement.
+  // It only ticks while the process is alive — the location stream keeps the
+  // iOS process resident in background, so the two mechanisms cover each
+  // other: stream keeps us alive, timer keeps us visible.
+  static const Duration _fallbackInterval = Duration(seconds: 90);
 
   /// Geohash precision 7 ≈ 150m × 75m cell.
   /// Used as a coarse GPS pre-filter; BLE RSSI confirms final proximity.
@@ -53,7 +65,8 @@ class GeoService {
     _isPremium = isPremium;
     await _checkBatteryState();
     _listenBatteryChanges();
-    _scheduleUpdate();
+    await _startPositionStream();
+    _startFallbackTimer();
   }
 
   void updatePremiumTier({required bool isPremium}) {
@@ -62,8 +75,12 @@ class GeoService {
 
   /// Stop all geo updates and mark user as inactive in Firestore.
   Future<void> stop() async {
-    _geoTimer?.cancel();
-    _batterySub?.cancel();
+    await _positionSub?.cancel();
+    _positionSub = null;
+    await _batterySub?.cancel();
+    _batterySub = null;
+    _fallbackTimer?.cancel();
+    _fallbackTimer = null;
     _isPremium = false;
 
     final uid = _auth.currentUser?.uid;
@@ -100,21 +117,18 @@ class GeoService {
       final wasLow = _isLowPowerMode;
       await _checkBatteryState();
       if (wasLow != _isLowPowerMode) {
-        _geoTimer?.cancel();
-        _scheduleUpdate();
+        await _startPositionStream();
       }
     });
   }
 
-  void _scheduleUpdate() {
-    final interval = _isLowPowerMode ? _lowPowerInterval : _normalInterval;
-    _geoTimer = Timer.periodic(interval, (_) => _uploadLocation());
-    _uploadLocation();
-  }
-
-  Future<void> _uploadLocation() async {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
+  /// Subscribe to Geolocator.getPositionStream so the OS delivers position
+  /// events on movement (distanceFilter). On iOS this keeps the process
+  /// alive under the `location` background mode instead of relying on a
+  /// wall-clock timer that freezes when the app is suspended.
+  Future<void> _startPositionStream() async {
+    await _positionSub?.cancel();
+    _positionSub = null;
 
     try {
       final permission = await Geolocator.checkPermission();
@@ -122,14 +136,57 @@ class GeoService {
           permission == LocationPermission.deniedForever) {
         return;
       }
+    } catch (_) {
+      return;
+    }
 
-      final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        ),
-      );
+    final distanceFilter =
+        _isLowPowerMode ? _lowPowerDistanceFilter : _normalDistanceFilter;
+    final settings = LocationSettings(
+      accuracy: LocationAccuracy.medium,
+      distanceFilter: distanceFilter,
+    );
 
+    _positionSub =
+        Geolocator.getPositionStream(locationSettings: settings).listen(
+      _uploadLocation,
+      onError: (Object _) {
+        // Silently ignore transient stream errors — subscription stays alive.
+      },
+    );
+  }
+
+  /// Stationary-user fallback. getPositionStream only emits on 50m+ movement,
+  /// so this timer forces a heartbeat every [_fallbackInterval] regardless of
+  /// motion. Runs in parallel with the stream — no coordination needed since
+  /// two writes to the same geohash are idempotent server-side.
+  void _startFallbackTimer() {
+    _fallbackTimer?.cancel();
+    _fallbackTimer = Timer.periodic(_fallbackInterval, (_) async {
+      try {
+        final permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          return;
+        }
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 10),
+          ),
+        );
+        await _uploadLocation(pos);
+      } catch (_) {
+        // Silently ignore — next tick retries.
+      }
+    });
+  }
+
+  Future<void> _uploadLocation(Position pos) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    try {
       // F13: Geofencing Safe Zones
       // If the user's exact current location falls within any local Safe Zone,
       // completely abort the geo-upload (proximity matching is disabled here).
