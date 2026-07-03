@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
@@ -126,6 +127,10 @@ class GeoService {
   /// events on movement (distanceFilter). On iOS this keeps the process
   /// alive under the `location` background mode instead of relying on a
   /// wall-clock timer that freezes when the app is suspended.
+  ///
+  /// IMPORTANT: AppleSettings with allowBackgroundLocationUpdates=true is
+  /// required on iOS — without it CLLocationManager does not deliver events
+  /// to a suspended process regardless of UIBackgroundModes: location.
   Future<void> _startPositionStream() async {
     await _positionSub?.cancel();
     _positionSub = null;
@@ -142,10 +147,24 @@ class GeoService {
 
     final distanceFilter =
         _isLowPowerMode ? _lowPowerDistanceFilter : _normalDistanceFilter;
-    final settings = LocationSettings(
-      accuracy: LocationAccuracy.medium,
-      distanceFilter: distanceFilter,
-    );
+
+    // iOS: AppleSettings sets allowsBackgroundLocationUpdates = true on the
+    // underlying CLLocationManager, which is mandatory for the OS to deliver
+    // location events when the app is in background. Generic LocationSettings
+    // does NOT set this flag — tested and confirmed non-functional.
+    // Android: LocationSettings is sufficient (no equivalent restriction).
+    final LocationSettings settings = Platform.isIOS
+        ? AppleSettings(
+            accuracy: LocationAccuracy.medium,
+            distanceFilter: distanceFilter,
+            allowBackgroundLocationUpdates: true,
+            pauseLocationUpdatesAutomatically: false,
+            activityType: ActivityType.fitness,
+          )
+        : LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            distanceFilter: distanceFilter,
+          );
 
     _positionSub =
         Geolocator.getPositionStream(locationSettings: settings).listen(
@@ -169,12 +188,23 @@ class GeoService {
             permission == LocationPermission.deniedForever) {
           return;
         }
-        final pos = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.medium,
-            timeLimit: Duration(seconds: 10),
-          ),
-        );
+        // Use the last known position for the fallback heartbeat to avoid
+        // an additional GPS fix request — the stream already keeps GPS warm.
+        // Falls back to getCurrentPosition if no last known position exists.
+        final pos = await Geolocator.getLastKnownPosition() ??
+            await Geolocator.getCurrentPosition(
+              locationSettings: Platform.isIOS
+                  ? AppleSettings(
+                      accuracy: LocationAccuracy.medium,
+                      timeLimit: Duration(seconds: 10),
+                      allowBackgroundLocationUpdates: true,
+                      pauseLocationUpdatesAutomatically: false,
+                    )
+                  : LocationSettings(
+                      accuracy: LocationAccuracy.medium,
+                      timeLimit: Duration(seconds: 10),
+                    ),
+            );
         await _uploadLocation(pos);
       } catch (_) {
         // Silently ignore — next tick retries.
