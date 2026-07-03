@@ -25,6 +25,37 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
 
+    <!-- ── flutter_ble_peripheral 2.1.0 duplicate-permission blockade ────
+         The plugin's manifest declares ACCESS_FINE_LOCATION and
+         ACCESS_COARSE_LOCATION as <uses-permission-sdk-23 maxSdkVersion="30">.
+         The Gradle manifest merger treats <uses-permission-sdk-23> and
+         <uses-permission> as distinct elements and does NOT deduplicate
+         them, so both variants end up in the final APK with divergent
+         maxSdkVersion values — triggering Play Console "Sensitive
+         permissions" review inconsistencies.
+
+         tools:node="remove" on the matching <uses-permission-sdk-23>
+         element instructs the merger to drop the plugin's entries.
+         Runtime location grant is unaffected: the plain <uses-permission>
+         declarations above still cover all API levels.
+
+         Verify after build by grepping merged manifest at
+         build/app/intermediates/merged_manifests/prodRelease/
+         processProdReleaseManifest/AndroidManifest.xml — no
+         uses-permission-sdk-23 entries should remain.
+
+         If flutter_ble_peripheral is upgraded and drops the sdk-23
+         pattern, this blockade becomes a silent no-op (harmless). Same
+         brittleness as the flutter_background_service receiver blockade
+         below.
+    -->
+    <uses-permission-sdk-23
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        tools:node="remove" />
+    <uses-permission-sdk-23
+        android:name="android.permission.ACCESS_COARSE_LOCATION"
+        tools:node="remove" />
+
     <!-- Activity Recognition (Run Club) -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
 
