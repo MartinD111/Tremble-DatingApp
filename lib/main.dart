@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -85,6 +87,33 @@ Future<void> main() async {
       stackTrace: details.stack,
     );
   };
+
+  // Catch unhandled async errors that escape all zones — e.g.
+  // StateError: "Cannot use ref after the widget was disposed"
+  // from background callbacks. FlutterError.onError misses these.
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    Sentry.captureException(error, stackTrace: stack);
+    return true;
+  };
+
+  // Low-level isolate error listener — catches errors that bypass
+  // PlatformDispatcher (e.g. spawned isolate crashes).
+  Isolate.current.addErrorListener(RawReceivePort((dynamic pair) async {
+    final List<dynamic> errorAndStack = pair as List<dynamic>;
+    final stack = errorAndStack.length > 1 && errorAndStack[1] != null
+        ? StackTrace.fromString(errorAndStack[1].toString())
+        : StackTrace.current;
+    await Sentry.captureException(
+      errorAndStack[0],
+      stackTrace: stack,
+    );
+    await FirebaseCrashlytics.instance.recordError(
+      errorAndStack[0],
+      stack,
+      fatal: true,
+    );
+  }).sendPort);
 
   NotificationService.registerBackgroundHandler();
 

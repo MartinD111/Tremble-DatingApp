@@ -84,6 +84,36 @@ Future<void> initializeBackgroundService() async {
 Future<bool> onIosBackground(ServiceInstance service) async {
   WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
+
+  // Supplementary heartbeat for BGAppRefreshTask. The primary background
+  // path is GeoService.getPositionStream() (kept alive by the `location`
+  // background mode). This callback exists so the ~30s BGTask window still
+  // contributes an updatedAt write when iOS wakes us — total work is kept
+  // well under the 30s budget.
+  try {
+    const flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
+    final firebaseOptions = flavor == 'prod'
+        ? ProdFirebaseOptions.currentPlatform
+        : DevFirebaseOptions.currentPlatform;
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(options: firebaseOptions);
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final hasConsent = prefs.getBool('gdpr_ble_location_consent') ?? false;
+    if (!hasConsent) return true;
+
+    final effectiveIsPremium =
+        prefs.getBool(geoServiceEffectivePremiumPrefsKey) ?? false;
+
+    final geoService = GeoService();
+    await geoService.start(isPremium: effectiveIsPremium);
+    await Future<void>.delayed(const Duration(seconds: 10));
+    await geoService.stop();
+  } catch (_) {
+    // Never surface errors to the BGTask — completion must return true.
+  }
+
   return true;
 }
 

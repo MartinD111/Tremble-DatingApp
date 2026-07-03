@@ -85,12 +85,78 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool _runRecapShown = false;
   bool _tutorialOptInShowing = false;
 
+  // Background service / native bridge subscriptions. Registered once in
+  // initState and cancelled in dispose so async events cannot fire against a
+  // disposed ref. Prior to this fix these were registered inside build(),
+  // which both leaked subscriptions on every rebuild and produced the
+  // "Cannot use ref after the widget was disposed" crash (Sentry 131353377)
+  // when a background radarState event arrived post-dispose.
+  StreamSubscription<bool>? _radarStateChangesSub;
+  StreamSubscription<Map<String, dynamic>?>? _radarStateSub;
+  StreamSubscription<Map<String, dynamic>?>? _runClubStateSub;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Pre-warm the swipe-hint counter so shouldShowHint is accurate on first pill show.
     WavePillService.preloadHintCount();
+
+    // Native tile / widget → radar toggle bridge.
+    _radarStateChangesSub =
+        RadarIntegrationService.instance.radarStateChanges.listen((active) {
+      if (!mounted) return;
+      final current = ref.read(isScanningProvider);
+      if (active == current) return; // already in sync
+      ref.read(isScanningProvider.notifier).state = active;
+      if (active) {
+        unawaited(
+          _syncBackgroundEffectivePremium(ref.read(effectiveIsPremiumProvider)),
+        );
+        // Android: trampoline service satisfies the 5s startForeground
+        // deadline before relay-starting the plugin. iOS: no-op.
+        if (Platform.isAndroid) {
+          RadarIntegrationService.instance.startRadarService();
+        } else {
+          FlutterBackgroundService().startService();
+        }
+      } else {
+        BleService().stop();
+        if (Platform.isAndroid) {
+          RadarIntegrationService.instance.stopRadarService();
+        } else {
+          FlutterBackgroundService().invoke('stopService', null);
+        }
+      }
+    });
+
+    // Radar mode / battery updates pushed from the background service isolate.
+    _radarStateSub =
+        FlutterBackgroundService().on('radarState').listen((event) {
+      if (!mounted || event == null) return;
+      final mode = event['mode'] as String? ?? 'full';
+      final battery = event['batteryLevel'] as int? ?? 100;
+      ref.read(radarModeProvider.notifier).state = mode;
+      ref.read(radarBatteryLevelProvider.notifier).state = battery;
+    });
+
+    // Run Club state changes from the background motion service. When the
+    // motion filter detects 5+ min of running (or 15+ min stationary),
+    // BleService restarts advertising with the updated manufacturerId
+    // (0xFF01 vs 0xFFFF).
+    _runClubStateSub =
+        FlutterBackgroundService().on('onRunClubStateChanged').listen((event) {
+      if (!mounted || event == null) return;
+      BleService().updateAdvertisingMode();
+      final isActive = event['active'] as bool? ?? true;
+      if (isActive) {
+        _runRecapShown = false; // New run started — reset flag
+      } else if (!_runRecapShown) {
+        _runRecapShown = true;
+        _showRunRecapPrompt();
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       // Register FCM Token on dashboard load
@@ -134,13 +200,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   void dispose() {
+    _radarStateChangesSub?.cancel();
+    _radarStateSub?.cancel();
+    _runClubStateSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
+    // iOS keeps CBCentralManager scanning under the `bluetooth-central`
+    // background mode, so stopping BLE on pause would kill proximity
+    // detection the moment the app backgrounds. Only Android — which
+    // lacks an equivalent activity-less BLE mode — needs the pause stop.
+    if (state == AppLifecycleState.paused && Platform.isAndroid) {
       BleService().stop();
     } else if (state == AppLifecycleState.resumed) {
       BleService().start();
@@ -386,60 +459,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // wave controller). See lib/src/features/match/presentation/widgets/
     // match_notification_pill.dart and DevSimPhase mapping below in
     // _phaseToPillState().
-
-    // Listen for Radar state changes pushed from native tile / widget (Android/iOS).
-    // When the user toggles via QS tile / quick action / lock screen widget, this fires and
-    // starts/stops the background service to match.
-    RadarIntegrationService.instance.radarStateChanges.listen((active) {
-      if (!mounted) return;
-      final current = ref.read(isScanningProvider);
-      if (active == current) return; // already in sync
-      ref.read(isScanningProvider.notifier).state = active;
-      if (active) {
-        unawaited(
-          _syncBackgroundEffectivePremium(ref.read(effectiveIsPremiumProvider)),
-        );
-        // Android: trampoline service satisfies the 5s startForeground
-        // deadline before relay-starting the plugin. iOS: no-op.
-        if (Platform.isAndroid) {
-          RadarIntegrationService.instance.startRadarService();
-        } else {
-          FlutterBackgroundService().startService();
-        }
-      } else {
-        BleService().stop();
-        if (Platform.isAndroid) {
-          RadarIntegrationService.instance.stopRadarService();
-        } else {
-          FlutterBackgroundService().invoke('stopService', null);
-        }
-      }
-    });
-
-    // Listen for radar mode updates from the background service isolate
-    FlutterBackgroundService().on('radarState').listen((event) {
-      if (event == null) return;
-      final mode = event['mode'] as String? ?? 'full';
-      final battery = event['batteryLevel'] as int? ?? 100;
-      ref.read(radarModeProvider.notifier).state = mode;
-      ref.read(radarBatteryLevelProvider.notifier).state = battery;
-    });
-
-    // Listen for Run Club state changes from the background motion service.
-    // When the motion filter detects 5+ min of running (or 15+ min stationary),
-    // it writes SharedPreferences and signals here. BleService then restarts
-    // advertising with the updated manufacturerId (0xFF01 vs 0xFFFF).
-    FlutterBackgroundService().on('onRunClubStateChanged').listen((event) {
-      if (event == null) return;
-      BleService().updateAdvertisingMode();
-      final isActive = event['active'] as bool? ?? true;
-      if (isActive) {
-        _runRecapShown = false; // New run started — reset flag
-      } else if (!_runRecapShown && mounted) {
-        _runRecapShown = true;
-        _showRunRecapPrompt();
-      }
-    });
+    //
+    // The native tile / widget bridge (radarStateChanges), the background
+    // radarState event, and the onRunClubStateChanged event are all wired
+    // once in initState and cancelled in dispose. Registering them here in
+    // build() previously leaked a subscription per rebuild and crashed with
+    // "Cannot use ref after the widget was disposed" when events fired
+    // post-dispose (Sentry 131353377).
 
     // ── Dev Simulation → Radar Ping bridge ─────────────────────────────────
     // Pipes the dev sim's tracking values into pingDistance/pingAngle so the
