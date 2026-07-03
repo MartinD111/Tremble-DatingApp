@@ -63,7 +63,7 @@ android {
     }
 
     defaultConfig {
-        minSdk = flutter.minSdkVersion
+        minSdk = 24 // Android 7.0+ — floor forced by purchases_ui_flutter, google_maps_flutter, google_sign_in_android dependencies (all require API 24).
         targetSdk = flutter.targetSdkVersion
     }
 
