@@ -322,16 +322,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
-  void _handleTutorialNavTap({
-    required int index,
-    required bool isPremium,
-  }) {
+  void _handleTutorialNavTap({required int index}) {
     final tutorial = ref.read(tutorialProvider);
     if (!tutorial.isActive) return;
 
-    final mapIndex = isPremium ? 1 : -1;
-    final peopleIndex = isPremium ? 2 : 1;
-    final settingsIndex = isPremium ? 3 : 2;
+    // Indices are fixed for both tiers now that the Map tab is shown to
+    // free users: [Radar=0, Map=1, People=2, Settings=3].
+    const mapIndex = 1;
+    const peopleIndex = 2;
+    const settingsIndex = 3;
 
     if (tutorial.currentStep == 2 && index == mapIndex) {
       ref.read(tutorialProvider.notifier).nextStep();
@@ -484,41 +483,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final lang = ref.watch(appLanguageProvider);
     final navIndex = ref.watch(navIndexProvider);
 
-    // Reactive mapping of active nav index during Premium/Free transitions
+    // Sync background service on tier transitions. Tab indices are stable
+    // across tiers (Radar=0, Map=1, People=2, Settings=3), so no reindex.
     ref.listen<bool>(
       effectiveIsPremiumProvider,
       (previous, next) {
-        if (previous == null) return;
-        if (previous != next) {
-          unawaited(_syncBackgroundEffectivePremium(next));
-          final currentIndex = ref.read(navIndexProvider);
-          if (next) {
-            // Downgrade to Upgrade: Free (3 tabs) -> Premium (4 tabs)
-            // Free: 0: Radar, 1: Matches, 2: Settings
-            // Premium: 0: Radar, 1: Map, 2: Matches, 3: Settings
-            if (currentIndex == 1) {
-              ref.read(navIndexProvider.notifier).state =
-                  2; // Matches stays Matches
-            } else if (currentIndex == 2) {
-              ref.read(navIndexProvider.notifier).state =
-                  3; // Settings stays Settings
-            }
-          } else {
-            // Upgrade to Downgrade: Premium (4 tabs) -> Free (3 tabs)
-            // Premium: 0: Radar, 1: Map, 2: Matches, 3: Settings
-            // Free: 0: Radar, 1: Matches, 2: Settings
-            if (currentIndex == 1) {
-              ref.read(navIndexProvider.notifier).state =
-                  0; // Map redirects to Radar
-            } else if (currentIndex == 2) {
-              ref.read(navIndexProvider.notifier).state =
-                  1; // Matches stays Matches
-            } else if (currentIndex == 3) {
-              ref.read(navIndexProvider.notifier).state =
-                  2; // Settings stays Settings
-            }
-          }
-        }
+        if (previous == null || previous == next) return;
+        unawaited(_syncBackgroundEffectivePremium(next));
       },
     );
 
@@ -533,42 +504,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     final bool isPremium = ref.watch(effectiveIsPremiumProvider);
 
-    // Define Screens and Nav Items
-    final List<Widget> screens;
-    final List<LiquidNavItem> navItems;
+    // Define Screens and Nav Items — layout is identical for both tiers.
+    // Premium gating for map badges / filters lives inside TrembleMapScreen,
+    // not in the tab structure. Fixed indices: Radar=0, Map=1, People=2,
+    // Settings=3.
     final radarScreen = _RadarSection(
       isPremium: isPremium,
       lang: lang,
       builder: _buildRadarView,
     );
-
-    if (isPremium) {
-      screens = [
-        radarScreen,
-        const TrembleMapScreen(),
-        const MatchesScreen(),
-        const SettingsScreen(),
-      ];
-      navItems = [
-        LiquidNavItem(icon: LucideIcons.radar, label: t('tab_radar', lang)),
-        LiquidNavItem(icon: LucideIcons.map, label: t('tab_map', lang)),
-        LiquidNavItem(icon: LucideIcons.users, label: t('tab_people', lang)),
-        LiquidNavItem(
-            icon: LucideIcons.settings, label: t('tab_settings', lang)),
-      ];
-    } else {
-      screens = [
-        radarScreen,
-        const MatchesScreen(),
-        const SettingsScreen(),
-      ];
-      navItems = [
-        LiquidNavItem(icon: LucideIcons.radar, label: t('tab_radar', lang)),
-        LiquidNavItem(icon: LucideIcons.users, label: t('tab_people', lang)),
-        LiquidNavItem(
-            icon: LucideIcons.settings, label: t('tab_settings', lang)),
-      ];
-    }
+    final List<Widget> screens = [
+      radarScreen,
+      const TrembleMapScreen(),
+      const MatchesScreen(),
+      const SettingsScreen(),
+    ];
+    final List<LiquidNavItem> navItems = [
+      LiquidNavItem(icon: LucideIcons.radar, label: t('tab_radar', lang)),
+      LiquidNavItem(icon: LucideIcons.map, label: t('tab_map', lang)),
+      LiquidNavItem(icon: LucideIcons.users, label: t('tab_people', lang)),
+      LiquidNavItem(icon: LucideIcons.settings, label: t('tab_settings', lang)),
+    ];
 
     // Defensively clamp navIndex to prevent out of bounds RangeErrors
     // during fast state/role transitions or initial bootup.
@@ -597,7 +553,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Positioned.fill(
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onHorizontalDragEnd: (isPremium && safeNavIndex == 1)
+            // Map tab (index 1) owns its own horizontal pan gestures, so we
+            // let it consume them instead of swapping tabs. Free users now
+            // also land on the map at this index.
+            onHorizontalDragEnd: (safeNavIndex == 1)
                 ? null
                 : (details) {
                     final velocity = details.primaryVelocity ?? 0;
@@ -672,7 +631,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         _BottomNavBar(
           navItems: navItems,
           screensLength: screens.length,
-          isPremium: isPremium,
           isCompact: isCompact,
           navBottomGap: navBottomGap,
           onTutorialNavTap: _handleTutorialNavTap,
@@ -1249,8 +1207,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       text: t('go_to_settings', lang),
                       width: 200,
                       onPressed: () {
-                        ref.read(navIndexProvider.notifier).state =
-                            isPremium ? 3 : 2; // Settings index varies
+                        // Settings tab is always index 3 (Radar=0, Map=1,
+                        // People=2, Settings=3) for all tiers.
+                        ref.read(navIndexProvider.notifier).state = 3;
                       },
                     )
                   ],
@@ -2316,7 +2275,6 @@ class _BottomNavBar extends ConsumerWidget {
   const _BottomNavBar({
     required this.navItems,
     required this.screensLength,
-    required this.isPremium,
     required this.isCompact,
     required this.navBottomGap,
     required this.onTutorialNavTap,
@@ -2324,20 +2282,19 @@ class _BottomNavBar extends ConsumerWidget {
 
   final List<LiquidNavItem> navItems;
   final int screensLength;
-  final bool isPremium;
   final bool isCompact;
   final double navBottomGap;
-  final void Function({required int index, required bool isPremium})
-      onTutorialNavTap;
+  final void Function({required int index}) onTutorialNavTap;
 
   Set<int> _pulsingIndexes({
     required bool isActive,
     required int currentStep,
   }) {
     if (!isActive) return const {};
-    if (currentStep == 2 && isPremium) return const {1};
-    if (currentStep == 3) return {isPremium ? 2 : 1};
-    if (currentStep == 4) return {isPremium ? 3 : 2};
+    // Fixed indices for both tiers: Radar=0, Map=1, People=2, Settings=3.
+    if (currentStep == 2) return const {1};
+    if (currentStep == 3) return const {2};
+    if (currentStep == 4) return const {3};
     return const {};
   }
 
@@ -2378,7 +2335,7 @@ class _BottomNavBar extends ConsumerWidget {
 
     void handleTap(int index) {
       ref.read(navIndexProvider.notifier).state = index;
-      onTutorialNavTap(index: index, isPremium: isPremium);
+      onTutorialNavTap(index: index);
     }
 
     return AnimatedPositioned(
@@ -2405,13 +2362,14 @@ class _BottomNavBar extends ConsumerWidget {
                 pulsingIndexes: pulsing,
                 onTap: handleTap,
                 itemWrapper: (index, child) {
-                  // Premium: Map (1)->Step 2, People (2)->Step 3, Settings (3)->Step 4
-                  // Free: People (1)->Step 3, Settings (2)->Step 4
-                  final int? step = isPremium
-                      ? (index == 1
-                          ? 2
-                          : (index == 2 ? 3 : (index == 3 ? 4 : null)))
-                      : (index == 1 ? 3 : (index == 2 ? 4 : null));
+                  // Fixed indices for both tiers:
+                  // Map (1) -> Step 2, People (2) -> Step 3, Settings (3) -> Step 4.
+                  final int? step = switch (index) {
+                    1 => 2,
+                    2 => 3,
+                    3 => 4,
+                    _ => null,
+                  };
                   if (step != null) {
                     return _TutorialTarget(step: step, child: child);
                   }

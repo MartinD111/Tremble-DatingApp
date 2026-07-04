@@ -21,10 +21,13 @@ const googleClient = new OAuth2Client();
 
 /**
  * Firestore trigger — runs when a new user document is created.
- * NOTE: The client creates the initial /users/{uid} document upon sign-up.
- * This function then enriches it with server-side timestamps and default fields.
+ * NOTE: Two creation paths exist:
+ *   1. Email/password sign-up — client writes the initial /users/{uid} doc.
+ *   2. Google sign-in — completeOnboarding creates the doc server-side with
+ *      isOnboarded: true (no client-side initial doc).
  *
- * Idempotency: Checks if isOnboarded is already set to avoid double-enrichment.
+ * Idempotency: field-level guards. Never overwrite fields that are already
+ * present — in particular, never downgrade isOnboarded from true to false.
  * Alternative to beforeUserCreated (which requires GCIP / Identity Platform).
  */
 export const onUserDocCreated = onDocumentCreated(
@@ -38,23 +41,25 @@ export const onUserDocCreated = onDocumentCreated(
         return;
     }
 
-    // Idempotency check: if createdAt already exists, trigger has already run
-    if (snap.get('createdAt')) {
-        console.log(`[AUTH] onUserDocCreated: Already enriched for ${uid.substring(0, 8)}..., skipping`);
-        return;
-    }
-
     try {
-        await snap.ref.set(
-            {
-                isOnboarded: false,
-                isPremium: false,
-                isAdmin: false,
-                createdAt: FieldValue.serverTimestamp(),
-                updatedAt: FieldValue.serverTimestamp(),
-            },
-            { merge: true }
-        );
+        const updates: Record<string, unknown> = {
+            updatedAt: FieldValue.serverTimestamp(),
+        };
+
+        if (snap.get('isOnboarded') === undefined) {
+            updates.isOnboarded = false;
+        }
+        if (snap.get('isPremium') === undefined) {
+            updates.isPremium = false;
+        }
+        if (snap.get('isAdmin') === undefined) {
+            updates.isAdmin = false;
+        }
+        if (snap.get('createdAt') === undefined) {
+            updates.createdAt = FieldValue.serverTimestamp();
+        }
+
+        await snap.ref.set(updates, { merge: true });
 
         console.log(`[AUTH] User doc enriched: ${uid.substring(0, 8)}...`);
     } catch (error) {
@@ -98,60 +103,66 @@ export const completeOnboarding = onCall(
             );
         }
 
+        // Read existing doc first — Google sign-in flow may not have an
+        // initial /users/{uid} document, so we need to know whether to seed
+        // createdAt ourselves. Not a transaction: concurrent onboarding calls
+        // for the same uid are already rate-limited and would converge on the
+        // same merged value.
+        const userRef = db.collection("users").doc(uid);
+        const existingDoc = await userRef.get();
+        const existingData = existingDoc.data();
+        const hasCreatedAt = existingData?.createdAt !== undefined;
+
         // Write validated profile data
-        await db
-            .collection("users")
-            .doc(uid)
-            .set(
-                {
-                    name: data.name,
-                    age,
-                    birthDate: birthDate,
-                    gender: data.gender,
-                    interestedIn: data.interestedIn,
-                    height: data.height || null,
-                    location: data.location || null,
-                    photoUrls: data.photoUrls,
-                    isSmoker: data.isSmoker ?? null,
-                    nicotineUse,
-                    partnerSmokingPreference: data.partnerSmokingPreference || null,
-                    drinkingHabit: data.drinkingHabit || null,
-                    exerciseHabit: data.exerciseHabit || null,
-                    sleepSchedule: data.sleepSchedule || null,
-                    petPreference: data.petPreference || null,
-                    childrenPreference: data.childrenPreference || null,
-                    introvertScale: data.introvertScale ?? null,
-                    occupation: data.occupation || null,
-                    religion: data.religion || null,
-                    ethnicity: data.ethnicity || null,
-                    hairColor: data.hairColor || null,
-                    politicalAffiliation: data.politicalAffiliation || null,
-                    lookingFor: data.lookingFor,
-                    languages: data.languages,
-                    hobbies: data.hobbies,
-                    prompts: data.prompts,
-                    appLanguage: data.appLanguage,
-                    isDarkMode: data.isDarkMode,
-                    isPrideMode: data.isPrideMode,
-                    showPingAnimation: data.showPingAnimation,
-                    ageRangeStart: data.ageRangeStart,
-                    ageRangeEnd: data.ageRangeEnd,
-                    maxDistance: data.maxDistance,
-                    jobStatus: data.jobStatus || null,
-                    consentGivenAt: FieldValue.serverTimestamp(),
-                    ageConfirmed: true,
-                    ageConfirmedAt: FieldValue.serverTimestamp(),
-                    isOnboarded: true,
-                    updatedAt: FieldValue.serverTimestamp(),
-                },
-                { merge: true }
-            );
+        await userRef.set(
+            {
+                name: data.name,
+                age,
+                birthDate: birthDate,
+                gender: data.gender,
+                interestedIn: data.interestedIn,
+                height: data.height || null,
+                location: data.location || null,
+                photoUrls: data.photoUrls,
+                isSmoker: data.isSmoker ?? null,
+                nicotineUse,
+                partnerSmokingPreference: data.partnerSmokingPreference || null,
+                drinkingHabit: data.drinkingHabit || null,
+                exerciseHabit: data.exerciseHabit || null,
+                sleepSchedule: data.sleepSchedule || null,
+                petPreference: data.petPreference || null,
+                childrenPreference: data.childrenPreference || null,
+                introvertScale: data.introvertScale ?? null,
+                occupation: data.occupation || null,
+                religion: data.religion || null,
+                ethnicity: data.ethnicity || null,
+                hairColor: data.hairColor || null,
+                politicalAffiliation: data.politicalAffiliation || null,
+                lookingFor: data.lookingFor,
+                languages: data.languages,
+                hobbies: data.hobbies,
+                prompts: data.prompts,
+                appLanguage: data.appLanguage,
+                isDarkMode: data.isDarkMode,
+                isPrideMode: data.isPrideMode,
+                showPingAnimation: data.showPingAnimation,
+                ageRangeStart: data.ageRangeStart,
+                ageRangeEnd: data.ageRangeEnd,
+                jobStatus: data.jobStatus || null,
+                consentGivenAt: FieldValue.serverTimestamp(),
+                ageConfirmed: true,
+                ageConfirmedAt: FieldValue.serverTimestamp(),
+                isOnboarded: true,
+                ...(hasCreatedAt ? {} : { createdAt: FieldValue.serverTimestamp() }),
+                updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+        );
 
         console.log(`[AUTH] Onboarding completed: ${uid.substring(0, 8)}...`);
 
         // Send welcome email — fire and forget (don't block response)
-        const userDoc = await db.collection("users").doc(uid).get();
-        const email = userDoc.data()?.email as string | undefined;
+        const email = existingData?.email as string | undefined;
         if (email && data.name) {
             sendWelcomeEmail(email, data.name).catch((err) =>
                 console.error(`[AUTH] Welcome email failed for ${uid.substring(0, 8)}...:`, err)

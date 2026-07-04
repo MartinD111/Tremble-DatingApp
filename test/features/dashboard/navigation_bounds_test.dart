@@ -24,38 +24,23 @@ class MockAuthNotifier extends AuthNotifier {
   }
 }
 
-// Test provider to run the exact reactive transition listener in our isolation test
+// Mirrors the production listener in home_screen.dart, which no longer
+// remaps navIndex on tier transitions. Both tiers share fixed tab indices:
+// Radar=0, Map=1, People=2, Settings=3.
 final navigationBoundsListenerProvider = Provider<void>((ref) {
   ref.listen<bool>(
     authStateProvider.select((user) => user?.isPremium == true),
     (previous, next) {
-      if (previous == null) return;
-      if (previous != next) {
-        final currentIndex = ref.read(navIndexProvider);
-        if (next) {
-          // Downgrade to Upgrade: Free (3 tabs) -> Premium (4 tabs)
-          if (currentIndex == 1) {
-            ref.read(navIndexProvider.notifier).state = 2;
-          } else if (currentIndex == 2) {
-            ref.read(navIndexProvider.notifier).state = 3;
-          }
-        } else {
-          // Upgrade to Downgrade: Premium (4 tabs) -> Free (3 tabs)
-          if (currentIndex == 1) {
-            ref.read(navIndexProvider.notifier).state = 0;
-          } else if (currentIndex == 2) {
-            ref.read(navIndexProvider.notifier).state = 1;
-          } else if (currentIndex == 3) {
-            ref.read(navIndexProvider.notifier).state = 2;
-          }
-        }
-      }
+      // Intentionally no reindex — the tab structure is identical for both
+      // tiers. Any premium gating happens inside individual tab screens.
     },
   );
 });
 
 void main() {
-  group('HomeScreen Navigation Bounds & Premium Transitions', () {
+  group('HomeScreen Navigation Bounds', () {
+    // Free and premium users see identical tab structure:
+    // 0: Radar, 1: Map, 2: People, 3: Settings.
     const freeUser = AuthUser(
       id: 'test-user',
       isPremium: false,
@@ -68,8 +53,7 @@ void main() {
       isOnboarded: true,
     );
 
-    test('Remaps index correctly during Premium to Free transition (Downgrade)',
-        () {
+    test('preserves current index when downgrading Premium → Free', () {
       final mockNotifier = MockAuthNotifier(premiumUser);
       final container = ProviderContainer(
         overrides: [
@@ -79,21 +63,18 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      // Force Riverpod to read the provider and register the listener
       container.read(navigationBoundsListenerProvider);
 
-      // Start on Premium's Settings tab (index 3)
+      // Sit on the Settings tab (index 3).
       container.read(navIndexProvider.notifier).state = 3;
 
-      // Downgrade to Free
       mockNotifier.updateState(freeUser);
 
-      // Verify that Settings (3) remapped to Settings (2) in Free
-      expect(container.read(navIndexProvider), equals(2));
+      // Same index → same tab in the free layout.
+      expect(container.read(navIndexProvider), equals(3));
     });
 
-    test('Remaps index correctly during Free to Premium transition (Upgrade)',
-        () {
+    test('preserves current index when upgrading Free → Premium', () {
       final mockNotifier = MockAuthNotifier(freeUser);
       final container = ProviderContainer(
         overrides: [
@@ -103,22 +84,17 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      // Force Riverpod to read the provider and register the listener
       container.read(navigationBoundsListenerProvider);
 
-      // Start on Free's Settings tab (index 2)
+      // Sit on the People tab (index 2).
       container.read(navIndexProvider.notifier).state = 2;
 
-      // Upgrade to Premium
       mockNotifier.updateState(premiumUser);
 
-      // Verify that Settings (2) remapped to Settings (3) in Premium
-      expect(container.read(navIndexProvider), equals(3));
+      expect(container.read(navIndexProvider), equals(2));
     });
 
-    test(
-        'Remaps index 1 (Map) to index 0 (Radar) during Premium to Free transition',
-        () {
+    test('preserves Map tab (index 1) across Premium → Free downgrade', () {
       final mockNotifier = MockAuthNotifier(premiumUser);
       final container = ProviderContainer(
         overrides: [
@@ -128,32 +104,20 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      // Force Riverpod to read the provider and register the listener
       container.read(navigationBoundsListenerProvider);
 
-      // Start on Premium's Map tab (index 1)
       container.read(navIndexProvider.notifier).state = 1;
-
-      // Downgrade to Free
       mockNotifier.updateState(freeUser);
 
-      // Verify that Map (1) remapped to Radar (0) since Free doesn't have a map
-      expect(container.read(navIndexProvider), equals(0));
+      // The Map tab is available to free users too now.
+      expect(container.read(navIndexProvider), equals(1));
     });
 
-    test('Defensively clamps invalid out-of-bounds indices in the widget tree',
-        () {
-      // Free users only have 3 screens: Radar (0), Matches (1), Settings (2).
-      // Let's assert clamp behavior for Free users when navIndex is outside boundary.
-
-      // navIndex = -1
-      expect((-1).clamp(0, 2), equals(0));
-
-      // navIndex = 3
-      expect(3.clamp(0, 2), equals(2));
-
-      // navIndex = 5
-      expect(5.clamp(0, 2), equals(2));
+    test('clamps out-of-bounds indices for the 4-screen layout', () {
+      // Both tiers have 4 screens → valid range [0, 3].
+      expect((-1).clamp(0, 3), equals(0));
+      expect(4.clamp(0, 3), equals(3));
+      expect(5.clamp(0, 3), equals(3));
     });
   });
 }

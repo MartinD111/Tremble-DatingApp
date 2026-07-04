@@ -83,7 +83,6 @@ export const updateProfileSchema = z
         ageRangeEnd: z.number().int().min(18).max(100).nullish(),
         heightRangeStart: z.number().int().min(100).max(250).nullish(),
         heightRangeEnd: z.number().int().min(100).max(250).nullish(),
-        maxDistance: z.number().int().min(1).max(500).nullish(),
         isTraveler: z.boolean().nullish(),
         onboardingCheckpoint: z.number().int().min(0).max(20).nullish(),
         gymNotificationsEnabled: z.boolean().nullish(),

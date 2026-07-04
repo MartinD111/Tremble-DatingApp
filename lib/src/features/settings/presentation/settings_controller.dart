@@ -138,10 +138,6 @@ class SettingsController {
         ));
   }
 
-  void updateMaxDistance(double value) {
-    updateUser((u) => u.copyWith(maxDistance: value.round()));
-  }
-
   // ── Enum single-select update ──────────────────────────────────────────────
 
   void updateInterestedIn(List<String> values) {

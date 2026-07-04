@@ -319,7 +319,6 @@ describe("Users Module", () => {
                 isPrideMode: null,
                 ageRangeStart: null,
                 ageRangeEnd: null,
-                maxDistance: null,
                 isTraveler: null,
             });
 

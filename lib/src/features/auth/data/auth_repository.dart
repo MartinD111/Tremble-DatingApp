@@ -109,7 +109,6 @@ class AuthUser {
   final int ageRangeStart;
   final int ageRangeEnd;
   final bool showPingAnimation;
-  final int maxDistance;
   // Partner preference range sliders (new numeric fields replacing legacy strings)
   final int? partnerPoliticalMin; // 1..5 spectrum left→right
   final int? partnerPoliticalMax;
@@ -205,7 +204,6 @@ class AuthUser {
     this.ageRangeStart = 18,
     this.ageRangeEnd = 100,
     this.showPingAnimation = true,
-    this.maxDistance = 50,
     this.partnerPoliticalMin,
     this.partnerPoliticalMax,
     this.partnerIntrovertMin,
@@ -284,7 +282,6 @@ class AuthUser {
       'ageRangeStart': ageRangeStart,
       'ageRangeEnd': ageRangeEnd,
       'showPingAnimation': showPingAnimation,
-      'maxDistance': maxDistance,
       if (partnerPoliticalMin != null)
         'partnerPoliticalMin': partnerPoliticalMin,
       if (partnerPoliticalMax != null)
@@ -408,7 +405,6 @@ class AuthUser {
       ageRangeStart: data['ageRangeStart'] as int? ?? 18,
       ageRangeEnd: data['ageRangeEnd'] as int? ?? 100,
       showPingAnimation: data['showPingAnimation'] as bool? ?? true,
-      maxDistance: data['maxDistance'] as int? ?? 50,
       partnerPoliticalMin: data['partnerPoliticalMin'] as int?,
       partnerPoliticalMax: data['partnerPoliticalMax'] as int?,
       partnerIntrovertMin: data['partnerIntrovertMin'] as int?,
@@ -490,7 +486,6 @@ class AuthUser {
     int? ageRangeStart,
     int? ageRangeEnd,
     bool? showPingAnimation,
-    int? maxDistance,
     int? partnerPoliticalMin,
     int? partnerPoliticalMax,
     int? partnerIntrovertMin,
@@ -602,7 +597,6 @@ class AuthUser {
       ageRangeStart: ageRangeStart ?? this.ageRangeStart,
       ageRangeEnd: ageRangeEnd ?? this.ageRangeEnd,
       showPingAnimation: showPingAnimation ?? this.showPingAnimation,
-      maxDistance: maxDistance ?? this.maxDistance,
       partnerPoliticalMin: partnerPoliticalMin ?? this.partnerPoliticalMin,
       partnerPoliticalMax: partnerPoliticalMax ?? this.partnerPoliticalMax,
       partnerIntrovertMin: partnerIntrovertMin ?? this.partnerIntrovertMin,

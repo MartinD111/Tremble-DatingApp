@@ -35,7 +35,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _imagePicker = ImagePicker();
 
   bool _hasChanges = false;
-  double _distancePreference = 50.0;
   bool _isUploading = false;
 
   List<String> _photoUrls = [];
@@ -188,7 +187,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           : ((rawIntrovert - 1) / 4.0).clamp(0.0, 1.0);
       _hobbies = List.from(user.hobbies);
       _languages = List.from(user.languages);
-      _distancePreference = user.maxDistance.toDouble();
       _birthDate = user.birthDate;
 
       // Political affiliation mapping: String -> Double
@@ -398,7 +396,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       'politics_center_right',
                       'politics_right'
                     ][_politicalAffiliationValue.toInt() - 1],
-          maxDistance: _distancePreference.round(),
         ));
     CenterNotification.show(
       context: context,
@@ -496,44 +493,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
         );
       },
-    );
-  }
-
-  void _showDistanceHelp(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final primaryColor = Theme.of(context).primaryColor;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Row(
-          children: [
-            Icon(LucideIcons.mapPin, color: primaryColor, size: 20),
-            const SizedBox(width: 10),
-            Text(t('distance', _lang),
-                style: GoogleFonts.instrumentSans(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18)),
-          ],
-        ),
-        content: Text(
-          t('distance_help', _lang),
-          style: GoogleFonts.lora(
-              color: colorScheme.onSurface.withValues(alpha: 0.7), height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('OK',
-                style: GoogleFonts.instrumentSans(
-                    color: primaryColor, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -743,7 +702,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               introversionLevel: _introversionLevel,
                               politicalAffiliationValue:
                                   _politicalAffiliationValue,
-                              distancePreference: _distancePreference,
                               isPremium: isPremium,
                               lang: lang,
                               isDark: isDark,
@@ -760,12 +718,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 _politicalAffiliationValue = val;
                                 _hasChanges = true;
                               }),
-                              onDistancePreferenceChanged: (val) =>
-                                  setState(() {
-                                _distancePreference = val;
-                                _hasChanges = true;
-                              }),
-                              onDistanceHelp: () => _showDistanceHelp(context),
                             ),
 
                             _PreferencesSection(
@@ -2553,7 +2505,6 @@ class _MetricsSection extends StatelessWidget {
   const _MetricsSection({
     required this.introversionLevel,
     required this.politicalAffiliationValue,
-    required this.distancePreference,
     required this.isPremium,
     required this.lang,
     required this.isDark,
@@ -2563,13 +2514,10 @@ class _MetricsSection extends StatelessWidget {
     required this.borderColor,
     required this.onIntroversionChanged,
     required this.onPoliticalAffiliationChanged,
-    required this.onDistancePreferenceChanged,
-    required this.onDistanceHelp,
   });
 
   final double introversionLevel;
   final double politicalAffiliationValue;
-  final double distancePreference;
   final bool isPremium;
   final String lang;
   final bool isDark;
@@ -2579,8 +2527,6 @@ class _MetricsSection extends StatelessWidget {
   final Color borderColor;
   final void Function(double) onIntroversionChanged;
   final void Function(double) onPoliticalAffiliationChanged;
-  final void Function(double) onDistancePreferenceChanged;
-  final VoidCallback onDistanceHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -2610,17 +2556,18 @@ class _MetricsSection extends StatelessWidget {
         _buildPoliticalSlider(context),
         const SizedBox(height: 32),
 
-        // ── Distance ──────────────────────────────────────────────────────────
+        // ── Detection radius (fixed per tier) ─────────────────────────────
+        // Backend uses RADIUS_FREE_M (100) / RADIUS_PRO_M (250), keyed off
+        // isPremium — never user input. Shown as a static label, not a slider.
         Center(
           child: _sectionLabel(
             t('distance', lang),
             LucideIcons.map,
             centered: true,
-            onHelp: onDistanceHelp,
           ),
         ),
         const SizedBox(height: 12),
-        _buildDistanceSlider(context),
+        _buildDetectionRadiusRow(context),
 
         Divider(color: borderColor, height: 28),
       ],
@@ -2631,7 +2578,6 @@ class _MetricsSection extends StatelessWidget {
     String label,
     IconData icon, {
     bool centered = false,
-    VoidCallback? onHelp,
   }) {
     return Row(
       mainAxisAlignment:
@@ -2647,13 +2593,6 @@ class _MetricsSection extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        if (onHelp != null) ...[
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onHelp,
-            child: Icon(LucideIcons.helpCircle, size: 16, color: iconColor),
-          ),
-        ],
       ],
     );
   }
@@ -2749,47 +2688,16 @@ class _MetricsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildDistanceSlider(BuildContext context) {
+  Widget _buildDetectionRadiusRow(BuildContext context) {
     final primary = Theme.of(context).primaryColor;
-    final maxDist = isPremium ? 100.0 : 50.0;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('10m', style: TextStyle(color: subColor, fontSize: 12)),
-            Text(
-              '${distancePreference.round()}m',
-              style: TextStyle(
-                color: primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            Text('${maxDist.round()}m',
-                style: TextStyle(color: subColor, fontSize: 12)),
-          ],
-        ),
-        Slider(
-          value: distancePreference.clamp(10, maxDist),
-          min: 10,
-          max: maxDist,
-          divisions: (maxDist - 10) ~/ 10,
-          activeColor: primary,
-          inactiveColor: isDark ? Colors.white24 : Colors.black12,
-          onChanged: onDistancePreferenceChanged,
-        ),
-        if (distancePreference > 50)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              t('battery_warning', lang).replaceFirst('{percent}', '25'),
-              style: const TextStyle(color: Colors.orangeAccent, fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-          ),
-      ],
+    final radiusLabel = isPremium ? '250m' : '100m';
+    return Text(
+      radiusLabel,
+      style: TextStyle(
+        color: primary,
+        fontWeight: FontWeight.bold,
+        fontSize: 20,
+      ),
     );
   }
 }

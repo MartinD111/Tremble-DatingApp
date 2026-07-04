@@ -53,6 +53,10 @@ jest.mock("firebase-functions/v2/https", () => ({
     },
 }));
 
+jest.mock("firebase-functions/v2/firestore", () => ({
+    onDocumentCreated: jest.fn((_, handler) => handler),
+}));
+
 jest.mock("../../src/middleware/rateLimit", () => ({
     checkRateLimit: jest.fn(() => Promise.resolve()),
 }));
@@ -131,7 +135,6 @@ describe("Auth Module", () => {
                 showPingAnimation: true,
                 ageRangeStart: 22,
                 ageRangeEnd: 35,
-                maxDistance: 10,
                 consentGiven: true,
             });
             expect(result.success).toBe(true);
@@ -220,7 +223,6 @@ describe("Auth Module", () => {
                 showPingAnimation: true,
                 ageRangeStart: 22,
                 ageRangeEnd: 35,
-                maxDistance: 10,
                 consentGiven: true,
             });
 
@@ -277,7 +279,6 @@ describe("Auth Module", () => {
                 lookingFor: null,
                 languages: null,
                 hobbies: null,
-                maxDistance: null,
                 jobStatus: null,
             });
 
@@ -287,8 +288,6 @@ describe("Auth Module", () => {
                 expect(result.data.lookingFor).toEqual([]);
                 expect(result.data.languages).toEqual([]);
                 expect(result.data.hobbies).toEqual([]);
-                // maxDistance transforms null → 50
-                expect(result.data.maxDistance).toBe(50);
             }
         });
 
@@ -339,7 +338,6 @@ describe("Auth Module", () => {
                 showPingAnimation: false,
                 ageRangeStart: 18,
                 ageRangeEnd: 35,
-                maxDistance: 5,
                 consentGiven: true,
             });
             expect(result.success).toBe(false);
@@ -349,6 +347,104 @@ describe("Auth Module", () => {
                 );
                 expect(ageError).toBeDefined();
             }
+        });
+    });
+
+    describe("onUserDocCreated", () => {
+        // Build a mock DocumentSnapshot with a `get(fieldPath)` accessor.
+        const makeSnap = (fields: Record<string, unknown>) => {
+            const setSpy = jest.fn(() => Promise.resolve());
+            const snap = {
+                get: (path: string) => fields[path],
+                data: () => fields,
+                ref: { set: setSpy },
+            };
+            return { snap, setSpy };
+        };
+
+        it("seeds all defaults when the doc has no auth fields yet (email/password flow)", async () => {
+            jest.clearAllMocks();
+            const { onUserDocCreated } = await import(
+                "../../src/modules/auth/auth.functions"
+            );
+            const trigger = onUserDocCreated as unknown as (
+                event: unknown
+            ) => Promise<void>;
+            const { snap, setSpy } = makeSnap({ email: "u@example.com" });
+
+            await trigger({ data: snap, params: { uid: "userUid" } });
+
+            expect(setSpy).toHaveBeenCalledTimes(1);
+            const [payload, opts] = setSpy.mock.calls[0] as unknown as [
+                Record<string, unknown>,
+                unknown,
+            ];
+            expect(payload).toEqual({
+                isOnboarded: false,
+                isPremium: false,
+                isAdmin: false,
+                createdAt: "SERVER_TIMESTAMP",
+                updatedAt: "SERVER_TIMESTAMP",
+            });
+            expect(opts).toEqual({ merge: true });
+        });
+
+        it("never downgrades isOnboarded when already true (Google flow)", async () => {
+            jest.clearAllMocks();
+            const { onUserDocCreated } = await import(
+                "../../src/modules/auth/auth.functions"
+            );
+            const trigger = onUserDocCreated as unknown as (
+                event: unknown
+            ) => Promise<void>;
+            // Simulates the Google flow: completeOnboarding created the doc
+            // with isOnboarded: true and createdAt already set.
+            const { snap, setSpy } = makeSnap({
+                isOnboarded: true,
+                createdAt: "existing-ts",
+                name: "Ana",
+            });
+
+            await trigger({ data: snap, params: { uid: "userUid" } });
+
+            expect(setSpy).toHaveBeenCalledTimes(1);
+            const [payload] = setSpy.mock.calls[0] as unknown as [
+                Record<string, unknown>,
+            ];
+            expect(payload).not.toHaveProperty("isOnboarded");
+            expect(payload).not.toHaveProperty("createdAt");
+            // Defaults for premium/admin should still seed when absent.
+            expect(payload).toMatchObject({
+                isPremium: false,
+                isAdmin: false,
+                updatedAt: "SERVER_TIMESTAMP",
+            });
+        });
+
+        it("preserves explicit false when already set (does not re-write)", async () => {
+            jest.clearAllMocks();
+            const { onUserDocCreated } = await import(
+                "../../src/modules/auth/auth.functions"
+            );
+            const trigger = onUserDocCreated as unknown as (
+                event: unknown
+            ) => Promise<void>;
+            const { snap, setSpy } = makeSnap({
+                isOnboarded: false,
+                isPremium: false,
+                isAdmin: false,
+            });
+
+            await trigger({ data: snap, params: { uid: "userUid" } });
+
+            const [payload] = setSpy.mock.calls[0] as unknown as [
+                Record<string, unknown>,
+            ];
+            expect(payload).not.toHaveProperty("isOnboarded");
+            expect(payload).not.toHaveProperty("isPremium");
+            expect(payload).not.toHaveProperty("isAdmin");
+            expect(payload).toHaveProperty("createdAt");
+            expect(payload).toHaveProperty("updatedAt");
         });
     });
 
