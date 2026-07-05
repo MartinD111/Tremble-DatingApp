@@ -20,9 +20,10 @@ export interface UserCompatibilityData {
   exerciseHabit?: string;
   sleepSchedule?: string;
   religion?: string;
-  religionPreference?: string;     // 'any' | 'prefer_same'
+  religionPreference?: string;
   ethnicity?: string;
   ethnicityPreference?: string;
+  sensitiveDataConsent?: boolean;  // GDPR Art. 9 — gates religion/ethnicity scoring
   lookingFor?: string[];
   isPremium?: boolean;
 }
@@ -189,28 +190,20 @@ function calculateLifestyleScore(
     if (a.sleepSchedule === b.sleepSchedule) matches++;
   }
 
-  // Religion
-  const aRelPref = a.religionPreference === 'same_only' || a.religionPreference === 'prefer_same' ? 'prefer_same' : 'any';
-  if (aRelPref === 'prefer_same') {
+  // Religion — GDPR Art. 9 special category, requires bilateral consent
+  const bothConsentReligion =
+    a.sensitiveDataConsent === true && b.sensitiveDataConsent === true;
+  if (bothConsentReligion && a.religion && b.religion) {
     total++;
-    if (a.religion && b.religion && a.religion === b.religion) matches++;
-  }
-  const bRelPref = b.religionPreference === 'same_only' || b.religionPreference === 'prefer_same' ? 'prefer_same' : 'any';
-  if (bRelPref === 'prefer_same') {
-    total++;
-    if (a.religion && b.religion && a.religion === b.religion) matches++;
+    if (a.religion === b.religion) matches++;
   }
 
-  // Ethnicity
-  const aEthPref = a.ethnicityPreference === 'same_only' || a.ethnicityPreference === 'prefer_same' ? 'prefer_same' : 'any';
-  if (aEthPref === 'prefer_same') {
+  // Ethnicity — GDPR Art. 9 special category, requires bilateral consent
+  const bothConsentEthnicity =
+    a.sensitiveDataConsent === true && b.sensitiveDataConsent === true;
+  if (bothConsentEthnicity && a.ethnicity && b.ethnicity) {
     total++;
-    if (a.ethnicity && b.ethnicity && a.ethnicity === b.ethnicity) matches++;
-  }
-  const bEthPref = b.ethnicityPreference === 'same_only' || b.ethnicityPreference === 'prefer_same' ? 'prefer_same' : 'any';
-  if (bEthPref === 'prefer_same') {
-    total++;
-    if (a.ethnicity && b.ethnicity && a.ethnicity === b.ethnicity) matches++;
+    if (a.ethnicity === b.ethnicity) matches++;
   }
 
   return total === 0 ? 0.5 : matches / total;

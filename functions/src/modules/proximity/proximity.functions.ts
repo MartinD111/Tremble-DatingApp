@@ -273,6 +273,7 @@ export const findNearby = onCall(
                             ethnicityPreference: requesterData.ethnicityPreference,
                             lookingFor: requesterData.lookingFor ?? [],
                             isPremium: requesterData.isPremium ?? false,
+                            sensitiveDataConsent: requesterData.sensitiveDataConsent,
                         },
                         {
                             uid: candidates[i].id,
@@ -290,6 +291,7 @@ export const findNearby = onCall(
                             ethnicityPreference: candidateData.ethnicityPreference,
                             lookingFor: candidateData.lookingFor ?? [],
                             isPremium: candidateData.isPremium ?? false,
+                            sensitiveDataConsent: candidateData.sensitiveDataConsent,
                         }
                     );
                 } else if (iMatchThem && theyMatchMe) {
@@ -630,6 +632,7 @@ export const scanProximityPairs = onSchedule(
                                 ethnicityPreference: safeA.ethnicityPreference,
                                 lookingFor: safeA.lookingFor ?? [],
                                 isPremium: safeA.isPremium ?? false,
+                                sensitiveDataConsent: safeA.sensitiveDataConsent,
                             },
                             {
                                 uid: b.uid,
@@ -647,6 +650,7 @@ export const scanProximityPairs = onSchedule(
                                 ethnicityPreference: safeB.ethnicityPreference,
                                 lookingFor: safeB.lookingFor ?? [],
                                 isPremium: safeB.isPremium ?? false,
+                                sensitiveDataConsent: safeB.sensitiveDataConsent,
                             },
                         );
 
