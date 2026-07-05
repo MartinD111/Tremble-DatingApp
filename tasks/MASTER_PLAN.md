@@ -1,4 +1,4 @@
-# TREMBLE — MASTER IMPLEMENTATION PLAN (V4 — 2026-05-28)
+# TREMBLE — MASTER IMPLEMENTATION PLAN (V5 — 2026-07-05)
 **Status:** Production stabilization + Phase E (Pulse Intercept / F12)
 **Single Source of Truth** for the Tremble Mobile App (Flutter).
 
