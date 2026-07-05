@@ -45,21 +45,9 @@ jobs:
       - name: Run Tests (Dev Flavor)
         run: flutter test --dart-define=FLAVOR=dev
 
-  firebase-security:
-    name: "Firebase Rules & Security"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-      - name: Install Firebase Tools
-        run: npm install -g firebase-tools
-      - name: Emulate & Test Rules
-        run: echo "firebase emulators:exec 'npm test'" # Placeholder for rules tests
-
   build-dev-android:
     name: "Build Dev APK"
-    needs: [flutter-validate, firebase-security]
+    needs: [flutter-validate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
