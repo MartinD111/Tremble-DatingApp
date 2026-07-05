@@ -1,3 +1,36 @@
+## Session State — 2026-07-05 10:40 CEST (Session 40)
+- Active Task: Fix main branch CI failures and refine compatibility scoring logic
+- Environment: Dev/local
+- Modified Files:
+    - `.github/workflows/ci.yml`
+    - `functions/jest.config.js`
+    - `functions/jest.setup.js` [NEW]
+    - `functions/src/__tests__/auth.test.ts`
+    - `functions/src/__tests__/compatibility_calculator.test.ts` [NEW]
+    - `functions/src/__tests__/uploads_proximity.test.ts`
+    - `functions/src/__tests__/users.test.ts`
+    - `functions/src/modules/compatibility/compatibility_calculator.ts`
+    - `functions/src/modules/proximity/proximity.functions.ts`
+    - `test/features/subscriptions/revenuecat_subscription_test.dart`
+- Open Problems:
+    - Existing blockers remain (B005 iOS provisioning, B006 photo upload E2E unverified).
+- System Status: `npm run lint` clean. `npm test` 58/58 passing. `flutter analyze` clean. `flutter test` 200/200 passing. Code pushed to `fix/ci-tests-and-compatibility`.
+
+## Session Handoff
+- Completed:
+    - Fixed CI backend test runner by injecting `TREMBLE_ENV: test` globally via Github Actions and locally via `jest.setup.js`.
+    - Fixed empty API key test assertion in `revenuecat_subscription_test.dart` to check for `REVENUECAT_APPLE_API_KEY`.
+    - Updated `users.test.ts` and `auth.test.ts` inputs to use array `["vaping"]` for `nicotineUse` to comply with the updated schema, updating expected payloads and mocked functions.
+    - Updated `passesHardFilters` to drop nicotine checks as they are now fully handled by the `nicotineCompatible` pre-filter before scoring.
+    - Refined religion and ethnicity calculations in `calculateLifestyleScore` to properly use and validate directional preferences (`prefer_same` instead of deprecated `same_only`).
+    - Added regression tests in `compatibility_calculator.test.ts` proving proper score retention when prefer_same directions do or do not match.
+    - Corrected broken test mock data (`uploads_proximity.test.ts`) that passed objects instead of strings for hobbies array, ensuring accurate category scoring.
+    - Verified all test suites in Flutter and Cloud Functions are green.
+    - Committed changes and pushed to `fix/ci-tests-and-compatibility` remote branch.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Review PR.
+
 ## Session State — 2026-07-02 00:51 CEST (Session 39)
 - Active Task: Wire PlatformDispatcher.instance.onError + Isolate.current.addErrorListener for async crash reporting
 - Environment: Dev (local Flutter only)

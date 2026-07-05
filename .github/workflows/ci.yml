@@ -226,6 +226,8 @@ jobs:
         run: npm run build
 
       - name: Run tests
+        env:
+          TREMBLE_ENV: test
         run: npm test -- --passWithNoTests
       - name: Audit CF dependencies
         working-directory: functions

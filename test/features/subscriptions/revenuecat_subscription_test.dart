@@ -30,7 +30,7 @@ void main() {
     expect(client.configureCalls, 0);
     expect(controller.state.status, RevenueCatSubscriptionStatus.disabled);
     expect(controller.state.isPremium, isFalse);
-    expect(controller.state.errorMessage, contains('REVENUECAT_API_KEY'));
+    expect(controller.state.errorMessage, contains('REVENUECAT_APPLE_API_KEY'));
   });
 
   test('configure loads customer info and detects premium entitlement',

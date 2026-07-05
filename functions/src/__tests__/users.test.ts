@@ -53,14 +53,14 @@ describe("Users Module", () => {
             jest.mocked(authGuard.requireAuth).mockReturnValue("userUid");
             jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
             jest.mocked(validate.validateRequest).mockReturnValue({
-                nicotineUse: "vape",
+                nicotineUse: ["vape"],
             });
 
             const callableUpdateProfile = updateProfile as unknown as (request: unknown) => Promise<unknown>;
 
             await expect(callableUpdateProfile({
                 auth: { uid: "userUid" },
-                data: { nicotineUse: "vape" },
+                data: { nicotineUse: ["vape"] },
             })).resolves.toEqual({ success: true });
 
             expect(update).toHaveBeenCalledWith(expect.objectContaining({
@@ -237,13 +237,13 @@ describe("Users Module", () => {
             );
 
             const result = updateProfileSchema.safeParse({
-                nicotineUse: "vaping",
+                nicotineUse: ["vaping"],
                 nicotineFilter: "no_smoking",
             });
 
             expect(result.success).toBe(true);
             if (result.success) {
-                expect(result.data.nicotineUse).toBe("vaping");
+                expect(result.data.nicotineUse).toEqual(["vaping"]);
                 expect(result.data.nicotineFilter).toBe("no_smoking");
             }
         });

@@ -20,7 +20,7 @@ export interface UserCompatibilityData {
   exerciseHabit?: string;
   sleepSchedule?: string;
   religion?: string;
-  religionPreference?: string;     // 'any' | 'same_only'
+  religionPreference?: string;     // 'any' | 'prefer_same'
   ethnicity?: string;
   ethnicityPreference?: string;
   lookingFor?: string[];
@@ -78,11 +78,7 @@ function passesHardFilters(
   a: UserCompatibilityData,
   b: UserCompatibilityData,
 ): boolean {
-  // Nicotine
-  const aSmoker = (a.nicotineUse?.length ?? 0) > 0;
-  const bSmoker = (b.nicotineUse?.length ?? 0) > 0;
-  if (a.nicotineFilter === 'none_only' && bSmoker) return false;
-  if (b.nicotineFilter === 'none_only' && aSmoker) return false;
+  // Nicotine removed from hard filters - checked by zunanji nicotineCompatible pre-filter
 
   // Drinking
   if (a.partnerDrinkingHabit === 'none_only' && b.drinkingHabit !== 'none') return false;
@@ -194,15 +190,27 @@ function calculateLifestyleScore(
   }
 
   // Religion
-  if (a.religion && b.religion) {
+  const aRelPref = a.religionPreference === 'same_only' || a.religionPreference === 'prefer_same' ? 'prefer_same' : 'any';
+  if (aRelPref === 'prefer_same') {
     total++;
-    if (a.religion === b.religion) matches++;
+    if (a.religion && b.religion && a.religion === b.religion) matches++;
+  }
+  const bRelPref = b.religionPreference === 'same_only' || b.religionPreference === 'prefer_same' ? 'prefer_same' : 'any';
+  if (bRelPref === 'prefer_same') {
+    total++;
+    if (a.religion && b.religion && a.religion === b.religion) matches++;
   }
 
   // Ethnicity
-  if (a.ethnicity && b.ethnicity) {
+  const aEthPref = a.ethnicityPreference === 'same_only' || a.ethnicityPreference === 'prefer_same' ? 'prefer_same' : 'any';
+  if (aEthPref === 'prefer_same') {
     total++;
-    if (a.ethnicity === b.ethnicity) matches++;
+    if (a.ethnicity && b.ethnicity && a.ethnicity === b.ethnicity) matches++;
+  }
+  const bEthPref = b.ethnicityPreference === 'same_only' || b.ethnicityPreference === 'prefer_same' ? 'prefer_same' : 'any';
+  if (bEthPref === 'prefer_same') {
+    total++;
+    if (a.ethnicity && b.ethnicity && a.ethnicity === b.ethnicity) matches++;
   }
 
   return total === 0 ? 0.5 : matches / total;
