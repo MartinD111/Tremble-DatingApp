@@ -79,6 +79,9 @@ jobs:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: bash scripts/ci/setup_maps_key.sh
 
+      - name: Setup google-services.json
+        run: bash scripts/ci/setup_google_services.sh
+
       - run: flutter pub get
       - run: flutter build apk --flavor dev --dart-define=FLAVOR=dev
 
