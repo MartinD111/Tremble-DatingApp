@@ -23,7 +23,8 @@ export interface UserCompatibilityData {
   religionPreference?: string;
   ethnicity?: string;
   ethnicityPreference?: string;
-  sensitiveDataConsent?: boolean;  // GDPR Art. 9 — gates religion/ethnicity scoring
+  religionConsent?: boolean;   // GDPR Art. 9 — gates religion scoring bilaterally
+  ethnicityConsent?: boolean;  // GDPR Art. 9 — gates ethnicity scoring bilaterally
   lookingFor?: string[];
   isPremium?: boolean;
 }
@@ -190,17 +191,19 @@ function calculateLifestyleScore(
     if (a.sleepSchedule === b.sleepSchedule) matches++;
   }
 
-  // Religion — GDPR Art. 9 special category, requires bilateral consent
+  // Religion — GDPR Art. 9, requires bilateral religionConsent (fail-closed:
+  // missing consent = excluded from scoring, does not count as a 0 match).
   const bothConsentReligion =
-    a.sensitiveDataConsent === true && b.sensitiveDataConsent === true;
+    a.religionConsent === true && b.religionConsent === true;
   if (bothConsentReligion && a.religion && b.religion) {
     total++;
     if (a.religion === b.religion) matches++;
   }
 
-  // Ethnicity — GDPR Art. 9 special category, requires bilateral consent
+  // Ethnicity — GDPR Art. 9, requires bilateral ethnicityConsent (fail-closed:
+  // missing consent = excluded from scoring, does not count as a 0 match).
   const bothConsentEthnicity =
-    a.sensitiveDataConsent === true && b.sensitiveDataConsent === true;
+    a.ethnicityConsent === true && b.ethnicityConsent === true;
   if (bothConsentEthnicity && a.ethnicity && b.ethnicity) {
     total++;
     if (a.ethnicity === b.ethnicity) matches++;

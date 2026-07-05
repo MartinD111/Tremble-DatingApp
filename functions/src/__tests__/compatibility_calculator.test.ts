@@ -24,26 +24,27 @@ describe("compatibility_calculator", () => {
         expect(score).toBeGreaterThan(0);
     });
 
-    // ── sensitiveDataConsent gate (GDPR Art. 9) ──────────────────────────
+    // ── Granular consent gate (GDPR Art. 9): religion and ethnicity are
+    //    now controlled by independent flags. Missing flag = fail-closed. ─
 
-    it("should include religion in scoring when both users have sensitiveDataConsent === true and same religion", () => {
+    it("should include religion in scoring when both users have religionConsent === true and same religion", () => {
         const base = {
             uid: "a",
             hobbies: ["Hiking"],
             religion: "Atheist",
-            sensitiveDataConsent: true,
+            religionConsent: true,
         };
         const match = {
             uid: "b",
             hobbies: ["Hiking"],
             religion: "Atheist",
-            sensitiveDataConsent: true,
+            religionConsent: true,
         };
         const mismatch = {
             uid: "b",
             hobbies: ["Hiking"],
             religion: "Catholic",
-            sensitiveDataConsent: true,
+            religionConsent: true,
         };
 
         const scoreMatch = calculateCompatibilityScore(base, match);
@@ -51,37 +52,29 @@ describe("compatibility_calculator", () => {
         expect(scoreMatch).toBeGreaterThan(scoreMismatch);
     });
 
-    it("should exclude religion from scoring when one user lacks sensitiveDataConsent", () => {
-        // Baseline: no religion data at all
-        const noReligion = {
-            uid: "a",
-            hobbies: ["Hiking"],
-        };
-        const noReligionB = {
-            uid: "b",
-            hobbies: ["Hiking"],
-        };
+    it("should exclude religion from scoring when one user lacks religionConsent (missing = fail-closed)", () => {
+        const noReligion = { uid: "a", hobbies: ["Hiking"] };
+        const noReligionB = { uid: "b", hobbies: ["Hiking"] };
         const baselineScore = calculateCompatibilityScore(noReligion, noReligionB);
 
-        // User A consented, User B did not (missing field = fail-closed)
         const withConsent = {
             uid: "a",
             hobbies: ["Hiking"],
             religion: "Atheist",
-            sensitiveDataConsent: true,
+            religionConsent: true,
         };
         const withoutConsent = {
             uid: "b",
             hobbies: ["Hiking"],
             religion: "Atheist",
-            // sensitiveDataConsent is missing → fail-closed
+            // religionConsent missing → fail-closed
         };
 
         const gatedScore = calculateCompatibilityScore(withConsent, withoutConsent);
         expect(gatedScore).toEqual(baselineScore);
     });
 
-    it("should exclude religion from scoring when sensitiveDataConsent is explicitly false", () => {
+    it("should exclude religion from scoring when religionConsent is explicitly false", () => {
         const noReligion = { uid: "a", hobbies: ["Hiking"] };
         const noReligionB = { uid: "b", hobbies: ["Hiking"] };
         const baselineScore = calculateCompatibilityScore(noReligion, noReligionB);
@@ -90,20 +83,20 @@ describe("compatibility_calculator", () => {
             uid: "a",
             hobbies: ["Hiking"],
             religion: "Atheist",
-            sensitiveDataConsent: false,
+            religionConsent: false,
         };
         const explicitFalseB = {
             uid: "b",
             hobbies: ["Hiking"],
             religion: "Atheist",
-            sensitiveDataConsent: false,
+            religionConsent: false,
         };
 
         const gatedScore = calculateCompatibilityScore(explicitFalseA, explicitFalseB);
         expect(gatedScore).toEqual(baselineScore);
     });
 
-    it("should exclude ethnicity from scoring without bilateral consent", () => {
+    it("should exclude ethnicity from scoring without bilateral ethnicityConsent", () => {
         const noEth = { uid: "a", hobbies: ["Hiking"] };
         const noEthB = { uid: "b", hobbies: ["Hiking"] };
         const baselineScore = calculateCompatibilityScore(noEth, noEthB);
@@ -112,41 +105,112 @@ describe("compatibility_calculator", () => {
             uid: "a",
             hobbies: ["Hiking"],
             ethnicity: "Slavic",
-            sensitiveDataConsent: true,
+            ethnicityConsent: true,
         };
         const withEthB = {
             uid: "b",
             hobbies: ["Hiking"],
             ethnicity: "Slavic",
-            // missing consent
+            // ethnicityConsent missing → fail-closed
         };
 
         const gatedScore = calculateCompatibilityScore(withEthA, withEthB);
         expect(gatedScore).toEqual(baselineScore);
     });
 
-    it("should include ethnicity in scoring when both users consent", () => {
+    it("should include ethnicity in scoring when both users have ethnicityConsent === true", () => {
         const ethMatchA = {
             uid: "a",
             hobbies: ["Hiking"],
             ethnicity: "Slavic",
-            sensitiveDataConsent: true,
+            ethnicityConsent: true,
         };
         const ethMatchB = {
             uid: "b",
             hobbies: ["Hiking"],
             ethnicity: "Slavic",
-            sensitiveDataConsent: true,
+            ethnicityConsent: true,
         };
         const ethMismatchB = {
             uid: "b",
             hobbies: ["Hiking"],
             ethnicity: "Germanic",
-            sensitiveDataConsent: true,
+            ethnicityConsent: true,
         };
 
         const scoreMatch = calculateCompatibilityScore(ethMatchA, ethMatchB);
         const scoreMismatch = calculateCompatibilityScore(ethMatchA, ethMismatchB);
         expect(scoreMatch).toBeGreaterThan(scoreMismatch);
+    });
+
+    // ── Independence: religionConsent and ethnicityConsent gate independently.
+    //    We prove independence by holding one dimension as a match and the
+    //    other as a mismatch, then verifying the mismatch only counts against
+    //    the score when its OWN consent is bilaterally present. ────────────
+
+    it("should exclude ethnicity mismatch when ethnicityConsent is not bilateral, even if religionConsent is", () => {
+        // Same religion (match), DIFFERENT ethnicity.
+        const a = {
+            uid: "a",
+            hobbies: ["Hiking"],
+            religion: "Atheist",
+            ethnicity: "Slavic",
+            religionConsent: true,
+            ethnicityConsent: true,
+        };
+        const bReligionOnly = {
+            uid: "b",
+            hobbies: ["Hiking"],
+            religion: "Atheist",
+            ethnicity: "Germanic",
+            religionConsent: true,
+            // ethnicityConsent missing → ethnicity mismatch is not scored
+        };
+        const bBoth = {
+            uid: "b",
+            hobbies: ["Hiking"],
+            religion: "Atheist",
+            ethnicity: "Germanic",
+            religionConsent: true,
+            ethnicityConsent: true,
+        };
+
+        // With only religionConsent bilateral, ethnicity mismatch is hidden →
+        // score should be HIGHER than when ethnicity mismatch is exposed.
+        const gated = calculateCompatibilityScore(a, bReligionOnly);
+        const fullyScored = calculateCompatibilityScore(a, bBoth);
+        expect(gated).toBeGreaterThan(fullyScored);
+    });
+
+    it("should exclude religion mismatch when religionConsent is not bilateral, even if ethnicityConsent is", () => {
+        // Same ethnicity (match), DIFFERENT religion.
+        const a = {
+            uid: "a",
+            hobbies: ["Hiking"],
+            religion: "Atheist",
+            ethnicity: "Slavic",
+            religionConsent: true,
+            ethnicityConsent: true,
+        };
+        const bEthnicityOnly = {
+            uid: "b",
+            hobbies: ["Hiking"],
+            religion: "Catholic",
+            ethnicity: "Slavic",
+            ethnicityConsent: true,
+            // religionConsent missing → religion mismatch is not scored
+        };
+        const bBoth = {
+            uid: "b",
+            hobbies: ["Hiking"],
+            religion: "Catholic",
+            ethnicity: "Slavic",
+            religionConsent: true,
+            ethnicityConsent: true,
+        };
+
+        const gated = calculateCompatibilityScore(a, bEthnicityOnly);
+        const fullyScored = calculateCompatibilityScore(a, bBoth);
+        expect(gated).toBeGreaterThan(fullyScored);
     });
 });
