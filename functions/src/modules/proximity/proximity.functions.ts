@@ -273,7 +273,8 @@ export const findNearby = onCall(
                             ethnicityPreference: requesterData.ethnicityPreference,
                             lookingFor: requesterData.lookingFor ?? [],
                             isPremium: requesterData.isPremium ?? false,
-                            sensitiveDataConsent: requesterData.sensitiveDataConsent,
+                            religionConsent: requesterData.religionConsent,
+                            ethnicityConsent: requesterData.ethnicityConsent,
                         },
                         {
                             uid: candidates[i].id,
@@ -291,7 +292,8 @@ export const findNearby = onCall(
                             ethnicityPreference: candidateData.ethnicityPreference,
                             lookingFor: candidateData.lookingFor ?? [],
                             isPremium: candidateData.isPremium ?? false,
-                            sensitiveDataConsent: candidateData.sensitiveDataConsent,
+                            religionConsent: candidateData.religionConsent,
+                            ethnicityConsent: candidateData.ethnicityConsent,
                         }
                     );
                 } else if (iMatchThem && theyMatchMe) {
@@ -632,7 +634,8 @@ export const scanProximityPairs = onSchedule(
                                 ethnicityPreference: safeA.ethnicityPreference,
                                 lookingFor: safeA.lookingFor ?? [],
                                 isPremium: safeA.isPremium ?? false,
-                                sensitiveDataConsent: safeA.sensitiveDataConsent,
+                                religionConsent: safeA.religionConsent,
+                                ethnicityConsent: safeA.ethnicityConsent,
                             },
                             {
                                 uid: b.uid,
@@ -650,7 +653,8 @@ export const scanProximityPairs = onSchedule(
                                 ethnicityPreference: safeB.ethnicityPreference,
                                 lookingFor: safeB.lookingFor ?? [],
                                 isPremium: safeB.isPremium ?? false,
-                                sensitiveDataConsent: safeB.sensitiveDataConsent,
+                                religionConsent: safeB.religionConsent,
+                                ethnicityConsent: safeB.ethnicityConsent,
                             },
                         );
 
