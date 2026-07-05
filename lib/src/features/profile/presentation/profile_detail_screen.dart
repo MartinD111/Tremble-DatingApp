@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
@@ -184,19 +185,19 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
                                         setState(() => _currentPhotoPage = i),
                                     itemBuilder: (context, index) {
                                       final url = match.photoUrls[index];
-                                      return Image.network(
-                                        url,
+                                      return CachedNetworkImage(
+                                        imageUrl: url,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
+                                        errorWidget: (_, __, ___) =>
                                             Container(color: Colors.grey[900]),
                                       );
                                     },
                                   )
                                 else
-                                  Image.network(
-                                    match.imageUrl,
+                                  CachedNetworkImage(
+                                    imageUrl: match.imageUrl,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) =>
+                                    errorWidget: (_, __, ___) =>
                                         Container(color: Colors.grey[900]),
                                   ),
                                 // Dot indicators

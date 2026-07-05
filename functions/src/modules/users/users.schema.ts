@@ -14,10 +14,7 @@ const interestedInSchema = z.preprocess((value) => {
     return value;
 }, z.array(interestedInValueSchema).min(1).max(3));
 
-const nicotineUseSchema = z.union([
-    z.array(z.string().max(50)).max(10),
-    z.string().max(50),
-]);
+const nicotineUseSchema = z.array(z.string().max(50)).max(10);
 
 /** Schema for partial profile updates (settings/preferences) */
 export const updateProfileSchema = z
@@ -47,9 +44,7 @@ export const updateProfileSchema = z
         introvertScale: z.number().int().min(0).max(100).nullish(),
         selfIntrovertMin: z.number().int().min(0).max(100).nullish(),
         selfIntrovertMax: z.number().int().min(0).max(100).nullish(),
-        partnerIntrovertPreference: z.string().max(50).nullish(),
-        partnerIntrovertMin: z.number().int().min(0).max(100).nullish(),
-        partnerIntrovertMax: z.number().int().min(0).max(100).nullish(),
+
         occupation: z.string().max(100).nullish(),
         company: z.string().max(100).nullish(),
         school: z.string().max(100).nullish(),
@@ -64,8 +59,7 @@ export const updateProfileSchema = z
         hairColorPreference: z.string().max(50).nullish(),
         politicalAffiliation: z.string().max(50).nullish(),
         politicalAffiliationPreference: z.string().max(50).nullish(),
-        partnerPoliticalMin: z.number().int().min(1).max(5).nullish(),
-        partnerPoliticalMax: z.number().int().min(1).max(5).nullish(),
+
         partnerHeightPreference: z.string().max(50).nullish(),
         interestedIn: interestedInSchema.nullish(),
         lookingFor: z.array(z.string().max(50)).max(5).nullish(),

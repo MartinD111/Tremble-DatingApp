@@ -86,8 +86,9 @@ class EventGeofenceService extends ChangeNotifier {
     final permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      debugPrint('[GeofenceService] location permission not granted — '
-          'geofence GPS inactive. Will use manual enter/exit only.');
+      if (kDebugMode)
+        debugPrint('[GeofenceService] location permission not granted — '
+            'geofence GPS inactive. Will use manual enter/exit only.');
       return;
     }
 
@@ -100,7 +101,7 @@ class EventGeofenceService extends ChangeNotifier {
 
     _positionSub = Geolocator.getPositionStream(locationSettings: settings)
         .listen(_onPosition, onError: (Object e) {
-      debugPrint('[GeofenceService] position stream error: $e');
+      if (kDebugMode) debugPrint('[GeofenceService] position stream error: $e');
     });
   }
 

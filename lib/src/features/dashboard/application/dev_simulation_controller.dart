@@ -10,6 +10,7 @@ import '../../../core/dev_mock_users.dart';
 import '../../../core/notification_service.dart';
 import '../../matches/data/match_repository.dart';
 import 'dev_mock_matches_provider.dart';
+import 'package:flutter/foundation.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DevSimulationController
@@ -337,7 +338,7 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
         }),
       );
     } catch (e) {
-      debugPrint('[DevSim] heads-up notification failed: $e');
+      if (kDebugMode) debugPrint('[DevSim] heads-up notification failed: $e');
     }
   }
 
@@ -345,7 +346,7 @@ class DevSimulationController extends StateNotifier<DevSimulationState> {
     try {
       await NotificationService.notifications.cancel(_kHeadsUpNotificationId);
     } catch (e, st) {
-      debugPrint('[DevSimController] caught: $e\n$st');
+      if (kDebugMode) debugPrint('[DevSimController] caught: $e\n$st');
     }
   }
 

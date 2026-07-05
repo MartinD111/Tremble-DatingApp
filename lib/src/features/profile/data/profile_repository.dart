@@ -15,7 +15,9 @@ class ProfileRepository {
       if (!doc.exists) throw Exception('Profile not found for uid=$uid');
       return PublicProfile.fromFirestore(doc);
     } catch (e, st) {
-      debugPrint('[ProfileRepository] getPublicProfile($uid) failed: $e\n$st');
+      if (kDebugMode)
+        debugPrint(
+            '[ProfileRepository] getPublicProfile($uid) failed: $e\n$st');
       rethrow;
     }
   }

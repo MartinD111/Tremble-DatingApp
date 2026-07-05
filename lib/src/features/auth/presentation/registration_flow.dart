@@ -290,7 +290,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   List<String>? _partnerPetPreference;
   String? _partnerNicotineFilter;
   String? _partnerPoliticalAffiliationPreference;
-  String? _partnerIntroversionRange;
   String? _partnerHeightRange;
 
   // Dating pref
@@ -462,7 +461,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           .read(authRepositoryProvider)
           .updateRegistrationDraft(currentUser.uid, dump);
     } catch (e) {
-      debugPrint("Failed to save checkpoint: $e");
+      if (kDebugMode) debugPrint("Failed to save checkpoint: $e");
     }
   }
 
@@ -470,16 +469,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final currentUser = ref.read(firebaseAuthProvider).currentUser;
 
     if (kDebugMode) {
-      debugPrint(
-        '[TREMBLE_AUTH_FLOW] _registerUser() called. currentUser=${currentUser?.email}, currentPage=$_currentPage',
-      );
+      if (kDebugMode)
+        debugPrint(
+          '[TREMBLE_AUTH_FLOW] _registerUser() called. currentUser=${currentUser?.email}, currentPage=$_currentPage',
+        );
     }
 
     if (currentUser != null) {
       // Already logged in (via Social or incomplete Email registration), just move to next page
       if (kDebugMode) {
-        debugPrint(
-            '[TREMBLE_AUTH_FLOW] currentUser already exists, advancing page');
+        if (kDebugMode)
+          debugPrint(
+              '[TREMBLE_AUTH_FLOW] currentUser already exists, advancing page');
       }
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
@@ -494,8 +495,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
     try {
       if (kDebugMode) {
-        debugPrint(
-            '[TREMBLE_AUTH_FLOW] Registering via repository (bypasses premature authStateProvider update)');
+        if (kDebugMode)
+          debugPrint(
+              '[TREMBLE_AUTH_FLOW] Registering via repository (bypasses premature authStateProvider update)');
       }
 
       // Call registerWithEmail() directly instead of authStateProvider.notifier.register().
@@ -517,16 +519,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       if (!mounted) return;
 
       if (kDebugMode) {
-        debugPrint(
-          '[TREMBLE_AUTH_FLOW] Register succeeded. Firebase currentUser=${ref.read(firebaseAuthProvider).currentUser?.email}',
-        );
+        if (kDebugMode)
+          debugPrint(
+            '[TREMBLE_AUTH_FLOW] Register succeeded. Firebase currentUser=${ref.read(firebaseAuthProvider).currentUser?.email}',
+          );
       }
 
       _showVerificationNotification();
 
       if (kDebugMode) {
-        debugPrint(
-            '[TREMBLE_AUTH_FLOW] Advancing page from $_currentPage to ${_currentPage + 1}');
+        if (kDebugMode)
+          debugPrint(
+              '[TREMBLE_AUTH_FLOW] Advancing page from $_currentPage to ${_currentPage + 1}');
       }
 
       _pageController.nextPage(
@@ -539,8 +543,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       });
 
       if (kDebugMode) {
-        debugPrint(
-            '[TREMBLE_AUTH_FLOW] Page advanced. currentPage=$_currentPage');
+        if (kDebugMode)
+          debugPrint(
+              '[TREMBLE_AUTH_FLOW] Page advanced. currentPage=$_currentPage');
       }
     } catch (e) {
       if (!mounted) return;
@@ -550,7 +555,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           : tr('registration_error');
 
       if (kDebugMode) {
-        debugPrint('[TREMBLE_AUTH_FLOW] Register failed: $e');
+        if (kDebugMode) debugPrint('[TREMBLE_AUTH_FLOW] Register failed: $e');
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -942,14 +947,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                         max: 1,
                         divisions: 4,
                         labels: [tr('introvert'), tr('extrovert')],
-                        onSave: (val) {
-                          if (val == null) {
-                            setState(() => _partnerIntroversionRange = null);
-                          } else {
-                            setState(() => _partnerIntroversionRange =
-                                '${(val.start * 100).toInt()}-${(val.end * 100).toInt()}');
-                          }
-                        },
+                        onSave: (val) {},
                       ),
                       tr: tr,
                     ),
@@ -1221,7 +1219,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   );
                 }
               } catch (e, st) {
-                debugPrint('[RegistrationFlow] caught: $e\n$st');
+                if (kDebugMode)
+                  debugPrint('[RegistrationFlow] caught: $e\n$st');
               }
             },
             style: TextButton.styleFrom(
@@ -1815,8 +1814,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       );
 
       if (kDebugMode) {
-        debugPrint(
-            '[RegistrationFlow] Starting upload of ${validPhotos.length} photos...');
+        if (kDebugMode)
+          debugPrint(
+              '[RegistrationFlow] Starting upload of ${validPhotos.length} photos...');
       }
 
       // Track per-photo byte progress and aggregate to overall 0–1 value.
@@ -1852,7 +1852,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       }
 
       if (kDebugMode) {
-        debugPrint('[RegistrationFlow] Uploads complete. URLs: $photoUrls');
+        if (kDebugMode)
+          debugPrint('[RegistrationFlow] Uploads complete. URLs: $photoUrls');
       }
 
       final datingMap = {
@@ -1918,7 +1919,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         hasChildren: _hasChildren,
         nicotineFilter: _partnerNicotineFilter,
         politicalAffiliationPreference: _partnerPoliticalAffiliationPreference,
-        partnerIntrovertPreference: _partnerIntroversionRange,
+
         partnerHeightPreference: _partnerHeightRange,
         lookingFor: _datingPreference != null
             ? [datingMap[_datingPreference!] ?? _datingPreference!]
@@ -1977,7 +1978,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[DEV] Registration error (bypassed): $e');
+        if (kDebugMode) debugPrint('[DEV] Registration error (bypassed): $e');
         if (user != null) {
           // Photo upload succeeded — force-complete onboarding locally.
           if (!mounted) return;
@@ -2006,8 +2007,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           }
         } else {
           // Photo upload itself failed — user not yet built; let them retry.
-          debugPrint(
-              '[DEV] Upload error: ${e is TrembleApiException ? e.code : e.runtimeType} — ${e is TrembleApiException ? e.message : e}');
+          if (kDebugMode)
+            debugPrint(
+                '[DEV] Upload error: ${e is TrembleApiException ? e.code : e.runtimeType} — ${e is TrembleApiException ? e.message : e}');
           setState(() {
             _isRegistering = false;
             _isUploadingPhotos = false;

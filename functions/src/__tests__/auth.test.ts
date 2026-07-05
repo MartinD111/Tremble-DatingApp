@@ -272,7 +272,7 @@ describe("Auth Module", () => {
                 partnerDrinkingHabit: null,
                 partnerExerciseHabit: null,
                 partnerSleepSchedule: null,
-                partnerIntrovertPreference: null,
+
                 hasChildren: null,
                 lookingForNewJob: null,
                 isTraveler: null,

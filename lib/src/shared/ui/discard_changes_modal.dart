@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/translations.dart';
 import '../../features/auth/data/auth_repository.dart';
+import 'tremble_alert_dialog.dart';
 
 Future<String?> showDiscardChangesModal(
     BuildContext context, WidgetRef ref) async {
@@ -19,76 +20,45 @@ Future<String?> showDiscardChangesModal(
   String saveText = t('save', lang);
   if (saveText.isEmpty || saveText == 'save') saveText = 'Save';
 
-  final result = await showDialog<String>(
+  final result = await showPlatformDialog<String>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: colorScheme.surface,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 10),
-          Icon(LucideIcons.alertTriangle, color: colorScheme.primary, size: 48),
-          const SizedBox(height: 20),
-          Text(
-            'Discard changes?',
-            style: GoogleFonts.instrumentSans(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
+    backgroundColor: colorScheme.surface,
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    title: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(LucideIcons.alertTriangle, color: colorScheme.primary, size: 48),
+        const SizedBox(height: 12),
+        Text(
+          discardTitle,
+          style: GoogleFonts.instrumentSans(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
           ),
-          const SizedBox(height: 12),
-          Text(
-            'You have unsaved changes. Are you sure you want to discard them?',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.lora(
-              fontSize: 16,
-              color: colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(height: 30),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(ctx, 'discard'),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(
-                        color: colorScheme.onSurface.withValues(alpha: 0.12)),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: Text(
-                    'Discard',
-                    style: GoogleFonts.instrumentSans(
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx, 'save'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: const StadiumBorder(),
-                    elevation: 0,
-                  ),
-                  child: const Text('Save',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
+      ],
+    ),
+    content: Text(
+      'You have unsaved changes. Are you sure you want to discard them?',
+      textAlign: TextAlign.center,
+      style: GoogleFonts.lora(
+        fontSize: 16,
+        color: colorScheme.onSurface.withValues(alpha: 0.7),
       ),
     ),
+    actions: [
+      TrembleDialogAction(
+        isDestructive: true,
+        onPressed: () => Navigator.pop(context, 'discard'),
+        child: Text(discardTitle),
+      ),
+      TrembleDialogAction(
+        onPressed: () => Navigator.pop(context, 'save'),
+        child: Text(saveText),
+      ),
+    ],
   );
   return result;
 }

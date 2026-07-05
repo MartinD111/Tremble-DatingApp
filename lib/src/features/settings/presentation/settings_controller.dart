@@ -124,40 +124,10 @@ class SettingsController {
     _introvertScaleDebounce?.cancel();
   }
 
-  void updatePartnerPoliticalRange(RangeValues values) {
-    updateUser((u) => u.copyWith(
-          partnerPoliticalMin: values.start.round(),
-          partnerPoliticalMax: values.end.round(),
-        ));
-  }
-
-  void updatePartnerIntrovertRange(RangeValues values) {
-    updateUser((u) => u.copyWith(
-          partnerIntrovertMin: values.start.round(),
-          partnerIntrovertMax: values.end.round(),
-        ));
-  }
-
   // ── Enum single-select update ──────────────────────────────────────────────
 
   void updateInterestedIn(List<String> values) {
     updateUser((u) => u.copyWith(interestedIn: values));
-  }
-
-  // ── Clear partner political/introvert preferences ─────────────────────────
-
-  void clearPartnerPolitical() {
-    updateUser((u) => u.copyWith(
-          partnerPoliticalMin: null,
-          partnerPoliticalMax: null,
-        ));
-  }
-
-  void clearPartnerIntrovert() {
-    updateUser((u) => u.copyWith(
-          partnerIntrovertMin: null,
-          partnerIntrovertMax: null,
-        ));
   }
 
   // ── Open pill edit modal ───────────────────────────────────────────────────

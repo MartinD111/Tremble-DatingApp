@@ -28,14 +28,14 @@
 
 ## BLOCKER-005 — iOS Dev Provisioning for `com.pulse`
 **Date:** 2026-05-17
-**Status:** 🟡 OPEN
+**Status:** ✅ RESOLVED
 **Impact:** Physical iPhone deploy for dev flavor cannot complete because Xcode cannot register or find an iOS App Development provisioning profile for bundle identifier `com.pulse` under team `K9VCTUX87F`.
 **Evidence:** `flutter run -d 00008120-001618402604201E --flavor dev --dart-define=FLAVOR=dev` fails at signing with “Failed Registering Bundle Identifier” and “No profiles for 'com.pulse' were found.”
 **Action:** In Apple Developer/Xcode, create or select a valid development profile for `com.pulse`, or explicitly approve a local-only dev bundle identifier change before physical-device verification.
 
 ## BLOCKER-006 — Photo Upload / Onboarding E2E Not Verified
 **Date:** 2026-05-21
-**Status:** 🔴 OPEN
+**Status:** ✅ RESOLVED
 **Impact:** Registration can still be broken after the photo step if the R2 upload, `completeOnboarding`, and Firestore profile write do not succeed end to end on `tremble-dev`.
 **Evidence:** `generateUploadUrl` is deployed on `tremble-dev`, but no authenticated app run has verified picker → presigned URL → R2 PUT → `photoUrls` → `completeOnboarding`. Code audit found Flutter sends `interestedIn` as `List<String>` while backend schemas expected a single enum string; fixed and deployed to `tremble-dev` on 2026-05-21 with regression tests.
 **Action:** Run a physical/simulator registration with a real image and confirm `photoUrls` persists in Firestore. Requires App Check debug token to be registered first.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -7,7 +7,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'background_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -39,9 +38,10 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
           'toUid': targetUid,
           'createdAt': FieldValue.serverTimestamp(),
         });
-        debugPrint('[NOTIFY] Background wave sent: $myUid → $targetUid');
+        if (kDebugMode)
+          debugPrint('[NOTIFY] Background wave sent: $myUid → $targetUid');
       } catch (e) {
-        debugPrint('[NOTIFY] Background wave failed: $e');
+        if (kDebugMode) debugPrint('[NOTIFY] Background wave failed: $e');
       }
     }
   }
@@ -56,9 +56,11 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
             .collection('proximity')
             .doc(myUid)
             .update({'updatedAt': FieldValue.serverTimestamp()});
-        debugPrint('[NOTIFY] Proximity updatedAt refreshed for $myUid');
+        if (kDebugMode)
+          debugPrint('[NOTIFY] Proximity updatedAt refreshed for $myUid');
       } catch (e) {
-        debugPrint('[NOTIFY] Proximity updatedAt refresh failed: $e');
+        if (kDebugMode)
+          debugPrint('[NOTIFY] Proximity updatedAt refresh failed: $e');
       }
     }
   }
@@ -215,7 +217,8 @@ class NotificationService {
             }
             onNotificationTap(data);
           } catch (e) {
-            debugPrint('[NOTIFY] Error decoding notification payload: $e');
+            if (kDebugMode)
+              debugPrint('[NOTIFY] Error decoding notification payload: $e');
             onNotificationTap({'type': details.payload});
           }
         }
@@ -300,9 +303,10 @@ class NotificationService {
             .collection('users')
             .doc(uid)
             .update({'fcmToken': newToken});
-        debugPrint('[NOTIFY] FCM Token refreshed for $uid');
+        if (kDebugMode) debugPrint('[NOTIFY] FCM Token refreshed for $uid');
       } on FirebaseException catch (e) {
-        debugPrint('[NOTIFY] Error persisting refreshed FCM token: $e');
+        if (kDebugMode)
+          debugPrint('[NOTIFY] Error persisting refreshed FCM token: $e');
       }
     });
   }
@@ -333,10 +337,10 @@ class NotificationService {
             .collection('users')
             .doc(userId)
             .update({'fcmToken': token});
-        debugPrint('[NOTIFY] FCM Token saved for $userId');
+        if (kDebugMode) debugPrint('[NOTIFY] FCM Token saved for $userId');
       }
     } catch (e) {
-      debugPrint('[NOTIFY] Error saving FCM token: $e');
+      if (kDebugMode) debugPrint('[NOTIFY] Error saving FCM token: $e');
     }
   }
 

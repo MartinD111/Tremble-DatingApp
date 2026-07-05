@@ -14,10 +14,7 @@ const interestedInSchema = z.preprocess((value) => {
     return value;
 }, z.array(interestedInValueSchema).min(1).max(3));
 
-const nicotineUseSchema = z.union([
-    z.array(z.string().max(50)).max(10),
-    z.string().max(50),
-]);
+const nicotineUseSchema = z.array(z.string().max(50)).max(10);
 
 // Optional fields use `.nullish()` (T | null | undefined) because the Dart
 // client serializes unset values as JSON `null`, which `.optional()` rejects.
@@ -69,7 +66,7 @@ export const completeOnboardingSchema = z.object({
     partnerDrinkingHabit: z.string().max(500).nullish(),
     partnerExerciseHabit: z.string().max(500).nullish(),
     partnerSleepSchedule: z.string().max(500).nullish(),
-    partnerIntrovertPreference: z.string().max(500).nullish(),
+
     hasChildren: z.boolean().nullish(),
     lookingForNewJob: z.boolean().nullish(),
     isTraveler: z.boolean().nullish(),

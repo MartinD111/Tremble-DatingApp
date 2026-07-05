@@ -7,6 +7,7 @@ import '../../../../shared/ui/primary_button.dart';
 import '../../data/safety_repository.dart';
 import '../../../../core/translations.dart';
 import '../../../../core/theme.dart';
+import '../../../../shared/ui/tremble_alert_dialog.dart';
 
 /// A generic bottom sheet that offers "Report User" and "Block User" options.
 class UgcActionSheet extends ConsumerWidget {
@@ -92,71 +93,63 @@ class UgcActionSheet extends ConsumerWidget {
   }
 
   void _showBlockDialog(BuildContext context, WidgetRef ref, String lang) {
-    showDialog(
+    showPlatformDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: TrembleTheme.textColor,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          t('block_user', lang).replaceAll('{name}', targetName),
-          style: GoogleFonts.playfairDisplay(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+      backgroundColor: TrembleTheme.textColor,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(
+        t('block_user', lang).replaceAll('{name}', targetName),
+        style: GoogleFonts.playfairDisplay(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
         ),
-        content: Text(
-          t('block_confirm_desc', lang).replaceAll('{name}', targetName),
-          style: GoogleFonts.instrumentSans(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              t('cancel', lang),
-              style: GoogleFonts.instrumentSans(color: Colors.white54),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: TrembleTheme.rose,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100)),
-              elevation: 0,
-            ),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              try {
-                await ref.read(safetyRepositoryProvider).blockUser(targetUid);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(t('block_success', lang)
-                          .replaceAll('{name}', targetName)),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Uporabnika ni bilo mogoče blokirati. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
-                      ),
-                    ),
-                  );
-                }
-              }
-            },
-            child: Text(
-              t('block_user', lang).replaceAll(' {name}', ''),
-              style: GoogleFonts.instrumentSans(
-                  color: Colors.white, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
       ),
+      content: Text(
+        t('block_confirm_desc', lang).replaceAll('{name}', targetName),
+        style: GoogleFonts.instrumentSans(color: Colors.white70),
+      ),
+      actions: [
+        TrembleDialogAction(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            t('cancel', lang),
+            style: GoogleFonts.instrumentSans(color: Colors.white54),
+          ),
+        ),
+        TrembleDialogAction(
+          isDestructive: true,
+          onPressed: () async {
+            Navigator.pop(context);
+            try {
+              await ref.read(safetyRepositoryProvider).blockUser(targetUid);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(t('block_success', lang)
+                        .replaceAll('{name}', targetName)),
+                  ),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Uporabnika ni bilo mogoče blokirati. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
+                    ),
+                  ),
+                );
+              }
+            }
+          },
+          child: Text(
+            t('block_user', lang).replaceAll(' {name}', ''),
+            style: GoogleFonts.instrumentSans(
+                color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
     );
   }
 
@@ -240,7 +233,7 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
     final lang = ref.watch(appLanguageProvider);
     final canSubmit = _selectedReasons.isNotEmpty && !_isSubmitting;
 
-    return AlertDialog(
+    return TrembleAlertDialog(
       backgroundColor: TrembleTheme.textColor,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -254,100 +247,108 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
       ),
       content: SizedBox(
         width: double.maxFinite,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                t('report_reasons_desc', lang),
-                style: GoogleFonts.instrumentSans(color: Colors.white70),
-              ),
-              const SizedBox(height: 12),
-              ..._getReasons(lang).map((reason) {
-                return CheckboxListTile(
-                  title: Text(
-                    reason,
-                    style: GoogleFonts.instrumentSans(color: Colors.white),
-                  ),
-                  value: _selectedReasons.contains(reason),
-                  activeColor: TrembleTheme.rose,
-                  checkColor: Colors.white,
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  onChanged: _isSubmitting
-                      ? null
-                      : (val) {
-                          setState(() {
-                            if (val == true) {
-                              _selectedReasons.add(reason);
-                            } else {
-                              _selectedReasons.remove(reason);
-                            }
-                          });
-                        },
-                );
-              }),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _explanationCtrl,
-                style: GoogleFonts.instrumentSans(color: Colors.white),
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: t('report_explanation', lang),
-                  labelStyle: GoogleFonts.instrumentSans(color: Colors.white54),
-                  hintText: t('report_explanation_hint', lang),
-                  hintStyle: GoogleFonts.instrumentSans(color: Colors.white38),
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.1),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.white30),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.white, width: 2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t('report_reasons_desc', lang),
+                  style: GoogleFonts.instrumentSans(color: Colors.white70),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                t('report_auto_block_warning', lang),
-                style: GoogleFonts.instrumentSans(
-                  fontWeight: FontWeight.bold,
-                  color: TrembleTheme.rose,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed:
-                        _isSubmitting ? null : () => Navigator.pop(context),
-                    child: Text(
-                      t('cancel', lang),
-                      style: GoogleFonts.instrumentSans(color: Colors.white54),
+                const SizedBox(height: 12),
+                ..._getReasons(lang).map((reason) {
+                  return CheckboxListTile(
+                    title: Text(
+                      reason,
+                      style: GoogleFonts.instrumentSans(color: Colors.white),
+                    ),
+                    value: _selectedReasons.contains(reason),
+                    activeColor: TrembleTheme.rose,
+                    checkColor: Colors.white,
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    onChanged: _isSubmitting
+                        ? null
+                        : (val) {
+                            setState(() {
+                              if (val == true) {
+                                _selectedReasons.add(reason);
+                              } else {
+                                _selectedReasons.remove(reason);
+                              }
+                            });
+                          },
+                  );
+                }),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _explanationCtrl,
+                  style: GoogleFonts.instrumentSans(color: Colors.white),
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: t('report_explanation', lang),
+                    labelStyle:
+                        GoogleFonts.instrumentSans(color: Colors.white54),
+                    hintText: t('report_explanation_hint', lang),
+                    hintStyle:
+                        GoogleFonts.instrumentSans(color: Colors.white38),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.1),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white30),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide:
+                          const BorderSide(color: Colors.white, width: 2),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Opacity(
-                    opacity: canSubmit ? 1.0 : 0.45,
-                    child: AbsorbPointer(
-                      absorbing: !canSubmit,
-                      child: PrimaryButton(
-                        text: t('submit', lang),
-                        onPressed: () => _submitReport(lang),
-                        isLoading: _isSubmitting,
-                        width: 120,
-                        height: 44,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  t('report_auto_block_warning', lang),
+                  style: GoogleFonts.instrumentSans(
+                    fontWeight: FontWeight.bold,
+                    color: TrembleTheme.rose,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed:
+                          _isSubmitting ? null : () => Navigator.pop(context),
+                      child: Text(
+                        t('cancel', lang),
+                        style:
+                            GoogleFonts.instrumentSans(color: Colors.white54),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: 8),
+                    Opacity(
+                      opacity: canSubmit ? 1.0 : 0.45,
+                      child: AbsorbPointer(
+                        absorbing: !canSubmit,
+                        child: PrimaryButton(
+                          text: t('submit', lang),
+                          onPressed: () => _submitReport(lang),
+                          isLoading: _isSubmitting,
+                          width: 120,
+                          height: 44,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -55,17 +55,19 @@ service cloud.firestore {
           && (!data.keys().hasAny(['age'])            || data.age is int)
           && (!data.keys().hasAny(['photoUrls'])      || data.photoUrls is list)
           && (!data.keys().hasAny(['gender'])         || data.gender is string)
-          && (!data.keys().hasAny(['lookingFor'])     || data.lookingFor is string)
+          && (!data.keys().hasAny(['lookingFor'])     || data.lookingFor is list)
           && (!data.keys().hasAny(['radarActive'])    || data.radarActive is bool)
           && (!data.keys().hasAny(['isActive'])       || data.isActive is bool)
-          && (!data.keys().hasAny(['fcmToken'])       || data.fcmToken is string);
+          && (!data.keys().hasAny(['fcmToken'])       || data.fcmToken is string)
+          && (!data.keys().hasAny(['selectedGyms'])   || data.selectedGyms is list);
     }
 
     function validUserSizes(data) {
       return (!data.keys().hasAny(['displayName'])   || data.displayName.size() <= 50)
           && (!data.keys().hasAny(['bio'])            || data.bio.size() <= 500)
           && (!data.keys().hasAny(['photoUrls'])      || data.photoUrls.size() <= 6)
-          && (!data.keys().hasAny(['fcmToken'])       || data.fcmToken.size() <= 4096);
+          && (!data.keys().hasAny(['fcmToken'])       || data.fcmToken.size() <= 4096)
+          && (!data.keys().hasAny(['selectedGyms'])   || data.selectedGyms.size() <= 3);
     }
 
     // For updates, validate only the fields that are actually being changed.
@@ -86,13 +88,15 @@ service cloud.firestore {
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['gender'])
                 || request.resource.data.gender is string)
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lookingFor'])
-                || request.resource.data.lookingFor is string)
+                || request.resource.data.lookingFor is list)
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['radarActive'])
                 || request.resource.data.radarActive is bool)
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isActive'])
                 || request.resource.data.isActive is bool)
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fcmToken'])
-                || request.resource.data.fcmToken is string);
+                || request.resource.data.fcmToken is string)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['selectedGyms'])
+                || request.resource.data.selectedGyms is list);
     }
 
     function validUserUpdateSizes() {
@@ -103,7 +107,9 @@ service cloud.firestore {
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['photoUrls'])
                 || request.resource.data.photoUrls.size() <= 6)
           && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['fcmToken'])
-                || request.resource.data.fcmToken.size() <= 4096);
+                || request.resource.data.fcmToken.size() <= 4096)
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['selectedGyms'])
+                || request.resource.data.selectedGyms.size() <= 3);
     }
 
     function isWaveParticipant(data) {

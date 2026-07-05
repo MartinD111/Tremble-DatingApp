@@ -41,6 +41,12 @@
 	<string>5F693050-D975-4416-AE08-3DBB7EA42B4C</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires access to the camera to take profile photos and send photo intercepts.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to your photo library to select profile photos and send photo intercepts.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app requires access to save photos to your library.</string>
 	<key>MAPS_API_KEY</key>
 	<string>$(MAPS_API_KEY)</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>

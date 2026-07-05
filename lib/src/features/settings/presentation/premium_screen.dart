@@ -10,6 +10,7 @@ import '../../auth/data/auth_repository.dart';
 import '../../subscriptions/application/revenuecat_subscription.dart';
 import '../../../shared/ui/tremble_back_button.dart';
 import '../../../core/theme.dart';
+import 'package:flutter/foundation.dart';
 
 @immutable
 class PremiumPlanCard {
@@ -454,7 +455,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
           _showSnack(error);
       }
     } catch (e) {
-      debugPrint('[PREMIUM] RevenueCat purchase failed: $e');
+      if (kDebugMode) debugPrint('[PREMIUM] RevenueCat purchase failed: $e');
       if (mounted) _showSnack(_t('purchase_failed', user.appLanguage));
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -478,7 +479,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
         _showSnack(error);
       }
     } catch (e) {
-      debugPrint('[PREMIUM] RevenueCat restore failed: $e');
+      if (kDebugMode) debugPrint('[PREMIUM] RevenueCat restore failed: $e');
       if (mounted) _showSnack(_t('restore_failed', user.appLanguage));
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -494,7 +495,7 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       if (!mounted || opened) return;
       _showSnack(_t('customer_center_failed', user.appLanguage));
     } catch (e) {
-      debugPrint('[PREMIUM] Customer Center failed: $e');
+      if (kDebugMode) debugPrint('[PREMIUM] Customer Center failed: $e');
       if (mounted) _showSnack(_t('customer_center_failed', user.appLanguage));
     } finally {
       if (mounted) setState(() => _isLoading = false);

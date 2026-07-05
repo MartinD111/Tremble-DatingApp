@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../../core/theme.dart';
 import '../../../../../shared/ui/tremble_back_button.dart';
+import '../../../../../shared/ui/tremble_alert_dialog.dart';
 import 'step_shared.dart';
 
 class EmailLocationStep extends StatefulWidget {
@@ -302,57 +304,45 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
       alignment: Alignment.center,
       child: GestureDetector(
         onTap: () {
-          showDialog(
+          showPlatformDialog(
             context: context,
-            builder: (ctx) => AlertDialog(
-              backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(LucideIcons.diamond,
-                      color: Theme.of(context).colorScheme.primary, size: 40),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.tr('premium_free_notice'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black87,
-                        fontSize: 16,
-                        height: 1.4),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget
-                        .tr('current_users_count')
-                        .replaceAll('{count}', '4.832'),
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('OK',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16)),
-                    ),
-                  ),
-                ],
-              ),
+            backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Icon(LucideIcons.diamond,
+                color: Theme.of(context).colorScheme.primary, size: 40),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 16),
+                Text(
+                  widget.tr('premium_free_notice'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 16,
+                      height: 1.4),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  widget
+                      .tr('current_users_count')
+                      .replaceAll('{count}', '4.832'),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
+            actions: [
+              TrembleDialogAction(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
           );
         },
         child: Container(

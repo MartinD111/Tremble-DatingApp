@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -108,9 +109,10 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                                     itemBuilder: (context, index) {
                                       final url = user.photoUrls[index];
                                       return url.startsWith('http')
-                                          ? Image.network(url,
+                                          ? CachedNetworkImage(
+                                              imageUrl: url,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) =>
+                                              errorWidget: (_, __, ___) =>
                                                   Container(
                                                       color: Colors.grey[900]))
                                           : Image.file(File(url),

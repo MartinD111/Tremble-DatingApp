@@ -61,11 +61,12 @@ String? computeRedirect({
   bool isSocialUser = false,
 }) {
   if (kDebugMode) {
-    debugPrint(
-      '[TREMBLE_ROUTER] computeRedirect() called: currentPath=$currentPath, '
-      'isInitialized=$isInitialized, authUser=${authUser?.email}, '
-      'profileLoading=${profileStatus.isLoading}, hasConsent=$hasConsent',
-    );
+    if (kDebugMode)
+      debugPrint(
+        '[TREMBLE_ROUTER] computeRedirect() called: currentPath=$currentPath, '
+        'isInitialized=$isInitialized, authUser=${authUser?.email}, '
+        'profileLoading=${profileStatus.isLoading}, hasConsent=$hasConsent',
+      );
   }
 
   // Auth stream not yet settled — hold, show splash
@@ -80,7 +81,7 @@ String? computeRedirect({
       return null;
     }
     final redirect = currentPath == '/login' ? null : '/login';
-    if (kDebugMode)
+    if (kDebugMode) if (kDebugMode)
       debugPrint('[TREMBLE_ROUTER] No authUser, redirecting to: $redirect');
     return redirect;
   }
@@ -99,9 +100,10 @@ String? computeRedirect({
       (status is ProfileStatusReady && !status.isOnboarded);
 
   if (kDebugMode) {
-    debugPrint(
-      '[TREMBLE_ROUTER] Profile status: $status, needsOnboarding=$needsOnboarding',
-    );
+    if (kDebugMode)
+      debugPrint(
+        '[TREMBLE_ROUTER] Profile status: $status, needsOnboarding=$needsOnboarding',
+      );
   }
 
   if (needsOnboarding) {
@@ -115,14 +117,15 @@ String? computeRedirect({
     if (!isSocialUser && !isEmailVerified) {
       final redirect = currentPath == '/login' ? null : '/login';
       if (kDebugMode) {
-        debugPrint(
-          '[TREMBLE_ROUTER] Stale email session (not verified, no profile), redirecting to: $redirect',
-        );
+        if (kDebugMode)
+          debugPrint(
+            '[TREMBLE_ROUTER] Stale email session (not verified, no profile), redirecting to: $redirect',
+          );
       }
       return redirect;
     }
     final redirect = '/onboarding';
-    if (kDebugMode)
+    if (kDebugMode) if (kDebugMode)
       debugPrint(
           '[TREMBLE_ROUTER] Needs onboarding, redirecting to: $redirect');
     return redirect;
@@ -202,10 +205,11 @@ Future<void> handleNotificationNavigation(
           'toUid': targetUid,
           'createdAt': FieldValue.serverTimestamp(),
         });
-        debugPrint(
-            '[ROUTER] Auto-wave sent via notification action: $myUid → $targetUid');
+        if (kDebugMode)
+          debugPrint(
+              '[ROUTER] Auto-wave sent via notification action: $myUid → $targetUid');
       } catch (e) {
-        debugPrint('[ROUTER] Auto-wave failed: $e');
+        if (kDebugMode) debugPrint('[ROUTER] Auto-wave failed: $e');
       }
     }
     // After waving, we might want to stay on the current screen or show a confirmation.
@@ -240,7 +244,7 @@ Future<void> handleNotificationNavigation(
         }
       }
     } catch (e) {
-      debugPrint('[ROUTER] Notification navigation failed: $e');
+      if (kDebugMode) debugPrint('[ROUTER] Notification navigation failed: $e');
     }
   }
 }
@@ -283,7 +287,8 @@ class _RouterNotifier extends ChangeNotifier {
     // exists. We MUST wait for it before trusting profileStatus = notFound,
     // because authStateProvider starts as null even for returning users.
     _ref.listen<AuthUser?>(authStateProvider, (prev, next) {
-      debugPrint('[ROUTER] authStateProvider → user: ${next?.id ?? 'null'}');
+      if (kDebugMode)
+        debugPrint('[ROUTER] authStateProvider → user: ${next?.id ?? 'null'}');
       _cachedAuthUser = next;
       _authStreamFired = true;
       _initialized = true;
@@ -299,8 +304,9 @@ class _RouterNotifier extends ChangeNotifier {
     // - When authState is null AND !_authStreamFired: the null is transient
     //   (Firebase hasn't restored the session yet). Ignore — hold the router.
     _ref.listen<AsyncValue<ProfileStatus>>(profileStatusProvider, (_, next) {
-      debugPrint(
-          '[ROUTER] profileStatusProvider → $next  authStreamFired=$_authStreamFired');
+      if (kDebugMode)
+        debugPrint(
+            '[ROUTER] profileStatusProvider → $next  authStreamFired=$_authStreamFired');
       if (!next.isLoading && _authStreamFired) _initialized = true;
       // Sync the cache: profileStatusProvider re-runs when authStateProvider
       // changes, so both listeners may fire in the same Riverpod batch. The
@@ -325,10 +331,11 @@ class _RouterNotifier extends ChangeNotifier {
     // When it resolves to true (user exists), the authStateProvider listener
     // handles initialization once the Firestore fetch completes.
     _ref.listen<AsyncValue<bool>>(authInitializedProvider, (_, next) {
-      debugPrint('[ROUTER] authInitializedProvider → $next');
+      if (kDebugMode) debugPrint('[ROUTER] authInitializedProvider → $next');
       if (next.hasValue && !next.value! && !_initialized) {
-        debugPrint(
-            '[ROUTER] no session — unblocking router (was timeout or clean signout)');
+        if (kDebugMode)
+          debugPrint(
+              '[ROUTER] no session — unblocking router (was timeout or clean signout)');
         _authStreamFired = true;
         _initialized = true;
         notifyListeners();
@@ -397,8 +404,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => Consumer(
           builder: (context, ref, _) {
             final authUser = ref.watch(authStateProvider);
-            debugPrint(
-                '[DEBUG_ROUTE] / builder: authUser=${authUser?.id ?? 'null'} name=${authUser?.name}');
+            if (kDebugMode)
+              debugPrint(
+                  '[DEBUG_ROUTE] / builder: authUser=${authUser?.id ?? 'null'} name=${authUser?.name}');
             if (authUser == null) return const _SplashLoadingScreen();
             return const GradientScaffold(child: HomeScreen());
           },
@@ -493,11 +501,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         isEmailVerified: notifier.isEmailVerified,
         isSocialUser: notifier.isSocialUser,
       );
-      debugPrint('[ROUTER] redirect ${state.uri} → ${result ?? '(stay)'}  '
-          'init=${notifier.isInitialized} '
-          'user=${notifier.authState?.id ?? 'null'} '
-          'profile=${notifier.profileStatus} '
-          'consent=${notifier.hasConsent}');
+      if (kDebugMode)
+        debugPrint('[ROUTER] redirect ${state.uri} → ${result ?? '(stay)'}  '
+            'init=${notifier.isInitialized} '
+            'user=${notifier.authState?.id ?? 'null'} '
+            'profile=${notifier.profileStatus} '
+            'consent=${notifier.hasConsent}');
       return result;
     },
   );

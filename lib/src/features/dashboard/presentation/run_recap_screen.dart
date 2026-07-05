@@ -19,6 +19,7 @@ import '../../recap/providers/recap_ttl_provider.dart';
 import '../data/run_club_repository.dart';
 import '../../../core/translations.dart';
 import '../../safety/screen_protection_service.dart';
+import 'package:flutter/foundation.dart';
 
 @visibleForTesting
 MatchProfile runRecapMatchProfileFromPublicProfile(PublicProfile profile) {
@@ -45,7 +46,7 @@ List<String> safeRecapUserIdsFromData(Map<String, dynamic> data) {
 
 @visibleForTesting
 Widget recapProviderErrorContent(Object error, StackTrace stackTrace) {
-  debugPrint('RecapProvider error: $error\n$stackTrace');
+  if (kDebugMode) debugPrint('RecapProvider error: $error\n$stackTrace');
   return Center(
     child: Text(
       'Something went wrong.',
@@ -115,7 +116,7 @@ class _RunRecapScreenState extends ConsumerState<RunRecapScreen> {
           )
           .catchError(
         (Object e, StackTrace st) {
-          debugPrint('viewedRecaps write failed: $e\n$st');
+          if (kDebugMode) debugPrint('viewedRecaps write failed: $e\n$st');
         },
       ),
     );
@@ -460,7 +461,7 @@ class _RecapItemState extends ConsumerState<_RecapItem> {
       if (!mounted) return;
       setState(() => _isSendingWave = false);
     } catch (e, st) {
-      debugPrint('sendWave error: $e\n$st');
+      if (kDebugMode) debugPrint('sendWave error: $e\n$st');
       if (!mounted) return;
       setState(() {
         _isSendingWave = false;

@@ -8,6 +8,7 @@ import '../../../core/translations.dart';
 import '../../../core/theme.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/tremble_header.dart';
+import '../../../shared/ui/tremble_alert_dialog.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../map/domain/safe_zone_model.dart';
 import '../../map/domain/safe_zone_repository.dart';
@@ -87,272 +88,244 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
         ? Colors.white.withValues(alpha: 0.12)
         : Colors.black.withValues(alpha: 0.1);
 
-    await showDialog<void>(
+    await showPlatformDialog<void>(
       context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return AlertDialog(
-              backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24)),
-              title: Text(
-                _t('safe_zone_add'),
-                style: GoogleFonts.instrumentSans(
-                    color: textColor, fontWeight: FontWeight.bold),
-              ),
-              content: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(ctx).unfocus(),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Zone name
-                      Text('Zone name',
-                          style: GoogleFonts.instrumentSans(
-                              color: subColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: nameController,
-                        style: TextStyle(color: textColor, fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: 'e.g. Home, Work, Gym…',
-                          hintStyle:
-                              TextStyle(color: subColor.withValues(alpha: 0.6)),
-                          filled: true,
-                          fillColor: inputFill,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(100),
-                            borderSide: BorderSide(color: borderColor),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(100),
-                            borderSide: BorderSide(color: borderColor),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(100),
-                            borderSide: BorderSide(
-                                color: TrembleTheme.rose, width: 1.5),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Radius selector
-                      Text('Radius',
-                          style: GoogleFonts.instrumentSans(
-                              color: subColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [100.0, 250.0, 500.0].map((r) {
-                          final isSelected = selectedRadius == r;
-                          return GestureDetector(
-                            onTap: () =>
-                                setDialogState(() => selectedRadius = r),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 10),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected ? TrembleTheme.rose : inputFill,
-                                borderRadius: BorderRadius.circular(100),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? TrembleTheme.rose
-                                      : borderColor,
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Text(
-                                '${r.round()}m',
-                                style: GoogleFonts.instrumentSans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: isSelected ? Colors.white : subColor,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Location source toggle
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Use address instead of GPS',
-                              style: GoogleFonts.instrumentSans(
-                                  color: subColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                          Switch(
-                            value: useAddress,
-                            activeTrackColor: TrembleTheme.rose,
-                            activeThumbColor: Colors.white,
-                            onChanged: (val) =>
-                                setDialogState(() => useAddress = val),
-                          ),
-                        ],
-                      ),
-
-                      if (useAddress) ...[
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: addressController,
-                          style: TextStyle(color: textColor, fontSize: 14),
-                          decoration: InputDecoration(
-                            hintText: 'Enter a nearby address (not exact)',
-                            hintStyle: TextStyle(
-                                color: subColor.withValues(alpha: 0.6),
-                                fontSize: 13),
-                            filled: true,
-                            fillColor: inputFill,
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: borderColor),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: borderColor),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                  color: TrembleTheme.rose, width: 1.5),
-                            ),
-                          ),
-                          maxLines: 2,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'You can enter a nearby street or intersection instead of your exact address. We build a range around it — your precise location is never stored.',
-                          style: GoogleFonts.instrumentSans(
-                              color: subColor.withValues(alpha: 0.7),
-                              fontSize: 11,
-                              height: 1.5),
-                        ),
-                      ],
-                    ],
+      backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+      title: Text(
+        _t('safe_zone_add'),
+        style: GoogleFonts.instrumentSans(
+            color: textColor, fontWeight: FontWeight.bold),
+      ),
+      content: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Zone name
+              Text('Zone name',
+                  style: GoogleFonts.instrumentSans(
+                      color: subColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: nameController,
+                style: TextStyle(color: textColor, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'e.g. Home, Work, Gym…',
+                  hintStyle: TextStyle(color: subColor.withValues(alpha: 0.6)),
+                  filled: true,
+                  fillColor: inputFill,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(100),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(100),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(100),
+                    borderSide:
+                        BorderSide(color: TrembleTheme.rose, width: 1.5),
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: isAdding ? null : () => Navigator.pop(ctx),
-                  child: Text(
-                    _t('cancel'),
-                    style: TextStyle(
-                        color: isDark ? Colors.white38 : Colors.black38),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: TrembleTheme.rose,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100)),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
-                  ),
-                  onPressed: isAdding
-                      ? null
-                      : () async {
-                          setDialogState(() => isAdding = true);
-                          try {
-                            double lat, lng;
+              const SizedBox(height: 20),
 
-                            if (useAddress &&
-                                addressController.text.trim().isNotEmpty) {
-                              // Address path: use GPS as fallback since
-                              // geocoding requires an API key not in scope.
-                              // The address is stored as the zone name so the
-                              // user still sees what they typed.
-                              final pos = await Geolocator.getCurrentPosition(
-                                locationSettings: const LocationSettings(
-                                  accuracy: LocationAccuracy.medium,
-                                  timeLimit: Duration(seconds: 10),
-                                ),
-                              );
-                              lat = pos.latitude;
-                              lng = pos.longitude;
-                            } else {
-                              final pos = await Geolocator.getCurrentPosition(
-                                locationSettings: const LocationSettings(
-                                  accuracy: LocationAccuracy.high,
-                                  timeLimit: Duration(seconds: 10),
-                                ),
-                              );
-                              lat = pos.latitude;
-                              lng = pos.longitude;
-                            }
-
-                            final currentZones = await ref
-                                .read(safeZoneRepositoryProvider)
-                                .getSafeZones();
-
-                            final rawName = nameController.text.trim();
-                            final zoneName = rawName.isNotEmpty
-                                ? rawName
-                                : 'Zone ${currentZones.length + 1}';
-
-                            final zone = SafeZone(
-                              id: DateTime.now()
-                                  .millisecondsSinceEpoch
-                                  .toString(),
-                              name: zoneName,
-                              latitude: lat,
-                              longitude: lng,
-                              radiusMeters: selectedRadius,
-                            );
-                            await ref
-                                .read(safeZoneRepositoryProvider)
-                                .addSafeZone(zone);
-                            if (ctx.mounted) Navigator.pop(ctx);
-                            await _loadZones();
-                          } catch (e) {
-                            setDialogState(() => isAdding = false);
-                            if (ctx.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Varnega območja ni bilo mogoče shraniti. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                  child: isAdding
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
-                      : Text(
-                          useAddress ? 'Add Zone' : 'Add Current Location',
-                          style: const TextStyle(color: Colors.white),
+              // Radius selector
+              Text('Radius',
+                  style: GoogleFonts.instrumentSans(
+                      color: subColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [100.0, 250.0, 500.0].map((r) {
+                  final isSelected = selectedRadius == r;
+                  return GestureDetector(
+                    onTap: () => setState(() => selectedRadius = r),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected ? TrembleTheme.rose : inputFill,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(
+                          color: isSelected ? TrembleTheme.rose : borderColor,
+                          width: 1.5,
                         ),
+                      ),
+                      child: Text(
+                        '${r.round()}m',
+                        style: GoogleFonts.instrumentSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? Colors.white : subColor,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+
+              // Location source toggle
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Use address instead of GPS',
+                      style: GoogleFonts.instrumentSans(
+                          color: subColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Switch(
+                    value: useAddress,
+                    activeTrackColor: TrembleTheme.rose,
+                    activeThumbColor: Colors.white,
+                    onChanged: (val) => setState(() => useAddress = val),
+                  ),
+                ],
+              ),
+
+              if (useAddress) ...[
+                const SizedBox(height: 6),
+                TextField(
+                  controller: addressController,
+                  style: TextStyle(color: textColor, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'Enter a nearby address (not exact)',
+                    hintStyle: TextStyle(
+                        color: subColor.withValues(alpha: 0.6), fontSize: 13),
+                    filled: true,
+                    fillColor: inputFill,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: borderColor),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: borderColor),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide:
+                          BorderSide(color: TrembleTheme.rose, width: 1.5),
+                    ),
+                  ),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'You can enter a nearby street or intersection instead of your exact address. We build a range around it — your precise location is never stored.',
+                  style: GoogleFonts.instrumentSans(
+                      color: subColor.withValues(alpha: 0.7),
+                      fontSize: 11,
+                      height: 1.5),
                 ),
               ],
-            );
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TrembleDialogAction(
+          onPressed: () {
+            if (!isAdding) Navigator.pop(context);
           },
-        );
-      },
+          child: Text(
+            _t('cancel'),
+            style: TextStyle(color: isDark ? Colors.white38 : Colors.black38),
+          ),
+        ),
+        TrembleDialogAction(
+          onPressed: () async {
+            if (isAdding) return;
+            isAdding = true;
+            try {
+              double lat, lng;
+
+              LocationPermission permission =
+                  await Geolocator.checkPermission();
+              if (permission == LocationPermission.denied) {
+                permission = await Geolocator.requestPermission();
+                if (permission == LocationPermission.denied) {
+                  throw Exception('Location permission denied');
+                }
+              }
+              if (permission == LocationPermission.deniedForever) {
+                throw Exception('Location permissions are permanently denied.');
+              }
+
+              if (useAddress && addressController.text.trim().isNotEmpty) {
+                final pos = await Geolocator.getCurrentPosition(
+                  locationSettings: const LocationSettings(
+                    accuracy: LocationAccuracy.medium,
+                    timeLimit: Duration(seconds: 10),
+                  ),
+                );
+                lat = pos.latitude;
+                lng = pos.longitude;
+              } else {
+                final pos = await Geolocator.getCurrentPosition(
+                  locationSettings: const LocationSettings(
+                    accuracy: LocationAccuracy.high,
+                    timeLimit: Duration(seconds: 10),
+                  ),
+                );
+                lat = pos.latitude;
+                lng = pos.longitude;
+              }
+
+              final currentZones =
+                  await ref.read(safeZoneRepositoryProvider).getSafeZones();
+
+              final rawName = nameController.text.trim();
+              final zoneName = rawName.isNotEmpty
+                  ? rawName
+                  : 'Zone ${currentZones.length + 1}';
+
+              final zone = SafeZone(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                name: zoneName,
+                latitude: lat,
+                longitude: lng,
+                radiusMeters: selectedRadius,
+              );
+              await ref.read(safeZoneRepositoryProvider).addSafeZone(zone);
+              if (context.mounted) Navigator.pop(context);
+              await _loadZones();
+            } catch (e) {
+              isAdding = false;
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Varnega območja ni bilo mogoče shraniti. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
+                    ),
+                  ),
+                );
+              }
+            }
+          },
+          child: Text(
+            useAddress ? 'Add Zone' : 'Add Current Location',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
     );
   }
 
@@ -362,29 +335,24 @@ class _SafeZonesScreenState extends ConsumerState<SafeZonesScreen> {
       final textColor = isDark ? Colors.white : Colors.black87;
       final subColor = isDark ? Colors.white70 : Colors.black54;
 
-      final confirm = await showDialog<bool>(
+      final confirm = await showPlatformDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-          title: Text(_t('warning'), style: TextStyle(color: textColor)),
-          content: Text(_t('safe_zone_confirm_off'),
-              style: TextStyle(color: subColor)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(_t('cancel'), style: TextStyle(color: subColor)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: TrembleTheme.rose,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100))),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(_t('continue'),
-                  style: const TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
+        backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+        title: Text(_t('warning'), style: TextStyle(color: textColor)),
+        content: Text(_t('safe_zone_confirm_off'),
+            style: TextStyle(color: subColor)),
+        actions: [
+          TrembleDialogAction(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(_t('cancel'), style: TextStyle(color: subColor)),
+          ),
+          TrembleDialogAction(
+            isDestructive: true,
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(_t('continue'),
+                style: const TextStyle(color: Colors.white)),
+          ),
+        ],
       );
       if (confirm != true) return;
     }

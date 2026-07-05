@@ -109,12 +109,13 @@ class PlacesService {
   /// Start a new billing session. Call when the autocomplete field gets focus.
   void startSession() {
     _sessionToken = _uuid.v4();
-    debugPrint('[PlacesService] New session started: $_sessionToken');
+    if (kDebugMode)
+      debugPrint('[PlacesService] New session started: $_sessionToken');
   }
 
   /// End the current billing session.
   void endSession() {
-    debugPrint('[PlacesService] Session ended: $_sessionToken');
+    if (kDebugMode) debugPrint('[PlacesService] Session ended: $_sessionToken');
     _sessionToken = null;
   }
 
@@ -123,8 +124,9 @@ class PlacesService {
   Future<List<PlacePrediction>> autocomplete(String input) async {
     if (input.trim().isEmpty) return [];
     if (_apiKey.isEmpty) {
-      debugPrint(
-          '[PlacesService] ⚠️ No API key — pass --dart-define=PLACES_KEY_DEV=AIza...');
+      if (kDebugMode)
+        debugPrint(
+            '[PlacesService] ⚠️ No API key — pass --dart-define=PLACES_KEY_DEV=AIza...');
       return [];
     }
 
@@ -155,8 +157,9 @@ class PlacesService {
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode != 200) {
-        debugPrint(
-            '[PlacesService] API error ${response.statusCode}: ${response.body}');
+        if (kDebugMode)
+          debugPrint(
+              '[PlacesService] API error ${response.statusCode}: ${response.body}');
         return [];
       }
 
@@ -169,7 +172,7 @@ class PlacesService {
           .where((p) => p.placeId.isNotEmpty)
           .toList();
     } catch (e) {
-      debugPrint('[PlacesService] Error: $e');
+      if (kDebugMode) debugPrint('[PlacesService] Error: $e');
       return [];
     }
   }
@@ -186,8 +189,9 @@ class PlacesService {
   }) async {
     if (input.trim().isEmpty) return [];
     if (_apiKey.isEmpty) {
-      debugPrint(
-          '[PlacesService] PLACES_KEY_DEV is empty. Pass via --dart-define=PLACES_KEY_DEV=AIza...');
+      if (kDebugMode)
+        debugPrint(
+            '[PlacesService] PLACES_KEY_DEV is empty. Pass via --dart-define=PLACES_KEY_DEV=AIza...');
       return [];
     }
 
@@ -226,11 +230,13 @@ class PlacesService {
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode != 200) {
-        debugPrint(
-            '[PlacesService] Gym autocomplete error ${response.statusCode}: ${response.body}');
-        if (kDebugMode && response.statusCode == 403) {
+        if (kDebugMode)
           debugPrint(
-              '[PlacesService] 403 on gym search — check: (1) PLACES_KEY_DEV in .env.json, (2) no Android app restrictions on key, (3) Places API (New) enabled in GCP.');
+              '[PlacesService] Gym autocomplete error ${response.statusCode}: ${response.body}');
+        if (kDebugMode && response.statusCode == 403) {
+          if (kDebugMode)
+            debugPrint(
+                '[PlacesService] 403 on gym search — check: (1) PLACES_KEY_DEV in .env.json, (2) no Android app restrictions on key, (3) Places API (New) enabled in GCP.');
         }
         return [];
       }
@@ -244,7 +250,7 @@ class PlacesService {
           .where((p) => p.placeId.isNotEmpty)
           .toList();
     } catch (e) {
-      debugPrint('[PlacesService] Gym autocomplete error: $e');
+      if (kDebugMode) debugPrint('[PlacesService] Gym autocomplete error: $e');
       return [];
     }
   }
@@ -273,8 +279,9 @@ class PlacesService {
       ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode != 200) {
-        debugPrint(
-            '[PlacesService] Place details error ${response.statusCode}');
+        if (kDebugMode)
+          debugPrint(
+              '[PlacesService] Place details error ${response.statusCode}');
         return null;
       }
 
@@ -295,7 +302,7 @@ class PlacesService {
       endSession();
       return details;
     } catch (e) {
-      debugPrint('[PlacesService] Place details error: $e');
+      if (kDebugMode) debugPrint('[PlacesService] Place details error: $e');
       endSession();
       return null;
     }

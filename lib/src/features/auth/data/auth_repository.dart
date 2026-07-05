@@ -13,6 +13,7 @@ import '../../../core/api_client.dart';
 import '../../../core/event_geofence_service.dart';
 import '../../../core/hobby_utils.dart';
 import '../../../core/slider_normalizer.dart';
+import '../../../core/notification_service.dart';
 import '../../subscriptions/application/revenuecat_subscription.dart';
 import '../../gym/domain/selected_gym.dart';
 
@@ -73,7 +74,7 @@ class AuthUser {
   final int? introvertScale;
   final int? selfIntrovertMin;
   final int? selfIntrovertMax;
-  final String? partnerIntrovertPreference;
+
   final String? exerciseHabit;
   final String? sleepSchedule;
   final String? petPreference;
@@ -110,10 +111,7 @@ class AuthUser {
   final int ageRangeEnd;
   final bool showPingAnimation;
   // Partner preference range sliders (new numeric fields replacing legacy strings)
-  final int? partnerPoliticalMin; // 1..5 spectrum left→right
-  final int? partnerPoliticalMax;
-  final int? partnerIntrovertMin; // 0..100 introvert→extrovert
-  final int? partnerIntrovertMax;
+
   final String? school;
   final String? company;
   final bool? hasChildren;
@@ -166,7 +164,6 @@ class AuthUser {
     this.introvertScale,
     this.selfIntrovertMin,
     this.selfIntrovertMax,
-    this.partnerIntrovertPreference,
     this.exerciseHabit,
     this.sleepSchedule,
     this.petPreference,
@@ -204,10 +201,6 @@ class AuthUser {
     this.ageRangeStart = 18,
     this.ageRangeEnd = 100,
     this.showPingAnimation = true,
-    this.partnerPoliticalMin,
-    this.partnerPoliticalMax,
-    this.partnerIntrovertMin,
-    this.partnerIntrovertMax,
     this.school,
     this.company,
     this.hasChildren,
@@ -229,7 +222,7 @@ class AuthUser {
     final hobbyIds =
         hobbies.map((h) => (h['id'] ?? h['name']) as String).toList();
 
-    return {
+    final payload = <String, dynamic>{
       if (name != null) 'name': name,
       'onboardingCheckpoint': onboardingCheckpoint,
       if (age != null) 'age': age,
@@ -248,7 +241,6 @@ class AuthUser {
       'introvertScale': introvertScale,
       if (selfIntrovertMin != null) 'selfIntrovertMin': selfIntrovertMin,
       if (selfIntrovertMax != null) 'selfIntrovertMax': selfIntrovertMax,
-      'partnerIntrovertPreference': partnerIntrovertPreference,
       'exerciseHabit': exerciseHabit,
       'sleepSchedule': sleepSchedule,
       'petPreference': petPreference,
@@ -282,14 +274,6 @@ class AuthUser {
       'ageRangeStart': ageRangeStart,
       'ageRangeEnd': ageRangeEnd,
       'showPingAnimation': showPingAnimation,
-      if (partnerPoliticalMin != null)
-        'partnerPoliticalMin': partnerPoliticalMin,
-      if (partnerPoliticalMax != null)
-        'partnerPoliticalMax': partnerPoliticalMax,
-      if (partnerIntrovertMin != null)
-        'partnerIntrovertMin': partnerIntrovertMin,
-      if (partnerIntrovertMax != null)
-        'partnerIntrovertMax': partnerIntrovertMax,
       'isGenderBasedColor': isGenderBasedColor,
       'school': school,
       'company': company,
@@ -302,6 +286,10 @@ class AuthUser {
       if (phoneNumber != null) 'phoneNumber': phoneNumber,
       'isTraveler': isTraveler,
     };
+
+    // Strip null fields to avoid CF validation errors or overriding existing data with null
+    payload.removeWhere((key, value) => value == null);
+    return payload;
   }
 
   /// Parses interestedIn from Firestore — handles legacy String values and
@@ -340,6 +328,7 @@ class AuthUser {
     Map<String, dynamic> data, {
     bool emailVerified = false,
     int wavesThisMonth = 0,
+    String currentLang = 'en',
   }) {
     return AuthUser(
       id: uid,
@@ -369,7 +358,6 @@ class AuthUser {
       introvertScale: SliderNormalizer.toNewFormat(data['introvertScale']),
       selfIntrovertMin: data['selfIntrovertMin'] as int?,
       selfIntrovertMax: data['selfIntrovertMax'] as int?,
-      partnerIntrovertPreference: data['partnerIntrovertPreference'] as String?,
       exerciseHabit: data['exerciseHabit'] as String?,
       sleepSchedule: data['sleepSchedule'] as String?,
       petPreference: data['petPreference'] as String?,
@@ -401,14 +389,10 @@ class AuthUser {
       isPrideMode: data['isPrideMode'] as bool? ?? false,
       isClassicAppearance: data['isClassicAppearance'] as bool? ?? true,
       partnerHeightPreference: data['partnerHeightPreference'] as String?,
-      appLanguage: data['appLanguage'] as String? ?? 'en',
+      appLanguage: data['appLanguage'] as String? ?? currentLang,
       ageRangeStart: data['ageRangeStart'] as int? ?? 18,
       ageRangeEnd: data['ageRangeEnd'] as int? ?? 100,
       showPingAnimation: data['showPingAnimation'] as bool? ?? true,
-      partnerPoliticalMin: data['partnerPoliticalMin'] as int?,
-      partnerPoliticalMax: data['partnerPoliticalMax'] as int?,
-      partnerIntrovertMin: data['partnerIntrovertMin'] as int?,
-      partnerIntrovertMax: data['partnerIntrovertMax'] as int?,
       isGenderBasedColor: data['isGenderBasedColor'] as bool? ?? false,
       school: data['school'] as String?,
       company: data['company'] as String?,
@@ -448,7 +432,6 @@ class AuthUser {
     int? introvertScale,
     int? selfIntrovertMin,
     int? selfIntrovertMax,
-    Object? partnerIntrovertPreference = _unset,
     Object? exerciseHabit = _unset,
     Object? sleepSchedule = _unset,
     Object? petPreference = _unset,
@@ -486,10 +469,6 @@ class AuthUser {
     int? ageRangeStart,
     int? ageRangeEnd,
     bool? showPingAnimation,
-    int? partnerPoliticalMin,
-    int? partnerPoliticalMax,
-    int? partnerIntrovertMin,
-    int? partnerIntrovertMax,
     bool? isGenderBasedColor,
     String? school,
     String? company,
@@ -527,9 +506,6 @@ class AuthUser {
       introvertScale: introvertScale ?? this.introvertScale,
       selfIntrovertMin: selfIntrovertMin ?? this.selfIntrovertMin,
       selfIntrovertMax: selfIntrovertMax ?? this.selfIntrovertMax,
-      partnerIntrovertPreference: identical(partnerIntrovertPreference, _unset)
-          ? this.partnerIntrovertPreference
-          : partnerIntrovertPreference as String?,
       exerciseHabit: identical(exerciseHabit, _unset)
           ? this.exerciseHabit
           : exerciseHabit as String?,
@@ -597,10 +573,6 @@ class AuthUser {
       ageRangeStart: ageRangeStart ?? this.ageRangeStart,
       ageRangeEnd: ageRangeEnd ?? this.ageRangeEnd,
       showPingAnimation: showPingAnimation ?? this.showPingAnimation,
-      partnerPoliticalMin: partnerPoliticalMin ?? this.partnerPoliticalMin,
-      partnerPoliticalMax: partnerPoliticalMax ?? this.partnerPoliticalMax,
-      partnerIntrovertMin: partnerIntrovertMin ?? this.partnerIntrovertMin,
-      partnerIntrovertMax: partnerIntrovertMax ?? this.partnerIntrovertMax,
       isGenderBasedColor: isGenderBasedColor ?? this.isGenderBasedColor,
       school: school ?? this.school,
       company: company ?? this.company,
@@ -739,7 +711,7 @@ final profileStatusProvider = StreamProvider.autoDispose<ProfileStatus>((ref) {
     final isOnboarded = data['isOnboarded'] as bool? ?? false;
     return ProfileStatus.ready(isOnboarded: isOnboarded);
   }).handleError((Object e) {
-    debugPrint('[PROFILE] Firestore snapshot error: $e');
+    if (kDebugMode) debugPrint('[PROFILE] Firestore snapshot error: $e');
     // On error fail-safe to notFound so router sends user to /onboarding
     // rather than showing the Home screen with a broken profile.
     return const ProfileStatus.notFound();
@@ -774,8 +746,9 @@ final authInitializedProvider = FutureProvider<bool>((ref) async {
         .timeout(const Duration(seconds: 5));
     return user != null;
   } on TimeoutException {
-    debugPrint('[AUTH] authStateChanges() timed out after 5 s — '
-        'forcing no-session state. Check SHA-1 / google-services.json.');
+    if (kDebugMode)
+      debugPrint('[AUTH] authStateChanges() timed out after 5 s — '
+          'forcing no-session state. Check SHA-1 / google-services.json.');
     return false;
   }
 });
@@ -812,7 +785,7 @@ class AuthRepository {
             SetOptions(merge: true),
           );
     } catch (e) {
-      debugPrint("[AUTH] Failed to update draft for $uid: $e");
+      if (kDebugMode) debugPrint("[AUTH] Failed to update draft for $uid: $e");
     }
   }
 
@@ -844,7 +817,7 @@ class AuthRepository {
           await _auth.signInWithCredential(credential);
       return _fetchUser(userCredential.user!);
     } catch (e) {
-      debugPrint("[Google Sign-In] Error: $e");
+      if (kDebugMode) debugPrint("[Google Sign-In] Error: $e");
       rethrow;
     }
   }
@@ -892,7 +865,7 @@ class AuthRepository {
 
       return _fetchUser(firebaseUser);
     } catch (e) {
-      debugPrint("[Apple Sign-In] Error: $e");
+      if (kDebugMode) debugPrint("[Apple Sign-In] Error: $e");
       rethrow;
     }
   }
@@ -929,7 +902,8 @@ class AuthRepository {
         SetOptions(merge: true),
       );
     } catch (e) {
-      debugPrint("[AUTH] Failed to create initial user doc for $uid: $e");
+      if (kDebugMode)
+        debugPrint("[AUTH] Failed to create initial user doc for $uid: $e");
       // Don't fail the signup — the trigger may still create it
     }
 
@@ -943,8 +917,9 @@ class AuthRepository {
     try {
       await cred.user!.sendEmailVerification();
     } catch (e) {
-      debugPrint(
-          "[AUTH] sendEmailVerification failed for $uid (non-fatal): $e");
+      if (kDebugMode)
+        debugPrint(
+            "[AUTH] sendEmailVerification failed for $uid (non-fatal): $e");
     }
 
     return AuthUser(
@@ -959,6 +934,8 @@ class AuthRepository {
   Future<AuthUser> _fetchUser(User firebaseUser) async {
     final doc = await _users.doc(firebaseUser.uid).get();
     final wavesThisMonth = await _fetchMonthlyWaveCount(firebaseUser.uid);
+    final prefs = await SharedPreferences.getInstance();
+    final currentLang = prefs.getString('appLanguage') ?? 'en';
     if (doc.exists && doc.data() != null) {
       final data = doc.data()!;
       // isOnboarded is the authoritative source of truth — read it directly.
@@ -972,6 +949,7 @@ class AuthRepository {
         data,
         emailVerified: firebaseUser.emailVerified,
         wavesThisMonth: wavesThisMonth,
+        currentLang: currentLang,
       );
     }
     // User doc not yet created by Cloud Function — return minimal stub.
@@ -982,6 +960,7 @@ class AuthRepository {
       isOnboarded: false,
       isEmailVerified: firebaseUser.emailVerified,
       wavesThisMonth: wavesThisMonth,
+      appLanguage: currentLang,
     );
   }
 
@@ -992,7 +971,8 @@ class AuthRepository {
       final value = doc.data()?[field];
       return value is int ? value : 0;
     } catch (e) {
-      debugPrint('[AUTH] Failed to fetch monthly wave count for $uid: $e');
+      if (kDebugMode)
+        debugPrint('[AUTH] Failed to fetch monthly wave count for $uid: $e');
       return 0;
     }
   }
@@ -1015,7 +995,8 @@ class AuthRepository {
         .doc(user.id)
         .set(payload, SetOptions(merge: true))
         .catchError((e) {
-      debugPrint('[AUTH] markOnboardedDirectly failed for ${user.id}: $e');
+      if (kDebugMode)
+        debugPrint('[AUTH] markOnboardedDirectly failed for ${user.id}: $e');
     });
   }
 
@@ -1035,6 +1016,7 @@ class AuthRepository {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('local_safe_zones');
+    await NotificationService.dispose();
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
@@ -1068,8 +1050,9 @@ class AuthRepository {
         return await _fetchUser(firebaseUser)
             .timeout(const Duration(seconds: 6));
       } catch (e) {
-        debugPrint(
-            '[AUTH] _fetchUser failed ($e) — emitting minimal stub so router unblocks');
+        if (kDebugMode)
+          debugPrint(
+              '[AUTH] _fetchUser failed ($e) — emitting minimal stub so router unblocks');
         return AuthUser(
           id: firebaseUser.uid,
           email: firebaseUser.email,
@@ -1120,11 +1103,13 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
     // fall back to signed-out state so the router unblocks the splash.
     _repository.authStateChanges().listen(
       (user) {
-        debugPrint('[AUTH] authStateChanges emitted: ${user?.id ?? 'null'}');
+        if (kDebugMode)
+          debugPrint('[AUTH] authStateChanges emitted: ${user?.id ?? 'null'}');
         state = user;
       },
       onError: (Object e, StackTrace st) {
-        debugPrint('[AUTH] authStateChanges stream error: $e — forcing null');
+        if (kDebugMode)
+          debugPrint('[AUTH] authStateChanges stream error: $e — forcing null');
         state = null;
       },
     );
@@ -1158,7 +1143,9 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
     try {
       await _repository.updateProfile(user);
     } catch (e) {
-      debugPrint('[AUTH] updateProfile API error (state already applied): $e');
+      if (kDebugMode)
+        debugPrint(
+            '[AUTH] updateProfile API error (state already applied): $e');
       // Keep optimistic state — next cold start will reconcile from Firestore.
     }
   }
@@ -1170,15 +1157,18 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
       // Network/SSL errors get a Firestore fallback — they're transient and
       // don't indicate data corruption, so blocking registration is wrong.
       if (e.code == 'unavailable' || kDebugMode) {
-        debugPrint(
-            '[AUTH] completeOnboarding fallback (${e.code}): ${e.message}');
+        if (kDebugMode)
+          debugPrint(
+              '[AUTH] completeOnboarding fallback (${e.code}): ${e.message}');
         await _repository.markOnboardedDirectly(user);
       } else {
         rethrow;
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[DEV] completeOnboarding unexpected error (bypassed): $e');
+        if (kDebugMode)
+          debugPrint(
+              '[DEV] completeOnboarding unexpected error (bypassed): $e');
         await _repository.markOnboardedDirectly(user);
       } else {
         rethrow;

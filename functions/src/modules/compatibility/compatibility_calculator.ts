@@ -11,7 +11,7 @@
 
 export interface UserCompatibilityData {
   uid: string;
-  hobbies: Array<{ name: string; category: string }>;
+  hobbies: string[];
   introvertScale?: number;         // 0–100
   nicotineUse?: string[];          // [] = nekadilec
   nicotineFilter?: string;         // 'any' | 'none_only' | 'no_preference'
@@ -21,6 +21,8 @@ export interface UserCompatibilityData {
   sleepSchedule?: string;
   religion?: string;
   religionPreference?: string;     // 'any' | 'same_only'
+  ethnicity?: string;
+  ethnicityPreference?: string;
   lookingFor?: string[];
   isPremium?: boolean;
 }
@@ -86,9 +88,7 @@ function passesHardFilters(
   if (a.partnerDrinkingHabit === 'none_only' && b.drinkingHabit !== 'none') return false;
   if (b.partnerDrinkingHabit === 'none_only' && a.drinkingHabit !== 'none') return false;
 
-  // Religion
-  if (a.religionPreference === 'same_only' && a.religion !== b.religion) return false;
-  if (b.religionPreference === 'same_only' && b.religion !== a.religion) return false;
+
 
   // Looking for — vsaj en skupen cilj
   if (a.lookingFor?.length && b.lookingFor?.length) {
@@ -120,8 +120,8 @@ function calculateHobbyScore(
   const maxScore = 85;
 
   // Exact matches — primerjaj po imenu
-  const aNames = new Set(aHobbies.map(h => h.name));
-  const bNames = new Set(bHobbies.map(h => h.name));
+  const aNames = new Set(aHobbies);
+  const bNames = new Set(bHobbies);
   let exactCount = 0;
   for (const name of aNames) {
     if (bNames.has(name)) exactCount++;
@@ -132,11 +132,11 @@ function calculateHobbyScore(
   const aCats: Record<string, number> = {};
   const bCats: Record<string, number> = {};
   aHobbies.forEach(h => {
-    const c = CATEGORY_MAP[h.name] ?? h.category;
+    const c = CATEGORY_MAP[h];
     if (c) aCats[c] = (aCats[c] ?? 0) + 1;
   });
   bHobbies.forEach(h => {
-    const c = CATEGORY_MAP[h.name] ?? h.category;
+    const c = CATEGORY_MAP[h];
     if (c) bCats[c] = (bCats[c] ?? 0) + 1;
   });
 
@@ -191,6 +191,18 @@ function calculateLifestyleScore(
   if (a.sleepSchedule && b.sleepSchedule) {
     total++;
     if (a.sleepSchedule === b.sleepSchedule) matches++;
+  }
+
+  // Religion
+  if (a.religion && b.religion) {
+    total++;
+    if (a.religion === b.religion) matches++;
+  }
+
+  // Ethnicity
+  if (a.ethnicity && b.ethnicity) {
+    total++;
+    if (a.ethnicity === b.ethnicity) matches++;
   }
 
   return total === 0 ? 0.5 : matches / total;

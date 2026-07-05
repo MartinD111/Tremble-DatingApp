@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,6 +12,7 @@ import '../../../shared/ui/tremble_loading_spinner.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
 import '../../../core/api_client.dart';
+import '../../../shared/ui/tremble_alert_dialog.dart';
 import '../../../core/theme_provider.dart';
 import 'settings_controller.dart';
 import 'widgets/phone_edit_modal.dart';
@@ -114,39 +116,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   String _t(String key) {
     final user = ref.read(authStateProvider);
     return t(key, user?.appLanguage ?? 'en');
-  }
-
-  /// Maps political scale value 1–5 to a readable label.
-  String _politicalLabel(double v) {
-    switch (v.round()) {
-      case 1:
-        return _t('politics_left');
-      case 2:
-        return _t('politics_center_left');
-      case 3:
-        return _t('politics_center');
-      case 4:
-        return _t('politics_center_right');
-      case 5:
-        return _t('politics_right');
-      default:
-        return v.round().toString();
-    }
-  }
-
-  /// Formats the political range display label.
-  String _politicalRangeLabel(int? min, int? max) {
-    if (min == null || max == null)
-      return _t('politics_left') + ' – ' + _t('politics_right');
-    if (min == max) return _politicalLabel(min.toDouble());
-    return '${_politicalLabel(min.toDouble())} – ${_politicalLabel(max.toDouble())}';
-  }
-
-  /// Formats the introvert/extrovert range display label.
-  String _introvertRangeLabel(int? min, int? max) {
-    final lo = min ?? 0;
-    final hi = max ?? 100;
-    return '$lo% – $hi%';
   }
 
   SettingsController get _ctrl => ref.read(settingsControllerProvider);
@@ -417,7 +386,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             final checkBorderColor = confirmed
                 ? Colors.redAccent
                 : (isDark ? Colors.white38 : Colors.black26);
-            return AlertDialog(
+            return TrembleAlertDialog(
               backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
@@ -473,49 +442,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 ],
               ),
               actions: [
-                TextButton(
-                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                TrembleDialogAction(
+                  onPressed: () {
+                    if (!isLoading) Navigator.pop(context);
+                  },
                   child: Text('Cancel',
                       style: TextStyle(
                           color: isDark ? Colors.white54 : Colors.black45)),
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: (!confirmed || isLoading)
-                      ? null
-                      : () async {
-                          setDialogState(() => isLoading = true);
-                          try {
-                            await TrembleApiClient()
-                                .call('deleteUserAccount')
-                                .timeout(const Duration(seconds: 15));
-                            if (context.mounted) {
-                              Navigator.pop(context);
-                              // Force logout and back to login
-                              await ref
-                                  .read(authStateProvider.notifier)
-                                  .logout();
-                              if (context.mounted) {
-                                context.go('/login');
-                              }
-                            }
-                          } catch (e) {
-                            setDialogState(() => isLoading = false);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Računa ni bilo mogoče izbrisati. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        },
+                TrembleDialogAction(
+                  isDestructive: true,
+                  onPressed: () async {
+                    if (!confirmed || isLoading) return;
+                    setDialogState(() => isLoading = true);
+                    try {
+                      await TrembleApiClient()
+                          .call('deleteUserAccount')
+                          .timeout(const Duration(seconds: 15));
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        // Force logout and back to login
+                        await ref.read(authStateProvider.notifier).logout();
+                        if (context.mounted) {
+                          context.go('/login');
+                        }
+                      }
+                    } catch (e) {
+                      setDialogState(() => isLoading = false);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Računa ni bilo mogoče izbrisati. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  },
                   child: isLoading
                       ? const SizedBox(
                           width: 18,
@@ -575,9 +539,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       itemBuilder: (context, index) {
                         final url = user.photoUrls[index];
                         return url.startsWith('http')
-                            ? Image.network(url,
+                            ? CachedNetworkImage(
+                                imageUrl: url,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
+                                errorWidget: (_, __, ___) =>
                                     Container(color: Colors.grey[900]))
                             : Image.file(File(url),
                                 fit: BoxFit.cover,
@@ -1094,69 +1059,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
         ),
         const SizedBox(height: 16),
-
-        PreferenceRangeSlider(
-          icon: LucideIcons.landmark,
-          label: _t('political_affiliation'),
-          valueLabel: _politicalRangeLabel(
-              user.partnerPoliticalMin, user.partnerPoliticalMax),
-          min: 1,
-          max: 5,
-          divisions: 4,
-          start: (user.partnerPoliticalMin ?? 1).toDouble(),
-          end: (user.partnerPoliticalMax ?? 5).toDouble(),
-          startLabel: _t('politics_left'),
-          endLabel: _t('politics_right'),
-          labelMapper: _politicalLabel,
-          onEdit: () => _ctrl.openSliderEditModal(
-            context: context,
-            title: _t('political_affiliation'),
-            min: 1,
-            max: 5,
-            divisions: 4,
-            current: RangeValues(
-              (user.partnerPoliticalMin ?? 1).toDouble(),
-              (user.partnerPoliticalMax ?? 5).toDouble(),
-            ),
-            startLabel: _t('politics_left'),
-            endLabel: _t('politics_right'),
-            labelMapper: _politicalLabel,
-            onUpdate: _ctrl.updatePartnerPoliticalRange,
-            rowIcon: LucideIcons.landmark,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        PreferenceRangeSlider(
-          icon: LucideIcons.smile,
-          label: _t('introvert_extrovert'),
-          valueLabel: _introvertRangeLabel(
-              user.partnerIntrovertMin, user.partnerIntrovertMax),
-          min: 0,
-          max: 100,
-          divisions: 10,
-          start: (user.partnerIntrovertMin ?? 0).toDouble(),
-          end: (user.partnerIntrovertMax ?? 100).toDouble(),
-          startLabel: _t('full_introvert'),
-          endLabel: _t('full_extrovert'),
-          labelMapper: (v) => '${v.round()}%',
-          onEdit: () => _ctrl.openSliderEditModal(
-            context: context,
-            title: _t('introvert_extrovert'),
-            min: 0,
-            max: 100,
-            divisions: 10,
-            current: RangeValues(
-              (user.partnerIntrovertMin ?? 0).toDouble(),
-              (user.partnerIntrovertMax ?? 100).toDouble(),
-            ),
-            startLabel: _t('full_introvert'),
-            endLabel: _t('full_extrovert'),
-            labelMapper: (v) => '${v.round()}%',
-            onUpdate: _ctrl.updatePartnerIntrovertRange,
-            rowIcon: LucideIcons.smile,
-          ),
-        ),
 
         Divider(
             color:

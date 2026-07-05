@@ -322,6 +322,7 @@ export const onWaveCreated = onDocumentCreated(
                         apns: {
                             payload: {
                                 aps: {
+                                    contentAvailable: true,
                                     sound: "default",
                                     "mutable-content": 1,
                                 },
@@ -349,6 +350,7 @@ export const onWaveCreated = onDocumentCreated(
                         apns: {
                             payload: {
                                 aps: {
+                                    contentAvailable: true,
                                     sound: "default",
                                     "mutable-content": 1,
                                 },

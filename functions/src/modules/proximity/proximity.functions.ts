@@ -238,7 +238,7 @@ export const findNearby = onCall(
                 const theirMaxAge = candidateData.ageRangeEnd ?? 100;
 
                 const theirNicotineUse: string[] = candidateData.nicotineUse ?? [];
-                const theirNicotineFilter: string = candidateData.nicotineFilter ?? "any";
+                const theirNicotineFilter: string = candidateData.isPremium ? (candidateData.nicotineFilter ?? "any") : "any";
                 if (!nicotineCompatible(myNicotineUse, myNicotineFilter, theirNicotineUse, theirNicotineFilter)) {
                     continue;
                 }
@@ -269,6 +269,8 @@ export const findNearby = onCall(
                             sleepSchedule: requesterData.sleepSchedule,
                             religion: requesterData.religion,
                             religionPreference: requesterData.religionPreference,
+                            ethnicity: requesterData.ethnicity,
+                            ethnicityPreference: requesterData.ethnicityPreference,
                             lookingFor: requesterData.lookingFor ?? [],
                             isPremium: requesterData.isPremium ?? false,
                         },
@@ -284,6 +286,8 @@ export const findNearby = onCall(
                             sleepSchedule: candidateData.sleepSchedule,
                             religion: candidateData.religion,
                             religionPreference: candidateData.religionPreference,
+                            ethnicity: candidateData.ethnicity,
+                            ethnicityPreference: candidateData.ethnicityPreference,
                             lookingFor: candidateData.lookingFor ?? [],
                             isPremium: candidateData.isPremium ?? false,
                         }
@@ -419,7 +423,7 @@ export const getProximityMatchCandidates = onCall(
                 if (candidateData.flaggedForReview === true) continue;
 
                 const theirNicotineUse: string[] = candidateData.nicotineUse ?? [];
-                const theirNicotineFilter: string = candidateData.nicotineFilter ?? "any";
+                const theirNicotineFilter: string = candidateData.isPremium ? (candidateData.nicotineFilter ?? "any") : "any";
                 if (!nicotineCompatible(myNicotineUse, myNicotineFilter, theirNicotineUse, theirNicotineFilter)) {
                     continue;
                 }
@@ -592,12 +596,10 @@ export const scanProximityPairs = onSchedule(
                             continue;
                         }
 
-                        const bothPremium = safeA.isPremium === true && safeB.isPremium === true;
-                        if (bothPremium) {
-                            const aNicotineUse: string[] = safeA.nicotineUse ?? [];
-                            const aNicotineFilter: string = safeA.nicotineFilter ?? "any";
-                            const bNicotineUse: string[] = safeB.nicotineUse ?? [];
-                            const bNicotineFilter: string = safeB.nicotineFilter ?? "any";
+                        const aNicotineUse: string[] = safeA.nicotineUse ?? [];
+                        const aNicotineFilter: string = safeA.isPremium ? (safeA.nicotineFilter ?? "any") : "any";
+                        const bNicotineUse: string[] = safeB.nicotineUse ?? [];
+                        const bNicotineFilter: string = safeB.isPremium ? (safeB.nicotineFilter ?? "any") : "any";
 
                             if (!nicotineCompatible(
                                 aNicotineUse,
@@ -608,7 +610,6 @@ export const scanProximityPairs = onSchedule(
                                 await redis.del(pairKey);
                                 continue;
                             }
-                        }
 
                         // Compatibility score — mirrors findNearby:259-304.
                         // EXPENSIVE: only runs after gender + age + nicotine gates pass.
@@ -625,6 +626,8 @@ export const scanProximityPairs = onSchedule(
                                 sleepSchedule: safeA.sleepSchedule,
                                 religion: safeA.religion,
                                 religionPreference: safeA.religionPreference,
+                                ethnicity: safeA.ethnicity,
+                                ethnicityPreference: safeA.ethnicityPreference,
                                 lookingFor: safeA.lookingFor ?? [],
                                 isPremium: safeA.isPremium ?? false,
                             },
@@ -640,6 +643,8 @@ export const scanProximityPairs = onSchedule(
                                 sleepSchedule: safeB.sleepSchedule,
                                 religion: safeB.religion,
                                 religionPreference: safeB.religionPreference,
+                                ethnicity: safeB.ethnicity,
+                                ethnicityPreference: safeB.ethnicityPreference,
                                 lookingFor: safeB.lookingFor ?? [],
                                 isPremium: safeB.isPremium ?? false,
                             },
@@ -948,7 +953,7 @@ export const onRunCrossUpdated = onDocumentUpdated(
                             path: "/radar",
                         },
                         apns: {
-                            payload: { aps: { sound: "default", "mutable-content": 1 } },
+                            payload: { aps: { contentAvailable: true, sound: "default", "mutable-content": 1 } },
                         },
                         android: { priority: "high" },
                     })
@@ -970,7 +975,7 @@ export const onRunCrossUpdated = onDocumentUpdated(
                             path: "/radar",
                         },
                         apns: {
-                            payload: { aps: { sound: "default", "mutable-content": 1 } },
+                            payload: { aps: { contentAvailable: true, sound: "default", "mutable-content": 1 } },
                         },
                         android: { priority: "high" },
                     })

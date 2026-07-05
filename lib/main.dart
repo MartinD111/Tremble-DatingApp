@@ -61,9 +61,11 @@ Future<void> main() async {
   );
 
   await FirebaseAppCheck.instance.activate(
-    providerAndroid: flavor == 'prod'
-        ? AndroidPlayIntegrityProvider()
-        : AndroidDebugProvider(),
+    providerAndroid: flavor == 'dev'
+        ? const AndroidDebugProvider(
+            debugToken: String.fromEnvironment('APP_CHECK_DEBUG_TOKEN_ANDROID'),
+          )
+        : AndroidPlayIntegrityProvider(),
     // Dev: pin the registered Firebase console debug token so App Check
     // bypass works consistently. AppleDebugProvider() without debugToken
     // generates a random token each run — it never matches the console entry.

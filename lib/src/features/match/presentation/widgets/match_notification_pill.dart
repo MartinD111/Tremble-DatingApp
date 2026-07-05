@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -575,10 +576,10 @@ class _MatchNotificationPillState extends State<MatchNotificationPill>
                     ),
                   ),
                   child: ClipOval(
-                    child: Image.network(
-                      widget.imageUrl,
+                    child: CachedNetworkImage(
+                      imageUrl: widget.imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorWidget: (_, __, ___) => Container(
                         color: accent.withValues(alpha: 0.1),
                         child:
                             Icon(Icons.person_rounded, color: accent, size: 20),

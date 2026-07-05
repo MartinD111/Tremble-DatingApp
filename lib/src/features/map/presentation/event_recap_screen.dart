@@ -12,6 +12,7 @@ import '../../auth/data/auth_repository.dart';
 import '../../recap/data/viewed_recaps_repository.dart';
 import '../../safety/screen_protection_service.dart';
 import '../../../shared/ui/warmth_empty_state.dart';
+import 'package:flutter/foundation.dart';
 
 // (Countdown is managed as local state in _EventRecapScreenState — simpler
 //  and avoids provider initialisation ordering issues.)
@@ -88,7 +89,7 @@ class _EventRecapScreenState extends ConsumerState<EventRecapScreen> {
           )
           .catchError(
         (Object e, StackTrace st) {
-          debugPrint('viewedRecaps write failed: $e\n$st');
+          if (kDebugMode) debugPrint('viewedRecaps write failed: $e\n$st');
         },
       ),
     );

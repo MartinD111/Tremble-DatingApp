@@ -109,6 +109,16 @@ export const requestPulseIntercept = onCall(
               senderId: senderUid,
               interceptType: type,
             },
+            apns: {
+              payload: {
+                aps: {
+                  contentAvailable: true,
+                  sound: "default",
+                  "mutable-content": 1,
+                },
+              },
+            },
+            android: { priority: "high" },
           });
         } catch (e) {
           logger.error("Failed to send intercept notification", e);

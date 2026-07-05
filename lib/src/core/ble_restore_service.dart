@@ -37,10 +37,11 @@ class BleRestoreService {
     _eventSub = channel.receiveBroadcastStream().listen(
       _onNativeEvent,
       onError: (Object error) {
-        debugPrint('[BleRestore] EventChannel error: $error');
+        if (kDebugMode) debugPrint('[BleRestore] EventChannel error: $error');
       },
     );
-    debugPrint('[BleRestore] Initialized — listening for restore events');
+    if (kDebugMode)
+      debugPrint('[BleRestore] Initialized — listening for restore events');
   }
 
   void dispose() {
@@ -56,20 +57,23 @@ class BleRestoreService {
     final uuid = event['uuid'] as String?;
     if (rssi == null || uuid == null) return;
 
-    debugPrint('[BleRestore] Received restore event: uuid=$uuid rssi=$rssi');
+    if (kDebugMode)
+      debugPrint('[BleRestore] Received restore event: uuid=$uuid rssi=$rssi');
 
     // Attempt to get the authenticated user, retrying if Auth hasn't rehydrated
     String? uid;
     for (int attempt = 0; attempt < _maxAuthRetries; attempt++) {
       uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) break;
-      debugPrint(
-          '[BleRestore] Auth not ready, retry ${attempt + 1}/$_maxAuthRetries');
+      if (kDebugMode)
+        debugPrint(
+            '[BleRestore] Auth not ready, retry ${attempt + 1}/$_maxAuthRetries');
       await Future<void>.delayed(_authRetryDelay);
     }
 
     if (uid == null) {
-      debugPrint('[BleRestore] Auth not available after retries — skipping');
+      if (kDebugMode)
+        debugPrint('[BleRestore] Auth not available after retries — skipping');
       return;
     }
 
@@ -80,7 +84,8 @@ class BleRestoreService {
           .get();
       final geohash = proximityDoc.data()?['geohash'] as String?;
       if (geohash == null || geohash.isEmpty) {
-        debugPrint('[BleRestore] No geohash for $uid — skipping');
+        if (kDebugMode)
+          debugPrint('[BleRestore] No geohash for $uid — skipping');
         return;
       }
 
@@ -93,9 +98,10 @@ class BleRestoreService {
           DateTime.now().add(const Duration(minutes: 10)),
         ),
       });
-      debugPrint('[BleRestore] Proximity event written for $uid');
+      if (kDebugMode)
+        debugPrint('[BleRestore] Proximity event written for $uid');
     } catch (e, st) {
-      debugPrint('[BleRestore] Proximity write failed: $e');
+      if (kDebugMode) debugPrint('[BleRestore] Proximity write failed: $e');
       FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
     }
   }

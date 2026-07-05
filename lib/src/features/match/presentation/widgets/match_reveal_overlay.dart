@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -335,10 +336,10 @@ class _MatchRevealOverlayState extends State<MatchRevealOverlay>
               ),
               child: ClipOval(
                 child: hasPhoto
-                    ? Image.network(
-                        widget.matchImageUrl!,
+                    ? CachedNetworkImage(
+                        imageUrl: widget.matchImageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _buildPhotoFallback(),
+                        errorWidget: (_, __, ___) => _buildPhotoFallback(),
                       )
                     : _buildPhotoFallback(),
               ),

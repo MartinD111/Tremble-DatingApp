@@ -80,8 +80,9 @@ class BleService {
     if (!_isRunning) return;
     await _stopAdvertising();
     await _startAdvertising();
-    debugPrint(
-        '[BleService] Advertising mode updated (RunClub state refreshed)');
+    if (kDebugMode)
+      debugPrint(
+          '[BleService] Advertising mode updated (RunClub state refreshed)');
   }
 
   /// Enables or disables high-frequency scanning during a search session.
@@ -106,13 +107,13 @@ class BleService {
 
     if (await _peripheral.isSupported) {
       await _peripheral.start(advertiseData: advertiseData);
-      debugPrint('[BleService] Advertising started');
+      if (kDebugMode) debugPrint('[BleService] Advertising started');
     }
   }
 
   Future<void> _stopAdvertising() async {
     await _peripheral.stop();
-    debugPrint('[BleService] Advertising stopped');
+    if (kDebugMode) debugPrint('[BleService] Advertising stopped');
   }
 
   // ─── BLE Scanning ─────────────────────────────────────
@@ -168,7 +169,7 @@ class BleService {
         }
       });
     } catch (e) {
-      debugPrint('[BleService] scan error: $e');
+      if (kDebugMode) debugPrint('[BleService] scan error: $e');
     }
   }
 
@@ -193,7 +194,7 @@ class BleService {
         ),
       });
     } catch (e, st) {
-      debugPrint('[BLE] proximity write failed: $e');
+      if (kDebugMode) debugPrint('[BLE] proximity write failed: $e');
       // Non-fatal — radar continues operating
       FirebaseCrashlytics.instance.recordError(e, st, fatal: false);
     }

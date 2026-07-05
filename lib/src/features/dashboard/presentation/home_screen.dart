@@ -545,108 +545,128 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ? 30
         : 30 + MediaQuery.viewPaddingOf(context).bottom;
 
-    return Stack(
-      key: HomeScreen.homeStackKey,
-      fit: StackFit.expand,
-      children: [
-        // Content with Liquid Transition
-        Positioned.fill(
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            // Map tab (index 1) owns its own horizontal pan gestures, so we
-            // let it consume them instead of swapping tabs. Free users now
-            // also land on the map at this index.
-            onHorizontalDragEnd: (safeNavIndex == 1)
-                ? null
-                : (details) {
-                    final velocity = details.primaryVelocity ?? 0;
-                    if (velocity < -300) {
-                      final next =
-                          (safeNavIndex + 1).clamp(0, screens.length - 1);
-                      if (next != safeNavIndex) {
-                        HapticFeedback.selectionClick();
-                        ref.read(navIndexProvider.notifier).state = next;
-                      }
-                    } else if (velocity > 300) {
-                      final prev =
-                          (safeNavIndex - 1).clamp(0, screens.length - 1);
-                      if (prev != safeNavIndex) {
-                        HapticFeedback.selectionClick();
-                        ref.read(navIndexProvider.notifier).state = prev;
-                      }
-                    }
-                  },
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                if (!hideNavBarPref) {
-                  // If preference is off, make sure nav bar is visible
-                  if (!ref.read(isNavBarVisibleProvider)) {
-                    ref.read(isNavBarVisibleProvider.notifier).state = true;
-                  }
-                  return false;
-                }
+    final bool canPop = navIndex == 0 && isNavBarVisible;
 
-                if (notification is ScrollUpdateNotification) {
-                  if (notification.scrollDelta != null) {
-                    if (notification.scrollDelta! > 5 && isNavBarVisible) {
-                      ref.read(isNavBarVisibleProvider.notifier).state = false;
-                    } else if (notification.scrollDelta! < -5 &&
-                        !isNavBarVisible) {
-                      ref.read(isNavBarVisibleProvider.notifier).state = true;
+    return PopScope(
+        canPop: canPop,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+
+          if (!isNavBarVisible) {
+            ref.read(isNavBarVisibleProvider.notifier).state = true;
+            return;
+          }
+
+          if (navIndex != 0) {
+            ref.read(navIndexProvider.notifier).state = 0;
+            return;
+          }
+        },
+        child: Stack(
+          key: HomeScreen.homeStackKey,
+          fit: StackFit.expand,
+          children: [
+            // Content with Liquid Transition
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                // Map tab (index 1) owns its own horizontal pan gestures, so we
+                // let it consume them instead of swapping tabs. Free users now
+                // also land on the map at this index.
+                onHorizontalDragEnd: (safeNavIndex == 1)
+                    ? null
+                    : (details) {
+                        final velocity = details.primaryVelocity ?? 0;
+                        if (velocity < -300) {
+                          final next =
+                              (safeNavIndex + 1).clamp(0, screens.length - 1);
+                          if (next != safeNavIndex) {
+                            HapticFeedback.selectionClick();
+                            ref.read(navIndexProvider.notifier).state = next;
+                          }
+                        } else if (velocity > 300) {
+                          final prev =
+                              (safeNavIndex - 1).clamp(0, screens.length - 1);
+                          if (prev != safeNavIndex) {
+                            HapticFeedback.selectionClick();
+                            ref.read(navIndexProvider.notifier).state = prev;
+                          }
+                        }
+                      },
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (!hideNavBarPref) {
+                      // If preference is off, make sure nav bar is visible
+                      if (!ref.read(isNavBarVisibleProvider)) {
+                        ref.read(isNavBarVisibleProvider.notifier).state = true;
+                      }
+                      return false;
                     }
-                  }
-                }
-                return false;
-              },
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: child,
-                  );
-                },
-                child: KeyedSubtree(
-                  key: ValueKey<int>(safeNavIndex),
-                  // On the unfolded Fold inner screen, keep the phone-tuned
-                  // layout centered within a max width instead of stretching
-                  // edge to edge. No effect on standard / compact surfaces.
-                  child: isExpanded
-                      ? Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: kExpandedContentMaxWidth,
-                            ),
-                            child: screens[safeNavIndex],
-                          ),
-                        )
-                      : screens[safeNavIndex],
+
+                    if (notification is ScrollUpdateNotification) {
+                      if (notification.scrollDelta != null) {
+                        if (notification.scrollDelta! > 5 && isNavBarVisible) {
+                          ref.read(isNavBarVisibleProvider.notifier).state =
+                              false;
+                        } else if (notification.scrollDelta! < -5 &&
+                            !isNavBarVisible) {
+                          ref.read(isNavBarVisibleProvider.notifier).state =
+                              true;
+                        }
+                      }
+                    }
+                    return false;
+                  },
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder:
+                        (Widget child, Animation<double> animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      );
+                    },
+                    child: KeyedSubtree(
+                      key: ValueKey<int>(safeNavIndex),
+                      // On the unfolded Fold inner screen, keep the phone-tuned
+                      // layout centered within a max width instead of stretching
+                      // edge to edge. No effect on standard / compact surfaces.
+                      child: isExpanded
+                          ? Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: kExpandedContentMaxWidth,
+                                ),
+                                child: screens[safeNavIndex],
+                              ),
+                            )
+                          : screens[safeNavIndex],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
 
-        // Floating Liquid Navigation Bar
-        _BottomNavBar(
-          navItems: navItems,
-          screensLength: screens.length,
-          isCompact: isCompact,
-          navBottomGap: navBottomGap,
-          onTutorialNavTap: _handleTutorialNavTap,
-        ),
+            // Floating Liquid Navigation Bar
+            _BottomNavBar(
+              navItems: navItems,
+              screensLength: screens.length,
+              isCompact: isCompact,
+              navBottomGap: navBottomGap,
+              onTutorialNavTap: _handleTutorialNavTap,
+            ),
 
-        // ── Global Match Notification Pill ───────────────────────────────
-        // Rendered above all tabs (Radar / Map / People / Settings) AND above
-        // the LiquidNavBar so a wave is impossible to miss regardless of which
-        // tab the user is on. Driven by DevSimulationController; in production
-        // the same hook will be fed by the BLE wave controller.
-        const _MatchNotificationPillOverlay(),
+            // ── Global Match Notification Pill ───────────────────────────────
+            // Rendered above all tabs (Radar / Map / People / Settings) AND above
+            // the LiquidNavBar so a wave is impossible to miss regardless of which
+            // tab the user is on. Driven by DevSimulationController; in production
+            // the same hook will be fed by the BLE wave controller.
+            const _MatchNotificationPillOverlay(),
 
-        // ── Global Live Run / Near-Miss Overlay + Gym Dwell + Tutorial ──
-        _OverlayStack(lang: lang),
-      ],
-    );
+            // ── Global Live Run / Near-Miss Overlay + Gym Dwell + Tutorial ──
+            _OverlayStack(lang: lang),
+          ],
+        ));
   }
 
   Future<void> _showDeactivateModeDialog({
@@ -1032,8 +1052,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
                             if (newState) {
                               if (kDebugMode) {
-                                debugPrint(
-                                    '[Radar] location captured by GeoService');
+                                if (kDebugMode)
+                                  debugPrint(
+                                      '[Radar] location captured by GeoService');
                               }
                               // Android 13+: POST_NOTIFICATIONS is a runtime grant.
                               // Without this the foreground service notification
@@ -1890,7 +1911,7 @@ Future<void> showEventActivationFlow(
           const LocationSettings(accuracy: LocationAccuracy.medium),
     ).timeout(const Duration(seconds: 5));
   } catch (e, st) {
-    debugPrint('[HomeScreen] caught: $e\n$st');
+    if (kDebugMode) debugPrint('[HomeScreen] caught: $e\n$st');
   }
 
   if (position != null) {
@@ -2346,36 +2367,39 @@ class _BottomNavBar extends ConsumerWidget {
           : -100,
       left: 0,
       right: 0,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onHorizontalDragEnd: handleSwipe,
-        child: isCompact
-            ? CompactNavBar(
-                currentIndex: safeNavIndex,
-                items: navItems,
-                pulsingIndexes: pulsing,
-                onTap: handleTap,
-              )
-            : LiquidNavBar(
-                currentIndex: safeNavIndex,
-                items: navItems,
-                pulsingIndexes: pulsing,
-                onTap: handleTap,
-                itemWrapper: (index, child) {
-                  // Fixed indices for both tiers:
-                  // Map (1) -> Step 2, People (2) -> Step 3, Settings (3) -> Step 4.
-                  final int? step = switch (index) {
-                    1 => 2,
-                    2 => 3,
-                    3 => 4,
-                    _ => null,
-                  };
-                  if (step != null) {
-                    return _TutorialTarget(step: step, child: child);
-                  }
-                  return child;
-                },
-              ),
+      child: IgnorePointer(
+        ignoring: !isNavBarVisible,
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onHorizontalDragEnd: handleSwipe,
+          child: isCompact
+              ? CompactNavBar(
+                  currentIndex: safeNavIndex,
+                  items: navItems,
+                  pulsingIndexes: pulsing,
+                  onTap: handleTap,
+                )
+              : LiquidNavBar(
+                  currentIndex: safeNavIndex,
+                  items: navItems,
+                  pulsingIndexes: pulsing,
+                  onTap: handleTap,
+                  itemWrapper: (index, child) {
+                    // Fixed indices for both tiers:
+                    // Map (1) -> Step 2, People (2) -> Step 3, Settings (3) -> Step 4.
+                    final int? step = switch (index) {
+                      1 => 2,
+                      2 => 3,
+                      3 => 4,
+                      _ => null,
+                    };
+                    if (step != null) {
+                      return _TutorialTarget(step: step, child: child);
+                    }
+                    return child;
+                  },
+                ),
+        ),
       ),
     );
   }

@@ -55,9 +55,9 @@ class GeoService {
   /// Used as a coarse GPS pre-filter; BLE RSSI confirms final proximity.
   static const int _geohashPrecision = 7;
 
-  /// Proximity docs auto-expire after 30 min without refresh.
+  /// Proximity docs auto-expire after 24h without refresh.
   /// Prevents stale location data persisting after the user closes the app.
-  static const Duration _geoTtl = Duration(minutes: 30);
+  static const Duration _geoTtl = Duration(hours: 24);
 
   /// Start uploading location data.
   /// MUST only be called after the user has explicitly consented via
@@ -256,7 +256,7 @@ class GeoService {
       // start/update time so RevenueCat-only premium users are treated correctly.
       final radiusTier = _isPremium ? 'pro' : 'free';
 
-      // TTL: proximity doc auto-expires after 30 min without refresh.
+      // TTL: proximity doc auto-expires after 24h without refresh.
       // Prevents stale location data persisting after the user closes the app.
       final geoHashExpiresAt = Timestamp.fromDate(
         DateTime.now().add(_geoTtl),

@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/ui/tremble_alert_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -1162,9 +1164,10 @@ class _PhotosSection extends StatelessWidget {
                           width: 90,
                           height: 110,
                           child: url.startsWith('http')
-                              ? Image.network(url,
+                              ? CachedNetworkImage(
+                                  imageUrl: url,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
+                                  errorWidget: (_, __, ___) =>
                                       Container(color: Colors.grey[800]))
                               : Image.file(File(url),
                                   fit: BoxFit.cover,
@@ -1820,18 +1823,16 @@ class _IdentitySection extends StatelessWidget {
               onGenderChanged(value);
 
               if (value == 'non_binary') {
-                showDialog(
+                showPlatformDialog(
                   context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: Text(t('gender_nonbinary_popup_title', lang)),
-                    content: Text(t('gender_nonbinary_popup_body', lang)),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: Text(t('ok', lang)),
-                      ),
-                    ],
-                  ),
+                  title: Text(t('gender_nonbinary_popup_title', lang)),
+                  content: Text(t('gender_nonbinary_popup_body', lang)),
+                  actions: [
+                    TrembleDialogAction(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(t('ok', lang)),
+                    ),
+                  ],
                 );
               }
             },

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -333,7 +334,7 @@ class RevenueCatSubscriptionController
         status: RevenueCatSubscriptionStatus.disabled,
         isPremium: false,
         errorMessage:
-            'REVENUECAT_API_KEY is missing. Pass it with --dart-define.',
+            'REVENUECAT_APPLE_API_KEY or REVENUECAT_GOOGLE_API_KEY is missing. Pass it with --dart-define.',
       );
       return;
     }
@@ -374,7 +375,8 @@ class RevenueCatSubscriptionController
       _appUserId = appUserId;
       await refreshCustomerInfo();
     } catch (error) {
-      debugPrint('[REVENUECAT] Failed to sync app user id: $error');
+      if (kDebugMode)
+        debugPrint('[REVENUECAT] Failed to sync app user id: $error');
     }
   }
 
@@ -503,7 +505,12 @@ class RevenueCatSubscriptionController
 }
 
 final revenueCatApiKeyProvider = Provider<String>((ref) {
-  return const String.fromEnvironment('REVENUECAT_API_KEY');
+  if (Platform.isIOS || Platform.isMacOS) {
+    return const String.fromEnvironment('REVENUECAT_APPLE_API_KEY');
+  } else if (Platform.isAndroid) {
+    return const String.fromEnvironment('REVENUECAT_GOOGLE_API_KEY');
+  }
+  return '';
 });
 
 final revenueCatClientProvider = Provider<RevenueCatClient>((ref) {

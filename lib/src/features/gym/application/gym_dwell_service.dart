@@ -52,19 +52,27 @@ class GymDwellService {
         .toList();
 
     _channel.invokeMethod<void>('startMonitoring', payload).then(
-          (_) => debugPrint(
-              '[GymDwell] Native monitoring started (${gyms.length} gym(s))'),
-          onError: (Object e) =>
-              debugPrint('[GymDwell] startMonitoring error: $e'),
-        );
+      (_) {
+        if (kDebugMode) {
+          debugPrint(
+              '[GymDwell] Native monitoring started (${gyms.length} gym(s))');
+        }
+      },
+      onError: (Object e) {
+        if (kDebugMode) debugPrint('[GymDwell] startMonitoring error: $e');
+      },
+    );
   }
 
   void dispose() {
     _channel.invokeMethod<void>('stopMonitoring').then(
-          (_) => debugPrint('[GymDwell] Native monitoring stopped'),
-          onError: (Object e) =>
-              debugPrint('[GymDwell] stopMonitoring error: $e'),
-        );
+      (_) {
+        if (kDebugMode) debugPrint('[GymDwell] Native monitoring stopped');
+      },
+      onError: (Object e) {
+        if (kDebugMode) debugPrint('[GymDwell] stopMonitoring error: $e');
+      },
+    );
   }
 }
 
