@@ -141,9 +141,9 @@ describe("Proximity Module", () => {
         // Reusable mutual-match base: gender/age satisfy the cheap gates and hobbies
         // satisfy the 0.70 score threshold. Tests override specific fields.
         const passingHobbies = [
-            { name: "Tek", category: "active" },
-            { name: "Hiking", category: "active" },
-            { name: "Joga", category: "active" },
+            "Tek",
+            "Pohodništvo",
+            "Joga",
         ];
         const mutualMatchBase = {
             blockedUserIds: [],
