@@ -83,7 +83,7 @@ jobs:
         run: bash scripts/ci/setup_google_services.sh
 
       - run: flutter pub get
-      - run: flutter build apk --flavor dev --dart-define=FLAVOR=dev
+      - run: flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev
 
   quality-gate:
     name: "Quality Gate (MPC Enforce)"
