@@ -459,11 +459,13 @@ void main() {
 
       // Navigate from PhotosStep to GymStep, then to ConsentStep
       // Tap "Continue" on PhotosStep
+      await tester.ensureVisible(find.text('Continue'));
       await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
 
       // GymStep is active. Tap "Continue"
       expect(find.text('Your Gyms'), findsOneWidget);
+      await tester.ensureVisible(find.text('Continue'));
       await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
 
@@ -475,6 +477,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap "Continue" on ConsentStep (triggers completeRegistration)
+      await tester.ensureVisible(find.text('Continue'));
       await tester.tap(find.text('Continue'));
       await _pumpUntil(tester, () => uploadAttempted);
       await tester.pumpAndSettle();
@@ -497,6 +500,7 @@ void main() {
       };
 
       // Tap "Continue" again to retry
+      await tester.ensureVisible(find.text('Continue'));
       await tester.tap(find.text('Continue'));
       await tester.pump();
 

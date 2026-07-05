@@ -13,7 +13,7 @@ class ConsentStep extends StatefulWidget {
   });
 
   final VoidCallback onBack;
-  final VoidCallback onComplete;
+  final void Function(bool religionConsent, bool ethnicityConsent) onComplete;
   final String Function(String) tr;
   final String? photoUploadError;
 
@@ -27,6 +27,8 @@ class _ConsentStepState extends State<ConsentStep> {
   bool _consentDataProcessing = false;
   bool _consentAge = false;
   bool _consentLocation = false;
+  bool _consentReligion = false;
+  bool _consentEthnicity = false;
 
   bool get _consentGiven =>
       _consentTerms &&
@@ -43,6 +45,8 @@ class _ConsentStepState extends State<ConsentStep> {
       _consentDataProcessing = newVal;
       _consentAge = newVal;
       _consentLocation = newVal;
+      _consentReligion = newVal;
+      _consentEthnicity = newVal;
     });
   }
 
@@ -174,10 +178,40 @@ class _ConsentStepState extends State<ConsentStep> {
               children: const [
                 TextSpan(
                     text:
-                        'I explicitly consent to the processing of my sensitive personal data '
-                        '(interests, preferences, religion, ethnicity) for the purpose of matchmaking. '
+                        'I explicitly consent to the processing of my profile data '
+                        '(interests, preferences) for the purpose of matchmaking. '
                         'I understand this data is protected by Google Cloud infrastructure-level encryption at rest, never sold, and I can withdraw consent '
                         'at any time from Settings.'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _consentTile(
+            value: _consentReligion,
+            onChanged: (v) => setState(() => _consentReligion = v),
+            richText: TextSpan(
+              style: bodyStyle,
+              children: const [
+                TextSpan(
+                    text:
+                        'I consent to the use of my religious beliefs for matchmaking. '
+                        'Checking this may slightly improve your compatibility score with others of similar beliefs. '
+                        'If left unchecked, your religion will not affect your matches.'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _consentTile(
+            value: _consentEthnicity,
+            onChanged: (v) => setState(() => _consentEthnicity = v),
+            richText: TextSpan(
+              style: bodyStyle,
+              children: const [
+                TextSpan(
+                    text:
+                        'I consent to the use of my ethnic background for matchmaking. '
+                        'Checking this may slightly improve your compatibility score. '
+                        'If left unchecked, your ethnicity will not affect your matches.'),
               ],
             ),
           ),
@@ -258,7 +292,7 @@ class _ConsentStepState extends State<ConsentStep> {
           ],
           ContinueButton(
             enabled: _consentGiven,
-            onTap: widget.onComplete,
+            onTap: () => widget.onComplete(_consentReligion, _consentEthnicity),
             label: 'Continue',
           ),
           const SizedBox(height: 16),

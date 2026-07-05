@@ -1123,7 +1123,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       ),
                     ConsentStep(
                       onBack: () => _goToPage(_currentPage - 1),
-                      onComplete: completeRegistration,
+                      onComplete: (r, e) => completeRegistration(
+                          religionConsent: r, ethnicityConsent: e),
                       tr: tr,
                       photoUploadError: _photoUploadError,
                     ),
@@ -1787,7 +1788,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return mapUploadError(error, lang);
   }
 
-  void completeRegistration() async {
+  void completeRegistration(
+      {bool? religionConsent, bool? ethnicityConsent}) async {
     final currentUser = ref.read(firebaseAuthProvider).currentUser;
     final uid =
         currentUser?.uid ?? 'generated_id'; // Fallback only if somehow null
@@ -1894,8 +1896,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         sleepSchedule: _sleepHabit ?? 'night_owl',
         petPreference: _petPreference ?? 'dog',
         childrenPreference: _childrenPreference ?? 'not_sure',
-        religion: _religion,
-        ethnicity: _ethnicity,
+        religion: _religion == 'prefer_not_to_say' ? null : _religion,
+        ethnicity: _ethnicity == 'prefer_not_to_say' ? null : _ethnicity,
+        religionConsent: religionConsent,
+        ethnicityConsent: ethnicityConsent,
         hairColor: _hairColor,
         politicalAffiliation: _politicalAffiliationValue == 0
             ? 'politics_dont_care'

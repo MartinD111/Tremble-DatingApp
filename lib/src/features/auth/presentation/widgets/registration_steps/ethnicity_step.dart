@@ -28,6 +28,7 @@ class EthnicityStep extends StatelessWidget {
         {'key': 'black', 'label': tr('ethnicity_black')},
         {'key': 'mixed', 'label': tr('ethnicity_mixed')},
         {'key': 'asian', 'label': tr('ethnicity_asian')},
+        {'key': 'prefer_not_to_say', 'label': tr('prefer_not_to_say')},
       ],
       selected: selected,
       onSelect: onSelect,

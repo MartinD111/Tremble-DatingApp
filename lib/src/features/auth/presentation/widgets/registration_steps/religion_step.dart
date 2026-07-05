@@ -60,6 +60,10 @@ class ReligionStep extends StatelessWidget {
           'label': tr('atheist'),
           'icon': IconUtils.getReligionIcon('atheist')
         },
+        {
+          'key': 'prefer_not_to_say',
+          'label': tr('prefer_not_to_say'),
+        },
       ],
       selected: selected,
       onSelect: onSelect,

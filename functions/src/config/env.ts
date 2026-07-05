@@ -33,18 +33,22 @@ export interface AppConfig {
  * True only when running against the production Firebase project (am---dating-app).
  * Used to gate App Check enforcement so iOS simulator / dev builds aren't blocked.
  */
-if (!process.env.TREMBLE_ENV) {
-    throw new Error("CRITICAL: TREMBLE_ENV is missing. Cannot start without environment context.");
-}
-
 export const TREMBLE_ENV = process.env.TREMBLE_ENV;
 export const SENTRY_DSN = process.env.SENTRY_DSN ?? '';
 export const ENFORCE_APP_CHECK = TREMBLE_ENV === "prod";
+
+export function assertEnvironmentConfigured(): void {
+    if (!process.env.TREMBLE_ENV) {
+        throw new Error("CRITICAL: TREMBLE_ENV is missing. Cannot start without environment context.");
+    }
+}
+
 /**
  * Load configuration from environment.
  * Secrets (API keys) come from Firebase Secret Manager via process.env.
  */
 export function getConfig(): AppConfig {
+    assertEnvironmentConfigured();
     const env = (process.env.TREMBLE_ENV as AppConfig["environment"]) || "dev";
 
     // We expect these to be populated by Firebase Secret Manager in production.

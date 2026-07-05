@@ -84,6 +84,8 @@ class AuthUser {
   final String? religionPreference;
   final String? ethnicity;
   final String? ethnicityPreference;
+  final bool? religionConsent;
+  final bool? ethnicityConsent;
   final String? hairColor;
   final String? hairColorPreference;
   final String? politicalAffiliation;
@@ -173,6 +175,8 @@ class AuthUser {
     this.religionPreference,
     this.ethnicity,
     this.ethnicityPreference,
+    this.religionConsent,
+    this.ethnicityConsent,
     this.hairColor,
     this.hairColorPreference,
     this.politicalAffiliation,
@@ -250,6 +254,8 @@ class AuthUser {
       'religionPreference': religionPreference,
       'ethnicity': ethnicity,
       'ethnicityPreference': ethnicityPreference,
+      if (religionConsent != null) 'religionConsent': religionConsent,
+      if (ethnicityConsent != null) 'ethnicityConsent': ethnicityConsent,
       'hairColor': hairColor,
       'hairColorPreference': hairColorPreference,
       'politicalAffiliation': politicalAffiliation,
@@ -367,6 +373,8 @@ class AuthUser {
       religionPreference: data['religionPreference'] as String?,
       ethnicity: data['ethnicity'] as String?,
       ethnicityPreference: data['ethnicityPreference'] as String?,
+      religionConsent: data['religionConsent'] as bool?,
+      ethnicityConsent: data['ethnicityConsent'] as bool?,
       hairColor: data['hairColor'] as String?,
       hairColorPreference: data['hairColorPreference'] as String?,
       politicalAffiliation: data['politicalAffiliation'] as String?,
@@ -441,6 +449,8 @@ class AuthUser {
     Object? religionPreference = _unset,
     String? ethnicity,
     Object? ethnicityPreference = _unset,
+    bool? religionConsent,
+    bool? ethnicityConsent,
     String? hairColor,
     Object? hairColorPreference = _unset,
     String? politicalAffiliation,
@@ -527,6 +537,8 @@ class AuthUser {
       ethnicityPreference: identical(ethnicityPreference, _unset)
           ? this.ethnicityPreference
           : ethnicityPreference as String?,
+      religionConsent: religionConsent ?? this.religionConsent,
+      ethnicityConsent: ethnicityConsent ?? this.ethnicityConsent,
       hairColor: hairColor ?? this.hairColor,
       hairColorPreference: identical(hairColorPreference, _unset)
           ? this.hairColorPreference
