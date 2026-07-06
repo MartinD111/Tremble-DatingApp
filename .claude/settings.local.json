@@ -120,7 +120,17 @@
       "Bash(git -C /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app commit -m \"chore\\(functions\\): bump form-data via npm audit fix to clear CI high-severity gate\")",
       "Bash(git -C /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app log -1 --oneline)",
       "Bash(git -C /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app status --short)",
-      "Bash(git -C /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app push)"
+      "Bash(git -C /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app push)",
+      "Bash(git merge *)",
+      "Bash(echo \"---exit=$?---\")",
+      "Bash(git -C /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app add functions/src/__tests__/compatibility_calculator.test.ts functions/src/modules/compatibility/compatibility_calculator.ts functions/src/modules/proximity/proximity.functions.ts)",
+      "Bash(git -C /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app commit -m ' *)",
+      "Bash(git -C /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app log --oneline -3)",
+      "Bash(git -C /Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app push -u origin fix/backend-granular-consent)",
+      "Bash(git *)",
+      "Bash(gh pr create --base main --head fix/backend-granular-consent --title 'fix: split sensitiveDataConsent into granular religionConsent/ethnicityConsent gates' --body ' *)",
+      "Bash(command -v gh)",
+      "Read(//opt/homebrew/bin/**)"
     ]
   }
 }

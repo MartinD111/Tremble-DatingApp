@@ -93,8 +93,9 @@ Task `6gwM94Mg74x78VGP` trdi "DONE (build 4)" za C1-C6 + H1-H9 + M1-M4, ampak 17
 - **Religija in Etničnost:** Odstranjena iz hard filtrov! Obe sta spremenjeni v mehko (soft) oceno znotraj lifestyle bucketa. Preference se preverjajo dvosmerno in simetrično. Legacy enum `same_only` je backward-compatible preimenovan v `prefer_same` ( Firestore dokumentov ni potrebno migrirati).
 - **Nikotin premium-gate fix:** Popravljeno, da je gating simetričen. Requesterjeve in candidate-ove vrednosti so zdaj pravilno gated preko prenosnih spremenljivk `myNicotineFilter`/`theirNicotineFilter` znotraj `proximity.functions.ts` pred klicem compatibility kalkulatorja. Dodan je regresijski test za `none_only` prostih kandidatov.
 - Etničnost, barva las, višina: shranjeni v Firestoru. Etničnost se sedaj uporablja v soft lifestyle scoringu.
-
-*Naslednji korak za religijo/etničnost:* Gate-anje na `sensitiveDataConsent` flag (GDPR varovalka), ki čaka na legal review.
+- **Hobby "fix" NI bil produkcijska sprememba kode.** Raw diff (4fd8b23) dokazuje: `compatibility_calculator.ts` je `Set(aHobbies)` uporabljal pravilno že pred PR #2. Sprememba je bila izključno v testnem fixtureu (`uploads_proximity.test.ts`, objekti → plain stringi). Prejšnja trditev "POTRJENO diffom" in "0.79 po popravku" je bila napačna — verjetno rezultat ločenega diagnostičnega skripta, ne dejanskega Firestore stanja.
+- **`pairsNotified:0` na živi infrastrukturi (5–6 jul) ni bil bug.** Sistem je pravilno zavrnil par pod threshold 0.70, ker sta bila testna profila (Aleksandar, Nikolina) nepopolna — Aleksandrov `onboardingCheckpoint: 2` od 28, hobiji/lifestyle prazni. Deployan, potrjen s 63 zelenimi testi, tudi izven originalnega konteksta buga.
+- **Consent arhitektura (6 jul):** `religionConsent` in `ethnicityConsent` kot LOČENA bilateralna, fail-closed polja (ne skupen `sensitiveDataConsent` — odstranjen v celoti). Manjkajoč consent = izključitev iz scoringa, ne šteje kot 0. Frontend (`consent_step.dart`) pošilja oba ločeno; backend ju ločeno bere. Odprti taski: `6h3XqHpmRGMpGRcP` (politični consent, še ne implementiran), `6h3c3FHcXV8HPc4P` (location consent legal vprašanje, nerešeno).
 
 ---
 
