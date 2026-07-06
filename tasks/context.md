@@ -10,13 +10,15 @@
     - `Tremble MPC Workflow.md` [DELETED]
     - `STRATEGY_CLAIMS.md` [DELETED]
     - `CLAUDE.md` [DELETED]
+    - `tasks/decisions/ADR-003-brand-alignment.md` [DELETED]
+    - `tasks/decisions/ADR-007-motion-and-emotional-arc.md` [DELETED]
 - Open Problems:
     - Transitioning to compliance-driven development to address critical GDPR, App Store, and Play Store blockers identified in the July 2026 report.
 - System Status: Documentation synced with Compliance Report.
 
 ## Session Handoff
 - Completed:
-    - Deleted outdated files: `Tremble MPC Workflow.md`, `STRATEGY_CLAIMS.md`, `CLAUDE.md`.
+    - Deleted outdated files: `Tremble MPC Workflow.md`, `STRATEGY_CLAIMS.md`, `CLAUDE.md`, `ADR-003-brand-alignment.md`, and `ADR-007-motion-and-emotional-arc.md`.
     - Updated `tasks/blockers.md` to move old blockers to archive and insert critical store and legal blockers from the compliance report.
     - Updated `tasks/todo.md` to map directly to the Compliance Launch Checklist.
     - Added new permanent rules to `tasks/lessons.md` (Rules #75 to #78) regarding GDPR consent, Play Console requirements, Paywall accuracy, and avoiding AI hallucinations in documentation.
