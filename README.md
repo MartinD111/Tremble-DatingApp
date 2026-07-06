@@ -25,7 +25,9 @@ Tremble is built using a modern, scalable stack designed for global performance:
 
 ## 🚦 Development
 
-This repository is governed by MPC. Read `tasks/context.md` and `tasks/blockers.md` before code changes.
+This repository is governed by the rules in `AGENTS.md`. Read `tasks/context.md`, `tasks/blockers.md`, and `tasks/todo.md` before code changes.
+
+Currently, the project is in the **Launch Polish & Compliance Phase** (July 2026). All new work must align with unblocking App Store/Play Store submissions and resolving legal/GDPR risks.
 
 Run the app with the checked-in Dart define file:
 

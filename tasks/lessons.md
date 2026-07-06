@@ -4,6 +4,21 @@
 
 ---
 
+**Rule #78 — Single Source of Truth is the Codebase.**
+[2026-07-06] Do not rely on AI-generated strategy or documentation files as a source of truth. Relying on "circular context" caused fake features and non-existent files to be treated as reality. Always verify claims against the actual codebase.
+Source: Compliance Report, July 2026.
+
+**Rule #77 — Paywall Copy Must Be 100% Code-Accurate.**
+[2026-07-06] Do not advertise premium features that don't exist in code (e.g. "unlimited geofence pings") and do not hide actual gated features (e.g. "see who waved"). This is a violation of App Store guidelines and consumer protection laws.
+Source: Compliance Report, July 2026.
+
+**Rule #76 — Android Platform Declarations Block Launches.**
+[2026-07-06] Android requires Prominent Disclosure, video demos, and Play Console declarations for background location and Foreground Services (FGS) before app submission. This review takes 2-4 weeks. Plan this long before the build is finalized.
+Source: Compliance Report, July 2026.
+
+**Rule #75 — GDPR Art. 9 Sensitive Data Cannot Be Bundled.**
+[2026-07-06] Processing sexual orientation (even implicitly via `gender` + `lookingFor`), religion, ethnicity, or cannabis use falls under GDPR Article 9. These require explicit, granular, and separate consent checkboxes. They cannot be bundled into a generic "sensitive data" flag or skipped.
+Source: Compliance Report, July 2026.
 ## iOS Build & App Store
 
 ### ITMS-90683: Missing NSUsageDescription keys

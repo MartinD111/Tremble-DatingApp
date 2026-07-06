@@ -1,42 +1,34 @@
 # Tremble - Project TODOs (V5)
 
-## Active Focus: Production Stabilization + Phase E
+## Active Focus: Compliance & Launch Readiness
 
-### 1. Infrastructure (Maps) ✅ COMPLETE, QA REMAINS
-- [x] Design Protomaps dark style (`tremble_dark_style.json`) — Apple Maps aesthetic.
-- [x] Bundle `tremble_dark_style.json` as a local Flutter asset for zero-latency load.
-- [x] Integrate `VectorTileLayer` + `PmTilesVectorTileProvider` in `tremble_map_screen.dart`.
-- [x] Fix Cloudflare Worker TypeScript errors (`R2ObjectBody` type guard, `R2GetOptions` typing).
-- [x] Pass `npm run biome-check` and `npx tsc` with zero errors on Worker codebase.
-- [x] **Martin:** Upload `planet.pmtiles` (126 GB) to Cloudflare R2 bucket `tremble-maps`.
-- [x] Deploy Cloudflare Worker (`wrangler deploy`) to `maps.trembledating.com`.
-- [ ] Verify worldwide tile loading on physical iOS device.
+Based on the 06-JUL-2026 Master Compliance Report, the focus is strictly on unblocking the App Store/Play Store submissions and resolving critical GDPR/Legal risks.
 
-### 2. Branding & UI ✅ COMPLETE
-- [x] Fix Splash Screen "white box" regression.
-- [x] Regenerate all app icons with correct Tremble Rose (#F4436C).
-- [x] Center Radar Heart icon (1.25x scale).
-- [x] Fix Radar Sweep gradient seam at 3 o'clock.
+### CRITICAL (Pred Submissionom)
 
-### 3. Native & Security ✅ COMPLETE
-- [x] Remove Google Maps SDK native dependencies (Info.plist, AndroidManifest).
-- [x] Clean up Background Modes (remove remote-notification for free dev accounts).
-- [x] Verify App Check enforcement on all Cloud Functions.
-- [x] ADR-001 BLE background restoration resolved via NativeMotionService.
+- [ ] **BLOCKER-STORE-001:** Add `PrivacyInfo.xcprivacy` to iOS project. (Task 6h3grHhjVXFhMRJP)
+- [ ] **BLOCKER-STORE-001:** Add `ITSAppUsesNonExemptEncryption` to `Info.plist`. (Task 6h3grHqC22mCcccP)
+- [ ] **BLOCKER-STORE-002:** Remove `NSContactsUsageDescription` from `Info.plist` or fix Privacy Policy. (Task 6h3p8gWpxpq7rWXw)
+- [ ] **BLOCKER-STORE-003:** Submit Android Background Location declaration. (Task 6h3p8gWG7WHWV7JP)
+- [ ] **BLOCKER-STORE-004:** Submit Android FGS declarations. (Task 6h3p8gc78572RF9P)
+- [ ] **BLOCKER-LEGAL-001:** Fix DPIA to reflect actual code architecture. (Task 6h3jFhxVHpRmph9P)
+- [ ] **BLOCKER-LEGAL-002:** Separate `cannabis` from `nicotineUse` in registration. (Task 6h3jHjr7Hf58G8pw)
+- [ ] **BLOCKER-LEGAL-003:** Implement explicit GDPR Art. 9 consent for sexual orientation (`gender` + `lookingFor`). (Task 6h3j9q65vh3mG64P)
+- [ ] **BLOCKER-LEGAL-004:** Fix backend/ToS mismatch for the "Weekend Getaway" free window. (Task 6h332RFRW946QWXw)
+- [ ] **BLOCKER-LEGAL-005:** Sync Paywall copy with actual RevenueCat gates. (Task 6h3pmrF84Cf6JVQP)
 
-### 4. Current Open Blockers
-- [x] **BLOCKER-003:** Legal/company registration resolved (AMS Solutions d.o.o. registered 2026-05-07).
-- [ ] **BLOCKER-005:** iOS dev provisioning for `com.pulse` blocks physical iPhone deploy and iOS tile verification.
-- [ ] **BLOCKER-006:** Real photo upload / onboarding E2E still needs device verification on `tremble-dev`.
-- [x] **BLOCKER-007:** Live Privacy Policy, Terms, and Erasure URLs verified on `trembledating.com`.
+### REQUIRED (Pred Javno Objavo)
 
-### 5. Backend Follow-Up
-- [ ] Verify in Firebase Console that functions newly created by the latest prod deploy are intentional.
-- [ ] Review remaining 9 moderate npm audit findings; do not use `npm audit fix --force` unless intentionally accepting Firebase SDK downgrades.
+- [ ] **Legal:** Configure Cookie/Consent banner (e.g., Usercentrics) for web and app. (Task 6h3pmrHxhCHX7q8P)
+- [ ] **App Store:** Provide EULA link and Age Rating declaration.
+- [ ] **Data Safety:** Complete Play Console Data Safety form accurately.
+- [ ] **Android:** Provide video demonstrating background location usage.
 
-### 6. Local Workflow
-- [x] Local `.git/hooks/pre-commit` created and verified directly on 2026-05-25.
-- [x] Agent/bootstrap docs updated to include the local pre-commit gate.
+### RECOMMENDED (Po Launchu)
+
+- [ ] Implement robust Account Deletion (GDPR Right to Erasure) automation in Cloud Functions.
+- [ ] Enhance rate limiting for F12 interactions.
+- [ ] Move any remaining non-critical legal docs to a CMS for easier updates.
 
 ---
-*Last Updated: 2026-05-28*
+*Last Updated: 2026-07-06*

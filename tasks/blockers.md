@@ -2,54 +2,74 @@
 
 ---
 
-## BLOCKER-001 / ADR-001 — iOS BLE Background State Restoration
-**Date:** 2026-04-29
-**Status:** ✅ RESOLVED
-**Impact:** `flutter_blue_plus` is now integrated via NativeMotionService EventChannel, successfully enabling background state restoration.
-**Action:** None.
+## CRITICAL — Store Blockers (Pred Submissionom)
 
-## BLOCKER-002 / D-37 — 3-State Map Toggle Untested on Physical Device
-**Date:** 2026-04-29
-**Status:** ✅ RESOLVED
-**Impact:** The 3-state map toggle logic was implemented and has been verified by Martin on a physical Samsung S25 Ultra.
-**Action:** None.
+### BLOCKER-STORE-001 — iOS Privacy Manifest & Encryption Declaration
+**Date:** 2026-07-06
+**Status:** OPEN
+**Impact:** App Store will automatically reject the build starting from iOS 17.4 without a privacy manifest. Missing encryption declaration will cause App Store Connect rejection.
+**Action:** Add `PrivacyInfo.xcprivacy` and add encryption declaration to `Info.plist`. (Task 6h3grHhjVXFhMRJP, 6h3grHqC22mCcccP)
 
-## BLOCKER-003 — Legal/Company Setup & App Store Agreement (RevenueCat)
-**Date:** 2026-04-18
-**Status:** ✅ RESOLVED (2026-05-07)
-**Impact:** None. Company AMS Solutions d.o.o. has been registered. Purchases library (purchases_flutter) has been wired in.
-**Action:** Real store-side testing is now gated on Apple Developer Account approval (BLOCKER-005) and store-side product configuration.
+### BLOCKER-STORE-002 — iOS Info.plist Contacts Contradiction
+**Date:** 2026-07-06
+**Status:** OPEN
+**Impact:** `Info.plist` states contacts are not accessed, but Privacy Policy §2.5 says they are. This contradiction will trigger an Apple 5.1.1 rejection.
+**Action:** Reconcile code functionality with `Info.plist` strings and Privacy Policy. (Task 6h3p8gWpxpq7rWXw)
 
-## BLOCKER-004 — F5 (Strava/Health) Integration
-**Date:** 2026-04-30
-**Status:** ✅ RESOLVED (REMOVED)
-**Impact:** Feature permanently removed to align with privacy-first philosophy.
-**Action:** Cleanup code leftovers (D-43) — COMPLETED 2026-04-30.
+### BLOCKER-STORE-003 — Android Background Location Declaration
+**Date:** 2026-07-06
+**Status:** OPEN
+**Impact:** Requires Prominent Disclosure, a demo video, and a special declaration in Google Play Console. This review process takes 2-4 weeks and blocks Android launch.
+**Action:** Submit the declaration to Google Play immediately. (Task 6h3p8gWG7WHWV7JP)
 
-## BLOCKER-005 — iOS Dev Provisioning for `com.pulse`
-**Date:** 2026-05-17
-**Status:** ✅ RESOLVED
-**Impact:** Physical iPhone deploy for dev flavor cannot complete because Xcode cannot register or find an iOS App Development provisioning profile for bundle identifier `com.pulse` under team `K9VCTUX87F`.
-**Evidence:** `flutter run -d 00008120-001618402604201E --flavor dev --dart-define=FLAVOR=dev` fails at signing with “Failed Registering Bundle Identifier” and “No profiles for 'com.pulse' were found.”
-**Action:** In Apple Developer/Xcode, create or select a valid development profile for `com.pulse`, or explicitly approve a local-only dev bundle identifier change before physical-device verification.
-
-## BLOCKER-006 — Photo Upload / Onboarding E2E Not Verified
-**Date:** 2026-05-21
-**Status:** ✅ RESOLVED
-**Impact:** Registration can still be broken after the photo step if the R2 upload, `completeOnboarding`, and Firestore profile write do not succeed end to end on `tremble-dev`.
-**Evidence:** `generateUploadUrl` is deployed on `tremble-dev`, but no authenticated app run has verified picker → presigned URL → R2 PUT → `photoUrls` → `completeOnboarding`. Code audit found Flutter sends `interestedIn` as `List<String>` while backend schemas expected a single enum string; fixed and deployed to `tremble-dev` on 2026-05-21 with regression tests.
-**Action:** Run a physical/simulator registration with a real image and confirm `photoUrls` persists in Firestore. Requires App Check debug token to be registered first.
-
-## BLOCKER-007 — Legal Web Pages Not Confirmed Live
-**Date:** 2026-05-21
-**Status:** ✅ RESOLVED
-**Impact:** None. Privacy Policy, Terms, and Erasure pages are live and linked on `trembledating.com`.
-**Evidence:** Privacy Policy, ToS, and Erasure URLs were verified live on 2026-05-26.
-**Action:** None.
-
-> BLOCKER-007 (App Store legal URLs) ✅ RESOLVED 2026-05-26
-> — privacy/tos/erasure all return HTTP 200.
+### BLOCKER-STORE-004 — Android Foreground Services Declaration
+**Date:** 2026-07-06
+**Status:** OPEN
+**Impact:** FGS types (location, connectedDevice, dataSync) require Google Play declaration.
+**Action:** Submit FGS declaration to Google Play. (Task 6h3p8gc78572RF9P)
 
 ---
 
-*(Historical resolved blockers (SEC-001, FUNCTIONS-DEPLOY, SEC-002, F5, etc.) have been archived to `MASTER_PLAN.md` and `lessons.md` to keep this file actionable).*
+## CRITICAL — Legal Blockers (Pred Submissionom)
+
+### BLOCKER-LEGAL-001 — DPIA False Claims
+**Date:** 2026-07-06
+**Status:** OPEN
+**Impact:** DPIA falsely claims `getPublicProfile` doesn't leak sensitive data, and lists incorrect TTLs (24h vs 2h). Evidence of discrepancy during an audit is an aggravating factor.
+**Action:** Fix DPIA to match codebase reality. (Task 6h3jFhxVHpRmph9P)
+
+### BLOCKER-LEGAL-002 — Cannabis Legal Classification
+**Date:** 2026-07-06
+**Status:** OPEN
+**Impact:** `nicotineUse` bundles cannabis with vape. In some jurisdictions, cannabis data is "criminal offense data" (Art. 10 GDPR), meaning consent cannot legitimize it.
+**Action:** Separate cannabis into its own field pending legal review. (Task 6h3jHjr7Hf58G8pw)
+
+### BLOCKER-LEGAL-003 — Sexual Orientation (GDPR Art. 9) Missing Consent
+**Date:** 2026-07-06
+**Status:** OPEN
+**Impact:** The combination of `gender` + `lookingFor` implicitly reveals sexual orientation. As an Art. 9 category, processing without explicit consent is a massive GDPR violation (Grindr fined NOK 65M for this).
+**Action:** Add an explicit consent gate for processing these fields. (Task 6h3j9q65vh3mG64P)
+
+### BLOCKER-LEGAL-004 — Weekend Window ToS Mismatch
+**Date:** 2026-07-06
+**Status:** OPEN
+**Impact:** ToS §7 promises an automatic weekend window (Fri 19h - Sun 19h), but code doesn't enforce this. This is an unfair business practice / consumer deception.
+**Action:** Align code enforcement with ToS, or amend ToS. (Task 6h332RFRW946QWXw)
+
+### BLOCKER-LEGAL-005 — Paywall False Advertising
+**Date:** 2026-07-06
+**Status:** OPEN
+**Impact:** Paywall advertises features that don't exist in code ("unlimited geofence pings") and hides features that are actually gated ("see who waved"). Violates Apple 3.1.2 and consumer protection laws.
+**Action:** Sync `premium_screen.dart` with actual backend gate logic. (Task 6h3pmrF84Cf6JVQP)
+
+---
+
+## ARCHIVED BLOCKERS (Resolved)
+
+> **B001 / ADR-001** (iOS BLE Background State) ✅ RESOLVED 2026-04-29
+> **B002 / D-37** (3-State Map Toggle) ✅ RESOLVED 2026-04-29
+> **B003** (Company Setup / RevenueCat) ✅ RESOLVED 2026-05-07
+> **B004 / F5** (Strava/Health Integration) ✅ REMOVED 2026-04-30
+> **B005** (iOS Dev Provisioning for com.pulse) ✅ RESOLVED
+> **B006** (Photo Upload / Onboarding E2E) ✅ RESOLVED
+> **B007** (Legal Web Pages Live) ✅ RESOLVED 2026-05-26

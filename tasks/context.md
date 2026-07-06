@@ -1,3 +1,30 @@
+## Session State — 2026-07-06 22:30 CEST (Session 41)
+- Active Task: Project Documentation & Compliance Cleanup
+- Environment: Dev/local
+- Modified Files:
+    - `tasks/blockers.md`
+    - `tasks/todo.md`
+    - `tasks/lessons.md`
+    - `README.md`
+    - `BOOTSTRAP.md`
+    - `Tremble MPC Workflow.md` [DELETED]
+    - `STRATEGY_CLAIMS.md` [DELETED]
+    - `CLAUDE.md` [DELETED]
+- Open Problems:
+    - Transitioning to compliance-driven development to address critical GDPR, App Store, and Play Store blockers identified in the July 2026 report.
+- System Status: Documentation synced with Compliance Report.
+
+## Session Handoff
+- Completed:
+    - Deleted outdated files: `Tremble MPC Workflow.md`, `STRATEGY_CLAIMS.md`, `CLAUDE.md`.
+    - Updated `tasks/blockers.md` to move old blockers to archive and insert critical store and legal blockers from the compliance report.
+    - Updated `tasks/todo.md` to map directly to the Compliance Launch Checklist.
+    - Added new permanent rules to `tasks/lessons.md` (Rules #75 to #78) regarding GDPR consent, Play Console requirements, Paywall accuracy, and avoiding AI hallucinations in documentation.
+    - Updated `README.md` and `BOOTSTRAP.md` to refer to the new compliance phase and `AGENTS.md` as the single source of truth.
+- In Progress: None.
+- Blocked: None.
+- Next Action: Proceed with implementing fixes for critical blockers (e.g., iOS Privacy Manifest, Android location declarations, GDPR consent logic).
+
 ## Session State — 2026-07-05 10:40 CEST (Session 40)
 - Active Task: Fix main branch CI failures and refine compatibility scoring logic
 - Environment: Dev/local

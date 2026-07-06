@@ -17,17 +17,18 @@ When this file is detected, immediately adopt the role of **Technical Co-Founder
 
 ---
 
-## Active Blockers (as of 2026-05)
+## Active Blockers (as of 2026-07)
 
 | ID | Blocker | Impact |
 |----|---------|--------|
-| B005 | iOS Provisioning — com.pulse vs correct bundle ID, Apple Developer account pending approval | TestFlight gated |
-| B006 | Photo Upload E2E — blocked on B005 iOS provisioning | Onboarding unverified |
-| B007 | purchases_flutter absent — RevenueCat SDK not wired, billing is mock | Paywall non-functional |
+| None | No active blockers at this time | All clear |
 
 > BLOCKER-003 (AMS Solutions d.o.o. registration) ✅ RESOLVED 2026-05-07
 > ADR-001 (iOS BLE Background State Restoration) ✅ RESOLVED 2026-04-29 — NativeMotionService EventChannel wired.
 > SEC-001 (App Check) ✅ RESOLVED 2026-04-29 — Enforced on all Cloud Functions.
+> B005 (iOS Dev Provisioning for com.pulse) ✅ RESOLVED
+> B006 (Photo Upload E2E) ✅ RESOLVED
+> B007 (Legal Web Pages / RevenueCat SDK wired) ✅ RESOLVED
 > B008 (Prod Firestore Rules active_run_crosses) ✅ RESOLVED 2026-05-24 — Verified active on am---dating-app.
 > B009 (WavePillService FCM) ✅ RESOLVED 2026-05-26 — Wired in router.dart.
 
@@ -42,6 +43,7 @@ Storage: Cloudflare R2 (media.trembledating.com — GET only, LIST disabled)
 Redis: Upstash (EU region — verify)
 Email: Resend (info@trembledating.com)
 Domain: trembledating.com
+RevenueCat: purchases_flutter v10.2.0 + purchases_ui_flutter
 ```
 
 **Environments — strict separation, no exceptions:**
@@ -50,7 +52,7 @@ Domain: trembledating.com
 |--|-----|------|
 | Firebase | `tremble-dev` | `am---dating-app` |
 | Bundle ID | `com.pulse` | TBD — confirm in Firebase console |
-| Run command | `flutter run --dart-define-from-file=.env.json` | `--flavor prod --dart-define=FLAVOR=prod` |
+| Run command | `flutter run --flavor dev --dart-define-from-file=.env.json` | `flutter run --flavor prod --dart-define-from-file=.env.prod.json` |
 
 Cross-contamination between environments = critical failure. Stop and escalate.
 
@@ -119,8 +121,8 @@ Staleness rule: if this block is >48h old, re-validate before executing.
 | 4 | Signals & Push Notifications (Waves, FCM, WavePillService) | ✅ |
 | 5 | Matching Algorithm — Event/Gym/Run scoring, Match Categories | ✅ |
 | 6 | Infra & Security — App Check, Firestore Rules | ✅ |
-| F1 | Protomaps — Google Maps SDK replaced, planet.pmtiles on R2, Worker at maps.trembledating.com | ✅ pubspec wired, device test pending B005 |
-| 7 | Launch Polish — Paywall, Store Deploy | ⏳ Blocked on B005 + B007 |
+| F1 | Protomaps — Google Maps SDK replaced, planet.pmtiles on R2, Worker at maps.trembledating.com | ✅ |
+| 7 | Launch Polish — Paywall, Store Deploy | ⏳ Pending store-side configuration |
 
 Phase does not close until all exit criteria pass.
 
@@ -140,6 +142,9 @@ Source: Wave limit implementation, May 2026.
 
 **Rule #5** — firebase firestore:rules:get and firestore:fields:list are not valid Firebase CLI commands. Use Firebase Rules API for rules verification and gcloud firestore fields ttls list for TTL policy checks.
 Source: TTL verification sprint, May 2026.
+
+**Rule #6** — Never assume CF schema matches Flutter model field types. CF validation errors (Expected string, received array / received object) are silent in the UI — only visible in logcat. Always verify toApiPayload() output against CF Zod schema before device testing.
+Source: completeOnboarding serialization fix, June 2026.
 
 Add new rules here immediately after any mistake. Format: `**Rule #N** — [rule]. Source: [context], [date].`
 
@@ -197,8 +202,8 @@ Run in this order after every significant change:
 
 ```bash
 flutter analyze --no-fatal-infos
-flutter test --dart-define=FLAVOR=dev
-flutter build apk --debug --flavor dev --dart-define=FLAVOR=dev
+flutter test --dart-define-from-file=.env.json
+flutter build apk --debug --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev
 ```
 
 For BLE changes, also run on physical device — emulator cannot simulate Bluetooth hardware.
@@ -227,7 +232,7 @@ lib/src/
 └── shared/                        ← GlassCard (useGlassEffect default: false), Buttons, shared hooks
 
 Infrastructure:
-- 172 Dart files, 13 test files, 11 CF src files (37 exported functions)
+- 173 Dart files, 40 test files, 200 Flutter tests passing, 11 CF src files (37 exported functions)
 - Platforms: iOS (Swift base), Android (Kotlin base)
 - CI/CD: GitHub Actions
 - Firestore TTL: proximity ✅ ACTIVE, rateLimits ✅ ACTIVE
@@ -282,7 +287,7 @@ Founder sign-off
 Production (flutter build ipa/appbundle --flavor prod)
 ```
 
-TestFlight currently gated on B005 iOS provisioning (Apple Developer account pending approval).
+TestFlight currently pending store product configurations.
 
 ---
 

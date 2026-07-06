@@ -4,9 +4,9 @@ This guide explains how to get the Tremble application running on a completely f
 The repository is completely portable and OS-agnostic. 
 
 > [!IMPORTANT]
-> This project is governed by the **MPC (Master Project Controller)** system. 
+> This project is governed by rules in `AGENTS.md`.
 > All development is tracked in the `/tasks` directory. 
-> NEVER code without reading `tasks/context.md` and `tasks/blockers.md` first.
+> NEVER code without reading `tasks/context.md`, `tasks/todo.md`, and `tasks/blockers.md` first.
 
 ## 1. Prerequisites
 Ensure you have the following installed on your machine (macOS, Windows, or Linux):
