@@ -133,7 +133,6 @@ export const completeOnboarding = onCall(
                 religion: data.religion || null,
                 ethnicity: data.ethnicity || null,
                 hairColor: data.hairColor || null,
-                politicalAffiliation: data.politicalAffiliation || null,
                 lookingFor: data.lookingFor,
                 languages: data.languages,
                 hobbies: data.hobbies,

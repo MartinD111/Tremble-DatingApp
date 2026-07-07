@@ -268,7 +268,6 @@ describe("Auth Module", () => {
                 religion: null,
                 ethnicity: null,
                 hairColor: null,
-                politicalAffiliation: null,
                 partnerDrinkingHabit: null,
                 partnerExerciseHabit: null,
                 partnerSleepSchedule: null,

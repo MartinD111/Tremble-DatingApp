@@ -30,7 +30,6 @@ import 'widgets/registration_steps/pets_step.dart';
 import 'widgets/registration_steps/religion_step.dart';
 import 'widgets/registration_steps/ethnicity_step.dart';
 import 'widgets/registration_steps/hair_color_step.dart';
-import 'widgets/registration_steps/political_affiliation_step.dart';
 import 'widgets/registration_steps/birthday_step.dart';
 import 'widgets/registration_steps/height_step.dart';
 import 'widgets/registration_steps/languages_step.dart';
@@ -167,8 +166,7 @@ Future<XFile?> _compressRegistrationPhoto(
 // 18 : Religion
 // 19 : Ethnicity
 // 20 : Hair colour
-// 21 : Political affiliation
-// 22 : Languages
+// 21 : Languages
 // 23 : Dating preferences
 // 24 : What to meet
 // 25 : Hobbies
@@ -277,7 +275,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   String? _religion;
   String? _ethnicity;
   String? _hairColor;
-  double _politicalAffiliationValue = 3.0; // 1 to 5 mapping (Left to Right)
 
   // Partner preferences
   List<String>? _partnerReligion;
@@ -289,7 +286,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   List<String>? _partnerSleepHabit;
   List<String>? _partnerPetPreference;
   String? _partnerNicotineFilter;
-  String? _partnerPoliticalAffiliationPreference;
   String? _partnerHeightRange;
 
   // Dating pref
@@ -373,18 +369,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     if (appUser.interestedIn.isNotEmpty)
       _wantToMeet.addAll(appUser.interestedIn);
     if (appUser.hobbies.isNotEmpty) _selectedHobbies.addAll(appUser.hobbies);
-    if (appUser.politicalAffiliation != null) {
-      final map = {
-        'politics_dont_care': 0.0,
-        'politics_undisclosed': -1.0,
-        'politics_left': 1.0,
-        'politics_center_left': 2.0,
-        'politics_center': 3.0,
-        'politics_center_right': 4.0,
-        'politics_right': 5.0,
-      };
-      _politicalAffiliationValue = map[appUser.politicalAffiliation] ?? 3.0;
-    }
   }
 
   void _nextPage() {
@@ -442,17 +426,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         religion: _religion,
         ethnicity: _ethnicity,
         hairColor: _hairColor,
-        politicalAffiliation: _politicalAffiliationValue == 0
-            ? 'politics_dont_care'
-            : _politicalAffiliationValue == -1
-                ? 'politics_undisclosed'
-                : [
-                    'politics_left',
-                    'politics_center_left',
-                    'politics_center',
-                    'politics_center_right',
-                    'politics_right'
-                  ][(_politicalAffiliationValue - 1).toInt()],
         onboardingCheckpoint: index,
         isOnboarded: false,
       ).toApiPayload();
@@ -1009,30 +982,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                           setState(() => _partnerHairColor = v),
                       tr: tr,
                     ),
-                    PoliticalAffiliationStep(
-                      value: _politicalAffiliationValue,
-                      onChanged: (v) =>
-                          setState(() => _politicalAffiliationValue = v),
-                      onBack: () => _goToPage(_currentPage - 1),
-                      onContinueTap: () => _showPartnerRangeModal(
-                        title: tr('political_affiliation'),
-                        min: 1,
-                        max: 5,
-                        divisions: 4,
-                        labels: [tr('politics_left'), tr('politics_right')],
-                        onSave: (val) {
-                          if (val == null) {
-                            setState(() =>
-                                _partnerPoliticalAffiliationPreference = null);
-                          } else {
-                            setState(() =>
-                                _partnerPoliticalAffiliationPreference =
-                                    '${val.start.toInt()}-${val.end.toInt()}');
-                          }
-                        },
-                      ),
-                      tr: tr,
-                    ),
                     LanguagesStep(
                       selectedLanguages: _selectedLanguages,
                       showCustom: _showCustomLanguage,
@@ -1443,18 +1392,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
-  /// Maps a 1–5 political value to its labeled descriptor.
-  String _politicsLabelReg(double v) {
-    final idx = v.round().clamp(1, 5) - 1;
-    return [
-      tr('politics_left'),
-      tr('politics_center_left'),
-      tr('politics_center'),
-      tr('politics_center_right'),
-      tr('politics_right'),
-    ][idx];
-  }
-
   /// Maps a 0.0–1.0 introvert value to a percentage label with personality descriptor.
   String _introvertLabelReg(double v) {
     final pct = (v * 100).toInt();
@@ -1543,14 +1480,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                           labels: RangeLabels(
                             title == tr('introversion')
                                 ? _introvertLabelReg(tempRange.start)
-                                : title == tr('political_affiliation')
-                                    ? _politicsLabelReg(tempRange.start)
-                                    : '${tempRange.start.toInt()}',
+                                : '${tempRange.start.toInt()}',
                             title == tr('introversion')
                                 ? _introvertLabelReg(tempRange.end)
-                                : title == tr('political_affiliation')
-                                    ? _politicsLabelReg(tempRange.end)
-                                    : '${tempRange.end.toInt()}',
+                                : '${tempRange.end.toInt()}',
                           ),
                           activeColor: Theme.of(context).colorScheme.primary,
                           inactiveColor:
@@ -1563,20 +1496,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
                                 '${_introvertLabelReg(tempRange.start)} – ${_introvertLabelReg(tempRange.end)}',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        if (title == tr('political_affiliation'))
-                          Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                '${_politicsLabelReg(tempRange.start)} – ${_politicsLabelReg(tempRange.end)}',
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontSize: 15,
@@ -1901,17 +1820,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         religionConsent: religionConsent,
         ethnicityConsent: ethnicityConsent,
         hairColor: _hairColor,
-        politicalAffiliation: _politicalAffiliationValue == 0
-            ? 'politics_dont_care'
-            : _politicalAffiliationValue == -1
-                ? 'politics_undisclosed'
-                : [
-                    'politics_left',
-                    'politics_center_left',
-                    'politics_center',
-                    'politics_center_right',
-                    'politics_right'
-                  ][_politicalAffiliationValue.toInt() - 1],
         religionPreference: _partnerReligion?.join(', '),
         ethnicityPreference: _partnerEthnicity?.join(', '),
         hairColorPreference: _partnerHairColor?.join(', '),
@@ -1922,7 +1830,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         partnerChildrenPreference: _partnerChildrenPreference?.join(', '),
         hasChildren: _hasChildren,
         nicotineFilter: _partnerNicotineFilter,
-        politicalAffiliationPreference: _partnerPoliticalAffiliationPreference,
 
         partnerHeightPreference: _partnerHeightRange,
         lookingFor: _datingPreference != null

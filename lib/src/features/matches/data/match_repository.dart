@@ -43,7 +43,6 @@ class MatchProfile {
 
   // Extended fields
   final int? height;
-  final String? politicalAffiliation;
   final String? religion;
   final String? ethnicity;
   final String? jobStatus;
@@ -86,7 +85,6 @@ class MatchProfile {
     required this.bio,
     this.photoUrls = const [],
     this.height,
-    this.politicalAffiliation,
     this.religion,
     this.ethnicity,
     this.jobStatus,
@@ -129,7 +127,6 @@ class MatchProfile {
       hobbies: HobbyUtils.parseHobbies(data['hobbies']),
       bio: '', // Bio not stored server-side; derived from prompts
       height: data['height'] as int?,
-      politicalAffiliation: data['politicalAffiliation'] as String?,
       religion: data['religion'] as String?,
       ethnicity: data['ethnicity'] as String?,
       jobStatus: data['jobStatus'] as String?,

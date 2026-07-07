@@ -94,21 +94,5 @@ void main() {
         expect(SliderNormalizer.labelForIntroversion(150), 'Extrovert');
       });
     });
-
-    group('labelForPolitical', () {
-      test('returns correct labels for 1–5 scale', () {
-        expect(SliderNormalizer.labelForPolitical(1), 'Left');
-        expect(SliderNormalizer.labelForPolitical(2), 'Center-Left');
-        expect(SliderNormalizer.labelForPolitical(3), 'Center');
-        expect(SliderNormalizer.labelForPolitical(4), 'Center-Right');
-        expect(SliderNormalizer.labelForPolitical(5), 'Right');
-      });
-
-      test('clamps values outside 1–5 range', () {
-        expect(SliderNormalizer.labelForPolitical(0), 'Left'); // Clamps to 1
-        expect(SliderNormalizer.labelForPolitical(6), 'Right'); // Clamps to 5
-        expect(SliderNormalizer.labelForPolitical(-1), 'Left'); // Clamps to 1
-      });
-    });
   });
 }

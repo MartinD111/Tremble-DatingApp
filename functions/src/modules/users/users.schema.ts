@@ -57,8 +57,6 @@ export const updateProfileSchema = z
         ethnicityPreference: z.string().max(50).nullish(),
         hairColor: z.string().max(50).nullish(),
         hairColorPreference: z.string().max(50).nullish(),
-        politicalAffiliation: z.string().max(50).nullish(),
-        politicalAffiliationPreference: z.string().max(50).nullish(),
 
         partnerHeightPreference: z.string().max(50).nullish(),
         interestedIn: interestedInSchema.nullish(),
