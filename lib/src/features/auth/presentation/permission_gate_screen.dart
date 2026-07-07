@@ -9,6 +9,7 @@ import '../../../core/theme_provider.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/primary_button.dart';
+import 'prominent_disclosure_screen.dart';
 
 class PermissionGateScreen extends ConsumerStatefulWidget {
   const PermissionGateScreen({super.key});
@@ -59,23 +60,46 @@ class _PermissionGateScreenState extends ConsumerState<PermissionGateScreen>
 
     await ConsentService.requestBluetooth();
     await ConsentService.requestNotification();
-    await ConsentService.requestLocation();
+    await ConsentService.requestLocationWhenInUse();
 
     final locationStatus = await Permission.locationWhenInUse.status;
 
     if (!mounted) return;
 
-    if (locationStatus.isGranted || locationStatus.isLimited) {
-      await ref.read(gdprConsentProvider.notifier).grantConsent();
-      // Router redirect fires automatically once consent state updates.
-    } else {
+    if (!(locationStatus.isGranted || locationStatus.isLimited)) {
       // iOS denied or permanently denied — must go to Settings.
       // Do NOT call grantConsent(); show inline Settings prompt instead.
       setState(() {
         _isRequesting = false;
         _showSettingsPrompt = true;
       });
+      return;
     }
+
+    // Foreground granted. Show the standalone Google Play Prominent
+    // Disclosure BEFORE the OS background-location prompt on both platforms.
+    // Bundling the disclosure into this screen is a documented Play review
+    // rejection path — the disclosure must be its own step.
+    final allowBackground = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        settings: const RouteSettings(name: prominentDisclosureRouteName),
+        builder: (_) => const ProminentDisclosureScreen(),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (allowBackground == true) {
+      await ConsentService.requestLocationAlways();
+      if (!mounted) return;
+    }
+
+    // Grant app-level consent regardless of the background choice. The user
+    // has granted foreground location; the app must remain usable even if
+    // they declined the background tier. They can enable "Always" later via
+    // device Settings.
+    await ref.read(gdprConsentProvider.notifier).grantConsent();
+    // Router redirect fires automatically once consent state updates.
   }
 
   void _onDecline() {

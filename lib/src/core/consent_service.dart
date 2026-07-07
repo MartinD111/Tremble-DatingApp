@@ -40,41 +40,36 @@ final gdprConsentProvider =
 
 /// Handles OS permission requests.
 class ConsentService {
-  /// Request location permission (for Radar / Geo feature).
+  /// Request foreground location ("When In Use") only.
   ///
-  /// On iOS this is a two-step process:
-  /// 1. Request "When In Use" so the system shows the standard location dialog.
-  /// 2. If granted, immediately escalate to "Always" so GeoService can update
-  ///    the geohash while the app is backgrounded (BLE proximity requires it).
-  ///    iOS requires the second request to originate from Dart — there is no
-  ///    single-call path to "Always" from a cold state.
+  /// Callers must NOT chain this into a background-location request without
+  /// showing the Prominent Disclosure screen first — Google Play policy for
+  /// ACCESS_BACKGROUND_LOCATION requires a standalone disclosure between the
+  /// foreground grant and the OS background-permission prompt.
   ///
-  /// On Android, ACCESS_BACKGROUND_LOCATION in AndroidManifest.xml handles the
-  /// background tier automatically once ACCESS_FINE_LOCATION is granted at
-  /// runtime — no second Dart call is needed.
-  static Future<PermissionStatus> requestLocation() async {
-    final whenInUse = await Permission.locationWhenInUse.request();
+  /// See [requestLocationAlways] for the background step and
+  /// ProminentDisclosureScreen for the disclosure UI that must precede it.
+  static Future<PermissionStatus> requestLocationWhenInUse() =>
+      Permission.locationWhenInUse.request();
 
-    if (whenInUse.isGranted) {
-      if (Platform.isIOS) {
-        // iOS requires an explicit second request after "When In Use" is
-        // granted. The system shows a separate prompt:
-        // "Allow [App] to always access your location?"
-        // with the explanatory note set in Info.plist
-        // (NSLocationAlwaysAndWhenInUseUsageDescription).
-        //
-        // UX rationale shown to the user before this request:
-        // "So Tremble can detect people nearby even when you're not looking
-        // at the app." This is surfaced by the permission_gate_screen before
-        // calling ConsentService.requestLocation().
-        await Permission.locationAlways.request();
-      }
-      // Android: ACCESS_BACKGROUND_LOCATION in AndroidManifest.xml handles
-      // the background tier automatically — no second runtime request needed.
-    }
-
-    return whenInUse;
-  }
+  /// Request background location ("Always" tier).
+  ///
+  /// Must only be invoked AFTER the user has affirmatively tapped the primary
+  /// CTA on ProminentDisclosureScreen. This method itself does not check for
+  /// disclosure — that responsibility lives in the caller.
+  ///
+  /// On iOS this triggers the system dialog:
+  ///   "Allow [App] to always access your location?"
+  /// backed by NSLocationAlwaysAndWhenInUseUsageDescription in Info.plist.
+  ///
+  /// On Android 10 this triggers a runtime dialog; on Android 11+ it opens
+  /// the app's Location settings so the user can choose "Allow all the time".
+  /// Both count as the OS prompt that Google Play policy gates behind the
+  /// Prominent Disclosure.
+  ///
+  /// Returns the resulting permission status.
+  static Future<PermissionStatus> requestLocationAlways() =>
+      Permission.locationAlways.request();
 
   /// Request Bluetooth scan permission (for BLE proximity detection).
   /// On Android 12+ this maps to BLUETOOTH_SCAN. On older versions / iOS it

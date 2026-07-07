@@ -1,13 +1,18 @@
-// Regression tests for H2 — Location "Always" tier escalation.
+// Regression tests for the split of the old ConsentService.requestLocation()
+// into two separately-invocable methods, driven by the Google Play Prominent
+// Disclosure requirement for ACCESS_BACKGROUND_LOCATION.
 //
-// ConsentService.requestLocation() MUST:
-//  1. First request Permission.locationWhenInUse
-//  2. Only if granted AND on iOS, also request Permission.locationAlways
-//  3. Return the WhenInUse status (callers key off that value)
+// New contract:
+//  * ConsentService.requestLocationWhenInUse() — foreground only.
+//  * ConsentService.requestLocationAlways()    — background only.
+//  * The caller (PermissionGateScreen) is responsible for showing the
+//    Prominent Disclosure between the two calls. The old compound
+//    requestLocation() method MUST NOT exist, so no future refactor can
+//    accidentally re-fuse the two steps and skip the disclosure.
 //
-// These tests operate on the source text because permission_handler requires
-// a real device to invoke. They pin the structural contract so a future
-// refactor cannot silently regress to the single-call implementation.
+// permission_handler cannot be invoked outside a device, so these tests
+// operate on the source text — matching the pattern used elsewhere in this
+// suite (see registration_flow_test.dart, api_payload_contract_test.dart).
 
 import 'dart:io';
 
@@ -22,72 +27,70 @@ void main() {
     source = File(sourcePath).readAsStringSync();
   });
 
-  group('ConsentService.requestLocation() — two-step location escalation', () {
-    test('imports dart:io Platform', () {
+  group('ConsentService — post-Prominent-Disclosure split', () {
+    test('exposes requestLocationWhenInUse for the foreground step', () {
       expect(
         source,
-        contains("import 'dart:io' show Platform;"),
-        reason: 'Platform.isIOS guard requires dart:io import',
+        contains('requestLocationWhenInUse'),
+        reason: 'Foreground request must be independently callable',
       );
-    });
-
-    test('requests locationWhenInUse first', () {
       expect(
         source,
         contains('Permission.locationWhenInUse.request()'),
-        reason: 'Step 1: WhenInUse is the entry-level location permission',
+        reason: 'Foreground path still hits WhenInUse',
       );
     });
 
-    test('requests locationAlways on iOS after WhenInUse granted', () {
+    test('exposes requestLocationAlways for the background step', () {
+      expect(
+        source,
+        contains('requestLocationAlways'),
+        reason: 'Background request must be independently callable',
+      );
       expect(
         source,
         contains('Permission.locationAlways.request()'),
-        reason: 'Step 2: iOS requires explicit escalation to Always tier',
+        reason: 'Background path still hits Always',
       );
     });
 
-    test('Platform.isIOS guard present to gate the second request', () {
+    test('no compound requestLocation() method remains', () {
+      // The old method chained WhenInUse → Always. Its removal is what
+      // guarantees the caller cannot accidentally skip the Prominent
+      // Disclosure by calling a single "do everything" method.
+      final compoundPattern = RegExp(r'\brequestLocation\s*\(\s*\)');
       expect(
-        source,
-        contains('Platform.isIOS'),
-        reason: 'Second request must only fire on iOS, not Android',
+        compoundPattern.hasMatch(source),
+        isFalse,
+        reason: 'requestLocation() must be gone. Callers must invoke '
+            'requestLocationWhenInUse and requestLocationAlways separately '
+            'with the Prominent Disclosure in between.',
       );
     });
 
-    test('second request is inside the whenInUse.isGranted block', () {
-      // Verify ordering: isGranted check must appear before locationAlways.
-      final isGrantedIdx = source.indexOf('whenInUse.isGranted');
-      final alwaysIdx = source.indexOf('locationAlways.request()');
-      expect(isGrantedIdx, isNot(-1), reason: 'isGranted check must exist');
-      expect(alwaysIdx, isNot(-1),
-          reason: 'locationAlways.request() must exist');
-      expect(
-        isGrantedIdx < alwaysIdx,
-        isTrue,
-        reason:
-            'locationAlways.request() must be nested inside the isGranted block',
-      );
-    });
-
-    test('requestLocation is an async method, not a one-liner arrow function',
+    test(
+        'no code path chains WhenInUse directly into Always inside the service',
         () {
-      // The old implementation was:
-      //   static Future<PermissionStatus> requestLocation() =>
-      //       Permission.locationWhenInUse.request();
-      // After H2 it must be an async function body.
-      expect(
-        source,
-        contains('requestLocation() async'),
-        reason: 'requestLocation must be an async function to await both calls',
-      );
-    });
+      // Prove the two calls are no longer wired back-to-back in the same
+      // method. This is a defense-in-depth check: if someone reintroduces
+      // the chain under a different name, this test fires.
+      final whenInUseIdx = source.indexOf('Permission.locationWhenInUse');
+      final alwaysIdx = source.indexOf('Permission.locationAlways');
+      expect(whenInUseIdx, isNot(-1));
+      expect(alwaysIdx, isNot(-1));
 
-    test('method still returns the WhenInUse status', () {
+      // They must live inside distinct method bodies. Simplest structural
+      // proof: the substring between them must include a method boundary
+      // (either `}` closing one method, or a new `static Future` signature).
+      final between = source.substring(
+        whenInUseIdx < alwaysIdx ? whenInUseIdx : alwaysIdx,
+        whenInUseIdx < alwaysIdx ? alwaysIdx : whenInUseIdx,
+      );
       expect(
-        source,
-        contains('return whenInUse'),
-        reason: 'Callers depend on the WhenInUse PermissionStatus return value',
+        between.contains('static Future') || between.contains('=>'),
+        isTrue,
+        reason: 'The two permission calls must live in separate methods so the '
+            'Prominent Disclosure can be interleaved between them.',
       );
     });
 
@@ -95,7 +98,15 @@ void main() {
       expect(
         source,
         contains('Permission.bluetoothScan.request()'),
-        reason: 'H2 scope is location only — bluetoothScan must stay intact',
+        reason: 'Bluetooth path is out of scope for this change',
+      );
+    });
+
+    test('requestNotification is unchanged', () {
+      expect(
+        source,
+        contains('Permission.notification.request()'),
+        reason: 'Notification path is out of scope for this change',
       );
     });
   });
