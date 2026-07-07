@@ -294,7 +294,7 @@ void main() {
       email: 'me@example.com',
       name: 'Sarah',
       onboardingCheckpoint:
-          26, // Start at PhotosStep page (index 26 on iOS/macOS)
+          25, // Start at PhotosStep page (index 25 after politicalAffiliation removal)
       isEmailVerified: true,
     );
 

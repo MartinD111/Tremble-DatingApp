@@ -695,20 +695,6 @@ const Map<String, Map<String, String>> _translations = {
     'hair_gray_white': 'Gray/White',
     'hair_bald': 'Bald',
     'hair_other': 'Other',
-
-    // --- Political Affiliation ---
-    'political_affiliation': 'Political affiliation',
-    'politics_left': 'Left',
-    'politics_center_left': 'Center-left',
-    'politics_center': 'Center',
-    'politics_center_right': 'Center-right',
-    'politics_right': 'Right',
-    'politics_dont_care': "I don't care about politics",
-    'politics_undisclosed': "I don't want to say",
-    'politics_match_any': "I don't care",
-    'politics_popup_title': 'Political Matching',
-    'politics_popup_body':
-        'You will be paired with people who have similar or close political views.',
     'action_share': 'Share',
     'action_view': 'View',
 
@@ -1555,18 +1541,6 @@ const Map<String, Map<String, String>> _translations = {
     'premium_account_activated': 'Premium račun aktiviran',
 
     // --- Politična pripadnost ---
-    'political_affiliation': 'Politična pripadnost',
-    'politics_left': 'Levo',
-    'politics_center_left': 'Sredinsko-levo',
-    'politics_center': 'Sredina',
-    'politics_center_right': 'Sredinsko-desno',
-    'politics_right': 'Desno',
-    'politics_dont_care': 'Ne zanima me politika',
-    'politics_undisclosed': 'Nočem povedati',
-    'politics_match_any': 'Vseeno mi je',
-    'politics_popup_title': 'Politično ujemanje',
-    'politics_popup_body':
-        'Povezani boste z ljudmi, ki imajo podobna ali bližnja politična prepričanja.',
 
     // --- Edit profile ---
     'distance_help':
@@ -2303,20 +2277,6 @@ const Map<String, Map<String, String>> _translations = {
     'hair_gray_white': 'Grau/Weiß',
     'hair_bald': 'Kahl',
     'hair_other': 'Andere',
-
-    // --- Political Affiliation ---
-    'political_affiliation': 'Politische Einstellung',
-    'politics_left': 'Links',
-    'politics_center_left': 'Mitte-links',
-    'politics_center': 'Mitte',
-    'politics_center_right': 'Mitte-rechts',
-    'politics_right': 'Rechts',
-    'politics_dont_care': 'Politik interessiert mich nicht',
-    'politics_undisclosed': 'Keine Angabe',
-    'politics_match_any': 'Egal',
-    'politics_popup_title': 'Politisches Matching',
-    'politics_popup_body':
-        'Du wirst mit Personen gematcht, die ähnliche oder nahestehende politische Ansichten haben.',
     'action_share': 'Teilen',
     'action_view': 'Ansehen',
 
@@ -3088,18 +3048,6 @@ const Map<String, Map<String, String>> _translations = {
     'hair_other': 'Altro',
 
     // --- Affiliazione Politica ---
-    'political_affiliation': 'Orientamento politico',
-    'politics_left': 'Sinistra',
-    'politics_center_left': 'Centro-sinistra',
-    'politics_center': 'Centro',
-    'politics_center_right': 'Centro-destra',
-    'politics_right': 'Destra',
-    'politics_dont_care': 'Non mi occupo di politica',
-    'politics_undisclosed': 'Preferisco non dirlo',
-    'politics_match_any': 'Non importa',
-    'politics_popup_title': 'Matching Politico',
-    'politics_popup_body':
-        'Sarai abbinato con persone che hanno visioni politiche simili o compatibili.',
     'action_share': 'Condividi',
     'action_view': 'Visualizza',
 
@@ -3869,18 +3817,6 @@ const Map<String, Map<String, String>> _translations = {
     'hair_other': 'Autre',
 
     // --- Affiliation Politique ---
-    'political_affiliation': 'Orientation politique',
-    'politics_left': 'Gauche',
-    'politics_center_left': 'Centre-gauche',
-    'politics_center': 'Centre',
-    'politics_center_right': 'Centre-droit',
-    'politics_right': 'Droite',
-    'politics_dont_care': 'Je ne m\'occuppe pas de politique',
-    'politics_undisclosed': 'Je préfère ne pas dire',
-    'politics_match_any': 'Peu importe',
-    'politics_popup_title': 'Matching Politique',
-    'politics_popup_body':
-        'Vous serez mis en relation avec des personnes ayant des visions politiques similaires ou compatibles.',
     'action_share': 'Partager',
     'action_view': 'Voir',
 
@@ -4533,18 +4469,6 @@ const Map<String, Map<String, String>> _translations = {
     'hair_gray_white': 'Sijeda/Bijela',
     'hair_bald': 'Ćelav/a',
     'hair_other': 'Drugo',
-    'political_affiliation': 'Politička pripadnost',
-    'politics_left': 'Lijevo',
-    'politics_center_left': 'Lijevi centar',
-    'politics_center': 'Centar',
-    'politics_center_right': 'Desni centar',
-    'politics_right': 'Desno',
-    'politics_dont_care': 'Politika me ne zanima',
-    'politics_undisclosed': 'Ne želim reći',
-    'politics_match_any': 'Svejedno mi je',
-    'politics_popup_title': 'Političko uparivanje',
-    'politics_popup_body':
-        'Bit ćete upareni s osobama koje imaju slične ili bliske političke stavove.',
 
     // --- Hobbies ---
     'hobby_fitness': 'Fitnes',
@@ -5435,20 +5359,6 @@ const Map<String, Map<String, String>> _translations = {
     'hair_gray_white': 'Seda/Bela',
     'hair_bald': 'Ćelav/a',
     'hair_other': 'Drugo',
-
-    // --- Political Affiliation ---
-    'political_affiliation': 'Politička pripadnost',
-    'politics_left': 'Levo',
-    'politics_center_left': 'Centar-levo',
-    'politics_center': 'Centar',
-    'politics_center_right': 'Centar-desno',
-    'politics_right': 'Desno',
-    'politics_dont_care': 'Ne zanima me politika',
-    'politics_undisclosed': 'Ne želim da kažem',
-    'politics_match_any': 'Svejedno mi je',
-    'politics_popup_title': 'Političko podudaranje',
-    'politics_popup_body':
-        'Bićete upareni sa ljudima koji imaju slična ili bliska politička uverenja.',
     'action_share': 'Podeli',
     'action_view': 'Pogledaj',
 
@@ -6340,18 +6250,6 @@ const Map<String, Map<String, String>> _translations = {
     'both_sent_wave': 'Mindketten hullámot küldtetek',
 
     // --- Politikai meggyőződés ---
-    'political_affiliation': 'Politikai meggyőződés',
-    'politics_left': 'Baloldali',
-    'politics_center_left': 'Közép-bal',
-    'politics_center': 'Középutas',
-    'politics_center_right': 'Közép-jobb',
-    'politics_right': 'Jobboldali',
-    'politics_dont_care': 'Nem érdekel a politika',
-    'politics_undisclosed': 'Nem szeretném megmondani',
-    'politics_match_any': 'Mindegy',
-    'politics_popup_title': 'Politikai párosítás',
-    'politics_popup_body':
-        'Olyan személyekkel leszel párosítva, akik hasonló vagy közeli politikai nézeteket vallanak.',
 
     // --- Privacy & Stealth ---
     'privacy_and_stealth': 'Adatvédelem és láthatatlanság',

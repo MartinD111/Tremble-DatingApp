@@ -142,7 +142,6 @@ describe("Users Module", () => {
                     blockedBy: [],
                     ethnicity: "private",
                     religion: "private",
-                    politicalAffiliation: "private",
                 }),
             });
             const matchGet = jest.fn<() => Promise<{ exists: boolean }>>().mockResolvedValue({
@@ -187,7 +186,6 @@ describe("Users Module", () => {
                     blockedBy: ["callerUid"],
                     ethnicity: "private",
                     religion: "private",
-                    politicalAffiliation: "private",
                 }),
             });
             const matchGet = jest.fn<() => Promise<{ exists: boolean }>>().mockResolvedValue({
@@ -308,7 +306,6 @@ describe("Users Module", () => {
                 religion: null,
                 ethnicity: null,
                 hairColor: null,
-                politicalAffiliation: null,
                 interestedIn: null,
                 lookingFor: null,
                 languages: null,

@@ -875,65 +875,9 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
             isGenderBasedColor: isGenderBasedColor,
             gender: gender,
           ),
-          const SizedBox(height: 12),
-          Builder(builder: (context) {
-            final val = _getPoliticalValue(match.politicalAffiliation);
-            String currentText = match.politicalAffiliation != null
-                ? t(match.politicalAffiliation!, lang)
-                : t('politics_undisclosed', lang);
-            if (val > 0 && match.politicalAffiliation != null) {
-              currentText = _politicsLabelReg(val, lang);
-            }
-            return _buildGlassSpectrumCard(
-              icon: LucideIcons.flag,
-              label: t('political_affiliation', lang),
-              value: val <= 0 ? 3.0 : val,
-              min: 1,
-              max: 5,
-              leftLabel: t('politics_left', lang),
-              rightLabel: t('politics_right', lang),
-              currentText: currentText,
-              isDark: isDark,
-              hideThumb: val <= 0,
-              isGenderBasedColor: isGenderBasedColor,
-              gender: gender,
-            );
-          }),
         ],
       ),
     );
-  }
-
-  double _getPoliticalValue(String? affiliation) {
-    switch (affiliation) {
-      case 'politics_left':
-        return 1.0;
-      case 'politics_center_left':
-        return 2.0;
-      case 'politics_center':
-        return 3.0;
-      case 'politics_center_right':
-        return 4.0;
-      case 'politics_right':
-        return 5.0;
-      case 'politics_dont_care':
-        return 0.0;
-      case 'politics_undisclosed':
-        return -1.0;
-      default:
-        return -1.0;
-    }
-  }
-
-  String _politicsLabelReg(double v, String lang) {
-    final idx = v.round().clamp(1, 5) - 1;
-    return [
-      t('politics_left', lang),
-      t('politics_center_left', lang),
-      t('politics_center', lang),
-      t('politics_center_right', lang),
-      t('politics_right', lang),
-    ][idx];
   }
 
   Widget _buildGlassSpectrumCard({

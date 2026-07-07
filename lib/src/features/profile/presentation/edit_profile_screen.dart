@@ -67,7 +67,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   List<Map<String, dynamic>> _hobbies = [];
   List<String> _lookingFor = [];
   List<String> _languages = [];
-  double _politicalAffiliationValue = 3.0; // 1-5 spectrum left→right
   DateTime? _birthDate;
   double _lastScrollOffset = 0;
 
@@ -190,25 +189,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _hobbies = List.from(user.hobbies);
       _languages = List.from(user.languages);
       _birthDate = user.birthDate;
-
-      // Political affiliation mapping: String -> Double
-      final polString = user.politicalAffiliation;
-      if (polString == 'politics_left')
-        _politicalAffiliationValue = 1.0;
-      else if (polString == 'politics_center_left')
-        _politicalAffiliationValue = 2.0;
-      else if (polString == 'politics_center')
-        _politicalAffiliationValue = 3.0;
-      else if (polString == 'politics_center_right')
-        _politicalAffiliationValue = 4.0;
-      else if (polString == 'politics_right')
-        _politicalAffiliationValue = 5.0;
-      else if (polString == 'politics_dont_care')
-        _politicalAffiliationValue = 0.0;
-      else if (polString == 'politics_undisclosed')
-        _politicalAffiliationValue = -1.0;
-      else
-        _politicalAffiliationValue = 3.0; // Default to center
     }
     _nameController.addListener(_markChanged);
     _locationController.addListener(_markChanged);
@@ -387,17 +367,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           languages: _languages,
           birthDate: _birthDate,
           age: _birthDate != null ? ZodiacUtils.calcAge(_birthDate!) : user.age,
-          politicalAffiliation: _politicalAffiliationValue == 0
-              ? 'politics_dont_care'
-              : _politicalAffiliationValue == -1
-                  ? 'politics_undisclosed'
-                  : [
-                      'politics_left',
-                      'politics_center_left',
-                      'politics_center',
-                      'politics_center_right',
-                      'politics_right'
-                    ][_politicalAffiliationValue.toInt() - 1],
         ));
     CenterNotification.show(
       context: context,
@@ -702,8 +671,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
                             _MetricsSection(
                               introversionLevel: _introversionLevel,
-                              politicalAffiliationValue:
-                                  _politicalAffiliationValue,
                               isPremium: isPremium,
                               lang: lang,
                               isDark: isDark,
@@ -713,11 +680,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               borderColor: borderColor,
                               onIntroversionChanged: (val) => setState(() {
                                 _introversionLevel = val;
-                                _hasChanges = true;
-                              }),
-                              onPoliticalAffiliationChanged: (val) =>
-                                  setState(() {
-                                _politicalAffiliationValue = val;
                                 _hasChanges = true;
                               }),
                             ),
@@ -2505,7 +2467,6 @@ class _LifestyleSection extends StatelessWidget {
 class _MetricsSection extends StatelessWidget {
   const _MetricsSection({
     required this.introversionLevel,
-    required this.politicalAffiliationValue,
     required this.isPremium,
     required this.lang,
     required this.isDark,
@@ -2514,11 +2475,9 @@ class _MetricsSection extends StatelessWidget {
     required this.iconColor,
     required this.borderColor,
     required this.onIntroversionChanged,
-    required this.onPoliticalAffiliationChanged,
   });
 
   final double introversionLevel;
-  final double politicalAffiliationValue;
   final bool isPremium;
   final String lang;
   final bool isDark;
@@ -2527,7 +2486,6 @@ class _MetricsSection extends StatelessWidget {
   final Color iconColor;
   final Color borderColor;
   final void Function(double) onIntroversionChanged;
-  final void Function(double) onPoliticalAffiliationChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -2546,15 +2504,6 @@ class _MetricsSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         _buildIntrovertSlider(context),
-        const SizedBox(height: 20),
-
-        _sectionLabel(
-          t('political_affiliation', lang),
-          LucideIcons.flag,
-          centered: true,
-        ),
-        const SizedBox(height: 8),
-        _buildPoliticalSlider(context),
         const SizedBox(height: 32),
 
         // ── Detection radius (fixed per tier) ─────────────────────────────
@@ -2628,56 +2577,6 @@ class _MetricsSection extends StatelessWidget {
           fit: BoxFit.scaleDown,
           child: Text(
             percentLabel,
-            style: TextStyle(
-              color: primary,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPoliticalSlider(BuildContext context) {
-    final primary = Theme.of(context).primaryColor;
-    final labels = [
-      '',
-      t('politics_left', lang),
-      t('politics_center_left', lang),
-      t('politics_center', lang),
-      t('politics_center_right', lang),
-      t('politics_right', lang),
-    ];
-
-    double displayValue = politicalAffiliationValue;
-    if (displayValue <= 0) displayValue = 3.0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(t('politics_left', lang),
-                style: TextStyle(color: subColor, fontSize: 12)),
-            Text(t('politics_right', lang),
-                style: TextStyle(color: subColor, fontSize: 12)),
-          ],
-        ),
-        Slider(
-          value: displayValue,
-          min: 1.0,
-          max: 5.0,
-          divisions: 4,
-          activeColor: primary,
-          inactiveColor: isDark ? Colors.white24 : Colors.black12,
-          onChanged: onPoliticalAffiliationChanged,
-        ),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            labels[displayValue.round()],
             style: TextStyle(
               color: primary,
               fontSize: 16,

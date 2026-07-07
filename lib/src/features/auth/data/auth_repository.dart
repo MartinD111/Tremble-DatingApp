@@ -88,8 +88,6 @@ class AuthUser {
   final bool? ethnicityConsent;
   final String? hairColor;
   final String? hairColorPreference;
-  final String? politicalAffiliation;
-  final String? politicalAffiliationPreference;
   final String? partnerExerciseHabit;
   final String? partnerDrinkingHabit;
   final String? partnerSleepSchedule;
@@ -179,8 +177,6 @@ class AuthUser {
     this.ethnicityConsent,
     this.hairColor,
     this.hairColorPreference,
-    this.politicalAffiliation,
-    this.politicalAffiliationPreference,
     this.partnerExerciseHabit,
     this.partnerDrinkingHabit,
     this.partnerSleepSchedule,
@@ -258,8 +254,6 @@ class AuthUser {
       if (ethnicityConsent != null) 'ethnicityConsent': ethnicityConsent,
       'hairColor': hairColor,
       'hairColorPreference': hairColorPreference,
-      'politicalAffiliation': politicalAffiliation,
-      'politicalAffiliationPreference': politicalAffiliationPreference,
       'partnerExerciseHabit': partnerExerciseHabit,
       'partnerDrinkingHabit': partnerDrinkingHabit,
       'partnerSleepSchedule': partnerSleepSchedule,
@@ -377,9 +371,6 @@ class AuthUser {
       ethnicityConsent: data['ethnicityConsent'] as bool?,
       hairColor: data['hairColor'] as String?,
       hairColorPreference: data['hairColorPreference'] as String?,
-      politicalAffiliation: data['politicalAffiliation'] as String?,
-      politicalAffiliationPreference:
-          data['politicalAffiliationPreference'] as String?,
       partnerExerciseHabit: data['partnerExerciseHabit'] as String?,
       partnerDrinkingHabit: data['partnerDrinkingHabit'] as String?,
       partnerSleepSchedule: data['partnerSleepSchedule'] as String?,
@@ -453,8 +444,6 @@ class AuthUser {
     bool? ethnicityConsent,
     String? hairColor,
     Object? hairColorPreference = _unset,
-    String? politicalAffiliation,
-    Object? politicalAffiliationPreference = _unset,
     Object? partnerExerciseHabit = _unset,
     Object? partnerDrinkingHabit = _unset,
     Object? partnerSleepSchedule = _unset,
@@ -543,11 +532,6 @@ class AuthUser {
       hairColorPreference: identical(hairColorPreference, _unset)
           ? this.hairColorPreference
           : hairColorPreference as String?,
-      politicalAffiliation: politicalAffiliation ?? this.politicalAffiliation,
-      politicalAffiliationPreference:
-          identical(politicalAffiliationPreference, _unset)
-              ? this.politicalAffiliationPreference
-              : politicalAffiliationPreference as String?,
       partnerExerciseHabit: identical(partnerExerciseHabit, _unset)
           ? this.partnerExerciseHabit
           : partnerExerciseHabit as String?,

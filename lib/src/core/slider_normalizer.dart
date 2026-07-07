@@ -122,35 +122,4 @@ class SliderNormalizer {
     if (value <= 87) return 'Center-Right';
     return 'Extrovert';
   }
-
-  /// Converts a 1–5 political affiliation scale to a label.
-  ///
-  /// Used for both own and partner preferences.
-  ///
-  /// **Examples:**
-  /// ```dart
-  /// SliderNormalizer.labelForPolitical(1) // → "Left"
-  /// SliderNormalizer.labelForPolitical(2) // → "Center-Left"
-  /// SliderNormalizer.labelForPolitical(3) // → "Center"
-  /// SliderNormalizer.labelForPolitical(4) // → "Center-Right"
-  /// SliderNormalizer.labelForPolitical(5) // → "Right"
-  /// ```
-  static String labelForPolitical(int value) {
-    value = value.clamp(1, 5);
-
-    switch (value) {
-      case 1:
-        return 'Left';
-      case 2:
-        return 'Center-Left';
-      case 3:
-        return 'Center';
-      case 4:
-        return 'Center-Right';
-      case 5:
-        return 'Right';
-      default:
-        return 'Center';
-    }
-  }
 }

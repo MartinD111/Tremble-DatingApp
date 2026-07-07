@@ -127,7 +127,6 @@ export const getPublicProfile = onCall(
                 religion: data.religion,
                 ethnicity: data.ethnicity,
                 hairColor: data.hairColor,
-                politicalAffiliation: data.politicalAffiliation,
                 occupation: data.occupation,
             },
         };

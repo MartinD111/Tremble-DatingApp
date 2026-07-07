@@ -62,7 +62,6 @@ export const completeOnboardingSchema = z.object({
     religion: z.string().max(50).nullish(),
     ethnicity: z.string().max(50).nullish(),
     hairColor: z.string().max(50).nullish(),
-    politicalAffiliation: z.string().max(50).nullish(),
     partnerDrinkingHabit: z.string().max(500).nullish(),
     partnerExerciseHabit: z.string().max(500).nullish(),
     partnerSleepSchedule: z.string().max(500).nullish(),
