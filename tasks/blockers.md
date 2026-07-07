@@ -17,10 +17,17 @@
 **Action:** Reconcile code functionality with `Info.plist` strings and Privacy Policy. (Task 6h3p8gWpxpq7rWXw)
 
 ### BLOCKER-STORE-003 — Android Background Location Declaration
-**Date:** 2026-07-06
-**Status:** OPEN
+**Date:** 2026-07-06 (updated 2026-07-07)
+**Status:** OPEN — code side done, Play Console side pending
 **Impact:** Requires Prominent Disclosure, a demo video, and a special declaration in Google Play Console. This review process takes 2-4 weeks and blocks Android launch.
-**Action:** Submit the declaration to Google Play immediately. (Task 6h3p8gWG7WHWV7JP)
+**Progress (2026-07-07, PR #7 / commit a3f793b, Session 42):**
+- ✅ Standalone Prominent Disclosure screen added at `lib/src/features/auth/presentation/prominent_disclosure_screen.dart` — shown between foreground grant and OS background prompt on both Android and iOS.
+- ✅ Consent flow refactored so the OS `ACCESS_BACKGROUND_LOCATION` prompt only fires after the disclosure's primary CTA is tapped. "Not now" completes onboarding with foreground-only location.
+- ✅ Android is now a first-class background-location caller (previously the manifest permission was silently dormant).
+- ⏳ Copy in EN + SL is spec-verbatim and **must go through `brand-voice-agent` review** before ship.
+- ⏳ EN + SL screenshots of the new screen must be captured on an emulator/device for the Play submission package.
+- ⏳ Play Console declaration + demo video still need to be submitted.
+**Action:** Run copy through brand-voice-agent, capture screenshots, record demo video, submit Play declaration. (Task 6h3p8gWG7WHWV7JP)
 
 ### BLOCKER-STORE-004 — Android Foreground Services Declaration
 **Date:** 2026-07-06
