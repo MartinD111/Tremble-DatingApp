@@ -960,6 +960,13 @@ const Map<String, Map<String, String>> _translations = {
     'photo_upload_error_network':
         'Image could not be uploaded. Check your connection and try again.',
     'photo_upload_error_generic': 'Upload failed. Try again.',
+    // Google Play Prominent Disclosure — background location.
+    // Copy is exact spec text. Do not edit without brand-voice-agent review.
+    'disclosure_bg_location_headline': 'Radar works while you live your life.',
+    'disclosure_bg_location_body':
+        'To find matches nearby, Tremble checks your approximate location — even when the app is in the background. It never stores your exact location. Only a rough area, deleted within hours.',
+    'disclosure_bg_location_cta_allow': 'Allow background location',
+    'disclosure_bg_location_cta_not_now': 'Not now',
   },
 
   // ═══════════════════════════════════════════
@@ -1763,6 +1770,11 @@ const Map<String, Map<String, String>> _translations = {
     'photo_upload_error_network':
         'Slike ni bilo mogoče naložiti. Preveri povezavo in poskusi znova.',
     'photo_upload_error_generic': 'Naložitev ni uspela. Poskusi znova.',
+    'disclosure_bg_location_headline': 'Radar deluje, tudi ko ne gledaš.',
+    'disclosure_bg_location_body':
+        'Da najde ujemanja v tvoji bližini, Tremble preverja tvojo približno lokacijo — tudi ko je aplikacija v ozadju. Tvoje točne lokacije nikoli ne shrani. Samo grobo območje, izbrisano v urah.',
+    'disclosure_bg_location_cta_allow': 'Dovoli lokacijo v ozadju',
+    'disclosure_bg_location_cta_not_now': 'Ne zdaj',
   },
 
   // ═══════════════════════════════════════════
