@@ -23,6 +23,7 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		A11CE0F1A11CE0F1A11CE0F1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A11CE0F0A11CE0F0A11CE0F0 /* PrivacyInfo.xcprivacy */; };
 		B680005BCA24327A9B7F8154 /* Pods_ImageNotification.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 010754A61BACEE2627293B8B /* Pods_ImageNotification.framework */; };
 		BA2DA3243D04CABB236456C3 /* GymGeofenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8083F7DCFECFCDFB14138E45 /* GymGeofenceManager.swift */; };
 		C1A2B3D4E5F60718A9B0C1D2 /* BleRestoreBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E3F4A5B6C70829BADCE3F4 /* BleRestoreBridge.swift */; };
@@ -132,6 +133,7 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A11CE0F0A11CE0F0A11CE0F0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		982ABC629F6CEF6D1D1D2CD9 /* Pods-TrembleRadarWidgetExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrembleRadarWidgetExtension.debug.xcconfig"; path = "Target Support Files/Pods-TrembleRadarWidgetExtension/Pods-TrembleRadarWidgetExtension.debug.xcconfig"; sourceTree = "<group>"; };
 		9C0539710531AF9A6EA7F589 /* Pods-TrembleRadarWidgetExtension.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrembleRadarWidgetExtension.profile.xcconfig"; path = "Target Support Files/Pods-TrembleRadarWidgetExtension/Pods-TrembleRadarWidgetExtension.profile.xcconfig"; sourceTree = "<group>"; };
 		A31C784C78C7CDCDD758F782 /* Pods-RunnerTests.debug-prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-prod.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-prod.xcconfig"; sourceTree = "<group>"; };
@@ -335,6 +337,7 @@
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
 				97C147021CF9000F007C117D /* Info.plist */,
+				A11CE0F0A11CE0F0A11CE0F0 /* PrivacyInfo.xcprivacy */,
 				2F1700052FB8A10000D00001 /* InfoPlist.strings */,
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
@@ -521,6 +524,7 @@
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				29FE04C3A8726D764E42B3CB /* GoogleService-Info.plist in Resources */,
 				2F1700012FB8A10000D00001 /* InfoPlist.strings in Resources */,
+				A11CE0F1A11CE0F1A11CE0F1 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
