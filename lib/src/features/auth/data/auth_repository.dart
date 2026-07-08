@@ -63,7 +63,7 @@ class AuthUser {
   final int? heightRangeEnd;
 
   /// Nicotine products the user uses. Empty list = none.
-  /// Valid values: 'cigarettes' | 'vape' | 'iqos' | 'zyn' | 'shisha' | 'cannabis'
+  /// Valid values: 'cigarettes' | 'vape' | 'iqos' | 'zyn' | 'shisha'
   final List<String> nicotineUse;
 
   /// Partner nicotine filter. Values: 'any' | 'none_only' | 'no_preference'

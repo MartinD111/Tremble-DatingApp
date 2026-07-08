@@ -169,14 +169,14 @@ describe("Auth Module", () => {
                 gender: "female",
                 interestedIn: "male",
                 photoUrls: ["https://r2.example.com/photo.jpg"],
-                nicotineUse: ["vaping"],
+                nicotineUse: ["vape"],
                 nicotineFilter: "no_smoking",
                 consentGiven: true,
             });
 
             expect(result.success).toBe(true);
             if (result.success) {
-                expect(result.data.nicotineUse).toEqual(["vaping"]);
+                expect(result.data.nicotineUse).toEqual(["vape"]);
                 expect(result.data.nicotineFilter).toBe("no_smoking");
             }
         });

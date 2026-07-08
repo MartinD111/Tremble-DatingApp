@@ -1320,11 +1320,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         'value': 'shisha',
         'icon': LucideIcons.flame,
       },
-      {
-        'label': _t('nicotine_cannabis'),
-        'value': 'cannabis',
-        'icon': LucideIcons.leaf,
-      },
     ];
     final allDisplayOptions = [...options, ...customOptions];
     final currentValue = user.nicotineFilter;

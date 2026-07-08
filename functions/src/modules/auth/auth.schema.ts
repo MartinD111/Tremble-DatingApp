@@ -14,7 +14,15 @@ const interestedInSchema = z.preprocess((value) => {
     return value;
 }, z.array(interestedInValueSchema).min(1).max(3));
 
-const nicotineUseSchema = z.array(z.string().max(50)).max(10);
+const nicotineUseValueSchema = z.enum([
+    "cigarettes",
+    "vape",
+    "iqos",
+    "zyn",
+    "shisha",
+]);
+
+const nicotineUseSchema = z.array(nicotineUseValueSchema).max(10);
 
 // Optional fields use `.nullish()` (T | null | undefined) because the Dart
 // client serializes unset values as JSON `null`, which `.optional()` rejects.
