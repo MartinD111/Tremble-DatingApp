@@ -8,7 +8,7 @@ import 'step_shared.dart';
 import 'partner_preference_modal.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Nicotine product options — cannabis is handled separately as a toggle
+// Nicotine product options
 // ─────────────────────────────────────────────────────────────────────────────
 class NicotineOptions {
   static final List<Map<String, dynamic>> products = [
@@ -21,7 +21,7 @@ class NicotineOptions {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NicotineStep — multi-select chips + separate cannabis toggle
+// NicotineStep — multi-select chips
 // ─────────────────────────────────────────────────────────────────────────────
 class NicotineStep extends ConsumerStatefulWidget {
   const NicotineStep({
@@ -46,10 +46,7 @@ class NicotineStep extends ConsumerStatefulWidget {
 }
 
 class _NicotineStepState extends ConsumerState<NicotineStep> {
-  bool _showCannabisDisclaimer = false;
-
   bool get _noneSelected => widget.selected.isEmpty;
-  bool get _cannabisSelected => widget.selected.contains('cannabis');
 
   @override
   Widget build(BuildContext context) {
@@ -85,15 +82,11 @@ class _NicotineStepState extends ConsumerState<NicotineStep> {
                     widget.onToggle(p['key'] as String);
                   }
                 }
-                if (_cannabisSelected) widget.onToggle('cannabis');
-                if (_showCannabisDisclaimer) {
-                  setState(() => _showCannabisDisclaimer = false);
-                }
               },
             ),
             const SizedBox(height: 16),
 
-            // ── Product grid (no cannabis) ────────────────────────────────────
+            // ── Product grid ──────────────────────────────────────────────────
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -111,28 +104,6 @@ class _NicotineStepState extends ConsumerState<NicotineStep> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 20),
-
-            // ── Cannabis toggle ───────────────────────────────────────────────
-            _CannabisToggleRow(
-              label: widget.tr('nicotine_cannabis'),
-              value: _cannabisSelected,
-              isDark: isDark,
-              primary: primary,
-              onChanged: (val) {
-                widget.onToggle('cannabis');
-                setState(() => _showCannabisDisclaimer = val);
-              },
-            ),
-
-            // ── Cannabis disclaimer ───────────────────────────────────────────
-            if (_showCannabisDisclaimer) ...[
-              const SizedBox(height: 12),
-              _CannabisDisclaimer(
-                text: widget.tr('cannabis_disclaimer'),
-                isDark: isDark,
-              ),
-            ],
 
             const Spacer(),
             ContinueButton(
@@ -174,114 +145,6 @@ class _NicotineStepState extends ConsumerState<NicotineStep> {
             const SizedBox(height: 32),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// _CannabisToggleRow
-// ─────────────────────────────────────────────────────────────────────────────
-class _CannabisToggleRow extends StatelessWidget {
-  const _CannabisToggleRow({
-    required this.label,
-    required this.value,
-    required this.isDark,
-    required this.primary,
-    required this.onChanged,
-  });
-
-  final String label;
-  final bool value;
-  final bool isDark;
-  final Color primary;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: value
-            ? primary.withValues(alpha: 0.18)
-            : (isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.black.withValues(alpha: 0.04)),
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(
-          color: value ? primary : (isDark ? Colors.white24 : Colors.black12),
-          width: value ? 2 : 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(LucideIcons.leaf,
-              size: 18,
-              color:
-                  value ? primary : (isDark ? Colors.white60 : Colors.black45)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: GoogleFonts.instrumentSans(
-                fontSize: 15,
-                fontWeight: value ? FontWeight.w600 : FontWeight.w500,
-                color: value
-                    ? (isDark ? Colors.white : Colors.black)
-                    : (isDark ? Colors.white70 : Colors.black87),
-              ),
-            ),
-          ),
-          Switch(
-            value: value,
-            activeThumbColor: primary,
-            activeTrackColor: primary.withValues(alpha: 0.35),
-            onChanged: onChanged,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// _CannabisDisclaimer
-// ─────────────────────────────────────────────────────────────────────────────
-class _CannabisDisclaimer extends StatelessWidget {
-  const _CannabisDisclaimer({required this.text, required this.isDark});
-
-  final String text;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: isDark ? 0.12 : 0.10),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.amber.withValues(alpha: 0.4),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(LucideIcons.alertTriangle,
-              size: 16, color: Colors.amber.shade700),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: GoogleFonts.instrumentSans(
-                fontSize: 12,
-                color: isDark ? Colors.amber.shade200 : Colors.amber.shade900,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -52,7 +52,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _occupationController = TextEditingController();
   final List<String> _nicotineUse = [];
   bool _nicotineUseToggle = false;
-  bool _cannabisShowDisclaimer = false;
   String? _drinkingHabit;
   String? _exerciseHabit;
   String? _sleepSchedule;
@@ -119,9 +118,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       });
       _nicotineUse
         ..clear()
-        ..addAll(user.nicotineUse);
-      _nicotineUseToggle = user.nicotineUse.isNotEmpty;
-      _cannabisShowDisclaimer = user.nicotineUse.contains('cannabis');
+        ..addAll(user.nicotineUse.where((v) => v != 'cannabis'));
+      _nicotineUseToggle = _nicotineUse.isNotEmpty;
       _occupation = user.occupation;
       _occupationController.text = user.occupation ?? '';
       _schoolController.text = user.school ?? '';
@@ -600,7 +598,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             _LifestyleSection(
                               nicotineUse: _nicotineUse,
                               nicotineUseToggle: _nicotineUseToggle,
-                              cannabisShowDisclaimer: _cannabisShowDisclaimer,
                               hasChildren: _hasChildren,
                               drinkingHabit: _drinkingHabit,
                               exerciseHabit: _exerciseHabit,
@@ -620,7 +617,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 _nicotineUseToggle = val;
                                 if (!val) {
                                   _nicotineUse.clear();
-                                  _cannabisShowDisclaimer = false;
                                 }
                                 _hasChanges = true;
                               }),
@@ -628,18 +624,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 _nicotineUse
                                   ..clear()
                                   ..addAll(values);
-                                _hasChanges = true;
-                              }),
-                              onCannabisChanged: (val) => setState(() {
-                                if (val) {
-                                  if (!_nicotineUse.contains('cannabis')) {
-                                    _nicotineUse.add('cannabis');
-                                  }
-                                  _cannabisShowDisclaimer = true;
-                                } else {
-                                  _nicotineUse.remove('cannabis');
-                                  _cannabisShowDisclaimer = false;
-                                }
                                 _hasChanges = true;
                               }),
                               onHasChildrenChanged: (val) => setState(() {
@@ -1977,7 +1961,6 @@ class _LifestyleSection extends StatelessWidget {
   const _LifestyleSection({
     required this.nicotineUse,
     required this.nicotineUseToggle,
-    required this.cannabisShowDisclaimer,
     required this.hasChildren,
     required this.drinkingHabit,
     required this.exerciseHabit,
@@ -1995,7 +1978,6 @@ class _LifestyleSection extends StatelessWidget {
     required this.formatValue,
     required this.onNicotineUseToggleChanged,
     required this.onNicotineUseChanged,
-    required this.onCannabisChanged,
     required this.onHasChildrenChanged,
     required this.onExerciseHabitChanged,
     required this.onDrinkingHabitChanged,
@@ -2006,7 +1988,6 @@ class _LifestyleSection extends StatelessWidget {
 
   final List<String> nicotineUse;
   final bool nicotineUseToggle;
-  final bool cannabisShowDisclaimer;
   final bool? hasChildren;
   final String? drinkingHabit;
   final String? exerciseHabit;
@@ -2024,7 +2005,6 @@ class _LifestyleSection extends StatelessWidget {
   final String Function(String?) formatValue;
   final void Function(bool) onNicotineUseToggleChanged;
   final void Function(List<String>) onNicotineUseChanged;
-  final void Function(bool) onCannabisChanged;
   final void Function(bool) onHasChildrenChanged;
   final void Function(String?) onExerciseHabitChanged;
   final void Function(String?) onDrinkingHabitChanged;
@@ -2279,8 +2259,6 @@ class _LifestyleSection extends StatelessWidget {
       'shisha': LucideIcons.flame,
     };
 
-    final cannabisSelected = nicotineUse.contains('cannabis');
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2357,93 +2335,6 @@ class _LifestyleSection extends StatelessWidget {
               );
             }).toList(),
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            decoration: BoxDecoration(
-              color: cannabisSelected
-                  ? primary.withValues(alpha: 0.10)
-                  : (isDark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : Colors.black.withValues(alpha: 0.03)),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: cannabisSelected
-                    ? primary.withValues(alpha: 0.5)
-                    : (isDark ? Colors.white24 : Colors.black12),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  LucideIcons.leaf,
-                  size: 16,
-                  color: cannabisSelected
-                      ? primary
-                      : (isDark ? Colors.white60 : Colors.black45),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    t('nicotine_cannabis', lang),
-                    style: TextStyle(
-                      color: cannabisSelected
-                          ? (isDark ? Colors.white : Colors.black)
-                          : textColor,
-                      fontWeight:
-                          cannabisSelected ? FontWeight.w600 : FontWeight.w500,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-                Switch(
-                  value: cannabisSelected,
-                  activeThumbColor: primary,
-                  activeTrackColor: primary.withValues(alpha: 0.35),
-                  inactiveTrackColor: isDark ? Colors.white24 : Colors.black12,
-                  onChanged: onCannabisChanged,
-                ),
-              ],
-            ),
-          ),
-          if (cannabisShowDisclaimer) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: isDark ? 0.12 : 0.10),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.amber.withValues(alpha: 0.4),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    LucideIcons.alertTriangle,
-                    size: 15,
-                    color: Colors.amber.shade700,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      t('cannabis_disclaimer', lang),
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.4,
-                        color: isDark
-                            ? Colors.amber.shade200
-                            : Colors.amber.shade900,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ],
     );

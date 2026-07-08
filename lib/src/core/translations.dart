@@ -418,9 +418,6 @@ const Map<String, Map<String, String>> _translations = {
     'nicotine_iqos': 'IQOS',
     'nicotine_zyn': 'ZYN / Pouches',
     'nicotine_shisha': 'Shisha / Hookah',
-    'nicotine_cannabis': 'Cannabis / Joints',
-    'cannabis_disclaimer':
-        'Tremble does not condone the use of cannabis. We are not healthcare professionals. Please consult a qualified professional for health-related guidance.',
     'nicotine_partner_q': 'What about your partner?',
     'nicotine_pref_no_preference': 'No preference',
     'nicotine_pref_none_only': 'Prefer non-users',
@@ -1296,9 +1293,6 @@ const Map<String, Map<String, String>> _translations = {
     'nicotine_iqos': 'IQOS',
     'nicotine_zyn': 'ZYN / Vrečke',
     'nicotine_shisha': 'Šiša / Vodna pipa',
-    'nicotine_cannabis': 'Konoplja / Jointi',
-    'cannabis_disclaimer':
-        'Tremble ne odobrava uporabe konoplje. Nismo zdravstveni strokovnjaki. Za zdravstvene nasvete se posvetujte s kvalificiranim strokovnjakom.',
     'nicotine_partner_q': 'Kaj pa tvoj/-a partner/-ka?',
     'nicotine_pref_no_preference': 'Brez preference',
     'nicotine_pref_none_only': 'Raje nekadilec/-ka',
@@ -2024,9 +2018,6 @@ const Map<String, Map<String, String>> _translations = {
     'nicotine_iqos': 'IQOS',
     'nicotine_zyn': 'ZYN / Beutel',
     'nicotine_shisha': 'Shisha / Wasserpfeife',
-    'nicotine_cannabis': 'Cannabis / Joints',
-    'cannabis_disclaimer':
-        'Tremble befürwortet den Konsum von Cannabis nicht. Wir sind keine Gesundheitsfachleute. Bitte wende dich bei gesundheitlichen Fragen an einen qualifizierten Fachmann.',
     'nicotine_partner_q': 'Was ist mit deinem Partner?',
     'nicotine_pref_no_preference': 'Keine Präferenz',
     'nicotine_pref_none_only': 'Lieber Nichtraucher',
@@ -2792,9 +2783,6 @@ const Map<String, Map<String, String>> _translations = {
     'nicotine_iqos': 'IQOS',
     'nicotine_zyn': 'ZYN / Bustine',
     'nicotine_shisha': 'Shisha / Narghilè',
-    'nicotine_cannabis': 'Cannabis / Spinelli',
-    'cannabis_disclaimer':
-        'Tremble non approva l\'uso di cannabis. Non siamo professionisti sanitari. Consulta un professionista qualificato per indicazioni sulla salute.',
     'nicotine_partner_q': 'E il tuo partner?',
     'nicotine_pref_no_preference': 'Nessuna preferenza',
     'nicotine_pref_none_only': 'Preferibilmente non fumatore',
@@ -3572,9 +3560,6 @@ const Map<String, Map<String, String>> _translations = {
     'nicotine_iqos': 'IQOS',
     'nicotine_zyn': 'ZYN / Sachets',
     'nicotine_shisha': 'Chicha',
-    'nicotine_cannabis': 'Cannabis / Joints',
-    'cannabis_disclaimer':
-        'Tremble ne cautionne pas l\'usage du cannabis. Nous ne sommes pas des professionnels de santé. Veuillez consulter un professionnel qualifié pour tout conseil médical.',
     'nicotine_partner_q': 'Et votre partenaire ?',
     'nicotine_pref_no_preference': 'Pas de préférence',
     'nicotine_pref_none_only': 'Préfère les non-utilisateurs',
@@ -4440,9 +4425,6 @@ const Map<String, Map<String, String>> _translations = {
     'nicotine_iqos': 'IQOS',
     'nicotine_zyn': 'ZYN / Vrećice',
     'nicotine_shisha': 'Nargila',
-    'nicotine_cannabis': 'Kanabis / Joint',
-    'cannabis_disclaimer':
-        'Tremble ne podržava upotrebu kanabisa. Nismo zdravstveni stručnjaci. Obratite se kvalificiranom stručnjaku za zdravstvene savjete.',
     'nicotine_partner_q': 'Što je s vašim partnerom?',
     'nicotine_pref_no_preference': 'Bez preferencije',
     'nicotine_pref_none_only': 'Preferiram nepušače',
@@ -5107,9 +5089,6 @@ const Map<String, Map<String, String>> _translations = {
     'nicotine_iqos': 'IQOS',
     'nicotine_zyn': 'ZYN / Kesice',
     'nicotine_shisha': 'Nargila',
-    'nicotine_cannabis': 'Kanabis / Džoint',
-    'cannabis_disclaimer':
-        'Tremble ne podržava upotrebu kanabisa. Nismo zdravstveni stručnjaci. Obratite se kvalifikovanom stručnjaku za zdravstvene savjete.',
     'nicotine_partner_q': 'Šta je sa vašim partnerom?',
     'nicotine_pref_no_preference': 'Bez preferencije',
     'nicotine_pref_none_only': 'Preferiram nepušače',
@@ -6003,9 +5982,6 @@ const Map<String, Map<String, String>> _translations = {
     'nicotine_iqos': 'IQOS',
     'nicotine_zyn': 'ZYN / Párna',
     'nicotine_shisha': 'Vízipipa',
-    'nicotine_cannabis': 'Kannabisz / Joint',
-    'cannabis_disclaimer':
-        'A Tremble nem helyesli a kannabisz használatát. Nem vagyunk egészségügyi szakemberek. Egészségügyi kérdésekben fordulj képzett szakemberhez.',
     'nicotine_partner_q': 'És a partnered?',
     'nicotine_pref_no_preference': 'Nincs preferencia',
     'nicotine_pref_none_only': 'Inkább nem dohányzó',

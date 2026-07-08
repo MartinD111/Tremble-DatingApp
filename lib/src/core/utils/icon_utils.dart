@@ -97,8 +97,6 @@ class IconUtils {
         return LucideIcons.circle;
       case 'nicotine_shisha':
         return LucideIcons.flame;
-      case 'nicotine_cannabis':
-        return LucideIcons.leaf;
       // Legacy smoking keys (backward compat)
       case 'yes':
         return LucideIcons.cigarette;
