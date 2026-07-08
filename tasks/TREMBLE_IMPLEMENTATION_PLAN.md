@@ -38,8 +38,41 @@ To ni samo plan — je obrazec. Vsak korak ima polje **Output**, ki ostane prazn
 **Todoist:** `6h3p8gWG7WHWV7JP`, `6h3p8gc78572RF9P`
 
 **Output (izpolni ti):**
-```
-Status:
+```text
+Status:Final summary
+
+Branch: feature/prominent-disclosure-background-location
+Commit: a3f793b
+PR-create URL (open in browser): [https://github.com/MartinD111/Tremble-DatingApp/pull/new/feature/prominent-disclosure-background-location](https://github.com/MartinD111/Tremble-DatingApp/pull/new/feature/prominent-disclosure-background-location)
+
+Verification (evidence, not assertions)
+
+- flutter analyze — 0 issues
+- flutter test — 209/209 pass (17 new)
+- flutter build apk --debug --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev — built successfully
+- Pre-commit hook ran format + analyze + functions Jest (63/63) + full Flutter suite — all green
+
+What changed
+
+- New lib/src/features/auth/presentation/prominent_disclosure_screen.dart — standalone Play-compliant disclosure screen, EN/SL copy from spec verbatim.
+- lib/src/core/consent_service.dart — split requestLocation() into requestLocationWhenInUse() + requestLocationAlways(). Compound method removed so no future refactor can silently re-fuse the steps.
+- lib/src/features/auth/presentation/permission_gate_screen.dart _onAccept() — foreground grant → push disclosure → if primary CTA tapped, request locationAlways. "Not now" completes onboarding with foreground-only location. grantConsent() runs in both branches.
+- lib/src/core/translations.dart — 4 new keys in EN and SL blocks.
+- 3 new test files pinning: disclosure copy (EN + SL), CTA return contract, no permission_handler leakage in the widget, ordering in _onAccept, and the ConsentService split contract.
+
+Framing per your grep condition
+
+Grep confirmed: only consent_service.dart:70 ever called Permission.locationAlways.request(), inside if (Platform.isIOS). Android never asked users for background location at runtime before this PR — the manifest permission was silently dormant. So on iOS it's a refactor; on Android it's new capability. Called out explicitly in the PR body.
+
+Deliverables I could NOT produce (need you)
+
+1. Screenshots (EN + SL) — requires a running emulator with the dev APK. The APK is at build/app/outputs/flutter-apk/app-dev-debug.apk; grab these before Play submission.
+2. On-device confirmation that the OS ACCESS_BACKGROUND_LOCATION prompt only fires after tapping "Allow background location" and does not fire on "Not now" — still gated on B005-style device access.
+3. PR creation — gh CLI missing on this machine. Open the URL above and paste the PR body I drafted above in the terminal (or I can output it again).
+
+BLOCKING before Play submission
+
+The 4 new strings are exact spec text, not brand-voice-agent-approved. Per your instruction, you must run them through brand-voice-agent before this ships. Not blocking merge to main, but blocking store submission.
 Datum oddaje v Play Console:
 Datum odobritve (ali še čakam):
 Opombe:
@@ -62,13 +95,37 @@ Vse spodaj mora biti odločeno, PREDEN se dokumenti popravijo ali koda spremeni,
 **Todoist:** `6h3JCC8m76XQPQ4P` (umbrella), `6h3j9q65vh3mG64P`, `6h3jHjr7Hf58G8pw`, `6h3c3FHcXV8HPc4P`
 
 **Output (izpolni ti):**
-```
-Datum sestanka:
-Odgovor na spolno usmerjenost (katera čl. 9(2) podlaga):
-Odgovor na kanabis (čl. 9 ali čl. 10, in če čl. 10 — ali obstaja pravna podlaga za obdelavo):
-Odgovor na politično pripadnost:
-Odgovor na location consent:
-Priložen dokument/email pravnice (da/ne, kje shranjen):
+```text
+Datum sestanka: ni in ne bo, bo kasneje ko bomo imeli funds for it. 07.07.2026: opravljen prvi prehod z Gemini (extended thinking). 
+
+Odgovor na spolno usmerjenost (katera čl. 9(2) podlaga): Vaša utemeljitev natančno zadene bistvo Smernic EDPB 05/2020 (zlasti točke 36 in naprej). Prepoved pogojevanja (conditionality) iz člena 7(4) in Uvodne izjave 43 je namenjena preprečevanju situacij, ko upravljavec od uporabnika izsiljuje privolitev za podatke, ki niso nujni za izvajanje storitve (npr. zahtevanje podatkov o lokaciji za uporabo aplikacije za svetilko, ali deljenje spolne usmerjenosti z oglaševalci, kot v primeru Grindr).
+
+Pri aplikaciji Tremble sta spol in preferenca (koga iščeš) objektivno in intrinzično nujna za zagotavljanje same jedrne storitve (algoritem ujemanja). Posameznik ima še vedno svobodno izbiro: ali želi uporabljati aplikacijo za zmenke (ki logično in nujno potrebuje te podatke) ali pa se odloči, da storitve ne bo uporabljal.
+
+Ker je zahteva po izrecni privolitvi po Členu 9(2)(a) tukaj obvezna zaradi narave podatka, pogojevanje dostopa do aplikacije s to privolitvijo ni nezakonito, pod strogim pogojem (ki ga že navajate), da se ta podatek ne bo nikoli uporabil za noben drug namen (npr. monetizacija, deljenje s tretjimi osebami, oglaševanje).
+
+Naslednji korak v kodi: V consent_step.dart dodate ločen checkbox z besedilom (npr. "Izrecno soglašam z obdelavo mojega spola in preference za namene iskanja ujemanj."), ki ga mora uporabnik obkljukati, da lahko zaključi registracijo (blocking step).
+
+Odgovor na kanabis (čl. 9 ali čl. 10, in če čl. 10 — ali obstaja pravna podlaga za obdelavo): Funkcionalnost v celoti odstranjena iz produkta. Odločitev sprejeta neodvisno od dokončne pravne klasifikacije (čl. 9 vs čl. 10), ker tveganje po čl. 10 v določenih ciljnih jurisdikcijah onemogoča varno privolitveno podlago za zasebno podjetje. Founder odločitev, 07.07.2026.
+
+Odgovor na politično pripadnost: Polje v celoti odstranjeno iz produkta. Ni bilo uporabljeno v algoritmu ujemanja (0 referenc), po STRIP odločitvi za getPublicProfile tudi ne bi bilo več prikazano — brez preostalega funkcionalnega namena je odstranitev edina skladna z načelom minimizacije (čl. 5(1)(c)). Founder odločitev, 07.07.2026.
+
+Odgovor na location consent: Dvojni pristop, ki ste ga predlagali, je izjemno eleganten in pravno najbolj robusten način za reševanje geolokacije v dating aplikacijah:
+
+Ospredje (Foreground) - Člen 6(1)(b): Ko ima uporabnik aplikacijo odprto, je prikaz bližnjih oseb tisto, kar pogodba (Terms of Service) obljublja. Obdelava lokacije v tistem trenutku je strogo nujna za izvajanje te pogodbe. Sklicevanje na 6(1)(b) je tu absolutno legitimno.
+
+Ozadje (Background Radar) - Člen 6(1)(a): Sledenje v ozadju, ko uporabnik telefona ne uporablja aktivno, predstavlja bistveno večji poseg v zasebnost. Težko bi ga ubranili kot "strogo nujnega za izvajanje pogodbe" (saj bi uporabnik lahko app preprosto odprl, ko želi pregledati okolico). Prehod na privolitev za ta specifičen del je edina varna pot. Zelo pomembno: uporabnik mora imeti možnost to privolitev zavrniti (ali preklicati), pri čemer mu aplikacija v ospredju še vedno normalno deluje.
+
+Unbundling (Ločitev od ToS): To, da boste operacijsko dovoljenje za lokacijo in obvestilo premaknili v povsem ločen zaslon stran od _consentGiven (starost + ToS), popolnoma odpravlja kršitev člena 7(2) GDPR (prepoved združevanja privolitev s pogoji poslovanja).
+
+Naslednji korak v kodi: Vključi se ta ločen "disclosure screen" za lokacijo (Kar tudi sovpada z zahtevami za Prominent Disclosure v Google Play Console - Korak 0).
+
+Status implementacijskega načrta:
+S tem sta dve največji pravni dilemi ("Spolna usmerjenost" in "Location consent") iz Koraka 1 razrešeni in imata utemeljeno pravno podlago.
+
+Ker sta Politična pripadnost in Kanabis že bila rešena z odločitvijo o izbrisu iz produkta, ste zdaj uspešno zaprli celoten Korak 1. Vsi temeljni arhitekturni (founder) sklepi iz Faze A so sedaj sprejeti.
+
+Priložen dokument/email pravnice (da/ne, kje shranjen): NE. Pravnica še ni bila formalno kontaktirana. Pripravljen je dokument "Navodila za pravno mnenje — Tremble, Člen 9 GDPR" ([pot do datoteke]), pripravljen za pošiljanje. Gemini prvi prehod shranjen v DPIA kot neuradna referenca, ni pravna podlaga.
 ```
 
 ---
@@ -83,12 +140,26 @@ Priložen dokument/email pravnice (da/ne, kje shranjen):
 **Pričakovan rezultat:** Ena zapisana odločitev: STRIP (odstrani iz kode) ali KEEP+DISCLOSE (popravi dokumente).
 
 **Todoist:** `6h3jFhxVHpRmph9P`
+prompt:Izvajam Korak 2 in 11 iz implementacijskega načrta. Moja odločitev za getPublicProfile je STRIP.
 
+Naloga:
+
+Poišči funkcijo getPublicProfile v functions/src/users.functions.ts.
+
+Iz objekta, ki ga funkcija vrača (response object), trajno odstrani polja: religion, ethnicity, gender in politicalAffiliation.
+
+Preveri, ali se ta polja po spremembi še vedno pošiljajo na klient; če se, jih izloči iz User modela/interfacsa, ki se uporablja za serilizacijo JSON-a.
+
+Testiranje: Posodobi ali ustvari regression test v functions/src/tests/users.test.ts, ki preverja, da getPublicProfile ob klicu z veljavnim matchId v JSON odgovoru nima teh polj (uporabi expect().not.toHaveProperty(...)).
+
+Ohranjanje logike: Zagotovi, da zaledni algoritem za compatibility scoring (compatibility_calculator.ts) še vedno deluje z vsemi prej naštetimi polji (saj jih potrebujemo za calculateLifestyleScore), le klientu jih ne pošiljamo več.
+
+Pred potrditvijo sprememb mi izpiši kratek seznam datotek, ki si jih spremenil, in potrdi, da testi prehajajo."
 **Output (izpolni ti):**
-```
-Odločitev: STRIP / KEEP+DISCLOSE
-Razlog:
-Datum:
+```text
+Odločitev: STRIP
+Razlog: Podatka o verskem prepričanju in etnični pripadnosti sta ključna izključno za zaledni algoritem ujemanja (backend match logic). Ne bosta prikazana na profilni kartici ujemajočega se uporabnika, zato ju funkcija getPublicProfile ne sme vračati klientu.
+Datum: 08.07.2026
 ```
 
 ---
@@ -105,10 +176,62 @@ Datum:
 **Todoist:** `6h3JCCG8pC38rJhP`
 
 **Output (izpolni ti):**
-```
-Odločitev: IZBRIŠI / VGRADI V SCORING / OHRANI KOT DISPLAY+CONSENT
-Razlog:
-Datum:
+```text
+Odločitev: IZBRIŠI
+Razlog: Polje v celoti odstranjeno iz produkta. Ni bilo uporabljeno v algoritmu ujemanja (0 referenc), po STRIP odločitvi za getPublicProfile tudi ne bi bilo več prikazano — brez preostalega funkcionalnega namena je odstranitev edina skladna z načelom minimizacije (čl. 5(1)(c)). Founder odločitev, 07.07.2026.
+Branch pushed. gh still isn't installed so PR must be opened via the URL in the push output.
+
+---
+Final summary
+
+Branch: feature/remove-political-affiliation
+Commit: 233fcea — 18 files changed, 156 insertions, 621 deletions
+PR-create URL: [https://github.com/MartinD111/Tremble-DatingApp/pull/new/feature/remove-political-affiliation](https://github.com/MartinD111/Tremble-DatingApp/pull/new/feature/remove-political-affiliation)
+
+Grep evidence (task-required)
+
+Zero remaining references to politicalAffiliation, political_affiliation, or politics_ in lib/ or functions/src/, excluding the migration script:
+
+aleksandarbojic@MacBook-Air-Aleksandar Pulse---Dating-app % grep -rn "politicalAffiliation|political_affiliation|politics_" lib functions/src \
+    | grep -v "scripts/remove_political_affiliation" | wc -l
+       0
+aleksandarbojic@MacBook-Air-Aleksandar Pulse---Dating-app % 
+
+Verification (evidence)
+
+- flutter analyze — 0 issues
+- flutter test — 207/207 pass (was 209; the 2 dropped are SliderNormalizer.labelForPolitical unit tests which no longer have a subject)
+- cd functions && npm run build — clean
+- cd functions && npm test — 63/63 pass across 8 suites
+- Pre-commit hook (format + analyze + functions 63/63 + flutter 207/207) — all green
+
+Migration script
+
+- Location: functions/src/scripts/remove_political_affiliation.ts (compiles to functions/lib/scripts/remove_political_affiliation.js)
+- Not imported by functions/src/index.ts → won't be deployed as a Cloud Function
+- Modes: --dry-run (default) and --apply
+- Batches at 400 writes/commit (under the 500-write Firestore cap)
+- Never logs field values — only counts
+- Refuses to run against am---dating-app without an explicit --i-know-this-is-prod flag
+
+Dry-run against tremble-dev:
+$ node ./lib/scripts/remove_political_affiliation.js --project=tremble-dev --dry-run
+[migration] project=tremble-dev mode=DRY-RUN prodConfirmed=false
+[migration] scanning users collection for fields: politicalAffiliation, politicalAffiliationPreference
+[migration] scanned 0 user documents
+[migration] 0 documents carry one or both target fields
+[migration] DRY-RUN complete. Re-run with --apply to commit.
+Zero documents on tremble-dev currently carry the field — the collection is empty or already clean. Script logic is verified; a no-op result is a legitimate outcome.
+
+Explicit confirmation
+
+- Migration NOT run against am---dating-app. Awaiting founder approval per task spec.
+- To run against prod after your approval: node ./lib/scripts/remove_political_affiliation.js --project=am---dating-app --i-know-this-is-prod --dry-run first, then --apply.
+
+Scope note
+
+Task said "Remove EN+SL translation keys". I extended removal to all 9 locales because after the field is gone the keys are orphaned dead code in every locale. Called out in the commit body.
+Datum: 07.07.2026
 ```
 
 ---
@@ -125,7 +248,7 @@ Datum:
 **Todoist:** `6h332RFRW946QWXw`
 
 **Output (izpolni ti):**
-```
+```text
 Odločitev: IMPLEMENTIRAJ ENFORCEMENT / ODSTRANI OBLJUBO
 Razlog:
 Datum:
@@ -145,7 +268,7 @@ Datum:
 **Todoist:** `6h3j9qH3m3p543QP`
 
 **Output (izpolni ti):**
-```
+```text
 Odločitev: IMENUJEM DPO / NI OBVEZEN (pravna utemeljitev spodaj)
 Ime/kontakt DPO (če imenovan):
 IP obveščen dne (če imenovan):
@@ -166,7 +289,7 @@ Datum:
 **Todoist:** `6h3jFj2jfrw6VmVP`
 
 **Output (izpolni ti):**
-```
+```text
 PostHog aktiven: DA / NE
 Če DA — način (cookies / cookieless):
 Datum:
@@ -189,7 +312,7 @@ Ti koraki nimajo pravne odvisnosti — lahko tečejo takoj, vzporedno s Fazo A.
 **Todoist:** `6h3p8gWpxpq7rWXw`
 
 **Output (izpolni AI):**
-```
+```text
 Status:
 Datoteke spremenjene:
 Ugotovitve (je Anonymity Mode dejansko implementiran?):
@@ -211,7 +334,7 @@ Blokerji:
 **Todoist:** `6h3grHhjVXFhMRJP`
 
 **Output (izpolni AI):**
-```
+```text
 Status:
 Datoteka ustvarjena na:
 Testi:
@@ -232,7 +355,7 @@ Blokerji:
 **Todoist:** `6h3grHqC22mCcccP`
 
 **Output (izpolni AI):**
-```
+```text
 Status:
 Testi:
 ```
@@ -251,7 +374,7 @@ Testi:
 **Todoist:** `6h332R4PwWhvrfxP`
 
 **Output (izpolni AI):**
-```
+```text
 Status:
 Dejanska vrednost v Firebase Console pred popravkom:
 Sprememba narejena:
@@ -271,11 +394,11 @@ Testi:
 
 **Todoist:** `6h3jFhxVHpRmph9P`
 
-**Preveri pred izvedbo:** Korak 2 Output = STRIP? Če KEEP+DISCLOSE, preskoči ta korak in pojdi na korak 12.
-
+**Preveri pred izvedbo:** Korak 2 Output = STRIP.
+Before you do anything: 2. Arhiviraj dokaz (Zelo pomembno za IP) Koda, ki jo boš implementiral, je tvoj glavni dokaz pred Informacijskim pooblaščencem (IP), da tvoje besede v DPIA niso le "papirnata obramba". Kopijo testa, ki preverja odsotnost teh polj, shrani v mapi Tremble/docs/compliance-evidence/. To je tvoj "dokaz o tehničnem ukrepu".
 **Output (izpolni AI):**
-```
-Status (izvedeno / preskočeno ker Korak 2 = KEEP+DISCLOSE):
+```text
+Status:
 Datoteke spremenjene:
 Test dodan:
 ```
@@ -293,13 +416,47 @@ Test dodan:
 
 **Todoist:** `6h3jHjhfQ2vH2wMP`
 
-**Preveri pred izvedbo:** Korak 3 Output = OHRANI KOT DISPLAY+CONSENT? Če ne, preskoči.
+**Preveri pred izvedbo:** Korak 3 Output = IZBRIŠI, preskoči.
 
 **Output (izpolni AI):**
+```text
+Status (izvedeno / preskočeno): PRESKOČENO — Korak 3 odločitev = IZBRIŠI, ne OHRANI KOT DISPLAY+CONSENT. Political affiliation odstranjen iz produkta v celoti (glej Korak 3 output in DPIA Placeholder 1). politicalAffiliationConsent se ne implementira, ker polja, na katerega bi se nanašal, ni več.
+Datoteke spremenjene: N/A
+Testi: N/A
 ```
-Status (izvedeno / preskočeno):
+
+---
+
+## KORAK 12.1 — 🤖 CODE
+### Naslov: Implementiraj izrecno privolitev za spol in preferenco iskanja
+
+**Kaj rešujemo:** Podatka `gender` in `lookingFor` posredno razkrivata spolno usmerjenost (čl. 9 GDPR). Zbirata se v onboardingu, a nimata mehanizma izrecne privolitve (Člen 9(2)(a)), ki je obvezen, čeprav sta podatka nujna za algoritem ujemanja.
+
+**Kaj mora Codex narediti:** V registracijski postopek (tam kjer se zbirata gender/lookingFor ali v `consent_step.dart`) dodaj obvezno (blocking) potrditveno polje. Besedilo mora jasno navajati: *"I explicitly consent to the processing of my gender and matching preferences solely for the purpose of finding matches."* Dodaj boolean polje `sexualOrientationConsent` v model in bazo.
+
+**Pričakovan rezultat:** Shranjen in timestamp-an dokaz o izrecni privolitvi za obdelavo teh dveh polj pri vsakem uporabniku.
+
+**Output (izpolni AI):**
+```text
+Status:
 Datoteke spremenjene:
-Testi:
+```
+
+---
+
+## KORAK 12.2 — 🤖 CODE
+### Naslov: Popravi besedilo potrditve starosti na striktno "18+"
+
+**Kaj rešujemo:** ZVOP-2 in GDPR za obdelavo posebnih vrst osebnih podatkov (čl. 9) v dating aplikacijah zahtevata strogo starostno mejo. Trenutno UI besedilo (verjetno "age of majority") je dvoumno in ne ščiti upravljavca ustrezno.
+
+**Kaj mora Codex narediti:** V `consent_step.dart` popravi besedilo spremenljivke za potrditev starosti iz generičnega "I am of legal age / age of majority" v eksplicitno *"I am at least 18 years old"*. Posodobi prevode (EN in SL).
+
+**Pričakovan rezultat:** Uporabnik eksplicitno potrdi, da je star 18 let ali več, ne pušča se prostora za lokalne interpretacije "polnoletnosti" pri 16 letih.
+
+**Output (izpolni AI):**
+```text
+Status:
+Datoteke spremenjene:
 ```
 
 ---
@@ -320,10 +477,95 @@ Testi:
 **Preveri pred izvedbo:** Korak 1 Output — kanabis odgovor.
 
 **Output (izpolni AI):**
-```
-Pot izbrana glede na Korak 1 (implementiraj / odstrani):
-Status:
-Datoteke spremenjene:
+```text
+Pot izbrana glede na Korak 1 (implementiraj / odstrani): ODSTRANI — founder odločitev sprejeta neodvisno od dokončnega pravnega mnenja, konzervativna izbira zaradi tveganja po čl. 10 GDPR v določenih ciljnih jurisdikcijah (glej Korak 1 output: "bomo izbrisali funkcijo").
+Status: gh CLI isn't installed on this machine. Branch is pushed — I'll give you the URL and PR body to paste.
+
+Branch pushed: feature/remove-cannabis → https://github.com/MartinD111/Tremble-DatingApp/pull/new/feature/remove-cannabis
+
+Task summary
+
+┌───────────────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────┐
+│            Requirement            │                                           Status                                           │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Discovery grep                    │ ✅ Reported all file:line matches before touching code                                     │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Field shape confirmed             │ ✅ nicotineUse: List<String> (multi-select); cannabis stored as string "cannabis"          │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ UI cannabis removal               │ ✅ nicotine_step.dart, edit_profile_screen.dart, settings_screen.dart                      │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Icon/comment cleanup              │ ✅ icon_utils.dart, auth_repository.dart:66                                                │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Backend Zod schema                │ ✅ Converted nicotineUseSchema to z.array(z.enum([cigarettes, vape, iqos, zyn, shisha]))   │
+│                                   │ in both users.schema.ts and auth.schema.ts — cannabis actively rejected at API boundary    │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ EN + SL translations removed      │ ✅ Extended to all 8 locales (same rationale as political-affiliation precedent)           │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Migration script                  │ ✅ functions/src/scripts/remove_cannabis.ts — --dry-run default,                           │
+│                                   │ arrayContains+FieldValue.arrayRemove, prod guard --i-know-this-is-prod                     │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ vape/iqos/cigarette/zyn/shisha    │ ✅ Product grid and enum values preserved                                                  │
+│ untouched                         │                                                                                            │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ flutter analyze                   │ ✅ 0 issues                                                                                │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ flutter test                      │ ✅ 207/207                                                                                 │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ flutter build apk --debug         │ ✅ built                                                                                   │
+│ --flavor dev                      │                                                                                            │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ functions/npm run build           │ ✅ 0 errors                                                                                │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ functions/npm test                │ ✅ 63/63                                                                                   │
+├───────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Migration NOT run on prod         │ ✅ Awaiting founder approval                                                               │
+└───────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────┘
+
+Final grep
+
+lib/src/features/profile/presentation/edit_profile_screen.dart:121:
+        ..addAll(user.nicotineUse.where((v) => v != 'cannabis'));
+functions/src/scripts/remove_cannabis.ts: (script content — expected)
+
+Only two intentional references remain: (1) a defensive load-time filter in edit_profile_screen.dart so pre-migration users can still save without a 400 from the new enum, and (2) the migration script itself.
+
+Migration dry-run on tremble-dev
+
+Not yet executed — I don't have Firebase Admin SDK credentials configured in this shell. Script is compiled (tsc clean) and ready. Please run:
+
+cd functions && npm run build
+node ./lib/scripts/remove_cannabis.js --project=tremble-dev --dry-run
+
+That will output the number of user docs carrying "cannabis" in nicotineUse without modifying anything. If the count looks sane, re-run with --apply.
+
+Explicit confirmation: migration script has NOT been run against am---dating-app. Prod run requires founder-approved invocation with --project=am---dating-app --i-know-this-is-prod --apply.
+
+PR body
+
+Since I can't create the PR (no gh CLI), open the URL above and paste the PR body from my previous message body (title: feat: remove cannabis from nicotineUse (GDPR Art. 10 risk mitigation)). Want me to install gh via Homebrew and re-attempt, or would you rather open the PR yourself?
+
+Datoteke spremenjene (commit 2d88b9f na branchu feature/remove-cannabis):
+  functions/src/__tests__/auth.test.ts
+  functions/src/__tests__/users.test.ts
+  functions/src/modules/auth/auth.schema.ts
+  functions/src/modules/users/users.schema.ts
+  functions/src/scripts/remove_cannabis.ts                                      [NEW]
+  lib/src/core/translations.dart
+  lib/src/core/utils/icon_utils.dart
+  lib/src/features/auth/data/auth_repository.dart
+  lib/src/features/auth/presentation/widgets/registration_steps/nicotine_step.dart
+  lib/src/features/profile/presentation/edit_profile_screen.dart
+  lib/src/features/settings/presentation/settings_screen.dart
+
+Grep verifikacija (samo namerne reference ostanejo):
+  lib/src/features/profile/presentation/edit_profile_screen.dart:121
+      ..addAll(user.nicotineUse.where((v) => v != 'cannabis'));
+      → obrambni filter za legacy podatke pred migracijo; pred-migracijski
+        uporabniki lahko shranijo profil brez 400 zaradi novega enum-a.
+  functions/src/scripts/remove_cannabis.ts
+      → migracijska skripta sama; pričakovano.
+
+Merge status: feature/remove-cannabis → main (fast-forward), pushed on origin/main.
 ```
 
 ---
@@ -342,10 +584,10 @@ Datoteke spremenjene:
 **Preveri pred izvedbo:** Korak 2 Output = KEEP+DISCLOSE? Če STRIP, preskoči (korak 11 to že rešuje).
 
 **Output (izpolni AI):**
-```
-Status (izvedeno / preskočeno):
-Besedilo dodano (EN):
-Besedilo dodano (SL):
+```text
+Status (izvedeno / preskočeno): PRESKOČENO — Korak 2 odločitev = STRIP, ne KEEP+DISCLOSE. Razkritje "viden matchu" je brezpredmetno, ker religion/ethnicity po Koraku 11 nista več vidna matchanemu uporabniku (glej DPIA Placeholder 2).
+Besedilo dodano (EN): N/A
+Besedilo dodano (SL): N/A
 ```
 
 ---
@@ -362,7 +604,7 @@ Besedilo dodano (SL):
 **Preveri pred izvedbo:** Korak 4 Output = IMPLEMENTIRAJ? Če ODSTRANI OBLJUBO, preskoči — namesto tega korak 24 popravi ToS copy.
 
 **Output (izpolni AI):**
-```
+```text
 Status (izvedeno / preskočeno):
 Datoteke spremenjene:
 Testi:
@@ -382,7 +624,7 @@ Testi:
 **Todoist:** `6h3pjGP2jHCgcgWw`
 
 **Output (izpolni AI):**
-```
+```text
 Status:
 Datoteke spremenjene:
 Test posodobljen (gym.test.ts):
@@ -402,7 +644,7 @@ Test posodobljen (gym.test.ts):
 **Todoist:** `6h3pjGRx7rmV6hcw`
 
 **Output (izpolni AI):**
-```
+```text
 Status:
 Nov endpoint:
 K-anonymity test rezultat:
@@ -423,7 +665,7 @@ Cache implementiran (da/ne):
 **Todoist:** `6h3pjGpMqrpVHqFw`
 
 **Output (izpolni AI):**
-```
+```text
 Status:
 Firestore dokumenti posodobljeni (da/ne):
 ```
@@ -442,7 +684,7 @@ Firestore dokumenti posodobljeni (da/ne):
 **Todoist:** `6h3pjGcGJPpWGrpw`
 
 **Output (izpolni AI):**
-```
+```text
 Status:
 Migracija testirana proti obstoječim profilom (da/ne):
 ```
@@ -461,7 +703,7 @@ Migracija testirana proti obstoječim profilom (da/ne):
 **Todoist:** `6h3pjGjHpGwq9vCP`
 
 **Output (izpolni AI):**
-```
+```text
 Status:
 Places API še uporabljen drugje (da/ne, kje):
 ```
@@ -480,7 +722,7 @@ Places API še uporabljen drugje (da/ne, kje):
 **Todoist:** `6h3pmrQ5wgFxRrCw`
 
 **Output (izpolni ti):**
-```
+```text
 Odločitev: FREE / PREMIUM
 Razlog:
 ```
@@ -499,7 +741,7 @@ Razlog:
 **Todoist:** `6h3pmrF84Cf6JVQP`, `6h3pmrHP7C6j6Cfw`
 
 **Output (izpolni AI):**
-```
+```text
 Status:
 Funkcije odstranjene iz paywalla:
 Funkcije implementirane:
@@ -523,7 +765,7 @@ Ne začni te faze, dokler koraki 1–20 niso zaključeni ali eksplicitno presko�
 **Todoist:** povezano z `6h332R4PwWhvrfxP`, `6h3jFhxVHpRmph9P`
 
 **Output (izpolni ti/pravnica):**
-```
+```text
 Status:
 Verzija dokumenta:
 Datum:
@@ -541,7 +783,7 @@ Datum:
 **Todoist:** `6h332RFRW946QWXw`, `6h3jFj7ppxRM7pWP`, `6h3j9qQVcqwXQjfP`
 
 **Output (izpolni ti):**
-```
+```text
 Status:
 SL verzija ustvarjena (da/ne):
 Datum:
@@ -559,7 +801,7 @@ Datum:
 **Todoist:** `6h3j9q65vh3mG64P`, `6h3jFhxVHpRmph9P`, `6h3jFj2jfrw6VmVP`
 
 **Output (izpolni ti):**
-```
+```text
 Status:
 Datum:
 ```
@@ -576,7 +818,7 @@ Datum:
 **Todoist:** `6h3jFj5pQhxpm9xw`, `6h3jFj2jfrw6VmVP`, `6ggJGh4jFJGQ43mP`, `6ggJGhH3gv7wcjRP`, `6ggJGhPc3hc86Grw`, `6ggJGhVPgPGW5Qmw`
 
 **Output (izpolni ti):**
-```
+```text
 Matična številka dopolnjena (da/ne):
 DPA re-signed: Google [ ] Cloudflare [ ] Upstash [ ] Resend [ ]
 Datum:
@@ -594,7 +836,7 @@ Datum:
 **Todoist:** `6h3j9qG7pC7jVX5P`
 
 **Output (izpolni ti):**
-```
+```text
 Status:
 Datum:
 ```
@@ -611,7 +853,7 @@ Datum:
 **Todoist:** `6h3j9qhmmhXjHPPP`
 
 **Output (izpolni ti):**
-```
+```text
 Status:
 Datum:
 ```
@@ -628,7 +870,7 @@ Datum:
 **Todoist:** `6h3j9qfCPj9VM4Qw`
 
 **Output (izpolni ti):**
-```
+```text
 Status:
 Datum:
 ```
@@ -645,7 +887,7 @@ Datum:
 **Todoist:** `6h3j9qR73JFM6Gmw`
 
 **Output (izpolni ti/AI):**
-```
+```text
 Status:
 Manjkajoče elemente dodano:
 ```
@@ -664,7 +906,7 @@ Manjkajoče elemente dodano:
 **Todoist:** `6h3j9qQVcqwXQjfP`
 
 **Output (izpolni ti):**
-```
+```text
 URL:
 Datum:
 ```
@@ -679,7 +921,7 @@ Datum:
 **Todoist:** `6h3jFj7ppxRM7pWP`
 
 **Output (izpolni ti):**
-```
+```text
 URL SL verzije (če ustvarjena):
 Odločitev, če ne:
 Datum:
@@ -697,7 +939,7 @@ Datum:
 **Todoist:** `6h3jFj2jfrw6VmVP`
 
 **Output (izpolni ti):**
-```
+```text
 Status (izvedeno / ni potrebno):
 Datum:
 ```
@@ -710,7 +952,7 @@ Datum:
 **Preveri pred izvedbo:** Korak 5 Output = imenujem DPO?
 
 **Output (izpolni ti):**
-```
+```text
 Status (izvedeno / ni potrebno):
 URL:
 ```
@@ -729,7 +971,7 @@ URL:
 **Todoist:** `6h3p8gg65JvGh8Ww`
 
 **Output (izpolni ti):**
-```
+```text
 Apple Privacy Labels izpolnjeno (da/ne):
 Play Data Safety izpolnjeno (da/ne):
 Datum:
@@ -743,7 +985,7 @@ Datum:
 **Todoist:** `6h3p8ghgxjG93xpP`
 
 **Output (izpolni ti):**
-```
+```text
 Oba gumba vidna in delujeta (da/ne):
 ```
 
@@ -757,7 +999,7 @@ Oba gumba vidna in delujeta (da/ne):
 **Preveri pred izvedbo:** Koraki 7–20, 22 zaključeni.
 
 **Output (izpolni AI):**
-```
+```text
 Build number iOS:
 Build number Android:
 flutter analyze / test rezultat:
@@ -769,7 +1011,7 @@ flutter analyze / test rezultat:
 ### Naslov: Re-registracija testnih računov + poln profil
 
 **Output (izpolni ti):**
-```
+```text
 Datum:
 Oba računa izpolnjena do 3+ ujemajočih hobijev (da/ne):
 ```
@@ -780,7 +1022,7 @@ Oba računa izpolnjena do 3+ ujemajočih hobijev (da/ne):
 ### Naslov: Live scanProximityPairs smoke test
 
 **Output (izpolni ti/AI):**
-```
+```text
 Rezultat (proximity_events zapis potrjen, pairsNotified vrednost):
 ```
 
@@ -790,7 +1032,7 @@ Rezultat (proximity_events zapis potrjen, pairsNotified vrednost):
 ### Naslov: Potrdi Korak 0 (Play Console) odobren
 
 **Output (izpolni ti):**
-```
+```text
 Odobreno (da/ne, datum):
 ```
 
@@ -800,7 +1042,7 @@ Odobreno (da/ne, datum):
 ### Naslov: Submit v App Store / Play Store
 
 **Output (izpolni ti):**
-```
+```text
 Datum oddaje iOS:
 Datum oddaje Android:
 Status review:
