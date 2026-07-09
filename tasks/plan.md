@@ -2,7 +2,7 @@
 
 Plan ID: 20260709-strip-public-profile
 Risk Level: HIGH
-Founder Approval Required: NO
+Founder Approval Required: YES
 Branch: feature/strip-public-profile-pii
 
 1. OBJECTIVE — Strip religion, ethnicity, and gender from `getPublicProfile` response with a compile-time-enforced `PublicProfile` interface so the fields cannot be silently re-added by a future edit.

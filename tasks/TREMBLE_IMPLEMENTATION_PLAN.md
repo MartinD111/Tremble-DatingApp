@@ -249,9 +249,9 @@ Datum: 07.07.2026
 
 **Output (izpolni ti):**
 ```text
-Odločitev: IMPLEMENTIRAJ ENFORCEMENT / ODSTRANI OBLJUBO
-Razlog:
-Datum:
+Odločitev: IMPLEMENTIRAJ ENFORCEMENT
+Razlog: ker ne zelijo si vsi monthly memberships. postaja trend glede sovraztva za take stvari. nekateri bi rajši kupili 4x in preplačali but have control over it. mental game. a tudi časovno mora biti omejeno, ker ne greš ga žurati v petek ob 10am, ampak popoldne. tko da, it is what it is.
+Datum: 10.07.2026
 ```
 
 ---
@@ -269,10 +269,8 @@ Datum:
 
 **Output (izpolni ti):**
 ```text
-Odločitev: IMENUJEM DPO / NI OBVEZEN (pravna utemeljitev spodaj)
-Ime/kontakt DPO (če imenovan):
-IP obveščen dne (če imenovan):
-Datum:
+Odločitev: NI OBVEZEN (pravna utemeljitev spodaj)
+Datum: 10.07.2026
 ```
 
 ---
@@ -290,9 +288,8 @@ Datum:
 
 **Output (izpolni ti):**
 ```text
-PostHog aktiven: DA / NE
-Če DA — način (cookies / cookieless):
-Datum:
+PostHog aktiven: NE - nikakor da ga uspešno vzpostavim, tako da for now ne bo, ker ni nujen in ni še prioriteta.
+Datum: 10.07.2026
 ```
 
 ---
