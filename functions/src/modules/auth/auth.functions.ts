@@ -147,6 +147,14 @@ export const completeOnboarding = onCall(
                 consentGivenAt: FieldValue.serverTimestamp(),
                 ageConfirmed: true,
                 ageConfirmedAt: FieldValue.serverTimestamp(),
+                sexualOrientationConsent: data.sexualOrientationConsent,
+                sexualOrientationConsentAt: FieldValue.serverTimestamp(),
+                ...(data.religionConsent != null
+                    ? { religionConsent: data.religionConsent }
+                    : {}),
+                ...(data.ethnicityConsent != null
+                    ? { ethnicityConsent: data.ethnicityConsent }
+                    : {}),
                 isOnboarded: true,
                 ...(hasCreatedAt ? {} : { createdAt: FieldValue.serverTimestamp() }),
                 updatedAt: FieldValue.serverTimestamp(),
