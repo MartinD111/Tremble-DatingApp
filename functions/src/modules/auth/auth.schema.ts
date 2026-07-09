@@ -105,6 +105,13 @@ export const completeOnboardingSchema = z.object({
     consentGiven: z.boolean().refine((val) => val === true, {
         message: "GDPR consent is required",
     }),
+    // GDPR Art. 9 — explicit consent to process gender + matching preferences
+    // (sexual-orientation-adjacent). Must be true to complete registration.
+    sexualOrientationConsent: z.boolean().refine((val) => val === true, {
+        message: "Explicit consent for gender/matching-preference processing is required",
+    }),
+    religionConsent: z.boolean().nullish(),
+    ethnicityConsent: z.boolean().nullish(),
 });
 
 export type CompleteOnboardingData = z.infer<typeof completeOnboardingSchema>;

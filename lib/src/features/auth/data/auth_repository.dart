@@ -86,6 +86,11 @@ class AuthUser {
   final String? ethnicityPreference;
   final bool? religionConsent;
   final bool? ethnicityConsent;
+  // GDPR Art. 9 — explicit consent to process gender + matching preferences
+  // (sexual orientation is inferrable from these). Written together with
+  // sexualOrientationConsentAt on the server.
+  final bool? sexualOrientationConsent;
+  final DateTime? sexualOrientationConsentAt;
   final String? hairColor;
   final String? hairColorPreference;
   final String? partnerExerciseHabit;
@@ -175,6 +180,8 @@ class AuthUser {
     this.ethnicityPreference,
     this.religionConsent,
     this.ethnicityConsent,
+    this.sexualOrientationConsent,
+    this.sexualOrientationConsentAt,
     this.hairColor,
     this.hairColorPreference,
     this.partnerExerciseHabit,
@@ -252,6 +259,8 @@ class AuthUser {
       'ethnicityPreference': ethnicityPreference,
       if (religionConsent != null) 'religionConsent': religionConsent,
       if (ethnicityConsent != null) 'ethnicityConsent': ethnicityConsent,
+      if (sexualOrientationConsent != null)
+        'sexualOrientationConsent': sexualOrientationConsent,
       'hairColor': hairColor,
       'hairColorPreference': hairColorPreference,
       'partnerExerciseHabit': partnerExerciseHabit,
@@ -369,6 +378,9 @@ class AuthUser {
       ethnicityPreference: data['ethnicityPreference'] as String?,
       religionConsent: data['religionConsent'] as bool?,
       ethnicityConsent: data['ethnicityConsent'] as bool?,
+      sexualOrientationConsent: data['sexualOrientationConsent'] as bool?,
+      sexualOrientationConsentAt:
+          _parseDateTime(data['sexualOrientationConsentAt']),
       hairColor: data['hairColor'] as String?,
       hairColorPreference: data['hairColorPreference'] as String?,
       partnerExerciseHabit: data['partnerExerciseHabit'] as String?,
@@ -442,6 +454,8 @@ class AuthUser {
     Object? ethnicityPreference = _unset,
     bool? religionConsent,
     bool? ethnicityConsent,
+    bool? sexualOrientationConsent,
+    DateTime? sexualOrientationConsentAt,
     String? hairColor,
     Object? hairColorPreference = _unset,
     Object? partnerExerciseHabit = _unset,
@@ -528,6 +542,10 @@ class AuthUser {
           : ethnicityPreference as String?,
       religionConsent: religionConsent ?? this.religionConsent,
       ethnicityConsent: ethnicityConsent ?? this.ethnicityConsent,
+      sexualOrientationConsent:
+          sexualOrientationConsent ?? this.sexualOrientationConsent,
+      sexualOrientationConsentAt:
+          sexualOrientationConsentAt ?? this.sexualOrientationConsentAt,
       hairColor: hairColor ?? this.hairColor,
       hairColorPreference: identical(hairColorPreference, _unset)
           ? this.hairColorPreference

@@ -658,6 +658,13 @@ const Map<String, Map<String, String>> _translations = {
         'Configuring radar for a 40-meter radius. Only physical presence triggers a signal lock.',
     'consent_subtitle':
         'By continuing, you agree to our Terms of Service and Privacy Policy.',
+    // Explicit consent for sexual-orientation-adjacent processing (gender +
+    // lookingFor). GDPR Art. 9 — required before completing registration.
+    'consent_sexual_orientation':
+        'I explicitly consent to the processing of my gender and matching '
+            'preferences solely for the purpose of finding matches.',
+    // Strict 18+ confirmation — verbatim per spec, no "age of majority" phrasing.
+    'consent_age_18': 'I am at least 18 years old.',
     'dating_preference': 'Dating preference',
     'dating_preferences_title': 'Dating Preferences',
     'add_own': '+ Add yours',
@@ -1487,6 +1494,10 @@ const Map<String, Map<String, String>> _translations = {
         'Konfiguracija radarja za radij 40 metrov. Samo fizična prisotnost sproži signal.',
     'consent_subtitle':
         'Z nadaljevanjem se strinjate z našimi Pogoji poslovanja in Politiko zasebnosti.',
+    'consent_sexual_orientation':
+        'Izrecno soglašam z obdelavo mojega spola in preferenc za ujemanje '
+            'izključno za namen iskanja ujemanj.',
+    'consent_age_18': 'Star sem najmanj 18 let.',
     'dating_preferences_title': 'Preference za zmenke',
     'dating_preference': 'Preference za zmenke',
     'add_own': '+ Dodaj svoje',

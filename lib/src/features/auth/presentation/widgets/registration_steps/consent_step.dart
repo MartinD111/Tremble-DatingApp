@@ -13,7 +13,11 @@ class ConsentStep extends StatefulWidget {
   });
 
   final VoidCallback onBack;
-  final void Function(bool religionConsent, bool ethnicityConsent) onComplete;
+  final void Function(
+    bool religionConsent,
+    bool ethnicityConsent,
+    bool sexualOrientationConsent,
+  ) onComplete;
   final String Function(String) tr;
   final String? photoUploadError;
 
@@ -29,13 +33,17 @@ class _ConsentStepState extends State<ConsentStep> {
   bool _consentLocation = false;
   bool _consentReligion = false;
   bool _consentEthnicity = false;
+  // GDPR Art. 9 — explicit consent for processing gender + matching
+  // preferences (sexual orientation is inferrable). Blocks registration.
+  bool _consentSexualOrientation = false;
 
   bool get _consentGiven =>
       _consentTerms &&
       _consentPrivacy &&
       _consentDataProcessing &&
       _consentAge &&
-      _consentLocation;
+      _consentLocation &&
+      _consentSexualOrientation;
 
   void _toggleAll() {
     final newVal = !_consentGiven;
@@ -47,6 +55,7 @@ class _ConsentStepState extends State<ConsentStep> {
       _consentLocation = newVal;
       _consentReligion = newVal;
       _consentEthnicity = newVal;
+      _consentSexualOrientation = newVal;
     });
   }
 
@@ -217,15 +226,23 @@ class _ConsentStepState extends State<ConsentStep> {
           ),
           const SizedBox(height: 16),
           _consentTile(
+            value: _consentSexualOrientation,
+            onChanged: (v) => setState(() => _consentSexualOrientation = v),
+            richText: TextSpan(
+              style: bodyStyle,
+              children: [
+                TextSpan(text: widget.tr('consent_sexual_orientation')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _consentTile(
             value: _consentAge,
             onChanged: (v) => setState(() => _consentAge = v),
             richText: TextSpan(
               style: bodyStyle,
-              children: const [
-                TextSpan(
-                  text: 'I confirm I am 18 years of age or older. '
-                      'I understand that Tremble is an adult platform.',
-                ),
+              children: [
+                TextSpan(text: widget.tr('consent_age_18')),
               ],
             ),
           ),
@@ -292,7 +309,11 @@ class _ConsentStepState extends State<ConsentStep> {
           ],
           ContinueButton(
             enabled: _consentGiven,
-            onTap: () => widget.onComplete(_consentReligion, _consentEthnicity),
+            onTap: () => widget.onComplete(
+              _consentReligion,
+              _consentEthnicity,
+              _consentSexualOrientation,
+            ),
             label: 'Continue',
           ),
           const SizedBox(height: 16),

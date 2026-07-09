@@ -84,6 +84,7 @@ describe("Auth Module", () => {
                     photoUrls: ["https://r2.example.com/photo.jpg"],
                     nicotineUse: ["cigarettes", "vape", "shisha"],
                     consentGiven: true,
+                    sexualOrientationConsent: true,
                 },
             })).resolves.toEqual({ success: true });
 
@@ -136,6 +137,7 @@ describe("Auth Module", () => {
                 ageRangeStart: 22,
                 ageRangeEnd: 35,
                 consentGiven: true,
+                sexualOrientationConsent: true,
             });
             expect(result.success).toBe(true);
         });
@@ -172,6 +174,7 @@ describe("Auth Module", () => {
                 nicotineUse: ["vape"],
                 nicotineFilter: "no_smoking",
                 consentGiven: true,
+                sexualOrientationConsent: true,
             });
 
             expect(result.success).toBe(true);
@@ -194,6 +197,7 @@ describe("Auth Module", () => {
                 photoUrls: ["https://r2.example.com/photo.jpg"],
                 nicotineUse: ["cigarettes", "vape", "shisha"],
                 consentGiven: true,
+                sexualOrientationConsent: true,
             });
 
             expect(result.success).toBe(true);
@@ -224,6 +228,7 @@ describe("Auth Module", () => {
                 ageRangeStart: 22,
                 ageRangeEnd: 35,
                 consentGiven: true,
+                sexualOrientationConsent: true,
             });
 
             expect(result.success).toBe(true);
@@ -245,6 +250,7 @@ describe("Auth Module", () => {
                 interestedIn: "male",
                 photoUrls: ["https://r2.example.com/photo.jpg"],
                 consentGiven: true,
+                sexualOrientationConsent: true,
                 // All optional fields explicitly null — mirrors the Dart
                 // payload when the user skipped optional pickers.
                 height: null,
@@ -311,6 +317,46 @@ describe("Auth Module", () => {
                 );
                 expect(photoUrlsError).toBeDefined();
             }
+        });
+
+        it("should reject onboarding without sexualOrientationConsent", async () => {
+            const { completeOnboardingSchema } = await import(
+                "../../src/modules/auth/auth.schema"
+            );
+
+            const result = completeOnboardingSchema.safeParse({
+                name: "Ana",
+                birthDate: "1995-06-15",
+                gender: "female",
+                interestedIn: "male",
+                photoUrls: ["https://r2.example.com/photo.jpg"],
+                consentGiven: true,
+                // sexualOrientationConsent intentionally omitted
+            });
+            expect(result.success).toBe(false);
+            if (!result.success) {
+                const issue = result.error.issues.find((i) =>
+                    i.path.includes("sexualOrientationConsent")
+                );
+                expect(issue).toBeDefined();
+            }
+        });
+
+        it("should reject onboarding when sexualOrientationConsent is false", async () => {
+            const { completeOnboardingSchema } = await import(
+                "../../src/modules/auth/auth.schema"
+            );
+
+            const result = completeOnboardingSchema.safeParse({
+                name: "Ana",
+                birthDate: "1995-06-15",
+                gender: "female",
+                interestedIn: "male",
+                photoUrls: ["https://r2.example.com/photo.jpg"],
+                consentGiven: true,
+                sexualOrientationConsent: false,
+            });
+            expect(result.success).toBe(false);
         });
 
         it("should reject a user under 18", async () => {
