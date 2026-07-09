@@ -9,7 +9,7 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { requireAuth, requireVerifiedEmail } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { assertValidDocumentId, validateRequest } from "../../middleware/validate";
-import { updateProfileSchema } from "./users.schema";
+import { updateProfileSchema, PublicProfile } from "./users.schema";
 import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
@@ -104,31 +104,32 @@ export const getPublicProfile = onCall(
         }
 
         // Return only public fields — never expose email, admin status, etc.
-        return {
-            profile: {
-                id: userId,
-                name: data.name,
-                age: data.age,
-                gender: data.gender,
-                photoUrls: data.photoUrls,
-                height: data.height,
-                location: data.location,
-                hobbies: data.hobbies,
-                lookingFor: data.lookingFor,
-                languages: data.languages,
-                prompts: data.prompts,
-                isSmoker: data.isSmoker,
-                drinkingHabit: data.drinkingHabit,
-                exerciseHabit: data.exerciseHabit,
-                sleepSchedule: data.sleepSchedule,
-                petPreference: data.petPreference,
-                childrenPreference: data.childrenPreference,
-                introvertScale: data.introvertScale,
-                religion: data.religion,
-                ethnicity: data.ethnicity,
-                hairColor: data.hairColor,
-                occupation: data.occupation,
-            },
+        //
+        // The explicit `PublicProfile` annotation enforces TypeScript's
+        // excess-property check on the literal below. Any future edit that
+        // adds `religion`, `ethnicity`, `gender`, or another forbidden field
+        // will fail `npm run build` — see `PublicProfile` doc in users.schema.ts.
+        const profile: PublicProfile = {
+            id: userId,
+            name: data.name,
+            age: data.age,
+            photoUrls: data.photoUrls,
+            height: data.height,
+            location: data.location,
+            hobbies: data.hobbies,
+            lookingFor: data.lookingFor,
+            languages: data.languages,
+            prompts: data.prompts,
+            isSmoker: data.isSmoker,
+            drinkingHabit: data.drinkingHabit,
+            exerciseHabit: data.exerciseHabit,
+            sleepSchedule: data.sleepSchedule,
+            petPreference: data.petPreference,
+            childrenPreference: data.childrenPreference,
+            introvertScale: data.introvertScale,
+            hairColor: data.hairColor,
+            occupation: data.occupation,
         };
+        return { profile };
     }
 );

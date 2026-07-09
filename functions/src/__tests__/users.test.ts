@@ -166,6 +166,112 @@ describe("Users Module", () => {
             })).resolves.toEqual({ profile: null });
         });
 
+        it("strips religion, ethnicity, and gender from the client-facing response even when present in Firestore", async () => {
+            jest.clearAllMocks();
+            const authGuard = await import("../../src/middleware/authGuard");
+            const rateLimit = await import("../../src/middleware/rateLimit");
+            const validate = await import("../../src/middleware/validate");
+            const { getPublicProfile } = await import("../../src/modules/users/users.functions");
+
+            jest.mocked(authGuard.requireVerifiedEmail).mockReturnValue("callerUid");
+            jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+            jest.mocked(validate.assertValidDocumentId).mockReturnValue("targetUid");
+
+            const targetGet = jest.fn<() => Promise<{
+                exists: boolean;
+                data: () => Record<string, unknown>;
+            }>>().mockResolvedValue({
+                exists: true,
+                data: () => ({
+                    name: "Target",
+                    age: 27,
+                    gender: "female",
+                    religion: "atheist",
+                    ethnicity: "slovenian",
+                    hairColor: "brown",
+                    occupation: "designer",
+                    blockedBy: [],
+                }),
+            });
+            const matchGet = jest.fn<() => Promise<{ exists: boolean }>>().mockResolvedValue({
+                exists: true,
+            });
+
+            mockDb.collection.mockImplementation((collectionName: unknown) => {
+                if (collectionName === "users") {
+                    return { doc: jest.fn(() => ({ get: targetGet })) };
+                }
+                if (collectionName === "matches") {
+                    return { doc: jest.fn(() => ({ get: matchGet })) };
+                }
+                throw new Error(`Unexpected collection: ${collectionName}`);
+            });
+
+            const callableGetPublicProfile = getPublicProfile as unknown as (request: unknown) => Promise<{ profile: Record<string, unknown> | null }>;
+
+            const response = await callableGetPublicProfile({
+                auth: { uid: "callerUid", token: { email_verified: true } },
+                data: { userId: "targetUid" },
+            });
+
+            expect(response.profile).not.toBeNull();
+            expect(response.profile).not.toHaveProperty("religion");
+            expect(response.profile).not.toHaveProperty("ethnicity");
+            expect(response.profile).not.toHaveProperty("gender");
+
+            // Positive assertions — non-sensitive fields still forwarded
+            expect(response.profile).toMatchObject({
+                id: "targetUid",
+                name: "Target",
+                age: 27,
+                hairColor: "brown",
+                occupation: "designer",
+            });
+        });
+
+        it("keeps religion and ethnicity readable server-side so lifestyle scoring still uses them", async () => {
+            // This test proves the client-facing strip did NOT regress the
+            // server-side data model. `calculateCompatibilityScore` composes
+            // `calculateLifestyleScore` internally, which reads religion and
+            // ethnicity from Firestore-populated `UserCompatibilityData` — NOT
+            // from the `getPublicProfile` response. Two identical users must
+            // still score higher than two users with mismatched sensitive
+            // attributes.
+            const { calculateCompatibilityScore } = await import(
+                "../../src/modules/compatibility/compatibility_calculator"
+            );
+
+            const base = {
+                uid: "a",
+                hobbies: ["Hiking"],
+                religion: "atheist",
+                ethnicity: "slovenian",
+                religionConsent: true,
+                ethnicityConsent: true,
+            };
+            const identical = {
+                uid: "b",
+                hobbies: ["Hiking"],
+                religion: "atheist",
+                ethnicity: "slovenian",
+                religionConsent: true,
+                ethnicityConsent: true,
+            };
+            const mismatched = {
+                uid: "b",
+                hobbies: ["Hiking"],
+                religion: "buddhist",
+                ethnicity: "croatian",
+                religionConsent: true,
+                ethnicityConsent: true,
+            };
+
+            const matchedScore = calculateCompatibilityScore(base, identical);
+            const mismatchedScore = calculateCompatibilityScore(base, mismatched);
+
+            expect(matchedScore).toBeGreaterThan(mismatchedScore);
+        });
+
         it("returns null when the target user has blocked the caller", async () => {
             const authGuard = await import("../../src/middleware/authGuard");
             const rateLimit = await import("../../src/middleware/rateLimit");
