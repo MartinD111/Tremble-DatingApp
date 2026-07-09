@@ -130,7 +130,8 @@
       "Bash(git *)",
       "Bash(gh pr create --base main --head fix/backend-granular-consent --title 'fix: split sensitiveDataConsent into granular religionConsent/ethnicityConsent gates' --body ' *)",
       "Bash(command -v gh)",
-      "Read(//opt/homebrew/bin/**)"
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(gh pr create --title 'fix\\(privacy\\): strip religion/ethnicity/gender from getPublicProfile [PLAN-ID: 20260709-strip-public-profile]' --body ' *)"
     ]
   }
 }
