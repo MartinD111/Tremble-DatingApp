@@ -91,3 +91,42 @@ export const updateProfileSchema = z
     .strict(); // Reject unknown fields — prevents injection of isAdmin/isPremium
 
 export type UpdateProfileData = z.infer<typeof updateProfileSchema>;
+
+/**
+ * Whitelist of fields returned by `getPublicProfile`.
+ *
+ * IMPORTANT — DO NOT add sensitive attributes here:
+ *   - `religion` and `ethnicity` are GDPR Art. 9 special-category data and must
+ *     never leave the server surface (they are read internally for consented
+ *     bilateral scoring in `compatibility_calculator.ts`, but that is a
+ *     server→server read, not client-facing).
+ *   - `gender` is intentionally omitted from the client-facing profile response
+ *     as of PLAN-ID 20260709-strip-public-profile.
+ *   - `politicalAffiliation` is not persisted at all (removed in PR #8).
+ *
+ * The `getPublicProfile` return literal is annotated with this interface so any
+ * future edit that reintroduces a forbidden field triggers a TypeScript
+ * excess-property error at build time, rather than silently regressing.
+ */
+export interface PublicProfile {
+    id: string;
+    name?: string;
+    age?: number;
+    photoUrls?: string[];
+    height?: number;
+    location?: string;
+    hobbies?: string[];
+    lookingFor?: string[];
+    languages?: string[];
+    prompts?: Record<string, string>;
+    isSmoker?: boolean;
+    drinkingHabit?: string;
+    exerciseHabit?: string;
+    sleepSchedule?: string;
+    petPreference?: string;
+    childrenPreference?: string;
+    introvertScale?: number;
+    hairColor?: string;
+    occupation?: string;
+}
+
