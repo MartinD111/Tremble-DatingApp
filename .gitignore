@@ -147,3 +147,5 @@ desktop.ini
 *.orig
 android/app/key.properties
 android/app/tremble-release.jks
+coverage/
+.claude/settings.local.json

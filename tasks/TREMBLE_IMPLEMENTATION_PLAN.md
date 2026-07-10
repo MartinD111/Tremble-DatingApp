@@ -269,7 +269,11 @@ Datum: 10.07.2026
 
 **Output (izpolni ti):**
 ```text
-Odločitev: NI OBVEZEN (pravna utemeljitev spodaj)
+Odločitev: ZAČASNO NI OBVEZEN, glede na trenutni obseg (TestFlight Family+Friends,
+<50 uporabnikov, ni javni launch). Pravna utemeljitev: prag "velikega obsega" po čl.
+37(1)(b)/(c) verjetno ni dosežen pri trenutnem obsegu. TA ODLOČITEV JE ZAČASNA in mora
+biti ponovno ocenjena pred javnim App Store/Play launchom, ko se obseg bistveno poveča.
+Ni še formalno pravno potrjeno — Gemini prvi prehod, ne pravno mnenje.
 Datum: 10.07.2026
 ```
 
@@ -602,9 +606,13 @@ Besedilo dodano (SL): N/A
 
 **Output (izpolni AI):**
 ```text
-Status (izvedeno / preskočeno):
-Datoteke spremenjene:
-Testi:
+Status: IZVEDENO in verificirano end-to-end. activateWeekendPass (edini write-site) že
+kliče getNextWeekendWindow — Tuesday aktivacija shrani Fri19:00/Sun19:00, ne Tuesday+48h.
+Ni bilo neusklajenega drugega writerja (RevenueCat/webhook še ne obstaja). Zabeleženo
+kot memory za prihodnost: ko se doda plačilni entitlement layer, mora iti skozi isto
+funkcijo, ne inline izračun.
+Datoteke spremenjene: functions/src/modules/subscriptions/subscriptions.functions.ts
+Testi: 10/10 novih + 77/77 skupaj
 ```
 
 ---

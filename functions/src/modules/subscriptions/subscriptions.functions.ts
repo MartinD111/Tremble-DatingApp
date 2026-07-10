@@ -6,7 +6,9 @@ import {
     QueryDocumentSnapshot,
     Timestamp,
 } from "firebase-admin/firestore";
+import { DateTime } from "luxon";
 import { ENFORCE_APP_CHECK } from "../../config/env";
+import { Sentry } from "../../core/sentry";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { assertValidDocumentId } from "../../middleware/validate";
@@ -89,32 +91,56 @@ export const activateWeekendPass = onCall(
     }
 );
 
+// ToS §7: Weekend Getaway window runs Fri 19:00 → Sun 19:00 Europe/Ljubljana.
+// The enforcement anchor is always the default timezone — user-timezone drift only
+// affects when a specific user's activation/expiry timestamps were computed at
+// activateWeekendPass time; the *window itself* is anchored to Ljubljana.
 export const processWeekendPasses = onSchedule(
-    { schedule: "0 * * * *", region: "europe-west1" },
+    { schedule: "0 * * * *", region: "europe-west1", timeZone: DEFAULT_TIMEZONE },
     async () => {
+        const startedAt = Date.now();
         const now = Timestamp.now();
+        const anchor = DateTime.now().setZone(DEFAULT_TIMEZONE);
+        const inWindow = isInWeekendWindow(DEFAULT_TIMEZONE);
 
-        const [pendingSnapshot, activeSnapshot] = await Promise.all([
-            db.collection("users")
-                .where("weekendPassStatus", "==", "pending")
-                .where("weekendPassActivatesAt", "<=", now)
-                .get(),
-            db.collection("users")
-                .where("weekendPassStatus", "==", "active")
-                .where("weekendPassExpiresAt", "<=", now)
-                .get(),
-        ]);
+        try {
+            const [pendingSnapshot, activeSnapshot] = await Promise.all([
+                db.collection("users")
+                    .where("weekendPassStatus", "==", "pending")
+                    .where("weekendPassActivatesAt", "<=", now)
+                    .get(),
+                db.collection("users")
+                    .where("weekendPassStatus", "==", "active")
+                    .where("weekendPassExpiresAt", "<=", now)
+                    .get(),
+            ]);
 
-        const activated = await updateUsersInBatches(pendingSnapshot.docs, {
-            weekendPassStatus: "active",
-        });
+            const activated = await updateUsersInBatches(pendingSnapshot.docs, {
+                weekendPassStatus: "active",
+            });
 
-        const expired = await updateUsersInBatches(activeSnapshot.docs, {
-            weekendPassStatus: null,
-            weekendPassActivatesAt: null,
-            weekendPassExpiresAt: null,
-        });
+            const expired = await updateUsersInBatches(activeSnapshot.docs, {
+                weekendPassStatus: null,
+                weekendPassActivatesAt: null,
+                weekendPassExpiresAt: null,
+            });
 
-        console.log(`[SUBSCRIPTIONS] Weekend passes activated=${activated}, expired=${expired}`);
+            console.log(
+                JSON.stringify({
+                    fn: "processWeekendPasses",
+                    event: "complete",
+                    timezone: DEFAULT_TIMEZONE,
+                    nowLjubljana: anchor.toISO(),
+                    inWindow,
+                    activated,
+                    expired,
+                    durationMs: Date.now() - startedAt,
+                })
+            );
+        } catch (err) {
+            Sentry.captureException(err);
+            await Sentry.flush(2000);
+            throw err;
+        }
     }
 );
