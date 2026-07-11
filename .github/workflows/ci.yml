@@ -45,8 +45,9 @@ jobs:
             core.setOutput('body', pr.data.body || '');
 
       - name: Check Plan-ID in title
+        env:
+          TITLE: ${{ steps.pr_meta.outputs.title }}
         run: |
-          TITLE="${{ steps.pr_meta.outputs.title }}"
           echo "PR Title: $TITLE"
           if ! echo "$TITLE" | grep -E "\[PLAN-ID: ?[0-9]{8}-[a-z0-9\-]+\]"; then
             echo "❌ Missing Plan-ID in PR title."
@@ -57,8 +58,9 @@ jobs:
           echo "✅ Plan-ID present."
 
       - name: Check verification checklist in body
+        env:
+          BODY: ${{ steps.pr_meta.outputs.body }}
         run: |
-          BODY="${{ steps.pr_meta.outputs.body }}"
           FAILED=0
           for phrase in "Verification checklist" "unit tests" "integration tests" "security scan"; do
             if ! echo "$BODY" | grep -qi "$phrase"; then
@@ -69,9 +71,11 @@ jobs:
           [ "$FAILED" -eq "0" ] && echo "✅ Verification checklist present." || exit 1
 
       - name: Check ADR reference for architecture changes
+        env:
+          BODY: ${{ steps.pr_meta.outputs.body }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          BODY="${{ steps.pr_meta.outputs.body }}"
-          BASE="${{ github.base_ref }}"
+          BASE="$BASE_REF"
           [ -z "$BASE" ] && BASE="HEAD~1" || BASE="origin/$BASE"
           CHANGED=$(git diff --name-only $BASE...HEAD \
             | grep -E "(system_map|infra|firebase\.json|pubspec\.yaml)" || true)
@@ -87,8 +91,9 @@ jobs:
 
       - name: Evaluate risk level
         id: risk_eval
+        env:
+          BODY: ${{ steps.pr_meta.outputs.body }}
         run: |
-          BODY="${{ steps.pr_meta.outputs.body }}"
           if echo "$BODY" | grep -iE "(infra_change|touches_auth|touches_pii|external_model_calls|risk_level: (high|critical))"; then
             echo "is_high_risk=true" >> $GITHUB_OUTPUT
             echo "⚠️  HIGH RISK PR — founder approval gate will be required."
