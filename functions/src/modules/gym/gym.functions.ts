@@ -12,24 +12,15 @@ const db = getFirestore();
 /** Hard limit for gym session duration. Auto-expire clears after this. */
 const GYM_SESSION_HOURS = 2;
 
-function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6_371_000;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLng = ((lng2 - lng1) * Math.PI) / 180;
-    const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLng / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
 /**
  * onGymModeActivate — manual check-in flow.
  *
  * Called when the user taps "Activate Gym Mode" and selects a gym.
- * Flutter fetches the current location via geolocator, then passes
- * gymId + lat/lng here. Backend validates proximity and sets the session.
+ * Flutter passes gymId + current lat/lng; lat/lng seed the first
+ * proximity iteration only. Manual activation is an explicit
+ * context declaration — no server-side geofence gate. Physical
+ * detection is handled by the geofence dwell service, not by this
+ * callable.
  *
  * Firestore gym doc shape:
  *   gyms/{gymId}: { name, address, placeId, location: { lat, lng }, radiusMeters }
@@ -58,19 +49,6 @@ export const onGymModeActivate = onCall(
         }
 
         const gymData = gymDoc.data()!;
-        const gymLat = gymData.location?.lat as number | undefined;
-        const gymLng = gymData.location?.lng as number | undefined;
-        const radiusMeters = (gymData.radiusMeters as number | undefined) ?? 200;
-
-        if (gymLat !== undefined && gymLng !== undefined) {
-            const distance = haversine(latitude, longitude, gymLat, gymLng);
-            if (distance > radiusMeters) {
-                throw new HttpsError(
-                    "failed-precondition",
-                    `You are ${Math.round(distance)}m away from this gym (max ${radiusMeters}m).`
-                );
-            }
-        }
 
         const gymModeUntil = Timestamp.fromDate(
             new Date(Date.now() + GYM_SESSION_HOURS * 60 * 60 * 1000)
