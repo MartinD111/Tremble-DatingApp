@@ -90,3 +90,6 @@ export {
     activateWeekendPass,
     processWeekendPasses,
 } from "./modules/subscriptions/subscriptions.functions";
+
+// ── Ops: Billing kill-switch ─────────────────────────────
+export { stopBilling } from "./scripts/stop-billing";
