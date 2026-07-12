@@ -133,6 +133,56 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// ── Server-side notification i18n ─────────────────────────
+// Founder decision (path a, plan 20260712-fix-crossing-paths-visibility):
+// FCM notification title/body are localized here from recipient's
+// `appLanguage` field (fallback `language`, then `en`). We no longer rely on
+// APNs `alert-body-loc-key` — that path required a native Localizable.strings
+// bundle that does not exist. All strings live here so tests can pin them.
+
+export type NotificationLocale = "en" | "sl";
+
+export const CROSSING_PATHS_STRINGS: Record<
+    NotificationLocale,
+    { title: string; body: (name: string, age: number) => string }
+> = {
+    en: {
+        title: "Someone nearby 👀",
+        body: (name, age) => (age > 0
+            ? `${name}, ${age} is nearby. Want to send a wave?`
+            : `${name} is nearby. Want to send a wave?`),
+    },
+    sl: {
+        title: "Nekdo v bližini 👀",
+        body: (name, age) => (age > 0
+            ? `${name}, ${age} je v bližini. Boš pomahal-a?`
+            : `${name} je v bližini. Boš pomahal-a?`),
+    },
+};
+
+export const SECOND_ENCOUNTER_STRINGS: Record<
+    NotificationLocale,
+    { title: string; body: string }
+> = {
+    en: {
+        title: "Crossed paths twice ✨",
+        body: "You've been near each other twice. Coincidence?",
+    },
+    sl: {
+        title: "Že drugič skupaj ✨",
+        body: "Že drugič ste blizu drug drugega. Naključje?",
+    },
+};
+
+export function resolveNotificationLocale(
+    userData: FirebaseFirestore.DocumentData | undefined,
+): NotificationLocale {
+    const raw = userData?.appLanguage ?? userData?.language;
+    if (typeof raw !== "string") return "en";
+    const code = raw.slice(0, 2).toLowerCase();
+    return code === "sl" ? "sl" : "en";
+}
+
 // ── F11: Nicotine Compatibility Helpers ─────────────────────
 
 function userSmokes(nicotineUse: string[]): boolean {
@@ -713,13 +763,26 @@ export const scanProximityPairs = onSchedule(
                             await redis.expire(encounterCountKey, 7776000);
                         }
                         if (encounterCount === 2) {
-                            const fcmTokens = [safeA.fcmToken, safeB.fcmToken].filter(
-                                (token): token is string => typeof token === "string" && token.trim() !== ""
-                            );
-                            for (const token of fcmTokens) {
+                            const secondEncounterRecipients: Array<{
+                                token: string;
+                                data: FirebaseFirestore.DocumentData;
+                            }> = [];
+                            if (typeof safeA.fcmToken === "string" && safeA.fcmToken.trim() !== "") {
+                                secondEncounterRecipients.push({ token: safeA.fcmToken, data: safeA });
+                            }
+                            if (typeof safeB.fcmToken === "string" && safeB.fcmToken.trim() !== "") {
+                                secondEncounterRecipients.push({ token: safeB.fcmToken, data: safeB });
+                            }
+                            for (const { token, data: recipientData } of secondEncounterRecipients) {
+                                const locale = resolveNotificationLocale(recipientData);
+                                const strings = SECOND_ENCOUNTER_STRINGS[locale];
                                 try {
                                     await messaging.send({
                                         token,
+                                        notification: {
+                                            title: strings.title,
+                                            body: strings.body,
+                                        },
                                         data: {
                                             type: "SECOND_ENCOUNTER",
                                         },
@@ -727,22 +790,28 @@ export const scanProximityPairs = onSchedule(
                                             payload: {
                                                 aps: {
                                                     contentAvailable: true,
-                                                    "alert-title-loc-key": "notify_second_encounter_title",
-                                                    "alert-body-loc-key": "notify_second_encounter_body",
+                                                    sound: "default",
                                                 },
                                             },
                                         },
                                         android: {
                                             priority: "high",
+                                            notification: {
+                                                channelId: "tremble_proximity",
+                                                sound: "default",
+                                            },
                                         },
                                     });
                                 } catch (e) {
-                                    console.error(`[NEAR_MISS_2ND] Failed to send push to token ${token}`, e);
+                                    logStructured({
+                                        fn: "scanProximityPairs",
+                                        event: "second_encounter_send_failed",
+                                        error: errorMessage(e),
+                                    });
                                 }
                             }
                         }
 
-                        pairsNotified++;
 
                         const buildAge = (userData: FirebaseFirestore.DocumentData): number => {
                             if (!userData.dateOfBirth) return 0;
@@ -754,14 +823,19 @@ export const scanProximityPairs = onSchedule(
                             return age;
                         };
 
+                        // Result semantics (plan 20260712-fix-crossing-paths-visibility):
+                        // `sent: true` means messaging.send() succeeded AND the recipient
+                        // received a user-visible notification. Silent-mode wakes and
+                        // no-token/throttled/error paths return sent: false with a reason,
+                        // so pairsNotified reflects real visible deliveries.
                         const sendCrossingPaths = async (
                             senderUid: string,
                             senderData: FirebaseFirestore.DocumentData,
                             recipientUid: string,
                             recipientData: FirebaseFirestore.DocumentData,
-                        ): Promise<void> => {
+                        ): Promise<{ sent: boolean; skipped?: string }> => {
                             const fcmToken = recipientData.fcmToken as string | undefined;
-                            if (!fcmToken) return;
+                            if (!fcmToken) return { sent: false, skipped: "no_token" };
 
                             const throttleKey = globalThrottleKey(recipientUid);
                             const count = await redis.incr(throttleKey);
@@ -773,78 +847,121 @@ export const scanProximityPairs = onSchedule(
                                     recipient: recipientUid.substring(0, 8),
                                     count,
                                 });
-                                return;
+                                return { sent: false, skipped: "throttled" };
                             }
 
                             const isSilent = recipientData?.isRunModeActive === true
                                 || !!recipientData?.activeGymId
                                 || !!recipientData?.activeEventId;
 
-                            const name = senderData.displayName || "Someone";
+                            const name = (senderData.displayName as string | undefined) || "Someone";
                             const photoUrl = (senderData.photoUrls as string[] | undefined)?.[0] ?? "";
                             const age = buildAge(senderData);
 
+                            const dataPayload = {
+                                type: "CROSSING_PATHS",
+                                fromUid: senderUid,
+                                senderId: senderUid,
+                                senderName: name,
+                                senderAge: age.toString(),
+                                senderPhotoUrl: photoUrl,
+                            };
+
                             if (isSilent) {
-                                await messaging.send({
-                                    token: fcmToken,
-                                    data: {
-                                        type: "CROSSING_PATHS",
-                                        fromUid: senderUid,
-                                        senderId: senderUid,
-                                        senderName: name,
-                                        senderAge: age.toString(),
-                                        senderPhotoUrl: photoUrl,
-                                    },
-                                    apns: {
-                                        payload: {
-                                            aps: {
-                                                contentAvailable: true,
+                                try {
+                                    await messaging.send({
+                                        token: fcmToken,
+                                        data: dataPayload,
+                                        apns: {
+                                            payload: {
+                                                aps: { contentAvailable: true },
                                             },
                                         },
-                                    },
-                                    android: {
-                                        priority: "high",
-                                    },
-                                });
-                            } else {
+                                        android: { priority: "high" },
+                                    });
+                                    logStructured({
+                                        fn: "scanProximityPairs",
+                                        event: "notification_sent",
+                                        mode: "silent",
+                                        sender: senderUid.substring(0, 8),
+                                        recipient: recipientUid.substring(0, 8),
+                                    });
+                                    return { sent: false, skipped: "silent" };
+                                } catch (e) {
+                                    logStructured({
+                                        fn: "scanProximityPairs",
+                                        event: "notification_error",
+                                        mode: "silent",
+                                        sender: senderUid.substring(0, 8),
+                                        recipient: recipientUid.substring(0, 8),
+                                        error: errorMessage(e),
+                                    });
+                                    return { sent: false, skipped: "error" };
+                                }
+                            }
+
+                            const locale = resolveNotificationLocale(recipientData);
+                            const strings = CROSSING_PATHS_STRINGS[locale];
+                            const notificationTitle = strings.title;
+                            const notificationBody = strings.body(name, age);
+
+                            try {
                                 await messaging.send({
                                     token: fcmToken,
-                                    data: {
-                                        type: "CROSSING_PATHS",
-                                        fromUid: senderUid,
-                                        senderId: senderUid,
-                                        senderName: name,
-                                        senderAge: age.toString(),
-                                        senderPhotoUrl: photoUrl,
+                                    notification: {
+                                        title: notificationTitle,
+                                        body: notificationBody,
                                     },
+                                    data: dataPayload,
                                     apns: {
                                         payload: {
                                             aps: {
                                                 contentAvailable: true,
                                                 category: "NEARBY_CATEGORY",
-                                                "alert-body-loc-key": "notify_nearby_body_rich",
-                                                "alert-body-loc-args": [name, age.toString()],
+                                                sound: "default",
                                             },
                                         },
                                     },
                                     android: {
                                         priority: "high",
+                                        notification: {
+                                            channelId: "tremble_proximity",
+                                            sound: "default",
+                                        },
                                     },
                                 });
+                                logStructured({
+                                    fn: "scanProximityPairs",
+                                    event: "notification_sent",
+                                    mode: "visible",
+                                    locale,
+                                    sender: senderUid.substring(0, 8),
+                                    recipient: recipientUid.substring(0, 8),
+                                });
+                                return { sent: true };
+                            } catch (e) {
+                                logStructured({
+                                    fn: "scanProximityPairs",
+                                    event: "notification_error",
+                                    mode: "visible",
+                                    locale,
+                                    sender: senderUid.substring(0, 8),
+                                    recipient: recipientUid.substring(0, 8),
+                                    error: errorMessage(e),
+                                });
+                                return { sent: false, skipped: "error" };
                             }
-
-                            logStructured({
-                                fn: "scanProximityPairs",
-                                event: "notification_sent",
-                                sender: senderUid.substring(0, 8),
-                                recipient: recipientUid.substring(0, 8),
-                            });
                         };
 
-                        await Promise.allSettled([
+                        const sendResults = await Promise.allSettled([
                             sendCrossingPaths(a.uid, safeA, b.uid, safeB),
                             sendCrossingPaths(b.uid, safeB, a.uid, safeA),
                         ]);
+                        for (const result of sendResults) {
+                            if (result.status === "fulfilled" && result.value.sent === true) {
+                                pairsNotified++;
+                            }
+                        }
                     }
                 }
             }
