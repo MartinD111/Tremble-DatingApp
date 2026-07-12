@@ -682,6 +682,7 @@ const Map<String, Map<String, String>> _translations = {
     'judaism': 'Judaism',
     'agnostic': 'Agnostic',
     'atheist': 'Atheist',
+    'prefer_not_to_say': 'Prefer not to say',
 
     // --- Ethnicity ---
     'ethnicity': 'Ethnicity',
@@ -1515,6 +1516,7 @@ const Map<String, Map<String, String>> _translations = {
     'judaism': 'Judaizem',
     'agnostic': 'Agnostik',
     'atheist': 'Ateist',
+    'prefer_not_to_say': 'Raje ne bi povedal/a',
 
     // --- Ethnicity ---
     'ethnicity': 'Etnična pripadnost',
@@ -2262,6 +2264,7 @@ const Map<String, Map<String, String>> _translations = {
     'judaism': 'Judentum',
     'agnostic': 'Agnostiker',
     'atheist': 'Atheist',
+    'prefer_not_to_say': 'Möchte ich nicht angeben',
 
     // --- Ethnicity ---
     'ethnicity': 'Ethnizität',
@@ -3028,6 +3031,7 @@ const Map<String, Map<String, String>> _translations = {
     'judaism': 'Ebraismo',
     'agnostic': 'Agnostico/a',
     'atheist': 'Ateo/a',
+    'prefer_not_to_say': 'Preferisco non dirlo',
 
     // --- Etnia ---
     'ethnicity': 'Etnia',
@@ -3794,6 +3798,7 @@ const Map<String, Map<String, String>> _translations = {
     'judaism': 'Judaïsme',
     'agnostic': 'Agnostique',
     'atheist': 'Athée',
+    'prefer_not_to_say': 'Je préfère ne pas dire',
 
     // --- Ethnie ---
     'ethnicity': 'Origine',
@@ -4449,6 +4454,7 @@ const Map<String, Map<String, String>> _translations = {
     'judaism': 'Judaizam',
     'agnostic': 'Agnostik',
     'atheist': 'Ateist',
+    'prefer_not_to_say': 'Radije ne bih rekao/rekla',
     'ethnicity': 'Etnička pripadnost',
     'ethnicity_white': 'Bijelac/kinja',
     'ethnicity_black': 'Crnac/kinja',
@@ -5332,6 +5338,7 @@ const Map<String, Map<String, String>> _translations = {
     'judaism': 'Judaizam',
     'agnostic': 'Agnostik',
     'atheist': 'Ateista',
+    'prefer_not_to_say': 'Radije ne bih rekao/rekla',
 
     // --- Ethnicity ---
     'ethnicity': 'Etnicitet',
@@ -6151,6 +6158,7 @@ const Map<String, Map<String, String>> _translations = {
     'judaism': 'Judaizmus',
     'agnostic': 'Agnosztikus',
     'atheist': 'Ateista',
+    'prefer_not_to_say': 'Inkább nem mondom meg',
 
     // --- Etnikum ---
     'ethnicity': 'Etnikum',

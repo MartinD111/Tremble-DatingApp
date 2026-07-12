@@ -63,6 +63,7 @@ class ReligionStep extends StatelessWidget {
         {
           'key': 'prefer_not_to_say',
           'label': tr('prefer_not_to_say'),
+          'icon': Icons.privacy_tip_outlined,
         },
       ],
       selected: selected,

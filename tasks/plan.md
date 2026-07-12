@@ -1,49 +1,52 @@
 # Active Implementation Plan
-Plan ID: 20260712-fix-crossing-paths-visibility
-Risk Level: HIGH
-Founder Approval Required: YES (already granted — path (a) chosen)
-Branch: feat/crossing-paths-visible-notification
+Plan ID: 20260712-fix-prefer-not-to-say-translation
+Risk Level: LOW
+Founder Approval Required: NO
+Branch: feat/prefer-not-to-say-translation
 
-1. OBJECTIVE — Make CROSSING_PATHS notifications actually visible to backgrounded users on both Android and iOS by moving to a full FCM `notification` payload with title/body localized server-side from the recipient's `appLanguage` field (fallback `en`), while preserving the existing `data` fields so the foreground in-app pill path continues to work end-to-end.
+1. OBJECTIVE — Ship the missing `'prefer_not_to_say'` translation key across every locale in `translations.dart` so the religion and ethnicity registration steps stop rendering a raw key string, AND make the option itself feel intentional in the design (icon + consistent pill styling) so the choice is easy to see and tap.
 
 2. SCOPE —
    - **Modified:**
-     - `functions/src/modules/proximity/proximity.functions.ts` — `sendCrossingPaths` (both silent/non-silent branches) and the `SECOND_ENCOUNTER` FCM path in `scanProximityPairs`.
-     - `functions/src/__tests__/proximity_crossing_paths.test.ts` — **new** Jest suite covering title/body localization (en + sl) and `pairsNotified` counting.
-     - `lib/src/core/notification_service.dart` — early-return after in-app pill so the OS banner is not double-shown in foreground now that a `notification` block is present.
+     - `lib/src/core/translations.dart` — add `'prefer_not_to_say'` to all 8 locale blocks (en, sl, de, it, fr, hr, sr, hu). Inserted immediately after each block's `'atheist'` line so it lives beside religion strings.
+     - `lib/src/features/auth/presentation/widgets/registration_steps/religion_step.dart` — add a neutral icon on the `prefer_not_to_say` option so it renders like the other religion pills (all others already carry an icon).
+     - `lib/src/features/auth/presentation/widgets/registration_steps/ethnicity_step.dart` — add the same neutral icon so the "opt-out" pill is visually distinct from the ethnicity options.
+     - `tasks/plans/PLAN_03_APP_CODE.md` — Output block for KORAK 3.1 and 3.2 + status footer.
+     - `.gitignore` — ignore `.claude/scheduled_tasks.lock` (session-local, harness-generated).
      - `tasks/plan.md` (this file).
    - **Does NOT change:**
-     - `ios/Runner/Info.plist`, `android/app/src/main/AndroidManifest.xml` (native manifests untouched).
-     - `pubspec.yaml`, Cloud Functions dependency list.
-     - Firestore Rules, `.github/workflows/`, secrets, App Check config.
-     - `lib/src/core/translations.dart` (Flutter loc strings; APNs no longer relies on them).
+     - Firestore schema, Cloud Functions, native manifests (Info.plist / AndroidManifest.xml), CI workflows.
+     - `sub_screen_step.dart` / `step_shared.dart` OptionPill widget — leave the shared button alone; only add the missing icon prop at the two call sites.
 
 3. STEPS —
-   (a) **Server-side i18n table.** Add a small in-file map `CROSSING_PATHS_STRINGS: Record<lang, {title, body(name, age)}>` covering `en` + `sl` (fallback `en`). Same map is exported via a helper so tests can assert exact strings.
-   (b) **Rewrite `sendCrossingPaths`.** Build recipient language from `recipientData.appLanguage` (fallback `language`, else `en`). Always send a full `notification: { title, body }`; keep the existing `data` block so foreground pill still receives `senderId/senderName/senderAge/senderPhotoUrl/type`. Preserve the silent-mode branch (Run Mode / Gym / Event) — silent still uses `content_available` only, no user-visible notification. Drop `alert-body-loc-key` / `alert-body-loc-args` / `notify_nearby_body_rich`. Set `apns.payload.aps.sound: "default"` and iOS category `NEARBY_CATEGORY` only for the non-silent branch. Preserve throttle + PII truncation.
-   (c) **Fix `pairsNotified`.** Remove the pre-send optimistic increment. Await `Promise.allSettled([send1, send2])` and increment `pairsNotified` by the count of fulfilled promises whose handler returned `{sent: true}` (silent-mode returns `{sent: false, skipped: "silent"}`, throttled/token-missing returns `{sent: false, skipped: "throttled" | "no_token"}`).
-   (d) **SECOND_ENCOUNTER localization.** Same treatment: full `notification.title/body` per recipient `appLanguage`; drop `alert-title-loc-key` / `alert-body-loc-key`.
-   (e) **Flutter foreground dedupe.** Confirm existing `return;` in `_onMessageSub` handler after `onForegroundWave(...)` fires — this already suppresses the OS banner when the app is foreground and the pill is shown, so no double-display when the CF now includes a `notification` block. Add a short comment documenting the invariant.
-   (f) **Tests.** New Jest suite mocks `firebase-admin/messaging` and `firebase-admin/firestore`, drives `scanProximityPairs` via a captured handler, and asserts:
-       - Recipient with `appLanguage: 'en'` receives EN title/body.
-       - Recipient with `appLanguage: 'sl'` receives SL title/body.
-       - Unknown language falls back to EN.
-       - When one recipient lacks `fcmToken`, `pairsNotified` reflects only the successful send.
-       - No remaining `alert-body-loc-key` / `notify_nearby_body_rich` in outgoing payloads.
+   (a) Confirm locale block count via `grep -n "^  '[a-z]\{2\}': {"` — expect 8 (en, sl, de, it, fr, hr, sr, hu). Post-edit count must also be 8 and each block must now grep-hit `'prefer_not_to_say'`.
+   (b) Add `'prefer_not_to_say'` immediately after the `'atheist'` line in each locale. Translations:
+       - en: "Prefer not to say"
+       - sl: "Raje ne bi povedal/a"
+       - de: "Möchte ich nicht angeben"
+       - it: "Preferisco non dirlo"
+       - fr: "Je préfère ne pas dire"
+       - hr: "Radije ne bih rekao/rekla"
+       - sr: "Radije ne bih rekao/rekla"
+       - hu: "Inkább nem mondom meg"
+   (c) In `religion_step.dart` add `'icon': Icons.privacy_tip_outlined` on the `prefer_not_to_say` option — every other religion option already carries an icon, so this pill previously rendered flat.
+   (d) In `ethnicity_step.dart` add the same icon (import `package:flutter/material.dart` already present in `religion_step.dart`; ethnicity does the same) — makes the opt-out choice visually anchored.
+   (e) Run `dart format .`, `flutter analyze`, `flutter test`. All must be clean/green.
+   (f) Commit, push, open PR with the four MPC phrases and the pre/post grep counts as evidence.
 
 4. RISKS & TRADEOFFS —
-   - **Rendering risk:** now that CF sends a full `notification` block, foreground clients see both the pill AND the OS banner if the handler is not short-circuited. Mitigation: `_onMessageSub` already returns after invoking `onForegroundWave`; step (e) documents/asserts that path.
-   - **APNs alert vs. data trade-off:** dropping `alert-body-loc-key` means we lose native OS-locale switching; instead we key off `appLanguage`, which lags OS locale if the user picks a language in-app that differs from OS locale — this is the founder's chosen trade-off (path a).
-   - **In-file loc strings:** Cloud Function does not import Flutter translations. Deliberately small map, only two strings; future languages added here. Drift risk mitigated by tests that assert the exact strings.
-   - **`pairsNotified` semantics change:** callers/dashboards reading this metric will see it drop when tokens are missing — this is the intended correction (metric was previously lying), not a regression.
+   - Translation quality for hr/sr/hu — I use a common polite form; a native speaker may polish later but the UX is now readable in every language and no raw key leaks.
+   - Adding an icon to the ethnicity pill: none of the other ethnicity options have icons today, so this pill will stand out. That is desired (it is semantically different — an opt-out rather than a category), and it matches the pattern already used in the religion step where every option carries an icon.
+   - We keep the shared `OptionPill` widget untouched — no cross-cutting styling change, no regression surface outside the two callers.
 
 5. VERIFICATION —
    - **Verification checklist:**
-     - [ ] **unit tests** — `cd functions && npm test` passes new proximity_crossing_paths suite (en + sl + fallback + partial success).
-     - [ ] **integration tests** — existing `matches.test.ts` and `compatibility_calculator.test.ts` still green; `scanProximityPairs` handler exercised end-to-end with mocked Firestore + Redis + FCM.
-     - [ ] **security scan** — no new dependencies; no PII in logs (`substring(0, 8)` truncation preserved); no secrets touched; `npm run lint` clean.
-     - [ ] `cd functions && npm run build && npm run lint && npm test` — all green.
+     - [ ] **unit tests** — n/a (no logic changes); existing Flutter test suite must stay green.
+     - [ ] **integration tests** — n/a (no data/network path touched); `flutter test` full suite green.
+     - [ ] **security scan** — n/a (docs + strings + one icon prop); no new deps, no secrets, no permission changes.
+     - [ ] `dart format .` — no diff.
      - [ ] `flutter analyze` — 0 issues.
-     - [ ] `flutter test` — all green (no new Flutter tests required; existing suite must stay green).
-     - [ ] Grep evidence in PR body: `grep -rn "notify_nearby_body_rich\|alert-body-loc-key\|alert-title-loc-key" functions/src` returns zero results.
-     - [ ] `risk_level: high` recorded in PR body.
+     - [ ] `flutter test` — all green.
+     - [ ] Grep evidence in PR body:
+       - `grep -c "'prefer_not_to_say'" lib/src/core/translations.dart` pre = 0, post = 8.
+       - `grep -c "^  '[a-z]\{2\}': {" lib/src/core/translations.dart` unchanged at 8 (no locale block accidentally deleted or duplicated).
