@@ -1,0 +1,279 @@
+# PLAN 03 — APLIKACIJSKA KODA
+**Faza 3 · Začne se po PLAN_01 (varen CI) · Koraki 3.1-3.2 takoj, ostalo po vrsti · Ocenjen čas: 3-5 dni CLI dela**
+
+Preberi PLAN_00_MASTER_INDEX.md pred tem dokumentom. Vsak korak tu je
+🤖 CODE — poln prompt je vključen, kopiraj ga v CLI dobesedno. Po vsakem:
+founder preveri Output polje in dokaze, preden gre naprej.
+
+---
+
+## KORAK 3.1 — CROSSING_PATHS vidna notifikacija (P1 — jedrna mehanika)
+
+**Kontekst:** Backend deluje (proximity_events zapisan 11. jul), ampak
+uporabnik v ozadju NIKOLI ne vidi obvestila:
+- Android: sendCrossingPaths pošlje data-only FCM (brez notification
+  bloka) — Android v ozadju ne prikaže ničesar; edina display pot
+  (notification_service.dart ~358) zahteva message.notification! in teče
+  samo v foregroundu.
+- iOS: apns alert-body-loc-key `notify_nearby_body_rich` se razrešuje
+  proti NATIVE bundlu (ios/Runner/*/Localizable.strings) — ta datoteka NE
+  OBSTAJA (samo InfoPlist.strings). Ključ v Flutter translations.dart za
+  APNs ni relevanten.
+- Bonus bug: pairsNotified++ se inkrementira tudi brez FCM tokena —
+  metrika laže.
+
+**CLI prompt (dobesedno):**
+```
+In the Tremble project, fix the architectural flaw that makes
+CROSSING_PATHS notifications invisible to backgrounded users on BOTH
+platforms.
+
+## Decision (already made by founder): take path (a) — the Cloud
+Function sends a full FCM notification payload (title/body localized
+server-side from the recipient's users doc `language` field, fallback
+EN), replacing the data-only + loc-key approach. Keep the existing data
+fields so foreground in-app handling continues to work.
+
+## Files
+- functions/src/modules/proximity/proximity.functions.ts
+  (sendCrossingPaths and the second-encounter variant)
+- lib/src/core/notification_service.dart (verify foreground path still
+  dedupes correctly when a notification block is now present — avoid
+  double-display in foreground: if app is foreground, suppress system
+  banner and keep in-app pill)
+- Remove/ignore the now-dead loc-key APNs fields.
+
+## Also fix
+pairsNotified must count actual successful sends (use the results of
+Promise.allSettled), not optimistic pre-send increments.
+
+## Tests
+- CF test: mock FCM, assert notification.title/body present and
+  localized per recipient language (test at least en + sl), assert
+  pairsNotified reflects real success/failure (one token missing →
+  count reflects it).
+- Flutter: existing tests must stay green.
+
+## Constraints
+- Do NOT modify Info.plist or AndroidManifest.xml.
+- No PII in logs (truncate UIDs to 8 chars).
+- flutter analyze 0 issues; flutter test all green;
+  cd functions && npm run build && npm run lint && npm test all green.
+- Branch: feat/crossing-paths-visible-notification
+- tasks/plan.md rewritten with Plan ID: 20260712-fix-crossing-paths-visibility
+- PR title: [PLAN-ID: 20260712-fix-crossing-paths-visibility] fix(notifications): CROSSING_PATHS visible on both platforms
+- PR body: include literal phrases Verification checklist, unit tests,
+  integration tests, security scan. This touches core notification
+  infra — include literal risk_level: high.
+- Evidence in PR body: grep output showing no remaining loc-key
+  references, test run summary.
+```
+
+**Founder po merge:** E2E verifikacija ostane ročna — ponovi mini BLE
+test z novima buildoma (PLAN_05 korak 5.2 pokrije polni matrix).
+
+**Output:**
+```text
+PR / merge datum:
+Testni dokaz (št. testov, jeziki pokriti):
+```
+
+## KORAK 3.2 — prefer_not_to_say translation key (P3, hiter)
+
+**Kontekst:** ključ 'prefer_not_to_say' NE obstaja v translations.dart
+(grep = 0), klican iz religion_step.dart in ethnicity_step.dart →
+UI prikazuje surov ključ.
+
+**CLI prompt:**
+```
+In lib/src/core/translations.dart add the missing key
+'prefer_not_to_say' to EVERY locale block present in the file (verify
+the number of locale blocks with grep before and after — counts must
+match). EN: "Prefer not to say". SL: "Raje ne bi povedal/a". Other
+locales: sensible translation or EN fallback.
+flutter analyze 0 issues, flutter test green.
+Branch feat/prefer-not-to-say-translation, Plan ID
+20260712-fix-prefer-not-to-say-translation, PR with required phrases.
+Evidence: grep -c "'prefer_not_to_say'" output pre/post.
+```
+
+**Output:**
+```text
+PR / merge datum:
+Locale-i pokriti:
+```
+
+## KORAK 3.3 — Gym Mode: odstrani proximity gate na ročni aktivaciji
+
+**Kontekst (compliance report Del IV):** gym.functions.ts:66-70 zavrne
+ročno aktivacijo, če uporabnik ni fizično v telovadnici — izniči smisel
+ročne aktivacije. Aktivacija = izjava konteksta; zaznava = živ GPS/BLE.
+
+**CLI prompt:**
+```
+In functions/src/modules/gym/gym.functions.ts (onGymModeActivate or
+equivalent), remove the haversine distance gate that throws when
+distance > radiusMeters on MANUAL activation. Keep lat/lng usage for
+the first proximity iteration; keep the geofence dwell service as the
+automatic-activation enhancement (unchanged). Update gym.test.ts:
+manual activation from anywhere succeeds; dwell auto-activation
+unchanged. CF build/lint/test green. Branch feat/gym-manual-activation-
+no-gate, Plan ID 20260712-fix-gym-manual-activation, PR with required
+phrases. Evidence: diff of removed gate + test output.
+```
+
+**Output:**
+```text
+PR / merge datum:
+```
+
+## KORAK 3.4 — Hobby lokalizacija: jezikovno-nevtralni ID-ji
+
+**Kontekst:** hobby_data.dart uporablja display imena kot ključe →
+mešan SL/EN prikaz IN matching bug ("Hiking" ≠ "Pohodništvo" za isti
+hobi). To kvari compatibility scoring med uporabniki z različnimi
+jeziki — ni kozmetika.
+
+**CLI prompt:**
+```
+In the Tremble Flutter project, migrate hobbies to language-neutral IDs:
+1. lib/.../hobby_data.dart: canonical list of stable hobby IDs
+   (snake_case, e.g. hiking, board_games), each with a category.
+2. Localization table: id → display name per locale (reuse
+   translations.dart pattern or a dedicated map in hobby_data.dart —
+   follow whichever pattern the file already leans toward).
+3. Migration mapping on READ (parseHobbies): map legacy display-name
+   values (both EN and SL variants) to IDs so existing profiles keep
+   working without a Firestore migration.
+4. Replace every hobby['name'] render with the localized lookup.
+5. Verify matching/compatibility code compares IDs, not display text —
+   grep for hobby comparisons in both lib/ and functions/src/ and fix
+   any text-based comparison (the CF compatibility calculator likely
+   compares raw strings; if so, add the same legacy mapping there).
+Tests: parseHobbies legacy-name mapping (EN + SL inputs → same ID);
+matching test where user A stored "Hiking" and user B "Pohodništvo" →
+counts as shared hobby. All suites green (flutter + functions).
+Branch feat/hobby-language-neutral-ids, Plan ID
+20260713-hobby-neutral-ids, PR with required phrases.
+Evidence: grep output showing no remaining display-name comparisons.
+```
+
+**Output:**
+```text
+PR / merge datum:
+Legacy mapping testiran (da/ne):
+```
+
+## KORAK 3.5 — Event Mode: koordinate v Firestore
+
+**Kontekst:** 3 ljubljanske lokacije hardcoded za _isDev — v produkciji
+prazen zaslon (Apple 2.1 App Completeness tveganje).
+
+**CLI prompt:**
+```
+Move Event Mode locations from hardcoded _eventLocations (+_isDev gate)
+in tremble_map_screen.dart to Firestore `events` documents with a
+`location` GeoPoint field. Client reads events from Firestore in all
+flavors. Provide a seed script functions/src/scripts/seed_events.ts
+(same safety pattern as existing migration scripts: --dry-run default,
+--i-know-this-is-prod guard) that seeds the current 3 Ljubljana
+locations. Do NOT run against prod. Firestore rules: events readable
+by authenticated users, writable by no client. Tests green. Branch
+feat/event-locations-firestore, Plan ID 20260713-event-locations-
+firestore, PR with required phrases.
+```
+
+**Founder po merge:** zaženi seed na tremble-dev, preveri pine na mapi,
+šele nato (z eksplicitno potrditvijo) na prod.
+
+**Output:**
+```text
+PR / merge datum:
+Seed izveden dev/prod (datuma):
+```
+
+## KORAK 3.6 — Registracijsko lokacijsko polje: prost tekst
+
+**Kontekst:** KP/LJ/ZG selektor nima funkcije (ni v matchingu). Manj
+podatka = GDPR minimizacija. Če Places API tu odpade in ni uporabljen
+drugje, se poenostavi tudi DPA/PP.
+
+**CLI prompt:**
+```
+Replace the KP/LJ/ZG/Other OptionPill selector in the registration
+location step with a plain TextField (no Places API, no geocoding).
+Grep the whole repo for remaining Places API usage and report whether
+it can be removed from dependencies entirely (report only — removal of
+the dependency is a separate decision). Tests green. Branch
+feat/registration-location-freetext, Plan ID 20260713-registration-
+location-freetext, PR with required phrases.
+```
+
+**Output:**
+```text
+PR / merge datum:
+Places API še uporabljen drugje (da/ne, kje):
+```
+
+## KORAK 3.7 — 🧑‍⚖️ ODLOČITEV + 🤖 CODE: Paywall uskladitev
+
+**Najprej founder odloči (ne CLI):** Pulse Intercept — Free ali Premium?
+(Implementation plan Korak 21, Todoist 6h3pmrQ5wgFxRrCw.) Argumenta:
+core-mechanic (Free, ker je del obljube "no chat, samo essentials") vs
+monetizacija (Premium, ker je visok-value moment). Zapiši odločitev.
+
+**Nato CLI prompt:**
+```
+Align the paywall with reality (compliance report Part V):
+1. premium_screen.dart advertises "unlimited geofence pings" and
+   "advanced filtering matrix" — grep the codebase for gates backing
+   these. They do not exist: REMOVE both from the paywall copy (do not
+   implement them).
+2. Code gates "see who waved" and "near-miss recap" but the paywall
+   does not mention them — ADD both, at the TOP of the feature list
+   (strongest conversion triggers).
+3. Implement the founder's Pulse Intercept tier decision: [VSTAVI
+   ODLOČITEV] — gate or un-gate consistently in CF + Flutter.
+4. Copy rules: EN + SL together, no forbidden phrases (revolutionary,
+   seamless, game-changing, find love today, find your person, swipe,
+   match queue, chat), no emoji in headlines, describe mechanics not
+   emotions. Pricing may appear here (paywall is an allowed surface).
+Tests green both suites. Branch feat/paywall-reality-alignment, Plan ID
+20260714-paywall-alignment, PR with required phrases + risk_level: high
+is NOT needed (no auth/billing logic change — RevenueCat wiring
+untouched) unless you end up touching subscription CFs; if you do,
+include it.
+Evidence: table in PR body mapping each advertised feature → gate
+file:line.
+```
+
+**Output:**
+```text
+Pulse Intercept odločitev:
+PR / merge datum:
+```
+
+## KORAK 3.8 — Preostali znani drobci (batch, nizka prioriteta)
+
+- Flaky GymStep test (photo_upload_registration_test.dart:467) —
+  Todoist 6h4rqCpQ3jjg9vjw ima poln prompt.
+- Info.plist podvojeni ključi + Contacts string (implementation plan
+  Korak 7) — ČE ŠE NI narejen (preveri Output polje v implementation
+  planu!). POZOR: Info.plist spremembe zahtevajo founder odobritev —
+  CLI pripravi diff, founder ga aplicira.
+- Heatmap realna geohash agregacija (implementation plan Korak 17) —
+  velik kos, POST-LAUNCH razen če Apple reviewer zavrne zaradi prazne
+  mape; mapa z event pini (3.5) verjetno zadošča za App Completeness.
+
+**Output:**
+```text
+GymStep test stabiliziran (datum):
+Korak 7 status:
+Heatmap odločitev (pre/post launch):
+```
+
+---
+**KONEC FAZE 3 — merila:** notifikacije vidne na obeh platformah (ročni
+device test), UI brez surovih ključev, gym ročna aktivacija dela od
+koderkoli, hobbiji enojezično dosledni in matching pravilen, event pini
+vidni v produkciji, paywall oglašuje samo obstoječe.
