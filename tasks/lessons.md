@@ -4,12 +4,23 @@
 
 ---
 
-**Rule #79 — Every PR Title Must Carry the Active `[PLAN-ID: YYYYMMDD-short-name]`.**
-[2026-07-12] The required MPC PR-metadata check (`.github/workflows/ci.yml` → *Check Plan-ID in title*) fails any PR whose title does not match `\[PLAN-ID: ?[0-9]{8}-[a-z0-9\-]+\]`, and the Plan-ID must exist in `tasks/plan.md`. Docs-only or trivial PRs are NOT exempt — the check runs on every `pull_request`. Before opening a PR:
-1. Confirm `tasks/plan.md` has an active `Plan ID:` line, or add a docs/chore plan entry for the change.
-2. Format the PR title as `type(scope): summary [PLAN-ID: YYYYMMDD-short-name]` (e.g. `docs(tasks): split plan set [PLAN-ID: 20260712-split-plan-set]`).
-3. If the title is missing the tag after opening, edit it with `gh pr edit <N> --title "..."` — no need to recreate the branch.
-Source: PR #15 failure, 2026-07-12.
+**Rule #79 — Every PR Must Pass the MPC PR-Metadata Gate (title Plan-ID + body checklist).**
+[2026-07-12] The required job `① MPC — PR Metadata` in `.github/workflows/ci.yml` runs on every `pull_request` and enforces **both** a title format AND a body checklist. Docs-only, chore, and trivial PRs are NOT exempt.
+
+**Title requirement:** must match `\[PLAN-ID: ?[0-9]{8}-[a-z0-9\-]+\]`. CI only regex-matches the format — it does NOT read `tasks/plan.md` — but the Plan-ID SHOULD correspond to an active entry in `tasks/plan.md` per MPC convention.
+
+**Body requirement:** must contain, case-insensitive, ALL four phrases (grepped verbatim): `Verification checklist`, `unit tests`, `integration tests`, `security scan`. Missing any one → job fails, all downstream gates (Policy Enforcement, Security Scans, SRE Gate, Founder Approval, ⑧ All Checks Passed) are skipped and marked failing.
+
+**Pre-PR checklist (do BEFORE `gh pr create`):**
+1. Confirm `tasks/plan.md` has an active `Plan ID:` line matching this work; if off-plan (docs/chore), rewrite `tasks/plan.md` with a new plan entry (`YYYYMMDD-short-name`) and commit it in the same PR.
+2. Title: `type(scope): summary [PLAN-ID: YYYYMMDD-short-name]`.
+3. Body: include a `## Verification checklist` section that names `unit tests`, `integration tests`, `security scan` explicitly — mark `n/a` with a one-line reason for docs-only PRs; do NOT omit the phrases.
+
+**If a PR is already open and failing this gate:** `gh pr edit <N> --title "..." --body "..."` — the check re-runs on edit; do NOT recreate the branch. Old failing check-runs from the pre-edit commit remain visible but GitHub uses the latest per name/SHA, so they do not block merge.
+
+**Non-admin path:** since `main` is protected and requires all ① checks green, admin bypass is not available to `unfab`. Fix title + body properly rather than trying to force-merge.
+
+Source: PR #15 failure and remediation, 2026-07-12.
 
 **Rule #78 — Single Source of Truth is the Codebase.**
 [2026-07-06] Do not rely on AI-generated strategy or documentation files as a source of truth. Relying on "circular context" caused fake features and non-existent files to be treated as reality. Always verify claims against the actual codebase.
