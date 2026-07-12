@@ -1068,3 +1068,353 @@ Priloži izpolnjen plan + nov ZIP kode. Vprašanje: je Tremble pripravljen za la
 - App Check fail-open na typo hardening
 - 228 hardcoded hex → tokeni
 - DMCA designated agent (`6ggJRF9g3WXp6fqw`), ko greš na US trg
+
+Tukaj so novi koraki za `TREMBLE_IMPLEMENTATION_PLAN.md`, v istem formatu kot obstoječi (43–50). Prilepi jih na konec, pred "PO LAUNCHU" sekcijo. Todoist taski so že ustvarjeni — vsak korak spodaj navaja svoj ID.
+
+Glede buildov: če je Claude Code trdil, da je dal nov build, ko si mu povedal, da je star — to je njegova trditev, ne dokaz. Standard iz tvojih lastnih pravil ("agent self-reports require evidence") velja tudi tu. 400 na `updateProfile` z obeh platform ni dokaz, da build ni bil posodobljen — je lahko tudi star cache na napravi ali star Play/TestFlight release, ki še ni prišel skozi. Zato Korak 46 spodaj ni "ali si mu verjel", ampak konkreten grep/version-code preverbeni korak, ki traja 5 minut in zapre vprašanje enkrat za vselej.
+
+---
+
+## KORAK 43 — 🤖 CODE + 🧑‍⚖️ FOUNDER
+### Naslov: Popravi stopBilling CF — billing kill-switch trenutno nefunkcionalen
+
+**Kaj rešujemo:** Prod logi (11 jul) kažejo, da `stop-billing-10eur` crashira s `TypeError: Buffer.from(undefined)` na vsakem budget Pub/Sub sporočilu. Funkcija je pisana za gen1 background signature, deployana pa je kot CloudEvent (gen2) — payload je v `cloudEvent.data.message.data`, ne v `event.data`. Ker crashira pred parsiranjem, nikoli ne pride do primerjave stroškov z budgetom. Tvoj €10 kill-switch je popolnoma neaktiven.
+
+**Kaj mora AI narediti:** Ta funkcija ni v repozitoriju — deployana je ročno prek GCP Console/gcloud, zato ni nič za Claude Code, dokler je ne prenesete v repo. Za zdaj: ročen deploy popravljene kode.
+
+**Prompt (za Claude Code, ko dodaš funkcijo v repo pod `functions/src/scripts/stop-billing/`):**
+```
+V Tremble Firebase Functions projektu (functions/ folder, MartinD111/Tremble-DatingApp):
+
+## Task
+Prenesi obstoječo ročno deployano Cloud Function `stop-billing-10eur` (Pub/Sub trigger na
+topic projects/am---dating-app/topics/budget-limit-reached) v repo pod
+functions/src/scripts/stop-billing/index.ts, in popravi CloudEvent parsing bug.
+
+## Context
+Funkcija je pisana za gen1 background function signature (event.data = base64 string).
+Deployana je kot gen2 CloudEvent function, kjer je pravi payload na
+cloudEvent.data.message.data. Trenutno crashira na VSAKEM klicu z
+TypeError [ERR_INVALID_ARG_TYPE]: Buffer.from(undefined), preden pride do primerjave
+costAmount/budgetAmount. Rezultat: billing kill-switch nikoli ne sproži.
+
+## Requirements
+- Uporabi @google-cloud/billing SDK, CloudBillingClient
+- Handler mora biti: exports.stopBilling = async (cloudEvent) => {...}
+- Parsiraj cloudEvent.data.message.data (base64 → JSON), NE event.data
+- Če ni data → log + return, ne crashaj
+- Primerjaj costAmount z budgetAmount PRED kakršnim koli billing klicem
+- Če costAmount <= budgetAmount → return brez akcije
+- Šele nad pragom: getProjectBillingInfo → če billingEnabled → updateProjectBillingInfo
+  z billingAccountName: '' (odklopi billing)
+- Loguj cost/budget vrednosti na vsakem klicu (za observability, brez PII)
+- Dodaj test, ki simulira CloudEvent shape in preveri: (a) sub-threshold → no-op,
+  (b) over-threshold → billing disable klican, (c) manjkajoč data → no crash
+
+## Restrictions
+- Nikoli ne pushaj na main direktno
+- Deploy ostane founder-action (glej spodaj), CF koda samo pripravljena za deploy
+
+## Expected Output
+Datoteka + test v repu, pripravljena za `firebase deploy --only functions:stopBilling`.
+```
+
+**Kaj moraš narediti ti (founder-action, po tem ko je koda pripravljena):**
+1. Prenesi popravljeno kodo v GCP Console → Cloud Run functions → `stop-billing-10eur` → Edit source, ali `gcloud functions deploy`.
+2. Preveri loge po deployu — pričakuj 200 namesto 500, in izpis `cost=X budget=Y`.
+3. Odločitev: je €10 prag še vedno smiseln zdaj, ko aktivno testirate z več napravami? Funkcija ob sprožitvi odklopi billing za **cel** `am---dating-app`, kar ubije vse Cloud Functions sredi testa.
+
+**Pričakovan rezultat:** Kill-switch dejansko deluje; ne crashira; prag potrjen kot nameren.
+
+**Todoist:** `6h4rx2R9clCC3WvxGw`
+
+**Output (izpolni ti):**
+```text
+Status:Committed cleanly (d580a9c) on feat/stop-billing-cf. Only the untouched TREMBLE_IMPLEMENTATION_PLAN.md from the prior session remains unstaged.
+
+Summary
+
+Branch: feat/stop-billing-cf
+Commit: d580a9c feat(functions): add stopBilling CF with fixed CloudEvent parsing
+
+Files:
+- functions/src/scripts/stop-billing/index.ts — v2 onMessagePublished handler on topic budget-limit-reached, region europe-west1. Env-driven threshold STOP_BILLING_THRESHOLD_EUR with fallback to notification's budgetAmount.
+- functions/src/__tests__/stop-billing.test.ts — 18 tests (sub/at/over threshold, already-disabled billing, env override up/down, missing & broken payload paths).
+- functions/src/index.ts — exports stopBilling for firebase deploy --only functions:stopBilling.
+- functions/package.json + package-lock.json — added @google-cloud/billing@^5.1.2.
+
+Verification:
+- npm run build → clean
+- npm test → 10 suites / 95 tests pass (18 new + 77 existing regressions clean)
+- eslint on new files → clean
+- Flutter pre-commit hook → analyze + tests all pass
+
+What broke in prod that this fixes: The manually-deployed CF used gen1 handler shape (event.data as base64 string) while GCP invoked it as a gen2 CloudEvent (payload at cloudEvent.data.message.data). Buffer.from(undefined) crashed on every alert before the cost/budget compare, so the €10 kill-switch never fired. New handler decodes event.data.message.data, guards every failure mode with a no-op + log, and only calls the Billing API after confirming costAmount > threshold.
+
+What's still on you (founder-action per KORAK 43):
+1. Deploy: from functions/, run firebase deploy --only functions:stopBilling (or gcloud). The old stop-billing-10eur will keep crashing until you either delete it or overwrite. Recommend deleting the old CF via GCP Console after the new one is verified — otherwise you have two subscribers on budget-limit-reached.
+2. Threshold decision: default is still €10 from the budget config. If you want to raise it during active multi-device testing, set STOP_BILLING_THRESHOLD_EUR env var on the function (Console → Cloud Run → env vars) — no code redeploy needed to change it later.
+3. Post-deploy: trigger a test alert (or wait for the next real one) and confirm logs show stopBilling: budget alert received with cost=X threshold=Y instead of a TypeError.
+
+Next: want me to also add a blockers.md entry marking KORAK 43 as "code ready, awaiting deploy", or open a PR?
+
+Datum deploya:
+Prag potrjen (da/ne, nova vrednost če spremenjen):
+```
+
+---
+
+## KORAK 44 — 🤖 CODE
+### Naslov: CROSSING_PATHS notifikacija — arhitekturno nemogoča v ozadju na obeh platformah
+
+**Kaj rešujemo:** Live BLE test (11 jul) je zapisal `proximity_events` dokument, a nihče ni videl vidnega obvestila. To ni test failure — je arhitekturna napaka, potrjena grepom proti kodi:
+- Android: `sendCrossingPaths` pošlje data-only FCM (brez `notification` bloka). Data-only sporočilo v ozadju Android sam od sebe ne prikaže ničesar — edina display logika (`_showForegroundNotification`) teče samo v foregroundu.
+- iOS: uporablja `apns.alert-body-loc-key`, ki se razrešuje proti native `Localizable.strings` datoteki — ta ne obstaja (samo `InfoPlist.strings`). APNs zato alert tiho zavrže.
+- `pairsNotified` se inkrementira ne glede na to, ali je bil push dejansko poslan — metrika je nezanesljiva.
+
+**Kaj mora Codex narediti:**
+```
+V Tremble projektu (MartinD111/Tremble-DatingApp) popravi arhitekturno napako, zaradi
+katere CROSSING_PATHS notifikacija ni nikoli vidna uporabniku v ozadju.
+
+## Task
+Odloči in implementiraj eno od dveh arhitektur:
+(a) CF pošlje poln FCM notification payload (title/body v jeziku prejemnika iz
+    users doc polja `language`), namesto data-only + loc-key
+(b) Ostane data-only; Flutter background message handler zgradi lokalno notifikacijo
+    prek flutter_local_notifications iz data payloada (konsistentno z obstoječim
+    silent-notif vzorcem za Gym/Run mode)
+
+Priporočilo: (a) je enostavnejši in bolj zanesljiv na obeh platformah — brez tega
+CF že pozna prejemnikov jezik (users doc), loc-key sistem pa je bil očitno nikoli
+testiran end-to-end na napravi.
+
+## Context
+functions/src/modules/proximity/proximity.functions.ts, funkcija sendCrossingPaths,
+pošilja data-only FCM z apns.alert-body-loc-key: notify_nearby_body_rich. Ta loc-key
+se mora razrešiti proti native iOS bundlu (Localizable.strings), ki v ios/Runner ne
+obstaja — obstajajo samo InfoPlist.strings datoteke. lib/src/core/notification_service.dart
+_showForegroundNotification (vrstica ~358) zahteva message.notification!, kar
+pomeni da teče izključno, ko je notification blok prisoten IN app v foregroundu.
+
+## Requirements
+- Če izbereš pot (a): CF prevede title/body v users.language (fallback EN), pošlje
+  poln notification blok. Odstrani loc-key referenc na iOS strani, če postanejo
+  odveč.
+- Če izbereš pot (b): implementiraj Android in iOS background message handler,
+  ki iz data payloada zgradi lokalno notifikacijo (flutter_local_notifications),
+  z enako channel/importance logiko kot obstoječi foreground handler.
+- Popravi metriko: pairsNotified naj šteje dejansko uspešne send-e (Promise.allSettled
+  rezultate), ne optimistični increment pred pošiljanjem.
+- Test: mock FCM send, preveri da notification vsebuje pravilen title/body za
+  testni jezik, in da pairsNotified odraža dejanski uspeh/neuspeh.
+
+## Build & restrictions
+- flutter test + functions npm test zeleno; tsc čist; flutter analyze 0 issues
+- Ne spreminjaj Info.plist brez founder odobritve — nove Localizable.strings
+  datoteke so dovoljene, a jasno označi v PR
+- Feature branch → PR, naslov [PLAN-ID: 20260712-fix-crossing-paths-visibility],
+  telo mora vsebovati "Verification checklist", "unit tests", "integration tests",
+  "security scan"
+
+## Files likely affected
+functions/src/modules/proximity/proximity.functions.ts
+lib/src/core/notification_service.dart
+ios/Runner/*.lproj/Localizable.strings (če pot b ali fix loc-key)
+test/...
+
+## Expected output
+Uporabnik v ozadju (app zaprta ali v Gym/Run modu ustrezno) dejansko vidi push
+notifikacijo ob CROSSING_PATHS eventu, na obeh platformah.
+```
+
+**Pričakovan rezultat:** Vidna notifikacija deluje na obeh platformah; pairsNotified pove resnico.
+
+**Todoist:** `6h4rx2JH52hFHxQw`
+
+**Preveri pred izvedbo:** Ni odvisen od drugih korakov, lahko teče takoj.
+
+**Output (izpolni AI):**
+```text
+Izbrana pot (a/b):
+Datoteke spremenjene:
+Testi:
+```
+
+---
+
+## KORAK 45 — 🤖 CODE
+### Naslov: Manjkajoč translation key 'prefer_not_to_say'
+
+**Kaj rešujemo:** UI prikazuje surov ključ `prefer_not_to_say` namesto prevoda — ključ ne obstaja v `translations.dart` v nobenem locale, klicano pa je iz `religion_step.dart` in `ethnicity_step.dart`.
+
+**Prompt:**
+```
+V lib/src/core/translations.dart dodaj manjkajoč ključ 'prefer_not_to_say' v VSE
+locale bloke (EN, SL, in ostale obstoječe — preveri točno število blokov z grep pred
+in po spremembi, mora se ujemati).
+
+EN: "Prefer not to say"
+SL: "Raje ne bi povedal/a"
+
+Za ostale locale (preveri, kateri dejansko obstajajo v datoteki) uporabi smiselni
+prevod ali angleški fallback, če prevoda ni na voljo.
+
+Requirements:
+- flutter analyze 0 issues, flutter test zeleno
+- grep -c "'prefer_not_to_say'" translations.dart pred/po commit sporočilu, da je
+  število ključev enako številu locale blokov
+- Feature branch → PR, [PLAN-ID: 20260712-fix-prefer-not-to-say-translation],
+  telo vsebuje zahtevane fraze
+```
+
+**Pričakovan rezultat:** UI prikaže preveden tekst v vseh jezikih.
+
+**Todoist:** `6h4rx2VJmmW7XjHP`
+
+**Output (izpolni AI):**
+```text
+Status:
+Locale-i pokriti:
+```
+
+---
+
+## KORAK 46 — 🧑‍⚖️ FOUNDER
+### Naslov: Neodvisno potrdi verzijo builda na obeh testnih napravah (ne zaupaj agentovi trditvi)
+
+**Kaj rešujemo:** Claude Code je trdil, da je bil nov build deployan, ko si opozoril na star build. To je njegova trditev — evidence standard iz tvojih lastnih pravil zahteva grep/log/screenshot dokaz, ne agentovo besedo. `updateProfile` 400 na obeh platformah (Android IN iOS) med live testom je signal, ki mu je vredno slediti do dna, ne prezreti.
+
+**Kaj moraš narediti:**
+1. **Android**: Nastavitve telefona → Aplikacije → Tremble → preveri version/build number v app info, ALI v aplikaciji sami (Settings screen, če obstaja verzija). Primerjaj z versionCode iz zadnjega AAB builda (67.8MB, `e99e41c`). Play Console → Internal testing → Release → preveri točen versionCode objavljenega releasa.
+2. **iOS**: TestFlight app na iPhonu → Tremble → preveri "Build" številko na dnu. Mora pisati **15**, ne 14. Če piše 14, App Store Connect processing ni zaključen ali ni bil dodan v External skupino.
+3. Če je verzija pravilna na obeh, a je 400 vseeno prišel: to pomeni bug v novi kodi (regresija strict scheme na legitimnem novem clientu) — drugačen in resnejši problem, ker bi pomenilo da tudi pravi novi uporabniki ne morejo posodobiti profila. Preveri natančno request body iz loga (`requestSize: 4805` za updateProfile 09:46:43 — kaj je bilo v njem, ki ga je Zod zavrnil).
+4. Če je verzija napačna: force-update / reinstall prek pravega internal testing / TestFlight linka, ne prek starega APK-ja na disku.
+
+**Pričakovan rezultat:** En trden odgovor — je bil problem stara naprava ali nova regresija — z verzijsko številko kot dokazom, ne s "Claude je rekel".
+
+**Todoist:** `6h4rx2M8RfPF9QmP`
+
+**Output (izpolni ti):**
+```text
+Android version code na napravi:
+Android version code v Play Console release:
+iOS TestFlight build number na napravi:
+Ujemanje (da/ne):
+Če ne ujema: akcija izvedena:
+Če ujema, a 400 vseeno: root cause najden:
+```
+
+---
+
+## KORAK 47 — 🧑‍⚖️ FOUNDER
+### Naslov: R2 + Redis čiščenje po ročnem brisanju računov (Firebase Console delete ne pokrije vsega)
+
+**Kaj rešujemo:** Console "Delete account" briše samo Firebase Auth zapis in karkoli si ročno počistil v Firestore. Ne sproži `deleteUserAccount` Cloud Function, ki bi počistila R2 fotografije in Redis ključe. Za štiri izbrisane račune (Aleksandar, Martin, wyattminer, lyndahart) sta bila 11. jul ob 11:46 dokazano generirana presigned upload URL-ja in fotografiji dejansko uploadani v R2.
+
+**Kaj moraš narediti:**
+1. Cloudflare dashboard → R2 → `media.trembledating.com` bucket → poišči in izbriši prefixe `users/{uid}/` za vse 4 UID-je:
+   - `sxkX6dMYD2XLzSxUvSV7bGACgwH3`
+   - `wjpkaTKNOuNyQ9FKAJjAFS5ZpjE3`
+   - `z3jMpBhXS3gHOThW6uYR91Z...` (dokončaj UID iz Firebase Console screenshotov, ki so bili predhodno vidni)
+   - `dK5MfsZi6oVf5CykywBWGaV...` (isto)
+2. Upstash Redis dashboard → preveri, ali obstajajo `encounter_count:*` ključi za te uparjene UID-je (90-dnevni TTL, ne bodo izginili sami). Po potrditvi, da ni drugih aktivnih testnih podatkov, razmisli o `FLUSHDB` na dev/test namespace.
+3. Firestore Console → ročno preveri prazne kolekcije: `users`, `proximity`, `proximity_events`, `waves`, `matches`, `rateLimits`, `notifications`.
+
+**Zakaj je to pomembno, ne samo pospravljanje:** trditev "kot da se je zgodil GDPR delete" mora dejansko pomeniti popoln delete. Delna izbrisa (Firestore da, R2 ne) je natanko vrsta razkoraka med izjavo in stanjem, ki ga tvoj lastni compliance report iz 6. julija označuje kot oteževalno okoliščino pri regulatornem pregledu — ista logika, drug primer.
+
+**Todoist:** `6h4rx2WHvf5728Xw`
+
+**Output (izpolni ti):**
+```text
+R2 prefixi izbrisani (4/4 da/ne):
+Redis preverjen (da/ne):
+Firestore kolekcije potrjeno prazne (da/ne):
+Datum:
+```
+
+---
+
+## KORAK 48 — 🧑‍⚖️ FOUNDER (Martin)
+### Naslov: GitHub Environment "founder-approval" — branch protection ni dovolj
+
+**Kaj rešujemo:** Screenshot potrjuje, da je branch protection rule na `main` zdaj ustvarjena. To je ločeno od CI gate ⑦ "Founder Approval", ki referencira GitHub Environment z imenom `founder-approval` — ta environment ne obstaja. Dokler ne obstaja z nastavljenim required reviewerjem, GitHub izvede job brez zaščite (auto-pass) za vsak PR, ne glede na tveganje. Branch protection sama po sebi tega ne popravi — je drug mehanizem.
+
+**Kaj mora Martin narediti (potreben je Owner dostop, ki ga Aleksandar nima):**
+1. GitHub repo → Settings → Environments → New environment → ime točno `founder-approval` (ujemati se mora s tem, kar `ci.yml` referencira).
+2. V nastavitvah environmenta: Required reviewers → dodaj Martin in/ali Aleksandar.
+3. Preveri v `.github/workflows/ci.yml`, da job ⑦ dejansko cilja `environment: founder-approval` (ime mora biti eksaktno enako).
+
+**Dodatno, nujno preveriti (glej Korak 49 spodaj):** main HEAD je pokazal 3/8 zelenih checkov kmalu po tem, ko je bila branch protection nastavljena. To je nenavadno — ali gre za isti "chore: coverage" avtomatski commit vzorec, ki se je že pojavil prej (glej memory), ali za nekaj novega.
+
+**Todoist:** `6h4mGfW5FjMhvGmw` (obstoječ task, dodan komentar 11. jul)
+
+**Output (izpolni Martin/ti):**
+```text
+Environment "founder-approval" ustvarjen (da/ne):
+Required reviewer nastavljen (kdo):
+ci.yml referenca potrjena ujemanje (da/ne):
+Datum:
+```
+
+---
+
+## KORAK 49 — 🤖 CODE (preiskava, ne fix)
+### Naslov: Zakaj main HEAD kaže 3/8 checkov kmalu po branch protection setupu
+
+**Kaj rešujemo:** Screenshot GitHub Branches strani kaže main na 3/8 check status, timestamp ~49 minut pred zajemom, kmalu po tem ko je branch protection rule nastavljena. Če je branch protection dejansko aktivna in zahteva vseh 8 checkov, ne bi smelo biti mogoče, da nekaj s 3/8 pristane na main — razen če (a) protection ne zahteva vseh 8 kot "required", samo prikazuje status, ali (b) je šlo za direct push pred aktivacijo pravila, ali (c) gre za znan vzorec avtomatskih "chore: coverage" commitov, ki so se v preteklosti že pojavili z isto značilnostjo (padli CI).
+
+**Prompt:**
+```
+V repozitoriju MartinD111/Tremble-DatingApp preišči zadnji commit na main:
+
+git log -1 --format="%H %an %ae %s %ci" main
+git show --stat HEAD
+
+Nato preveri branch protection konfiguracijo prek GitHub API ali UI:
+- Kateri checki so označeni kot "required" v protection rule za main?
+- Je "Require branches to be up to date before merging" vklopljeno?
+- Je "Include administrators" vklopljeno (če ne, lahko Owner/Admin obide pravilo)?
+
+Primerjaj s prejšnjim znanim vzorcem: 4 zaporedni avtomatski "chore: coverage"
+commiti direktno na main, 3/4 s padlim CI (omenjeno v prejšnji seji, vir ni bil
+identificiran). Ugotovi, ali je zadnji commit tega tipa.
+
+Poročaj: avtor commita, ali je šel skozi PR ali direct push, kateri checki so
+manjkali/padli, in ali branch protection rule dejansko blokira te primere ali ne.
+Ne popravljaj ničesar — samo diagnoza.
+```
+
+**Pričakovan rezultat:** Jasen odgovor, ali je nova branch protection dejansko efektivna, ali ima isto luknjo kot prej.
+
+**Todoist:** *(ni še ustvarjen — ustvarim, ko potrdiš prioriteto; naravno se navezuje na 6h4mGfW5FjMhvGmw)*
+
+**Output (izpolni AI):**
+```text
+Zadnji commit avtor:
+Pot na main (PR / direct push):
+Required checks v protection rule:
+Include administrators (da/ne):
+Diagnoza:
+```
+
+---
+
+## KORAK 50 — 🧑‍⚖️ FOUNDER
+### Naslov: Preveri, ali so "random računi" Google pre-launch report boti
+
+**Kaj rešujemo:** Štirje neznani računi (`wyattminer.16607@gm...`, `martin.dumanic@gmail...` — pozor, to je verjetno Martin sam, ne bot, `lyndahart.02127@gmai...`, in tvoj) v Firebase Authentication. Google Play avtomatsko poganja pre-launch report bote na vsak internal/closed testing upload — prijavijo se z generičnimi testnimi Google računi in crawlajo app. Vzorec imen (naključno ime + številke) je konsistenten s tem. Ni nujno vdor, ampak potrjuje pomembnejšo stvar: neznani (tudi če so boti) so uspešno prišli skozi celoten registracijski flow na produkciji.
+
+**Kaj moraš narediti:**
+1. Play Console → tvoj app → Release → Testing → Pre-launch reports → preveri, ali je report tekel okoli 11. jul, in ali se UID-ji/imena ujemajo.
+2. Če se ujemajo: potrjeno kot pričakovano Google vedenje, brez nadaljnje akcije razen tega, da se zavedaš, da je prod dostopen komurkoli z linkom do internal testing (to je po designu za internal testing, a vredno je vedeti).
+3. Če se NE ujemajo: eskaliraj — to bi pomenilo, da je nekdo zunaj tvojega testerskega kroga našel in registriral na produkcijski app pred javnim launchom.
+
+**Todoist:** *(founder-only preverba, ni potreben avtonomen task — če eskalira v točko 3, ustvari nov p1 task)*
+
+**Output (izpolni ti):**
+```text
+Pre-launch report najden za ta datum (da/ne):
+UID-ji ujemanje (da/ne):
+Zaključek:
+```
