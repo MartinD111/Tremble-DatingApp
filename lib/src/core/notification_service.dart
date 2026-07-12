@@ -255,6 +255,11 @@ class NotificationService {
       }
 
       // In-app pill for wave / proximity events — suppresses the OS banner.
+      // Invariant: the Cloud Function now attaches a `notification` block to
+      // CROSSING_PATHS (plan 20260712-fix-crossing-paths-visibility) so the OS
+      // renders it when the app is background/killed. In foreground we MUST
+      // early-return after showing the pill, otherwise the user sees both the
+      // pill and the system banner for the same event.
       final isPillEvent = type == TrembleNotificationType.incomingWave ||
           type == TrembleNotificationType.crossingPaths;
       if (isPillEvent && onForegroundWave != null) {
