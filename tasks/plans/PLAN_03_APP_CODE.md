@@ -74,15 +74,35 @@ test z novima buildoma (PLAN_05 korak 5.2 pokrije polni matrix).
 
 **Output:**
 ```text
-PR / merge datum:
+PR / merge datum:  PR #17 (github.com/MartinD111/Tremble-DatingApp/pull/17)
+                    squash-merged v main 2026-07-12 (commit 7df1159).
+                    Feature commit: d457e95.
+Deploy target:      PRODUCTION (founder odločitev 2026-07-12 —
+                    dev preskočen, popravek gre direktno v prod
+                    pri naslednjem `firebase deploy --only functions`).
+Founder approval:   granted via GitHub Environment `founder-approval`
+                    (risk_level: high gate — ⑦ MPC — Founder Approval).
 Testni dokaz (št. testov, jeziki pokriti):
+  - functions/ Jest: 100 tests / 11 suites GREEN
+    (novo: proximity_crossing_paths.test.ts — pokriva EN + SL +
+    fallback za neznan locale + one-token-missing → pairsNotified
+    pravilen + silent-mode ni štet).
+  - Flutter: 221 tests GREEN, `flutter analyze` 0 issues.
+  - Grep evidence: `alert-body-loc-key` / `alert-title-loc-key` /
+    `notify_nearby_body_rich` nikjer več v produkcijskih payloadih
+    (functions/src/modules) — ostane samo dokumentacijski komentar
+    na proximity.functions.ts:140 in test assertions.
+  - CI: vseh 10 required checks PASS (MPC PR-Metadata na prvem
+    pushu, ⑦ Founder Approval po odobritvi, ⑧ All Checks Passed).
+Locali pokriti:      en (fallback), sl. Ostali locale-i padejo na
+                    en (dokumentirano v resolveNotificationLocale).
 ```
 
-## KORAK 3.2 — prefer_not_to_say translation key (P3, hiter)
+## KORAK 3.2 — prefer_not_to_say translation key + bad text visually shown (P3, hiter) ✅
 
 **Kontekst:** ključ 'prefer_not_to_say' NE obstaja v translations.dart
 (grep = 0), klican iz religion_step.dart in ethnicity_step.dart →
-UI prikazuje surov ključ.
+UI prikazuje surov ključ. Pa tudi je grdo zapisan in ni lep gumb. popravi izgled gumba in ga naredi enostavnega za klik pa da se ga lepo vidi in da paše v dizajn.
 
 **CLI prompt:**
 ```
@@ -99,8 +119,33 @@ Evidence: grep -c "'prefer_not_to_say'" output pre/post.
 
 **Output:**
 ```text
-PR / merge datum:
-Locale-i pokriti:
+PR / merge datum:  PR #18 (github.com/MartinD111/Tremble-DatingApp/pull/18)
+                    merged v main 2026-07-12.
+Locale-i pokriti:   vseh 8 — en, sl, de, it, fr, hr, sr, hu.
+                    Prevodi:
+                      en → "Prefer not to say"
+                      sl → "Raje ne bi povedal/a"
+                      de → "Möchte ich nicht angeben"
+                      it → "Preferisco non dirlo"
+                      fr → "Je préfère ne pas dire"
+                      hr → "Radije ne bih rekao/rekla"
+                      sr → "Radije ne bih rekao/rekla"
+                      hu → "Inkább nem mondom meg"
+Grep evidence:      pre-edit  grep -c "'prefer_not_to_say'" = 0
+                    post-edit grep -c "'prefer_not_to_say'" = 8
+                    Locale-block count nespremenjen: 8 pred, 8 po.
+Gumb (izgled):      OptionPill v religion_step.dart in ethnicity_step.dart
+                    zdaj nosi `Icons.privacy_tip_outlined` na
+                    prefer_not_to_say možnosti — pill je vizualno
+                    poravnan z ostalimi (v religion so imele vse
+                    možnosti ikono) in v ethnicity opt-out izstopa
+                    kot zavesten "opt-out" izbor. Sam widget ni
+                    spremenjen — hit-target ostane full-width,
+                    16pt vertical padding (enostaven za klik).
+Deploy target:      PROD (built v naslednji APK/TestFlight bundle,
+                    ni potreben firebase deploy — Flutter strings only).
+Verification:       dart format . (0 changed), flutter analyze
+                    (0 issues), flutter test (221 tests green).
 ```
 
 ## KORAK 3.3 — Gym Mode: odstrani proximity gate na ročni aktivaciji
@@ -277,3 +322,23 @@ Heatmap odločitev (pre/post launch):
 device test), UI brez surovih ključev, gym ročna aktivacija dela od
 koderkoli, hobbiji enojezično dosledni in matching pravilen, event pini
 vidni v produkciji, paywall oglašuje samo obstoječe.
+
+---
+## STATUS (posodobljeno 2026-07-12)
+
+| Korak | Naslov                                                          | Status         | PR / merge                                    |
+|-------|-----------------------------------------------------------------|----------------|-----------------------------------------------|
+| 3.1   | CROSSING_PATHS vidna notifikacija (P1)                          | ✅ MERGED       | #17 → main 2026-07-12 (commit 7df1159)         |
+| 3.2   | prefer_not_to_say translation key + gumb                        | ✅ MERGED       | #18 → main 2026-07-12                          |
+| 3.3   | Gym Mode: odstrani proximity gate na ročni aktivaciji           | ⬜ TODO         | —                                             |
+| 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ⬜ TODO         | —                                             |
+| 3.5   | Event Mode: koordinate v Firestore                              | ⬜ TODO         | —                                             |
+| 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ⬜ TODO         | —                                             |
+| 3.7   | Paywall uskladitev (potreben founder odločitev pred CLI)        | ⬜ BLOCKED (founder odločitev za Pulse Intercept) | —      |
+| 3.8   | Preostali drobci (batch)                                        | ⬜ TODO         | —                                             |
+
+**Naslednji korak (predlog):** KORAK 3.3 — nizko tveganje, hiter čist popravek CF logike; ali KORAK 3.4 — večji, a poravnava matching bug pred nadaljnjim delom na algoritmu.
+
+**Prod deploy dnevnik:**
+- 2026-07-12 · KORAK 3.1 · Cloud Functions deploy na produkcijo predviden ročno prek `firebase deploy --only functions:scanProximityPairs` (founder odločitev: dev preskočen).
+- 2026-07-12 · KORAK 3.2 · Flutter-only sprememba (translations + button icon) — vključena v naslednji APK/TestFlight bundle, brez CF deploya.
