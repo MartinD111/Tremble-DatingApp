@@ -42,8 +42,9 @@ comes from richer history + wider radar surface area.
 | **TREMBLING WINDOW** | 30-min active radar | ✓ | ✓ |
 | | Pulse Intercept — Send Phone | ✓ | ✓ |
 | | Pulse Intercept — Send Photo | ✓ | ✓ |
-| **HISTORY — MATCHES** | Prikaz matched profila | Omejen (foto + ime + starost + 3 skupni hobiji/interesi) | Celoten profil card v Trembling Window IN v history — SAMO če je mutual wave |
-| | Odpiranje profil kartice | ✗ | ✓ (samo pri mutual wave — glej Amendment §1) |
+| **HISTORY — MATCHES** | Prikaz matched profila (mutual wave) | Foto + ime + starost + 3 skupni hobiji/interesi | Celoten profil card v Trembling Window IN v history |
+| | Prikaz matched profila (BREZ mutual wave) | **Greyscaled** — foto + ime + starost, brez interakcij | **Greyscaled** — foto + ime + starost, brez interakcij (fallback na Free-shape) |
+| | Odpiranje profil kartice | ✗ | ✓ (samo pri mutual wave — compound gate `isPremium && hasMutualWave`) |
 | **HISTORY — RECAPS** | Foto + ime + starost | ✓ (sivina) | ✓ (barvno) |
 | | Odpiranje profil kartice | ✗ | ✓ |
 | | 10-min TTL val iz recapa | ✗ | ✓ |
@@ -112,29 +113,43 @@ amendments override the corresponding rows above.
 
 ### §1 — Matches shape and the mutual-wave predicate
 
-Split the History → Matches "Prikaz matched profila" row into an
-explicit Free shape and an explicit Premium shape, both gated on the
-mutual-wave predicate:
+Split the History → Matches "Prikaz matched profila" row into two
+explicit shapes gated on the mutual-wave predicate. Founder clarified
+2026-07-13 (post first-cut wording revision):
 
-- **Free tier — always sees:** profile photo, name, age, and **3
-  shared hobbies or interests** (top-3 by compatibility calculator).
-  Nothing more, regardless of tier of the OTHER user.
-- **Premium tier — sees FULL profile card** in two contexts:
-  1. During the Trembling Window (real-time surface).
-  2. In History with the matched person.
-  ...**but ONLY when a mutual wave exists** (both users have waved at
-  each other). Without a mutual wave, Premium sees the same Free
-  shape (photo + name + age + 3 shared items).
-- **Asymmetric-wave case (A waved, B did not):** BOTH users still
-  appear in each other's History (this preserves ADR-007's
-  "prikaz omejen" row for Free), but each user sees according to
-  their OWN tier. Free B sees Free-shape of A; Premium A sees
-  Premium-shape of B if mutual — otherwise Free-shape of B.
+- **When a MUTUAL wave exists** (both users have waved at each
+  other):
+  - **Free tier:** sees photo + name + age + **3 shared hobbies /
+    interests** (top-3 by compatibility calculator). Card is
+    tappable but the tap leads to the Free shape only — no full
+    profile card open.
+  - **Premium tier:** sees the **full profile card** in the
+    Trembling Window AND in History. Tap opens the full card.
 
-This means the "Odpiranje profil kartice ✗ / ✓" row is really a
-compound gate: `isPremium && hasMutualWave(viewer, viewed)`. A
-Premium-only gate on card-open is NOT sufficient — the mutual-wave
-check must land in the same predicate.
+- **When NO mutual wave exists** (A waved to B, B did not reply):
+  - **Both users** see the other in their History **greyed out /
+    greyscaled** (photo desaturated).
+  - **Both users** see ONLY photo + name + age (no shared hobbies,
+    no card open, no interactions). This holds regardless of tier —
+    Premium falls back to this same greyed shape.
+  - Card is NOT tappable (or the tap is a no-op with an upsell /
+    "wave back to unlock" affordance — copy TBD).
+
+This means "Odpiranje profil kartice" is really a **compound gate**:
+`isPremium && hasMutualWave(viewer, viewed)`. Neither condition alone
+opens the card. Without mutual wave, both tiers see the greyscaled
+minimal shape; without Premium, mutual wave only unlocks the
+non-greyed Free-shape (photo + name + age + 3 shared hobbies).
+
+**Implementation contract:**
+- Client-side `MatchProfile` DTO gains a `hasMutualWave: bool` field
+  populated from the server-side mutual-wave counter.
+- Widget render layer applies three states in order: (a) no mutual
+  wave → greyscale + minimal, (b) mutual wave + Free → colour +
+  Free-shape, (c) mutual wave + Premium → colour + full card.
+- Card-open tap gate: `isPremium && hasMutualWave`.
+- Greyscale is achieved via `ColorFilter.matrix(_greyscaleMatrix)`
+  wrapping the photo widget when `!hasMutualWave`.
 
 ### §2 — Hard filters PAUSED until post-launch
 

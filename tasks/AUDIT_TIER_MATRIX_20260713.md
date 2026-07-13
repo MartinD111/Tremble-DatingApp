@@ -325,20 +325,23 @@ Founder clarified all three P1 items on 2026-07-13. Full text in
 ADR-007 Amendments §1-§3. Summary of resolutions:
 
 1. **3.7c-1 — Matches shape.** RESOLVED — compound gate
-   `isPremium && hasMutualWave(viewer, viewed)` on match card open
-   and full-card render.
-   - **Free (always):** photo + name + age + 3 shared hobbies /
-     interests (top-3 by compatibility calculator).
-   - **Premium (only when mutual wave):** full profile card, in
-     Trembling Window AND in History.
-   - **Asymmetric-wave case (A waved, B did not):** both users
-     appear in each other's History, each sees per their own tier
-     shape. Premium A sees Premium-shape of B only if mutual.
-   - **Client + server:** the mutual-wave predicate already exists
-     server-side in `matches.functions.ts` (mutual-wave counter). A
-     client-visible `hasMutualWave` flag must land in the
-     `MatchProfile` DTO for `matches_screen.dart` and
-     `run_recap_screen.dart` to render the split shape correctly.
+   `isPremium && hasMutualWave(viewer, viewed)` on match card open,
+   plus a **three-state render pipeline**:
+   - **No mutual wave (either tier):** greyscaled (photo
+     desaturated) + photo + name + age only. No shared hobbies, no
+     card open, no interactions. Both tiers fall back to this
+     minimal shape.
+   - **Mutual wave + Free:** colour + photo + name + age + 3 shared
+     hobbies/interests. Card tap does NOT open full card.
+   - **Mutual wave + Premium:** colour + full profile card in
+     Trembling Window AND in History. Card tap opens the full card.
+   - **Client + server:** mutual-wave predicate already exists
+     server-side (mutual-wave counter in `matches.functions.ts`); a
+     `hasMutualWave: bool` field must land on the client-side
+     `MatchProfile` DTO. Widget layer wraps the photo in a
+     `ColorFilter.matrix(_greyscaleMatrix)` when `!hasMutualWave`.
+     Card-open tap gate becomes `isPremium && hasMutualWave`
+     (neither alone unlocks the full card).
 2. **3.7c-2 — Hard filters.** REMOVED from 3.7 wave — paused until
    post-launch. Paywall bullet `premium_feature_hard_filters` remains
    as a declared-intent claim; consider soft-labelling as "coming
