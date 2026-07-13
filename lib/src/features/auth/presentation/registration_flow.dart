@@ -1032,6 +1032,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       onBack: () => _goToPage(_currentPage - 1),
                       onContinue: _nextPage,
                       tr: tr,
+                      lang: _selectedLanguage.isNotEmpty
+                          ? _selectedLanguage
+                          : 'sl',
                       isGenderBased: !_isClassicAppearance,
                       gender: _selectedGender,
                     ),

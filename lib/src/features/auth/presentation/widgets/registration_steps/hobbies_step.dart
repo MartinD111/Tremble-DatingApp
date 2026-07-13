@@ -15,6 +15,7 @@ class HobbiesStep extends StatefulWidget {
     this.onBack,
     required this.onContinue,
     required this.tr,
+    this.lang = 'sl',
     this.isModal = false,
     this.scrollController,
     this.isGenderBased = false,
@@ -27,6 +28,7 @@ class HobbiesStep extends StatefulWidget {
   final VoidCallback? onBack;
   final VoidCallback onContinue;
   final String Function(String) tr;
+  final String lang;
   final bool isModal;
   final ScrollController? scrollController;
   final bool isGenderBased;
@@ -228,6 +230,11 @@ class _HobbiesStepState extends State<HobbiesStep> {
   }
 
   bool _isSelected(Map<String, dynamic> hobby) {
+    final id = hobby['id'] as String? ?? '';
+    if (id.isNotEmpty) {
+      return widget.selectedHobbies
+          .any((h) => (h['id'] as String? ?? '') == id);
+    }
     return widget.selectedHobbies.any((h) => h['name'] == hobby['name']);
   }
 
@@ -582,7 +589,7 @@ class _HobbiesStepState extends State<HobbiesStep> {
                 style: const TextStyle(fontSize: 16)),
             const SizedBox(width: 6),
             Text(
-              hobby['name'] as String,
+              HobbyData.hobbyDisplay(hobby, widget.lang),
               style: GoogleFonts.instrumentSans(
                 color: selected
                     ? accent

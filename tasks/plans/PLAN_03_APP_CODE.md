@@ -148,7 +148,7 @@ Verification:       dart format . (0 changed), flutter analyze
                     (0 issues), flutter test (221 tests green).
 ```
 
-## KORAK 3.3 — Gym Mode: odstrani proximity gate na ročni aktivaciji
+## KORAK 3.3 — Gym Mode: odstrani proximity gate na ročni aktivaciji ✅
 
 **Kontekst (compliance report Del IV):** gym.functions.ts:66-70 zavrne
 ročno aktivacijo, če uporabnik ni fizično v telovadnici — izniči smisel
@@ -169,10 +169,36 @@ phrases. Evidence: diff of removed gate + test output.
 
 **Output:**
 ```text
-PR / merge datum:
+PR / merge datum:  PR #19 (github.com/MartinD111/Tremble-DatingApp/pull/19)
+                    merged v main 2026-07-12 21:56 UTC
+                    (merge commit f48ff52, feature commit e470650).
+Deploy target:      PROD (naslednji `firebase deploy --only
+                    functions:onGymModeActivate` — samo CF sprememba,
+                    Flutter build ni potreben; klientov contract
+                    nespremenjen: lat/lng se še vedno pošiljata).
+Founder approval:   ni zahtevan (risk_level: low — odstranitev
+                    check-a, ne varnostne meje; Gym Mode je filter,
+                    ne auth gate). Ročni merge (2026-07-12).
+Odstranjeno:        - haversine() helper (dead code po odstranitvi gate).
+                    - distance gate v onGymModeActivate (throw
+                      "failed-precondition" pri distance > radiusMeters).
+Ohranjeno:          - lat/lng v request payloadu (shape validation ostane;
+                      klient nespremenjen).
+                    - Geofence dwell service (avtomatska pot) — untouched.
+                    - onGymModeDeactivate, expireGymSessions, RunMode
+                      funkcije — untouched.
+Testni dokaz:       functions/ Jest: 12 suites / 105 tests GREEN
+                    (prej 100, +5 novih: manual iz Ljubljane proti Koper
+                    gym uspe, inside-geofence uspe, unknown gymId →
+                    not-found, missing lat/lng → invalid-argument,
+                    missing auth → unauthenticated).
+                    npm run build: 0 errors. npm run lint: 0 warnings.
+Grep evidence:      `grep -rn "haversine" functions/src/modules/gym/`
+                    → 0 hits post-merge.
+CI:                 vseh required checks PASS pred ročnim mergeom.
 ```
 
-## KORAK 3.4 — Hobby lokalizacija: jezikovno-nevtralni ID-ji
+## KORAK 3.4 — Hobby lokalizacija: jezikovno-nevtralni ID-ji ✅
 
 **Kontekst:** hobby_data.dart uporablja display imena kot ključe →
 mešan SL/EN prikaz IN matching bug ("Hiking" ≠ "Pohodništvo" za isti
@@ -205,8 +231,61 @@ Evidence: grep output showing no remaining display-name comparisons.
 
 **Output:**
 ```text
-PR / merge datum:
-Legacy mapping testiran (da/ne):
+PR / merge datum:  PR #20 (github.com/MartinD111/Tremble-DatingApp/pull/20)
+                    → main 2026-07-13 (bo ročno merged; direct-to-prod
+                    ker klientov contract nespremenjen in on-read
+                    migracija ne zahteva Firestore backfill-a).
+Deploy target:      PROD.
+                    - Cloud Functions deploy (compatibility_calculator.ts
+                      spremenjen) prek naslednjega `firebase deploy
+                      --only functions` cikla. Vpliva na: matches,
+                      proximity scoring (isti binarni izračun, samo
+                      normaliziran).
+                    - Flutter: vključeno v naslednji APK/TestFlight
+                      bundle. Migracija je popolnoma on-read — starim
+                      profilom se `hobbies: ["Hiking"]` normalizira v
+                      `id: "hiking"` ob branju, brez migracije.
+Legacy mapping testiran (da/ne): DA.
+                    - Flutter (`test/core/hobby_utils_test.dart`, 16 testov):
+                      "Hiking" (EN) → id="hiking",
+                      "Pohodništvo" (SL) → id="hiking",
+                      "hobby_running" (stari translation key) → id="running",
+                      map input s samo "name" → obogaten s kanoničnim id,
+                      map input s novim "id" → resolve prek predefined,
+                      custom hobbi preservirani (custom=true, id=''),
+                      neznane strine → custom entry brez crash-a,
+                      locale display: EN → "Hiking", SL → "Pohodništvo",
+                      HU (brez prevoda) → fallback na EN,
+                      language-neutral (SUP/BJJ) → enak niz v vseh locales.
+                    - Functions (`compatibility_calculator.test.ts`, 4
+                      novi testi):
+                      cross-locale EN+SL ["Hiking", "Cycling", "Yoga"]
+                        vs ["Pohodništvo", "Kolesarjenje", "Joga"] →
+                        score identičen s canonical-ID score,
+                      mixed-locale profil (EN+SL v istem array) → tudi
+                        pravilno normaliziran,
+                      hobby_running (legacy key) → matcha z "running",
+                      unknown/custom strini → NE cross-match z drugimi
+                        unknowni.
+Testni dokaz:       Flutter: 237 tests GREEN (prej 221, +16 novih).
+                    `flutter analyze` 0 issues.
+                    Functions: 12 suites / 109 tests GREEN (prej 105,
+                    +4 nova). npm run build 0 errors, npm run lint 0
+                    warnings.
+Grep evidence:      - Vsi preostali `hobby['name']` klici v `lib/`
+                      so write-path serializacije (auth_repository,
+                      hobby_utils.toStorage) ali fallbacki za custom
+                      hobije (hobby_categories, hobbies_step._isSelected).
+                      Noben display site ne uporablja več `hobby['name']`
+                      neposredno — vsi gredo skozi `HobbyData.hobbyDisplay(h, lang)`.
+                    - V CF modulih (`functions/src/modules/**`) ni več
+                      `CATEGORY_MAP` reference — zamenjano z
+                      `ID_TO_CATEGORY` + `LEGACY_NAME_TO_ID`.
+Kritični pattern:   on-read migracija (LEGACY_NAME_TO_ID) obstaja tako
+                    na Flutter (HobbyData.idForLegacyName) kot CF
+                    (normaliseHobbyId) — obe strani MORATA ostati
+                    sinhronizirani, če kdo doda nov predefined hobby.
+                    Če dodaš id-je, jih dodaj v OBA seznama.
 ```
 
 ## KORAK 3.5 — Event Mode: koordinate v Firestore
@@ -330,15 +409,17 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 |-------|-----------------------------------------------------------------|----------------|-----------------------------------------------|
 | 3.1   | CROSSING_PATHS vidna notifikacija (P1)                          | ✅ MERGED       | #17 → main 2026-07-12 (commit 7df1159)         |
 | 3.2   | prefer_not_to_say translation key + gumb                        | ✅ MERGED       | #18 → main 2026-07-12                          |
-| 3.3   | Gym Mode: odstrani proximity gate na ročni aktivaciji           | ⬜ TODO         | —                                             |
-| 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ⬜ TODO         | —                                             |
+| 3.3   | Gym Mode: odstrani proximity gate na ročni aktivaciji           | ✅ MERGED       | #19 → main 2026-07-12 (commit f48ff52)         |
+| 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13                          |
 | 3.5   | Event Mode: koordinate v Firestore                              | ⬜ TODO         | —                                             |
 | 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ⬜ TODO         | —                                             |
 | 3.7   | Paywall uskladitev (potreben founder odločitev pred CLI)        | ⬜ BLOCKED (founder odločitev za Pulse Intercept) | —      |
 | 3.8   | Preostali drobci (batch)                                        | ⬜ TODO         | —                                             |
 
-**Naslednji korak (predlog):** KORAK 3.3 — nizko tveganje, hiter čist popravek CF logike; ali KORAK 3.4 — večji, a poravnava matching bug pred nadaljnjim delom na algoritmu.
+**Naslednji korak (predlog):** KORAK 3.5 — mape v prod, hitro odpre "Event Mode dela v Apple review" ustvarno tveganje; ali KORAK 3.6 — prost tekst za lokacijo (poenostavitev DPA/PP če Places API pade ven).
 
 **Prod deploy dnevnik:**
 - 2026-07-12 · KORAK 3.1 · Cloud Functions deploy na produkcijo predviden ročno prek `firebase deploy --only functions:scanProximityPairs` (founder odločitev: dev preskočen).
 - 2026-07-12 · KORAK 3.2 · Flutter-only sprememba (translations + button icon) — vključena v naslednji APK/TestFlight bundle, brez CF deploya.
+- 2026-07-12 · KORAK 3.3 · Cloud Functions deploy predviden ročno prek `firebase deploy --only functions:onGymModeActivate` (samo CF sprememba; klientov contract nespremenjen — Flutter bump ni potreben).
+- 2026-07-13 · KORAK 3.4 · Cloud Functions deploy prek `firebase deploy --only functions` (compatibility_calculator.ts spremenjen — vpliva na matches + proximity scoring). Flutter: vključeno v naslednji APK/TestFlight bundle. On-read migracija — brez Firestore backfill-a.

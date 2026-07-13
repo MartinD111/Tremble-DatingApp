@@ -11,6 +11,7 @@ import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/tremble_header.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
+import '../../../core/hobby_data.dart';
 import '../../settings/presentation/widgets/preference_edit_modal.dart';
 import '../../settings/presentation/widgets/preference_pill_row.dart';
 import '../../auth/presentation/widgets/registration_steps/hobbies_step.dart';
@@ -457,6 +458,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 Navigator.pop(ctx);
               },
               tr: (key) => t(key, _lang),
+              lang: _lang,
               scrollController: scrollController,
             ),
           ),
@@ -705,8 +707,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               borderColor: borderColor,
                               onEdit: _showHobbiesModal,
                               onRemoveHobby: (hobby) => setState(() {
-                                _hobbies.removeWhere(
-                                    (h) => h['name'] == hobby['name']);
+                                bool sameHobby(Map<String, dynamic> a,
+                                    Map<String, dynamic> b) {
+                                  final aId = a['id'] as String? ?? '';
+                                  final bId = b['id'] as String? ?? '';
+                                  if (aId.isNotEmpty && bId.isNotEmpty) {
+                                    return aId == bId;
+                                  }
+                                  return a['name'] == b['name'];
+                                }
+
+                                _hobbies
+                                    .removeWhere((h) => sameHobby(h, hobby));
                                 _hasChanges = true;
                               }),
                             ),
@@ -2855,7 +2867,7 @@ class _HobbiesSection extends StatelessWidget {
           Text(hobby['emoji'] as String, style: const TextStyle(fontSize: 12)),
           const SizedBox(width: 4),
           Text(
-            hobby['name'] as String,
+            HobbyData.hobbyDisplay(hobby, lang),
             style: TextStyle(
               color: textColor,
               fontSize: 11,

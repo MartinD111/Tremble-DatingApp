@@ -10,6 +10,7 @@ import '../data/match_repository.dart';
 import '../../../core/api_client.dart';
 import '../../../core/theme.dart';
 import '../../../core/translations.dart';
+import '../../../core/hobby_data.dart';
 import '../../../shared/ui/premium_paywall.dart';
 import '../../auth/data/auth_repository.dart';
 
@@ -311,7 +312,7 @@ class _MatchDialogState extends ConsumerState<MatchDialog>
                                                   fontSize: 14)),
                                           const SizedBox(width: 6),
                                           Text(
-                                            h['name'] as String,
+                                            HobbyData.hobbyDisplay(h, lang),
                                             style: GoogleFonts.instrumentSans(
                                               color: Colors.white70,
                                               fontSize: 12,
