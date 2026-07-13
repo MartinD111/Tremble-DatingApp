@@ -314,26 +314,37 @@ firestore, PR with required phrases.
 **Output:**
 ```text
 PR / merge datum:  PR #21 (github.com/MartinD111/Tremble-DatingApp/pull/21)
-                    open 2026-07-13 — čaka ročni merge s strani founderja.
+                    squash-merged v main 2026-07-13 (merge commit be2f9c7).
                     Feature commit: 149d101. Chore (backfill KORAK 3.4
-                    merge details): fb12508.
-Deploy target:      po mergeu:
+                    merge details): fb12508. Docs (Output block prep):
+                    b54d5dc.
+Deploy target:      PRODUCTION (founder odločitev 2026-07-13 —
+                    dev preskočen, popravek gre direktno v prod, isti
+                    pattern kot KORAK 3.1).
                     - Cloud Functions: `firebase deploy --only
-                      functions:onEventModeActivate` — sprejema GeoPoint
-                      IN legacy {lat,lng} map (backward-compatible);
-                      klientov contract nespremenjen.
+                      functions:onEventModeActivate --project
+                      am---dating-app` uspešno izveden 2026-07-13.
+                      Nova verzija sprejema GeoPoint IN legacy
+                      {lat,lng} map (backward-compatible); klientov
+                      contract nespremenjen.
                     - Flutter: vključeno v naslednji APK/TestFlight
-                      bundle. Prod build zdaj bere `events` collection
-                      v vseh flavors — hardcoded gate odstranjen.
-Seed izveden dev/prod (datuma):  ⬜ PENDING founderjev korak po mergeu:
-                    1. `cd functions && npm run build`
-                    2. `node ./lib/scripts/seed_events.js
-                       --project=tremble-dev --dry-run`
-                    3. `--apply` na dev; preveri 3 pine na mapi
-                    4. Šele nato: `--project=am---dating-app
-                       --i-know-this-is-prod --apply`.
-                    Skripta je idempotentna (skip existing docs) —
-                    varno ponovno pognati.
+                      bundle. Prod build bere `events` collection v
+                      vseh flavors — hardcoded gate odstranjen.
+Seed izveden dev/prod (datuma):  DEV preskočen (founder odločitev).
+                    PROD seeded 2026-07-13 prek
+                    `node ./lib/scripts/seed_events.js
+                     --project=am---dating-app --i-know-this-is-prod
+                     --apply`.
+                    - Dry-run pred apply: OK (created=0 skipped=0,
+                      3 documents pripravljeni — brez trkov z
+                      obstoječimi).
+                    - Apply: created=3 skipped=0.
+                    - Ustvarjeni dokumenti (id, radius):
+                        club_monokel  (150m)
+                        labaratorij   (150m)
+                        metelkova     (250m)
+                    Skripta je idempotentna — če jo pozneje spet
+                    zaženeš, bo preskočila obstoječe dokumente.
 Firestore rules:    NE spremenjen — `match /events/{eventId}` je že
                     imel `read: signedIn(); write: false` pred
                     KORAK-om 3.5 (firestore.rules:197-200).
@@ -454,7 +465,7 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 | 3.2   | prefer_not_to_say translation key + gumb                        | ✅ MERGED       | #18 → main 2026-07-12                          |
 | 3.3   | Gym Mode: odstrani proximity gate na ročni aktivaciji           | ✅ MERGED       | #19 → main 2026-07-12 (commit f48ff52)         |
 | 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13 (commit a31e2b8)         |
-| 3.5   | Event Mode: koordinate v Firestore                              | 🟡 IN REVIEW    | #21 open 2026-07-13 (commit 149d101, seed pending post-merge) |
+| 3.5   | Event Mode: koordinate v Firestore                              | ✅ MERGED       | #21 → main 2026-07-13 (commit be2f9c7, prod seeded 3/3) |
 | 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ⬜ TODO         | —                                             |
 | 3.7   | Paywall uskladitev (potreben founder odločitev pred CLI)        | ⬜ BLOCKED (founder odločitev za Pulse Intercept) | —      |
 | 3.8   | Preostali drobci (batch)                                        | ⬜ TODO         | —                                             |
@@ -466,4 +477,4 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 - 2026-07-12 · KORAK 3.2 · Flutter-only sprememba (translations + button icon) — vključena v naslednji APK/TestFlight bundle, brez CF deploya.
 - 2026-07-12 · KORAK 3.3 · Cloud Functions deploy predviden ročno prek `firebase deploy --only functions:onGymModeActivate` (samo CF sprememba; klientov contract nespremenjen — Flutter bump ni potreben).
 - 2026-07-13 · KORAK 3.4 · Cloud Functions deploy prek `firebase deploy --only functions` (compatibility_calculator.ts spremenjen — vpliva na matches + proximity scoring). Flutter: vključeno v naslednji APK/TestFlight bundle. On-read migracija — brez Firestore backfill-a.
-- 2026-07-13 · KORAK 3.5 · PR #21 open. Po mergeu: (a) `firebase deploy --only functions:onEventModeActivate` (backward-compatible GeoPoint + legacy map), (b) seed dev prek `node ./lib/scripts/seed_events.js --project=tremble-dev --apply`, (c) preveri 3 pine na mapi, (d) `--project=am---dating-app --i-know-this-is-prod --apply` za prod. Flutter build vključen v naslednji APK/TestFlight bundle.
+- 2026-07-13 · KORAK 3.5 · PR #21 merged v main (be2f9c7). Cloud Function `onEventModeActivate` deployan direktno na prod (`firebase deploy --only functions:onEventModeActivate --project am---dating-app`) — dev preskočen (founder odločitev, isti pattern kot KORAK 3.1). Prod events collection seeded s 3 dokumenti (club_monokel, labaratorij, metelkova) prek `seed_events.js --project=am---dating-app --i-know-this-is-prod --apply`. Flutter build vključen v naslednji APK/TestFlight bundle.
