@@ -359,13 +359,25 @@ ADR-007 Amendments §1-§3. Summary of resolutions:
      no participant count. Premium sees participant count AND
      potential-matches count (subset that fits their filters).
 
-### Priority 2 — Quick, unambiguous gate additions
-These are small diffs (single-file or two-file) with clear ADR-007-
-matching behaviour and no scope ambiguity.
+### Priority 2 — Quick, unambiguous copy + code corrections
 
-4. **3.7c-5 — Distance slider tier bounds.** Add `isPremium`-aware max
-   to the caller of `PreferenceRangeSlider` in `settings_screen.dart`.
-   ~15 LoC + widget test. **NEXT EXECUTABLE SLICE.**
+Post-Amendment (2026-07-13), the P2 list is reshaped:
+
+4. **3.7c-5R — Distance row REMOVED** (replaces original 3.7c-5).
+   Per ADR-007 Amendment §5, the max-distance-slider row was a
+   mistake — no widget was ever wired to a distance value. Retire
+   the two paywall bullets `premium_feature_distance_100` +
+   `premium_free_distance_50` from `premium_screen.dart`; update
+   `premium_screen_test.dart` (Premium 8→7 + Free 7→6 bullets).
+   ~15 LoC.
+5. **3.7c-2C — Hard filters "coming soon" localisation** (new per
+   Amendment §6). Add the localised soft-label to all 8 locale
+   blocks in `premium_screen.dart._localTranslations` (en, sl, de,
+   hr, it, es, fr, pt). ~25 LoC.
+
+Bundle 3.7c-5R + 3.7c-2C into a single PR — both touch
+`premium_screen.dart` + the same test file, LOW risk, saves a merge
+round-trip.
 
 Note: 3.7c-3 (event pin sheet) has been reclassified per Amendment §3
 — now part of the Priority 1 resolution stack alongside 3.7c-4a/b.

@@ -59,7 +59,7 @@ comes from richer history + wider radar surface area.
 | | Število udeležencev na eventu | ✗ | ✓ |
 | | Heatmap indikator na event pinu | ✗ | ✓ |
 | | Heatmap krogi | ✓ (samo obris, brez števila) | ✓ (število uporabnikov + filter po tipu → potential matches count) |
-| **NASTAVITVE** | Max distance slider | do 50 km | do 100 km |
+| ~~**NASTAVITVE**~~ | ~~Max distance slider~~ | ~~do 50 km~~ | ~~do 100 km~~ (**REMOVED — glej Amendment §5**) |
 
 ## Cross-cutting rules
 
@@ -194,6 +194,60 @@ scoped:
   require a Firestore aggregate or CF endpoint that returns a
   filtered count, not just a total. Design pending.
 
+### §5 — Max distance slider row REMOVED
+
+Founder clarified 2026-07-13: the "Max distance slider — Free 50 km /
+Premium 100 km" row was a **mistake**. There is no distance-slider
+widget wired to any meaningful distance value in the app (grep confirms
+`PreferenceRangeSlider` is used for age + height only). Radar radius
+is already tiered by ADR-007's first row (100 / 250 m via
+`geo_service.dart` + `proximity.functions.ts`), which is the ONLY
+distance concept the product needs.
+
+**Impact:**
+- Nastavitve row in the matrix table is struck through above.
+- Paywall bullets `premium_feature_distance_100` and
+  `premium_free_distance_50` (shipped in KORAK 3.7a) must be
+  **removed wholesale** from `premium_screen.dart`. This is a
+  correction of KORAK 3.7a, not new scope.
+- Contract test in `premium_screen_test.dart` moves from 8 → 7
+  Premium bullets and 7 → 6 Free bullets. Order preserved for the
+  remaining rows.
+- No CF or gate change — nothing was ever gated. Nothing to remove
+  in production behaviour.
+
+**Sub-KORAK impact:**
+- 3.7c-5 (originally "distance slider tier bounds") is replaced by
+  **3.7c-5R — Distance slider row removal** (code PR that retires
+  the two paywall bullets + updates tests).
+
+### §6 — Hard filters "coming soon" copy in all locales
+
+Founder clarified 2026-07-13: keep the `premium_feature_hard_filters`
+paywall bullet, but soft-label with "coming soon" until Amendment §2's
+post-launch scope actually ships. Add the localised label to **all 8
+locale blocks** in `premium_screen.dart._localTranslations` (en, sl,
+de, hr, it, es, fr, pt) — not just EN + SL fallback.
+
+Suggested phrasing per locale:
+- en: "Additional hard filters beyond gender, age and nicotine (coming soon)"
+- sl: "Dodatni hard filtri poleg spola, starosti in nikotina (kmalu)"
+- de: "Weitere Hard-Filter neben Geschlecht, Alter und Nikotin (bald verfügbar)"
+- hr: "Dodatni hard filtri osim spola, dobi i nikotina (uskoro)"
+- it: "Filtri hard aggiuntivi oltre a genere, età e nicotina (in arrivo)"
+- es: "Filtros adicionales además de género, edad y nicotina (próximamente)"
+- fr: "Filtres avancés supplémentaires au-delà du genre, âge et nicotine (bientôt disponible)"
+- pt: "Filtros adicionais além de género, idade e nicotina (em breve)"
+
+The other feature bullets remain EN-only fallback for now (that is
+existing behaviour, unchanged). Adding a full non-EN feature-bullet
+translation pass is a separate translation task.
+
+**Sub-KORAK impact:**
+- 3.7c-2 (paused per §2) gets a satellite copy PR
+  **3.7c-2C — Hard filters "coming soon" localisation** covering the
+  8-locale label update.
+
 ### §4 — Ordered fix list revision (post-Amendment)
 
 Applying §1-§3 to the audit's Priority 1-3 list:
@@ -203,13 +257,15 @@ Applying §1-§3 to the audit's Priority 1-3 list:
 | P1 | 3.7c-1 (matches shape + mutual-wave gate) | RESOLVED — implement compound gate `isPremium && hasMutualWave` on match card open and "full card" render |
 | P1 | 3.7c-2 (hard filters) | REMOVED — paused until post-launch |
 | P1 | 3.7c-4 (heatmap scope) | RESOLVED — splits into 3.7c-4a (count chip) + 3.7c-4b (filter subset count) |
-| P2 | 3.7c-5 (distance slider bounds) | UNCHANGED — next executable slice |
+| P2 | 3.7c-5R (distance row REMOVED) | REPLACES 3.7c-5 — retire paywall bullets, update tests |
+| P2 | 3.7c-2C (hard filters "coming soon" localisation) | NEW — 8-locale label per §6 |
 | P2 | 3.7c-3 (event pin gate trace) | UNCHANGED — scoped per §3 |
 | P3 | 3.7c-6 through 3.7c-11 (pair-of-tests) | UNCHANGED |
 | P4 | RSSI threshold | UNCHANGED — blocked on ADR-001 |
 
-Next executable slice after this Amendment merges: **3.7c-5**
-(distance slider bounds) — LOW risk, small diff, no scope dependency.
+Next executable slice after this Amendment merges: **combined
+3.7c-5R + 3.7c-2C** — both are `premium_screen.dart` + test edits,
+LOW risk, single PR to save a round-trip. ~40 LoC total.
 
 ## Related documents
 
