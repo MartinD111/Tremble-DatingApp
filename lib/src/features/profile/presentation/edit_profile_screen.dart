@@ -16,7 +16,7 @@ import '../../settings/presentation/widgets/preference_edit_modal.dart';
 import '../../settings/presentation/widgets/preference_pill_row.dart';
 import '../../auth/presentation/widgets/registration_steps/hobbies_step.dart';
 import '../../auth/presentation/widgets/registration_steps/step_shared.dart'
-    show DrumPicker, profileLocationOptions;
+    show DrumPicker;
 import '../../../shared/ui/center_notification.dart';
 import '../../../shared/ui/discard_changes_modal.dart';
 import '../../../core/upload_service.dart';
@@ -79,9 +79,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (user != null) {
       _lang = user.appLanguage;
       _nameController.text = user.name ?? '';
-      _locationController.text = profileLocationOptions.contains(user.location)
-          ? user.location!
-          : 'Other';
+      // Freetext location (PLAN 03 · KORAK 3.6). Previously clamped to
+      // Ljubljana/Koper/Zagreb/Other — legacy values still fit as-is,
+      // and new users' custom city text no longer gets overwritten on
+      // edit.
+      _locationController.text = user.location ?? '';
       _photoUrls = List.from(user.photoUrls);
       _gender = _normalizeLegacyValue(user.gender, {
         'Moški': 'male',
@@ -1299,68 +1301,15 @@ class _BasicInfoSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ...profileLocationOptions.map(
-              (location) => GestureDetector(
-                onTap: () => onLocationSelected(location),
-                child: Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: locationController.text == location
-                        ? Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.15)
-                        : pillBg,
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(
-                      color: locationController.text == location
-                          ? Theme.of(context).colorScheme.primary
-                          : (isDark
-                              ? const Color(0xFF3A3A3E)
-                              : const Color(0xFFD8DCE0)),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.mapPin,
-                        size: 18,
-                        color: locationController.text == location
-                            ? Theme.of(context).colorScheme.primary
-                            : iconColor,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          location,
-                          style: GoogleFonts.instrumentSans(
-                            color: locationController.text == location
-                                ? Theme.of(context).colorScheme.primary
-                                : textColor,
-                            fontWeight: locationController.text == location
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      if (locationController.text == location)
-                        Icon(
-                          LucideIcons.checkCircle,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+        // Freetext location field (PLAN 03 · KORAK 3.6). Replaces the
+        // KP/LJ/ZG/Other OptionPill selector — the value has no
+        // matching/scoring role and freetext favours GDPR data
+        // minimisation.
+        _buildTextField(
+          locationController,
+          t('location', lang),
+          maxLength: 80,
+          onChanged: onLocationSelected,
         ),
         const SizedBox(height: 12),
 
@@ -1397,10 +1346,11 @@ class _BasicInfoSection extends StatelessWidget {
   }
 
   Widget _buildTextField(TextEditingController ctrl, String hint,
-      {int? maxLength}) {
+      {int? maxLength, ValueChanged<String>? onChanged}) {
     return TextField(
       controller: ctrl,
       maxLength: maxLength,
+      onChanged: onChanged,
       style: TextStyle(color: textColor),
       decoration: InputDecoration(
         hintText: hint,

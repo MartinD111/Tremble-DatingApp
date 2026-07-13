@@ -31,7 +31,7 @@ export const updateProfileSchema = z
         age: z.number().int().min(18).max(100).nullish(),
         birthDate: z.string().nullish(),
         gender: z.string().max(50).nullish(),
-        location: z.enum(["Ljubljana", "Koper", "Zagreb", "Other"]).nullish(),
+        location: z.string().trim().min(1).max(80).nullish(),
         photoUrls: z.array(z.string().url()).min(1).max(6).nullish(),
         height: z.number().int().min(100).max(250).nullish(),
         isSmoker: z.boolean().nullish(),

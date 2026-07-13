@@ -52,11 +52,6 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
     super.dispose();
   }
 
-  void _onLocationSelected(String value) {
-    widget.locationController.text = value;
-    setState(() {});
-  }
-
   bool get _isPasswordValid =>
       _hasMinLength && _hasUppercase && _hasDigit && _hasSpecialChar;
 
@@ -263,38 +258,15 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
   }
 
   Widget _locationSelector() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconColor = isDark ? Colors.white38 : Colors.black38;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 12),
-          child: Row(
-            children: [
-              Icon(LucideIcons.mapPin, color: iconColor, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                widget.tr('from_where'),
-                style: GoogleFonts.instrumentSans(
-                  color: isDark ? Colors.white70 : Colors.black54,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-        ...profileLocationOptions.map(
-          (location) => OptionPill(
-            label: location,
-            selected: widget.locationController.text == location,
-            onTap: () => _onLocationSelected(location),
-            icon: LucideIcons.mapPin,
-          ),
-        ),
-      ],
+    // Plain free-text city input. Previously KP/LJ/ZG/Other OptionPill
+    // selector; migrated to freetext (PLAN 03 · KORAK 3.6) — the field
+    // has no matching/scoring role and GDPR minimisation favours the
+    // simpler input.
+    return _inputField(
+      widget.tr('from_where'),
+      widget.locationController,
+      icon: LucideIcons.mapPin,
+      keyboard: TextInputType.text,
     );
   }
 
