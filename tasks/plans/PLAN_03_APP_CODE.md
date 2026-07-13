@@ -625,7 +625,7 @@ Scope confined:     Matches list only. Recap card + Near-Miss card
                     shared hobbies → separate small copy PR.
 ```
 
-### 3.7c-3 Slice A — Event pin sheet tier gate pair-of-tests — 🟨 OPEN 2026-07-13
+### 3.7c-3 Slice A — Event pin sheet tier gate pair-of-tests — ✅ MERGED 2026-07-13
 Plan ID: `20260713-event-pin-sheet-tier-gate-tests`
 Branch: `feat/tier-3-7c-3-event-pin-sheet-tests`
 PR: #30
@@ -788,12 +788,25 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 | 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13 (commit a31e2b8)         |
 | 3.5   | Event Mode: koordinate v Firestore                              | ✅ MERGED       | #21 → main 2026-07-13 (commit be2f9c7, prod seeded 3/3) |
 | 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ✅ MERGED       | #23 → main 2026-07-13 (commit ee48c69)         |
-| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟡 IN PROGRESS — 3.7a ✅, 3.7b ✅, 3.7c-5R+2C ✅, 3.7c-1 ✅, 3.7c-3-A 🟨 OPEN | 3.7a: #25 · 3.7b: #26+#27 · 3.7c-5R+2C: #28 · 3.7c-1: #29 · 3.7c-3-A: **#30 (open)** |
-| 3.8   | Preostali drobci (batch)                                        | ⬜ TODO         | —                                             |
+| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟢 SHIP-READY (see ship-path note below) — 3.7a ✅, 3.7b ✅, 3.7c-5R+2C ✅, 3.7c-1 ✅, 3.7c-3-A ✅ | 3.7a: #25 · 3.7b: #26+#27 · 3.7c-5R+2C: #28 · 3.7c-1: #29 · 3.7c-3-A: #30 |
+| 3.8   | Preostali drobci (batch)                                        | 🟨 NEXT — ship-critical items | flaky GymStep, Info.plist Contacts contradiction |
 
-**Naslednji korak (v teku):** KORAK 3.7a + 3.7b + 3.7c-5R + 3.7c-2C + 3.7c-1 ✅ MERGED 2026-07-13. **3.7c-3 Slice A (event pin sheet pair-of-tests)** open kot PR #30 (branch `feat/tier-3-7c-3-event-pin-sheet-tests`, Plan ID `20260713-event-pin-sheet-tier-gate-tests`) — čaka founder review + merge. Read-only regression net: verified da participant-count + heatmap gates že matchata ADR-007 §3; ADR-007 §4 pair-of-tests dodani.
+**Naslednji korak (SHIP-PIVOT 2026-07-13):** KORAK 3.7 substancialno zaključen — PR #25 / #26+#27 / #28 / #29 / #30 vsi merged. Vse core paywall in matches-list gate spremembe iz ADR-007 §1–§6 so v prod-pripravljenem stanju. Preostali 3.7c-* work je **deferrable in NE blokira launcha**:
 
-Po merge-u #30 sledi 3.7c-4a (heatmap count chip on circles — Premium only). 3.7c-3 Slice B (potential-matches count) je bundled z 3.7c-4b — oba delita per-filter subset CF design (pending). Potem P3 pair-of-tests batch (3.7c-6..11), nato 3.7z (integration matrix). P4 (3.7c-rssi-threshold-tier) ostane dormant za ADR-001. Vzporedno lahko poteka KORAK 3.8 podnaloga 1 (flaky GymStep test).
+- **3.7c-4a** (heatmap count chip Premium-only) — potrebuje UX design decision + majhen widget; ni Apple/Play review blocker.
+- **3.7c-4b + 3.7c-3 Slice B** (per-filter subset CF endpoint za heatmap circle subset in event pin potential-matches count) — potrebuje Firestore schema design + aggregate cost budget; velik kos, "design pending" per audit — ni ship-critical.
+- **3.7c-6..11** (dodatni pair-of-tests batch) — regression net; koristno, ni ship blocker.
+- **3.7z** (integration matrix) — regression net; koristno, ni ship blocker.
+- **3.7c-rssi-threshold-tier** — blocked na ADR-001 (BLE mock).
+
+**Zato: naslednji korak za ship je KORAK 3.8 (ship-critical drobci), potem PLAN_04 (Legal + Play Console) → PLAN_05 (final build + BLE matrix test + submission).**
+
+Ship-critical KORAK 3.8 podnaloge (per `tasks/blockers.md`):
+1. **Info.plist Contacts contradiction** (BLOCKER-STORE-002) — Info.plist pravi da contacts NISO dostopani, Privacy Policy §2.5 pravi da SO. Apple 5.1.1 rejection risk. Zahteva **founder odobritev** za Info.plist edit (per PLAN_00 pravila). CLI pripravi diff, founder aplicira.
+2. **Flaky GymStep test** (Todoist 6h4rqCpQ3jjg9vjw) — `test/features/auth/photo_upload_registration_test.dart:467`. Nizka prioriteta, ampak zmanjša CI noise pred final build push.
+3. **Heatmap realna geohash agregacija** — POST-LAUNCH razen če Apple reviewer specifično zavrne prazno mapo; mapa z event pini iz KORAK 3.5 verjetno zadošča za App Completeness.
+
+Vzporedno se lahko začne **PLAN_04 KORAK 4.1** (🧑‍⚖️ FOUNDER only — Play Console background location deklaracija, 2-4 tedne review) — CLI ne more izvesti, ampak lahko pripravi brand-voice pregled 4 novih stringov in preveri je Prominent Disclosure branch merged.
 
 **Prod deploy dnevnik:**
 - 2026-07-12 · KORAK 3.1 · Cloud Functions deploy na produkcijo predviden ročno prek `firebase deploy --only functions:scanProximityPairs` (founder odločitev: dev preskočen).
@@ -806,4 +819,5 @@ Po merge-u #30 sledi 3.7c-4a (heatmap count chip on circles — Premium only). 3
 - 2026-07-13 · KORAK 3.7b · PR #26 (docs plan-03 update) + PR #27 (research/tier-matrix-audit-3-7b) merged v main (f2842bb). Docs-only, no deploy. Deliverable: `tasks/AUDIT_TIER_MATRIX_20260713.md` (429 vrstic) + ADR-007 Amendments §1-§6 (matches three-state render, hard filtri pause + coming-soon localizacija, heatmap/event tier split v 3.7c-3/4a/4b, distance vrstica UMAKNJENA, greyscaled fallback za no-mutual-wave). Fix wave vrstni red potrjen: P1 code slices (3.7c-1/3/4a/4b) → P2 quick wins (bundle 3.7c-5R + 3.7c-2C) → P3 pair-of-tests (3.7c-6..11) → P4 deferred (RSSI) → 3.7z integration matrix.
 - 2026-07-13 · KORAK 3.7c-5R + 3.7c-2C (bundled) · PR #28 merged v main (d256d4a). Flutter-only copy-only sprememba. ADR-007 Amendment §5: retire distance paywall bullete (grep dokazal: `settings_screen.dart` uporablja `PreferenceRangeSlider` samo za age line 1011 + height line 1034; nikjer ni `maxDistance`/`distanceKm`). ADR-007 Amendment §6: hard-filters "coming soon" localised v vseh 8 locales z natančnim ADR §6 phrasingom. Bonus cleanup: orphan `distance_help` translation key (0 callers v `lib/`) odstranjen iz vseh 8 locale blokov v `translations.dart`. Deploy: naslednji APK/TestFlight bundle, brez CF deploya. Test: 249 tests green (+2 nova za hard-filters locale coverage), analyze 0 issues. Extracted lesson: Rule #81 (sweep the fossil trail when retiring never-wired features).
 - 2026-07-13 · KORAK 3.7c-1 · PR #29 merged v main (ba8a3dd). Executes ADR-007 Amendment §1 — compound gate `isPremium && hasMutualWave` na Matches list + three-state render pipeline (non-mutual = greyscaled + name + age, mutual+Free = colour + name + age tap-upsell, mutual+Premium = colour + name + age tap opens full card). CF change: `getMatches` emits `hasMutualWave: bool` from `matchData.gestures`. Client DTO: `MatchProfile.hasMutualWave` (default false, backward-compat). Widget: extracted pure `resolveMatchDisplayState()` enum helper. Deploy: `firebase deploy --only functions:getMatches --project am---dating-app` + naslednji APK/TestFlight bundle (additive CF change je backward-compatible za starejše kliente). Test: Flutter 259 green (+10 novih), functions 117 green (+3 novih pair-of-tests za mutual/non-mutual/missing-gestures). Scope confined: Matches list only; Recap + Near-Miss three-state migracije so v ločenih follow-up-ih (3.7c-10, 3.7c-11).
-- 2026-07-13 · KORAK 3.7c-3 Slice A · PR #30 opened, čaka founder review + merge. Read-only regression net za event pin sheet: 4 pair-of-tests (Free-count-locked, Premium-count-visible, Free-heatmap-locked, Premium-heatmap-visible) v `test/features/map/event_pin_sheet_tier_gates_test.dart`. Verified: participant-count + heatmap indicator gates že matchata ADR-007 §3 (obstoječi `effectiveIsPremium` ternary). Slice B (potential-matches count za Premium — subset participants matching caller filter prefs) deferred, bo bundled z 3.7c-4b (owns per-filter subset CF endpoint, design pending). Zero behaviour change; no deploy needed. Test: Flutter 263 green (+4 novih), analyze 0 issues.
+- 2026-07-13 · KORAK 3.7c-3 Slice A · PR #30 merged v main (2f245b6). Read-only regression net za event pin sheet: 4 pair-of-tests (Free-count-locked, Premium-count-visible, Free-heatmap-locked, Premium-heatmap-visible) v `test/features/map/event_pin_sheet_tier_gates_test.dart`. Verified: participant-count + heatmap indicator gates že matchata ADR-007 §3 (obstoječi `effectiveIsPremium` ternary). Slice B (potential-matches count za Premium — subset participants matching caller filter prefs) deferred, bo bundled z 3.7c-4b (owns per-filter subset CF endpoint, design pending). Zero behaviour change; no deploy needed. Test: Flutter 263 green (+4 novih), analyze 0 issues.
+- 2026-07-13 · **SHIP PIVOT** · KORAK 3.7 substancialno zaključen (5 PR-jev v prod-ready stanju). Preostali 3.7c-* work je deferrable in ne blokira launcha. Naslednji korak: KORAK 3.8 ship-critical drobci (Info.plist Contacts contradiction — BLOCKER-STORE-002, Apple 5.1.1 tveganje; flaky GymStep test), potem PLAN_04 (Legal + Play Console — 4.1 lahko FOUNDER začne takoj, 2-4 tedne Google review) → PLAN_05 (final build + BLE matrix test + submission). ADR-001 (BLE prava wire-up) ostane največji tehnični launch blocker.
