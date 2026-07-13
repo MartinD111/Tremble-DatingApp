@@ -579,10 +579,56 @@ Risk assessment:    LOW — copy-only, no gate logic, no server contract
                     change. False-advertisement risk goes DOWN.
 ```
 
+### 3.7c-1 — Matches three-state mutual-wave render pipeline — 🟨 OPEN 2026-07-13
+Plan ID: `20260713-matches-three-state-mutual-wave`
+Branch: `feat/tier-3-7c-1-matches-three-state`
+PR: #29
+
+**Output (3.7c-1):**
+```text
+Ships:              ADR-007 Amendment §1 compound gate
+                    `isPremium && hasMutualWave` on Matches list.
+                    Neither condition alone unlocks the full card.
+Three-state:        A. non-mutual (both tiers) → greyscaled photo +
+                       name + age, no tap-open.
+                    B. mutual + Free → colour + name + age, tap =
+                       paywall upsell.
+                    C. mutual + Premium → colour + name + age, tap
+                       opens full profile card.
+Server:             getMatches emits hasMutualWave: bool per profile
+                    (Object.keys(gestures ?? {}).length >= 2). No
+                    schema, no migration. Older APKs default to
+                    non-mutual — safe.
+Client DTO:         MatchProfile + fromApi gain hasMutualWave (default
+                    false, backward-compat with mock data + tests).
+Widget helper:      resolveMatchDisplayState() enum-returning pure
+                    function isolates the compound gate for testing.
+Mock data:          Nika/Sara = mutual, Luka = non-mutual → Admin
+                    Bypass shows all three states visibly.
+UX replacement:     Old isLocked "Someone sent you a wave" placeholder
+                    + "Upgrade to see" pill REPLACED by §1 non-mutual
+                    render (real name + age + greyscaled photo).
+                    Founder decision 2026-07-13.
+Test evidence:      Flutter 259 tests GREEN (+10 new in
+                    matches_three_state_test.dart). functions npm
+                    test 117 GREEN (+3 new pair-of-tests in
+                    matches.test.ts `ADR-007 §1 hasMutualWave
+                    contract` describe block). flutter analyze 0
+                    issues. npm build + lint clean.
+Deploy target:      PROD via `firebase deploy --only
+                    functions:getMatches --project am---dating-app`
+                    + next APK/TestFlight bundle. Additive CF change
+                    is backward-compatible for older clients.
+Scope confined:     Matches list only. Recap card + Near-Miss card
+                    three-state → separate follow-ups (3.7c-10,
+                    3.7c-11). Free-mutual preview card with 3
+                    shared hobbies → separate small copy PR.
+```
+
 **Preostali fix wave (per audit report):**
-- P1 code slices: 3.7c-1 (matches three-state s `hasMutualWave` DTO
-  field), 3.7c-3 (event pin sheet participant counts), 3.7c-4a
-  (heatmap count chip), 3.7c-4b (CF endpoint za filter subset).
+- P1 code slices remaining: 3.7c-3 (event pin sheet participant
+  counts), 3.7c-4a (heatmap count chip), 3.7c-4b (CF endpoint za
+  filter subset).
 - P3 pair-of-tests batch: 3.7c-6..11.
 - P4 deferred: 3.7c-rssi-threshold-tier (blocked na ADR-001).
 
@@ -711,12 +757,12 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 | 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13 (commit a31e2b8)         |
 | 3.5   | Event Mode: koordinate v Firestore                              | ✅ MERGED       | #21 → main 2026-07-13 (commit be2f9c7, prod seeded 3/3) |
 | 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ✅ MERGED       | #23 → main 2026-07-13 (commit ee48c69)         |
-| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟡 IN PROGRESS — 3.7a ✅, 3.7b ✅, 3.7c-5R+2C 🟨 OPEN; P1 code wave next | 3.7a: #25 · 3.7b: #26+#27 · 3.7c-5R+2C: **#28 (open)** |
+| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟡 IN PROGRESS — 3.7a ✅, 3.7b ✅, 3.7c-5R+2C ✅, 3.7c-1 🟨 OPEN | 3.7a: #25 · 3.7b: #26+#27 · 3.7c-5R+2C: #28 · 3.7c-1: **#29 (open)** |
 | 3.8   | Preostali drobci (batch)                                        | ⬜ TODO         | —                                             |
 
-**Naslednji korak (v teku):** KORAK 3.7a + 3.7b + ADR-007 Amendments §1-§6 ✅ MERGED 2026-07-13. Bundled **3.7c-5R + 3.7c-2C** open kot PR #28 (branch `feat/tier-3-7c-5R-and-3-7c-2C`, Plan ID `20260713-distance-remove-and-hardfilters-comingsoon`) — čaka founder review + merge, potem gremo v P1 code wave.
+**Naslednji korak (v teku):** KORAK 3.7a + 3.7b + 3.7c-5R + 3.7c-2C ✅ MERGED 2026-07-13. **3.7c-1 (matches three-state)** open kot PR #29 (branch `feat/tier-3-7c-1-matches-three-state`, Plan ID `20260713-matches-three-state-mutual-wave`) — čaka founder review + merge.
 
-Po merge-u #28 sledi P1 code wave (3.7c-1 matches three-state z `hasMutualWave` DTO field, 3.7c-3 event pin sheet participant counts, 3.7c-4a heatmap count chip, 3.7c-4b CF endpoint za filter subset), potem P3 pair-of-tests (3.7c-6..11), nato 3.7z (integration matrix). P4 (3.7c-rssi-threshold-tier) ostane dormant za ADR-001. Vzporedno lahko poteka KORAK 3.8 podnaloga 1 (flaky GymStep test).
+Po merge-u #29 sledijo preostali P1 code slices (3.7c-3 event pin sheet participant counts, 3.7c-4a heatmap count chip, 3.7c-4b CF endpoint za filter subset), potem P3 pair-of-tests (3.7c-6..11), nato 3.7z (integration matrix). P4 (3.7c-rssi-threshold-tier) ostane dormant za ADR-001. Vzporedno lahko poteka KORAK 3.8 podnaloga 1 (flaky GymStep test).
 
 **Prod deploy dnevnik:**
 - 2026-07-12 · KORAK 3.1 · Cloud Functions deploy na produkcijo predviden ročno prek `firebase deploy --only functions:scanProximityPairs` (founder odločitev: dev preskočen).
@@ -727,4 +773,5 @@ Po merge-u #28 sledi P1 code wave (3.7c-1 matches three-state z `hasMutualWave` 
 - 2026-07-13 · KORAK 3.6 · PR #23 merged v main (ee48c69). Cloud Functions deploy predviden prek naslednjega `firebase deploy --only functions` cikla (posodobi Zod schemo za `completeOnboarding` + `updateProfile` — `location` polje iz `z.enum` v `z.string().trim().min(1).max(80)`). Klientov contract je backward-compatible — legacy enum vrednosti ("Ljubljana"/"Koper"/"Zagreb"/"Other") še vedno passajo, Firestore migracija NI potrebna. Flutter: vključeno v naslednji APK/TestFlight bundle — freetext lokacijsko polje v obeh flow-ih (registracija + edit profile). Places API ostaja aktiven za Gym Mode gym autocomplete (raw HTTP + PLACES_KEY_DEV/PROD compile-time defines; odstranitev iz `pubspec.yaml` ni relevantna ker ni pub package).
 - 2026-07-13 · KORAK 3.7a · PR #25 merged v main (0cd8b4c). Paywall copy prepisan po ADR-007 tabeli — 7 retired feature ključev odstranjenih, 15 novih dodanih (EN + SL). Flutter-only: vključeno v naslednji APK/TestFlight bundle. Brez CF deploya (copy-only, no gate logic change). Naslednji sub-KORAK je 3.7b (feature-parity audit — research only). Tudi ADR-007 (`tasks/decisions/ADR-007-tier-matrix.md`) landeal na main prek PR #24 (0da6da9) — služi kot single source of truth za vse bodoče per-gate PR-je.
 - 2026-07-13 · KORAK 3.7b · PR #26 (docs plan-03 update) + PR #27 (research/tier-matrix-audit-3-7b) merged v main (f2842bb). Docs-only, no deploy. Deliverable: `tasks/AUDIT_TIER_MATRIX_20260713.md` (429 vrstic) + ADR-007 Amendments §1-§6 (matches three-state render, hard filtri pause + coming-soon localizacija, heatmap/event tier split v 3.7c-3/4a/4b, distance vrstica UMAKNJENA, greyscaled fallback za no-mutual-wave). Fix wave vrstni red potrjen: P1 code slices (3.7c-1/3/4a/4b) → P2 quick wins (bundle 3.7c-5R + 3.7c-2C) → P3 pair-of-tests (3.7c-6..11) → P4 deferred (RSSI) → 3.7z integration matrix.
-- 2026-07-13 · KORAK 3.7c-5R + 3.7c-2C (bundled) · PR #28 opened, čaka founder review + merge. Flutter-only copy-only sprememba. ADR-007 Amendment §5: retire distance paywall bullete (grep dokazal: `settings_screen.dart` uporablja `PreferenceRangeSlider` samo za age line 1011 + height line 1034; nikjer ni `maxDistance`/`distanceKm`). ADR-007 Amendment §6: hard-filters "coming soon" localised v vseh 8 locales z natančnim ADR §6 phrasingom. Bonus cleanup: orphan `distance_help` translation key (0 callers v `lib/`) odstranjen iz vseh 8 locale blokov v `translations.dart`. Deploy: naslednji APK/TestFlight bundle, brez CF deploya. Test: 249 tests green (+2 nova za hard-filters locale coverage), analyze 0 issues.
+- 2026-07-13 · KORAK 3.7c-5R + 3.7c-2C (bundled) · PR #28 merged v main (d256d4a). Flutter-only copy-only sprememba. ADR-007 Amendment §5: retire distance paywall bullete (grep dokazal: `settings_screen.dart` uporablja `PreferenceRangeSlider` samo za age line 1011 + height line 1034; nikjer ni `maxDistance`/`distanceKm`). ADR-007 Amendment §6: hard-filters "coming soon" localised v vseh 8 locales z natančnim ADR §6 phrasingom. Bonus cleanup: orphan `distance_help` translation key (0 callers v `lib/`) odstranjen iz vseh 8 locale blokov v `translations.dart`. Deploy: naslednji APK/TestFlight bundle, brez CF deploya. Test: 249 tests green (+2 nova za hard-filters locale coverage), analyze 0 issues. Extracted lesson: Rule #81 (sweep the fossil trail when retiring never-wired features).
+- 2026-07-13 · KORAK 3.7c-1 · PR #29 opened, čaka founder review + merge. Executes ADR-007 Amendment §1 — compound gate `isPremium && hasMutualWave` na Matches list + three-state render pipeline (non-mutual = greyscaled + name + age, mutual+Free = colour + name + age tap-upsell, mutual+Premium = colour + name + age tap opens full card). CF change: `getMatches` emits `hasMutualWave: bool` from `matchData.gestures`. Client DTO: `MatchProfile.hasMutualWave` (default false, backward-compat). Widget: extracted pure `resolveMatchDisplayState()` enum helper. Deploy: `firebase deploy --only functions:getMatches --project am---dating-app` + naslednji APK/TestFlight bundle (additive CF change je backward-compatible za starejše kliente). Test: Flutter 259 green (+10 novih), functions 117 green (+3 novih pair-of-tests za mutual/non-mutual/missing-gestures). Scope confined: Matches list only; Recap + Near-Miss three-state migracije so v ločenih follow-up-ih (3.7c-10, 3.7c-11).
