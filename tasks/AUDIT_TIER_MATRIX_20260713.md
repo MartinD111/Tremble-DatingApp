@@ -319,21 +319,42 @@ Ordered by **impact / risk / effort** balance. Founder can re-prioritise
 at any time — priority here reflects the audit's read of user visibility
 and business value.
 
-### Priority 1 — Ambiguity resolution (no code)
-These must be founder-clarified before any code lands, because the
-scope of the corresponding 3.7c-* PR depends on the answer.
+### Priority 1 — Ambiguity resolution → RESOLVED 2026-07-13
 
-1. **3.7c-1 — Matches "Prikaz matched profila" spec clarification.**
-   ADR-007 says "Free omejen / Premium celoten" but the code exposes a
-   related-but-different recap-lock gate. Get a one-sentence definition
-   of "omejen" from founder.
-2. **3.7c-2 — Hard filters scope clarification.** ADR-007 promises a
-   Premium-only hard-filter set but grep finds none in code. Founder to
-   decide: build new (bigger) or expose existing settings surfaces (smaller).
-3. **3.7c-4 — Heatmap krogi scope clarification.** ADR-007 promises
-   Free = empty circles, Premium = data circles, but no such layer is
-   in code. Founder to decide: defer to post-launch (KORAK 3.8-3) or
-   build now.
+Founder clarified all three P1 items on 2026-07-13. Full text in
+ADR-007 Amendments §1-§3. Summary of resolutions:
+
+1. **3.7c-1 — Matches shape.** RESOLVED — compound gate
+   `isPremium && hasMutualWave(viewer, viewed)` on match card open
+   and full-card render.
+   - **Free (always):** photo + name + age + 3 shared hobbies /
+     interests (top-3 by compatibility calculator).
+   - **Premium (only when mutual wave):** full profile card, in
+     Trembling Window AND in History.
+   - **Asymmetric-wave case (A waved, B did not):** both users
+     appear in each other's History, each sees per their own tier
+     shape. Premium A sees Premium-shape of B only if mutual.
+   - **Client + server:** the mutual-wave predicate already exists
+     server-side in `matches.functions.ts` (mutual-wave counter). A
+     client-visible `hasMutualWave` flag must land in the
+     `MatchProfile` DTO for `matches_screen.dart` and
+     `run_recap_screen.dart` to render the split shape correctly.
+2. **3.7c-2 — Hard filters.** REMOVED from 3.7 wave — paused until
+   post-launch. Paywall bullet `premium_feature_hard_filters` remains
+   as a declared-intent claim; consider soft-labelling as "coming
+   soon" in a small follow-up copy PR.
+3. **3.7c-4 — Heatmap and event tiers.** RESOLVED and expanded.
+   Splits into:
+   - **3.7c-4a — Heatmap-count chip on circles.** Premium sees "X
+     users" chip inside each heatmap circle; Free sees only the
+     circle outline (no chip).
+   - **3.7c-4b — Per-filter subset count.** Premium can filter the
+     circle by their own settings (e.g. from "150 nearby" to "35
+     potential matches"). Requires a Firestore aggregate or CF
+     endpoint that returns a filtered count, not a raw total.
+   - **3.7c-3 — Event pin sheet.** Free sees location + share link,
+     no participant count. Premium sees participant count AND
+     potential-matches count (subset that fits their filters).
 
 ### Priority 2 — Quick, unambiguous gate additions
 These are small diffs (single-file or two-file) with clear ADR-007-
@@ -341,12 +362,10 @@ matching behaviour and no scope ambiguity.
 
 4. **3.7c-5 — Distance slider tier bounds.** Add `isPremium`-aware max
    to the caller of `PreferenceRangeSlider` in `settings_screen.dart`.
-   ~15 LoC + widget test.
-5. **3.7c-3 — Event pin sheet participants count + heatmap indicator
-   gate verification.** Trace the `isPremium` flow through
-   `event_pin_sheet.dart`; if any of the three rows (participants
-   count / heatmap indicator / locked-state) lacks a real gate, add
-   it. ~30 LoC + widget test.
+   ~15 LoC + widget test. **NEXT EXECUTABLE SLICE.**
+
+Note: 3.7c-3 (event pin sheet) has been reclassified per Amendment §3
+— now part of the Priority 1 resolution stack alongside 3.7c-4a/b.
 
 ### Priority 3 — Consistency test coverage (blocking 3.7z)
 No behaviour change; adds the pair-of-tests requirement from

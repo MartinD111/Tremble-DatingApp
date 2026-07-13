@@ -42,8 +42,8 @@ comes from richer history + wider radar surface area.
 | **TREMBLING WINDOW** | 30-min active radar | ✓ | ✓ |
 | | Pulse Intercept — Send Phone | ✓ | ✓ |
 | | Pulse Intercept — Send Photo | ✓ | ✓ |
-| **HISTORY — MATCHES** | Prikaz matched profila | Omejen | Celoten |
-| | Odpiranje profil kartice | ✗ | ✓ |
+| **HISTORY — MATCHES** | Prikaz matched profila | Omejen (foto + ime + starost + 3 skupni hobiji/interesi) | Celoten profil card v Trembling Window IN v history — SAMO če je mutual wave |
+| | Odpiranje profil kartice | ✗ | ✓ (samo pri mutual wave — glej Amendment §1) |
 | **HISTORY — RECAPS** | Foto + ime + starost | ✓ (sivina) | ✓ (barvno) |
 | | Odpiranje profil kartice | ✗ | ✓ |
 | | 10-min TTL val iz recapa | ✗ | ✓ |
@@ -53,11 +53,11 @@ comes from richer history + wider radar surface area.
 | | Upsell banner (nearMissCount) | ✓ | ✗ |
 | **FILTRI** | Osnovno (spol, starost) | ✓ | ✓ |
 | | Nicotine exclusion filter | ✓ | ✓ |
-| | Ostali hard filtri | ✗ | ✓ |
-| **MAP** | Event pini na mapi | ✓ | ✓ |
+| | Ostali hard filtri | ✗ | ✓ (**POST-LAUNCH — glej Amendment §2**) |
+| **MAP** | Event pini na mapi | ✓ (lokacija + share link) | ✓ (+ število udeležencev + potential matches) |
 | | Število udeležencev na eventu | ✗ | ✓ |
 | | Heatmap indikator na event pinu | ✗ | ✓ |
-| | Heatmap krogi | ✓ (brez podatkov) | ✓ (s podatki) |
+| | Heatmap krogi | ✓ (samo obris, brez števila) | ✓ (število uporabnikov + filter po tipu → potential matches count) |
 | **NASTAVITVE** | Max distance slider | do 50 km | do 100 km |
 
 ## Cross-cutting rules
@@ -103,6 +103,98 @@ comes from richer history + wider radar surface area.
 - RevenueCat product IDs and receipt validation flow are unchanged.
 - Server-side matchmaking algorithm and BLE proximity engine are
   unchanged.
+
+## Amendments 2026-07-13 (post-audit clarifications)
+
+The KORAK 3.7b audit (`tasks/AUDIT_TIER_MATRIX_20260713.md`) flagged
+three rows as ambiguous. Founder clarified 2026-07-13; these
+amendments override the corresponding rows above.
+
+### §1 — Matches shape and the mutual-wave predicate
+
+Split the History → Matches "Prikaz matched profila" row into an
+explicit Free shape and an explicit Premium shape, both gated on the
+mutual-wave predicate:
+
+- **Free tier — always sees:** profile photo, name, age, and **3
+  shared hobbies or interests** (top-3 by compatibility calculator).
+  Nothing more, regardless of tier of the OTHER user.
+- **Premium tier — sees FULL profile card** in two contexts:
+  1. During the Trembling Window (real-time surface).
+  2. In History with the matched person.
+  ...**but ONLY when a mutual wave exists** (both users have waved at
+  each other). Without a mutual wave, Premium sees the same Free
+  shape (photo + name + age + 3 shared items).
+- **Asymmetric-wave case (A waved, B did not):** BOTH users still
+  appear in each other's History (this preserves ADR-007's
+  "prikaz omejen" row for Free), but each user sees according to
+  their OWN tier. Free B sees Free-shape of A; Premium A sees
+  Premium-shape of B if mutual — otherwise Free-shape of B.
+
+This means the "Odpiranje profil kartice ✗ / ✓" row is really a
+compound gate: `isPremium && hasMutualWave(viewer, viewed)`. A
+Premium-only gate on card-open is NOT sufficient — the mutual-wave
+check must land in the same predicate.
+
+### §2 — Hard filters PAUSED until post-launch
+
+The "Ostali hard filtri" row (Free ✗ / Premium ✓) is deferred to
+post-launch. Paywall copy already advertises it (via
+`premium_feature_hard_filters` shipped in KORAK 3.7a), but the
+underlying filter surface + gate will not be built in the current
+KORAK 3.7 wave. When the feature ships, its own KORAK will re-open
+this row with a concrete filter list.
+
+**Impact on 3.7 sub-KORAK-i:** the audit's Priority 1 item 3.7c-2
+(hard-filters scope) is removed from the fix list. The paywall bullet
+remains truthful as a "coming soon" claim in the sense that ADR-007
+still declares the intent; verify with founder whether the bullet
+should be soft-labelled ("coming soon") or left as-is.
+
+### §3 — Heatmap and event tiers
+
+The Map section is expanded to reflect what the Free / Premium user
+actually sees on the map:
+
+- **Free tier:**
+  - Heatmap circles: sees the **circle outline** only. No user count,
+    no color intensity that reveals density, no "X users here" chip.
+  - Event pins: sees the **location + share link**. Cannot see the
+    participant count.
+- **Premium tier:**
+  - Heatmap circles: sees the **user count inside the circle** AND
+    can **filter by their own preference type** (e.g. filter the
+    circle from "150 users nearby" down to "35 potential matches"
+    per their filter settings).
+  - Event pins: sees the participant count AND **potential matches
+    count** (subset of participants that fit their filters).
+
+**Impact on 3.7 sub-KORAK-i:** the audit's Priority 1 items 3.7c-3
+(event pin sheet gate trace) and 3.7c-4 (heatmap scope) are now
+scoped:
+- 3.7c-3 becomes concrete: verify existing gates for participant count
+  + heatmap indicator; add if missing.
+- 3.7c-4 splits into 3.7c-4a (heatmap-count chip on circles — Premium
+  only) and 3.7c-4b (per-filter subset count — Premium only). Both
+  require a Firestore aggregate or CF endpoint that returns a
+  filtered count, not just a total. Design pending.
+
+### §4 — Ordered fix list revision (post-Amendment)
+
+Applying §1-§3 to the audit's Priority 1-3 list:
+
+| Priority | Sub-KORAK | Status |
+|---|---|---|
+| P1 | 3.7c-1 (matches shape + mutual-wave gate) | RESOLVED — implement compound gate `isPremium && hasMutualWave` on match card open and "full card" render |
+| P1 | 3.7c-2 (hard filters) | REMOVED — paused until post-launch |
+| P1 | 3.7c-4 (heatmap scope) | RESOLVED — splits into 3.7c-4a (count chip) + 3.7c-4b (filter subset count) |
+| P2 | 3.7c-5 (distance slider bounds) | UNCHANGED — next executable slice |
+| P2 | 3.7c-3 (event pin gate trace) | UNCHANGED — scoped per §3 |
+| P3 | 3.7c-6 through 3.7c-11 (pair-of-tests) | UNCHANGED |
+| P4 | RSSI threshold | UNCHANGED — blocked on ADR-001 |
+
+Next executable slice after this Amendment merges: **3.7c-5**
+(distance slider bounds) — LOW risk, small diff, no scope dependency.
 
 ## Related documents
 
