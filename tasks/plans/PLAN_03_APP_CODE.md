@@ -370,7 +370,7 @@ Backward compat:    `TrembleEvent.fromMap` (Flutter) IN
                     `EVENTS` array v seed_events.ts z GeoPoint-om.
 ```
 
-## KORAK 3.6 — Registracijsko lokacijsko polje: prost tekst
+## KORAK 3.6 — Registracijsko lokacijsko polje: prost tekst ✅
 
 **Kontekst:** KP/LJ/ZG selektor nima funkcije (ni v matchingu). Manj
 podatka = GDPR minimizacija. Če Places API tu odpade in ni uporabljen
@@ -389,46 +389,181 @@ location-freetext, PR with required phrases.
 
 **Output:**
 ```text
-PR / merge datum:
+PR / merge datum:  PR #23 (github.com/MartinD111/Tremble-DatingApp/pull/23)
+                    squash-merged v main 2026-07-13 10:11 UTC
+                    (merge commit ee48c69, feature commit 2cb0d5e,
+                    docs glyph commit 7cab04e).
+Deploy target:      PROD.
+                    - Cloud Functions: naslednji `firebase deploy
+                      --only functions` cikel bo posodobil
+                      completeOnboarding + updateProfile Zod schema
+                      (location z.enum → z.string.trim.min1.max80).
+                      Klientov contract je backward-compatible —
+                      legacy vrednosti ("Ljubljana"/"Koper"/"Zagreb"/
+                      "Other") še vedno passajo, Firestore migracija
+                      NI potrebna.
+                    - Flutter: vključeno v naslednji APK/TestFlight
+                      bundle. Freetext lokacija se pokaže v obeh
+                      registracijskih flow-ih (email_location_step +
+                      edit_profile_screen) v vseh flavors.
 Places API še uporabljen drugje (da/ne, kje):
+                    DA — `lib/src/features/gym/presentation/gym_search_widget.dart`
+                    še vedno uporablja `lib/src/core/places_service.dart`
+                    za gym autocomplete v Gym Mode. Ni pub package —
+                    servis kliče Places API (New) direkt prek HTTP
+                    z `PLACES_KEY_DEV` / `PLACES_KEY_PROD`
+                    compile-time defines. V `pubspec.yaml` NI ničesar
+                    za odstraniti; odstranitev bi bila mogoča šele,
+                    ko / če Gym Mode preneha uporabljati gym search
+                    (ločena odločitev, izven scope-a KORAK 3.6).
+Testni dokaz:       Flutter: 242 tests GREEN (nespremenjen count —
+                    obstoječi `registration_flow_test.dart` "profile
+                    location input is freetext" test flipped v nov
+                    contract). `flutter analyze` 0 issues.
+                    Functions: 13 suites / 114 tests GREEN
+                    (nespremenjen count — trije test bodies rewritten
+                    v users.test.ts + auth.test.ts pod nov freetext
+                    contract). `npm run build` 0 errors, `npm run
+                    lint` 0 warnings.
+Grep evidence:      - `grep -rn "profileLocationOptions" lib/ test/`
+                      → samo tri negativne assertion-e v
+                      `registration_flow_test.dart` (linije 261-263).
+                      Const je izbrisan iz `step_shared.dart`, oba
+                      screen-a ga več ne referencirata.
+                    - `grep -rn "z.enum.*Ljubljana" functions/src/modules/`
+                      → 0 hits (enum odstranjen iz obeh Zod schem).
+                    - `grep -n "OptionPill" lib/src/features/auth/presentation/widgets/registration_steps/email_location_step.dart`
+                      → 0 hits (OptionPill map zamenjan z
+                      `_inputField` klicem).
+Backward compat:    Firestore dokumenti z legacy enum vrednostmi
+                    ("Ljubljana"/"Koper"/"Zagreb"/"Other") še vedno
+                    pravilno parsajo skozi novo `z.string().trim()
+                    .min(1).max(80)` schemo. `edit_profile_screen.dart`
+                    NE overwritea več custom string-a (prej je
+                    `profileLocationOptions.contains(...) ? ... :
+                    'Other'` clamp zbrisala vsako non-enum vrednost
+                    ob prvem edit-u — zdaj se ohrani).
 ```
 
-## KORAK 3.7 — 🧑‍⚖️ ODLOČITEV + 🤖 CODE: Paywall uskladitev
+## KORAK 3.7 — Tier Matrix alignment (multi-PR umbrella)
 
-**Najprej founder odloči (ne CLI):** Pulse Intercept — Free ali Premium?
-(Implementation plan Korak 21, Todoist 6h3pmrQ5wgFxRrCw.) Argumenta:
-core-mechanic (Free, ker je del obljube "no chat, samo essentials") vs
-monetizacija (Premium, ker je visok-value moment). Zapiši odločitev.
+**Status change 2026-07-13:** originalno je bil 3.7 en majhen "paywall
+copy fix". Founder je 2026-07-13 zapisal **celotni tier matrix** kot
+source of truth v `tasks/decisions/ADR-007-tier-matrix.md` (glej ADR
+za tabelo). 3.7 zdaj ni več copy fix — je umbrella za več PR-jev, ki
+poravnajo kodo z ADR-007.
 
-**Nato CLI prompt:**
+**Pulse Intercept odločitev (ADR-007):** **FREE v obeh variantah**
+(Send Phone + Send Photo). Argumentacija: core-mechanic obljuba ("no
+chat, samo essentials"). Monetizacija gre skozi širši radar + bogatejši
+history.
+
+**Audit posnetek 2026-07-13** (grep kode proti ADR-007 matrixu):
+
+| Row | Trenutno stanje | Delta |
+|---|---|---|
+| Radar Radius 100/250 m | ✅ v `geo_service.dart` | none |
+| Radar RSSI −75/−85 dBm | ⚠️ dokumentirano v `geo_service.dart:20-21`, treba verificirati BLE enforcement | verify |
+| Proximity detekcija + notifikacija (Free) | ✅ `proximity.functions.ts` | none |
+| Wave pošiljanje/prejemanje (Free) | ✅ | none |
+| Mutual waves 5/20/mesec | ✅ `MUTUAL_WAVE_FREE_LIMIT=5` / `PREMIUM_LIMIT=20` v `matches.functions.ts:38-39` | verify enforcement path |
+| Trembling Window 30-min active radar (Free) | ✅ (taste_of_premium translations) | verify |
+| Pulse Intercept — Send Phone + Send Photo (Free) | ⚠️ audit `intercept.functions.ts` — ADR-007 zahteva Free obojno | audit + likely un-gate če je gated |
+| History — Matches, prikaz profila (Omejen/Celoten) | ⚠️ audit `matches_screen.dart` | verify + implement Free clamp če manjka |
+| History — Matches, odpiranje profil kartice (✗/✓) | ⚠️ audit | verify gate |
+| History — Recaps, foto sivina/barvno | ⚠️ audit `run_recap_screen.dart` | verify color gate |
+| History — Recaps, odpiranje profil kartice (✗/✓) | ⚠️ audit | verify gate |
+| History — Recaps, 10-min TTL val (✗/✓) | ⚠️ audit | verify gate |
+| History — Recaps, arhiv po TTL (read-only za Pro) | ⚠️ audit `viewed_recaps_repository.dart` | verify gate |
+| Near-Miss History tab viden (✗/✓) | ⚠️ audit — `isNearMissProfile` obstaja v `matches_screen.dart:29` | verify tab gate |
+| Near-Miss History odpiranje profil kartice (✗/✓) | ⚠️ audit | verify gate |
+| Near-Miss upsell banner nearMissCount (Free ✓, Premium ✗) | ✅ `shouldShowNearMissUpsell` v `matches_screen.dart:40` — pravilno gated na `!isPremium` | none |
+| Filtri — osnovno (spol, starost) (Free) | ✅ | none |
+| Filtri — Nicotine exclusion (Free) | ✅ (v nicotine_step) | none |
+| Filtri — ostali hard filtri (Premium) | ⚠️ audit filter surfaces | verify Premium gate |
+| Map — event pini (Free obojno) | ✅ `tremble_map_screen.dart` (po KORAK 3.5) | none |
+| Map — število udeležencev na eventu (Premium) | ⚠️ audit `event_pin_sheet.dart` | verify gate |
+| Map — heatmap indikator na event pinu (Premium) | ✅ `event_pin_sheet.dart:158` gated na `heatmap_locked` | verify Free path |
+| Map — heatmap krogi (Free brez podatkov / Premium s podatki) | ⚠️ audit map heatmap layer | verify + likely add Free empty-circle path |
+| Nastavitve — max distance slider 50/100 km | ⚠️ audit `preference_range_slider.dart` | verify tier bounds |
+| Paywall copy (`premium_screen.dart`) | ❌ oglašuje "unlimited geofence pings" + "advanced filtering matrix" ki NE obstajata; ne omenja mutual-wave limita, radar radius/RSSI, recap colors, near-miss history, hard filtrov, event participants, heatmap indikatorja, distance slider — kompletno stran od ADR-007 | **wholesale rewrite** |
+
+**Naslednji koraki so razdelijo na več PR-jev** — vsak zapre eno vrsto
+ADR-007 matrixa in ima svoj Plan ID + branch. Vrstni red je predlog;
+founder izbere.
+
+### 3.7a — Paywall copy rewrite (Flutter only, LOW risk) — **PRIORITETA 1**
+Prepiši `premiumPlanCards.features` v `premium_screen.dart` točno po
+ADR-007 tabeli. Odstrani štiri neveljavne feature ključe (`wider_radar`
+kot "50% wider" — matrix pravi 100/250 m, ne %; `unlimited_geofence` —
+ne obstaja; `custom_themes` — ne obstaja; `advanced_filters` — matrix
+pravi "hard filtri", ne "matrix"). Doda: mutual waves 20/mo, radar 250
+m + RSSI −85 dBm, recap barvno + TTL + arhiv, match profile card
+open, near-miss tab + card, hard filtri, event participants count,
+heatmap indikator + data, distance slider 100 km. Copy pravila
+(ADR-007 §3): EN + SL, no forbidden phrases, no emoji v headlinih,
+mechanics ne emotions. **Ne dodaja gate-ov, samo copy.** Plan ID:
+20260713-paywall-copy-rewrite. Branch: feat/paywall-copy-rewrite.
+
+### 3.7b — Feature-parity audit report (research, no code) — **PRIORITETA 2**
+Za vsak ⚠️ v audit tabeli zgoraj naredi grep + izpiši dejansko stanje
+gate-a (server-side enforcement da/ne, client-side check da/ne).
+Rezultat: `tasks/AUDIT_TIER_MATRIX_20260713.md` z ordered fix list.
+Iz te liste izvirajo 3.7c-3.7n PR-ji. Founder pregleda pred kodiranjem.
+
+### 3.7c-3.7n — Individual gate fixes (izvirajo iz 3.7b)
+Vsak gate = svoj PR (Plan ID 20260713-tier-<row-slug>, branch
+feat/tier-<row-slug>). Vsak PR mora priložiti pair-of-tests (Free hit
+gate + Premium bypass gate) kot je zahtevano v ADR-007 §4.
+
+### 3.7z — Consistency test suite (integracija, MEDIUM risk) — **ZADNJI**
+Ko so 3.7a-3.7n zaključeni, dodaj integrations test ki za vsak ADR-007
+row assertira dvojico (Free-behavior + Premium-behavior). To zapre
+regression window za bodoče spremembe.
+
+**CLI prompt za 3.7a (edini takoj izvedljiv brez audit-a):**
 ```
-Align the paywall with reality (compliance report Part V):
-1. premium_screen.dart advertises "unlimited geofence pings" and
-   "advanced filtering matrix" — grep the codebase for gates backing
-   these. They do not exist: REMOVE both from the paywall copy (do not
-   implement them).
-2. Code gates "see who waved" and "near-miss recap" but the paywall
-   does not mention them — ADD both, at the TOP of the feature list
-   (strongest conversion triggers).
-3. Implement the founder's Pulse Intercept tier decision: [VSTAVI
-   ODLOČITEV] — gate or un-gate consistently in CF + Flutter.
-4. Copy rules: EN + SL together, no forbidden phrases (revolutionary,
-   seamless, game-changing, find love today, find your person, swipe,
-   match queue, chat), no emoji in headlines, describe mechanics not
-   emotions. Pricing may appear here (paywall is an allowed surface).
-Tests green both suites. Branch feat/paywall-reality-alignment, Plan ID
-20260714-paywall-alignment, PR with required phrases + risk_level: high
-is NOT needed (no auth/billing logic change — RevenueCat wiring
-untouched) unless you end up touching subscription CFs; if you do,
-include it.
-Evidence: table in PR body mapping each advertised feature → gate
-file:line.
+Rewrite lib/src/features/settings/presentation/premium_screen.dart
+paywall copy in accordance with tasks/decisions/ADR-007-tier-matrix.md.
+Do NOT add or change any gate logic — copy-only change. Steps:
+1. Read ADR-007 (do NOT paraphrase — match its wording).
+2. Delete these feature keys from every card (Weekend, Premium,
+   Yearly, Lifetime cards): premium_feature_wider_radar,
+   premium_feature_unlimited_geofence, premium_feature_custom_themes,
+   premium_feature_advanced_filters.
+3. Replace with the ADR-007-derived feature bullets, ordered by
+   conversion strength (per founder judgement): mutual waves 20/mo,
+   radar 250 m + RSSI −85 dBm sensitivity, match profile card
+   openable, recap in color + 10-min TTL wave + archive read-only,
+   near-miss history tab + card, hard filters unlocked, event
+   participants count + heatmap indicator, max distance up to 100 km.
+   Free card lists what stays free: proximity detection + notification,
+   wave send/receive, Pulse Intercept (Phone + Photo), 30-min active
+   radar, event pins, empty heatmap circles, nicotine exclusion, mutual
+   waves 5/mo, distance up to 50 km.
+4. Add EN + SL translations for every new key. Copy rules (ADR-007 §3):
+   no forbidden phrases (revolutionary, seamless, game-changing, find
+   love today, find your person, swipe, match queue, chat), no emoji
+   in headlines, describe mechanics not emotions.
+5. Tests: existing premium_screen widget tests must still pass (adjust
+   assertions for the new copy). Add a new test that asserts the
+   premium card lists exactly the ADR-007 Premium-only features.
+Constraints: flutter analyze 0 issues, flutter test green.
+Branch: feat/paywall-copy-rewrite
+Plan ID: 20260713-paywall-copy-rewrite
+Risk level: low (copy only, no gate logic).
+PR body: literal phrases Verification checklist, unit tests,
+integration tests, security scan.
 ```
 
 **Output:**
 ```text
-Pulse Intercept odločitev:
-PR / merge datum:
+ADR:                tasks/decisions/ADR-007-tier-matrix.md (accepted 2026-07-13)
+Pulse Intercept odločitev: FREE (Phone + Photo obojno; core-mechanic obljuba)
+3.7a PR / merge:
+3.7b audit report path:
+3.7c-3.7n PRs:
+3.7z integration tests PR:
 ```
 
 ## KORAK 3.8 — Preostali znani drobci (batch, nizka prioriteta)
@@ -457,7 +592,7 @@ koderkoli, hobbiji enojezično dosledni in matching pravilen, event pini
 vidni v produkciji, paywall oglašuje samo obstoječe.
 
 ---
-## STATUS (posodobljeno 2026-07-12)
+## STATUS (posodobljeno 2026-07-13)
 
 | Korak | Naslov                                                          | Status         | PR / merge                                    |
 |-------|-----------------------------------------------------------------|----------------|-----------------------------------------------|
@@ -466,11 +601,11 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 | 3.3   | Gym Mode: odstrani proximity gate na ročni aktivaciji           | ✅ MERGED       | #19 → main 2026-07-12 (commit f48ff52)         |
 | 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13 (commit a31e2b8)         |
 | 3.5   | Event Mode: koordinate v Firestore                              | ✅ MERGED       | #21 → main 2026-07-13 (commit be2f9c7, prod seeded 3/3) |
-| 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ⬜ TODO         | —                                             |
-| 3.7   | Paywall uskladitev (potreben founder odločitev pred CLI)        | ⬜ BLOCKED (founder odločitev za Pulse Intercept) | —      |
+| 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ✅ MERGED       | #23 → main 2026-07-13 (commit ee48c69)         |
+| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟡 UNBLOCKED — ADR-007 accepted 2026-07-13; razdeljen na 3.7a-3.7z | —      |
 | 3.8   | Preostali drobci (batch)                                        | ⬜ TODO         | —                                             |
 
-**Naslednji korak (predlog):** KORAK 3.6 — prost tekst za lokacijo (poenostavitev DPA/PP če Places API pade ven); ali počakati na merge #21 in seed dev, preden gremo na 3.6.
+**Naslednji korak (predlog):** KORAK 3.7 je UNBLOCKED — ADR-007 (tier matrix) je locked source of truth. Predlagan vrstni red: **3.7a** (paywall copy rewrite — Flutter-only, LOW risk, ~1h) → **3.7b** (audit report — research, no code) → **3.7c-3.7n** (individual gate fixes po prioriteti iz 3.7b) → **3.7z** (integration tests). Vzporedno lahko poteka KORAK 3.8 podnaloga 1 (flaky GymStep test — pure fix, brez founder gate, neodvisen od 3.7). Founder odloči, ali gremo najprej 3.7a ali 3.7b ali 3.8-1.
 
 **Prod deploy dnevnik:**
 - 2026-07-12 · KORAK 3.1 · Cloud Functions deploy na produkcijo predviden ročno prek `firebase deploy --only functions:scanProximityPairs` (founder odločitev: dev preskočen).
@@ -478,3 +613,4 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 - 2026-07-12 · KORAK 3.3 · Cloud Functions deploy predviden ročno prek `firebase deploy --only functions:onGymModeActivate` (samo CF sprememba; klientov contract nespremenjen — Flutter bump ni potreben).
 - 2026-07-13 · KORAK 3.4 · Cloud Functions deploy prek `firebase deploy --only functions` (compatibility_calculator.ts spremenjen — vpliva na matches + proximity scoring). Flutter: vključeno v naslednji APK/TestFlight bundle. On-read migracija — brez Firestore backfill-a.
 - 2026-07-13 · KORAK 3.5 · PR #21 merged v main (be2f9c7). Cloud Function `onEventModeActivate` deployan direktno na prod (`firebase deploy --only functions:onEventModeActivate --project am---dating-app`) — dev preskočen (founder odločitev, isti pattern kot KORAK 3.1). Prod events collection seeded s 3 dokumenti (club_monokel, labaratorij, metelkova) prek `seed_events.js --project=am---dating-app --i-know-this-is-prod --apply`. Flutter build vključen v naslednji APK/TestFlight bundle.
+- 2026-07-13 · KORAK 3.6 · PR #23 merged v main (ee48c69). Cloud Functions deploy predviden prek naslednjega `firebase deploy --only functions` cikla (posodobi Zod schemo za `completeOnboarding` + `updateProfile` — `location` polje iz `z.enum` v `z.string().trim().min(1).max(80)`). Klientov contract je backward-compatible — legacy enum vrednosti ("Ljubljana"/"Koper"/"Zagreb"/"Other") še vedno passajo, Firestore migracija NI potrebna. Flutter: vključeno v naslednji APK/TestFlight bundle — freetext lokacijsko polje v obeh flow-ih (registracija + edit profile). Places API ostaja aktiven za Gym Mode gym autocomplete (raw HTTP + PLACES_KEY_DEV/PROD compile-time defines; odstranitev iz `pubspec.yaml` ni relevantna ker ni pub package).
