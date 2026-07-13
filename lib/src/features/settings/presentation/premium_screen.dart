@@ -51,18 +51,47 @@ class PremiumPlanCard {
   final String? productIdentifier;
 }
 
+// Feature-bullet order matches ADR-007 (`tasks/decisions/ADR-007-tier-
+// matrix.md`). Order chosen for conversion strength: expanded radar
+// surface first (visible in the same session), then history/recap
+// upgrades (returning users), then long-tail filters/insights.
+// Any change to this list must also update ADR-007 and re-run the
+// `premium card advertises exactly the ADR-007 Premium-only rows` test
+// in `test/features/settings/premium_screen_test.dart`.
+const premiumOnlyFeatureBullets = <String>[
+  'premium_feature_radar_extended',
+  'premium_feature_mutual_waves_20',
+  'premium_feature_open_profile_cards',
+  'premium_feature_recap_full',
+  'premium_feature_near_miss_history',
+  'premium_feature_hard_filters',
+  'premium_feature_event_insights',
+  'premium_feature_distance_100',
+];
+
+// What stays free per ADR-007. Both-tier rows (proximity, waves,
+// active radar, Pulse Intercept, event pins, nicotine filter,
+// distance-up-to-50km) plus the Free-only nearMissCount upsell banner
+// are collapsed into user-facing bullets. Gym Mode is intentionally
+// NOT listed — it is a mode users opt into, not a tier feature, and
+// therefore falls outside ADR-007's scope.
+const freeTierFeatureBullets = <String>[
+  'premium_free_proximity',
+  'premium_free_pulse_intercept',
+  'premium_free_active_radar',
+  'premium_free_mutual_waves_5',
+  'premium_free_event_pins',
+  'premium_free_nicotine_filter',
+  'premium_free_distance_50',
+];
+
 const premiumPlanCards = [
   PremiumPlanCard(
     titleKey: 'premium_card_premium_title',
     price: '7,99 €',
     periodKey: 'premium_card_premium_period',
     windowKey: '',
-    features: [
-      'premium_feature_wider_radar',
-      'premium_feature_unlimited_geofence',
-      'premium_feature_custom_themes',
-      'premium_feature_advanced_filters',
-    ],
+    features: premiumOnlyFeatureBullets,
     ctaBasicKey: 'premium_cta_get_premium',
     ctaPremiumKey: 'premium_cta_get_premium',
     color: TrembleTheme.textColor,
@@ -78,10 +107,7 @@ const premiumPlanCards = [
     periodKey: 'premium_card_weekend_period',
     windowKey: 'premium_card_weekend_window',
     features: [
-      'premium_feature_wider_radar',
-      'premium_feature_unlimited_geofence',
-      'premium_feature_custom_themes',
-      'premium_feature_advanced_filters',
+      ...premiumOnlyFeatureBullets,
       'premium_feature_weekend_window',
     ],
     ctaBasicKey: 'premium_cta_get_weekend',
@@ -139,11 +165,7 @@ const premiumPlanCards = [
     price: '0,00 €',
     periodKey: '',
     windowKey: '',
-    features: [
-      'premium_free_gym_mode',
-      'premium_free_local_radar',
-      'premium_free_wave_limit',
-    ],
+    features: freeTierFeatureBullets,
     ctaBasicKey: 'premium_current_plan',
     ctaPremiumKey: 'premium_switch_to_free',
     color: TrembleTheme.textColor,
@@ -275,19 +297,41 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_card_lifetime_period': 'one-time',
       'premium_card_lifetime_window': 'never pay again',
       'premium_card_free_title': 'Free Tier',
-      'premium_feature_wider_radar': '50% wider radar scan',
-      'premium_feature_unlimited_geofence': 'Unlimited geofence pings',
-      'premium_feature_custom_themes': 'Custom themes',
-      'premium_feature_advanced_filters': 'Advanced filtering matrix',
+      // Premium-only bullets (ADR-007). Copy describes mechanics
+      // (radius, thresholds, counts), not emotions. Pricing appears
+      // on the plan cards, not inside individual bullets.
+      'premium_feature_radar_extended':
+          'Radar reach 250 m with more sensitive proximity (–85 dBm)',
+      'premium_feature_mutual_waves_20': '20 mutual waves per month (vs 5)',
+      'premium_feature_open_profile_cards':
+          'Open full profile cards from Matches, Recaps and Near-Miss',
+      'premium_feature_recap_full':
+          'Recaps in color + 10-minute wave from a recap + read-only archive after it expires',
+      'premium_feature_near_miss_history':
+          'Near-Miss history tab — see who passed just outside your radar',
+      'premium_feature_hard_filters':
+          'Additional hard filters beyond gender, age and nicotine',
+      'premium_feature_event_insights':
+          'Event participants count + live heatmap data on event pins',
+      'premium_feature_distance_100': 'Distance range up to 100 km (vs 50 km)',
       'premium_feature_weekend_window': 'Active Fri 7 PM – Sun 7 PM your time',
       'premium_feature_all_premium': 'All Premium features',
       'premium_feature_yearly_access': '12 months of uninterrupted access',
       'premium_feature_cancel_anytime': 'Cancel anytime',
       'premium_feature_lifetime_upgrades': 'All future upgrades',
       'premium_feature_priority_support': 'Priority support',
-      'premium_free_gym_mode': 'Gym mode access',
-      'premium_free_local_radar': '30-min local radar',
-      'premium_free_wave_limit': 'Standard mutual wave limit',
+      // Free-tier bullets (ADR-007). List what actually stays free so
+      // the paywall does not oversell the downgrade.
+      'premium_free_proximity': 'Proximity detection and notifications',
+      'premium_free_pulse_intercept':
+          'Pulse Intercept — send phone or photo during the 30-min window',
+      'premium_free_active_radar':
+          '30-minute active radar inside every Trembling Window',
+      'premium_free_mutual_waves_5': '5 mutual waves per month',
+      'premium_free_event_pins':
+          'Event pins on the map + empty heatmap circles',
+      'premium_free_nicotine_filter': 'Nicotine exclusion filter',
+      'premium_free_distance_50': 'Distance range up to 50 km',
     },
     'sl': {
       'premium_title': 'Tremble Nadgradnja',
@@ -333,10 +377,20 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_card_lifetime_period': 'enkratno',
       'premium_card_lifetime_window': 'nikoli več ne plačaš',
       'premium_card_free_title': 'Brezplačni paket',
-      'premium_feature_wider_radar': '50% širši domet radarja',
-      'premium_feature_unlimited_geofence': 'Neomejeni geofence pingi',
-      'premium_feature_custom_themes': 'Prilagojene teme',
-      'premium_feature_advanced_filters': 'Napredna matrika filtrov',
+      'premium_feature_radar_extended':
+          'Radar doseg 250 m z občutljivejšo proximity (–85 dBm)',
+      'premium_feature_mutual_waves_20': '20 mutual valov na mesec (namesto 5)',
+      'premium_feature_open_profile_cards':
+          'Odpiranje celotnih profil kartic v Matches, Recaps in Near-Miss',
+      'premium_feature_recap_full':
+          'Recap-i v barvah + 10-minutni val iz recapa + read-only arhiv po izteku',
+      'premium_feature_near_miss_history':
+          'Near-Miss zgodovina — poglej kdo je bil skoraj v tvojem radarju',
+      'premium_feature_hard_filters':
+          'Dodatni hard filtri poleg spola, starosti in nikotina',
+      'premium_feature_event_insights':
+          'Število udeležencev + živi heatmap podatki na event pinih',
+      'premium_feature_distance_100': 'Razdalja do 100 km (namesto 50 km)',
       'premium_feature_weekend_window':
           'Aktivno pet 19:00 – ned 19:00 tvoj čas',
       'premium_feature_all_premium': 'Vse Premium funkcije',
@@ -344,9 +398,15 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_feature_cancel_anytime': 'Odpoveš kadarkoli',
       'premium_feature_lifetime_upgrades': 'Vse prihodnje nadgradnje',
       'premium_feature_priority_support': 'Prioritetna podpora',
-      'premium_free_gym_mode': 'Dostop do Gym načina',
-      'premium_free_local_radar': '30-min lokalni radar',
-      'premium_free_wave_limit': 'Standardna omejitev mutual wave',
+      'premium_free_proximity': 'Proximity detekcija in notifikacije',
+      'premium_free_pulse_intercept':
+          'Pulse Intercept — pošlji telefon ali foto v 30-min oknu',
+      'premium_free_active_radar':
+          '30-minutni aktivni radar v vsakem Trembling Window-u',
+      'premium_free_mutual_waves_5': '5 mutual valov na mesec',
+      'premium_free_event_pins': 'Event pini na mapi + prazni heatmap krogi',
+      'premium_free_nicotine_filter': 'Nicotine exclusion filter',
+      'premium_free_distance_50': 'Razdalja do 50 km',
     },
     'de': {
       'premium_card_weekend_window':
