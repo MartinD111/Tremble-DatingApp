@@ -12,9 +12,14 @@
 
 ### BLOCKER-STORE-002 — iOS Info.plist Contacts Contradiction
 **Date:** 2026-07-06
-**Status:** OPEN
-**Impact:** `Info.plist` states contacts are not accessed, but Privacy Policy §2.5 says they are. This contradiction will trigger an Apple 5.1.1 rejection.
-**Action:** Reconcile code functionality with `Info.plist` strings and Privacy Policy. (Task 6h3p8gWpxpq7rWXw)
+**Status:** RESOLVED 2026-07-13 — code side reconciled
+**Impact:** `Info.plist` stated contacts are not accessed, but Privacy Policy §2.5 says they are. Apple 5.1.1 rejection risk.
+**Resolution (PR fix/info-plist-contacts-reconcile, KORAK 3.8-1):**
+- Master `NSContactsUsageDescription` rewritten to match localized `en.lproj/InfoPlist.strings` verbatim (describes Anonymity Mode / ADR-004).
+- Three duplicate permission keys removed from Info.plist (NSCameraUsageDescription, NSPhotoLibraryUsageDescription, NSPhotoLibraryAddUsageDescription). Founder decision 2026-07-13: kept the L46/L48 wording that covers Pulse Intercept (v1 feature); L50-51 replaced with the Apple-preferred explicit-consent NSPhotoLibraryAdd variant.
+- `PrivacyInfo.xcprivacy` now declares `NSPrivacyCollectedDataTypeContacts` (Linked=false per ADR-004 hash-only transmission; Tracking=false; Purpose=AppFunctionality).
+**Still-owed (founder, PLAN_04 KORAK 4.2):** align `trembledating.com/privacy` §2.5 web copy with Anonymity Mode + hashed transmission. Required before actual App Store submission.
+(Task 6h3p8gWpxpq7rWXw)
 
 ### BLOCKER-STORE-003 — Android Background Location Declaration
 **Date:** 2026-07-06 (updated 2026-07-07)
