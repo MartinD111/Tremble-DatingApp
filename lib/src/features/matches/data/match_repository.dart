@@ -62,6 +62,13 @@ class MatchProfile {
   final String matchType;
   final MatchContext? matchContext;
 
+  // ADR-007 §1 — mutual-wave predicate populated server-side by
+  // `getMatches` from the match doc's `gestures` map. Default `false`
+  // (backward-compatible with mock data + tests that build a
+  // MatchProfile directly). Widget layer renders the three-state
+  // pipeline based on this + isPremium.
+  final bool hasMutualWave;
+
   // Lifestyle
   final String? exerciseHabit;
   final String? sleepSchedule;
@@ -112,6 +119,7 @@ class MatchProfile {
     this.birthDate,
     this.matchedAt,
     this.isTraveler = false,
+    this.hasMutualWave = false,
   });
 
   /// Create a MatchProfile from Cloud Functions response data.
@@ -157,6 +165,7 @@ class MatchProfile {
           : null,
       matchedAt: _parseDateTime(data['matchedAt']),
       isTraveler: data['isTraveler'] as bool? ?? false,
+      hasMutualWave: data['hasMutualWave'] as bool? ?? false,
     );
   }
 

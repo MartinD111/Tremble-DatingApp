@@ -7,6 +7,12 @@ import '../features/matches/data/match_repository.dart';
 
 /// 3 handcrafted mock profiles to demo the radar notification + profile card
 /// in both free and premium mode without touching Firebase.
+///
+/// Mutual-wave state (ADR-007 §1) is set explicitly per user so Admin
+/// Bypass renders all three states of the matches-list pipeline:
+///   Nika  → mutual  (State C for Premium, State B for Free)
+///   Luka  → NOT mutual (State A both tiers — greyscaled photo)
+///   Sara  → mutual  (State C for Premium, State B for Free)
 const List<MatchProfile> kMockNearbyUsers = [
   // User 1 — 22F, student, Ljubljana — visible to free + premium
   MatchProfile(
@@ -14,6 +20,7 @@ const List<MatchProfile> kMockNearbyUsers = [
     name: 'Nika',
     age: 22,
     gender: 'Female',
+    hasMutualWave: true,
     imageUrl:
         'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&q=80',
     hobbies: [
@@ -70,6 +77,7 @@ const List<MatchProfile> kMockNearbyUsers = [
     name: 'Luka',
     age: 26,
     gender: 'Male',
+    hasMutualWave: false,
     imageUrl:
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80',
     hobbies: [
@@ -126,6 +134,7 @@ const List<MatchProfile> kMockNearbyUsers = [
     name: 'Sara',
     age: 24,
     gender: 'Female',
+    hasMutualWave: true,
     imageUrl:
         'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&q=80',
     hobbies: [

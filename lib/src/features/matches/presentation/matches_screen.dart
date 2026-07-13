@@ -77,6 +77,74 @@ String _historyKey(HistoryFilter filter) => switch (filter) {
 final matchSectionProvider =
     StateProvider<MatchSection>((ref) => MatchSection.matches);
 
+// ADR-007 §1 — luminance-preserving greyscale matrix applied to the
+// photo widget when a match is non-mutual. Standard NTSC luminance
+// coefficients (0.2126 R, 0.7152 G, 0.0722 B). Alpha channel is
+// preserved untouched.
+const ColorFilter _greyscaleColorFilter = ColorFilter.matrix(<double>[
+  0.2126,
+  0.7152,
+  0.0722,
+  0,
+  0,
+  0.2126,
+  0.7152,
+  0.0722,
+  0,
+  0,
+  0.2126,
+  0.7152,
+  0.0722,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+]);
+
+// ADR-007 §1 — three-state pipeline for the Matches list. Near-miss
+// keeps its own two-state gate (Premium sees / Free locked); non-
+// near-miss matches follow the compound rule below.
+enum MatchDisplayState {
+  /// Near-miss profile, Free tier — blurred photo + placeholder text.
+  nearMissLocked,
+
+  /// Near-miss profile, Premium tier — read-only rendering.
+  nearMissReadOnly,
+
+  /// Non-near-miss, no mutual wave — greyscale photo + name + age,
+  /// no tap-open, no trailing actions. Applies to BOTH tiers.
+  nonMutual,
+
+  /// Non-near-miss, mutual wave, Free tier — colour + name + age;
+  /// tap surfaces an upsell (full card is Premium-gated).
+  mutualFree,
+
+  /// Non-near-miss, mutual wave, Premium tier — colour + name + age;
+  /// tap opens the full profile card.
+  mutualPremium,
+}
+
+/// Pure derivation of the tap/render state for a match tile per
+/// ADR-007 §1. Extracted so the widget layer stays a thin renderer
+/// and the compound gate is unit-testable in isolation.
+MatchDisplayState resolveMatchDisplayState({
+  required MatchProfile profile,
+  required bool isPremium,
+}) {
+  if (isNearMissProfile(profile)) {
+    return isPremium
+        ? MatchDisplayState.nearMissReadOnly
+        : MatchDisplayState.nearMissLocked;
+  }
+  if (!profile.hasMutualWave) return MatchDisplayState.nonMutual;
+  return isPremium
+      ? MatchDisplayState.mutualPremium
+      : MatchDisplayState.mutualFree;
+}
+
 class MatchesScreen extends ConsumerStatefulWidget {
   const MatchesScreen({super.key});
 
@@ -662,19 +730,12 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                       continue;
                     }
 
-                    // Lock samo za Recap: nekdo TI je poslal wave, ti nisi odgovoril
-                    // Vse ostalo (wave poslan, mutual, near-miss) = vidno
-                    final myUid = user?.id ?? '';
-                    final partnerId = matchData.getPartnerId(myUid);
-                    final theyWaved = matchData.gestures.containsKey(partnerId);
-                    final iWaved = matchData.gestures.containsKey(myUid);
-                    final isRecapLock = !isPremium && theyWaved && !iWaved;
-
+                    // ADR-007 §1 — mutual-wave predicate now lives on
+                    // MatchProfile.hasMutualWave (server-computed).
+                    // Widget layer reads it directly; no client-side
+                    // isLocked recap-lock predicate any more.
                     matchesToDisplay.add(
-                      _MatchDisplayItem(
-                        profile: profile,
-                        isLocked: isRecapLock,
-                      ),
+                      _MatchDisplayItem(profile: profile),
                     );
                   }
 
@@ -725,18 +786,27 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
 
                       final item = visibleItems[index];
                       final profile = item.profile;
-                      final isLocked = item.isLocked;
-                      final isNearMiss = isNearMissProfile(profile);
-                      final isNearMissLocked = isNearMiss && !isPremium;
-                      final isNearMissReadOnly = isNearMiss && isPremium;
-                      final hideDetails = isLocked || isNearMissLocked;
+                      final displayState = resolveMatchDisplayState(
+                        profile: profile,
+                        isPremium: isPremium,
+                      );
+                      final isNearMissLocked =
+                          displayState == MatchDisplayState.nearMissLocked;
+                      final isNearMissReadOnly =
+                          displayState == MatchDisplayState.nearMissReadOnly;
+                      final isNonMutual =
+                          displayState == MatchDisplayState.nonMutual;
+                      final isMutualFree =
+                          displayState == MatchDisplayState.mutualFree;
+                      final canOpenFullCard =
+                          displayState == MatchDisplayState.mutualPremium;
+
+                      final hideDetails = isNearMissLocked;
                       final disableTrailingActions =
-                          isLocked || isNearMissLocked || isNearMissReadOnly;
+                          isNearMissLocked || isNearMissReadOnly;
                       final displayName = isNearMissLocked
                           ? t('someone_nearby', lang)
-                          : isLocked
-                              ? t('someone_sent_you_wave', lang)
-                              : profile.name;
+                          : profile.name;
 
                       Widget profileImage = CircleAvatar(
                         radius: 32,
@@ -752,18 +822,41 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                             child: profileImage,
                           ),
                         );
+                      } else if (isNonMutual) {
+                        // ADR-007 §1 — greyscale wrapper for non-mutual
+                        // matches. Applies to both tiers uniformly.
+                        profileImage = ColorFiltered(
+                          colorFilter: _greyscaleColorFilter,
+                          child: profileImage,
+                        );
                       }
+
+                      // Tap semantics (per ADR-007 §1):
+                      // - near-miss locked → paywall (existing behaviour)
+                      // - non-mutual → no-op (card is not tappable)
+                      // - mutual + Free → paywall upsell (Free preview
+                      //   card with 3 hobbies is a follow-up)
+                      // - mutual + Premium → open full profile card
+                      // - edit mode → no tap (per-row X handles delete)
+                      final VoidCallback? onTap = _isEditMode
+                          ? null
+                          : isNearMissLocked
+                              ? () => PremiumPaywallBottomSheet.show(context)
+                              : isNonMutual
+                                  ? null
+                                  : isMutualFree
+                                      ? () => PremiumPaywallBottomSheet.show(
+                                          context)
+                                      : canOpenFullCard
+                                          ? () => _openProfile(profile)
+                                          : null;
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: GestureDetector(
-                          onTap: isNearMissLocked
-                              ? () => PremiumPaywallBottomSheet.show(context)
-                              : (isLocked || _isEditMode)
-                                  ? null
-                                  : () => _openProfile(profile),
+                          onTap: onTap,
                           child: Opacity(
-                            opacity: isLocked ? 0.6 : 1.0,
+                            opacity: 1.0,
                             child: Stack(
                               children: [
                                 GlassCard(
@@ -773,23 +866,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                       horizontal: 14, vertical: 10),
                                   child: Row(
                                     children: [
-                                      if (isLocked && !isNearMissLocked)
-                                        Container(
-                                          width: 64,
-                                          height: 64,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.06),
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                                color: Colors.white
-                                                    .withValues(alpha: 0.12)),
-                                          ),
-                                          child: const Icon(LucideIcons.user,
-                                              color: Colors.white24, size: 28),
-                                        )
-                                      else
-                                        profileImage,
+                                      profileImage,
                                       const SizedBox(width: 14),
                                       Expanded(
                                         child: Column(
@@ -852,52 +929,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                           ],
                                         ),
                                       ),
-                                      if (isLocked && !isNearMissLocked)
-                                        Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            const Icon(LucideIcons.lock,
-                                                color: Colors.white24,
-                                                size: 16),
-                                            const SizedBox(height: 4),
-                                            GestureDetector(
-                                              onTap: () {
-                                                PremiumPaywallBottomSheet.show(
-                                                    context);
-                                              },
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 3),
-                                                decoration: BoxDecoration(
-                                                  color: TrembleTheme.rose
-                                                      .withValues(alpha: 0.15),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          100),
-                                                  border: Border.all(
-                                                      color: TrembleTheme.rose
-                                                          .withValues(
-                                                              alpha: 0.3)),
-                                                ),
-                                                child: Text(
-                                                  t('upgrade_to_see', lang),
-                                                  style: GoogleFonts
-                                                      .instrumentSans(
-                                                    fontSize: 9,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: TrembleTheme.rose,
-                                                    letterSpacing: 0.5,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      else if (!disableTrailingActions &&
+                                      if (!disableTrailingActions &&
                                           _isEditMode)
                                         GestureDetector(
                                           onTap: () => _removeMatch(
@@ -1573,8 +1605,7 @@ class _MatchTypeBadge extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 class _MatchDisplayItem {
   final MatchProfile profile;
-  final bool isLocked;
-  _MatchDisplayItem({required this.profile, required this.isLocked});
+  _MatchDisplayItem({required this.profile});
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
