@@ -1,98 +1,125 @@
 # Active Implementation Plan
-Plan ID: 20260713-distance-remove-and-hardfilters-comingsoon
-Risk Level: LOW
+Plan ID: 20260713-matches-three-state-mutual-wave
+Risk Level: MEDIUM
 Founder Approval Required: NO
-Branch: feat/tier-3-7c-5R-and-3-7c-2C
+Branch: feat/tier-3-7c-1-matches-three-state
 
-1. OBJECTIVE — Deliver KORAK 3.7c-5R + 3.7c-2C as a single Flutter-only
-   PR that (a) retires the false-advertisement distance bullets from
-   the paywall per ADR-007 Amendment §5, (b) soft-labels the paused
-   hard-filters bullet with "coming soon" across all 8 supported
-   locales per ADR-007 Amendment §6, and (c) sweeps the orphan
-   `distance_help` translation key discovered during pre-flight (no
-   caller anywhere in `lib/`; fossil from the never-built distance
-   slider). Zero gate logic changes, copy-only.
+1. OBJECTIVE — Land ADR-007 Amendment §1 (Matches shape + mutual-wave
+   predicate) as KORAK 3.7c-1. Introduce a compound gate
+   `isPremium && hasMutualWave` on the Matches list render, and a
+   three-state pipeline: (a) no mutual wave → greyscaled photo +
+   name + age only, (b) mutual wave + Free → colour + name + age +
+   3 shared hobbies, (c) mutual wave + Premium → colour + full
+   profile card openable. Both tiers fall back to (a) when there is
+   no mutual wave.
 
 2. SCOPE —
    - **Modified:**
-     - `lib/src/features/settings/presentation/premium_screen.dart` —
-       remove two distance bullet keys from the ordered arrays, delete
-       the EN + SL translation entries for them, refresh the free-tier
-       comment, update EN `premium_feature_hard_filters` with
-       "(coming soon)" suffix, and add the same soft-labelled bullet
-       to the 7 other locale blocks (sl, de, hr, it, es, fr, pt).
-     - `lib/src/core/translations.dart` — delete the orphan
-       `distance_help` entry (multi-line) from all 8 locale blocks
-       (en, sl, de, it, fr, hr, sr, hu). Locale-block count must be
-       identical before and after.
-     - `test/features/settings/premium_screen_test.dart` — Premium
-       ordered set 8→7, Free ordered set 7→6, add the two retired
-       distance keys to the "retired paywall keys are fully removed"
-       assertion, add "coming soon" contains checks (EN + SL).
+     - `functions/src/modules/matches/matches.functions.ts` —
+       `getMatches` response gains a `hasMutualWave: boolean` field
+       per profile, computed from `matchData.gestures` (mutual when
+       `Object.keys(gestures ?? {}).length >= 2`).
+     - `functions/src/__tests__/matches.test.ts` — new assertions on
+       the `getMatches` mutual-wave contract (mutual + non-mutual
+       pair-of-tests per ADR-007 §4).
+     - `lib/src/features/matches/data/match_repository.dart` —
+       `MatchProfile` gains `final bool hasMutualWave` (default
+       `false`, backward-compatible with mock data + direct
+       constructor callers); `MatchProfile.fromApi` reads
+       `data['hasMutualWave'] as bool? ?? false`.
+     - `lib/src/features/matches/presentation/matches_screen.dart` —
+       three-state render pipeline replaces the existing
+       `isLocked` placeholder for non-mutual matches. Tap gate on
+       `_openProfile` becomes `isPremium && hasMutualWave`. Greyscale
+       via `ColorFilter.matrix` around the photo.
+     - `lib/src/core/dev_mock_users.dart` — set explicit
+       `hasMutualWave` on the 3 mock users so dev-mode Admin Bypass
+       renders all three states visibly.
+     - `test/features/matches/matches_three_state_test.dart` — new
+       widget test file covering the three states (pair-of-tests
+       per ADR-007 §4: Free-non-mutual, Free-mutual, Premium-mutual,
+       Premium-non-mutual).
      - `tasks/plan.md` — this file (Plan-ID rewrite).
-     - `tasks/plans/PLAN_03_APP_CODE.md` — mark 3.7c-5R + 3.7c-2C
-       as MERGED, update STATUS table, add prod-deploy dnevnik entry.
-   - **Untouched:** all Cloud Functions, Firestore rules, CI config,
-     ADR-007, all other Dart features. No gate logic added, no
-     server contract changed.
+     - `tasks/plans/PLAN_03_APP_CODE.md` — mark 3.7c-1 as MERGED
+       once PR lands, add prod-deploy dnevnik entry.
+   - **Untouched:** Firestore rules (read gates unchanged; write
+     paths unchanged), all other features, Recap and Near-Miss
+     card surfaces (those are 3.7c-10 / 3.7c-11 scoped separately).
 
 3. STEPS —
-   1. Delete `premium_feature_distance_100` from
-      `premiumOnlyFeatureBullets` (premium_screen.dart:69).
-   2. Delete `premium_free_distance_50` from
-      `freeTierFeatureBullets` (premium_screen.dart:85). Refresh the
-      preceding comment that says "distance-up-to-50km" so it stops
-      claiming a bullet that no longer exists.
-   3. Delete the four translation entries for those keys (EN 316 +
-      334, SL 393 + 409).
-   4. Update EN `premium_feature_hard_filters` (line 312-313) with
-      the "(coming soon)" suffix per ADR-007 §6.
-   5. Add localised `premium_feature_hard_filters` entries to sl, de,
-      hr, it, es, fr, pt locale blocks per the exact phrasing in
-      ADR-007 §6.
-   6. Delete all 8 `distance_help` entries in translations.dart. Grep
-      pre + post to confirm locale-block count unchanged.
-   7. Update `premium_screen_test.dart`: shrink both ordered lists,
-      add the two distance keys to the retired-keys sweep, add EN +
-      SL "coming soon" contains assertions.
-   8. `flutter analyze` — 0 issues. `flutter test` — all green.
-   9. Rewrite this `tasks/plan.md`, then open PR complying with
-      Rule #79 + Rule #80 pre-flight.
+   1. `getMatches` (functions/src/modules/matches/matches.functions.ts)
+      — compute `hasMutualWave` server-side from
+      `matchData.gestures`. Emit on the returned profile.
+   2. `MatchProfile` DTO gains the field (default `false`).
+   3. `matches_screen.dart` — replace `isLocked`-based render with
+      three-state pipeline. Non-mutual = greyscaled photo + name +
+      age, no tap-open. Mutual + Free = colour + 3 hobbies, no
+      tap-open. Mutual + Premium = colour + full card, tap-open.
+   4. `dev_mock_users.dart` — Nika = mutual (State C/B by tier),
+      Luka = non-mutual (State A both tiers), Sara = mutual.
+   5. Widget test suite: assert render for each of the 4 tier ×
+      mutual permutations.
+   6. CF test: `getMatches` returns `hasMutualWave: true` when both
+      users are in `gestures`; `false` when only one is present or
+      the map is empty.
+   7. `flutter analyze` + `flutter test` + `npm test` (CF) all
+      green.
+   8. Rewrite this `tasks/plan.md`, open PR per Rule #79 + Rule #80
+      pre-flight.
 
 4. RISKS & TRADEOFFS —
-   - **Copy-only, no gate change:** false-advertisement risk goes
-     DOWN, not up. Nothing else in the app reads these bullet keys.
-   - **Orphan `distance_help` deletion:** grep confirmed zero callers
-     in `lib/`. If a future distance-slider PR ever lands, it can
-     re-add its own key — the deletion here is honest cleanup, not
-     future-blocking.
-   - **Non-EN feature-bullet translations still fall back to EN**
-     for every other Premium bullet — that is existing behaviour
-     inherited from KORAK 3.7a and unchanged by this PR. Adding a
-     full non-EN feature-bullet translation pass is a separate task
-     tracked outside 3.7.
+   - **UX shift for Free-they-waved-me-didn't (MEDIUM):** today
+     Free tier sees "Someone sent you a wave" placeholder when they
+     received a wave and haven't replied. Under §1 they see the
+     sender's real name + age + greyscaled photo. Confirmed by
+     founder 2026-07-13 — ADR §1 wins (both tiers see the same
+     greyed shape).
+   - **CF deploy required (LOW):** `getMatches` shape change is
+     additive. Clients that predate the field default to `false`
+     and simply render everything as non-mutual → safe. Backwards-
+     compatible for older APK builds during rollout.
+   - **DTO default = false (LOW):** older mock data + widget tests
+     that build `MatchProfile` directly continue to compile;
+     they land in State A by default, which is intentional.
+   - **Server truth vs client wave state:** we compute mutual on
+     the server from the `matches/{matchId}.gestures` map, which
+     is written client-side by `wave_repository.sendGesture`. If
+     a client races two waves onto the same doc, Firestore's
+     last-write-wins already resolves it; no new race introduced.
+   - **Scope confined to Matches list.** Recap card and Near-Miss
+     card still use the OLD render — three-state migration for
+     those surfaces lives in 3.7c-10 / 3.7c-11.
 
 5. VERIFICATION —
    - `flutter analyze` — 0 issues.
-   - `flutter test` — all suites green (unit + widget). Two new
-     assertions in `premium_screen_test.dart`; count moves by test
-     additions only, no test file removals.
-   - unit tests — added (retired-keys sweep + coming-soon contains).
-   - integration tests — none needed; no CF or Firestore path
-     touched.
-   - security scan — grep of branch diff shows only Dart copy files
-     and docs; no secrets, no PII, no auth/billing/security-boundary
-     change.
-   - `git diff --stat origin/main...HEAD` — five files:
-     `lib/src/features/settings/presentation/premium_screen.dart`,
-     `lib/src/core/translations.dart`,
-     `test/features/settings/premium_screen_test.dart`,
+   - `flutter test` — all suites green (unit + widget). New file
+     `matches_three_state_test.dart` adds coverage for the four
+     tier × mutual permutations.
+   - `cd functions && npm run build && npm run lint && npm test`
+     — all green. New assertions in `matches.test.ts` cover the
+     `hasMutualWave` contract in `getMatches`.
+   - unit tests — added (CF `hasMutualWave` computation +
+     widget three-state render).
+   - integration tests — n/a; the mutual-wave predicate is a
+     read-derived boolean, not a new write path. No Firestore
+     rules touched.
+   - security scan — branch diff shows only CF getMatches shape
+     addition (additive, no auth logic), Dart DTO + widget +
+     mock + tests, and docs. No secrets, no PII change, no
+     credential surface.
+   - `git diff --stat origin/main...HEAD` — expected files:
+     `functions/src/modules/matches/matches.functions.ts`,
+     `functions/src/__tests__/matches.test.ts`,
+     `lib/src/features/matches/data/match_repository.dart`,
+     `lib/src/features/matches/presentation/matches_screen.dart`,
+     `lib/src/core/dev_mock_users.dart`,
+     `test/features/matches/matches_three_state_test.dart`,
      `tasks/plan.md`,
      `tasks/plans/PLAN_03_APP_CODE.md`.
    - MPC PR-Metadata gate verification (Rule #79 + Rule #80
      pre-flight):
-     - Title format present: `[PLAN-ID:
-       20260713-distance-remove-and-hardfilters-comingsoon] …`.
+     - Title format: `[PLAN-ID:
+       20260713-matches-three-state-mutual-wave] …`.
      - Body contains: `Verification checklist`, `unit tests`,
        `integration tests`, `security scan`.
      - Body does NOT contain any literal risk-regex trigger

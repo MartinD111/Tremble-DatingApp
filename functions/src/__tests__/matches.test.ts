@@ -209,6 +209,9 @@ describe("Matches Module", () => {
                         matchContext: { eventId: "event-1" },
                         matchedAt: "2026-06-14T08:30:00.000Z",
                         isTraveler: true,
+                        // ADR-007 §1 — no gestures on the match doc, so
+                        // hasMutualWave defaults to false.
+                        hasMutualWave: false,
                     },
                 ],
             });
@@ -220,6 +223,111 @@ describe("Matches Module", () => {
             expect(partnerGet).not.toHaveBeenCalled();
             expect(missingGet).not.toHaveBeenCalled();
             expect(docMock).not.toHaveBeenCalledWith("blockedUid");
+        });
+
+        // ADR-007 §1 — mutual-wave predicate pair-of-tests.
+        // Server derives hasMutualWave from matchData.gestures (client-
+        // written {uid: true} map on the match doc). Two waves in the
+        // map => mutual; one or zero => non-mutual. This is the compound
+        // gate that the client's three-state render pipeline depends on.
+        describe("ADR-007 §1 hasMutualWave contract", () => {
+            const buildGetMatchesForGestures = async (
+                gestures: Record<string, boolean> | undefined,
+            ): Promise<unknown> => {
+                jest.clearAllMocks();
+                const authGuard = await import("../../src/middleware/authGuard");
+                const rateLimit = await import("../../src/middleware/rateLimit");
+                const { getMatches } = await import(
+                    "../../src/modules/matches/matches.functions"
+                );
+
+                jest.mocked(authGuard.requireAuth).mockReturnValue("callerUid");
+                jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+
+                const matchDocs = [{
+                    data: () => ({
+                        userA: "callerUid",
+                        userB: "partnerUid",
+                        matchType: "standard",
+                        matchContext: null,
+                        createdAt: null,
+                        ...(gestures !== undefined ? { gestures } : {}),
+                    }),
+                }];
+                const partnerRef = { path: "users/partnerUid" };
+                const partnerDoc = {
+                    exists: true,
+                    data: () => ({
+                        name: "Partner",
+                        age: 30,
+                        photoUrls: [],
+                        hobbies: [],
+                        lookingFor: [],
+                        isTraveler: false,
+                    }),
+                };
+                const docMock = jest.fn((docId: unknown) => {
+                    if (docId === "callerUid") {
+                        return {
+                            get: jest.fn(async () => ({
+                                data: () => ({ blockedUserIds: [] }),
+                            })),
+                        };
+                    }
+                    if (docId === "partnerUid") {
+                        return { ...partnerRef, get: jest.fn() };
+                    }
+                    throw new Error(`Unexpected user doc: ${String(docId)}`);
+                });
+
+                mockDb.collection.mockImplementation((collectionName: unknown) => {
+                    if (collectionName === "users") return { doc: docMock };
+                    if (collectionName === "matches") {
+                        return {
+                            where: jest.fn(() => ({
+                                orderBy: jest.fn(() => ({
+                                    limit: jest.fn(() => ({
+                                        get: jest.fn(async () => ({ docs: matchDocs })),
+                                    })),
+                                })),
+                            })),
+                        };
+                    }
+                    throw new Error(`Unexpected collection: ${collectionName}`);
+                });
+                mockDb.getAll.mockResolvedValue([partnerDoc]);
+
+                const callable = getMatches as unknown as (
+                    request: unknown,
+                ) => Promise<{ matches: Array<{ hasMutualWave: boolean }> }>;
+                return callable({ auth: { uid: "callerUid", token: {} }, data: {} });
+            };
+
+            it("returns hasMutualWave=true when both userIds appear in gestures (mutual)", async () => {
+                const result = await buildGetMatchesForGestures({
+                    callerUid: true,
+                    partnerUid: true,
+                });
+                expect(
+                    (result as { matches: Array<{ hasMutualWave: boolean }> }).matches[0].hasMutualWave,
+                ).toBe(true);
+            });
+
+            it("returns hasMutualWave=false when only one user has waved (non-mutual)", async () => {
+                const result = await buildGetMatchesForGestures({
+                    callerUid: true,
+                });
+                expect(
+                    (result as { matches: Array<{ hasMutualWave: boolean }> }).matches[0].hasMutualWave,
+                ).toBe(false);
+            });
+
+            it("returns hasMutualWave=false when gestures is missing entirely (defensive default)", async () => {
+                const result = await buildGetMatchesForGestures(undefined);
+                expect(
+                    (result as { matches: Array<{ hasMutualWave: boolean }> }).matches[0].hasMutualWave,
+                ).toBe(false);
+            });
         });
     });
 

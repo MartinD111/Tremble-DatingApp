@@ -480,6 +480,14 @@ export const getMatches = onCall(
             if (!profileDoc.exists) return null;
             const pData = profileDoc.data()!;
 
+            // ADR-007 §1 — mutual-wave predicate. `gestures` is a
+            // client-written map on the match doc (`{uid: true}`);
+            // mutual = both userIds have waved. Clients that predate
+            // this field render everything as non-mutual, which is
+            // the safe default.
+            const gestures = (matchData.gestures as Record<string, boolean> | undefined) ?? {};
+            const hasMutualWave = Object.keys(gestures).length >= 2;
+
             return {
                 id: partnerId,
                 name: pData.name,
@@ -494,6 +502,7 @@ export const getMatches = onCall(
                     ? (matchData.createdAt as FirebaseFirestore.Timestamp).toDate().toISOString()
                     : null,
                 isTraveler: (pData.isTraveler as boolean | undefined) ?? false,
+                hasMutualWave,
             };
         });
 
