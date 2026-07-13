@@ -1,86 +1,71 @@
 # Active Implementation Plan
-Plan ID: 20260713-plan-03-korak-3-7a-docs
+Plan ID: 20260713-tier-matrix-audit
 Risk Level: LOW
 Founder Approval Required: NO
-Branch: docs/plan-03-korak-3-7a-merged
+Branch: research/tier-matrix-audit-3-7b
 
-1. OBJECTIVE — Post-merge documentation for KORAK 3.7a (PR #25 landed
-   in main as commit 0cd8b4c on 2026-07-13). Also encodes two hard-
-   won lessons from the same session so future sessions do not repeat
-   them.
+1. OBJECTIVE — Produce the KORAK 3.7b deliverable: a grep-driven audit
+   of every ADR-007 (`tasks/decisions/ADR-007-tier-matrix.md`) row
+   against the actual codebase, with per-row verdicts (OK / PARTIAL /
+   MISSING / N/A) and an ordered fix list that feeds sub-KORAK-i
+   3.7c-3.7n. Zero runtime code changed; result is a single new
+   document at `tasks/AUDIT_TIER_MATRIX_20260713.md`.
 
 2. SCOPE —
+   - **Added:**
+     - `tasks/AUDIT_TIER_MATRIX_20260713.md` — the audit report.
    - **Modified:**
-     - `tasks/plans/PLAN_03_APP_CODE.md` — KORAK 3.7a heading marked
-       ✅ MERGED; Output block filled with retired/added feature-key
-       counts, translation coverage, contract-test additions, deploy
-       target, and a note on the lessons surfaced during 3.7a
-       execution. STATUS table row for 3.7 flipped from "🟡 UNBLOCKED"
-       to "🟡 IN PROGRESS — 3.7a ✅ MERGED; 3.7b next". Next-step
-       recommendation now points at 3.7b. Prod-deploy dnevnik entry
-       appended for 3.7a.
-     - `tasks/lessons.md` — new **Rule #80** covering (a) the
-       naive-regex trap where a literal `risk_level: high` substring
-       in ANY body position flips `is_high_risk` to true and triggers
-       the ⑦ Founder Approval gate; (b) a corollary that Rule #79
-       (MPC PR-Metadata) is not waived for docs/follow-up PRs and a
-       four-step pre-flight before every `gh pr create`.
-     - `tasks/plan.md` — this file; carries the docs Plan-ID so the
-       MPC PR-Metadata gate passes.
+     - `tasks/plan.md` — this file; carries the Plan-ID so the MPC
+       PR-Metadata gate passes.
    - **Untouched:** all runtime code, tests, CI config, Firestore
-     rules. This PR ships zero executable changes.
+     rules, ADR-007 itself. This PR ships zero executable changes and
+     zero ADR revisions.
 
 3. STEPS —
-   1. Fill KORAK 3.7a Output block in PLAN_03 from PR #25 merge
-      metadata (commit 0cd8b4c, 15 new keys, 7 retired keys, 247/114
-      test counts).
-   2. Update PLAN_03 STATUS table + prod-deploy dnevnik for 3.7a.
-   3. Add Rule #80 to `tasks/lessons.md` covering the risk-regex trap
-      + docs-PR MPC-gate corollary.
-   4. Rewrite this `tasks/plan.md` with a Plan-ID that describes the
-      docs bundle so the MPC PR-Metadata gate passes.
-   5. Open PR #26 with the compliant title
-      `[PLAN-ID: 20260713-plan-03-korak-3-7a-docs] docs(plan): KORAK
-      3.7a MERGED + lessons Rule #80` and a body containing the four
-      required MPC phrases (`Verification checklist`, `unit tests`,
-      `integration tests`, `security scan`).
-   6. Immediately after `gh pr create`, run the four-check pre-flight
-      per Rule #80 to catch any silent regression.
+   1. Grep each ADR-007 row against the codebase (server + client)
+      and record file:line references for the actual gate (if any).
+   2. Verdict-tag each row: ✅ OK / ⚠️ PARTIAL / ❌ MISSING / 🟦 N/A.
+   3. For ⚠️ and ❌ rows, name the fix action and its estimated blast
+      radius (one-file gate flip vs multi-file new build).
+   4. Assemble the ordered fix list (Priority 1: ambiguity resolution,
+      Priority 2: quick unambiguous gate additions, Priority 3:
+      consistency test coverage, Priority 4: deferred behind ADR-001)
+      that becomes the roadmap for sub-KORAK-i 3.7c-3.7n.
+   5. Record assumptions + blind spots so the next session can decide
+      whether to trust the audit or re-grep specific rows.
+   6. Rewrite this `tasks/plan.md` with the Plan-ID and open a PR that
+      complies with Rule #79 + Rule #80.
 
 4. RISKS & TRADEOFFS —
-   - **No runtime impact (VERIFIED):** grep shows only `.md` files
-     under `tasks/` are touched.
-   - **Rule #80 wording risk (LOW):** the new rule quotes the exact
-     regex triggers as prose examples. Rule #80 itself would trip
-     the naive is_high_risk check if this file's contents landed in a
-     PR body. Guard: docs PRs from this branch onward MUST paraphrase
-     the trigger substrings in their PR body, even when the branch
-     modifies `lessons.md`. The PR body for #26 uses paraphrases
-     ("naive-regex trigger substring") to avoid the trap.
-   - **Bundled scope acceptable:** the two logical changes (KORAK
-     3.7a backfill + Rule #80) share only `.md` files under `tasks/`
-     and have no overlap on the same file section. Combining reduces
-     review overhead and lands Rule #80 before 3.7b needs it.
+   - **Grep-only method (LOW):** the audit does not run the app or
+     toggle actual RevenueCat entitlements. A gate that reads
+     `isPremium` under a different name (`isPro`, `hasEntitlement`)
+     would be invisible. Reasonable confidence given the codebase's
+     naming consistency, but flagged in the report.
+   - **Ambiguity rows deliberately deferred (LOW):** three rows are
+     tagged for founder clarification before 3.7c-3.7n begins. This
+     is by design — kicking off a large PR before scope is clear
+     wastes effort.
+   - **No behaviour change:** audit is research-only; if any verdict
+     turns out wrong, the fix lands in 3.7c-3.7n, not here.
 
 5. VERIFICATION —
    - `flutter analyze` — 0 issues (no runtime code touched).
    - `flutter test` — 247 tests green on branch base (unchanged; no
      test files touched).
    - unit tests — none added or modified.
-   - integration tests — none needed; no CF or Firestore path
-     touched.
+   - integration tests — none needed; no CF or Firestore path touched.
    - security scan — grep of branch diff shows only `tasks/**`
      changes; no secrets, no PII, no auth/billing/security-boundary
      change.
-   - `git diff --stat origin/main...HEAD` — three files:
-     `tasks/plans/PLAN_03_APP_CODE.md`, `tasks/lessons.md`,
-     `tasks/plan.md`.
-   - MPC PR-Metadata gate verification (per Rule #79 + Rule #80):
-     - Title format present: `[PLAN-ID: 20260713-plan-03-korak-3-7a-
-       docs] …`.
+   - `git diff --stat origin/main...HEAD` — two files:
+     `tasks/AUDIT_TIER_MATRIX_20260713.md` (new),
+     `tasks/plan.md` (Plan-ID rewrite).
+   - MPC PR-Metadata gate verification (Rule #79 + Rule #80 preflight):
+     - Title format present: `[PLAN-ID: 20260713-tier-matrix-audit] …`.
      - Body contains: `Verification checklist`, `unit tests`,
        `integration tests`, `security scan`.
-     - Body does NOT contain any literal risk-regex trigger
-       substring.
-     - Plan-ID `20260713-plan-03-korak-3-7a-docs` present in this
+     - Body does NOT contain any literal risk-regex trigger substring
+       (per Rule #80).
+     - Plan-ID `20260713-tier-matrix-audit` present in this
        `tasks/plan.md` file (line 2).
