@@ -84,7 +84,7 @@ podpisuje in objavlja founder.
 |---|---|---|
 | DPIA | §3.2/§4.2/§8: TTL 2h (ne 24h), getPublicProfile STRIP, politika odstranjena, gender/lookingFor consent mehanizem | dejanska koda + 4.2 mnenje |
 | ToS | §7 Weekend okno ZDAJ drži (enforcement v main) — samo preveri besedilo ur; §16 SL verzija ali popravek klavzule; DSA Contact Points sekcija | koda + Korak 24 |
-| Privacy Policy | §2.2 gender/lookingFor NI "voluntarily provided" — popravi na pogodbeno/consent formulacijo iz 4.2; §2.5 Contacts (uskladi s Korak 7 izidom); PostHog NI aktiven → ne dodajaj | 4.2 + koda |
+| Privacy Policy | §2.2 gender/lookingFor NI "voluntarily provided" — popravi na pogodbeno/consent formulacijo iz 4.2; §2.5 Contacts — **koda že usklajena 2026-07-13 (KORAK 3.8-1)**: master `Info.plist` `NSContactsUsageDescription` zdaj natančno opisuje Anonymity Mode + `PrivacyInfo.xcprivacy` deklarira Contacts (Linked=false per ADR-004 hash-only). Preostane samo posodobitev spletne §2.5 na `trembledating.com/privacy` da opiše Anonymity Mode + SHA-256 hash-only transmission (nič raw contact data leaves device); PostHog NI aktiven → ne dodajaj | 4.2 + koda |
 | DPA | matična številka; re-sign Google/Cloudflare/Upstash/Resend pod AMS Solutions d.o.o. | AJPES izpis |
 | ROPA | konsolidacija v en čl. 30 dokument | DPA/DPIA/PP |
 | Breach postopek | upravljavec→IP 72h + register | Korak 28 |
