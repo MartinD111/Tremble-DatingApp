@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-const List<String> profileLocationOptions = [
-  'Ljubljana',
-  'Koper',
-  'Zagreb',
-  'Other',
-];
-
 // ─────────────────────────────────────────────────────────────────────────────
 // DRUM PICKER
 // A scroll-wheel date/value picker used by BirthdayStep and HeightStep.

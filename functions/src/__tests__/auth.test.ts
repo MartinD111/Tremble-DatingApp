@@ -142,22 +142,44 @@ describe("Auth Module", () => {
             expect(result.success).toBe(true);
         });
 
-        it("should validate onboarding schema — reject precise free-text location", async () => {
+        it("should validate onboarding schema — freetext location bounded but no enum (PLAN 03 · KORAK 3.6)", async () => {
             const { completeOnboardingSchema } = await import(
                 "../../src/modules/auth/auth.schema"
             );
 
-            const result = completeOnboardingSchema.safeParse({
+            const base = {
                 name: "Ana",
                 birthDate: "1995-06-15",
-                gender: "female",
+                gender: "female" as const,
                 interestedIn: "male",
-                location: "Prešernova cesta 10, Ljubljana",
                 photoUrls: ["https://r2.example.com/photo.jpg"],
                 consentGiven: true,
-            });
+                sexualOrientationConsent: true,
+            };
 
-            expect(result.success).toBe(false);
+            // Freetext city text (previously rejected by KP/LJ/ZG/Other
+            // enum) is now accepted — location is no longer a matching
+            // signal and GDPR minimisation favours the simpler input.
+            expect(
+                completeOnboardingSchema.safeParse({
+                    ...base,
+                    location: "Prešernova cesta 10, Ljubljana",
+                }).success
+            ).toBe(true);
+            // Whitespace-only trims to empty → rejected.
+            expect(
+                completeOnboardingSchema.safeParse({
+                    ...base,
+                    location: "   ",
+                }).success
+            ).toBe(false);
+            // Over the 80-char bound → rejected.
+            expect(
+                completeOnboardingSchema.safeParse({
+                    ...base,
+                    location: "x".repeat(81),
+                }).success
+            ).toBe(false);
         });
 
         it("should validate onboarding schema — accept nicotine fields", async () => {

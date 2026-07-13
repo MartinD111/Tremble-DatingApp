@@ -227,7 +227,7 @@ void main() {
       expect(emailLocationStep, contains('_isPasswordValid &&'));
     });
 
-    test('profile location input is constrained to city selector options', () {
+    test('profile location input is freetext (PLAN 03 · KORAK 3.6)', () {
       final authSchema =
           File('functions/src/modules/auth/auth.schema.ts').readAsStringSync();
       final userSchema = File('functions/src/modules/users/users.schema.ts')
@@ -242,22 +242,29 @@ void main() {
         'lib/src/features/profile/presentation/edit_profile_screen.dart',
       ).readAsStringSync();
 
-      // Both schemas use `.nullish()` so the Dart client can send explicit
-      // `null` for unset fields without tripping strict-mode validation.
-      const enumPrefix = 'z.enum(["Ljubljana", "Koper", "Zagreb", "Other"])';
-      expect(authSchema, contains('$enumPrefix.nullish()'));
-      expect(userSchema, contains('$enumPrefix.nullish()'));
-      expect(stepShared, contains('const List<String> profileLocationOptions'));
-      for (final city in ['Ljubljana', 'Koper', 'Zagreb', 'Other']) {
-        expect(stepShared, contains("'$city'"));
-      }
+      // Location is a bounded freetext string on both submit paths.
+      // `.nullish()` preserves the "no city entered" contract so the Dart
+      // client can still send explicit `null` under strict-mode Zod.
+      const freetextPrefix = 'z.string().trim().min(1).max(80)';
+      expect(authSchema, contains('$freetextPrefix.nullish()'));
+      expect(userSchema, contains('$freetextPrefix.nullish()'));
+      // The old KP/LJ/ZG enum is gone from BOTH submit paths so a
+      // freetext client value can no longer be rejected by the enum.
+      expect(authSchema,
+          isNot(contains('z.enum(["Ljubljana", "Koper", "Zagreb", "Other"])')));
+      expect(userSchema,
+          isNot(contains('z.enum(["Ljubljana", "Koper", "Zagreb", "Other"])')));
 
-      expect(emailLocationStep, contains('profileLocationOptions.map'));
-      expect(emailLocationStep, contains('OptionPill('));
+      // The shared const list is removed — no residual OptionPill wiring
+      // in either screen.
+      expect(stepShared,
+          isNot(contains('const List<String> profileLocationOptions')));
+      expect(emailLocationStep, isNot(contains('profileLocationOptions')));
+      expect(editProfile, isNot(contains('profileLocationOptions')));
+
+      // No Places API / autocomplete regression on either surface.
       expect(emailLocationStep, isNot(contains('PlacesService')));
       expect(emailLocationStep, isNot(contains('_locationAutocomplete')));
-
-      expect(editProfile, contains('profileLocationOptions.map'));
       expect(editProfile, isNot(contains('PlacesService')));
       expect(editProfile, isNot(contains('locationPredictions')));
     });

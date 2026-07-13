@@ -367,19 +367,35 @@ describe("Users Module", () => {
             }
         });
 
-        it("should constrain location to the city enum", async () => {
+        it("should accept freetext location up to 80 chars, reject empty and oversized (PLAN 03 · KORAK 3.6)", async () => {
             const { updateProfileSchema } = await import(
                 "../../src/modules/users/users.schema"
             );
 
+            // Legacy enum values still fit as-is (backward compat).
             expect(
                 updateProfileSchema.safeParse({ location: "Koper" }).success
             ).toBe(true);
+            // Freetext city name at the previous enum's rejection boundary
+            // must now be accepted.
             expect(
                 updateProfileSchema.safeParse({
                     location: "Prešernova cesta 10, Ljubljana",
                 }).success
+            ).toBe(true);
+            // Whitespace-only trims to empty → rejected.
+            expect(
+                updateProfileSchema.safeParse({ location: "   " }).success
             ).toBe(false);
+            // Over the 80-char bound → rejected.
+            expect(
+                updateProfileSchema.safeParse({ location: "x".repeat(81) })
+                    .success
+            ).toBe(false);
+            // Explicit null still allowed (nullish).
+            expect(
+                updateProfileSchema.safeParse({ location: null }).success
+            ).toBe(true);
         });
 
         it("should accept payload with all optional fields explicitly null", async () => {

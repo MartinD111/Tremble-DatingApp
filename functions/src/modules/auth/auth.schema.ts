@@ -51,7 +51,7 @@ export const completeOnboardingSchema = z.object({
     height: z.number().int().min(100).max(250).nullish(),
     heightRangeStart: z.number().int().min(100).max(250).nullish(),
     heightRangeEnd: z.number().int().min(100).max(250).nullish(),
-    location: z.enum(["Ljubljana", "Koper", "Zagreb", "Other"]).nullish(),
+    location: z.string().trim().min(1).max(80).nullish(),
     photoUrls: z.array(z.string().url()).min(1).max(6),
     isSmoker: z.boolean().nullish(),
     nicotineUse: nicotineUseSchema.nullish(),
