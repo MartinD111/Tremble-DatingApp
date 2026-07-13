@@ -718,8 +718,6 @@ const Map<String, Map<String, String>> _translations = {
     'premium_account_activated': 'Premium account activated',
 
     // --- Edit profile ---
-    'distance_help':
-        'Maximum distance in km for discovering nearby people. Larger radius uses more battery.',
     'unsaved_changes': 'Unsaved changes',
     'discard_changes_q': 'Discard unsaved changes?',
     'discard': 'Discard',
@@ -1550,8 +1548,6 @@ const Map<String, Map<String, String>> _translations = {
     // --- Politična pripadnost ---
 
     // --- Edit profile ---
-    'distance_help':
-        'Največja razdalja v km za odkrivanje bližnjih oseb. Večji radij porabi več baterije.',
     'unsaved_changes': 'Neshranjene spremembe',
     'discard_changes_q': 'Zavrži neshranjene spremembe?',
     'discard': 'Zavrži',
@@ -2301,8 +2297,6 @@ const Map<String, Map<String, String>> _translations = {
     'premium_account_activated': 'Premium-Account aktiviert',
 
     // --- Edit profile ---
-    'distance_help':
-        'Maximale Entfernung in km für die Entdeckung. Ein größerer Radius verbraucht mehr Akku.',
     'unsaved_changes': 'Ungespeicherte Änderungen',
     'discard_changes_q': 'Ungespeicherte Änderungen verwerfen?',
     'discard': 'Verwerfen',
@@ -3070,8 +3064,6 @@ const Map<String, Map<String, String>> _translations = {
     'premium_account_activated': 'Account Premium attivato',
 
     // --- Modifica Profilo ---
-    'distance_help':
-        'Distanza massima in km per la scoperta. Un raggio più ampio consuma più batteria.',
     'unsaved_changes': 'Modifiche non salvate',
     'discard_changes_q': 'Scartare le modifiche non salvate?',
     'discard': 'Scarta',
@@ -3837,8 +3829,6 @@ const Map<String, Map<String, String>> _translations = {
     'premium_account_activated': 'Compte Premium activé',
 
     // --- Modifier Profil ---
-    'distance_help':
-        'Distance maximale en km pour la découverte. Un rayon plus large consomme plus de batterie.',
     'unsaved_changes': 'Modifications non enregistrées',
     'discard_changes_q': 'Abandonner les modifications ?',
     'discard': 'Abandonner',
@@ -4427,8 +4417,6 @@ const Map<String, Map<String, String>> _translations = {
     'set_birthday': 'Postavi rođendan',
     'photos_lofi_hint':
         'Fotografiraj se na prirodnom svjetlu, onako kako te ljudi vide u stvarnom svijetu. Bez filtera.',
-    'distance_help':
-        'Maksimalna udaljenost za otkrivanje u km. Veći radijus troši više baterije.',
     'forgot_password': 'Zaboravljena lozinka?',
     'are_you_new': 'Novi ste ovdje?',
 
@@ -5375,8 +5363,6 @@ const Map<String, Map<String, String>> _translations = {
     'premium_account_activated': 'Premium nalog aktiviran',
 
     // --- Edit profile ---
-    'distance_help':
-        'Maksimalna udaljenost u km za otkrivanje ljudi u blizini. Veći radijus troši više baterije.',
     'unsaved_changes': 'Nesačuvane promene',
     'discard_changes_q': 'Odbaci nesačuvane promene?',
     'discard': 'Odbaci',
@@ -5863,8 +5849,6 @@ const Map<String, Map<String, String>> _translations = {
     'nothing': 'Semmi',
     'something_else': 'Valami más',
     'premium_account_activated': 'Prémium fiók aktiválva',
-    'distance_help':
-        'Maximális távolság km-ben a felfedezéshez. A nagyobb sugár több akkumulátort fogyaszt.',
     'unsaved_changes': 'Nem mentett változtatások',
     'discard_changes_q': 'Elveti a nem mentett változtatásokat?',
     'discard': 'Elvetés',

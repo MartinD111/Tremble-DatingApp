@@ -66,15 +66,15 @@ const premiumOnlyFeatureBullets = <String>[
   'premium_feature_near_miss_history',
   'premium_feature_hard_filters',
   'premium_feature_event_insights',
-  'premium_feature_distance_100',
 ];
 
 // What stays free per ADR-007. Both-tier rows (proximity, waves,
-// active radar, Pulse Intercept, event pins, nicotine filter,
-// distance-up-to-50km) plus the Free-only nearMissCount upsell banner
-// are collapsed into user-facing bullets. Gym Mode is intentionally
-// NOT listed — it is a mode users opt into, not a tier feature, and
-// therefore falls outside ADR-007's scope.
+// active radar, Pulse Intercept, event pins, nicotine filter) plus
+// the Free-only nearMissCount upsell banner are collapsed into
+// user-facing bullets. Gym Mode is intentionally NOT listed — it is
+// a mode users opt into, not a tier feature, and therefore falls
+// outside ADR-007's scope. Max-distance row retired per ADR-007
+// Amendment §5 (no widget ever wired the slider).
 const freeTierFeatureBullets = <String>[
   'premium_free_proximity',
   'premium_free_pulse_intercept',
@@ -82,7 +82,6 @@ const freeTierFeatureBullets = <String>[
   'premium_free_mutual_waves_5',
   'premium_free_event_pins',
   'premium_free_nicotine_filter',
-  'premium_free_distance_50',
 ];
 
 const premiumPlanCards = [
@@ -310,10 +309,9 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_feature_near_miss_history':
           'Near-Miss history tab — see who passed just outside your radar',
       'premium_feature_hard_filters':
-          'Additional hard filters beyond gender, age and nicotine',
+          'Additional hard filters beyond gender, age and nicotine (coming soon)',
       'premium_feature_event_insights':
           'Event participants count + live heatmap data on event pins',
-      'premium_feature_distance_100': 'Distance range up to 100 km (vs 50 km)',
       'premium_feature_weekend_window': 'Active Fri 7 PM – Sun 7 PM your time',
       'premium_feature_all_premium': 'All Premium features',
       'premium_feature_yearly_access': '12 months of uninterrupted access',
@@ -331,7 +329,6 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_free_event_pins':
           'Event pins on the map + empty heatmap circles',
       'premium_free_nicotine_filter': 'Nicotine exclusion filter',
-      'premium_free_distance_50': 'Distance range up to 50 km',
     },
     'sl': {
       'premium_title': 'Tremble Nadgradnja',
@@ -387,10 +384,9 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_feature_near_miss_history':
           'Near-Miss zgodovina — poglej kdo je bil skoraj v tvojem radarju',
       'premium_feature_hard_filters':
-          'Dodatni hard filtri poleg spola, starosti in nikotina',
+          'Dodatni hard filtri poleg spola, starosti in nikotina (kmalu)',
       'premium_feature_event_insights':
           'Število udeležencev + živi heatmap podatki na event pinih',
-      'premium_feature_distance_100': 'Razdalja do 100 km (namesto 50 km)',
       'premium_feature_weekend_window':
           'Aktivno pet 19:00 – ned 19:00 tvoj čas',
       'premium_feature_all_premium': 'Vse Premium funkcije',
@@ -406,13 +402,14 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
       'premium_free_mutual_waves_5': '5 mutual valov na mesec',
       'premium_free_event_pins': 'Event pini na mapi + prazni heatmap krogi',
       'premium_free_nicotine_filter': 'Nicotine exclusion filter',
-      'premium_free_distance_50': 'Razdalja do 50 km',
     },
     'de': {
       'premium_card_weekend_window':
           'Aktiviert sich am nächsten Freitag um 19:00 Uhr – Sonntag um 19:00 Uhr (deine Ortszeit). Verlängert sich automatisch wöchentlich. Jederzeit kündbar.',
       'premium_feature_weekend_window':
           'Aktiv Fr 19:00 – So 19:00 Uhr deiner Zeit',
+      'premium_feature_hard_filters':
+          'Weitere Hard-Filter neben Geschlecht, Alter und Nikotin (bald verfügbar)',
       'premium_cta_get_weekend': 'Hol dir dieses Wochenende',
     },
     'hr': {
@@ -420,6 +417,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
           'Aktivira se sljedeći petak u 19:00 – nedjelja u 19:00 (tvoje lokalno vrijeme). Automatski se obnavlja tjedno. Otkaži bilo kada.',
       'premium_feature_weekend_window':
           'Aktivno pet 19:00 – ned 19:00 tvoje vrijeme',
+      'premium_feature_hard_filters':
+          'Dodatni hard filtri osim spola, dobi i nikotina (uskoro)',
       'premium_cta_get_weekend': 'Aktiviraj ovaj vikend',
     },
     'it': {
@@ -427,12 +426,16 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
           'Si attiva il prossimo venerdì alle 19:00 – domenica alle 19:00 (ora locale). Si rinnova automaticamente ogni settimana. Disdici in qualsiasi momento.',
       'premium_feature_weekend_window':
           'Attivo ven 19:00 – dom 19:00 ora locale',
+      'premium_feature_hard_filters':
+          'Filtri hard aggiuntivi oltre a genere, età e nicotina (in arrivo)',
       'premium_cta_get_weekend': 'Attiva questo fine settimana',
     },
     'es': {
       'premium_card_weekend_window':
           'Se activa el próximo viernes a las 19:00 – domingo a las 19:00 (tu hora local). Se renueva automáticamente cada semana. Cancela en cualquier momento.',
       'premium_feature_weekend_window': 'Activo vie 19:00 – dom 19:00 tu hora',
+      'premium_feature_hard_filters':
+          'Filtros adicionales además de género, edad y nicotina (próximamente)',
       'premium_cta_get_weekend': 'Obtén este fin de semana',
     },
     'fr': {
@@ -440,6 +443,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
           'S’active le vendredi suivant à 19h00 – dimanche à 19h00 (votre heure locale). Renouvellement hebdomadaire automatique. Annulez à tout moment.',
       'premium_feature_weekend_window':
           'Actif ven 19h00 – dim 19h00 votre heure',
+      'premium_feature_hard_filters':
+          'Filtres avancés supplémentaires au-delà du genre, âge et nicotine (bientôt disponible)',
       'premium_cta_get_weekend': 'Profiter de ce week-end',
     },
     'pt': {
@@ -447,6 +452,8 @@ class _PremiumUpgradeScreenState extends ConsumerState<PremiumUpgradeScreen> {
           'Ativa na próxima sexta-feira às 19:00 – domingo às 19:00 (seu horário local). Renova automaticamente toda semana. Cancele a qualquer momento.',
       'premium_feature_weekend_window':
           'Ativo sex 19:00 – dom 19:00 seu horário',
+      'premium_feature_hard_filters':
+          'Filtros adicionais além de género, idade e nicotina (em breve)',
       'premium_cta_get_weekend': 'Obter este fim de semana',
     }
   };
