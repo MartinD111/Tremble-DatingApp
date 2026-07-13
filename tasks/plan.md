@@ -1,127 +1,91 @@
 # Active Implementation Plan
-Plan ID: 20260713-matches-three-state-mutual-wave
-Risk Level: MEDIUM
+Plan ID: 20260713-event-pin-sheet-tier-gate-tests
+Risk Level: LOW
 Founder Approval Required: NO
-Branch: feat/tier-3-7c-1-matches-three-state
+Branch: feat/tier-3-7c-3-event-pin-sheet-tests
 
-1. OBJECTIVE — Land ADR-007 Amendment §1 (Matches shape + mutual-wave
-   predicate) as KORAK 3.7c-1. Introduce a compound gate
-   `isPremium && hasMutualWave` on the Matches list render, and a
-   three-state pipeline: (a) no mutual wave → greyscaled photo +
-   name + age only, (b) mutual wave + Free → colour + name + age +
-   3 shared hobbies, (c) mutual wave + Premium → colour + full
-   profile card openable. Both tiers fall back to (a) when there is
-   no mutual wave.
+1. OBJECTIVE — Close KORAK 3.7c-3 (Event pin sheet gate trace) per
+   ADR-007 Amendment §3 and the audit report's "verify existing gates
+   for participant count + heatmap indicator" scope. Confirmed by
+   read: both gates in `event_pin_sheet.dart` already match §3
+   (Free → `_LockedFeatureRow` for both rows, Premium → `_PeopleCountRow`
+   + `_HeatmapActiveRow`). This PR lands the pair-of-tests required by
+   ADR-007 §4 so any future drift of the `effectiveIsPremium` ternary
+   trips a red test. Zero behaviour change; regression net only.
+
+   Slice B — "potential-matches count for Premium" (subset of
+   participants that fit the caller's filter prefs) — is deferred to
+   bundle with 3.7c-4b, which owns the per-filter subset CF endpoint
+   (design pending per audit report §Priority 1). Founder decision
+   2026-07-13.
 
 2. SCOPE —
+   - **Added:**
+     - `test/features/map/event_pin_sheet_tier_gates_test.dart` — new
+       widget test file. Four pair-of-tests: (Free, Premium) × (people
+       count, heatmap indicator). Free → locked row visible;
+       Premium → active/count row visible.
    - **Modified:**
-     - `functions/src/modules/matches/matches.functions.ts` —
-       `getMatches` response gains a `hasMutualWave: boolean` field
-       per profile, computed from `matchData.gestures` (mutual when
-       `Object.keys(gestures ?? {}).length >= 2`).
-     - `functions/src/__tests__/matches.test.ts` — new assertions on
-       the `getMatches` mutual-wave contract (mutual + non-mutual
-       pair-of-tests per ADR-007 §4).
-     - `lib/src/features/matches/data/match_repository.dart` —
-       `MatchProfile` gains `final bool hasMutualWave` (default
-       `false`, backward-compatible with mock data + direct
-       constructor callers); `MatchProfile.fromApi` reads
-       `data['hasMutualWave'] as bool? ?? false`.
-     - `lib/src/features/matches/presentation/matches_screen.dart` —
-       three-state render pipeline replaces the existing
-       `isLocked` placeholder for non-mutual matches. Tap gate on
-       `_openProfile` becomes `isPremium && hasMutualWave`. Greyscale
-       via `ColorFilter.matrix` around the photo.
-     - `lib/src/core/dev_mock_users.dart` — set explicit
-       `hasMutualWave` on the 3 mock users so dev-mode Admin Bypass
-       renders all three states visibly.
-     - `test/features/matches/matches_three_state_test.dart` — new
-       widget test file covering the three states (pair-of-tests
-       per ADR-007 §4: Free-non-mutual, Free-mutual, Premium-mutual,
-       Premium-non-mutual).
      - `tasks/plan.md` — this file (Plan-ID rewrite).
-     - `tasks/plans/PLAN_03_APP_CODE.md` — mark 3.7c-1 as MERGED
-       once PR lands, add prod-deploy dnevnik entry.
-   - **Untouched:** Firestore rules (read gates unchanged; write
-     paths unchanged), all other features, Recap and Near-Miss
-     card surfaces (those are 3.7c-10 / 3.7c-11 scoped separately).
+     - `tasks/plans/PLAN_03_APP_CODE.md` — mark 3.7c-3 as MERGED once
+       PR lands, add prod-deploy dnevnik entry.
+   - **Untouched:** all runtime code (widget, model, Cloud Functions,
+     Firestore rules). This is a regression-net PR; zero behavioural
+     change. Slice B (potential-matches count) does not appear here.
 
 3. STEPS —
-   1. `getMatches` (functions/src/modules/matches/matches.functions.ts)
-      — compute `hasMutualWave` server-side from
-      `matchData.gestures`. Emit on the returned profile.
-   2. `MatchProfile` DTO gains the field (default `false`).
-   3. `matches_screen.dart` — replace `isLocked`-based render with
-      three-state pipeline. Non-mutual = greyscaled photo + name +
-      age, no tap-open. Mutual + Free = colour + 3 hobbies, no
-      tap-open. Mutual + Premium = colour + full card, tap-open.
-   4. `dev_mock_users.dart` — Nika = mutual (State C/B by tier),
-      Luka = non-mutual (State A both tiers), Sara = mutual.
-   5. Widget test suite: assert render for each of the 4 tier ×
-      mutual permutations.
-   6. CF test: `getMatches` returns `hasMutualWave: true` when both
-      users are in `gestures`; `false` when only one is present or
-      the map is empty.
-   7. `flutter analyze` + `flutter test` + `npm test` (CF) all
-      green.
-   8. Rewrite this `tasks/plan.md`, open PR per Rule #79 + Rule #80
+   1. Create `test/features/map/event_pin_sheet_tier_gates_test.dart`.
+   2. Assert Free path: pumping `EventPinSheet(effectiveIsPremium:
+      false, …)` renders `pro_feature_locked` translation and does NOT
+      render the raw participant count nor "LIVE" heatmap pill.
+   3. Assert Premium path: pumping `EventPinSheet(effectiveIsPremium:
+      true, …)` renders the participant count formatted via
+      `pulsing_here` translation and the "LIVE" heatmap pill; does NOT
+      render `pro_feature_locked` or `heatmap_locked`.
+   4. Constrain flavor to non-dev (`FLAVOR=prod`) via widget test
+      harness so `_DevGeofenceControls` does not render and pollute
+      finder queries.
+   5. `flutter analyze` + `flutter test` all green.
+   6. Rewrite this `tasks/plan.md`, open PR per Rule #79 + Rule #80
       pre-flight.
 
 4. RISKS & TRADEOFFS —
-   - **UX shift for Free-they-waved-me-didn't (MEDIUM):** today
-     Free tier sees "Someone sent you a wave" placeholder when they
-     received a wave and haven't replied. Under §1 they see the
-     sender's real name + age + greyscaled photo. Confirmed by
-     founder 2026-07-13 — ADR §1 wins (both tiers see the same
-     greyed shape).
-   - **CF deploy required (LOW):** `getMatches` shape change is
-     additive. Clients that predate the field default to `false`
-     and simply render everything as non-mutual → safe. Backwards-
-     compatible for older APK builds during rollout.
-   - **DTO default = false (LOW):** older mock data + widget tests
-     that build `MatchProfile` directly continue to compile;
-     they land in State A by default, which is intentional.
-   - **Server truth vs client wave state:** we compute mutual on
-     the server from the `matches/{matchId}.gestures` map, which
-     is written client-side by `wave_repository.sendGesture`. If
-     a client races two waves onto the same doc, Firestore's
-     last-write-wins already resolves it; no new race introduced.
-   - **Scope confined to Matches list.** Recap card and Near-Miss
-     card still use the OLD render — three-state migration for
-     those surfaces lives in 3.7c-10 / 3.7c-11.
+   - **Copy assertions coupled to translations.dart (LOW):** the tests
+     look up EN/SL strings via `t()` at runtime, matching the widget's
+     own lookup. If a future copy PR changes the EN wording, this file
+     rebuilds against the new string automatically (no hard-coded
+     literal). Safe.
+   - **`_DevGeofenceControls` renders only when FLAVOR==dev.** Widget
+     tests do NOT pass `--dart-define=FLAVOR=dev`, so the widget's
+     `const String.fromEnvironment('FLAVOR', defaultValue: 'dev')`
+     defaults to `dev` and the dev controls DO render. Compensated by
+     scoping finder queries to non-dev widgets only (or by explicitly
+     asserting the absence of locked/active markers without touching
+     the dev block).
+   - **Slice B deferred, not skipped.** ADR-007 §3's "potential matches
+     count for Premium" still needs to land. Tracked as 3.7c-3-Slice-B
+     in PLAN_03 status; will be bundled with 3.7c-4b when the per-filter
+     subset CF design is finalised.
 
 5. VERIFICATION —
    - `flutter analyze` — 0 issues.
    - `flutter test` — all suites green (unit + widget). New file
-     `matches_three_state_test.dart` adds coverage for the four
-     tier × mutual permutations.
-   - `cd functions && npm run build && npm run lint && npm test`
-     — all green. New assertions in `matches.test.ts` cover the
-     `hasMutualWave` contract in `getMatches`.
-   - unit tests — added (CF `hasMutualWave` computation +
-     widget three-state render).
-   - integration tests — n/a; the mutual-wave predicate is a
-     read-derived boolean, not a new write path. No Firestore
-     rules touched.
-   - security scan — branch diff shows only CF getMatches shape
-     addition (additive, no auth logic), Dart DTO + widget +
-     mock + tests, and docs. No secrets, no PII change, no
-     credential surface.
+     `event_pin_sheet_tier_gates_test.dart` adds 4 tests.
+   - unit tests — added (pair-of-tests for each of the two gates).
+   - integration tests — n/a; no CF or Firestore path touched.
+   - security scan — branch diff shows only Dart test additions + two
+     docs files. No secrets, no PII, no auth/billing/security-boundary
+     change.
    - `git diff --stat origin/main...HEAD` — expected files:
-     `functions/src/modules/matches/matches.functions.ts`,
-     `functions/src/__tests__/matches.test.ts`,
-     `lib/src/features/matches/data/match_repository.dart`,
-     `lib/src/features/matches/presentation/matches_screen.dart`,
-     `lib/src/core/dev_mock_users.dart`,
-     `test/features/matches/matches_three_state_test.dart`,
+     `test/features/map/event_pin_sheet_tier_gates_test.dart`,
      `tasks/plan.md`,
      `tasks/plans/PLAN_03_APP_CODE.md`.
    - MPC PR-Metadata gate verification (Rule #79 + Rule #80
      pre-flight):
      - Title format: `[PLAN-ID:
-       20260713-matches-three-state-mutual-wave] …`.
+       20260713-event-pin-sheet-tier-gate-tests] …`.
      - Body contains: `Verification checklist`, `unit tests`,
        `integration tests`, `security scan`.
-     - Body does NOT contain any literal risk-regex trigger
-       substring (per Rule #80).
+     - Body does NOT contain any literal risk-regex trigger substring
+       (per Rule #80).
      - Plan-ID present in this `tasks/plan.md` file (line 2).

@@ -625,10 +625,41 @@ Scope confined:     Matches list only. Recap card + Near-Miss card
                     shared hobbies → separate small copy PR.
 ```
 
+### 3.7c-3 Slice A — Event pin sheet tier gate pair-of-tests — 🟨 OPEN 2026-07-13
+Plan ID: `20260713-event-pin-sheet-tier-gate-tests`
+Branch: `feat/tier-3-7c-3-event-pin-sheet-tests`
+PR: #30
+
+**Output (3.7c-3 Slice A):**
+```text
+Ships:              ADR-007 §4 pair-of-tests for the two existing
+                    tier gates on event_pin_sheet.dart (participant
+                    count row + heatmap indicator row). Zero
+                    behaviour change — regression net only.
+Verified by read:   Both gates already match ADR-007 §3 today:
+                    - Line 138-149: effectiveIsPremium ternary
+                      _PeopleCountRow vs _LockedFeatureRow with
+                      pro_feature_locked pill.
+                    - Line 152-160: effectiveIsPremium ternary
+                      _HeatmapActiveRow ("LIVE") vs _LockedFeatureRow
+                      with heatmap_locked pill.
+Tests added:        4× pair-of-tests in
+                    test/features/map/event_pin_sheet_tier_gates_test.dart:
+                    Free-count-locked, Premium-count-visible,
+                    Free-heatmap-locked, Premium-heatmap-visible.
+Slice B deferred:   Potential-matches count for Premium (subset of
+                    participants fitting caller's filter prefs, per
+                    ADR-007 §3) → will bundle with 3.7c-4b (owns
+                    per-filter subset CF endpoint). Design pending.
+Test evidence:      Flutter 263 tests GREEN (prev 259, +4 new).
+                    flutter analyze 0 issues.
+Deploy target:      No deploy needed (test-only PR).
+```
+
 **Preostali fix wave (per audit report):**
-- P1 code slices remaining: 3.7c-3 (event pin sheet participant
-  counts), 3.7c-4a (heatmap count chip), 3.7c-4b (CF endpoint za
-  filter subset).
+- P1 code slices remaining: 3.7c-4a (heatmap count chip on circles),
+  3.7c-4b (CF endpoint za per-filter subset count + bundle Slice B
+  potential-matches count za event pin sheet).
 - P3 pair-of-tests batch: 3.7c-6..11.
 - P4 deferred: 3.7c-rssi-threshold-tier (blocked na ADR-001).
 
@@ -757,12 +788,12 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 | 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13 (commit a31e2b8)         |
 | 3.5   | Event Mode: koordinate v Firestore                              | ✅ MERGED       | #21 → main 2026-07-13 (commit be2f9c7, prod seeded 3/3) |
 | 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ✅ MERGED       | #23 → main 2026-07-13 (commit ee48c69)         |
-| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟡 IN PROGRESS — 3.7a ✅, 3.7b ✅, 3.7c-5R+2C ✅, 3.7c-1 🟨 OPEN | 3.7a: #25 · 3.7b: #26+#27 · 3.7c-5R+2C: #28 · 3.7c-1: **#29 (open)** |
+| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟡 IN PROGRESS — 3.7a ✅, 3.7b ✅, 3.7c-5R+2C ✅, 3.7c-1 ✅, 3.7c-3-A 🟨 OPEN | 3.7a: #25 · 3.7b: #26+#27 · 3.7c-5R+2C: #28 · 3.7c-1: #29 · 3.7c-3-A: **#30 (open)** |
 | 3.8   | Preostali drobci (batch)                                        | ⬜ TODO         | —                                             |
 
-**Naslednji korak (v teku):** KORAK 3.7a + 3.7b + 3.7c-5R + 3.7c-2C ✅ MERGED 2026-07-13. **3.7c-1 (matches three-state)** open kot PR #29 (branch `feat/tier-3-7c-1-matches-three-state`, Plan ID `20260713-matches-three-state-mutual-wave`) — čaka founder review + merge.
+**Naslednji korak (v teku):** KORAK 3.7a + 3.7b + 3.7c-5R + 3.7c-2C + 3.7c-1 ✅ MERGED 2026-07-13. **3.7c-3 Slice A (event pin sheet pair-of-tests)** open kot PR #30 (branch `feat/tier-3-7c-3-event-pin-sheet-tests`, Plan ID `20260713-event-pin-sheet-tier-gate-tests`) — čaka founder review + merge. Read-only regression net: verified da participant-count + heatmap gates že matchata ADR-007 §3; ADR-007 §4 pair-of-tests dodani.
 
-Po merge-u #29 sledijo preostali P1 code slices (3.7c-3 event pin sheet participant counts, 3.7c-4a heatmap count chip, 3.7c-4b CF endpoint za filter subset), potem P3 pair-of-tests (3.7c-6..11), nato 3.7z (integration matrix). P4 (3.7c-rssi-threshold-tier) ostane dormant za ADR-001. Vzporedno lahko poteka KORAK 3.8 podnaloga 1 (flaky GymStep test).
+Po merge-u #30 sledi 3.7c-4a (heatmap count chip on circles — Premium only). 3.7c-3 Slice B (potential-matches count) je bundled z 3.7c-4b — oba delita per-filter subset CF design (pending). Potem P3 pair-of-tests batch (3.7c-6..11), nato 3.7z (integration matrix). P4 (3.7c-rssi-threshold-tier) ostane dormant za ADR-001. Vzporedno lahko poteka KORAK 3.8 podnaloga 1 (flaky GymStep test).
 
 **Prod deploy dnevnik:**
 - 2026-07-12 · KORAK 3.1 · Cloud Functions deploy na produkcijo predviden ročno prek `firebase deploy --only functions:scanProximityPairs` (founder odločitev: dev preskočen).
@@ -774,4 +805,5 @@ Po merge-u #29 sledijo preostali P1 code slices (3.7c-3 event pin sheet particip
 - 2026-07-13 · KORAK 3.7a · PR #25 merged v main (0cd8b4c). Paywall copy prepisan po ADR-007 tabeli — 7 retired feature ključev odstranjenih, 15 novih dodanih (EN + SL). Flutter-only: vključeno v naslednji APK/TestFlight bundle. Brez CF deploya (copy-only, no gate logic change). Naslednji sub-KORAK je 3.7b (feature-parity audit — research only). Tudi ADR-007 (`tasks/decisions/ADR-007-tier-matrix.md`) landeal na main prek PR #24 (0da6da9) — služi kot single source of truth za vse bodoče per-gate PR-je.
 - 2026-07-13 · KORAK 3.7b · PR #26 (docs plan-03 update) + PR #27 (research/tier-matrix-audit-3-7b) merged v main (f2842bb). Docs-only, no deploy. Deliverable: `tasks/AUDIT_TIER_MATRIX_20260713.md` (429 vrstic) + ADR-007 Amendments §1-§6 (matches three-state render, hard filtri pause + coming-soon localizacija, heatmap/event tier split v 3.7c-3/4a/4b, distance vrstica UMAKNJENA, greyscaled fallback za no-mutual-wave). Fix wave vrstni red potrjen: P1 code slices (3.7c-1/3/4a/4b) → P2 quick wins (bundle 3.7c-5R + 3.7c-2C) → P3 pair-of-tests (3.7c-6..11) → P4 deferred (RSSI) → 3.7z integration matrix.
 - 2026-07-13 · KORAK 3.7c-5R + 3.7c-2C (bundled) · PR #28 merged v main (d256d4a). Flutter-only copy-only sprememba. ADR-007 Amendment §5: retire distance paywall bullete (grep dokazal: `settings_screen.dart` uporablja `PreferenceRangeSlider` samo za age line 1011 + height line 1034; nikjer ni `maxDistance`/`distanceKm`). ADR-007 Amendment §6: hard-filters "coming soon" localised v vseh 8 locales z natančnim ADR §6 phrasingom. Bonus cleanup: orphan `distance_help` translation key (0 callers v `lib/`) odstranjen iz vseh 8 locale blokov v `translations.dart`. Deploy: naslednji APK/TestFlight bundle, brez CF deploya. Test: 249 tests green (+2 nova za hard-filters locale coverage), analyze 0 issues. Extracted lesson: Rule #81 (sweep the fossil trail when retiring never-wired features).
-- 2026-07-13 · KORAK 3.7c-1 · PR #29 opened, čaka founder review + merge. Executes ADR-007 Amendment §1 — compound gate `isPremium && hasMutualWave` na Matches list + three-state render pipeline (non-mutual = greyscaled + name + age, mutual+Free = colour + name + age tap-upsell, mutual+Premium = colour + name + age tap opens full card). CF change: `getMatches` emits `hasMutualWave: bool` from `matchData.gestures`. Client DTO: `MatchProfile.hasMutualWave` (default false, backward-compat). Widget: extracted pure `resolveMatchDisplayState()` enum helper. Deploy: `firebase deploy --only functions:getMatches --project am---dating-app` + naslednji APK/TestFlight bundle (additive CF change je backward-compatible za starejše kliente). Test: Flutter 259 green (+10 novih), functions 117 green (+3 novih pair-of-tests za mutual/non-mutual/missing-gestures). Scope confined: Matches list only; Recap + Near-Miss three-state migracije so v ločenih follow-up-ih (3.7c-10, 3.7c-11).
+- 2026-07-13 · KORAK 3.7c-1 · PR #29 merged v main (ba8a3dd). Executes ADR-007 Amendment §1 — compound gate `isPremium && hasMutualWave` na Matches list + three-state render pipeline (non-mutual = greyscaled + name + age, mutual+Free = colour + name + age tap-upsell, mutual+Premium = colour + name + age tap opens full card). CF change: `getMatches` emits `hasMutualWave: bool` from `matchData.gestures`. Client DTO: `MatchProfile.hasMutualWave` (default false, backward-compat). Widget: extracted pure `resolveMatchDisplayState()` enum helper. Deploy: `firebase deploy --only functions:getMatches --project am---dating-app` + naslednji APK/TestFlight bundle (additive CF change je backward-compatible za starejše kliente). Test: Flutter 259 green (+10 novih), functions 117 green (+3 novih pair-of-tests za mutual/non-mutual/missing-gestures). Scope confined: Matches list only; Recap + Near-Miss three-state migracije so v ločenih follow-up-ih (3.7c-10, 3.7c-11).
+- 2026-07-13 · KORAK 3.7c-3 Slice A · PR #30 opened, čaka founder review + merge. Read-only regression net za event pin sheet: 4 pair-of-tests (Free-count-locked, Premium-count-visible, Free-heatmap-locked, Premium-heatmap-visible) v `test/features/map/event_pin_sheet_tier_gates_test.dart`. Verified: participant-count + heatmap indicator gates že matchata ADR-007 §3 (obstoječi `effectiveIsPremium` ternary). Slice B (potential-matches count za Premium — subset participants matching caller filter prefs) deferred, bo bundled z 3.7c-4b (owns per-filter subset CF endpoint, design pending). Zero behaviour change; no deploy needed. Test: Flutter 263 green (+4 novih), analyze 0 issues.
