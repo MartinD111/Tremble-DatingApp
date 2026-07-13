@@ -232,9 +232,10 @@ Evidence: grep output showing no remaining display-name comparisons.
 **Output:**
 ```text
 PR / merge datum:  PR #20 (github.com/MartinD111/Tremble-DatingApp/pull/20)
-                    → main 2026-07-13 (bo ročno merged; direct-to-prod
-                    ker klientov contract nespremenjen in on-read
-                    migracija ne zahteva Firestore backfill-a).
+                    merged v main 2026-07-13 07:08 UTC
+                    (merge commit a31e2b8, feature commit a3890e7).
+                    Direct-to-prod pot — klientov contract nespremenjen
+                    in on-read migracija ne zahteva Firestore backfill-a.
 Deploy target:      PROD.
                     - Cloud Functions deploy (compatibility_calculator.ts
                       spremenjen) prek naslednjega `firebase deploy
@@ -410,7 +411,7 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 | 3.1   | CROSSING_PATHS vidna notifikacija (P1)                          | ✅ MERGED       | #17 → main 2026-07-12 (commit 7df1159)         |
 | 3.2   | prefer_not_to_say translation key + gumb                        | ✅ MERGED       | #18 → main 2026-07-12                          |
 | 3.3   | Gym Mode: odstrani proximity gate na ročni aktivaciji           | ✅ MERGED       | #19 → main 2026-07-12 (commit f48ff52)         |
-| 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13                          |
+| 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13 (commit a31e2b8)         |
 | 3.5   | Event Mode: koordinate v Firestore                              | ⬜ TODO         | —                                             |
 | 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ⬜ TODO         | —                                             |
 | 3.7   | Paywall uskladitev (potreben founder odločitev pred CLI)        | ⬜ BLOCKED (founder odločitev za Pulse Intercept) | —      |
