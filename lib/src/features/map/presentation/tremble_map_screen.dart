@@ -13,6 +13,7 @@ import '../../../core/event_geofence_service.dart';
 import '../../../core/theme.dart';
 import '../../../core/translations.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../gym/data/gym_repository.dart';
 import 'event_pin_sheet.dart';
 import '../../../core/map_provider.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
@@ -50,16 +51,16 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
     _MapZoom.national: 7.5,
   };
 
-  static const List<TrembleEventData> _events = [];
-
-  static const Map<String, LatLng> _eventLocations = {
-    'club_monokel': LatLng(46.0514, 14.5058),
-    'labaratorij': LatLng(46.0540, 14.5120),
-    'metelkova': LatLng(46.0560, 14.5097),
-  };
-
   // Dev mock proximity circles (replace with Firestore stream in prod).
   late final List<LatLng> _proximityPoints;
+
+  /// Cached Firestore snapshot of active events. Populated from
+  /// [activeEventsStreamProvider] via [_syncEventsFromFirestore].
+  List<TrembleEvent> _remoteEvents = const [];
+
+  /// Set of event IDs already registered with [EventGeofenceService] so the
+  /// stream's periodic re-emit does not restart the position listener.
+  final Set<String> _geofenceEventIds = <String>{};
 
   @override
   void initState() {
@@ -187,47 +188,96 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   }
 
   List<Marker> _buildEventMarkers(bool effectivePremium, String lang) {
-    // Hardcoded Ljubljana venue coordinates in [_eventLocations] must never
-    // reach a prod render path. Until venue coords are sourced from Firestore
-    // they are dev-only fixtures.
-    if (!_isDev) return const [];
-    return _events.map((event) {
-      final location = _eventLocations[event.id]!;
-      final accent = event.isActive ? TrembleTheme.azure : TrembleTheme.rose;
-      final fill = Colors.white.withValues(alpha: 0.96);
+    if (_remoteEvents.isEmpty) return const [];
+    return _remoteEvents
+        .map((event) {
+          final lat = event.lat;
+          final lng = event.lng;
+          if (lat == null || lng == null) return null;
+          final data = _toEventData(event);
+          final accent = data.isActive ? TrembleTheme.azure : TrembleTheme.rose;
+          final fill = Colors.white.withValues(alpha: 0.96);
 
-      return Marker(
-        point: location,
-        width: 40,
-        height: 40,
-        child: GestureDetector(
-          onTap: () => _showEventPinSheet(event, effectivePremium, lang),
-          child: Container(
-            decoration: BoxDecoration(
-              color: fill,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: accent.withValues(alpha: 0.25),
-                width: 1.0,
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x14000000),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
+          return Marker(
+            point: LatLng(lat, lng),
+            width: 40,
+            height: 40,
+            child: GestureDetector(
+              onTap: () => _showEventPinSheet(data, effectivePremium, lang),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: fill,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.25),
+                    width: 1.0,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x14000000),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
+                child: Icon(
+                  Icons.location_pin,
+                  color: data.isActive
+                      ? TrembleTheme.azure
+                      : TrembleTheme.textColor,
+                  size: 20,
+                ),
+              ),
             ),
-            child: Icon(
-              Icons.location_pin,
-              color:
-                  event.isActive ? TrembleTheme.azure : TrembleTheme.textColor,
-              size: 20,
-            ),
-          ),
-        ),
-      );
-    }).toList();
+          );
+        })
+        .whereType<Marker>()
+        .toList(growable: false);
+  }
+
+  /// Adapts a Firestore [TrembleEvent] into the UI-facing [TrembleEventData]
+  /// consumed by [EventPinSheet]. Consumer surfaces (people count, heatmap)
+  /// remain gated behind premium in the sheet itself.
+  TrembleEventData _toEventData(TrembleEvent event) {
+    final now = DateTime.now();
+    final startsAt = event.startsAt;
+    final endsAt = event.endsAt;
+    final isActive = (startsAt == null || !startsAt.isAfter(now)) &&
+        (endsAt == null || endsAt.isAfter(now));
+    return TrembleEventData(
+      id: event.id,
+      name: event.name,
+      isActive: isActive,
+      startsAt: startsAt?.toIso8601String(),
+      peopleCount: 0,
+      locationLabel: event.locationLabel,
+    );
+  }
+
+  /// Re-applies the current Firestore event list to local state and the
+  /// geofence service. Called from [build] via [ref.listen] to avoid rebuild
+  /// churn when the snapshot is unchanged.
+  void _syncEventsFromFirestore(List<TrembleEvent> events) {
+    setState(() => _remoteEvents = events);
+    final targets = events
+        .where((e) => e.lat != null && e.lng != null)
+        .map((e) => GeofenceTarget(
+              id: e.id,
+              name: e.name,
+              lat: e.lat!,
+              lng: e.lng!,
+              radiusMeters: e.radiusMeters.toDouble(),
+            ))
+        .toList(growable: false);
+    final incomingIds = targets.map((t) => t.id).toSet();
+    if (incomingIds.length == _geofenceEventIds.length &&
+        incomingIds.containsAll(_geofenceEventIds)) {
+      return; // no change — do not restart the position listener
+    }
+    _geofenceEventIds
+      ..clear()
+      ..addAll(incomingIds);
+    unawaited(ref.read(eventGeofenceServiceProvider).setActiveEvents(targets));
   }
 
   @override
@@ -235,6 +285,16 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
     final user = ref.watch(authStateProvider);
     final lang = user?.appLanguage ?? 'sl';
     final effectivePremium = ref.watch(effectiveIsPremiumProvider);
+
+    // Firestore-backed event pins. Rendered in all flavors; falls back to no
+    // pins on error/loading so the map stays interactive during Firestore
+    // connectivity blips.
+    ref.listen<AsyncValue<List<TrembleEvent>>>(
+      activeEventsStreamProvider,
+      (_, next) {
+        next.whenData(_syncEventsFromFirestore);
+      },
+    );
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final gradientColors = TrembleTheme.getGradient(

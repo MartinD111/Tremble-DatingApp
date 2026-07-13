@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, GeoPoint, Timestamp } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { assertValidDocumentId } from "../../middleware/validate";
@@ -57,9 +57,22 @@ export const onEventModeActivate = onCall(
             throw new HttpsError('failed-precondition', 'Event has already ended');
         }
 
-        // Verify user is within radius
-        const eventLat = eventData.location?.lat;
-        const eventLng = eventData.location?.lng;
+        // Verify user is within radius.
+        //
+        // KORAK 3.5 migration: `location` is now a Firestore GeoPoint on newly
+        // seeded documents. Legacy `{lat, lng}` map shape is still accepted so
+        // any dev-seeded doc from before the migration keeps validating —
+        // seed_events.ts always writes a GeoPoint going forward.
+        const rawLocation = eventData.location;
+        let eventLat: number | undefined;
+        let eventLng: number | undefined;
+        if (rawLocation instanceof GeoPoint) {
+            eventLat = rawLocation.latitude;
+            eventLng = rawLocation.longitude;
+        } else if (rawLocation && typeof rawLocation === "object") {
+            eventLat = rawLocation.lat;
+            eventLng = rawLocation.lng;
+        }
         const radiusMeters = eventData.radiusMeters ?? 500;
 
         if (eventLat !== undefined && eventLng !== undefined) {

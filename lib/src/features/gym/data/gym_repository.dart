@@ -25,16 +25,31 @@ class TrembleEvent {
 
   factory TrembleEvent.fromFirestore(
       DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data() ?? {};
-    final loc = data['location'] as Map<String, dynamic>? ?? {};
+    return TrembleEvent.fromMap(doc.id, doc.data() ?? const {});
+  }
+
+  /// Pure-Dart parser exposed for unit tests. Handles both the canonical
+  /// GeoPoint shape written by `functions/src/scripts/seed_events.ts` and the
+  /// legacy `{lat, lng}` map shape used by pre-KORAK-3.5 dev seeds.
+  factory TrembleEvent.fromMap(String id, Map<String, dynamic> data) {
+    final rawLocation = data['location'];
+    double? lat;
+    double? lng;
+    if (rawLocation is GeoPoint) {
+      lat = rawLocation.latitude;
+      lng = rawLocation.longitude;
+    } else if (rawLocation is Map) {
+      lat = (rawLocation['lat'] as num?)?.toDouble();
+      lng = (rawLocation['lng'] as num?)?.toDouble();
+    }
     return TrembleEvent(
-      id: doc.id,
+      id: id,
       name: data['name'] as String? ?? 'Event',
       startsAt: (data['startsAt'] as Timestamp?)?.toDate(),
       endsAt: (data['endsAt'] as Timestamp?)?.toDate(),
-      lat: (loc['lat'] as num?)?.toDouble(),
-      lng: (loc['lng'] as num?)?.toDouble(),
-      radiusMeters: data['radiusMeters'] as int? ?? 500,
+      lat: lat,
+      lng: lng,
+      radiusMeters: (data['radiusMeters'] as num?)?.toInt() ?? 500,
       locationLabel: data['locationLabel'] as String?,
     );
   }
@@ -150,3 +165,26 @@ class GymRepository {
 }
 
 final gymRepositoryProvider = Provider<GymRepository>((ref) => GymRepository());
+
+/// Live stream of currently-active Tremble events sourced from Firestore.
+///
+/// Reads `events` where `active == true` and `endsAt > now`. Rules restrict
+/// writes to Admin SDK (see `firestore.rules`), so the client only ever
+/// observes seeded/curated documents — never user-authored data.
+///
+/// Emits an empty list when the collection is empty (production before any
+/// seed run) so the map renders without event pins instead of showing an
+/// error.
+final activeEventsStreamProvider =
+    StreamProvider.autoDispose<List<TrembleEvent>>((ref) {
+  final firestore = FirebaseFirestore.instance;
+  return firestore
+      .collection('events')
+      .where('active', isEqualTo: true)
+      .where('endsAt', isGreaterThan: Timestamp.now())
+      .snapshots()
+      .map((snap) => snap.docs
+          .map((doc) => TrembleEvent.fromFirestore(doc))
+          .where((e) => e.lat != null && e.lng != null)
+          .toList(growable: false));
+});
