@@ -15,6 +15,7 @@ import '../../../shared/ui/tremble_header.dart';
 import '../../matches/data/match_repository.dart';
 import '../../safety/presentation/widgets/ugc_action_sheet.dart';
 import '../../../core/translations.dart';
+import '../../../core/hobby_data.dart';
 import '../../../core/utils/icon_utils.dart';
 import '../../../shared/ui/tremble_circle_button.dart';
 import '../../../core/theme.dart';
@@ -742,7 +743,8 @@ class _ProfileDetailScreenState extends ConsumerState<ProfileDetailScreen>
                 alignment: WrapAlignment.center,
                 children: entry.value
                     .map((h) => _PreferencePill(
-                          label: '${h['emoji']} ${h['name']}',
+                          label:
+                              '${h['emoji']} ${HobbyData.hobbyDisplay(h, lang)}',
                           isGenderBased: isGenderBasedColor,
                           gender: gender,
                         ))

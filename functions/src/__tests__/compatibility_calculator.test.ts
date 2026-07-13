@@ -213,4 +213,66 @@ describe("compatibility_calculator", () => {
         const fullyScored = calculateCompatibilityScore(a, bBoth);
         expect(gated).toBeGreaterThan(fullyScored);
     });
+
+    // ── Cross-locale hobby matching (Plan 20260713-hobby-neutral-ids) ─────
+    //   "Hiking" and "Pohodništvo" are the same hobby stored in different
+    //   locales. Before the migration they scored as no shared hobby;
+    //   after the migration they score identically to two matching ID
+    //   strings, because the calculator normalises to canonical IDs.
+
+    it("counts EN + SL variants of the same hobby as a shared match", () => {
+        const en = {
+            uid: "en",
+            hobbies: ["Hiking", "Cycling", "Yoga"],
+        };
+        const sl = {
+            uid: "sl",
+            hobbies: ["Pohodništvo", "Kolesarjenje", "Joga"],
+        };
+        const canonical = {
+            uid: "id",
+            hobbies: ["hiking", "cycling", "yoga"],
+        };
+
+        const crossLocaleScore = calculateCompatibilityScore(en, sl);
+        const canonicalScore = calculateCompatibilityScore(en, canonical);
+
+        expect(crossLocaleScore).toBeGreaterThan(0.5);
+        expect(crossLocaleScore).toBeCloseTo(canonicalScore, 5);
+    });
+
+    it("mixed-locale profile (EN + SL strings) still normalises to IDs", () => {
+        const mixed = {
+            uid: "mix",
+            hobbies: ["Hiking", "Kolesarjenje"], // EN + SL in the same array
+        };
+        const other = {
+            uid: "other",
+            hobbies: ["hiking", "cycling"], // canonical IDs
+        };
+
+        const score = calculateCompatibilityScore(mixed, other);
+        // Two exact matches → hobby subscore = min(2,3)*15 / 85 = 0.3529...
+        // Weighted at 0.50, plus 0.5 personality (no data) + 0.5 lifestyle (base)
+        // = 0.176 + 0.125 + 0.125 = 0.426 → rounded to 0.43.
+        expect(score).toBeGreaterThan(0.35);
+    });
+
+    it("legacy translation keys (hobby_running) also normalise", () => {
+        const legacyKey = { uid: "a", hobbies: ["hobby_running"] };
+        const canonical = { uid: "b", hobbies: ["running"] };
+        const score = calculateCompatibilityScore(legacyKey, canonical);
+        // One exact match after normalisation.
+        expect(score).toBeGreaterThan(0.25);
+    });
+
+    it("unknown/custom hobby strings do not cross-match with other unknowns", () => {
+        const a = { uid: "a", hobbies: ["Underwater basket weaving"] };
+        const b = { uid: "b", hobbies: ["Homebrew mead-making"] };
+        const same = { uid: "c", hobbies: ["Underwater basket weaving"] };
+
+        const noMatchScore = calculateCompatibilityScore(a, b);
+        const matchScore = calculateCompatibilityScore(a, same);
+        expect(matchScore).toBeGreaterThan(noMatchScore);
+    });
 });

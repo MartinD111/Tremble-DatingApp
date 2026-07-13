@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/translations.dart';
+import '../../../core/hobby_data.dart';
 import '../../../core/theme.dart';
 import '../../../core/utils/icon_utils.dart';
 import '../../auth/data/auth_repository.dart';
@@ -724,7 +725,8 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                 alignment: WrapAlignment.center,
                 children: entry.value
                     .map((h) => _PreferencePill(
-                          label: '${h['emoji']} ${h['name']}',
+                          label:
+                              '${h['emoji']} ${HobbyData.hobbyDisplay(h, lang)}',
                           isGenderBased: isGenderBasedColor,
                           gender: gender,
                         ))

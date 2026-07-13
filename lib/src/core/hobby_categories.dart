@@ -1,11 +1,16 @@
 // lib/src/core/hobby_categories.dart
 //
 // Tremble Hobby Categories — Compatibility Layer
-// Mapiraj obstoječe hobbije iz hobby_data.dart na 4 kategorije za compatibility scoring.
-// NE zamenjuje hobby_data.dart — samo dodaja kategorijsko logiko.
+//
+// Category classifier used by compatibility scoring and the
+// CommonTraitsWidget. Keyed by the canonical hobby ID from
+// hobby_data.dart. Legacy display-name inputs are normalised via
+// `HobbyData.idForLegacyName`, so callers holding old strings keep
+// working without a migration.
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/material.dart';
+import 'hobby_data.dart';
 
 enum HobbyCategory {
   active, // hobby_cat_active
@@ -15,139 +20,153 @@ enum HobbyCategory {
 }
 
 class HobbyCategories {
-  // Mapping: hobby name → category
-  // Vsebuje vse hobbije iz hobby_data.dart
-  static const Map<String, HobbyCategory> _nameToCategory = {
+  static const Map<String, HobbyCategory> _idToCategory = {
     // Active
-    'Pohodništvo': HobbyCategory.active,
-    'Hiking': HobbyCategory.active,
-    'Kolesarjenje': HobbyCategory.active,
-    'Plavanje': HobbyCategory.active,
-    'Tek': HobbyCategory.active,
-    'Plezanje': HobbyCategory.active,
-    'Joga': HobbyCategory.active,
-    'Pilates': HobbyCategory.active,
-    'Fitnes': HobbyCategory.active,
-    'Kalistenika': HobbyCategory.active,
-    'Tenis': HobbyCategory.active,
-    'Skvoš': HobbyCategory.active,
-    'Ples': HobbyCategory.active,
-    'BJJ': HobbyCategory.active,
-    'Karate': HobbyCategory.active,
-    'Taekwondo': HobbyCategory.active,
-    'Judo': HobbyCategory.active,
-    'Mixed martial arts': HobbyCategory.active,
-    'Boks': HobbyCategory.active,
-    'Smučanje': HobbyCategory.active,
-    'Bordanje': HobbyCategory.active,
-    'Rolanje': HobbyCategory.active,
-    'Drsanje': HobbyCategory.active,
-    'Kajak': HobbyCategory.active,
-    'SUP': HobbyCategory.active,
-    'Jadranje': HobbyCategory.active,
-    'Nogomet': HobbyCategory.active,
-    'Košarka': HobbyCategory.active,
-    'Odbojka': HobbyCategory.active,
-    'Skateboarding': HobbyCategory.active,
-    'Ping pong': HobbyCategory.active,
-    'Bowling': HobbyCategory.active,
-    'Biljard': HobbyCategory.active,
-    'Ribolov': HobbyCategory.active,
+    'hiking': HobbyCategory.active,
+    'cycling': HobbyCategory.active,
+    'swimming': HobbyCategory.active,
+    'running': HobbyCategory.active,
+    'climbing': HobbyCategory.active,
+    'yoga': HobbyCategory.active,
+    'pilates': HobbyCategory.active,
+    'fitness': HobbyCategory.active,
+    'calisthenics': HobbyCategory.active,
+    'tennis': HobbyCategory.active,
+    'squash': HobbyCategory.active,
+    'dance': HobbyCategory.active,
+    'bjj': HobbyCategory.active,
+    'karate': HobbyCategory.active,
+    'taekwondo': HobbyCategory.active,
+    'judo': HobbyCategory.active,
+    'mma': HobbyCategory.active,
+    'boxing': HobbyCategory.active,
+    'skiing': HobbyCategory.active,
+    'snowboarding': HobbyCategory.active,
+    'rollerblading': HobbyCategory.active,
+    'iceskating': HobbyCategory.active,
+    'kayaking': HobbyCategory.active,
+    'sup': HobbyCategory.active,
+    'sailing': HobbyCategory.active,
+    'football': HobbyCategory.active,
+    'basketball': HobbyCategory.active,
+    'volleyball': HobbyCategory.active,
+    'skateboarding': HobbyCategory.active,
+    'ping_pong': HobbyCategory.active,
+    'bowling': HobbyCategory.active,
+    'billiards': HobbyCategory.active,
+    'fishing': HobbyCategory.active,
     // Leisure
-    'Knjige': HobbyCategory.leisure,
-    'Stripi': HobbyCategory.leisure,
-    'Videoigre': HobbyCategory.leisure,
-    'Podcasts': HobbyCategory.leisure,
-    'Audiobooks': HobbyCategory.leisure,
-    'Vrtnarjenje': HobbyCategory.leisure,
-    'House plants': HobbyCategory.leisure,
-    'Kuhanje': HobbyCategory.leisure,
-    'Baking': HobbyCategory.leisure,
-    'Board games': HobbyCategory.leisure,
-    'Šah': HobbyCategory.leisure,
-    'Domino': HobbyCategory.leisure,
-    'Puzzles': HobbyCategory.leisure,
-    'Lego': HobbyCategory.leisure,
-    'Meditacija': HobbyCategory.leisure,
-    'Collecting': HobbyCategory.leisure,
-    'Journaling': HobbyCategory.leisure,
-    'Astronomija': HobbyCategory.leisure,
-    'Reševanje križank': HobbyCategory.leisure,
-    'Sudoku': HobbyCategory.leisure,
-    "Rubik's": HobbyCategory.leisure,
-    'Učenje novega jezika': HobbyCategory.leisure,
-    'Grozljivke': HobbyCategory.leisure,
-    'Komedije': HobbyCategory.leisure,
-    'Trilerji': HobbyCategory.leisure,
-    'Drame': HobbyCategory.leisure,
-    'Romantični filmi': HobbyCategory.leisure,
-    'Dokumentarci': HobbyCategory.leisure,
-    'Historical films': HobbyCategory.leisure,
-    'Serije': HobbyCategory.leisure,
-    'Specialty coffee': HobbyCategory.leisure,
-    'Specialty tea': HobbyCategory.leisure,
+    'books': HobbyCategory.leisure,
+    'comics': HobbyCategory.leisure,
+    'video_games': HobbyCategory.leisure,
+    'podcasts': HobbyCategory.leisure,
+    'audiobooks': HobbyCategory.leisure,
+    'gardening': HobbyCategory.leisure,
+    'house_plants': HobbyCategory.leisure,
+    'cooking': HobbyCategory.leisure,
+    'baking': HobbyCategory.leisure,
+    'board_games': HobbyCategory.leisure,
+    'chess': HobbyCategory.leisure,
+    'domino': HobbyCategory.leisure,
+    'puzzles': HobbyCategory.leisure,
+    'lego': HobbyCategory.leisure,
+    'meditation': HobbyCategory.leisure,
+    'collecting': HobbyCategory.leisure,
+    'journaling': HobbyCategory.leisure,
+    'astronomy': HobbyCategory.leisure,
+    'crosswords': HobbyCategory.leisure,
+    'sudoku': HobbyCategory.leisure,
+    'rubiks_cube': HobbyCategory.leisure,
+    'language_learning': HobbyCategory.leisure,
+    'horror': HobbyCategory.leisure,
+    'comedy': HobbyCategory.leisure,
+    'thrillers': HobbyCategory.leisure,
+    'drama': HobbyCategory.leisure,
+    'romance': HobbyCategory.leisure,
+    'documentaries': HobbyCategory.leisure,
+    'historical_films': HobbyCategory.leisure,
+    'series': HobbyCategory.leisure,
+    'specialty_coffee': HobbyCategory.leisure,
+    'specialty_tea': HobbyCategory.leisure,
     // Art
-    'Slikanje': HobbyCategory.art,
-    'Risanje': HobbyCategory.art,
-    'Fotografija': HobbyCategory.art,
-    'Oblikovanje gline': HobbyCategory.art,
-    'Kitara': HobbyCategory.art,
-    'Klavir': HobbyCategory.art,
-    'Bobni': HobbyCategory.art,
-    'Violina': HobbyCategory.art,
-    'Harmonika': HobbyCategory.art,
-    'Saksofon': HobbyCategory.art,
-    'Klarinet': HobbyCategory.art,
-    'Flavta': HobbyCategory.art,
-    'Pletenje': HobbyCategory.art,
-    'Kvačkanje': HobbyCategory.art,
-    'Šivanje': HobbyCategory.art,
-    'Grafični dizajn': HobbyCategory.art,
-    '3D modeliranje': HobbyCategory.art,
-    'Poezija': HobbyCategory.art,
-    'Blog': HobbyCategory.art,
-    'Izdelovanje nakita': HobbyCategory.art,
-    'Obdelava lesa': HobbyCategory.art,
-    'Kaligrafija': HobbyCategory.art,
-    'Origami': HobbyCategory.art,
+    'painting': HobbyCategory.art,
+    'drawing': HobbyCategory.art,
+    'photography': HobbyCategory.art,
+    'pottery': HobbyCategory.art,
+    'guitar': HobbyCategory.art,
+    'piano': HobbyCategory.art,
+    'drums': HobbyCategory.art,
+    'violin': HobbyCategory.art,
+    'accordion': HobbyCategory.art,
+    'saxophone': HobbyCategory.art,
+    'clarinet': HobbyCategory.art,
+    'flute': HobbyCategory.art,
+    'knitting': HobbyCategory.art,
+    'crochet': HobbyCategory.art,
+    'sewing': HobbyCategory.art,
+    'graphic_design': HobbyCategory.art,
+    'modeling_3d': HobbyCategory.art,
+    'poetry': HobbyCategory.art,
+    'blogging': HobbyCategory.art,
+    'jewellery_making': HobbyCategory.art,
+    'woodworking': HobbyCategory.art,
+    'calligraphy': HobbyCategory.art,
+    'origami': HobbyCategory.art,
     // Travel
-    'Backpacking': HobbyCategory.travel,
-    'Road trips': HobbyCategory.travel,
-    'Kampiranje': HobbyCategory.travel,
-    'Kulinarični turizem': HobbyCategory.travel,
-    'Solo potovanja': HobbyCategory.travel,
-    'Živalski vrtovi': HobbyCategory.travel,
-    'Nacionalni parki': HobbyCategory.travel,
-    'Geocaching': HobbyCategory.travel,
-    'Muzeji': HobbyCategory.travel,
-    'Ruševine': HobbyCategory.travel,
-    'Galerije': HobbyCategory.travel,
-    'Slow travel': HobbyCategory.travel,
+    'backpacking': HobbyCategory.travel,
+    'road_trips': HobbyCategory.travel,
+    'camping': HobbyCategory.travel,
+    'food_tourism': HobbyCategory.travel,
+    'solo_travel': HobbyCategory.travel,
+    'zoos': HobbyCategory.travel,
+    'national_parks': HobbyCategory.travel,
+    'geocaching': HobbyCategory.travel,
+    'museums': HobbyCategory.travel,
+    'ruins': HobbyCategory.travel,
+    'galleries': HobbyCategory.travel,
+    'slow_travel': HobbyCategory.travel,
   };
 
-  /// Vrne kategorijo za hobby po imenu. Null za custom hobbije.
-  static HobbyCategory? getCategory(String hobbyName) =>
-      _nameToCategory[hobbyName];
+  /// Category for a hobby. Accepts either the canonical ID or a
+  /// legacy display name — normalises through `HobbyData.idForLegacyName`.
+  static HobbyCategory? getCategory(String hobbyIdOrName) {
+    final direct = _idToCategory[hobbyIdOrName];
+    if (direct != null) return direct;
+    final id = HobbyData.idForLegacyName(hobbyIdOrName);
+    if (id == null) return null;
+    return _idToCategory[id];
+  }
 
-  /// Iz seznama hobby map objektov izračuna število hobijev po kategoriji.
+  /// Count hobbies per category from parsed hobby maps.
   static Map<HobbyCategory, int> getCategoryCount(
       List<Map<String, dynamic>> hobbies) {
     final result = <HobbyCategory, int>{};
     for (final hobby in hobbies) {
-      final name = hobby['name'] as String? ?? '';
-      final cat = _nameToCategory[name];
+      final id = (hobby['id'] as String?) ?? '';
+      final key = id.isNotEmpty ? id : (hobby['name'] as String? ?? '');
+      final cat = getCategory(key);
       if (cat != null) result[cat] = (result[cat] ?? 0) + 1;
     }
     return result;
   }
 
-  /// Vrne set imen hobijev iz seznama hobby map objektov.
-  static Set<String> getNames(List<Map<String, dynamic>> hobbies) {
+  /// Set of canonical IDs for the supplied hobby maps (custom hobbies
+  /// contribute their display name so they don't cross-match).
+  static Set<String> getIds(List<Map<String, dynamic>> hobbies) {
     return hobbies
-        .map((h) => h['name'] as String? ?? '')
-        .where((n) => n.isNotEmpty)
+        .map((h) {
+          final id = h['id'] as String? ?? '';
+          if (id.isNotEmpty) return id;
+          return h['name'] as String? ?? '';
+        })
+        .where((s) => s.isNotEmpty)
         .toSet();
   }
+
+  /// Deprecated alias kept for the CommonTraitsWidget call site — same
+  /// semantics as `getIds`, name preserved so widget diffs stay minimal.
+  static Set<String> getNames(List<Map<String, dynamic>> hobbies) =>
+      getIds(hobbies);
 
   static IconData getCategoryIcon(HobbyCategory cat) {
     return switch (cat) {
@@ -168,9 +187,9 @@ class HobbyCategories {
     };
   }
 
-  /// Vrne ikono za konkreten hobby po imenu.
-  static IconData getHobbyIcon(String hobbyName) {
-    final cat = _nameToCategory[hobbyName];
+  /// Icon for a hobby — accepts ID or legacy display name.
+  static IconData getHobbyIcon(String hobbyIdOrName) {
+    final cat = getCategory(hobbyIdOrName);
     if (cat == null) return LucideIcons.star;
     return getCategoryIcon(cat);
   }
