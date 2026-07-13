@@ -39,7 +39,8 @@ void main() {
         () {
       expect(premiumPlanCards[0].features, premiumOnlyFeatureBullets);
       // Precise assertion of the ordered set — any drift from ADR-007
-      // fails here and forces a matching ADR update.
+      // fails here and forces a matching ADR update. Distance row
+      // removed per ADR-007 Amendment §5 (no widget ever wired).
       expect(premiumOnlyFeatureBullets, const [
         'premium_feature_radar_extended',
         'premium_feature_mutual_waves_20',
@@ -48,7 +49,6 @@ void main() {
         'premium_feature_near_miss_history',
         'premium_feature_hard_filters',
         'premium_feature_event_insights',
-        'premium_feature_distance_100',
       ]);
     });
 
@@ -61,6 +61,7 @@ void main() {
 
     test('Free card lists exactly the ADR-007 Free-tier bullets', () {
       expect(premiumPlanCards[4].features, freeTierFeatureBullets);
+      // Distance row removed per ADR-007 Amendment §5.
       expect(freeTierFeatureBullets, const [
         'premium_free_proximity',
         'premium_free_pulse_intercept',
@@ -68,7 +69,6 @@ void main() {
         'premium_free_mutual_waves_5',
         'premium_free_event_pins',
         'premium_free_nicotine_filter',
-        'premium_free_distance_50',
       ]);
     });
 
@@ -87,9 +87,68 @@ void main() {
         'premium_free_gym_mode',
         'premium_free_local_radar',
         'premium_free_wave_limit',
+        // ADR-007 Amendment §5 — distance row was never a real widget.
+        'premium_feature_distance_100',
+        'premium_free_distance_50',
       ]) {
         expect(source, isNot(contains(retired)),
             reason: '$retired must be gone per ADR-007 §Consequences');
+      }
+    });
+
+    test('hard-filters bullet is soft-labelled "coming soon" in EN + SL', () {
+      // ADR-007 Amendment §6 — hard filters paused until post-launch;
+      // paywall bullet stays but must carry the "coming soon" soft
+      // label so we do not oversell a feature that has no gate yet.
+      final source = File(
+        'lib/src/features/settings/presentation/premium_screen.dart',
+      ).readAsStringSync();
+      expect(
+        source,
+        contains(
+          "'premium_feature_hard_filters':\n"
+          "          'Additional hard filters beyond gender, age and nicotine (coming soon)'",
+        ),
+        reason: 'EN hard-filters bullet must include "(coming soon)" '
+            'per ADR-007 §6',
+      );
+      expect(
+        source,
+        contains(
+          "'premium_feature_hard_filters':\n"
+          "          'Dodatni hard filtri poleg spola, starosti in nikotina (kmalu)'",
+        ),
+        reason: 'SL hard-filters bullet must include "(kmalu)" '
+            'per ADR-007 §6',
+      );
+    });
+
+    test('hard-filters bullet is localised across all 8 paywall locales', () {
+      // ADR-007 §6 — the soft label must land in every locale block
+      // of `premium_screen.dart._localTranslations`, not fall back
+      // to EN. Precise string per locale from the ADR.
+      final source = File(
+        'lib/src/features/settings/presentation/premium_screen.dart',
+      ).readAsStringSync();
+      const perLocale = <String, String>{
+        'en (implicit)':
+            'Additional hard filters beyond gender, age and nicotine (coming soon)',
+        'sl': 'Dodatni hard filtri poleg spola, starosti in nikotina (kmalu)',
+        'de': 'Weitere Hard-Filter neben Geschlecht, Alter und Nikotin '
+            '(bald verfügbar)',
+        'hr': 'Dodatni hard filtri osim spola, dobi i nikotina (uskoro)',
+        'it': 'Filtri hard aggiuntivi oltre a genere, età e nicotina '
+            '(in arrivo)',
+        'es': 'Filtros adicionales además de género, edad y nicotina '
+            '(próximamente)',
+        'fr': 'Filtres avancés supplémentaires au-delà du genre, âge '
+            'et nicotine (bientôt disponible)',
+        'pt': 'Filtros adicionais além de género, idade e nicotina '
+            '(em breve)',
+      };
+      for (final entry in perLocale.entries) {
+        expect(source, contains(entry.value),
+            reason: '${entry.key} hard-filters bullet missing per ADR-007 §6');
       }
     });
 
