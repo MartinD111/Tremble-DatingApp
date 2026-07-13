@@ -4,6 +4,17 @@
 
 ---
 
+**Rule #81 — When Retiring a "Never-Wired" Feature, Sweep the Whole Fossil Trail — Not Just What the ADR Names.**
+[2026-07-13] ADR-007 Amendment §5 declared the max-distance-slider row a mistake and named two paywall bullet keys to retire (`premium_feature_distance_100` + `premium_free_distance_50`). Pre-flight grep for KORAK 3.7c-5R surfaced a third artefact the ADR did NOT name: an orphan `distance_help` translation key with an 8-locale entry in `lib/src/core/translations.dart` and **zero callers anywhere in `lib/`** — fossil from the same never-built slider. Deleting only what the ADR listed would have left the fossil in place; the next contributor greps `distance` and thinks a widget must exist.
+
+**How to apply:**
+- Before opening a "retire feature X" PR, grep for the feature's naming vocabulary (`distance`, `Distance`, `Razdalja`, `km`) across BOTH `lib/` and `functions/src/` — not just the specific keys the ADR names.
+- Any zero-caller string, key, field, or const that shares the same vocabulary is a fossil from the same mistake. Delete it in the same PR.
+- Add a "bonus cleanup" section to the PR body naming what you found and why it was orphaned, so the reviewer can sanity-check that the sweep was justified (not overreach).
+- Rule of thumb: an ADR names decisions, not exhaustive file lists. Trust the ADR's *intent*, then let grep tell you the actual blast radius.
+
+Source: PR #28 pre-flight, KORAK 3.7c-5R + 3.7c-2C, 2026-07-13. If applied differently, the orphan `distance_help` in translations.dart would still be there today.
+
 **Rule #80 — Never Put Literal `risk_level: high` in ANY PR Body (Even in Negation).**
 [2026-07-13] The `mpc-validate-pr` job in `.github/workflows/ci.yml` computes `is_high_risk` with a naive case-insensitive `grep -iE "(infra_change|touches_auth|touches_pii|external_model_calls|risk_level: (high|critical))"` over the PR body — regardless of surrounding context. Writing `` `risk_level: high` NOT needed `` or "not a `risk_level: high` change" flips `is_high_risk` to `true`, which triggers the `⑦ MPC — Founder Approval` environment gate and blocks merge until manually approved via GitHub → Environments → founder-approval.
 
