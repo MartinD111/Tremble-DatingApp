@@ -4,6 +4,21 @@
 
 ---
 
+**Rule #82 — Info.plist Can Lie to Apple While Runtime Prompts Tell Users the Truth. Audit Three Surfaces Before Every Submission.**
+[2026-07-13] BLOCKER-STORE-002 (Apple 5.1.1 rejection risk) sat open for 7 days because the audit only saw one lie. Fixing it surfaced two more that had been latent since the Anonymity Mode feature first shipped:
+
+1. **Master↔localized divergence.** `ios/Runner/Info.plist`'s master `NSContactsUsageDescription` said "Tremble does not access or store any contact data" while `en.lproj/InfoPlist.strings` (and `sl`/`hr`) already said the opposite. At runtime iOS shows the localized string, so users saw the truth — but Apple's static review reads the master, so reviewers saw the lie. Users happy, submission rejected.
+2. **Silent duplicate keys.** Three permission keys (`NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription`) each appeared twice in the master `Info.plist`. Xcode keeps the last occurrence at build so nothing crashed, but the raw XML tripped Apple's automated review.
+3. **PrivacyInfo.xcprivacy missing derived-data declaration.** ADR-004's zero-data architecture hashes phone contacts on-device before transmission. Hashing does NOT exempt the app from declaring `NSPrivacyCollectedDataTypeContacts` — Apple treats the derived data leaving the device as Contacts-category collection. Missing declaration is a separate ITMS-91036-family submission gap.
+
+**How to apply — before every prod build / submission:**
+- For each `NS*UsageDescription` key in `ios/Runner/Info.plist`, `diff` the master string against `ios/Runner/en.lproj/InfoPlist.strings` (and every other `*.lproj`). Master should be byte-identical to the base-locale localized version, so Apple's static reviewer and the user's runtime prompt tell the same story.
+- Count each usage-description key: `for k in NSContacts NSCamera NSPhotoLibrary NSPhotoLibraryAdd NSLocationWhenInUse NSLocationAlwaysAndWhenInUse NSBluetoothAlways NSBluetoothPeripheral NSMotion NSMicrophone NSFaceID; do grep -c "<key>${k}UsageDescription</key>" ios/Runner/Info.plist; done` — every count must be exactly 1.
+- Cross-check `PrivacyInfo.xcprivacy`'s `NSPrivacyCollectedDataTypes` against the actual code. If the code processes contacts, photos, location, or any other collected type — even in a hashed or derived form that leaves the device — the manifest must declare it. Hashing is not an exemption.
+- Rule of thumb: an Info.plist audit that only reads the master file is half a job. Read master, localized, and the privacy manifest together, then compare all three to the code.
+
+Source: BLOCKER-STORE-002 close-out (KORAK 3.8-1, PR #32, 2026-07-13). Extends [[pr-title-plan-id-required]] and the ITMS-90683 note further down this file. Related: ADR-004 hash-only architecture is what forces the derived-data privacy-manifest declaration.
+
 **Rule #81 — When Retiring a "Never-Wired" Feature, Sweep the Whole Fossil Trail — Not Just What the ADR Names.**
 [2026-07-13] ADR-007 Amendment §5 declared the max-distance-slider row a mistake and named two paywall bullet keys to retire (`premium_feature_distance_100` + `premium_free_distance_50`). Pre-flight grep for KORAK 3.7c-5R surfaced a third artefact the ADR did NOT name: an orphan `distance_help` translation key with an 8-locale entry in `lib/src/core/translations.dart` and **zero callers anywhere in `lib/`** — fossil from the same never-built slider. Deleting only what the ADR listed would have left the fossil in place; the next contributor greps `distance` and thinks a widget must exist.
 
