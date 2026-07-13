@@ -492,7 +492,7 @@ history.
 ADR-007 matrixa in ima svoj Plan ID + branch. Vrstni red je predlog;
 founder izbere.
 
-### 3.7a — Paywall copy rewrite (Flutter only, LOW risk) — **PRIORITETA 1**
+### 3.7a — Paywall copy rewrite (Flutter only, LOW risk) — ✅ MERGED 2026-07-13
 Prepiši `premiumPlanCards.features` v `premium_screen.dart` točno po
 ADR-007 tabeli. Odstrani štiri neveljavne feature ključe (`wider_radar`
 kot "50% wider" — matrix pravi 100/250 m, ne %; `unlimited_geofence` —
@@ -560,10 +560,49 @@ integration tests, security scan.
 ```text
 ADR:                tasks/decisions/ADR-007-tier-matrix.md (accepted 2026-07-13)
 Pulse Intercept odločitev: FREE (Phone + Photo obojno; core-mechanic obljuba)
-3.7a PR / merge:
-3.7b audit report path:
-3.7c-3.7n PRs:
-3.7z integration tests PR:
+3.7a PR / merge:    PR #25 (github.com/MartinD111/Tremble-DatingApp/pull/25)
+                    merged v main 2026-07-13 12:13 UTC
+                    (merge commit 0cd8b4c, feature commit 03a6afc,
+                    conflict-resolution merge 6911ad8).
+                    Retired feature keys (7): premium_feature_wider_radar,
+                    premium_feature_unlimited_geofence, premium_feature_
+                    custom_themes, premium_feature_advanced_filters,
+                    premium_free_gym_mode, premium_free_local_radar,
+                    premium_free_wave_limit.
+                    Novi feature keys (15): 8× premium_feature_*
+                    (radar_extended, mutual_waves_20, open_profile_cards,
+                    recap_full, near_miss_history, hard_filters,
+                    event_insights, distance_100) + 7× premium_free_*
+                    (proximity, pulse_intercept, active_radar,
+                    mutual_waves_5, event_pins, nicotine_filter,
+                    distance_50). EN + SL translation blocks vsi
+                    prepisani; de/hr/it/es/fr/pt še vedno fallback na
+                    EN za feature bullets (nespremenjeno, ločen
+                    translation task).
+                    Contract testi v premium_screen_test.dart (4 novi):
+                    Premium card = točen ordered ADR-007 set;
+                    Weekend card = Premium + weekend suffix;
+                    Free card = točen ordered ADR-007 set;
+                    retired keys fizično odsotni iz datoteke;
+                    ADR-007 §3 copy pravila (regex nad translation
+                    values samo — scoped da internal code komentarji
+                    ne false-positive-jajo).
+                    Testni dokaz: Flutter 247 tests GREEN (prej 242,
+                    +5 novih). flutter analyze 0 issues.
+                    Deploy target: PROD, v naslednji APK/TestFlight
+                    bundle. Ni CF deploya (copy-only).
+                    Lessons naučene med izvedbo: PR #24 (docs za 3.6)
+                    in PR #25 sta oba na začetku propadla MPC PR-
+                    Metadata gate (title brez [PLAN-ID: …] + body
+                    brez štirih zahtevanih fraz) — dodano kot Rule #80
+                    v tasks/lessons.md. Poleg tega je PR #25 body
+                    vseboval literal `risk_level: high` (v negaciji
+                    "NOT needed") kar CI regex ujame naivno in prižge
+                    ⑦ Founder Approval gate — nikoli več v telesu PR-
+                    ja, celo v negaciji.
+3.7b audit report path:  tasks/AUDIT_TIER_MATRIX_20260713.md (planned)
+3.7c-3.7n PRs:      TBD after 3.7b audit
+3.7z integration tests PR: TBD after 3.7c-3.7n done
 ```
 
 ## KORAK 3.8 — Preostali znani drobci (batch, nizka prioriteta)
@@ -602,10 +641,10 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 | 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13 (commit a31e2b8)         |
 | 3.5   | Event Mode: koordinate v Firestore                              | ✅ MERGED       | #21 → main 2026-07-13 (commit be2f9c7, prod seeded 3/3) |
 | 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ✅ MERGED       | #23 → main 2026-07-13 (commit ee48c69)         |
-| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟡 UNBLOCKED — ADR-007 accepted 2026-07-13; razdeljen na 3.7a-3.7z | —      |
+| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟡 IN PROGRESS — 3.7a ✅ MERGED; 3.7b next | 3.7a: #25 → main 2026-07-13 (commit 0cd8b4c) |
 | 3.8   | Preostali drobci (batch)                                        | ⬜ TODO         | —                                             |
 
-**Naslednji korak (predlog):** KORAK 3.7 je UNBLOCKED — ADR-007 (tier matrix) je locked source of truth. Predlagan vrstni red: **3.7a** (paywall copy rewrite — Flutter-only, LOW risk, ~1h) → **3.7b** (audit report — research, no code) → **3.7c-3.7n** (individual gate fixes po prioriteti iz 3.7b) → **3.7z** (integration tests). Vzporedno lahko poteka KORAK 3.8 podnaloga 1 (flaky GymStep test — pure fix, brez founder gate, neodvisen od 3.7). Founder odloči, ali gremo najprej 3.7a ali 3.7b ali 3.8-1.
+**Naslednji korak (v teku):** KORAK 3.7a ✅ MERGED 2026-07-13. Naslednji sub-KORAK je **3.7b** (feature-parity audit report → `tasks/AUDIT_TIER_MATRIX_20260713.md`) — research-only, no code. Po 3.7b sledijo 3.7c-3.7n (per-gate PR-ji po prioriteti iz audit reporta), nato 3.7z (integration test suite). Vzporedno lahko poteka KORAK 3.8 podnaloga 1 (flaky GymStep test).
 
 **Prod deploy dnevnik:**
 - 2026-07-12 · KORAK 3.1 · Cloud Functions deploy na produkcijo predviden ročno prek `firebase deploy --only functions:scanProximityPairs` (founder odločitev: dev preskočen).
@@ -614,3 +653,4 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 - 2026-07-13 · KORAK 3.4 · Cloud Functions deploy prek `firebase deploy --only functions` (compatibility_calculator.ts spremenjen — vpliva na matches + proximity scoring). Flutter: vključeno v naslednji APK/TestFlight bundle. On-read migracija — brez Firestore backfill-a.
 - 2026-07-13 · KORAK 3.5 · PR #21 merged v main (be2f9c7). Cloud Function `onEventModeActivate` deployan direktno na prod (`firebase deploy --only functions:onEventModeActivate --project am---dating-app`) — dev preskočen (founder odločitev, isti pattern kot KORAK 3.1). Prod events collection seeded s 3 dokumenti (club_monokel, labaratorij, metelkova) prek `seed_events.js --project=am---dating-app --i-know-this-is-prod --apply`. Flutter build vključen v naslednji APK/TestFlight bundle.
 - 2026-07-13 · KORAK 3.6 · PR #23 merged v main (ee48c69). Cloud Functions deploy predviden prek naslednjega `firebase deploy --only functions` cikla (posodobi Zod schemo za `completeOnboarding` + `updateProfile` — `location` polje iz `z.enum` v `z.string().trim().min(1).max(80)`). Klientov contract je backward-compatible — legacy enum vrednosti ("Ljubljana"/"Koper"/"Zagreb"/"Other") še vedno passajo, Firestore migracija NI potrebna. Flutter: vključeno v naslednji APK/TestFlight bundle — freetext lokacijsko polje v obeh flow-ih (registracija + edit profile). Places API ostaja aktiven za Gym Mode gym autocomplete (raw HTTP + PLACES_KEY_DEV/PROD compile-time defines; odstranitev iz `pubspec.yaml` ni relevantna ker ni pub package).
+- 2026-07-13 · KORAK 3.7a · PR #25 merged v main (0cd8b4c). Paywall copy prepisan po ADR-007 tabeli — 7 retired feature ključev odstranjenih, 15 novih dodanih (EN + SL). Flutter-only: vključeno v naslednji APK/TestFlight bundle. Brez CF deploya (copy-only, no gate logic change). Naslednji sub-KORAK je 3.7b (feature-parity audit — research only). Tudi ADR-007 (`tasks/decisions/ADR-007-tier-matrix.md`) landeal na main prek PR #24 (0da6da9) — služi kot single source of truth za vse bodoče per-gate PR-je.
