@@ -1,95 +1,94 @@
 # Active Implementation Plan
-Plan ID: 20260713-adr-007-and-korak-3-6-docs
+Plan ID: 20260713-paywall-copy-rewrite
 Risk Level: LOW
 Founder Approval Required: NO
-Branch: docs/plan-03-korak-3-6-merged
+Branch: feat/paywall-copy-rewrite
 
-1. OBJECTIVE — Bundle the KORAK 3.6 post-merge documentation update
-   with ADR-007 (tier-matrix lock) and the KORAK 3.7 restructure into
-   a single docs-only PR against main. Two separate purposes served
-   in one branch:
-   (a) Backfill the KORAK 3.6 Output block in
-       `tasks/plans/PLAN_03_APP_CODE.md` now that PR #23 is merged.
-   (b) Lock the founder-provided Free/Premium tier matrix as
-       `tasks/decisions/ADR-007-tier-matrix.md` and rewrite KORAK 3.7
-       in PLAN_03 from a one-shot copy-fix into an umbrella covering
-       sub-KORAK-i 3.7a-3.7z (paywall copy, feature-parity audit,
-       per-gate PRs, integration tests).
+1. OBJECTIVE — Rewrite `premium_screen.dart` paywall bullet copy so it
+   matches ADR-007's Free/Premium tier matrix exactly. The paywall
+   previously advertised features that were never gated in code
+   (`unlimited geofence pings`, `advanced filtering matrix`, `custom
+   themes`, `50% wider radar scan`) and omitted features that are
+   actually gated (mutual-wave cap, near-miss history, recap TTL,
+   distance slider bounds, etc.). Copy-only change — no gate logic
+   touched.
 
 2. SCOPE —
    - **Modified:**
-     - `tasks/plans/PLAN_03_APP_CODE.md` — KORAK 3.6 heading marked
-       ✅, Output block filled (merge coordinates, Places API grep
-       report, test-count evidence, backward-compat note), STATUS
-       table bumped, prod-deploy dnevnik entry appended for 3.6.
-       Separately: KORAK 3.7 rewritten to reference ADR-007 with an
-       audit-snapshot table and an ordered 3.7a-3.7z breakdown.
-     - `tasks/plan.md` — this file; carries the new Plan-ID so the
-       MPC PR-Metadata gate passes on the docs branch.
-   - **Added:**
-     - `tasks/decisions/ADR-007-tier-matrix.md` — Free/Premium tier
-       matrix locked as source of truth. Includes cross-cutting rules
-       (server is tier truth, no grandfathering, copy rules,
-       consistency test pair requirement, RevenueCat entitlement key
-       unchanged), consequences, non-goals, and cross-refs to the
-       affected code.
-   - **Untouched:** all runtime code, tests, CI config, Firestore
-     rules. This PR ships zero executable changes.
+     - `lib/src/features/settings/presentation/premium_screen.dart`
+       — introduced two top-level const lists
+       (`premiumOnlyFeatureBullets`, `freeTierFeatureBullets`) sourced
+       from ADR-007. Premium (monthly) and Free cards reference them
+       directly; Weekend card composes `[...premiumOnlyFeatureBullets,
+       weekend_window]`. EN + SL translation blocks fully rewritten
+       for the 8 Premium + 7 Free new keys. Retired 7 old keys
+       (`premium_feature_wider_radar/unlimited_geofence/custom_themes/
+       advanced_filters`, `premium_free_gym_mode/local_radar/wave_limit`).
+     - `test/features/settings/premium_screen_test.dart` — added
+       `paywall copy matches ADR-007 tier matrix` group with four
+       assertions: (a) Premium card = exact ordered set from ADR-007;
+       (b) Weekend card = Premium + weekend suffix; (c) Free card =
+       exact ordered set from ADR-007; (d) retired keys physically
+       absent from the file; (e) no ADR-007 §3 forbidden phrases in
+       user-facing translation strings.
+   - **Untouched:** any gate logic, `revenuecat_subscription.dart`,
+     Cloud Functions, other locale blocks (de/hr/it/es/fr/pt fall
+     back to EN for feature bullets, as they already did).
 
 3. STEPS —
-   1. Fill the KORAK 3.6 Output block in PLAN_03_APP_CODE.md from the
-      merged PR #23 metadata (merge commit ee48c69, tests 242/114
-      green).
-   2. Write `tasks/decisions/ADR-007-tier-matrix.md` from the
-      founder's matrix, adding the cross-cutting rules that make the
-      ADR actionable for KORAK 3.7 and future gate work.
-   3. Rewrite PLAN_03 §3.7 to reference ADR-007, include the current-
-      state audit snapshot table, and break down into ordered
-      sub-KORAK-i so future sessions can pick up any one slice
-      independently.
-   4. Rewrite this `tasks/plan.md` with a Plan-ID that reflects the
-      docs+ADR bundle so the MPC PR-Metadata gate passes.
-   5. Retitle PR #24 with the required `[PLAN-ID: …]` prefix and
-      rewrite its body to include the four MPC gate phrases
-      (`Verification checklist`, `unit tests`, `integration tests`,
-      `security scan`).
+   1. Extract the ADR-007 Premium-only + Free-tier bullet lists into
+      two top-level `const` arrays with a comment linking back to the
+      ADR and the test that guards them.
+   2. Point each card's `features` list at the appropriate array
+      (Weekend spreads Premium + adds the weekend-window key).
+   3. Rewrite the EN + SL translation entries for the new keys.
+      Remove the 7 retired entries wholesale.
+   4. Add the ADR-007 contract test group. Include a copy-rules
+      assertion scoped to translation values (regex over
+      `'key': 'value',` lines) — full-file scan would fail on
+      internal comments (`// left swipe pulls the previous card...`).
+   5. Verify: `flutter analyze` clean, `flutter test` green.
 
 4. RISKS & TRADEOFFS —
-   - **Bundled scope (LOW):** two logical changes (KORAK 3.6 backfill
-     + ADR-007 lock) share one PR. Alternative was two separate
-     PRs, but both change only `.md` files under `tasks/` with no
-     overlap on the same file — combining reduces review overhead and
-     lands the ADR before KORAK 3.7a (PR #25) needs it.
-   - **Repeated MPC-gate mistake (SURFACED):** the initial PR #24
-     shipped without the `[PLAN-ID: …]` title prefix or the four
-     required body phrases, ignoring the memory note
-     `pr-title-plan-id-required.md`. This plan file adds those
-     bookkeeping steps to the checklist and the retitle-and-rebody is
-     step 5. Future docs-only PRs must apply the same gate treatment.
-   - **No runtime impact (VERIFIED):** grep for `\.dart`, `\.ts`,
-     `\.yaml`, `firestore.rules` on the branch diff → 0 hits; only
-     `.md` files touched.
+   - **Legacy translation keys (LOW):** the 7 retired keys are no
+     longer referenced. Removed from the EN + SL maps in the same
+     commit so they cannot be resurrected accidentally. Fallback
+     locales that used to hit the retired keys will now hit the new
+     ones via the EN fallback chain (`_t()` already handles unknown
+     keys by falling through EN).
+   - **Missing localizations (LOW):** only EN + SL have the new
+     bullets. Other locales (de/hr/it/es/fr/pt) already only
+     translated `weekend_window` and CTA strings and let feature
+     bullets fall through to EN — same behaviour as before. Adding
+     full localization for the remaining 6 locales is out of scope
+     for 3.7a; that is a separate translation task.
+   - **Copy accuracy (assumption):** the new EN + SL bullets restate
+     the mechanics from ADR-007 (250 m, −85 dBm, 20/mo, 100 km, etc.).
+     If ADR-007 shifts, this copy AND the ADR-007 contract test must
+     shift together — the test failure will point to the mismatch.
+   - **No gate changes:** feature-parity work (3.7b onward) will
+     verify that these advertised features actually exist as gates.
+     Until then the paywall is honest about what is CLAIMED to exist
+     per ADR-007, but not yet a proof of implementation. That is
+     explicitly deferred to KORAK 3.7b.
 
 5. VERIFICATION —
-   - `flutter analyze` — 0 issues (no runtime code touched; kept as a
-     safety net).
-   - `flutter test` — 242 tests green on this branch's base
-     (unchanged; no test files touched).
-   - unit tests — none added or modified.
-   - integration tests — none needed; no CF or Firestore path
-     touched.
-   - security scan — no secrets, no PII, no auth/billing logic
-     change; grep of the branch diff shows only `tasks/**` changes.
+   - `flutter analyze` — 0 issues.
+   - `flutter test` — 247 tests green (was 242, +5 new tests in
+     `premium_screen_test.dart`).
+   - `flutter test test/features/settings/premium_screen_test.dart`
+     — 6/6 green.
    - Grep evidence:
-     - `git diff --stat origin/main...HEAD` shows only
-       `tasks/decisions/ADR-007-tier-matrix.md` (added),
-       `tasks/plans/PLAN_03_APP_CODE.md` (modified), and
-       `tasks/plan.md` (modified after this step).
-   - MPC PR-Metadata verification:
-     - PR title format: `[PLAN-ID: 20260713-adr-007-and-korak-3-6-
-       docs] docs(plan): KORAK 3.6 backfill + ADR-007 tier matrix +
-       KORAK 3.7 restructure`.
-     - PR body must contain literal phrases: `Verification
-       checklist`, `unit tests`, `integration tests`, `security scan`.
-     - Plan-ID `20260713-adr-007-and-korak-3-6-docs` present in this
-       `tasks/plan.md` file (line 2).
+     - `grep -n "premium_feature_wider_radar\|premium_feature_
+       unlimited_geofence\|premium_feature_custom_themes\|premium_
+       feature_advanced_filters\|premium_free_gym_mode\|premium_
+       free_local_radar\|premium_free_wave_limit" lib/` → 0 hits
+       (retired keys gone).
+     - `grep -n "premium_feature_radar_extended\|premium_feature_
+       mutual_waves_20\|premium_feature_open_profile_cards\|premium_
+       feature_recap_full\|premium_feature_near_miss_history\|
+       premium_feature_hard_filters\|premium_feature_event_insights\|
+       premium_feature_distance_100" lib/` → 8 hits (1 per new key,
+       all inside `premium_screen.dart`).
+   - Device test not applicable — pure Flutter copy change; smoke
+     verification deferred to the next TestFlight build.
