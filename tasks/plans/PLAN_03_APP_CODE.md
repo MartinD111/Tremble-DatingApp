@@ -289,7 +289,7 @@ Kritični pattern:   on-read migracija (LEGACY_NAME_TO_ID) obstaja tako
                     Če dodaš id-je, jih dodaj v OBA seznama.
 ```
 
-## KORAK 3.5 — Event Mode: koordinate v Firestore
+## KORAK 3.5 — Event Mode: koordinate v Firestore ✅
 
 **Kontekst:** 3 ljubljanske lokacije hardcoded za _isDev — v produkciji
 prazen zaslon (Apple 2.1 App Completeness tveganje).
