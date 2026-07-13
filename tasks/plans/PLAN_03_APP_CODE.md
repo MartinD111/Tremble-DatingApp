@@ -505,16 +505,86 @@ heatmap indikator + data, distance slider 100 km. Copy pravila
 mechanics ne emotions. **Ne dodaja gate-ov, samo copy.** Plan ID:
 20260713-paywall-copy-rewrite. Branch: feat/paywall-copy-rewrite.
 
-### 3.7b — Feature-parity audit report (research, no code) — **PRIORITETA 2**
+### 3.7b — Feature-parity audit report (research, no code) — ✅ MERGED 2026-07-13
 Za vsak ⚠️ v audit tabeli zgoraj naredi grep + izpiši dejansko stanje
 gate-a (server-side enforcement da/ne, client-side check da/ne).
 Rezultat: `tasks/AUDIT_TIER_MATRIX_20260713.md` z ordered fix list.
 Iz te liste izvirajo 3.7c-3.7n PR-ji. Founder pregleda pred kodiranjem.
 
-### 3.7c-3.7n — Individual gate fixes (izvirajo iz 3.7b)
+**Output (3.7b):**
+```text
+Audit PR:           PR #26 (docs plan-03-korak-3-7a-merged prep) +
+                    PR #27 (research/tier-matrix-audit-3-7b)
+                    → main 2026-07-13 15:47 UTC (merge commit f2842bb).
+                    Ključni feature commit: 2612958 (audit report),
+                    plus ADR-007 Amendments §1-§6 (b521de3, c392ad3,
+                    ae0c19a).
+Deliverable:        tasks/AUDIT_TIER_MATRIX_20260713.md — 429 vrstic,
+                    verdict-tag na vsaki ADR-007 vrstici (OK / PARTIAL
+                    / MISSING / N/A) + ordered fix list.
+ADR-007 Amendments: §1 matches three-state render (grey / colour+3-hobbies
+                    / colour+full-card) — greyscaled fallback za no-mutual-wave.
+                    §2 hard filtri paused post-launch — paywall bullet
+                    ostane, doda se "coming soon" suffix v vseh locales.
+                    §3 heatmap in event tier razbit v 3.7c-3, 3.7c-4a,
+                    3.7c-4b (chip + per-filter subset count).
+                    §5 max distance slider vrstica UMAKNJENA — nikoli ni
+                    obstajala kot widget; paywall bullete odstranit.
+                    §6 hard-filters "coming soon" localizacija v 8 locales.
+P1 ambiguity:       vsi trije P1 items RESOLVED (matches shape, hard
+                    filtri, heatmap/event tiers).
+Fix list vrstni red: P1 gates (3.7c-1, 3.7c-3, 3.7c-4a, 3.7c-4b) →
+                    P2 quick wins (bundle 3.7c-5R + 3.7c-2C) →
+                    P3 pair-of-tests (3.7c-6..11) → P4 deferred
+                    (3.7c-rssi-threshold-tier, blocked na ADR-001) →
+                    3.7z integration matrix.
+Deploy target:      N/A (docs-only, no CF/Flutter change).
+```
+
+### 3.7c-3.7n — Individual gate fixes (izvirajo iz 3.7b) — 🟡 IN PROGRESS
 Vsak gate = svoj PR (Plan ID 20260713-tier-<row-slug>, branch
 feat/tier-<row-slug>). Vsak PR mora priložiti pair-of-tests (Free hit
 gate + Premium bypass gate) kot je zahtevano v ADR-007 §4.
+
+### 3.7c-5R + 3.7c-2C (bundled) — Distance retire + hard-filters coming-soon — ✅ MERGE-READY 2026-07-13
+Plan ID: `20260713-distance-remove-and-hardfilters-comingsoon`
+Branch: `feat/tier-3-7c-5R-and-3-7c-2C`
+PR: #28
+
+**Output (bundle):**
+```text
+Ships:              ADR-007 Amendment §5 (distance row retired,
+                    zero widget backing) + Amendment §6 (hard-filters
+                    "coming soon" localised across all 8 paywall
+                    locales — en, sl, de, hr, it, es, fr, pt).
+Bonus cleanup:      translations.dart orphan `distance_help` key
+                    surfaced during pre-flight (0 callers in lib/,
+                    fossil from the never-built distance slider) —
+                    removed from all 8 locale blocks. Locale-block
+                    count unchanged (8 → 8).
+Files touched:      lib/src/features/settings/presentation/premium_screen.dart
+                    lib/src/core/translations.dart
+                    test/features/settings/premium_screen_test.dart
+                    tasks/plan.md (Plan-ID rewrite)
+                    tasks/plans/PLAN_03_APP_CODE.md (this file)
+Test evidence:      Flutter 249 tests GREEN (prev 247, +2 new
+                    hard-filter locale coverage tests). flutter
+                    analyze 0 issues.
+Bullet count diff:  premiumOnlyFeatureBullets 8 → 7 items.
+                    freeTierFeatureBullets 7 → 6 items.
+Deploy target:      PROD via next APK/TestFlight bundle. No Cloud
+                    Functions deploy needed (copy-only). No Firestore
+                    migration (no user-facing DB change).
+Risk assessment:    LOW — copy-only, no gate logic, no server contract
+                    change. False-advertisement risk goes DOWN.
+```
+
+**Preostali fix wave (per audit report):**
+- P1 code slices: 3.7c-1 (matches three-state s `hasMutualWave` DTO
+  field), 3.7c-3 (event pin sheet participant counts), 3.7c-4a
+  (heatmap count chip), 3.7c-4b (CF endpoint za filter subset).
+- P3 pair-of-tests batch: 3.7c-6..11.
+- P4 deferred: 3.7c-rssi-threshold-tier (blocked na ADR-001).
 
 ### 3.7z — Consistency test suite (integracija, MEDIUM risk) — **ZADNJI**
 Ko so 3.7a-3.7n zaključeni, dodaj integrations test ki za vsak ADR-007
@@ -600,8 +670,8 @@ Pulse Intercept odločitev: FREE (Phone + Photo obojno; core-mechanic obljuba)
                     "NOT needed") kar CI regex ujame naivno in prižge
                     ⑦ Founder Approval gate — nikoli več v telesu PR-
                     ja, celo v negaciji.
-3.7b audit report path:  tasks/AUDIT_TIER_MATRIX_20260713.md (planned)
-3.7c-3.7n PRs:      TBD after 3.7b audit
+3.7b audit report path:  tasks/AUDIT_TIER_MATRIX_20260713.md ✅ landed 2026-07-13 (PR #27, f2842bb)
+3.7c-3.7n PRs:      🟡 IN PROGRESS — next slice is bundled 3.7c-5R + 3.7c-2C
 3.7z integration tests PR: TBD after 3.7c-3.7n done
 ```
 
@@ -641,10 +711,12 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 | 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13 (commit a31e2b8)         |
 | 3.5   | Event Mode: koordinate v Firestore                              | ✅ MERGED       | #21 → main 2026-07-13 (commit be2f9c7, prod seeded 3/3) |
 | 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ✅ MERGED       | #23 → main 2026-07-13 (commit ee48c69)         |
-| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟡 IN PROGRESS — 3.7a ✅ MERGED; 3.7b next | 3.7a: #25 → main 2026-07-13 (commit 0cd8b4c) |
+| 3.7   | Tier Matrix alignment (ADR-007 umbrella — več PR-jev)           | 🟡 IN PROGRESS — 3.7a ✅, 3.7b ✅, 3.7c-5R+2C 🟨 OPEN; P1 code wave next | 3.7a: #25 · 3.7b: #26+#27 · 3.7c-5R+2C: **#28 (open)** |
 | 3.8   | Preostali drobci (batch)                                        | ⬜ TODO         | —                                             |
 
-**Naslednji korak (v teku):** KORAK 3.7a ✅ MERGED 2026-07-13. Naslednji sub-KORAK je **3.7b** (feature-parity audit report → `tasks/AUDIT_TIER_MATRIX_20260713.md`) — research-only, no code. Po 3.7b sledijo 3.7c-3.7n (per-gate PR-ji po prioriteti iz audit reporta), nato 3.7z (integration test suite). Vzporedno lahko poteka KORAK 3.8 podnaloga 1 (flaky GymStep test).
+**Naslednji korak (v teku):** KORAK 3.7a + 3.7b + ADR-007 Amendments §1-§6 ✅ MERGED 2026-07-13. Bundled **3.7c-5R + 3.7c-2C** open kot PR #28 (branch `feat/tier-3-7c-5R-and-3-7c-2C`, Plan ID `20260713-distance-remove-and-hardfilters-comingsoon`) — čaka founder review + merge, potem gremo v P1 code wave.
+
+Po merge-u #28 sledi P1 code wave (3.7c-1 matches three-state z `hasMutualWave` DTO field, 3.7c-3 event pin sheet participant counts, 3.7c-4a heatmap count chip, 3.7c-4b CF endpoint za filter subset), potem P3 pair-of-tests (3.7c-6..11), nato 3.7z (integration matrix). P4 (3.7c-rssi-threshold-tier) ostane dormant za ADR-001. Vzporedno lahko poteka KORAK 3.8 podnaloga 1 (flaky GymStep test).
 
 **Prod deploy dnevnik:**
 - 2026-07-12 · KORAK 3.1 · Cloud Functions deploy na produkcijo predviden ročno prek `firebase deploy --only functions:scanProximityPairs` (founder odločitev: dev preskočen).
@@ -654,3 +726,5 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 - 2026-07-13 · KORAK 3.5 · PR #21 merged v main (be2f9c7). Cloud Function `onEventModeActivate` deployan direktno na prod (`firebase deploy --only functions:onEventModeActivate --project am---dating-app`) — dev preskočen (founder odločitev, isti pattern kot KORAK 3.1). Prod events collection seeded s 3 dokumenti (club_monokel, labaratorij, metelkova) prek `seed_events.js --project=am---dating-app --i-know-this-is-prod --apply`. Flutter build vključen v naslednji APK/TestFlight bundle.
 - 2026-07-13 · KORAK 3.6 · PR #23 merged v main (ee48c69). Cloud Functions deploy predviden prek naslednjega `firebase deploy --only functions` cikla (posodobi Zod schemo za `completeOnboarding` + `updateProfile` — `location` polje iz `z.enum` v `z.string().trim().min(1).max(80)`). Klientov contract je backward-compatible — legacy enum vrednosti ("Ljubljana"/"Koper"/"Zagreb"/"Other") še vedno passajo, Firestore migracija NI potrebna. Flutter: vključeno v naslednji APK/TestFlight bundle — freetext lokacijsko polje v obeh flow-ih (registracija + edit profile). Places API ostaja aktiven za Gym Mode gym autocomplete (raw HTTP + PLACES_KEY_DEV/PROD compile-time defines; odstranitev iz `pubspec.yaml` ni relevantna ker ni pub package).
 - 2026-07-13 · KORAK 3.7a · PR #25 merged v main (0cd8b4c). Paywall copy prepisan po ADR-007 tabeli — 7 retired feature ključev odstranjenih, 15 novih dodanih (EN + SL). Flutter-only: vključeno v naslednji APK/TestFlight bundle. Brez CF deploya (copy-only, no gate logic change). Naslednji sub-KORAK je 3.7b (feature-parity audit — research only). Tudi ADR-007 (`tasks/decisions/ADR-007-tier-matrix.md`) landeal na main prek PR #24 (0da6da9) — služi kot single source of truth za vse bodoče per-gate PR-je.
+- 2026-07-13 · KORAK 3.7b · PR #26 (docs plan-03 update) + PR #27 (research/tier-matrix-audit-3-7b) merged v main (f2842bb). Docs-only, no deploy. Deliverable: `tasks/AUDIT_TIER_MATRIX_20260713.md` (429 vrstic) + ADR-007 Amendments §1-§6 (matches three-state render, hard filtri pause + coming-soon localizacija, heatmap/event tier split v 3.7c-3/4a/4b, distance vrstica UMAKNJENA, greyscaled fallback za no-mutual-wave). Fix wave vrstni red potrjen: P1 code slices (3.7c-1/3/4a/4b) → P2 quick wins (bundle 3.7c-5R + 3.7c-2C) → P3 pair-of-tests (3.7c-6..11) → P4 deferred (RSSI) → 3.7z integration matrix.
+- 2026-07-13 · KORAK 3.7c-5R + 3.7c-2C (bundled) · PR #28 opened, čaka founder review + merge. Flutter-only copy-only sprememba. ADR-007 Amendment §5: retire distance paywall bullete (grep dokazal: `settings_screen.dart` uporablja `PreferenceRangeSlider` samo za age line 1011 + height line 1034; nikjer ni `maxDistance`/`distanceKm`). ADR-007 Amendment §6: hard-filters "coming soon" localised v vseh 8 locales z natančnim ADR §6 phrasingom. Bonus cleanup: orphan `distance_help` translation key (0 callers v `lib/`) odstranjen iz vseh 8 locale blokov v `translations.dart`. Deploy: naslednji APK/TestFlight bundle, brez CF deploya. Test: 249 tests green (+2 nova za hard-filters locale coverage), analyze 0 issues.
