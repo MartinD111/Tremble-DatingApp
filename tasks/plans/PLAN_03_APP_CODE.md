@@ -370,7 +370,7 @@ Backward compat:    `TrembleEvent.fromMap` (Flutter) IN
                     `EVENTS` array v seed_events.ts z GeoPoint-om.
 ```
 
-## KORAK 3.6 — Registracijsko lokacijsko polje: prost tekst
+## KORAK 3.6 — Registracijsko lokacijsko polje: prost tekst ✅
 
 **Kontekst:** KP/LJ/ZG selektor nima funkcije (ni v matchingu). Manj
 podatka = GDPR minimizacija. Če Places API tu odpade in ni uporabljen
@@ -389,8 +389,60 @@ location-freetext, PR with required phrases.
 
 **Output:**
 ```text
-PR / merge datum:
+PR / merge datum:  PR #23 (github.com/MartinD111/Tremble-DatingApp/pull/23)
+                    squash-merged v main 2026-07-13 10:11 UTC
+                    (merge commit ee48c69, feature commit 2cb0d5e,
+                    docs glyph commit 7cab04e).
+Deploy target:      PROD.
+                    - Cloud Functions: naslednji `firebase deploy
+                      --only functions` cikel bo posodobil
+                      completeOnboarding + updateProfile Zod schema
+                      (location z.enum → z.string.trim.min1.max80).
+                      Klientov contract je backward-compatible —
+                      legacy vrednosti ("Ljubljana"/"Koper"/"Zagreb"/
+                      "Other") še vedno passajo, Firestore migracija
+                      NI potrebna.
+                    - Flutter: vključeno v naslednji APK/TestFlight
+                      bundle. Freetext lokacija se pokaže v obeh
+                      registracijskih flow-ih (email_location_step +
+                      edit_profile_screen) v vseh flavors.
 Places API še uporabljen drugje (da/ne, kje):
+                    DA — `lib/src/features/gym/presentation/gym_search_widget.dart`
+                    še vedno uporablja `lib/src/core/places_service.dart`
+                    za gym autocomplete v Gym Mode. Ni pub package —
+                    servis kliče Places API (New) direkt prek HTTP
+                    z `PLACES_KEY_DEV` / `PLACES_KEY_PROD`
+                    compile-time defines. V `pubspec.yaml` NI ničesar
+                    za odstraniti; odstranitev bi bila mogoča šele,
+                    ko / če Gym Mode preneha uporabljati gym search
+                    (ločena odločitev, izven scope-a KORAK 3.6).
+Testni dokaz:       Flutter: 242 tests GREEN (nespremenjen count —
+                    obstoječi `registration_flow_test.dart` "profile
+                    location input is freetext" test flipped v nov
+                    contract). `flutter analyze` 0 issues.
+                    Functions: 13 suites / 114 tests GREEN
+                    (nespremenjen count — trije test bodies rewritten
+                    v users.test.ts + auth.test.ts pod nov freetext
+                    contract). `npm run build` 0 errors, `npm run
+                    lint` 0 warnings.
+Grep evidence:      - `grep -rn "profileLocationOptions" lib/ test/`
+                      → samo tri negativne assertion-e v
+                      `registration_flow_test.dart` (linije 261-263).
+                      Const je izbrisan iz `step_shared.dart`, oba
+                      screen-a ga več ne referencirata.
+                    - `grep -rn "z.enum.*Ljubljana" functions/src/modules/`
+                      → 0 hits (enum odstranjen iz obeh Zod schem).
+                    - `grep -n "OptionPill" lib/src/features/auth/presentation/widgets/registration_steps/email_location_step.dart`
+                      → 0 hits (OptionPill map zamenjan z
+                      `_inputField` klicem).
+Backward compat:    Firestore dokumenti z legacy enum vrednostmi
+                    ("Ljubljana"/"Koper"/"Zagreb"/"Other") še vedno
+                    pravilno parsajo skozi novo `z.string().trim()
+                    .min(1).max(80)` schemo. `edit_profile_screen.dart`
+                    NE overwritea več custom string-a (prej je
+                    `profileLocationOptions.contains(...) ? ... :
+                    'Other'` clamp zbrisala vsako non-enum vrednost
+                    ob prvem edit-u — zdaj se ohrani).
 ```
 
 ## KORAK 3.7 — 🧑‍⚖️ ODLOČITEV + 🤖 CODE: Paywall uskladitev
@@ -457,7 +509,7 @@ koderkoli, hobbiji enojezično dosledni in matching pravilen, event pini
 vidni v produkciji, paywall oglašuje samo obstoječe.
 
 ---
-## STATUS (posodobljeno 2026-07-12)
+## STATUS (posodobljeno 2026-07-13)
 
 | Korak | Naslov                                                          | Status         | PR / merge                                    |
 |-------|-----------------------------------------------------------------|----------------|-----------------------------------------------|
@@ -466,11 +518,11 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 | 3.3   | Gym Mode: odstrani proximity gate na ročni aktivaciji           | ✅ MERGED       | #19 → main 2026-07-12 (commit f48ff52)         |
 | 3.4   | Hobby lokalizacija: jezikovno-nevtralni ID-ji                   | ✅ MERGED       | #20 → main 2026-07-13 (commit a31e2b8)         |
 | 3.5   | Event Mode: koordinate v Firestore                              | ✅ MERGED       | #21 → main 2026-07-13 (commit be2f9c7, prod seeded 3/3) |
-| 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ⬜ TODO         | —                                             |
+| 3.6   | Registracijsko lokacijsko polje: prost tekst                    | ✅ MERGED       | #23 → main 2026-07-13 (commit ee48c69)         |
 | 3.7   | Paywall uskladitev (potreben founder odločitev pred CLI)        | ⬜ BLOCKED (founder odločitev za Pulse Intercept) | —      |
 | 3.8   | Preostali drobci (batch)                                        | ⬜ TODO         | —                                             |
 
-**Naslednji korak (predlog):** KORAK 3.6 — prost tekst za lokacijo (poenostavitev DPA/PP če Places API pade ven); ali počakati na merge #21 in seed dev, preden gremo na 3.6.
+**Naslednji korak (predlog):** KORAK 3.7 je BLOCKED — čaka founder odločitev za Pulse Intercept tier (Free vs Premium). Vzporedno lahko poženemo KORAK 3.8 podnalogo 1 (flaky GymStep test — pure fix, brez founder gate). KORAK 3.8 podnaloga 2 (Info.plist podvojeni ključi) zahteva founder odobritev pred aplikacijo diff-a. KORAK 3.8 podnaloga 3 (heatmap) je POST-LAUNCH.
 
 **Prod deploy dnevnik:**
 - 2026-07-12 · KORAK 3.1 · Cloud Functions deploy na produkcijo predviden ročno prek `firebase deploy --only functions:scanProximityPairs` (founder odločitev: dev preskočen).
@@ -478,3 +530,4 @@ vidni v produkciji, paywall oglašuje samo obstoječe.
 - 2026-07-12 · KORAK 3.3 · Cloud Functions deploy predviden ročno prek `firebase deploy --only functions:onGymModeActivate` (samo CF sprememba; klientov contract nespremenjen — Flutter bump ni potreben).
 - 2026-07-13 · KORAK 3.4 · Cloud Functions deploy prek `firebase deploy --only functions` (compatibility_calculator.ts spremenjen — vpliva na matches + proximity scoring). Flutter: vključeno v naslednji APK/TestFlight bundle. On-read migracija — brez Firestore backfill-a.
 - 2026-07-13 · KORAK 3.5 · PR #21 merged v main (be2f9c7). Cloud Function `onEventModeActivate` deployan direktno na prod (`firebase deploy --only functions:onEventModeActivate --project am---dating-app`) — dev preskočen (founder odločitev, isti pattern kot KORAK 3.1). Prod events collection seeded s 3 dokumenti (club_monokel, labaratorij, metelkova) prek `seed_events.js --project=am---dating-app --i-know-this-is-prod --apply`. Flutter build vključen v naslednji APK/TestFlight bundle.
+- 2026-07-13 · KORAK 3.6 · PR #23 merged v main (ee48c69). Cloud Functions deploy predviden prek naslednjega `firebase deploy --only functions` cikla (posodobi Zod schemo za `completeOnboarding` + `updateProfile` — `location` polje iz `z.enum` v `z.string().trim().min(1).max(80)`). Klientov contract je backward-compatible — legacy enum vrednosti ("Ljubljana"/"Koper"/"Zagreb"/"Other") še vedno passajo, Firestore migracija NI potrebna. Flutter: vključeno v naslednji APK/TestFlight bundle — freetext lokacijsko polje v obeh flow-ih (registracija + edit profile). Places API ostaja aktiven za Gym Mode gym autocomplete (raw HTTP + PLACES_KEY_DEV/PROD compile-time defines; odstranitev iz `pubspec.yaml` ni relevantna ker ni pub package).
