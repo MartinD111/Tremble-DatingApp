@@ -19,6 +19,10 @@ import { ENFORCE_APP_CHECK } from "../../config/env";
 const db = getFirestore();
 const googleClient = new OAuth2Client();
 
+// Current Art. 9 consent version. Mirrored from users.functions.ts — bump
+// there and here together when the consent text materially changes.
+const ART9_CONSENT_VERSION = "v1";
+
 /**
  * Firestore trigger — runs when a new user document is created.
  * NOTE: Two creation paths exist:
@@ -109,6 +113,14 @@ export const completeOnboarding = onCall(
         const existingData = existingDoc.data();
         const hasCreatedAt = existingData?.createdAt !== undefined;
 
+        // Fail-closed on Art. 9 optionals — religion + ethnicity are only
+        // persisted when the corresponding consent is === true. Missing or
+        // false consent drops the sensitive value so nothing lands in
+        // Firestore that the scorer would then read behind the bilateral
+        // gate. The orientation refine is enforced at the schema level.
+        const religionConsented = data.religionConsent === true;
+        const ethnicityConsented = data.ethnicityConsent === true;
+
         // Write validated profile data
         await userRef.set(
             {
@@ -130,8 +142,8 @@ export const completeOnboarding = onCall(
                 childrenPreference: data.childrenPreference || null,
                 introvertScale: data.introvertScale ?? null,
                 occupation: data.occupation || null,
-                religion: data.religion || null,
-                ethnicity: data.ethnicity || null,
+                religion: religionConsented ? data.religion || null : null,
+                ethnicity: ethnicityConsented ? data.ethnicity || null : null,
                 hairColor: data.hairColor || null,
                 lookingFor: data.lookingFor,
                 languages: data.languages,
@@ -148,12 +160,21 @@ export const completeOnboarding = onCall(
                 ageConfirmed: true,
                 ageConfirmedAt: FieldValue.serverTimestamp(),
                 sexualOrientationConsent: data.sexualOrientationConsent,
+                sexualOrientationConsentVersion: ART9_CONSENT_VERSION,
                 sexualOrientationConsentAt: FieldValue.serverTimestamp(),
                 ...(data.religionConsent != null
-                    ? { religionConsent: data.religionConsent }
+                    ? {
+                          religionConsent: data.religionConsent,
+                          religionConsentVersion: ART9_CONSENT_VERSION,
+                          religionConsentAt: FieldValue.serverTimestamp(),
+                      }
                     : {}),
                 ...(data.ethnicityConsent != null
-                    ? { ethnicityConsent: data.ethnicityConsent }
+                    ? {
+                          ethnicityConsent: data.ethnicityConsent,
+                          ethnicityConsentVersion: ART9_CONSENT_VERSION,
+                          ethnicityConsentAt: FieldValue.serverTimestamp(),
+                      }
                     : {}),
                 isOnboarded: true,
                 ...(hasCreatedAt ? {} : { createdAt: FieldValue.serverTimestamp() }),

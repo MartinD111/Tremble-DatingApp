@@ -4,7 +4,7 @@
  * Profile CRUD operations — all writes are server-side only.
  */
 
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { requireAuth, requireVerifiedEmail } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
@@ -14,9 +14,20 @@ import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
 
+// Current Art. 9 consent version. Bump when the consent text materially
+// changes; the backfill modal + settings tiles re-prompt on version drift.
+const ART9_CONSENT_VERSION = "v1";
+
 /**
  * Update user profile — called from Settings/Edit Profile.
  * Only allows whitelisted fields (no isAdmin/isPremium injection).
+ *
+ * Art. 9 write gate — a write of `gender`/`lookingFor`/`religion`/`ethnicity`
+ * is rejected unless the effective (existing OR same-request) consent for that
+ * category is === true. Same-request grants (client toggles consent on and
+ * writes the field in the same call) are honoured. Same-request withdrawals
+ * (consent flipped to false while writing the field) are rejected — withdrawal
+ * must land as its own call and `FieldValue.delete()` the field.
  */
 export const updateProfile = onCall(
     { maxInstances: 50, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
@@ -32,6 +43,40 @@ export const updateProfile = onCall(
         // Validate — .strict() rejects unknown fields
         const data = validateRequest(updateProfileSchema, request.data);
 
+        const userRef = db.collection("users").doc(uid);
+
+        // Load current consent state so a same-request grant can unlock the
+        // corresponding field write in one atomic call.
+        const existingSnap = await userRef.get();
+        const existing = existingSnap.data() ?? {};
+
+        const effectiveConsent = (key: string): boolean => {
+            const incoming = (data as Record<string, unknown>)[key];
+            if (typeof incoming === "boolean") return incoming;
+            return existing[key] === true;
+        };
+
+        const orientationTouched =
+            data.gender !== undefined || data.lookingFor !== undefined;
+        if (orientationTouched && !effectiveConsent("sexualOrientationConsent")) {
+            throw new HttpsError(
+                "permission-denied",
+                "art9_orientation_consent_required"
+            );
+        }
+        if (data.religion !== undefined && !effectiveConsent("religionConsent")) {
+            throw new HttpsError(
+                "permission-denied",
+                "art9_religion_consent_required"
+            );
+        }
+        if (data.ethnicity !== undefined && !effectiveConsent("ethnicityConsent")) {
+            throw new HttpsError(
+                "permission-denied",
+                "art9_ethnicity_consent_required"
+            );
+        }
+
         // Only write the fields that were actually provided
         const updateData: Record<string, unknown> = {
             updatedAt: FieldValue.serverTimestamp(),
@@ -43,9 +88,105 @@ export const updateProfile = onCall(
             }
         }
 
-        await db.collection("users").doc(uid).update(updateData);
+        // Server-authoritative version + timestamp stamping on any consent
+        // state transition (grant OR withdrawal). Timestamps are always
+        // rewritten so withdrawal history is at least "last-change" traceable
+        // via updatedAt + the per-category *ConsentAt.
+        const stampConsent = (
+            flagKey: string,
+            versionKey: string,
+            atKey: string
+        ) => {
+            const incoming = (data as Record<string, unknown>)[flagKey];
+            if (typeof incoming === "boolean") {
+                updateData[versionKey] = ART9_CONSENT_VERSION;
+                updateData[atKey] = FieldValue.serverTimestamp();
+            }
+        };
+        stampConsent(
+            "sexualOrientationConsent",
+            "sexualOrientationConsentVersion",
+            "sexualOrientationConsentAt"
+        );
+        stampConsent(
+            "religionConsent",
+            "religionConsentVersion",
+            "religionConsentAt"
+        );
+        stampConsent(
+            "ethnicityConsent",
+            "ethnicityConsentVersion",
+            "ethnicityConsentAt"
+        );
+
+        await userRef.update(updateData);
 
         console.log(`[USERS] Profile updated: ${uid.substring(0, 8)}...`);
+        return { success: true };
+    }
+);
+
+/**
+ * Withdraw a single Art. 9 consent — writes consent=false + version + timestamp
+ * AND `FieldValue.delete()`s the corresponding Art. 9 field(s). Orientation
+ * withdrawal deletes both `gender` and `lookingFor`.
+ *
+ * Split out from `updateProfile` because destructive deletes need their own
+ * confirmation surface (settings withdrawal UX) and don't share the
+ * `updateProfileSchema` write path.
+ */
+const withdrawableCategories = ["orientation", "religion", "ethnicity"] as const;
+type WithdrawableCategory = (typeof withdrawableCategories)[number];
+
+export const withdrawArt9Consent = onCall(
+    { maxInstances: 20, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+    async (request) => {
+        const uid = requireAuth(request);
+
+        await checkRateLimit(uid, "withdrawArt9Consent", {
+            maxRequests: 10,
+            windowMs: 60_000,
+        });
+
+        const raw = (request.data ?? {}) as { category?: unknown };
+        if (
+            typeof raw.category !== "string" ||
+            !withdrawableCategories.includes(raw.category as WithdrawableCategory)
+        ) {
+            throw new HttpsError(
+                "invalid-argument",
+                "art9_withdraw_category_invalid"
+            );
+        }
+        const category = raw.category as WithdrawableCategory;
+
+        const updates: Record<string, unknown> = {
+            updatedAt: FieldValue.serverTimestamp(),
+        };
+
+        if (category === "orientation") {
+            updates.sexualOrientationConsent = false;
+            updates.sexualOrientationConsentVersion = ART9_CONSENT_VERSION;
+            updates.sexualOrientationConsentAt = FieldValue.serverTimestamp();
+            updates.gender = FieldValue.delete();
+            updates.lookingFor = FieldValue.delete();
+        } else if (category === "religion") {
+            updates.religionConsent = false;
+            updates.religionConsentVersion = ART9_CONSENT_VERSION;
+            updates.religionConsentAt = FieldValue.serverTimestamp();
+            updates.religion = FieldValue.delete();
+        } else {
+            updates.ethnicityConsent = false;
+            updates.ethnicityConsentVersion = ART9_CONSENT_VERSION;
+            updates.ethnicityConsentAt = FieldValue.serverTimestamp();
+            updates.ethnicity = FieldValue.delete();
+        }
+
+        await db.collection("users").doc(uid).update(updates);
+
+        console.log(
+            `[USERS] Art. 9 consent withdrawn (${category}): ${uid.substring(0, 8)}...`
+        );
         return { success: true };
     }
 );

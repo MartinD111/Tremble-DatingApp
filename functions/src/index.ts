@@ -24,6 +24,7 @@ export {
     updateProfile,
     getProfile,
     getPublicProfile,
+    withdrawArt9Consent,
 } from "./modules/users/users.functions";
 
 // ── Matches Module ───────────────────────────────────────

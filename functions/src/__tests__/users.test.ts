@@ -12,11 +12,19 @@ jest.mock("firebase-admin/firestore", () => ({
     getFirestore: jest.fn(() => mockDb),
     FieldValue: {
         serverTimestamp: jest.fn(() => "SERVER_TIMESTAMP"),
+        delete: jest.fn(() => "FIELD_DELETE"),
     },
 }));
 
 jest.mock("firebase-functions/v2/https", () => ({
     onCall: jest.fn((_, handler) => handler),
+    HttpsError: class HttpsError extends Error {
+        code: string;
+        constructor(code: string, message: string) {
+            super(message);
+            this.code = code;
+        }
+    },
 }));
 
 jest.mock("../../src/middleware/authGuard", () => ({
@@ -47,8 +55,10 @@ describe("Users Module", () => {
             const { updateProfile } = await import("../../src/modules/users/users.functions");
 
             const update = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+            const get = jest.fn<() => Promise<{ data: () => Record<string, unknown> }>>()
+                .mockResolvedValue({ data: () => ({}) });
             mockDb.collection.mockReturnValue({
-                doc: jest.fn(() => ({ update })),
+                doc: jest.fn(() => ({ update, get })),
             });
             jest.mocked(authGuard.requireAuth).mockReturnValue("userUid");
             jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
@@ -76,8 +86,10 @@ describe("Users Module", () => {
             const { updateProfile } = await import("../../src/modules/users/users.functions");
 
             const update = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+            const get = jest.fn<() => Promise<{ data: () => Record<string, unknown> }>>()
+                .mockResolvedValue({ data: () => ({ sexualOrientationConsent: true }) });
             mockDb.collection.mockReturnValue({
-                doc: jest.fn(() => ({ update })),
+                doc: jest.fn(() => ({ update, get })),
             });
             jest.mocked(authGuard.requireAuth).mockReturnValue("userUid");
             jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
@@ -95,6 +107,231 @@ describe("Users Module", () => {
             expect(update).toHaveBeenCalledWith(expect.objectContaining({
                 nicotineUse: ["cigarettes", "vape", "shisha"],
             }));
+        });
+
+        // ── Art. 9 write gate — pair-of-tests per sensitive field ─────────
+        //   Each pair proves rejection when consent is missing/false AND
+        //   acceptance when the same request grants consent. Fail-closed on
+        //   the write path is the load-bearing complement to the scorer's
+        //   bilateral gate. See tasks/plan.md § LEGAL-003 step 1.
+
+        function stubUpdateProfileMocks(
+            existing: Record<string, unknown>,
+            incoming: Record<string, unknown>,
+        ) {
+            const update = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+            const get = jest
+                .fn<() => Promise<{ data: () => Record<string, unknown> }>>()
+                .mockResolvedValue({ data: () => existing });
+            mockDb.collection.mockReturnValue({
+                doc: jest.fn(() => ({ update, get })),
+            });
+            return { update, incoming };
+        }
+
+        async function callUpdateProfile(incoming: Record<string, unknown>) {
+            const authGuard = await import("../../src/middleware/authGuard");
+            const rateLimit = await import("../../src/middleware/rateLimit");
+            const validate = await import("../../src/middleware/validate");
+            const { updateProfile } = await import(
+                "../../src/modules/users/users.functions"
+            );
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userUid");
+            jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+            jest.mocked(validate.validateRequest).mockReturnValue(incoming);
+            const callable = updateProfile as unknown as (
+                request: unknown,
+            ) => Promise<unknown>;
+            return callable({ auth: { uid: "userUid" }, data: incoming });
+        }
+
+        it("rejects gender writes when sexualOrientationConsent is not held", async () => {
+            jest.clearAllMocks();
+            stubUpdateProfileMocks({}, { gender: "female" });
+            await expect(callUpdateProfile({ gender: "female" })).rejects.toMatchObject(
+                { code: "permission-denied", message: "art9_orientation_consent_required" },
+            );
+        });
+
+        it("accepts gender writes when the same request grants orientation consent", async () => {
+            jest.clearAllMocks();
+            const { update } = stubUpdateProfileMocks(
+                {},
+                { gender: "female", sexualOrientationConsent: true },
+            );
+            await expect(
+                callUpdateProfile({
+                    gender: "female",
+                    sexualOrientationConsent: true,
+                }),
+            ).resolves.toEqual({ success: true });
+            expect(update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    gender: "female",
+                    sexualOrientationConsent: true,
+                    sexualOrientationConsentVersion: "v1",
+                }),
+            );
+        });
+
+        it("rejects lookingFor writes when sexualOrientationConsent is not held", async () => {
+            jest.clearAllMocks();
+            stubUpdateProfileMocks({}, { lookingFor: ["long_term_partner"] });
+            await expect(
+                callUpdateProfile({ lookingFor: ["long_term_partner"] }),
+            ).rejects.toMatchObject({
+                code: "permission-denied",
+                message: "art9_orientation_consent_required",
+            });
+        });
+
+        it("accepts lookingFor writes when consent is already held on the existing doc", async () => {
+            jest.clearAllMocks();
+            const { update } = stubUpdateProfileMocks(
+                { sexualOrientationConsent: true },
+                { lookingFor: ["long_term_partner"] },
+            );
+            await expect(
+                callUpdateProfile({ lookingFor: ["long_term_partner"] }),
+            ).resolves.toEqual({ success: true });
+            expect(update).toHaveBeenCalledWith(
+                expect.objectContaining({ lookingFor: ["long_term_partner"] }),
+            );
+        });
+
+        it("rejects religion writes when religionConsent is not held", async () => {
+            jest.clearAllMocks();
+            stubUpdateProfileMocks({}, { religion: "atheist" });
+            await expect(
+                callUpdateProfile({ religion: "atheist" }),
+            ).rejects.toMatchObject({
+                code: "permission-denied",
+                message: "art9_religion_consent_required",
+            });
+        });
+
+        it("accepts religion writes when the same request grants religionConsent", async () => {
+            jest.clearAllMocks();
+            const { update } = stubUpdateProfileMocks(
+                {},
+                { religion: "atheist", religionConsent: true },
+            );
+            await expect(
+                callUpdateProfile({ religion: "atheist", religionConsent: true }),
+            ).resolves.toEqual({ success: true });
+            expect(update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    religion: "atheist",
+                    religionConsent: true,
+                    religionConsentVersion: "v1",
+                }),
+            );
+        });
+
+        it("rejects ethnicity writes when ethnicityConsent is not held", async () => {
+            jest.clearAllMocks();
+            stubUpdateProfileMocks({}, { ethnicity: "slovenian" });
+            await expect(
+                callUpdateProfile({ ethnicity: "slovenian" }),
+            ).rejects.toMatchObject({
+                code: "permission-denied",
+                message: "art9_ethnicity_consent_required",
+            });
+        });
+
+        it("accepts ethnicity writes when the same request grants ethnicityConsent", async () => {
+            jest.clearAllMocks();
+            const { update } = stubUpdateProfileMocks(
+                {},
+                { ethnicity: "slovenian", ethnicityConsent: true },
+            );
+            await expect(
+                callUpdateProfile({
+                    ethnicity: "slovenian",
+                    ethnicityConsent: true,
+                }),
+            ).resolves.toEqual({ success: true });
+            expect(update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    ethnicity: "slovenian",
+                    ethnicityConsent: true,
+                    ethnicityConsentVersion: "v1",
+                }),
+            );
+        });
+
+        it("rejects sensitive writes when consent is flipped to false in the same request", async () => {
+            // Withdrawal must land as its own withdraw call — you cannot
+            // set consent=false AND still push a field write through the
+            // same call, because the write itself is the abuse we're
+            // preventing.
+            jest.clearAllMocks();
+            stubUpdateProfileMocks(
+                { sexualOrientationConsent: true },
+                { gender: "female", sexualOrientationConsent: false },
+            );
+            await expect(
+                callUpdateProfile({
+                    gender: "female",
+                    sexualOrientationConsent: false,
+                }),
+            ).rejects.toMatchObject({
+                code: "permission-denied",
+                message: "art9_orientation_consent_required",
+            });
+        });
+    });
+
+    describe("withdrawArt9Consent", () => {
+        it("orientation withdrawal deletes gender + lookingFor and stamps version", async () => {
+            jest.clearAllMocks();
+            const authGuard = await import("../../src/middleware/authGuard");
+            const rateLimit = await import("../../src/middleware/rateLimit");
+            const { withdrawArt9Consent } = await import(
+                "../../src/modules/users/users.functions"
+            );
+            const update = jest
+                .fn<(data: Record<string, unknown>) => Promise<void>>()
+                .mockResolvedValue(undefined);
+            mockDb.collection.mockReturnValue({ doc: jest.fn(() => ({ update })) });
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userUid");
+            jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+
+            const callable = withdrawArt9Consent as unknown as (r: unknown) => Promise<unknown>;
+            await expect(
+                callable({ auth: { uid: "userUid" }, data: { category: "orientation" } }),
+            ).resolves.toEqual({ success: true });
+
+            expect(update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    sexualOrientationConsent: false,
+                    sexualOrientationConsentVersion: "v1",
+                    gender: "FIELD_DELETE",
+                    lookingFor: "FIELD_DELETE",
+                }),
+            );
+        });
+
+        it("rejects an unknown withdrawal category", async () => {
+            jest.clearAllMocks();
+            const authGuard = await import("../../src/middleware/authGuard");
+            const rateLimit = await import("../../src/middleware/rateLimit");
+            const { withdrawArt9Consent } = await import(
+                "../../src/modules/users/users.functions"
+            );
+            mockDb.collection.mockReturnValue({
+                doc: jest.fn(() => ({ update: jest.fn() })),
+            });
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userUid");
+            jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+
+            const callable = withdrawArt9Consent as unknown as (r: unknown) => Promise<unknown>;
+            await expect(
+                callable({ auth: { uid: "userUid" }, data: { category: "phone" } }),
+            ).rejects.toMatchObject({
+                code: "invalid-argument",
+                message: "art9_withdraw_category_invalid",
+            });
         });
     });
 
