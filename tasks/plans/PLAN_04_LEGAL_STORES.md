@@ -67,6 +67,20 @@ je pripravljen za pošiljanje.
 4. Budget realnost: eno pisno mnenje na 2 vprašanji je nekaj sto EUR,
    ne tisoči. To ni "ko bo denar" postavka — je launch pogoj.
 
+**Code-side status (2026-07-14):** Art. 9(2)(a) posture hardening iz
+BLOCKER-LEGAL-003 je v izvedbi po PLAN_03 KORAK 3.10 (Plan-ID
+`20260714-legal-003-art9-consent-hardening`, HIGH risk, 1-PR scope
+z 7 workstream-i: server write-time enforcement, bilateral fail-
+closed scorer gate za gender + lookingFor, narrow-purpose consent
+text v EN + SL + HR, select-all fix, consent version + timestamp
+tags, settings withdrawal UX z `FieldValue.delete()` na purge,
+backfill modal za obstoječe uporabnike). **NE pošlji vprašanja
+odvetnici pred merge-om tega PR-ja** — sicer opinira na proposal
+namesto na shipped code, kar je razlog za re-work in dodaten
+strošek. Ko PR mergea, kopiraj current `consent_step.dart`
+orientation tile text (narrow-purpose formulacija) + pointer na
+merge commit v mnenje kot Exhibit A.
+
 **Output:**
 ```text
 Poslano odvetnici (datum, komu):
