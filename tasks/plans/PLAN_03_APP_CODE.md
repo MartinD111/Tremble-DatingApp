@@ -772,6 +772,146 @@ Heatmap odločitev (pre/post launch):
 ```
 
 ---
+## KORAK 3.9 — Session 2026-07-14 audit follow-up (P1 — process + ship-gate lane)
+
+Session 2026-07-14 je razkril, da je 5 od 8 "živih" p1/p3 tasks v
+PLAN_00 §Todoist že MERGEAN (PR #14 CI injection, PR #13 stopBilling,
+PR #17 CROSSING_PATHS, PR #18 prefer_not_to_say + KORAK 3.8-2 flaky
+GymStep test = cannot repro 43/43). PLAN_00 in `~/.claude/CLAUDE.md`
+"active blockers" sekciji NISO POSODOBLJENI in vsaka nova CLI seja
+ponovno zapravi ~1h ure odkrivanjem istih zaključenih ticket-ov.
+Naslednji 4 podnalog naslavljajo (1) sam problem stale intel-a in
+(2) tri prave preostale ship-blockerje na code-side.
+
+### KORAK 3.9-1 — Stale-intel audit docs PR (P1 — process hygiene)
+
+**Cilj:** Uskladi `tasks/plans/PLAN_00_MASTER_INDEX.md` §"Pokvarjeno /
+odprto" in §"Todoist živi taski" z dejanskim stanjem `main` po session
+2026-07-14. Doda Rule #83 v `tasks/lessons.md`. Predlaga diff za
+`~/.claude/CLAUDE.md` active-blocker sekcijo (globalna datoteka —
+founder aplicira).
+
+**Scope:**
+- `tasks/plans/PLAN_00_MASTER_INDEX.md` — odstrani zaključene alineje;
+  posodobi Todoist seznam (5 → 3 live task).
+- `tasks/lessons.md` — Rule #83: "Verify handoff intel against `git
+  log` + `gh pr list` pred kot cutнeš fix branch."
+- `tasks/plan.md` — Plan-ID rewrite.
+- `~/.claude/CLAUDE.md` (globalna) — CLI pripravi diff, founder aplicira.
+
+**Risk:** LOW · Founder approval: NO · Branch: `docs/stale-intel-audit-20260714`
+**Plan-ID:** `20260714-stale-intel-audit-docs`
+
+**Output:**
+```text
+PR#:               (fill after opening)
+Merge commit:
+Rule #83 landed:
+CLAUDE.md diff proposed (path/patch):
+```
+
+### KORAK 3.9-2 — iOS submission-readiness audit (Rule #82 3-surface check)
+
+**Cilj:** Verificira, da so PR #32 (Info.plist Contacts reconcile) +
+PrivacyInfo.xcprivacy + `en.lproj/InfoPlist.strings` skupaj resnično
+submission-ready proti Rule #82 3-surface protokolu:
+(a) master `Info.plist` ↔ localized `en.lproj/InfoPlist.strings`
+    divergence sweep za VSE `NS*UsageDescription` ključe (ne samo
+    Contacts).
+(b) duplicate permission-key sweep prek `plutil -lint` +
+    `grep -c "<key>NS.*UsageDescription</key>"` za vsak ključ.
+(c) `PrivacyInfo.xcprivacy` — NSPrivacyAccessedAPITypes derived-data
+    completeness (User Defaults, File Timestamp, System Boot Time,
+    Disk Space) + NSPrivacyCollectedDataTypes coverage za VSA
+    Firebase/R2/Redis polja, ne samo Contacts.
+
+**Scope:**
+- `ios/Runner/Info.plist` (read-only sweep prek plutil + grep)
+- `ios/Runner/en.lproj/InfoPlist.strings` (read-only)
+- `ios/Runner/PrivacyInfo.xcprivacy` (read-only unless gap found)
+- `tasks/blockers.md` — posodobi BLOCKER-STORE-001 status
+- `tasks/plan.md` — Plan-ID rewrite
+
+**Risk:** LOW če audit vrne clean; MEDIUM če najde gap (Info.plist
+edits zahtevajo founder odobritev per PLAN_00 native-config rule).
+**Founder approval:** NO za samo audit poročilo; YES če gap zahteva
+edit.
+**Branch:** `docs/ios-submission-audit-20260714`
+**Plan-ID:** `20260714-ios-submission-audit`
+
+**Output:**
+```text
+PR#:               (fill after opening)
+Audit result:      CLEAN / GAP FOUND
+Gap details:
+```
+
+### KORAK 3.9-3 — Paywall accuracy sync (BLOCKER-LEGAL-005 → App Store 3.1.2)
+
+**Cilj:** `lib/src/features/settings/presentation/premium_screen.dart`
+oglašuje feature-e, ki jih ni v kodi, in skriva feature-e, ki so
+gated. To je App Store 3.1.2 zavrnitveno tveganje + potrošniška
+zaščita per BLOCKER-LEGAL-005. Uskladi paywall bulleti z dejansko
+backend gate logiko (compound gates iz KORAK 3.7c-1: `hasMutualWave`,
+`effectiveIsPremium`, weekend pass window, itd.).
+
+**Scope:**
+- `lib/src/features/settings/presentation/premium_screen.dart` —
+  copy sync z realno gate logiko.
+- `lib/src/core/translations.dart` — nova/spremenjena copy v EN + SL
+  (+ ostalih 6 locales fallback).
+- `test/features/settings/premium_screen_test.dart` — regression
+  testi za vsak paywall bullet ↔ backend gate.
+- `tasks/blockers.md` — zapri BLOCKER-LEGAL-005.
+- `tasks/plan.md` — Plan-ID rewrite.
+
+**Risk:** MEDIUM — paywall je user-facing + billing-adjacent; HIGH če
+sprememba zadeva RevenueCat entitlement mapping. Test coverage MUST
+verificirati vsak bullet ↔ code gate.
+**Founder approval:** YES (billing-adjacent per MPC).
+**Branch:** `fix/paywall-accuracy-sync`
+**Plan-ID:** `20260714-paywall-accuracy-sync`
+
+**Output:**
+```text
+PR#:               (fill after opening)
+Bullete spremenjeni:
+RevenueCat mapping touched (yes/no):
+BLOCKER-LEGAL-005 closed:
+```
+
+### KORAK 3.9-4 — Brand-voice review Prominent Disclosure copy (BLOCKER-STORE-003 companion)
+
+**Cilj:** 4 nove Prominent Disclosure translation ključe (EN + SL)
+uvedene v PR #7 (2026-07-07) skozi `brand-voice-agent` skill. Trenutna
+copy je spec-verbatim in ni šla skozi brand review; blokira Play
+Console submission per BLOCKER-STORE-003.
+
+**Scope:**
+- Read: `lib/src/features/auth/presentation/prominent_disclosure_screen.dart`
+- Read: `lib/src/core/translations.dart` — 4 ključi:
+  `disclosure_bg_location_headline`, `disclosure_bg_location_body`,
+  `disclosure_bg_location_cta_allow`, `disclosure_bg_location_cta_not_now`.
+- Modify: `lib/src/core/translations.dart` s pregledano copy (EN + SL).
+- Test: obstoječi `test/features/auth/prominent_disclosure_screen_test.dart`
+  posodobi za novo copy (pins string content).
+- `tasks/blockers.md` — posodobi BLOCKER-STORE-003 progress.
+- `tasks/plan.md` — Plan-ID rewrite.
+
+**Risk:** LOW — copy only, no gate logic, no native config.
+**Founder approval:** NO (copy review is delegable). Founder Martin
+lahko final review copy pred Play submission.
+**Branch:** `feat/brand-voice-prominent-disclosure`
+**Plan-ID:** `20260714-brand-voice-prominent-disclosure`
+
+**Output:**
+```text
+PR#:               (fill after opening)
+Copy revidirana (EN + SL):
+BLOCKER-STORE-003 progress:
+```
+
+---
 **KONEC FAZE 3 — merila:** notifikacije vidne na obeh platformah (ročni
 device test), UI brez surovih ključev, gym ročna aktivacija dela od
 koderkoli, hobbiji enojezično dosledni in matching pravilen, event pini
