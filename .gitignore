@@ -18,6 +18,7 @@
 .pub-cache/
 .pub/
 build/
+release-symbols/
 
 // Android-specific
 android/**/generated/
