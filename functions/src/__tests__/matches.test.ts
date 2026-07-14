@@ -404,5 +404,59 @@ describe("Matches Module", () => {
             expect(mutualWaveCountForUser({ mutualWaves_2026_06: 4 }, "mutualWaves_2026_06")).toBe(4);
             expect(mutualWaveCountForUser({}, "mutualWaves_2026_06")).toBe(0);
         });
+
+        // ADR-007 §4 pair-of-tests — paywall premium_feature_mutual_waves_20.
+        // The client-side `AuthUser.hasReachedWaveLimit` gate is covered
+        // by `test/features/auth/auth_user_wave_limit_test.dart` (Free at
+        // 5 = at limit, Premium at 5 = under, Premium at 20 = at limit).
+        // These two server-side assertions mirror the client contract at
+        // the `count >= limit` comparison in `onWaveCreated`
+        // (matches.functions.ts:256) so a helper drift on either tier
+        // cannot silently un-gate the rejection.
+        it(
+            "Free user at the monthly limit (count=5) satisfies the "
+                + "`count >= limit` rejection predicate",
+            async () => {
+                const { mutualWaveLimitForUser, mutualWaveCountForUser } = await import(
+                    "../../src/modules/matches/matches.functions"
+                );
+
+                const userData = { isPremium: false, mutualWaves_2026_06: 5 };
+                const count = mutualWaveCountForUser(userData, "mutualWaves_2026_06");
+                const limit = mutualWaveLimitForUser(userData);
+
+                expect(count).toBe(5);
+                expect(limit).toBe(5);
+                expect(count >= limit).toBe(true);
+            }
+        );
+
+        it(
+            "Premium user at Free-tier count (count=5) does NOT satisfy the "
+                + "rejection predicate, but the same user at Premium-tier count "
+                + "(count=20) does",
+            async () => {
+                const { mutualWaveLimitForUser, mutualWaveCountForUser } = await import(
+                    "../../src/modules/matches/matches.functions"
+                );
+
+                const premiumUnderLimit = { isPremium: true, mutualWaves_2026_06: 5 };
+                const premiumAtLimit = { isPremium: true, mutualWaves_2026_06: 20 };
+
+                const underCount = mutualWaveCountForUser(
+                    premiumUnderLimit,
+                    "mutualWaves_2026_06"
+                );
+                const atCount = mutualWaveCountForUser(
+                    premiumAtLimit,
+                    "mutualWaves_2026_06"
+                );
+                const premiumLimit = mutualWaveLimitForUser(premiumUnderLimit);
+
+                expect(premiumLimit).toBe(20);
+                expect(underCount >= premiumLimit).toBe(false);
+                expect(atCount >= premiumLimit).toBe(true);
+            }
+        );
     });
 });
