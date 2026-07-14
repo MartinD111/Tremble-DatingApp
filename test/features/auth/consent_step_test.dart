@@ -200,6 +200,66 @@ void main() {
       expect(user.sexualOrientationConsent, isTrue);
       expect(user.sexualOrientationConsentAt, isNotNull);
     });
+
+    test(
+        'fromFirestore parses version + timestamp for all three Art. 9 categories',
+        () {
+      // Per LEGAL-003 step 5, the client must be able to READ the
+      // server-authoritative version + timestamp for orientation,
+      // religion, and ethnicity so the settings withdrawal UI and the
+      // backfill modal can decide whether to re-prompt on future
+      // version bumps.
+      final user = AuthUser.fromFirestore(
+        'u1',
+        const {
+          'sexualOrientationConsent': true,
+          'sexualOrientationConsentAt': '2026-07-14T12:00:00.000Z',
+          'sexualOrientationConsentVersion': 'v1',
+          'religionConsent': true,
+          'religionConsentAt': '2026-07-14T12:00:00.000Z',
+          'religionConsentVersion': 'v1',
+          'ethnicityConsent': false,
+          'ethnicityConsentAt': '2026-07-14T12:00:00.000Z',
+          'ethnicityConsentVersion': 'v1',
+        },
+      );
+      expect(user.sexualOrientationConsentVersion, 'v1');
+      expect(user.religionConsentVersion, 'v1');
+      expect(user.ethnicityConsentVersion, 'v1');
+      expect(user.religionConsentAt, isNotNull);
+      expect(user.ethnicityConsentAt, isNotNull);
+    });
+
+    test('version + timestamp fields default to null on unmigrated docs', () {
+      const user = AuthUser(id: 'u1');
+      expect(user.sexualOrientationConsentVersion, isNull);
+      expect(user.religionConsentVersion, isNull);
+      expect(user.ethnicityConsentVersion, isNull);
+      expect(user.religionConsentAt, isNull);
+      expect(user.ethnicityConsentAt, isNull);
+    });
+
+    test('copyWith preserves version + timestamp fields', () {
+      final t = DateTime.utc(2026, 7, 14, 12);
+      final u = AuthUser(
+        id: 'u1',
+        sexualOrientationConsent: true,
+        sexualOrientationConsentVersion: 'v1',
+        sexualOrientationConsentAt: t,
+        religionConsent: true,
+        religionConsentVersion: 'v1',
+        religionConsentAt: t,
+        ethnicityConsent: false,
+        ethnicityConsentVersion: 'v1',
+        ethnicityConsentAt: t,
+      );
+      final copy = u.copyWith(name: 'x');
+      expect(copy.sexualOrientationConsentVersion, 'v1');
+      expect(copy.religionConsentVersion, 'v1');
+      expect(copy.ethnicityConsentVersion, 'v1');
+      expect(copy.religionConsentAt, t);
+      expect(copy.ethnicityConsentAt, t);
+    });
   });
 
   group('GDPR pipeline — server-side wiring', () {
