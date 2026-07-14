@@ -77,17 +77,30 @@ void main() {
       expect(
         find.textContaining('approximate location'),
         findsOneWidget,
-        reason: 'EN body must mention approximate location',
+        reason: 'EN body must mention approximate location (Play policy)',
       );
       expect(
         find.textContaining('in the background'),
         findsOneWidget,
-        reason: 'EN body must state collection happens in background',
+        reason: 'EN body must state collection happens in background '
+            '(Play policy)',
+      );
+      expect(
+        find.textContaining('signals nearby'),
+        findsOneWidget,
+        reason: 'EN body uses brand-voice lexicon "signals" (Rule #3 '
+            'Wave-based mechanic), not the generic dating-app word "matches"',
+      );
+      expect(
+        find.textContaining('cleared within hours'),
+        findsOneWidget,
+        reason: 'EN body says data is "cleared" not "deleted" — brand-voice '
+            'softens the legalese for the consent surface',
       );
       expect(
         find.text('Allow background location'),
         findsOneWidget,
-        reason: 'EN primary CTA is spec-locked',
+        reason: 'EN primary CTA is spec-locked (Play policy)',
       );
       expect(
         find.text('Not now'),
@@ -113,17 +126,25 @@ void main() {
       expect(
         find.textContaining('približno lokacijo'),
         findsOneWidget,
-        reason: 'SL body must mention approximate location',
+        reason: 'SL body must mention approximate location (Play policy)',
       );
       expect(
         find.textContaining('aplikacija v ozadju'),
         findsOneWidget,
-        reason: 'SL body must state collection happens in background',
+        reason: 'SL body must state collection happens in background '
+            '(Play policy)',
+      );
+      expect(
+        find.textContaining('signale v tvoji bližini'),
+        findsOneWidget,
+        reason: 'SL body uses brand-voice lexicon "signale" (Rule #3 '
+            'Wave-based mechanic), not the generic dating-app word '
+            '"ujemanja"',
       );
       expect(
         find.text('Dovoli lokacijo v ozadju'),
         findsOneWidget,
-        reason: 'SL primary CTA is spec-locked',
+        reason: 'SL primary CTA is spec-locked (Play policy)',
       );
       expect(
         find.text('Ne zdaj'),
