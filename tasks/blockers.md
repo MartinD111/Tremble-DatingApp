@@ -82,11 +82,13 @@ Cannabis is unreachable across every surface of the product:
 **Impact:** The combination of `gender` + `lookingFor` implicitly reveals sexual orientation. As an Art. 9 category, processing without explicit consent is a massive GDPR violation (Grindr fined NOK 65M for this).
 **Action:** Add an explicit consent gate for processing these fields. (Task 6h3j9q65vh3mG64P)
 
-### BLOCKER-LEGAL-004 — Weekend Window ToS Mismatch
-**Date:** 2026-07-06
-**Status:** OPEN
-**Impact:** ToS §7 promises an automatic weekend window (Fri 19h - Sun 19h), but code doesn't enforce this. This is an unfair business practice / consumer deception.
-**Action:** Align code enforcement with ToS, or amend ToS. (Task 6h332RFRW946QWXw)
+### BLOCKER-LEGAL-004 — Weekend Window ToS Mismatch + user-local timezone
+**Date:** 2026-07-06 (rescoped 2026-07-14)
+**Status:** OPEN — scope escalated from LOW (ToS edit only) to HIGH (code + ToS)
+**Impact:** Two-layer problem.
+- **Layer 1 (original):** ToS §7 promises an "automatic weekend window (Fri 19h - Sun 19h)" but the actual product model is a PAID Premium mini-package (Weekend Getaway) with flat pricing, three purchase-timing branches (queued if bought pre-Fri 19:00 → activates at Fri 19:00 same week; instant if bought Fri 19:00 - Sun 19:00; queued for next weekend if bought post-Sun 19:00), NOT an automatic free unlock. Unfair business practice / consumer deception risk.
+- **Layer 2 (discovered 2026-07-14):** `getNextWeekendWindow` computes against hardcoded `Europe/Ljubljana`. A California user buying Weekend Getaway on Friday morning PST would see it activate at Thu 10:00 AM PST (Fri 19:00 CET) and expire Sun 10:00 AM PST — wrong product. The window must be computed in the **user's local timezone** (founder confirmed 2026-07-14).
+**Rescoped action:** No longer a 5-min ToS edit. The lane now requires (a) `timezone: string` (IANA) field on user document + backfill for existing SI/HR users, (b) `getNextWeekendWindow(userTimezone)` refactor + all callers, (c) traveler decision (snapshot at purchase vs re-evaluate at activation), (d) DST edge-case handling for Fri-19:00 transition weekends, THEN (e) ToS §7 rewrite describing the paid weekend package in user-local time. Sequenced AFTER LEGAL-003 ships. See memory `weekend-pass-user-local-timezone.md` for the durable decision record. (Task 6h332RFRW946QWXw)
 
 ### BLOCKER-LEGAL-005 — Paywall False Advertising
 **Date:** 2026-07-06

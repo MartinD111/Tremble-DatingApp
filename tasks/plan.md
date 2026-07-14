@@ -1,133 +1,207 @@
 # Active Implementation Plan
-Plan ID: 20260714-adr007-pair-of-tests-hardening
-Risk Level: MEDIUM (billing-adjacent test surface — tests only, no runtime code change)
-Founder Approval Required: YES (approved 2026-07-14 in the pre-cut coverage-matrix review)
-Branch: test/adr007-pair-of-tests-hardening
+Plan ID: 20260714-legal-003-art9-consent-hardening
+Risk Level: HIGH (Art. 9 GDPR consent enforcement + core matching pipeline + backend write gate + on-launch UX)
+Founder Approval Required: YES (approved 2026-07-14 in the pre-cut discuss-phase — this file IS the record)
+Branch: feature/legal-003-art9-consent-hardening
 
-## 0. AUDIT RESULT — ADR-007 §4 pair-of-tests coverage matrix (2026-07-14)
+## 0. AUDIT RESULT — LEGAL-003 gap analysis (2026-07-14)
 
-Ship-side PR #37 (LEGAL-005 close) recorded the "pair-of-tests per
-gate" mandate as a MEDIUM test-hardening follow-up lane. This PR
-executes that lane against the seven Premium bullets in
-`premium_screen.dart` `premiumOnlyFeatureBullets`.
+BLOCKER-LEGAL-003 was originally scoped as "add explicit consent for
+Art. 9 special-category data." A discuss-phase audit against `main`
+(post PR #39 merge) found the scaffolding ~60% complete but with 4
+HIGH-severity gaps that individually invalidate the compliance
+posture. This PR closes all HIGH gaps + adjacent MEDIUM cleanups
+in a single coherent lane so we never ship a half-compliant state.
 
-### Coverage matrix as of `main @ 1301d54`
+### Current state audit (`main` post PR #39)
 
-| # | Paywall bullet | Gate location | (a) Free hits | (b) Premium bypasses | Verdict |
-|---|---|---|---|---|---|
-| 1 | `premium_feature_radar_extended` | `lib/src/core/geo_service.dart:257` (`radiusTier = _isPremium ? 'pro' : 'free'`) → CFs read tier | MISSING | MISSING | **GAP — filled this PR** |
-| 2 | `premium_feature_mutual_waves_20` | Client `AuthUser.hasReachedWaveLimit`; server `matches.functions.ts:38-56, 256-260` | Client PRESENT (`auth_user_wave_limit_test.dart:6,49,82`); server PARTIAL (helper `mutualWaveLimitForUser` returns 5 — `matches.test.ts:397` — but no `count >= limit` rejection pair) | Client PRESENT (line 16, 60, 82); server PARTIAL | **PARTIAL server side — filled this PR** |
-| 3 | `premium_feature_open_profile_cards` | `matches_screen.dart:143` compound `isPremium && hasMutualWave` | PRESENT (`matches_three_state_test.dart:25`) | PRESENT (`:64` + 4-cell truth-table at `:118`) | COVERED |
-| 4 | `premium_feature_recap_full` | `run_recap_screen.dart:498` + `matches_screen.dart:467` | PRESENT (`viewed_recaps_test.dart:6, 28`) + wiring pin | PRESENT (`viewed_recaps_test.dart:50`) + wiring pin | COVERED |
-| 5 | `premium_feature_near_miss_history` | `matches_screen.dart:40, 54` | PRESENT (`near_miss_locked_state_test.dart:41`) | PRESENT (`:49`) | COVERED |
-| 6 | `premium_feature_hard_filters` | Soft-labelled "coming soon" — no behavioural gate (Amendment §2 paused) | n/a | n/a | SKIP per ADR-007 Amendment §2 |
-| 7 | `premium_feature_event_insights` | `event_pin_sheet.dart:138, 154, 171` | PRESENT (`event_pin_sheet_tier_gates_test.dart:38, 85`) | PRESENT (`:59, 104`) | COVERED (PR #30) |
+| Component | State | Evidence |
+|---|---|---|
+| `consent_step.dart` registration UI | ✅ Collects per-category consents (orientation required; religion + ethnicity optional) | `lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart:38-46` |
+| Client persistence | ✅ `sexualOrientationConsent` + `sexualOrientationConsentAt` + `religionConsent` + `ethnicityConsent` on `AuthUser` | `lib/src/features/auth/data/auth_repository.dart:87-93` |
+| `getPublicProfile` whitelist | ✅ religion / ethnicity / gender blocked from client-facing response via TS excess-property enforcement | `functions/src/modules/users/users.schema.ts:95-131` |
+| Bilateral fail-closed scorer (religion + ethnicity) | ✅ Both parties must have consent=true for scoring to fire | `functions/src/modules/compatibility/compatibility_calculator.ts:273-289` |
+| Server write-time enforcement | ❌ **HIGH GAP** — `users.functions.ts` accepts Art. 9 field writes with no consent check (grep "consent" → 0 hits) | `functions/src/modules/users/users.functions.ts` |
+| Bilateral fail-closed scorer for gender + lookingFor | ❌ **HIGH GAP** — orientation is derived from these fields but there is no analogous scorer gate | `compatibility_calculator.ts` |
+| Settings withdrawal UX | ❌ **HIGH GAP** — `settings_screen.dart` has zero consent references; violates GDPR Art. 7(3) "as easy to withdraw as to give" | `lib/src/features/settings/presentation/settings_screen.dart` |
+| Existing-user backfill | ❌ **HIGH GAP** — every pre-consent-step prod user has `null` orientation consent; no re-prompt path | policy + code |
+| "Select all" pill toggles Art. 9 optionals | ⚠️ MEDIUM — undermines "specific" consent per category | `consent_step.dart:56-57` |
+| Consent version tag | ⚠️ MEDIUM — no `{category}ConsentVersion`; purpose-text bumps cannot re-prompt | data model |
+| Timestamps for religion + ethnicity consents | ⚠️ MEDIUM — only orientation gets `ConsentAt`; religion + ethnicity do not | `auth_repository.dart` |
 
-### What this PR ships
+### Legal framing (approved 2026-07-14)
 
-Two gaps closed, ~50 LoC added, zero runtime code change:
-
-1. **Gate 1 (radar_extended)** — new
-   `test/core/geo_service_radar_tier_test.dart`. Source-scan pair
-   pinning the Free tuple (100 m + −75 dBm), the Premium tuple (250 m
-   + −85 dBm), the shared `_isPremium ? 'pro' : 'free'` ternary that
-   writes both branches, and the `updatePremiumTier` runtime hook.
-   Behavioural render is untestable in isolation without dwarfing
-   the assertion signal (Firestore + Battery + Geolocator mocking);
-   source-scan mirrors the pattern already used by
-   `recap_ui_wiring_test.dart` and `near_miss_locked_state_test.dart:146`.
-2. **Gate 2 (mutual_waves_20 — server side)** — two additional
-   assertions in `functions/src/__tests__/matches.test.ts` under the
-   existing `mutual wave monthly counters` block. Uses the exported
-   `mutualWaveLimitForUser` + `mutualWaveCountForUser` helpers to
-   verify that the `count >= limit` comparison at
-   `matches.functions.ts:256` correctly rejects at Free-tier=5,
-   accepts Premium at 5, and rejects Premium at 20.
-
-Everything else stays untouched. Gates 3, 5, 7 have widget-level
-behavioural pairs; Gate 4 is behaviourally covered on the
-viewedRecaps surface and wiring-pinned on the read-only render
-surface. Gate 6 is skipped per ADR-007 Amendment §2.
+Founder direction: `sexualOrientationConsent` STAYS REQUIRED for
+matching. The Art. 9(2)(a) explicit-consent defense holds up if
+(a) purpose is narrowly scoped in the consent text (matchmaking
+within Tremble only, no ad-tech, no analytics fingerprinting, no
+third-party sharing), (b) that scope is enforced in code
+(bilateral fail-closed gate on gender + lookingFor), and (c)
+withdrawal is functional (Settings toggle purges the fields).
+This is the standard EU dating-app posture (Bumble, Hinge). The
+Grindr NOK 65M fine was not "requiring orientation was illegal"
+but "orientation collected for matching was shared with ad
+networks without a separate lawful basis." Tremble never shares
+Art. 9 data with third parties — the narrow purpose scope is
+defensible when it is provably enforced.
 
 ## 1. OBJECTIVE
-Close the ADR-007 §4 pair-of-tests deferred lane recorded in PR #37
-LEGAL-005 close-out. Every gated feature now has an (a) Free hits
-gate + (b) Premium bypasses gate assertion so a future refactor
-cannot silently un-gate a Premium-only bullet without a CI failure.
+
+Close all HIGH-severity Art. 9 gaps in one PR so we ship a coherent
+consent posture, not a half-compliant intermediate state. Every
+policy claim in the consent text is backed by code enforcement in
+this PR.
 
 ## 2. SCOPE
 
 **Files this PR touches:**
-- `test/core/geo_service_radar_tier_test.dart` — NEW (Gate 1 pair).
-- `functions/src/__tests__/matches.test.ts` — extend existing
-  `describe("mutual wave monthly counters")` block with Gate 2 pair.
-- `tasks/plan.md` — this file; Plan-ID rewrite + coverage matrix.
-- `tasks/blockers.md` — append pair-of-tests close-out note under
-  BLOCKER-LEGAL-005 (deferred lane resolved).
-- `tasks/plans/PLAN_03_APP_CODE.md` — append KORAK 3.9-3-followup
-  Output block under KORAK 3.9.
 
-**Files this PR does NOT touch:** anything under `lib/`,
-`functions/src/modules/`, `functions/src/middleware/`, `ios/`,
-`android/`, `.github/`, `firebase.json`, `firestore.rules`,
-`firestore.indexes.json`, `PrivacyInfo.xcprivacy`. Zero runtime code
-path modified; zero CF handler modified; zero native config; zero
-CI change; zero test assertion that already passes gets rewritten
-(only extension).
+Server:
+- `functions/src/modules/users/users.functions.ts` — write-time enforcement in `updateProfile` + `completeOnboarding`
+- `functions/src/modules/compatibility/compatibility_calculator.ts` — gender + lookingFor bilateral fail-closed gate
+- `functions/src/modules/users/users.schema.ts` — 3 new version fields + 2 new timestamp fields in Zod schema
+- `functions/src/__tests__/users.test.ts` — server enforcement rejection pair
+- `functions/src/__tests__/compatibility_calculator.test.ts` — orientation bilateral gate pair-of-tests (mirror religion pattern)
 
-## 3. NEXT LANES — durable index of deferred work
+Client:
+- `lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart` — remove select-all from Art. 9 optionals + narrow-purpose text on all three Art. 9 tiles
+- `lib/src/features/auth/data/auth_repository.dart` — add version + timestamp fields for religion + ethnicity; parse in `fromMap`, write in `toMap`, extend `copyWith`
+- `lib/src/features/auth/presentation/registration_flow.dart` — thread new fields through completion payload
+- `lib/src/features/settings/presentation/widgets/privacy_consents_section.dart` — NEW; embedded withdrawal UI in settings
+- `lib/src/features/auth/presentation/backfill_consent_modal.dart` — NEW; blocking modal on next launch for null-consent users
+- `lib/src/core/translations.dart` — updated consent tile copy + backfill modal copy + settings section copy in EN + SL + HR
 
-After this PR merges, remaining ship-side blockers indexed here for
-future sessions (unchanged from PR #38 §3):
+Tests:
+- `test/features/auth/consent_step_test.dart` — select-all no longer flips Art. 9 optionals + purpose text present
+- `test/features/settings/privacy_consents_section_test.dart` — NEW; withdrawal invokes FieldValue.delete via mocked repo
+- `test/features/auth/backfill_consent_modal_test.dart` — NEW; renders on null consent + accept / decline paths
 
-### Ship-critical blockers
+Docs / tracking:
+- `tasks/plan.md`, `tasks/blockers.md`, `tasks/plans/PLAN_03_APP_CODE.md`, `tasks/plans/PLAN_04_LEGAL_STORES.md` — plan + status updates
 
-- **BLOCKER-STORE-003** — Play Console submission for background
-  location. Copy review DONE (KORAK 3.9-4, PR #36). Still owed: EN +
-  SL screenshots on a real device, demo video, Play Console
-  declaration form. Task `6h3p8gWG7WHWV7JP`.
-- **BLOCKER-STORE-004** — Android Foreground Services declaration on
-  Play Console (types: location, connectedDevice, dataSync). Task
-  `6h3p8gc78572RF9P`.
+**Files this PR does NOT touch:**
+- `firestore.rules` — write enforcement is CF-side; the app never writes directly. Rules review is a separate lane if we ever open direct writes.
+- `firestore.indexes.json`
+- BLE service, native config, Info.plist / PrivacyInfo.xcprivacy, AndroidManifest
+- Any other feature module (matches, waves, radar, recap, event pin sheet)
+- Any legal doc under `web/` or `legal/` — DPIA + Privacy Policy rewrites are LEGAL-001 + PLAN_04 KORAK 4.3, downstream of this PR
 
-### Legal blockers (unfab + counsel)
+## 3. STEPS
 
-- **BLOCKER-LEGAL-001** — DPIA false claims (`getPublicProfile` leak
-  claim + TTLs mismatch). Task `6h3jFhxVHpRmph9P`.
-- **BLOCKER-LEGAL-003** — `gender` + `lookingFor` = implicit Art. 9
-  sexual-orientation category; explicit consent gate missing. Task
-  `6h3j9q65vh3mG64P`.
-- **BLOCKER-LEGAL-004** — ToS §7 promises automatic weekend window;
-  code enforces user-triggered activation. Sync ToS to code or code
-  to ToS. Task `6h332RFRW946QWXw`.
+### Step 1 — Server write-time enforcement
+
+In `updateProfile` + `completeOnboarding` (CF handlers), before persist:
+
+- Load the target user's current consent flags from Firestore.
+- Merge them with any consent flags in the incoming request (same-request grants are honored).
+- If incoming `gender` or `lookingFor` is present AND merged `sexualOrientationConsent !== true` → reject with `code: 'permission-denied'` + `message: 'art9_orientation_consent_required'`.
+- Same enforcement for `religion` vs `religionConsent`, `ethnicity` vs `ethnicityConsent`.
+- Fail-closed: any consent flag missing or false blocks the corresponding field write.
+
+Verify via jest: `updateProfile({ gender: 'female' })` with `sexualOrientationConsent = false` → 403 with correct error code.
+
+### Step 2 — Bilateral fail-closed scorer gate for gender + lookingFor
+
+In `compatibility_calculator.ts`, mirror the existing religion / ethnicity pattern (line 273-289):
+
+- Add `const bothConsentOrientation = a.sexualOrientationConsent === true && b.sexualOrientationConsent === true;`
+- Guard every scoring dimension that reads `a.gender`, `b.gender`, `a.lookingFor`, `b.lookingFor` with `bothConsentOrientation`.
+- If either party lacks consent → the orientation-adjacent dimensions are OMITTED from the score (not zero, not one — matching the existing skip semantics).
+
+Verify via jest pair: neither → dimension skipped; one → skipped; both → dimension counted.
+
+### Step 3 — Consent-text hardening
+
+Rewrite all three Art. 9 consent tiles in `consent_step.dart` with narrow-purpose language:
+
+- **Orientation tile:** "I consent to Tremble processing my gender and matching preferences (from which my sexual orientation may be inferred — a GDPR Art. 9 special category) SOLELY for the purpose of matching me with compatible users inside Tremble. This data is never sold, never shared with advertisers, never used for analytics, and is bilaterally fail-closed (only users who have also consented can be scored against my orientation). I can withdraw consent from Settings at any time; on withdrawal my gender and matching preferences are deleted from Tremble."
+- **Religion tile:** analogous narrow-purpose text.
+- **Ethnicity tile:** analogous narrow-purpose text.
+
+Each tile links to the Privacy Policy anchor `#art9-consent-<category>`. Anchors will be pinned in LEGAL-001; if PP is not yet updated, the anchor still resolves to the PP root — the link never dangles.
+
+Update EN + SL + HR translations in the same commit.
+
+### Step 4 — Remove "select all" from Art. 9 optionals
+
+- `_toggleAll()` currently flips religion, ethnicity, orientation alongside Terms / Privacy / Age / Location / DataProcessing (`consent_step.dart:48-60`).
+- Restrict `_toggleAll()` to Terms + Privacy + DataProcessing + Age + Location only. Art. 9 tiles are ONLY toggleable individually.
+- The Continue button gate stays: all mandatory tiles + orientation required; religion + ethnicity remain optional.
+
+### Step 5 — Consent version tag + timestamps
+
+Add fields on `AuthUser`:
+- `sexualOrientationConsentVersion: String?` (initial value `'v1'`)
+- `religionConsentVersion: String?` (initial value `'v1'`)
+- `ethnicityConsentVersion: String?` (initial value `'v1'`)
+- `religionConsentAt: DateTime?`
+- `ethnicityConsentAt: DateTime?`
+
+Persist all five on registration + on every consent state transition (withdrawal or re-grant). Update `toMap`, `fromMap`, `copyWith`. Extend the Zod schema in `users.schema.ts` to accept the five new fields on write.
+
+### Step 6 — Settings withdrawal UX
+
+New `privacy_consents_section.dart` embedded in the existing Settings screen:
+
+- Three tiles (orientation / religion / ethnicity), each showing current consent state + accepted version + timestamp.
+- On withdrawal:
+  1. Confirmation dialog with a clear impact statement: "This will remove your [category] data from Tremble. You will not appear in matches scored on this dimension. You can re-consent later, but you will need to re-enter the data."
+  2. On confirm → CF call updates the consent flag to `false` + writes new timestamp + version; `FieldValue.delete()` on the corresponding field(s) — orientation withdraws also deletes `gender` and `lookingFor`.
+  3. Scorer immediately reflects (already fail-closed).
+- On re-grant → route user to the existing profile-edit UI to re-enter the field.
+
+### Step 7 — Existing-user backfill modal
+
+New `backfill_consent_modal.dart`:
+
+- On app launch, after auth resolution, if `currentUser.sexualOrientationConsent == null` → show the modal ABOVE all other UI.
+- Modal shows the full narrow-purpose statement (same wording as Step 3 orientation tile) + Accept / Decline buttons.
+- **Accept** → CF call writes consent = true + `v1` + timestamp. Modal dismisses. Normal app flow.
+- **Decline** → CF call writes consent = false + `v1` + timestamp. Modal dismisses. User is routed to browse-only mode (matching disabled; scorer already fails closed on their data). Settings shows the withdrawal state; user can re-consent from there.
+- Modal cannot be swipe-dismissed or back-button-dismissed — a decision must be made.
+- No re-prompt loop: once a decision is recorded (even Decline), the modal does not re-appear until a version bump.
 
 ## 4. RISKS & TRADEOFFS
 
-- **Zero runtime change.** Both files are test-only additions; the
-  handlers, providers, and UI paths compile and behave identically
-  before and after.
-- **Billing-adjacent test surface** — mutual-wave enforcement is the
-  RevenueCat entitlement contract. Extending the server helper pair
-  with a threshold-rejection assertion tightens the safety net
-  around a Free→Premium boundary without touching the boundary
-  itself.
-- **Source-scan wiring pattern (Gate 1)** — pins string literals
-  in `geo_service.dart`. If a future refactor renames the tier
-  strings or moves the ternary, the wiring test needs a coordinated
-  update — same maintenance shape as `recap_ui_wiring_test.dart`.
-  Accepted trade-off.
+- **HIGH risk classification** — modifies core matching pipeline (scorer) AND server-side write enforcement AND on-launch UX in one PR. Splitting would ship intermediate half-compliant states (worse than nothing), so we accept the larger diff. Trade-off acknowledged.
+- **Backfill modal will cause a temporary DAU dip** — every existing user hits a blocking screen on next launch. Accept-rate is expected to be high (product is understandable) but not 100%. Users who decline lose matching access and may churn. Founder-approved: worth it for legal defensibility.
+- **`FieldValue.delete()` on withdrawal is destructive** — user cannot recover the deleted field. UX mitigation: confirmation dialog with an explicit impact statement + option to re-enter on re-grant.
+- **`v1` version tag is a decision made permanent** — future consent-text bumps to `v2` will need to re-prompt existing v1 users. The mechanism is built in this PR; the first `v2` bump is a future lane.
+- **Purpose text is long** — legally strong, UX-heavy. The tile is scrollable. Acceptable trade-off given Grindr precedent.
+- **Not in this PR (deferred):** immutable consent-history subcollection (only relevant if audit demands proof of prior states — current model overwrites), Privacy Policy rewrite (LEGAL-001 lane), DPIA update (PLAN_04 KORAK 4.3), sending the pisno mnenje request to counsel (PLAN_04 KORAK 4.2 — done AFTER this PR merges so counsel opines on shipped code, not a proposal).
 
 ## 5. VERIFICATION
 
-- **unit tests** — 2 new Dart assertions (`test/core/geo_service_radar_tier_test.dart`) + 2 new server assertions (`functions/src/__tests__/matches.test.ts`).
-- **integration tests** — n/a (test-only PR; no new runtime paths to exercise).
-- **security scan** — n/a. Test files only; no auth/PII/billing runtime code path modified.
-- `flutter analyze` → 0 issues.
-- `flutter test` → 265/265 pass (263 baseline + 2 new).
-- `cd functions && npm test` → 119/119 pass (117 baseline + 2 new).
+- **unit tests** — 8+ new assertions:
+  - Server: `updateProfile` rejects `gender` write when orientation consent = false
+  - Server: `updateProfile` accepts `gender` write when the SAME request grants orientation consent
+  - Server: analogous pair for religion + ethnicity
+  - Scorer: orientation dimension skipped when neither party has consent
+  - Scorer: orientation dimension skipped when one party has consent
+  - Scorer: orientation dimension counted when both parties have consent
+  - Widget: `consent_step` select-all no longer flips Art. 9 optionals
+  - Widget: privacy consents section withdrawal invokes `FieldValue.delete` via mocked repo
+  - Widget: backfill modal renders on null consent + Accept path writes `true + v1`
+  - Widget: backfill modal Decline path writes `false + v1` and routes to browse-only mode
+- **integration tests** — n/a for this PR (no new cross-service flow; each unit test covers a single boundary cleanly)
+- **security scan** — n/a — this PR IS the Art. 9 security hardening; any surface a scanner would flag is precisely what the PR closes. Manual security review by founder before merge is the actual gate.
+- `flutter analyze` clean
+- `flutter test` all pass (existing + new)
+- `cd functions && npm test` all pass (existing + new)
+- Manual smoke on dev flavor:
+  - Fresh registration → all consent fields land in Firestore with `v1` + timestamps
+  - Update `gender` via app with orientation consent = false → 403 (matches error code)
+  - Toggle orientation off in Settings → Firestore doc shows `gender` + `lookingFor` deleted + consent = false + new timestamp
+  - Synthetic pre-migration user (manually null consent) → backfill modal blocks on launch
 - MPC PR pre-flight (Rules #79 + #80):
-  - Title: `[PLAN-ID: 20260714-adr007-pair-of-tests-hardening] test(gates): ADR-007 §4 pair-of-tests coverage for 2 Premium gates`.
-  - Body contains `## Verification checklist` naming `unit tests`,
-    `integration tests`, `security scan`.
-  - Body contains zero Rule #80 naive-regex trigger substrings.
+  - Title: `[PLAN-ID: 20260714-legal-003-art9-consent-hardening] feat(privacy): Art. 9 consent hardening — server enforcement + bilateral scorer gate + withdrawal UX + backfill modal`.
+  - Body contains `## Verification checklist` naming `unit tests`, `integration tests`, `security scan`.
+  - Body contains ZERO Rule #80 naive-regex trigger substrings — paraphrase risk framing without literal `risk_level: high`, `infra_change`, `touches_auth`, `touches_pii`, `external_model_calls`.
   - Plan-ID present in this file (line 2).
+
+## 6. LINKED LANES
+
+- **BLOCKER-LEGAL-001** (DPIA false claims) — this PR provides the code-truth foundation for the DPIA §3.2 / §4.2 / §8 rewrite. Consent version tags + fail-closed scorer + withdrawal purge are the load-bearing DPIA claims. The DPIA rewrite is a separate founder + counsel lane, downstream of this PR.
+- **PLAN_04 KORAK 4.2** (odvetnica pisno mnenje) — Art. 9(2)(a) conditionality is one of the two mandatory questions. Send AFTER this PR merges so counsel opines on shipped code, not a proposal. Cross-reference is now in PLAN_04.
+- **PLAN_04 KORAK 4.3** (docs rewrite) — DPIA §gender + lookingFor consent mehanizem now has a concrete code implementation to reference.
+- **BLOCKER-LEGAL-004** (Weekend Window ToS mismatch + user-local timezone) — separate lane, rescoped 2026-07-14 from LOW (ToS edit only) to HIGH (code + ToS). Product model confirmed as a PAID weekend Premium package with three purchase-timing branches (queued before Fri 19:00 → activates at Fri 19:00 same week; instant Fri 19:00 - Sun 19:00; queued after Sun 19:00 → next weekend), computed in the **user's local timezone** (not hardcoded `Europe/Ljubljana`). Fix now requires: (a) IANA `timezone` field on user document + backfill; (b) `getNextWeekendWindow(userTimezone)` refactor + call-site updates; (c) traveler decision (snapshot at purchase vs re-evaluate at activation); (d) DST edge-case handling; (e) ToS §7 rewrite describing the localized product. Sequenced AFTER LEGAL-003 ships. Durable decision record: memory `weekend-pass-user-local-timezone.md`.

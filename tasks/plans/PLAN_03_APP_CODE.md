@@ -1016,6 +1016,118 @@ BLOCKER-STORE-003 progress: brand-voice review DONE. Preostalo
   Console declaration.
 ```
 
+## KORAK 3.10 — LEGAL-003 Art. 9 consent hardening (P1 — legal launch blocker)
+
+**Cilj:** Zapri BLOCKER-LEGAL-003 (Art. 9 GDPR explicit consent gate)
+z enim koherentnim PR-jem, ki hkrati zapre 4 HIGH-severity code gap-e
+najdene v 2026-07-14 discuss-phase audit-u. Scaffolding je ~60%
+pripravljen (registracijski `consent_step.dart`, client-side
+`AuthUser` consent polja, `getPublicProfile` whitelist,
+bilateral fail-closed scorer za religion + ethnicity), ampak
+brez server-side write enforcement-a, brez gender + lookingFor
+scorer gate-a, brez settings withdrawal UX-a in brez backfill
+modala za obstoječe uporabnike je posture ne-defensible pod Art.
+9(2)(a).
+
+**Founder framing decision (2026-07-14):** `sexualOrientationConsent`
+OSTANE REQUIRED za matching. Art. 9(2)(a) explicit-consent defence
+drži če je (a) purpose narrowly scoped v consent text-u (matchmaking
+znotraj Tremble-a, brez ad-tech, brez analytics fingerprinting, brez
+third-party sharing), (b) scope je enforcable v kodi (bilateral
+fail-closed gate), in (c) withdrawal je funkcionalen (Settings
+toggle briše field-e). Standardna EU dating-app postura (Bumble,
+Hinge). Grindr NOK 65M fine ni bil "requiring orientation was
+illegal" ampak "sharing orientation with ad networks without
+separate lawful basis" — Tremble tega ne dela.
+
+**7 workstream-ov, 1 PR:**
+
+1. **Server write-time enforcement** — `users.functions.ts`
+   `updateProfile` + `completeOnboarding` zavrneta write na
+   `gender` / `lookingFor` / `religion` / `ethnicity` če
+   corresponding consent flag ni `true`. Fail-closed: manjkajoč
+   flag = zavrnitev. Same-request consent grants so honoured.
+2. **Bilateral fail-closed scorer gate za gender + lookingFor** —
+   `compatibility_calculator.ts` mirror obstoječega religion +
+   ethnicity pattern-a (line 273-289). Če katera stran nima
+   `sexualOrientationConsent === true` → orientation-adjacent
+   scoring dimension je SKIPPED (ne zero, ne one — omitted).
+3. **Consent-text hardening** — `consent_step.dart` vse tri Art.
+   9 tile-e (orientation, religion, ethnicity) dobijo narrow-
+   purpose language: "SOLELY for matching within Tremble, never
+   sold, never shared with advertisers, never used for analytics,
+   bilaterally fail-closed." EN + SL + HR translations.
+4. **Remove "select all" od Art. 9 optionals** —
+   `consent_step.dart:48-60` `_toggleAll()` restrictan na Terms
+   + Privacy + DataProcessing + Age + Location. Art. 9 tile-i
+   samo individualno toggleable.
+5. **Consent version tag + timestamps** — dodaj `AuthUser` field-e
+   `sexualOrientationConsentVersion` / `religionConsentVersion` /
+   `ethnicityConsentVersion` (initial `'v1'`) + `religionConsentAt`
+   / `ethnicityConsentAt` (only orientation je imela `ConsentAt`).
+   `toMap` / `fromMap` / `copyWith` + Zod schema extension.
+6. **Settings withdrawal UX** — nov
+   `privacy_consents_section.dart` v settings. 3 tile-i (per
+   category) + confirmation dialog + `FieldValue.delete()` na
+   corresponding field(s). Orientation withdrawal briše tudi
+   `gender` + `lookingFor`. Scorer immediately reflects (že
+   fail-closed).
+7. **Existing-user backfill modal** — nov
+   `backfill_consent_modal.dart`. Na app launch po auth
+   resolution: če `currentUser.sexualOrientationConsent == null`
+   → blocking modal. Accept → consent = true + v1 + timestamp.
+   Decline → consent = false + v1 + timestamp → user routed to
+   browse-only mode. Modal ni swipe/back dismissable.
+
+**Scope:** ~600-900 LoC. HIGH risk (core matching pipeline +
+backend write gate + on-launch UX v enem PR-ju). Split bi shipnil
+half-compliant intermediate state, kar je slabše od nič — accepted
+trade-off.
+
+**Not in this PR (deferred):**
+- Immutable consent-history subcollection (samo če audit zahteva
+  proof of prior states — current model overwrites).
+- Privacy Policy rewrite (LEGAL-001 lane).
+- DPIA update (KORAK 4.3).
+- Sending pisno mnenje request odvetnici (KORAK 4.2 — done PO
+  merge tega PR-ja, da counsel opinira na shipped code, ne na
+  proposal).
+
+**Risk:** HIGH · **Founder approval:** YES (approved 2026-07-14 v
+pre-cut discuss-phase; `tasks/plan.md` `20260714-legal-003-art9-
+consent-hardening` IS the record) · **Branch:**
+`feature/legal-003-art9-consent-hardening` · **Plan-ID:**
+`20260714-legal-003-art9-consent-hardening`
+
+**Output:**
+```text
+PR#:                  (fill after opening)
+Merge commit:         (fill after merge)
+BLOCKER-LEGAL-003:    (open → resolved on merge)
+Server enforcement:   updateProfile + completeOnboarding rejection
+                      pair added; users.test.ts 4 new assertions.
+Scorer gate:          gender + lookingFor bilateral fail-closed
+                      pair-of-tests in compatibility_calculator.test.ts
+                      (mirrors religion pattern line 273-289).
+Consent text:         3 Art. 9 tiles rewritten with narrow-purpose
+                      language + PP anchor links; EN + SL + HR.
+Select-all fix:       Art. 9 optionals no longer flipped by pill.
+Version + timestamps: 3 new version fields + 2 new timestamp
+                      fields on AuthUser + Zod schema.
+Withdrawal UX:        privacy_consents_section.dart with
+                      FieldValue.delete on purge.
+Backfill modal:       backfill_consent_modal.dart, non-dismissable,
+                      Accept / Decline paths tested.
+Verification:         flutter analyze clean · flutter test all
+                      green (existing + 4-6 new widget assertions)
+                      · npm test all green (existing + 4-6 new
+                      jest assertions).
+Follow-up owed:       LEGAL-001 DPIA rewrite (§3.2 / §4.2 / §8
+                      references this PR's shipped code); PLAN_04
+                      KORAK 4.2 send pisno mnenje request to
+                      counsel (do NOT send before this PR merges).
+```
+
 ---
 **KONEC FAZE 3 — merila:** notifikacije vidne na obeh platformah (ročni
 device test), UI brez surovih ključev, gym ročna aktivacija dela od
