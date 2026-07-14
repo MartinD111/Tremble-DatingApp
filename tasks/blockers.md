@@ -59,9 +59,22 @@
 
 ### BLOCKER-LEGAL-002 — Cannabis Legal Classification
 **Date:** 2026-07-06
-**Status:** OPEN
-**Impact:** `nicotineUse` bundles cannabis with vape. In some jurisdictions, cannabis data is "criminal offense data" (Art. 10 GDPR), meaning consent cannot legitimize it.
-**Action:** Separate cannabis into its own field pending legal review. (Task 6h3jHjr7Hf58G8pw)
+**Status:** RESOLVED 2026-07-14 — cannabis removed from product entirely (stronger than the original "separate into own field" action)
+**Impact:** `nicotineUse` bundled cannabis with vape. In some jurisdictions, cannabis data is "criminal offense data" (Art. 10 GDPR), meaning consent cannot legitimize it.
+**Resolution (audit evidence, 2026-07-14):**
+
+Cannabis is unreachable across every surface of the product:
+
+| Surface | Evidence | Verified |
+|---|---|---|
+| Registration UI | `lib/src/features/auth/presentation/widgets/registration_steps/nicotine_step.dart:15-19` — only 5 options offered: `cigarettes`, `vape`, `iqos`, `zyn`, `shisha`. No cannabis chip. | ✅ |
+| Server API (Zod) | `functions/src/modules/users/users.schema.ts:17-23` — `nicotineUseValueSchema = z.enum(["cigarettes", "vape", "iqos", "zyn", "shisha"])`. Any request that sends `"cannabis"` is rejected with 400 at the API boundary. | ✅ |
+| Edit-profile display | `lib/src/features/profile/presentation/edit_profile_screen.dart:124` — `..addAll(user.nicotineUse.where((v) => v != 'cannabis'))` defensively filters legacy Firestore entries out of the render. | ✅ |
+| Legacy Firestore data | `functions/src/scripts/remove_cannabis.ts` migration ran against **prod (`am---dating-app`)**. Founder confirmed 2026-07-14. `FieldValue.arrayRemove("cannabis")` is idempotent — subsequent user writes cannot re-introduce it. | ✅ |
+
+**Why stronger than the original action:** the blocker's original ask was to "separate cannabis into its own field pending legal review." The founder chose to *remove* cannabis entirely instead. No collection → no consent needed → no Art. 10 exposure at all. This closes the risk without waiting for a per-jurisdiction legal opinion.
+
+**Related:** PLAN_00 §Deluje records "Kanabis + politična pripadnost: odstranjena iz kode (grep = 0 zadetkov v main)" — verifies the code-side removal. This closeout adds the schema-boundary + display-filter + prod-migration evidence. (Task 6h3jHjr7Hf58G8pw)
 
 ### BLOCKER-LEGAL-003 — Sexual Orientation (GDPR Art. 9) Missing Consent
 **Date:** 2026-07-06

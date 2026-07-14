@@ -56,6 +56,30 @@ banned phrases (`revolutionary`, `seamless`, `game-changing`, `find
 love today`, `find your person`, `swipe`, `match queue`, `chat`) per
 ADR-007 §3. Currently passes.
 
+### Bonus closure — BLOCKER-LEGAL-002 (cannabis, Art. 10 GDPR)
+
+Founder flagged 2026-07-14 that cannabis has been fully removed from
+the product. Verified across four surfaces:
+
+- **Registration UI** (`nicotine_step.dart:15-19`): only 5 options
+  offered — `cigarettes`, `vape`, `iqos`, `zyn`, `shisha`. No
+  cannabis chip renders.
+- **Server API (Zod)** (`users.schema.ts:17-23`): enum excludes
+  cannabis; any request that sends it is rejected with 400 at the
+  API boundary.
+- **Edit-profile display** (`edit_profile_screen.dart:124`):
+  defensively filters legacy Firestore entries via
+  `.where((v) => v != 'cannabis')` so no stale data reaches the UI.
+- **Prod migration** (`functions/src/scripts/remove_cannabis.ts`):
+  ran against `am---dating-app` (founder confirmed 2026-07-14).
+  `FieldValue.arrayRemove("cannabis")` is idempotent; subsequent
+  writes cannot re-introduce it.
+
+Result stronger than the original blocker's "separate cannabis into
+its own field" action: no collection → no consent needed → no Art. 10
+exposure. LEGAL-002 marked RESOLVED in `tasks/blockers.md` with the
+same evidence chain.
+
 ## 1. OBJECTIVE
 Close BLOCKER-LEGAL-005 with concrete audit evidence so future
 sessions don't re-open the phantom-blocker cycle Rule #83 warned
@@ -64,17 +88,24 @@ location (blockers.md + this plan) as a source-of-truth for the next
 copy-review cycle.
 
 ## 2. SCOPE
-- `tasks/blockers.md` — BLOCKER-LEGAL-005 → RESOLVED with the
-  full bullet↔gate mapping table + deferred pair-of-tests note.
-- `tasks/plan.md` — this file; Plan-ID + §0 audit evidence + §3
-  durable index of remaining ship-side blockers.
+- `tasks/blockers.md`
+  - BLOCKER-LEGAL-005 → RESOLVED with the full bullet↔gate mapping
+    table + deferred pair-of-tests note.
+  - BLOCKER-LEGAL-002 → RESOLVED with the 4-surface cannabis-
+    unreachable evidence chain (bonus closure — founder confirmed
+    prod migration ran 2026-07-14).
+- `tasks/plan.md` — this file; Plan-ID + §0 audit evidence
+  (including §"Bonus closure — LEGAL-002") + §3 durable index of
+  remaining ship-side blockers (LEGAL-002 removed from the index).
 - `tasks/plans/PLAN_03_APP_CODE.md` — KORAK 3.9-3 Output block filled
   with the pivot note (fix → docs close).
 
 **Not touched:** any code under `lib/`, `functions/`, `test/`,
 `ios/`, `android/`, `.github/`, `firebase.json`. Zero runtime code,
 zero test change, zero native config, zero CI. Copy did not need to
-change; every current bullet already matches a real gate.
+change; every current bullet already matches a real gate. Cannabis
+was already removed from all four surfaces long before this session
+began; this PR only records the closure.
 
 ## 3. NEXT LANES — durable index of deferred work
 
@@ -96,8 +127,6 @@ future session sees them at bootstrap.
 
 - **BLOCKER-LEGAL-001** — DPIA false claims (`getPublicProfile` leak
   claim + TTLs mismatch). Task `6h3jFhxVHpRmph9P`.
-- **BLOCKER-LEGAL-002** — Cannabis in `nicotineUse` = Art. 10 GDPR
-  in some jurisdictions. Task `6h3jHjr7Hf58G8pw`.
 - **BLOCKER-LEGAL-003** — `gender` + `lookingFor` = implicit Art. 9
   sexual-orientation category; explicit consent gate missing (Grindr
   precedent: NOK 65M fine). Task `6h3j9q65vh3mG64P`.
@@ -105,6 +134,11 @@ future session sees them at bootstrap.
   (Fri 19h – Sun 19h), code enforces user-triggered activation
   (Rule: single write path via `activateWeekendPass`). Sync ToS to
   code or code to ToS. Task `6h332RFRW946QWXw`.
+
+_LEGAL-002 (cannabis Art. 10) was RESOLVED in this same PR — cannabis
+removed from every surface (UI + Zod enum + display filter + prod
+migration confirmed by founder 2026-07-14). Evidence chain in
+`tasks/blockers.md`._
 
 ### Test-hardening lane (deferred from this PR)
 
