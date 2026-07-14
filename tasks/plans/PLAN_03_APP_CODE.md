@@ -885,15 +885,36 @@ backend gate logiko (compound gates iz KORAK 3.7c-1: `hasMutualWave`,
 sprememba zadeva RevenueCat entitlement mapping. Test coverage MUST
 verificirati vsak bullet ↔ code gate.
 **Founder approval:** YES (billing-adjacent per MPC).
-**Branch:** `fix/paywall-accuracy-sync`
-**Plan-ID:** `20260714-paywall-accuracy-sync`
+**Branch:** `fix/paywall-accuracy-sync` → pivoted to `docs/paywall-audit-legal-005-close-20260714`
+**Plan-ID:** `20260714-paywall-accuracy-sync` → pivoted to `20260714-paywall-audit-legal-005-close`
+
+**PIVOT NOTE 2026-07-14:** Session 2026-07-14 audit of every current
+Premium + Free bullet against actual code gates found ZERO drift —
+the KORAK 3.7 series (2026-07-13) already rewrote the paywall
+against the ADR-007 tier matrix. Every bullet maps to a real code
+gate (see plan.md §0 bullet↔gate table). The original "sync
+paywall to code" scope had nothing to sync. LOWERED to LOW risk,
+docs-only close of BLOCKER-LEGAL-005.
+
+The ADR-007 §4 mandate ("pair of tests per gate") remains partially
+covered; recorded as a MEDIUM test-hardening follow-up lane in
+`tasks/plan.md` §3 and NOT bundled into this PR.
 
 **Output:**
 ```text
 PR#:               (fill after opening)
-Bullete spremenjeni:
-RevenueCat mapping touched (yes/no):
-BLOCKER-LEGAL-005 closed:
+Merge commit:      (fill after merge)
+Bullete spremenjeni: 0 — audit found every current bullet already
+                     matches a real code gate. No copy edit needed.
+RevenueCat mapping touched (yes/no): NO — no billing surface changed.
+                     Docs-only PR; entitlement key `premium` stays
+                     the source of truth per ADR-007 §5.
+BLOCKER-LEGAL-005 closed: YES — with the full bullet↔gate mapping
+                     table in tasks/blockers.md. Retired keys
+                     test-locked as gone. Copy-rule scan passes.
+Deferred:            ADR-007 §4 pair-of-tests hardening (MEDIUM,
+                     billing-adjacent) — recorded in plan.md §3
+                     as a separate lane, founder approval required.
 ```
 
 ### KORAK 3.9-4 — Brand-voice review Prominent Disclosure copy (BLOCKER-STORE-003 companion)
