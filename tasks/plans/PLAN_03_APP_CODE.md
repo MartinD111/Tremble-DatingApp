@@ -923,8 +923,21 @@ lahko final review copy pred Play submission.
 **Output:**
 ```text
 PR#:               (fill after opening)
+Merge commit:      (fill after merge)
 Copy revidirana (EN + SL):
-BLOCKER-STORE-003 progress:
+  EN body: "To find matches nearby ... deleted within hours"
+         → "To find signals nearby ... cleared within hours"
+  SL body: "Da najde ujemanja v tvoji bližini ..."
+         → "Da najde signale v tvoji bližini ..."
+  Headline + CTAs unchanged (Play-standard).
+  Play-policy phrases ("approximate location", "in the background",
+  "Allow background location" + SL equivalents) preserved verbatim.
+Widget test posodobljen: pins 3 nove brand-voice ključne besede
+  ("signals nearby", "cleared within hours", "signale v tvoji bližini")
+  poleg obstoječih 4 Play-policy verifikacij.
+BLOCKER-STORE-003 progress: brand-voice review DONE. Preostalo
+  na Play submission: EN + SL screenshots + demo video + Play
+  Console declaration.
 ```
 
 ---

@@ -1,115 +1,88 @@
 # Active Implementation Plan
-Plan ID: 20260714-ios-submission-audit
+Plan ID: 20260714-brand-voice-prominent-disclosure
 Risk Level: LOW
 Founder Approval Required: NO
-Branch: docs/ios-submission-audit-20260714
+Branch: feat/brand-voice-prominent-disclosure
 
-## 0. AUDIT RESULT — KORAK 3.9-2 iOS submission-readiness (Rule #82)
+## 0. CHANGE — KORAK 3.9-4 brand-voice pass on Prominent Disclosure copy
 
-Audit against `main` @ 49e679c, post PR #32 (Info.plist Contacts
-reconcile) and PR #34 (stale-intel cleanup). Read-only sweep of the
-three surfaces mandated by Rule #82.
-
-**Overall verdict: CLEAN.** No submission-blocking gap. BLOCKER-STORE-001
-closed with evidence.
-
-### Surface (a) — master ↔ localized divergence
-- Master `ios/Runner/Info.plist` declares 10 `NS*UsageDescription`
-  keys (Bluetooth×2, Camera, Contacts, Location×3, Motion, Photo×2).
-- `en.lproj/InfoPlist.strings` localizes 7 of the 10; the 7 present
-  are **byte-identical** to the master strings (`plutil -convert
-  json` diff → zero divergence).
-- `sl.lproj/InfoPlist.strings` and `hr.lproj/InfoPlist.strings`
-  cover the same 7 keys with locale-appropriate translations
-  (Bluetooth, Contacts, Location×3, Motion, but NOT Camera/Photo).
-- **Not a Rule #82 violation**: iOS falls back to master when a
-  localization is missing → user sees the English master string, not
-  a lie. Apple's static reviewer reads the master → same string.
-- **Follow-up (non-blocker)**: sl/hr users see English Camera / Photo
-  prompts. Worth a translation sprint before broader EU launch, but
-  not gating submission.
-
-### Surface (b) — duplicate permission-key sweep
-Every `NS*UsageDescription` key present in master `Info.plist`
-counts **exactly 1**:
-- NSBluetoothAlwaysUsageDescription: 1
-- NSBluetoothPeripheralUsageDescription: 1
-- NSCameraUsageDescription: 1
-- NSContactsUsageDescription: 1
-- NSLocationAlwaysAndWhenInUseUsageDescription: 1
-- NSLocationAlwaysUsageDescription: 1
-- NSLocationWhenInUseUsageDescription: 1
-- NSMotionUsageDescription: 1
-- NSPhotoLibraryAddUsageDescription: 1
-- NSPhotoLibraryUsageDescription: 1
-- NSMicrophoneUsageDescription: 0 (correct — not requested)
-- NSFaceIDUsageDescription: 0 (correct — not requested)
-
-PR #32's dedupe (Camera / Photo / PhotoAdd) held; no regression.
-
-### Surface (c) — PrivacyInfo.xcprivacy completeness
-`ios/Runner/PrivacyInfo.xcprivacy` (`plutil -lint` OK):
-- **NSPrivacyAccessedAPITypes** — all 4 Required Reasons categories
-  declared with valid reason codes: UserDefaults (CA92.1),
-  FileTimestamp (C617.1), SystemBootTime (35F9.1), DiskSpace (E174.1).
-- **NSPrivacyCollectedDataTypes** — 10 categories declared, all
-  `NSPrivacyCollectedDataTypePurposeAppFunctionality`, `Tracking=false`:
-  CoarseLocation, PhotosorVideos, Name, EmailAddress, PhoneNumber,
-  UserID, PurchaseHistory, CrashData, OtherDiagnosticData, Contacts.
-- Contacts entry has `Linked=false` per ADR-004 zero-data hash-only
-  architecture; all others `Linked=true`.
-- **NSPrivacyTrackingDomains** empty; **NSPrivacyTracking** false.
-  Correct for a no-ads dating app.
-
-### Encryption declaration
-`ITSAppUsesNonExemptEncryption = false` present in master `Info.plist`.
-Combined with `PrivacyInfo.xcprivacy` presence → iOS 17.4 gate cleared.
+Copy for the 4 disclosure translation keys was spec-verbatim from PR
+#7 (2026-07-07). BLOCKER-STORE-003 progress note flagged it as
+"⏳ must go through brand-voice review before ship." This PR closes
+that item.
 
 ## 1. OBJECTIVE
-Close BLOCKER-STORE-001 with audit evidence and record the audit
-result in the durable plan of record so the next submission cycle
-inherits the verification, not a re-verification cost.
+Ship a brand-voice-reviewed EN + SL copy for the Google Play
+Prominent Disclosure screen without diluting the Play-policy phrases
+the regulator's reviewer greps for. Pin the brand-voice keywords in
+the widget test so a future refactor can't silently regress.
 
 ## 2. SCOPE
-- `tasks/blockers.md` — BLOCKER-STORE-001 status → RESOLVED with
-  audit evidence + non-blocker follow-up note (sl/hr Camera/Photo
-  localizations).
-- `tasks/plan.md` — this file; Plan-ID rewrite + audit result §0.
-- `tasks/plans/PLAN_03_APP_CODE.md` — KORAK 3.9-2 Output block
-  filled (result CLEAN, PR#, merge commit after merge).
 
-**Not touched:** `ios/Runner/Info.plist`, `PrivacyInfo.xcprivacy`,
-any `.lproj/InfoPlist.strings`, any code under `lib/`, `functions/`,
-`ios/Runner/*.swift`, `android/`, `.github/`. Zero native config
-edit → no founder approval gate triggered.
+- `lib/src/core/translations.dart`
+  - EN body: `matches → signals`, `deleted → cleared`.
+  - SL body: `ujemanja → signale`.
+  - Headline + CTAs unchanged (Play-standard).
+  - EN comment above the keys rewritten to record the brand-voice
+    review outcome and the exact policy phrases preserved.
+- `test/features/auth/prominent_disclosure_screen_test.dart`
+  - Add 2 EN + 1 SL `textContaining` assertions pinning the new
+    brand-voice keywords (`signals nearby`, `cleared within hours`,
+    `signale v tvoji bližini`).
+  - Existing spec-locked assertions kept unchanged.
+- `tasks/blockers.md` — BLOCKER-STORE-003 progress: brand-voice
+  review DONE; remaining actions = screenshots + demo video + Play
+  Console submission.
+- `tasks/plan.md` — this file, Plan-ID.
+- `tasks/plans/PLAN_03_APP_CODE.md` — KORAK 3.9-4 Output block filled.
 
-## 3. NEXT LANES
-- KORAK 3.9-3 paywall accuracy sync (BLOCKER-LEGAL-005) — MEDIUM
-  risk, billing-adjacent, founder approval required.
-- KORAK 3.9-4 brand-voice review Prominent Disclosure copy
-  (BLOCKER-STORE-003 companion) — LOW risk, docs/copy only.
+**Not touched:** no code under `functions/`, no native config
+(`ios/Runner/Info.plist`, `AndroidManifest.xml`, `PrivacyInfo.xcprivacy`),
+no CI, no Firestore Rules, no other translation keys, no other
+locales (`de`, `fr`, `it`, `es`, `pt`).
+
+## 3. STEPS
+
+1. Cut `feat/brand-voice-prominent-disclosure` off `main` @ 17f7b5c.
+2. Apply the 2 surgical edits to EN body + 1 edit to SL body in
+   `translations.dart`. Rewrite the source-comment above the keys.
+3. Extend `prominent_disclosure_screen_test.dart` with pinning
+   assertions for the new brand-voice keywords.
+4. Update `tasks/blockers.md` BLOCKER-STORE-003 progress.
+5. Update `tasks/plans/PLAN_03_APP_CODE.md` KORAK 3.9-4 Output.
+6. Commit; pre-commit hook re-verifies `flutter analyze` + full test
+   suite.
+7. Open PR with Rule #79 + Rule #80 pre-flight.
 
 ## 4. RISKS & TRADEOFFS
-- Zero runtime change; zero submission risk introduced.
-- Follow-up sl/hr Camera/Photo localization is recorded in
-  blockers.md as a non-blocker so it can be picked up as a small
-  translation sprint any time before broader EU launch. Not
-  bundled into this PR because it would require translation review
-  through `brand-voice-agent`, which is a separate lane.
+
+- Copy change is user-facing and ships in a regulatory submission
+  package (Play Console). Diluting the Play-policy phrases could
+  cause review rejection. Mitigation: preserved verbatim the exact
+  phrases the regulator's reviewer looks for (`approximate
+  location`, `in the background`, `Allow background location`) in
+  both EN + SL. Only the surrounding narrative changes.
+- No other locales updated. `de/fr/it/es/pt` still show the
+  original English fallback (they never had disclosure keys). Not a
+  regression; those locales are out of scope for the Play SI + HR
+  launch package. To be picked up in a future translation sprint.
 
 ## 5. VERIFICATION
-- `git diff --stat` on branch → 3 files under `tasks/**`.
-- `flutter analyze` → 0 issues (no Dart touched; pre-commit hook
-  re-verifies).
-- `flutter test` → 263 tests green baseline preserved.
-- unit tests — n/a (docs-only, no runtime code).
-- integration tests — n/a (docs-only).
-- security scan — branch diff limited to `tasks/**`. Zero secrets,
-  zero PII, zero auth/billing/security-boundary change.
+
+- `git diff --stat` on branch → ≤6 files (translations, test,
+  blockers.md, plan.md, PLAN_03_APP_CODE.md).
+- `flutter analyze` → 0 issues (pre-commit hook re-verifies).
+- `flutter test` → all tests green; `prominent_disclosure_screen_test.dart`
+  now passes 5 checks per language (headline + 4 pinning assertions
+  for EN, 4 for SL) + 2 CTA-contract checks + 1 no-permission-handler
+  leak check.
+- unit tests — n/a (no domain logic changed).
+- integration tests — n/a (widget test covers surface).
+- security scan — no PII/auth/billing/security-boundary change. Copy
+  only.
 - MPC PR pre-flight (Rules #79 + #80):
-  - Title: `[PLAN-ID: 20260714-ios-submission-audit] docs(blockers+plan): close BLOCKER-STORE-001 — Rule #82 3-surface audit CLEAN`.
+  - Title: `[PLAN-ID: 20260714-brand-voice-prominent-disclosure] feat(auth): brand-voice pass on Prominent Disclosure copy (EN + SL)`.
   - Body contains `## Verification checklist` naming `unit tests`,
-    `integration tests`, `security scan` (each n/a with a one-line
-    docs-only reason).
+    `integration tests`, `security scan`.
   - Body contains zero Rule #80 naive-regex trigger substrings.
   - Plan-ID present in this file (line 2).

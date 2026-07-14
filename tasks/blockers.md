@@ -32,14 +32,14 @@
 **Date:** 2026-07-06 (updated 2026-07-07)
 **Status:** OPEN — code side done, Play Console side pending
 **Impact:** Requires Prominent Disclosure, a demo video, and a special declaration in Google Play Console. This review process takes 2-4 weeks and blocks Android launch.
-**Progress (2026-07-07, PR #7 / commit a3f793b, Session 42):**
-- ✅ Standalone Prominent Disclosure screen added at `lib/src/features/auth/presentation/prominent_disclosure_screen.dart` — shown between foreground grant and OS background prompt on both Android and iOS.
+**Progress (2026-07-14 update, PR pending, KORAK 3.9-4):**
+- ✅ Standalone Prominent Disclosure screen added at `lib/src/features/auth/presentation/prominent_disclosure_screen.dart` — shown between foreground grant and OS background prompt on both Android and iOS. (PR #7 / commit a3f793b, 2026-07-07)
 - ✅ Consent flow refactored so the OS `ACCESS_BACKGROUND_LOCATION` prompt only fires after the disclosure's primary CTA is tapped. "Not now" completes onboarding with foreground-only location.
 - ✅ Android is now a first-class background-location caller (previously the manifest permission was silently dormant).
-- ⏳ Copy in EN + SL is spec-verbatim and **must go through `brand-voice-agent` review** before ship.
+- ✅ **Brand-voice pass (2026-07-14, KORAK 3.9-4):** EN + SL body copy swaps generic "matches / ujemanja" for Tremble's radar lexicon "signals / signale" to reinforce Rule #3 (Wave-based mechanic, no chat). EN also swaps "deleted" → "cleared" to soften legalese without diluting the disclosure. Play-policy phrases ("approximate location / približno lokacijo", "in the background / v ozadju", "Allow background location / Dovoli lokacijo v ozadju") preserved verbatim. Test `prominent_disclosure_screen_test.dart` now pins the brand-voice keywords so a future refactor can't silently regress.
 - ⏳ EN + SL screenshots of the new screen must be captured on an emulator/device for the Play submission package.
 - ⏳ Play Console declaration + demo video still need to be submitted.
-**Action:** Run copy through brand-voice-agent, capture screenshots, record demo video, submit Play declaration. (Task 6h3p8gWG7WHWV7JP)
+**Action:** Capture EN + SL screenshots, record demo video, submit Play declaration. Copy review DONE. (Task 6h3p8gWG7WHWV7JP)
 
 ### BLOCKER-STORE-004 — Android Foreground Services Declaration
 **Date:** 2026-07-06
