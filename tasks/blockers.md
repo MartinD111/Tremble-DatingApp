@@ -6,9 +6,16 @@
 
 ### BLOCKER-STORE-001 — iOS Privacy Manifest & Encryption Declaration
 **Date:** 2026-07-06
-**Status:** OPEN
+**Status:** RESOLVED 2026-07-14 — verified via Rule #82 3-surface audit (KORAK 3.9-2)
 **Impact:** App Store will automatically reject the build starting from iOS 17.4 without a privacy manifest. Missing encryption declaration will cause App Store Connect rejection.
-**Action:** Add `PrivacyInfo.xcprivacy` and add encryption declaration to `Info.plist`. (Task 6h3grHhjVXFhMRJP, 6h3grHqC22mCcccP)
+**Resolution (audit evidence, 2026-07-14):**
+- `ios/Runner/PrivacyInfo.xcprivacy` present and `plutil -lint` clean.
+- **NSPrivacyAccessedAPITypes** — all 4 Required Reasons API categories declared: UserDefaults (CA92.1), FileTimestamp (C617.1), SystemBootTime (35F9.1), DiskSpace (E174.1).
+- **NSPrivacyCollectedDataTypes** — 10 categories declared covering CoarseLocation, PhotosorVideos, Name, EmailAddress, PhoneNumber, UserID, PurchaseHistory, CrashData, OtherDiagnosticData, and Contacts (Linked=false per ADR-004 hash-only transmission).
+- **`Info.plist` encryption declaration** — `ITSAppUsesNonExemptEncryption = false` present (Info.plist line verified via grep).
+- **Rule #82 surface (a) master↔localized divergence** — 7 present keys byte-identical between master `Info.plist` and `en.lproj/InfoPlist.strings`.
+- **Rule #82 surface (b) duplicate-key sweep** — every `NS*UsageDescription` key counts exactly 1 in master Info.plist.
+**Follow-up (non-blocker, LOW):** `sl.lproj/InfoPlist.strings` and `hr.lproj/InfoPlist.strings` do NOT localize NSCameraUsageDescription, NSPhotoLibraryUsageDescription, NSPhotoLibraryAddUsageDescription — iOS falls back to the English master string for those 3 prompts on Slovenian/Croatian device locales. Not a submission blocker (no lie, no divergence) but a UX gap worth a future translation sprint. (Task 6h3grHhjVXFhMRJP, 6h3grHqC22mCcccP)
 
 ### BLOCKER-STORE-002 — iOS Info.plist Contacts Contradiction
 **Date:** 2026-07-06

@@ -842,8 +842,24 @@ edit.
 **Output:**
 ```text
 PR#:               (fill after opening)
-Audit result:      CLEAN / GAP FOUND
-Gap details:
+Merge commit:      (fill after merge)
+Audit result:      CLEAN — Rule #82 3-surface sweep passed 2026-07-14.
+                   (a) master↔localized: 7/7 present keys byte-identical.
+                   (b) duplicate sweep: every NS*UsageDescription = 1.
+                   (c) PrivacyInfo.xcprivacy: all 4 Required Reasons
+                       API categories (UserDefaults CA92.1,
+                       FileTimestamp C617.1, SystemBootTime 35F9.1,
+                       DiskSpace E174.1) + 10 collected data types
+                       incl. hashed Contacts (ADR-004, Linked=false).
+                   Encryption declaration ITSAppUsesNonExemptEncryption=false present.
+                   BLOCKER-STORE-001 closed with evidence in tasks/blockers.md.
+Gap details:       Non-blocker follow-up only — sl.lproj + hr.lproj
+                   do not localize NSCameraUsageDescription /
+                   NSPhotoLibraryUsageDescription /
+                   NSPhotoLibraryAddUsageDescription. iOS falls back
+                   to master EN string → no divergence, no submission
+                   risk. Recorded in blockers.md STORE-001 follow-up
+                   for a future translation sprint pre-EU launch.
 ```
 
 ### KORAK 3.9-3 — Paywall accuracy sync (BLOCKER-LEGAL-005 → App Store 3.1.2)
