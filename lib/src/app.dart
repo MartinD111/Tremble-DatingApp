@@ -7,6 +7,7 @@ import 'core/theme.dart';
 import 'core/router.dart';
 import 'core/theme_provider.dart';
 import 'features/auth/data/auth_repository.dart';
+import 'features/auth/presentation/backfill_consent_modal.dart';
 import 'features/subscriptions/application/revenuecat_subscription.dart';
 import 'shared/ui/dismiss_keyboard.dart';
 
@@ -78,8 +79,11 @@ class TrembleApp extends ConsumerWidget {
       darkTheme: darkTheme,
       themeMode: themeMode,
       routerConfig: router,
-      builder: (context, child) =>
-          DismissKeyboard(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => DismissKeyboard(
+        child: BackfillConsentGate(
+          child: child ?? const SizedBox.shrink(),
+        ),
+      ),
     );
   }
 }

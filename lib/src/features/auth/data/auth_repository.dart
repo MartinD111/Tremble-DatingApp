@@ -1061,6 +1061,27 @@ class AuthRepository {
     await _api.call('withdrawArt9Consent', data: {'category': category});
   }
 
+  /// Non-destructive consent state change — writes the flag + version +
+  /// timestamp only, without touching the corresponding sensitive field.
+  /// Used by the backfill modal on app launch (accept = true; decline =
+  /// false) so pre-migration users can record a decision without either
+  /// re-entering the field (accept) or losing it (decline; the scorer's
+  /// bilateral gate already skips them on the read path).
+  ///
+  /// The server-side `updateProfile` gate only fires when the request
+  /// touches `gender` / `lookingFor` / `religion` / `ethnicity`; sending
+  /// only the flag bypasses the gate cleanly. The server still stamps
+  /// version + timestamp because the consent field is present.
+  Future<void> setArt9Consent(String category, {required bool granted}) async {
+    final field = switch (category) {
+      'orientation' => 'sexualOrientationConsent',
+      'religion' => 'religionConsent',
+      'ethnicity' => 'ethnicityConsent',
+      _ => throw ArgumentError.value(category, 'category'),
+    };
+    await _api.call('updateProfile', data: {field: granted});
+  }
+
   // ── Update selected gyms (direct Firestore — bypasses strict CF schema) ──
   Future<void> updateSelectedGyms(String uid, List<SelectedGym> gyms) async {
     await _users.doc(uid).update({
@@ -1282,6 +1303,37 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
       if (kDebugMode)
         debugPrint('[AUTH] withdrawArt9Consent($category) API error: $e');
       rethrow;
+    }
+  }
+
+  /// Non-destructive Art. 9 consent decision — used by the backfill
+  /// modal to record accept/decline without deleting the underlying
+  /// sensitive field. Server-first (NOT optimistic) so a network
+  /// failure keeps the modal on-screen for retry rather than silently
+  /// dismissing it — a decision that never landed on the server must
+  /// not look like a landed decision to the user or the local scorer.
+  Future<void> setArt9Consent(String category, {required bool granted}) async {
+    final current = state;
+    if (current == null) return;
+    // Reject unknown category early so a typo doesn't silently no-op.
+    if (category != 'orientation' &&
+        category != 'religion' &&
+        category != 'ethnicity') {
+      return;
+    }
+    await _repository.setArt9Consent(category, granted: granted);
+    // Only apply the local flip AFTER the server acknowledges — this
+    // is the point where the backfill modal is safe to dismiss.
+    switch (category) {
+      case 'orientation':
+        state = current.copyWith(sexualOrientationConsent: granted);
+        break;
+      case 'religion':
+        state = current.copyWith(religionConsent: granted);
+        break;
+      case 'ethnicity':
+        state = current.copyWith(ethnicityConsent: granted);
+        break;
     }
   }
 
