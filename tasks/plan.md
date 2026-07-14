@@ -210,3 +210,27 @@ New `backfill_consent_modal.dart`:
 - **PLAN_04 KORAK 4.2** (odvetnica pisno mnenje) — Art. 9(2)(a) conditionality is one of the two mandatory questions. Send AFTER this PR merges so counsel opines on shipped code, not a proposal. Cross-reference is now in PLAN_04.
 - **PLAN_04 KORAK 4.3** (docs rewrite) — DPIA §gender + lookingFor consent mehanizem now has a concrete code implementation to reference.
 - **BLOCKER-LEGAL-004** (Weekend Window ToS mismatch + user-local timezone) — separate lane, rescoped 2026-07-14 from LOW (ToS edit only) to HIGH (code + ToS). Product model confirmed as a PAID weekend Premium package with three purchase-timing branches (queued before Fri 19:00 → activates at Fri 19:00 same week; instant Fri 19:00 - Sun 19:00; queued after Sun 19:00 → next weekend), computed in the **user's local timezone** (not hardcoded `Europe/Ljubljana`). Fix now requires: (a) IANA `timezone` field on user document + backfill; (b) `getNextWeekendWindow(userTimezone)` refactor + call-site updates; (c) traveler decision (snapshot at purchase vs re-evaluate at activation); (d) DST edge-case handling; (e) ToS §7 rewrite describing the localized product. Sequenced AFTER LEGAL-003 ships. Durable decision record: memory `weekend-pass-user-local-timezone.md`.
+
+---
+
+# Active Release Chore
+Plan ID: 20260714-release-b17
+Risk Level: LOW (version string bump + gitignore line; no code paths, no infra, no auth, no PII)
+Status: IN-REVIEW 2026-07-14 — PR #43 opened; TestFlight upload 1.0.0 (17) delivered to ASC (delivery UUID `0b1e8e74-df40-479e-8015-5e4501b1e2fc`); AAB awaiting manual Play Console upload.
+Founder Approval Required: NO (LOW risk; release chore paired with LEGAL-003 artifacts already approved and merged in PR #41).
+Branch: chore/release-1.0.0-b17
+
+## Objective
+
+Align git HEAD with the release artifacts (AAB + IPA) that carry the first public shipment of the LEGAL-003 Art. 9 GDPR consent hardening code. Previous build 16 was never public. Build 17 is the first user-facing binary containing the Art. 9 code merged in PR #41 (`cce1f1c`) and prod-deployed to Cloud Functions the same day.
+
+## Scope
+
+- `pubspec.yaml`: version `1.0.0+16` → `1.0.0+17` — single source of truth for both Android `versionCode`/`versionName` and iOS `CFBundleShortVersionString`/`CFBundleVersion` (memory: `android-version-source-of-truth`).
+- `.gitignore`: add `release-symbols/` — local-only preservation copy of AAB, IPA, and native debug symbols kept outside `build/` so the inter-platform `flutter clean` does not wipe them, and kept out of git because ~130 MB of binaries.
+
+## Notes for MPC PR pre-flight
+
+- Title: `[PLAN-ID: 20260714-release-b17] chore(release): bump build to 1.0.0+17`. NOTE — slug intentionally omits the `1.0.0` dots; CI regex `[a-z0-9\-]+` rejects `.`. Lesson learned; recording here so future release chores use `bXY` slugs (build number, no version dots).
+- Body contains `## Verification checklist` naming `unit tests`, `integration tests`, `security scan` (all `n/a` with reasons — release chore, no source paths changed).
+- Plan-ID present on this line: `20260714-release-b17`.
