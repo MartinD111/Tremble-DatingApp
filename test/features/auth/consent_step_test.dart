@@ -10,10 +10,14 @@ void main() {
       'lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart',
     ).readAsStringSync();
 
-    test('renders sexual-orientation consent tile via translation key', () {
+    test('renders sexual-orientation consent tile via v1 narrow-purpose key',
+        () {
+      // Post-LEGAL-003 the orientation tile uses the long-form
+      // narrow-purpose text; the legacy short-form key is preserved for
+      // callers not yet migrated, but the widget references the v1 key.
       expect(
         consentStep,
-        contains("widget.tr('consent_sexual_orientation')"),
+        contains("widget.tr('consent_art9_orientation_v1')"),
       );
     });
 
@@ -36,17 +40,101 @@ void main() {
       expect(consentStep, contains('_consentSexualOrientation'));
     });
 
-    test('EN + SL translations match the exact spec wording', () {
-      expect(
-        t('consent_sexual_orientation', 'en'),
-        'I explicitly consent to the processing of my gender and matching '
-        'preferences solely for the purpose of finding matches.',
-      );
-      expect(
-        t('consent_sexual_orientation', 'sl'),
-        'Izrecno soglašam z obdelavo mojega spola in preferenc za ujemanje '
-        'izključno za namen iskanja ujemanj.',
-      );
+    test(
+        'select-all does NOT flip Art. 9 tiles (orientation/religion/ethnicity)',
+        () {
+      // Per LEGAL-003 step 4: Art. 9(2)(a) requires "specific" consent
+      // per category. _toggleAll must therefore leave the three Art. 9
+      // flags untouched and only sweep general-processing consents.
+      final toggleAllBody = RegExp(
+        r'void _toggleAll\(\)\s*\{(.*?)\n\s*\}',
+        dotAll: true,
+      ).firstMatch(consentStep)?.group(1);
+      expect(toggleAllBody, isNotNull,
+          reason: '_toggleAll() must exist to gate the select-all pill.');
+      expect(toggleAllBody, isNot(contains('_consentReligion')),
+          reason:
+              'Select-all must not toggle religion — Art. 9 specific consent.');
+      expect(toggleAllBody, isNot(contains('_consentEthnicity')),
+          reason:
+              'Select-all must not toggle ethnicity — Art. 9 specific consent.');
+      expect(toggleAllBody, isNot(contains('_consentSexualOrientation')),
+          reason:
+              'Select-all must not toggle orientation — Art. 9 specific consent.');
+    });
+
+    test('Art. 9 tiles all link to the Privacy Policy anchor', () {
+      // Each Art. 9 tile pairs the narrow-purpose text with a "Learn more"
+      // deep-link to the PP anchor for that category.
+      expect(consentStep, contains("consent_art9_orientation_v1"));
+      expect(consentStep, contains("consent_art9_religion_v1"));
+      expect(consentStep, contains("consent_art9_ethnicity_v1"));
+      expect(consentStep, contains("art9-orientation"));
+      expect(consentStep, contains("art9-religion"));
+      expect(consentStep, contains("art9-ethnicity"));
+    });
+
+    test('EN + SL + HR v1 tiles carry the load-bearing narrow-purpose phrases',
+        () {
+      // The compliance defence rests on four phrases: "GDPR Article 9",
+      // "never sold", "never shared with advertisers", "bilaterally
+      // fail-closed". Every locale we ship for the primary launch (EN,
+      // SL, HR) must carry the equivalent phrasing.
+      const enPhrases = [
+        'GDPR Article 9',
+        'never sold',
+        'never shared with advertisers',
+        'bilaterally',
+      ];
+      const slPhrases = [
+        '9. členu GDPR',
+        'nikoli ne prodaja',
+        'nikoli ne deli',
+        'dvostransko',
+      ];
+      const hrPhrases = [
+        'članku 9. GDPR',
+        // "nikada se ne prodaje" (sg subject) vs "nikada se ne prodaju"
+        // (plural — used when subject is "podaci"). Same for "ne
+        // dijeli" vs "ne dijele". Assert on the shared prefix so both
+        // grammatical forms qualify without pinning locale-specific
+        // grammar.
+        'nikada se ne proda',
+        'nikada ne dije',
+        'dvostrano',
+      ];
+
+      for (final key in [
+        'consent_art9_orientation_v1',
+        'consent_art9_religion_v1',
+        'consent_art9_ethnicity_v1',
+      ]) {
+        final en = t(key, 'en');
+        final sl = t(key, 'sl');
+        final hr = t(key, 'hr');
+        for (final p in enPhrases) {
+          expect(en, contains(p),
+              reason: 'EN $key must contain "$p" — got:\n$en');
+        }
+        for (final p in slPhrases) {
+          expect(sl, contains(p),
+              reason: 'SL $key must contain "$p" — got:\n$sl');
+        }
+        for (final p in hrPhrases) {
+          expect(hr, contains(p),
+              reason: 'HR $key must contain "$p" — got:\n$hr');
+        }
+      }
+    });
+
+    test('legacy short-form consent_sexual_orientation key stays parseable',
+        () {
+      // Legacy key preserved for any caller not yet migrated (backfill
+      // modal still references orientation via the v1 key). Removing the
+      // legacy key silently would risk a runtime tr() fallback to the
+      // raw key string.
+      expect(t('consent_sexual_orientation', 'en'), isNotEmpty);
+      expect(t('consent_sexual_orientation', 'sl'), isNotEmpty);
     });
   });
 

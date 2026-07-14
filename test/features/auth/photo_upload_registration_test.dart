@@ -472,8 +472,15 @@ void main() {
       // ConsentStep is active.
       expect(find.byType(ConsentStep), findsOneWidget);
 
-      // Select all checkboxes using the OptionPill
+      // Sweep the general-processing consents via the select-all pill.
+      // Per LEGAL-003 step 4, Art. 9 tiles (orientation / religion /
+      // ethnicity) are excluded from the sweep and must be toggled
+      // individually — orientation is required to unblock Continue.
       await tester.tap(find.byType(OptionPill));
+      await tester.pumpAndSettle();
+      await tester
+          .ensureVisible(find.byKey(const Key('art9-orientation-tile')));
+      await tester.tap(find.byKey(const Key('art9-orientation-tile')));
       await tester.pumpAndSettle();
 
       // Tap "Continue" on ConsentStep (triggers completeRegistration)
