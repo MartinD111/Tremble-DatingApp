@@ -78,9 +78,19 @@ Cannabis is unreachable across every surface of the product:
 
 ### BLOCKER-LEGAL-003 — Sexual Orientation (GDPR Art. 9) Missing Consent
 **Date:** 2026-07-06
-**Status:** OPEN
+**Status:** IN-REVIEW 2026-07-14 — 7-step hardening shipped on branch `feature/legal-003-art9-consent-code`, pending founder + code-reviewer sign-off + merge. Marks as RESOLVED on merge.
 **Impact:** The combination of `gender` + `lookingFor` implicitly reveals sexual orientation. As an Art. 9 category, processing without explicit consent is a massive GDPR violation (Grindr fined NOK 65M for this).
-**Action:** Add an explicit consent gate for processing these fields. (Task 6h3j9q65vh3mG64P)
+**Resolution (branch pending merge, Plan-ID 20260714-legal-003-art9-consent-hardening):**
+- Server write-time enforcement in `updateProfile` — Art. 9 field writes (gender / lookingFor / religion / ethnicity) rejected unless the effective consent for that category is `=== true`. Same-request grants honoured; same-request withdrawals rejected.
+- New `withdrawArt9Consent` callable that writes consent=false + version + timestamp AND `FieldValue.delete()`s the corresponding sensitive field(s) (orientation withdrawal deletes both gender + lookingFor).
+- `completeOnboarding` drops religion + ethnicity to `null` when the paired consent flag isn't true so nothing lands in Firestore that the scorer would then read behind the bilateral gate.
+- Bilateral fail-closed orientation gate in `compatibility_calculator.ts` on the `lookingFor` hard filter, mirroring the existing religion + ethnicity pattern.
+- All three Art. 9 consent tiles rewritten with narrow-purpose text (v1) + PP anchor deep-link. Select-all no longer flips Art. 9 optionals — Art. 9(2)(a) "specific" consent requirement. EN + SL + HR translations.
+- Settings-screen withdrawal UI (`privacy_consents_section.dart`) with confirmation dialog + destructive server call.
+- App-launch backfill modal (`backfill_consent_modal.dart`) for pre-migration users with `sexualOrientationConsent == null`; PopScope-locked, accept/decline both server-first (not optimistic) so a network failure keeps the modal open.
+- Server stamps `{category}ConsentVersion = "v1"` + `{category}ConsentAt = serverTimestamp()` on every grant OR withdrawal so future consent-text bumps can re-prompt v1 users through the same backfill machinery.
+- Test coverage: 10 new CF assertions in `users.test.ts`, 4 new pair-of-tests in `compatibility_calculator.test.ts`, 7 widget assertions in `backfill_consent_modal_test.dart`, 3 in `privacy_consents_section_test.dart`, updated `consent_step_test.dart` (17 assertions after Step 3+4). 134/134 CF + 275/275 Flutter tests green.
+**Action:** Merge the PR after founder + code-reviewer sign-off. Then close BLOCKER-LEGAL-001 (DPIA rewrite) since this PR is its code-truth foundation, and send the pisno mnenje request to counsel per PLAN_04 KORAK 4.2 (they should opine on shipped code, not a proposal). (Task 6h3j9q65vh3mG64P)
 
 ### BLOCKER-LEGAL-004 — Weekend Window ToS Mismatch + user-local timezone
 **Date:** 2026-07-06 (rescoped 2026-07-14)

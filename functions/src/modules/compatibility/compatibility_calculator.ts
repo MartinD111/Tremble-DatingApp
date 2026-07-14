@@ -25,6 +25,11 @@ export interface UserCompatibilityData {
   ethnicityPreference?: string;
   religionConsent?: boolean;   // GDPR Art. 9 — gates religion scoring bilaterally
   ethnicityConsent?: boolean;  // GDPR Art. 9 — gates ethnicity scoring bilaterally
+  // GDPR Art. 9 — gates lookingFor (and any future gender-adjacent scoring)
+  // bilaterally. Absent OR false on either side means the orientation-
+  // adjacent dimensions are OMITTED (not zero, not one), matching the
+  // religion/ethnicity skip semantics.
+  sexualOrientationConsent?: boolean;
   lookingFor?: string[];
   isPremium?: boolean;
 }
@@ -167,8 +172,15 @@ function passesHardFilters(
 
 
 
-  // Looking for — vsaj en skupen cilj
-  if (a.lookingFor?.length && b.lookingFor?.length) {
+  // Looking for — vsaj en skupen cilj. GDPR Art. 9: `lookingFor` is
+  // orientation-adjacent (gender + lookingFor combined reveal sexual
+  // orientation), so the overlap check only runs when BOTH parties have
+  // granted sexualOrientationConsent. Missing consent on either side =
+  // skip the check (fail-closed as no-data), same pattern as
+  // religion/ethnicity in calculateLifestyleScore.
+  const bothConsentOrientation =
+    a.sexualOrientationConsent === true && b.sexualOrientationConsent === true;
+  if (bothConsentOrientation && a.lookingFor?.length && b.lookingFor?.length) {
     const overlap = a.lookingFor.filter(x => b.lookingFor!.includes(x));
     if (overlap.length === 0) return false;
   }

@@ -275,4 +275,91 @@ describe("compatibility_calculator", () => {
         const matchScore = calculateCompatibilityScore(a, same);
         expect(matchScore).toBeGreaterThan(noMatchScore);
     });
+
+    // ── Bilateral orientation gate (GDPR Art. 9) — mirrors the religion +
+    //    ethnicity pattern in calculateLifestyleScore. `lookingFor` overlap
+    //    is orientation-adjacent (combined with `gender` it can imply sexual
+    //    orientation), so the hard-filter check must fail-closed on either
+    //    party's missing sexualOrientationConsent.
+
+    it("skips lookingFor hard filter when NEITHER party has sexualOrientationConsent", () => {
+        // Disjoint lookingFor arrays would normally hard-fail the pair
+        // (score → 0). Without bilateral consent the check is skipped, so
+        // the pair still scores on hobbies alone.
+        const a = {
+            uid: "a",
+            hobbies: ["Hiking"],
+            lookingFor: ["long_term_partner"],
+        };
+        const b = {
+            uid: "b",
+            hobbies: ["Hiking"],
+            lookingFor: ["short_term_fun"],
+        };
+        const score = calculateCompatibilityScore(a, b);
+        expect(score).toBeGreaterThan(0);
+    });
+
+    it("skips lookingFor hard filter when ONLY ONE party has sexualOrientationConsent", () => {
+        const a = {
+            uid: "a",
+            hobbies: ["Hiking"],
+            lookingFor: ["long_term_partner"],
+            sexualOrientationConsent: true,
+        };
+        const b = {
+            uid: "b",
+            hobbies: ["Hiking"],
+            lookingFor: ["short_term_fun"],
+            // sexualOrientationConsent missing → fail-closed → skip check
+        };
+        const score = calculateCompatibilityScore(a, b);
+        expect(score).toBeGreaterThan(0);
+    });
+
+    it("applies lookingFor hard filter when BOTH parties have sexualOrientationConsent", () => {
+        const a = {
+            uid: "a",
+            hobbies: ["Hiking"],
+            lookingFor: ["long_term_partner"],
+            sexualOrientationConsent: true,
+        };
+        const bDisjoint = {
+            uid: "b",
+            hobbies: ["Hiking"],
+            lookingFor: ["short_term_fun"],
+            sexualOrientationConsent: true,
+        };
+        const bOverlap = {
+            uid: "b",
+            hobbies: ["Hiking"],
+            lookingFor: ["long_term_partner", "undecided"],
+            sexualOrientationConsent: true,
+        };
+        // With bilateral consent + disjoint lookingFor, hard filter fails →
+        // score 0. With bilateral consent + overlap, the pair scores.
+        expect(calculateCompatibilityScore(a, bDisjoint)).toBe(0);
+        expect(calculateCompatibilityScore(a, bOverlap)).toBeGreaterThan(0);
+    });
+
+    it("bilateral orientation consent = false is treated as missing (fail-closed)", () => {
+        // Explicit `false` must behave identically to `undefined` — never
+        // let a scorer proceed on an orientation-adjacent check when a user
+        // has affirmatively withdrawn consent.
+        const a = {
+            uid: "a",
+            hobbies: ["Hiking"],
+            lookingFor: ["long_term_partner"],
+            sexualOrientationConsent: false,
+        };
+        const b = {
+            uid: "b",
+            hobbies: ["Hiking"],
+            lookingFor: ["short_term_fun"],
+            sexualOrientationConsent: false,
+        };
+        // Would hard-fail with bilateral true; here it's skipped → score > 0.
+        const score = calculateCompatibilityScore(a, b);
+        expect(score).toBeGreaterThan(0);
+    });
 });

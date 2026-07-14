@@ -18,6 +18,7 @@ import 'settings_controller.dart';
 import 'widgets/phone_edit_modal.dart';
 import 'widgets/preference_pill_row.dart';
 import 'widgets/preference_range_slider.dart';
+import 'widgets/privacy_consents_section.dart';
 import '../../../core/utils/icon_utils.dart';
 import '../../../shared/ui/tremble_header.dart';
 import '../../../core/theme.dart';
@@ -55,6 +56,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     'preferences': GlobalKey(),
     'lifestyle': GlobalKey(),
     'appearance': GlobalKey(),
+    'privacy': GlobalKey(),
     'account': GlobalKey(),
   };
 
@@ -168,6 +170,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   sectionKey: 'appearance',
                   icon: LucideIcons.palette,
                   content: _buildAppSettingsContent(user),
+                ),
+                const SizedBox(height: 20),
+                _buildExpandableSection(
+                  title: _t('privacy_consents_section_title'),
+                  sectionKey: 'privacy',
+                  icon: LucideIcons.shield,
+                  content: const PrivacyConsentsSection(),
                 ),
                 const SizedBox(height: 20),
                 _buildExpandableSection(

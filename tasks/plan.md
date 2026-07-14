@@ -2,7 +2,8 @@
 Plan ID: 20260714-legal-003-art9-consent-hardening
 Risk Level: HIGH (Art. 9 GDPR consent enforcement + core matching pipeline + backend write gate + on-launch UX)
 Founder Approval Required: YES (approved 2026-07-14 in the pre-cut discuss-phase — this file IS the record)
-Branch: feature/legal-003-art9-consent-hardening
+Branch: feature/legal-003-art9-consent-code (code follow-up to merged
+docs branch feature/legal-003-art9-consent-hardening / PR #40)
 
 ## 0. AUDIT RESULT — LEGAL-003 gap analysis (2026-07-14)
 
@@ -57,24 +58,28 @@ this PR.
 **Files this PR touches:**
 
 Server:
-- `functions/src/modules/users/users.functions.ts` — write-time enforcement in `updateProfile` + `completeOnboarding`
-- `functions/src/modules/compatibility/compatibility_calculator.ts` — gender + lookingFor bilateral fail-closed gate
-- `functions/src/modules/users/users.schema.ts` — 3 new version fields + 2 new timestamp fields in Zod schema
-- `functions/src/__tests__/users.test.ts` — server enforcement rejection pair
-- `functions/src/__tests__/compatibility_calculator.test.ts` — orientation bilateral gate pair-of-tests (mirror religion pattern)
+- `functions/src/modules/users/users.functions.ts` — write-time enforcement in `updateProfile`; new `withdrawArt9Consent` callable that deletes the sensitive field(s)
+- `functions/src/modules/users/users.schema.ts` — accept `sexualOrientationConsent` / `religionConsent` / `ethnicityConsent` on `updateProfile` (same-request grants)
+- `functions/src/modules/auth/auth.functions.ts` — `completeOnboarding` drops religion/ethnicity to null when the paired consent isn't true; server stamps version + timestamp for all three categories
+- `functions/src/modules/compatibility/compatibility_calculator.ts` — orientation bilateral fail-closed gate on `lookingFor` (`gender` is not scored today; the gate is placed on the orientation-adjacent scoring surface)
+- `functions/src/index.ts` — export the new `withdrawArt9Consent` callable
+- `functions/src/__tests__/users.test.ts` — 10 new assertions: pair-of-tests per Art. 9 field, same-request-withdrawal rejection, withdrawal callable delete semantics
+- `functions/src/__tests__/compatibility_calculator.test.ts` — orientation bilateral gate pair-of-tests (mirrors religion pattern)
 
 Client:
-- `lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart` — remove select-all from Art. 9 optionals + narrow-purpose text on all three Art. 9 tiles
-- `lib/src/features/auth/data/auth_repository.dart` — add version + timestamp fields for religion + ethnicity; parse in `fromMap`, write in `toMap`, extend `copyWith`
-- `lib/src/features/auth/presentation/registration_flow.dart` — thread new fields through completion payload
-- `lib/src/features/settings/presentation/widgets/privacy_consents_section.dart` — NEW; embedded withdrawal UI in settings
-- `lib/src/features/auth/presentation/backfill_consent_modal.dart` — NEW; blocking modal on next launch for null-consent users
-- `lib/src/core/translations.dart` — updated consent tile copy + backfill modal copy + settings section copy in EN + SL + HR
+- `lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart` — remove select-all from Art. 9 optionals; narrow-purpose text on all three Art. 9 tiles via `_v1` translation keys with a "Learn more" PP anchor link; stable Keys for widget-test access
+- `lib/src/features/auth/data/auth_repository.dart` — five new AuthUser fields (version + timestamp for orientation / religion / ethnicity); `fromFirestore` + `copyWith` extended; new `withdrawArt9Consent(category)` and `setArt9Consent(category, granted:)` repo + notifier methods (server-first, not optimistic, so a network failure keeps the backfill modal open for retry)
+- `lib/src/features/settings/presentation/widgets/privacy_consents_section.dart` — NEW; three-tile settings section with confirmation dialog + destructive withdrawal
+- `lib/src/features/settings/presentation/settings_screen.dart` — wires the new section as a fifth expandable "privacy" group
+- `lib/src/features/auth/presentation/backfill_consent_modal.dart` — NEW; PopScope-locked full-screen modal + `BackfillConsentGate` root-level overlay
+- `lib/src/app.dart` — wraps the app inside `BackfillConsentGate` alongside the existing `DismissKeyboard`
+- `lib/src/core/translations.dart` — Art. 9 tile copy + settings section copy + backfill modal copy in EN + SL + HR; other locales fall back to EN via the existing `tr()` fallback
 
 Tests:
-- `test/features/auth/consent_step_test.dart` — select-all no longer flips Art. 9 optionals + purpose text present
-- `test/features/settings/privacy_consents_section_test.dart` — NEW; withdrawal invokes FieldValue.delete via mocked repo
-- `test/features/auth/backfill_consent_modal_test.dart` — NEW; renders on null consent + accept / decline paths
+- `test/features/auth/consent_step_test.dart` — select-all restriction, `_v1` key wiring, PP anchor deep-links, and four narrow-purpose phrases across EN + SL + HR
+- `test/features/settings/privacy_consents_section_test.dart` — NEW; render-state parity + confirm-then-invoke + cancel-suppression
+- `test/features/auth/backfill_consent_modal_test.dart` — NEW; four state-predicate assertions plus accept / decline / server-error retry paths
+- `test/features/auth/photo_upload_registration_test.dart` — updated so the "select-all + continue" path taps the orientation tile explicitly (LEGAL-003 step 4)
 
 Docs / tracking:
 - `tasks/plan.md`, `tasks/blockers.md`, `tasks/plans/PLAN_03_APP_CODE.md`, `tasks/plans/PLAN_04_LEGAL_STORES.md` — plan + status updates

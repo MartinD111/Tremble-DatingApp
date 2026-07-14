@@ -63,6 +63,12 @@ export const updateProfileSchema = z
         religionPreference: z.string().max(50).nullish(),
         ethnicity: z.string().max(50).nullish(),
         ethnicityPreference: z.string().max(50).nullish(),
+        // Art. 9 consent flags — client may grant/withdraw via the same
+        // request that touches the corresponding sensitive field
+        // (updateProfile enforces the pairing server-side).
+        sexualOrientationConsent: z.boolean().nullish(),
+        religionConsent: z.boolean().nullish(),
+        ethnicityConsent: z.boolean().nullish(),
         hairColor: z.string().max(50).nullish(),
         hairColorPreference: z.string().max(50).nullish(),
 

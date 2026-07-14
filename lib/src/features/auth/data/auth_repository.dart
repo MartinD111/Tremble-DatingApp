@@ -85,12 +85,19 @@ class AuthUser {
   final String? ethnicity;
   final String? ethnicityPreference;
   final bool? religionConsent;
+  final DateTime? religionConsentAt;
+  final String? religionConsentVersion;
   final bool? ethnicityConsent;
+  final DateTime? ethnicityConsentAt;
+  final String? ethnicityConsentVersion;
   // GDPR Art. 9 — explicit consent to process gender + matching preferences
-  // (sexual orientation is inferrable from these). Written together with
-  // sexualOrientationConsentAt on the server.
+  // (sexual orientation is inferrable from these). Version + timestamp are
+  // server-authoritative: users.functions.ts / auth.functions.ts stamp them
+  // on every grant OR withdrawal so the settings UI and the backfill modal
+  // can decide whether to re-prompt on future version bumps.
   final bool? sexualOrientationConsent;
   final DateTime? sexualOrientationConsentAt;
+  final String? sexualOrientationConsentVersion;
   final String? hairColor;
   final String? hairColorPreference;
   final String? partnerExerciseHabit;
@@ -179,9 +186,14 @@ class AuthUser {
     this.ethnicity,
     this.ethnicityPreference,
     this.religionConsent,
+    this.religionConsentAt,
+    this.religionConsentVersion,
     this.ethnicityConsent,
+    this.ethnicityConsentAt,
+    this.ethnicityConsentVersion,
     this.sexualOrientationConsent,
     this.sexualOrientationConsentAt,
+    this.sexualOrientationConsentVersion,
     this.hairColor,
     this.hairColorPreference,
     this.partnerExerciseHabit,
@@ -377,10 +389,16 @@ class AuthUser {
       ethnicity: data['ethnicity'] as String?,
       ethnicityPreference: data['ethnicityPreference'] as String?,
       religionConsent: data['religionConsent'] as bool?,
+      religionConsentAt: _parseDateTime(data['religionConsentAt']),
+      religionConsentVersion: data['religionConsentVersion'] as String?,
       ethnicityConsent: data['ethnicityConsent'] as bool?,
+      ethnicityConsentAt: _parseDateTime(data['ethnicityConsentAt']),
+      ethnicityConsentVersion: data['ethnicityConsentVersion'] as String?,
       sexualOrientationConsent: data['sexualOrientationConsent'] as bool?,
       sexualOrientationConsentAt:
           _parseDateTime(data['sexualOrientationConsentAt']),
+      sexualOrientationConsentVersion:
+          data['sexualOrientationConsentVersion'] as String?,
       hairColor: data['hairColor'] as String?,
       hairColorPreference: data['hairColorPreference'] as String?,
       partnerExerciseHabit: data['partnerExerciseHabit'] as String?,
@@ -453,9 +471,14 @@ class AuthUser {
     String? ethnicity,
     Object? ethnicityPreference = _unset,
     bool? religionConsent,
+    DateTime? religionConsentAt,
+    String? religionConsentVersion,
     bool? ethnicityConsent,
+    DateTime? ethnicityConsentAt,
+    String? ethnicityConsentVersion,
     bool? sexualOrientationConsent,
     DateTime? sexualOrientationConsentAt,
+    String? sexualOrientationConsentVersion,
     String? hairColor,
     Object? hairColorPreference = _unset,
     Object? partnerExerciseHabit = _unset,
@@ -541,11 +564,19 @@ class AuthUser {
           ? this.ethnicityPreference
           : ethnicityPreference as String?,
       religionConsent: religionConsent ?? this.religionConsent,
+      religionConsentAt: religionConsentAt ?? this.religionConsentAt,
+      religionConsentVersion:
+          religionConsentVersion ?? this.religionConsentVersion,
       ethnicityConsent: ethnicityConsent ?? this.ethnicityConsent,
+      ethnicityConsentAt: ethnicityConsentAt ?? this.ethnicityConsentAt,
+      ethnicityConsentVersion:
+          ethnicityConsentVersion ?? this.ethnicityConsentVersion,
       sexualOrientationConsent:
           sexualOrientationConsent ?? this.sexualOrientationConsent,
       sexualOrientationConsentAt:
           sexualOrientationConsentAt ?? this.sexualOrientationConsentAt,
+      sexualOrientationConsentVersion: sexualOrientationConsentVersion ??
+          this.sexualOrientationConsentVersion,
       hairColor: hairColor ?? this.hairColor,
       hairColorPreference: identical(hairColorPreference, _unset)
           ? this.hairColorPreference
@@ -1019,6 +1050,38 @@ class AuthRepository {
     await _api.call('updateProfile', data: user.toApiPayload());
   }
 
+  /// Withdraw a single Art. 9 consent — hits the server callable which
+  /// (a) writes consent=false + version + timestamp and
+  /// (b) FieldValue.delete()s the corresponding sensitive field(s).
+  /// Orientation withdrawal deletes both gender and lookingFor.
+  ///
+  /// Accepts one of: 'orientation', 'religion', 'ethnicity'. Any other
+  /// value is rejected server-side with invalid-argument.
+  Future<void> withdrawArt9Consent(String category) async {
+    await _api.call('withdrawArt9Consent', data: {'category': category});
+  }
+
+  /// Non-destructive consent state change — writes the flag + version +
+  /// timestamp only, without touching the corresponding sensitive field.
+  /// Used by the backfill modal on app launch (accept = true; decline =
+  /// false) so pre-migration users can record a decision without either
+  /// re-entering the field (accept) or losing it (decline; the scorer's
+  /// bilateral gate already skips them on the read path).
+  ///
+  /// The server-side `updateProfile` gate only fires when the request
+  /// touches `gender` / `lookingFor` / `religion` / `ethnicity`; sending
+  /// only the flag bypasses the gate cleanly. The server still stamps
+  /// version + timestamp because the consent field is present.
+  Future<void> setArt9Consent(String category, {required bool granted}) async {
+    final field = switch (category) {
+      'orientation' => 'sexualOrientationConsent',
+      'religion' => 'religionConsent',
+      'ethnicity' => 'ethnicityConsent',
+      _ => throw ArgumentError.value(category, 'category'),
+    };
+    await _api.call('updateProfile', data: {field: granted});
+  }
+
   // ── Update selected gyms (direct Firestore — bypasses strict CF schema) ──
   Future<void> updateSelectedGyms(String uid, List<SelectedGym> gyms) async {
     await _users.doc(uid).update({
@@ -1211,6 +1274,67 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
     // Optimistic update
     state = state?.copyWith(selectedGyms: gyms);
     await _repository.updateSelectedGyms(uid, gyms);
+  }
+
+  /// Withdraw an Art. 9 consent. Applies an optimistic local state update
+  /// so the settings UI reflects the change immediately; the server call
+  /// then makes the deletion authoritative. On server error the local
+  /// state stays optimistic — a subsequent app cold-start reconciles from
+  /// Firestore (same pattern as [updateProfile]).
+  Future<void> withdrawArt9Consent(String category) async {
+    final current = state;
+    if (current == null) return;
+    switch (category) {
+      case 'orientation':
+        state = current.copyWith(sexualOrientationConsent: false);
+        break;
+      case 'religion':
+        state = current.copyWith(religionConsent: false);
+        break;
+      case 'ethnicity':
+        state = current.copyWith(ethnicityConsent: false);
+        break;
+      default:
+        return;
+    }
+    try {
+      await _repository.withdrawArt9Consent(category);
+    } catch (e) {
+      if (kDebugMode)
+        debugPrint('[AUTH] withdrawArt9Consent($category) API error: $e');
+      rethrow;
+    }
+  }
+
+  /// Non-destructive Art. 9 consent decision — used by the backfill
+  /// modal to record accept/decline without deleting the underlying
+  /// sensitive field. Server-first (NOT optimistic) so a network
+  /// failure keeps the modal on-screen for retry rather than silently
+  /// dismissing it — a decision that never landed on the server must
+  /// not look like a landed decision to the user or the local scorer.
+  Future<void> setArt9Consent(String category, {required bool granted}) async {
+    final current = state;
+    if (current == null) return;
+    // Reject unknown category early so a typo doesn't silently no-op.
+    if (category != 'orientation' &&
+        category != 'religion' &&
+        category != 'ethnicity') {
+      return;
+    }
+    await _repository.setArt9Consent(category, granted: granted);
+    // Only apply the local flip AFTER the server acknowledges — this
+    // is the point where the backfill modal is safe to dismiss.
+    switch (category) {
+      case 'orientation':
+        state = current.copyWith(sexualOrientationConsent: granted);
+        break;
+      case 'religion':
+        state = current.copyWith(religionConsent: granted);
+        break;
+      case 'ethnicity':
+        state = current.copyWith(ethnicityConsent: granted);
+        break;
+    }
   }
 
   Future<bool> reloadVerification() async {

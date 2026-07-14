@@ -46,6 +46,12 @@ class _ConsentStepState extends State<ConsentStep> {
       _consentSexualOrientation;
 
   void _toggleAll() {
+    // Select-all covers ONLY the general-processing consents. GDPR Art. 9
+    // special-category tiles (orientation, religion, ethnicity) must be
+    // toggled individually — a select-all shortcut is incompatible with
+    // "specific" consent per Art. 9(2)(a). The orientation tile remains
+    // in `_consentGiven` because it is required to complete registration;
+    // it just isn't in the select-all sweep.
     final newVal = !_consentGiven;
     setState(() {
       _consentTerms = newVal;
@@ -53,19 +59,54 @@ class _ConsentStepState extends State<ConsentStep> {
       _consentDataProcessing = newVal;
       _consentAge = newVal;
       _consentLocation = newVal;
-      _consentReligion = newVal;
-      _consentEthnicity = newVal;
-      _consentSexualOrientation = newVal;
     });
+  }
+
+  /// Builds a rich span for an Art. 9 tile: the narrow-purpose consent body
+  /// followed by a "Learn more" link that deep-links to the corresponding
+  /// Privacy Policy anchor. The anchor resolves to the PP root when the
+  /// section is not yet published (LEGAL-001 lane), so the link never
+  /// dangles.
+  InlineSpan _art9TileSpan({
+    required String body,
+    required String anchor,
+    required TextStyle bodyStyle,
+  }) {
+    return TextSpan(
+      style: bodyStyle,
+      children: [
+        TextSpan(text: body),
+        const TextSpan(text: ' '),
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: GestureDetector(
+            onTap: () => launchUrl(
+              Uri.parse('https://trembledating.com/privacy#$anchor'),
+              mode: LaunchMode.externalApplication,
+            ),
+            child: Text(
+              widget.tr('consent_art9_learn_more'),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 14,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _consentTile({
     required bool value,
     required ValueChanged<bool> onChanged,
     required InlineSpan richText,
+    Key? key,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
+      key: key,
       onTap: () => onChanged(!value),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,43 +237,35 @@ class _ConsentStepState extends State<ConsentStep> {
           ),
           const SizedBox(height: 16),
           _consentTile(
+            key: const Key('art9-religion-tile'),
             value: _consentReligion,
             onChanged: (v) => setState(() => _consentReligion = v),
-            richText: TextSpan(
-              style: bodyStyle,
-              children: const [
-                TextSpan(
-                    text:
-                        'I consent to the use of my religious beliefs for matchmaking. '
-                        'Checking this may slightly improve your compatibility score with others of similar beliefs. '
-                        'If left unchecked, your religion will not affect your matches.'),
-              ],
+            richText: _art9TileSpan(
+              body: widget.tr('consent_art9_religion_v1'),
+              anchor: 'art9-religion',
+              bodyStyle: bodyStyle,
             ),
           ),
           const SizedBox(height: 16),
           _consentTile(
+            key: const Key('art9-ethnicity-tile'),
             value: _consentEthnicity,
             onChanged: (v) => setState(() => _consentEthnicity = v),
-            richText: TextSpan(
-              style: bodyStyle,
-              children: const [
-                TextSpan(
-                    text:
-                        'I consent to the use of my ethnic background for matchmaking. '
-                        'Checking this may slightly improve your compatibility score. '
-                        'If left unchecked, your ethnicity will not affect your matches.'),
-              ],
+            richText: _art9TileSpan(
+              body: widget.tr('consent_art9_ethnicity_v1'),
+              anchor: 'art9-ethnicity',
+              bodyStyle: bodyStyle,
             ),
           ),
           const SizedBox(height: 16),
           _consentTile(
+            key: const Key('art9-orientation-tile'),
             value: _consentSexualOrientation,
             onChanged: (v) => setState(() => _consentSexualOrientation = v),
-            richText: TextSpan(
-              style: bodyStyle,
-              children: [
-                TextSpan(text: widget.tr('consent_sexual_orientation')),
-              ],
+            richText: _art9TileSpan(
+              body: widget.tr('consent_art9_orientation_v1'),
+              anchor: 'art9-orientation',
+              bodyStyle: bodyStyle,
             ),
           ),
           const SizedBox(height: 16),

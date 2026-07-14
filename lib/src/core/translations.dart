@@ -660,9 +660,87 @@ const Map<String, Map<String, String>> _translations = {
         'By continuing, you agree to our Terms of Service and Privacy Policy.',
     // Explicit consent for sexual-orientation-adjacent processing (gender +
     // lookingFor). GDPR Art. 9 — required before completing registration.
+    // Legacy short-form key preserved for any callers not yet migrated to
+    // the v1 narrow-purpose copy below.
     'consent_sexual_orientation':
         'I explicitly consent to the processing of my gender and matching '
             'preferences solely for the purpose of finding matches.',
+    // ── Art. 9 narrow-purpose consent copy (v1) ─────────────────────────
+    // Long-form tiles used by consent_step.dart. Each tile pairs the
+    // narrow-purpose statement with a "Learn more" link to the PP anchor
+    // #art9-<category>. Bump the `_v1` suffix (and the shared version
+    // constant in users.functions.ts / auth.functions.ts) when the copy
+    // materially changes, so existing users re-prompt via the backfill
+    // modal.
+    'consent_art9_orientation_v1':
+        'I explicitly consent to Tremble processing my gender and matching '
+            'preferences to match me with compatible users. My sexual '
+            'orientation may be inferred from these fields — this is GDPR '
+            'Article 9 special-category data. This information is used solely '
+            'inside Tremble, is never sold, never shared with advertisers or '
+            'ad networks, never used for analytics, and is bilaterally '
+            'fail-closed (only users who have also consented can be scored '
+            'against my orientation). I can withdraw consent at any time from '
+            'Settings; on withdrawal my gender and matching preferences are '
+            'permanently deleted from Tremble.',
+    'consent_art9_religion_v1':
+        'I explicitly consent to Tremble processing my religion for '
+            'matchmaking — GDPR Article 9 special-category data. My religion '
+            'is used solely inside Tremble for compatibility scoring, is '
+            'never sold, never shared with advertisers, never used for '
+            'analytics, and is bilaterally fail-closed. I can withdraw '
+            'consent at any time from Settings; on withdrawal my religion is '
+            'permanently deleted from Tremble. Leaving this unchecked means '
+            'my religion will not affect my matches.',
+    'consent_art9_ethnicity_v1':
+        'I explicitly consent to Tremble processing my ethnic background for '
+            'matchmaking — GDPR Article 9 special-category data. My ethnicity '
+            'is used solely inside Tremble for compatibility scoring, is '
+            'never sold, never shared with advertisers, never used for '
+            'analytics, and is bilaterally fail-closed. I can withdraw '
+            'consent at any time from Settings; on withdrawal my ethnicity is '
+            'permanently deleted from Tremble. Leaving this unchecked means '
+            'my ethnicity will not affect my matches.',
+    'consent_art9_learn_more': 'Learn more',
+    // Settings withdrawal + backfill copy (referenced by
+    // privacy_consents_section.dart + backfill_consent_modal.dart).
+    'privacy_consents_section_title': 'Sensitive-category consents',
+    'privacy_consents_section_subtitle':
+        'You can withdraw any GDPR Article 9 consent below. Withdrawal '
+            'permanently deletes the corresponding data from Tremble.',
+    'privacy_consents_orientation_label':
+        'Gender + matching preferences (orientation)',
+    'privacy_consents_religion_label': 'Religion',
+    'privacy_consents_ethnicity_label': 'Ethnicity',
+    'privacy_consents_state_granted': 'Granted',
+    'privacy_consents_state_withdrawn': 'Withdrawn',
+    'privacy_consents_state_never': 'Not asked',
+    'privacy_consents_withdraw_button': 'Withdraw',
+    'privacy_consents_regrant_button': 'Re-grant',
+    'privacy_consents_withdraw_orientation_confirm':
+        'This will delete your gender and matching preferences from Tremble. '
+            'You will not appear in matches scored on this dimension. You can '
+            're-consent later, but you will need to re-enter the data.',
+    'privacy_consents_withdraw_religion_confirm':
+        'This will delete your religion from Tremble. You can re-consent '
+            'later, but you will need to re-enter it.',
+    'privacy_consents_withdraw_ethnicity_confirm':
+        'This will delete your ethnic background from Tremble. You can '
+            're-consent later, but you will need to re-enter it.',
+    'privacy_consents_confirm_button': 'Yes, withdraw',
+    'privacy_consents_cancel_button': 'Cancel',
+    'privacy_consents_version_label': 'Version',
+    'backfill_consent_title': 'Update required — sensitive-data consent',
+    'backfill_consent_body':
+        'Tremble now requires explicit consent under GDPR Article 9 for the '
+            'gender + matching preferences we use to find your matches. This '
+            'is a special category of personal data.\n\nYour data stays '
+            'inside Tremble. It is never sold, never shared with advertisers, '
+            'never used for analytics. Only users who have also consented can '
+            'be scored against your orientation.\n\nIf you decline, you can '
+            'still use Tremble, but matching is disabled until you consent.',
+    'backfill_consent_accept': 'I explicitly consent',
+    'backfill_consent_decline': 'Not now — browse only',
     // Strict 18+ confirmation — verbatim per spec, no "age of majority" phrasing.
     'consent_age_18': 'I am at least 18 years old.',
     'dating_preference': 'Dating preference',
@@ -1500,6 +1578,78 @@ const Map<String, Map<String, String>> _translations = {
     'consent_sexual_orientation':
         'Izrecno soglašam z obdelavo mojega spola in preferenc za ujemanje '
             'izključno za namen iskanja ujemanj.',
+    'consent_art9_orientation_v1':
+        'Izrecno soglašam, da Tremble obdeluje moj spol in preference za '
+            'ujemanje, da me poveže z združljivimi uporabniki. Iz teh polj '
+            'se lahko sklepa na mojo spolno usmerjenost — gre za posebno '
+            'kategorijo osebnih podatkov po 9. členu GDPR. Ti podatki se '
+            'uporabljajo izključno znotraj Trembla, se nikoli ne prodajajo, '
+            'nikoli ne delijo z oglaševalskimi omrežji, nikoli ne uporabljajo '
+            'za analitiko in so dvostransko zaklenjeni (samo uporabniki, ki '
+            'so tudi soglašali, so lahko ocenjeni glede na mojo usmerjenost). '
+            'Soglasje lahko kadar koli umaknem v Nastavitvah; ob umiku se moj '
+            'spol in preference za ujemanje trajno izbrišejo iz Trembla.',
+    'consent_art9_religion_v1':
+        'Izrecno soglašam, da Tremble obdeluje moje versko prepričanje za '
+            'iskanje ujemanj — gre za posebno kategorijo osebnih podatkov po '
+            '9. členu GDPR. Moja vera se uporablja izključno znotraj Trembla '
+            'za oceno združljivosti, se nikoli ne prodaja, nikoli ne deli z '
+            'oglaševalskimi omrežji, nikoli ne uporablja za analitiko in je '
+            'dvostransko zaklenjena. Soglasje lahko kadar koli umaknem v '
+            'Nastavitvah; ob umiku se moja vera trajno izbriše iz Trembla. Če '
+            'polja ne obkljukam, moja vera ne vpliva na moja ujemanja.',
+    'consent_art9_ethnicity_v1':
+        'Izrecno soglašam, da Tremble obdeluje moje etnično poreklo za '
+            'iskanje ujemanj — gre za posebno kategorijo osebnih podatkov po '
+            '9. členu GDPR. Moje etnično poreklo se uporablja izključno '
+            'znotraj Trembla za oceno združljivosti, se nikoli ne prodaja, '
+            'nikoli ne deli z oglaševalskimi omrežji, nikoli ne uporablja za '
+            'analitiko in je dvostransko zaklenjeno. Soglasje lahko kadar '
+            'koli umaknem v Nastavitvah; ob umiku se moje etnično poreklo '
+            'trajno izbriše iz Trembla. Če polja ne obkljukam, moje poreklo '
+            'ne vpliva na moja ujemanja.',
+    'consent_art9_learn_more': 'Več informacij',
+    'privacy_consents_section_title': 'Soglasja za občutljive podatke',
+    'privacy_consents_section_subtitle':
+        'Vsako soglasje po 9. členu GDPR lahko spodaj umaknete. Umik trajno '
+            'izbriše ustrezne podatke iz Trembla.',
+    'privacy_consents_orientation_label':
+        'Spol + preference za ujemanje (usmerjenost)',
+    'privacy_consents_religion_label': 'Vera',
+    'privacy_consents_ethnicity_label': 'Etnično poreklo',
+    'privacy_consents_state_granted': 'Podano',
+    'privacy_consents_state_withdrawn': 'Umaknjeno',
+    'privacy_consents_state_never': 'Ni bilo vprašano',
+    'privacy_consents_withdraw_button': 'Umakni',
+    'privacy_consents_regrant_button': 'Ponovno podaj',
+    'privacy_consents_withdraw_orientation_confirm':
+        'To bo iz Trembla trajno izbrisalo tvoj spol in preference za '
+            'ujemanje. Ne boš več prikazan v ujemanjih, ki temeljijo na tej '
+            'dimenziji. Soglasje lahko kasneje ponovno podaš, a boš moral '
+            'podatke ponovno vnesti.',
+    'privacy_consents_withdraw_religion_confirm':
+        'To bo iz Trembla trajno izbrisalo tvojo vero. Soglasje lahko '
+            'kasneje ponovno podaš, a boš moral podatek ponovno vnesti.',
+    'privacy_consents_withdraw_ethnicity_confirm':
+        'To bo iz Trembla trajno izbrisalo tvoje etnično poreklo. Soglasje '
+            'lahko kasneje ponovno podaš, a boš moral podatek ponovno vnesti.',
+    'privacy_consents_confirm_button': 'Da, umakni',
+    'privacy_consents_cancel_button': 'Prekliči',
+    'privacy_consents_version_label': 'Različica',
+    'backfill_consent_title':
+        'Potrebna posodobitev — soglasje za občutljive podatke',
+    'backfill_consent_body':
+        'Tremble zdaj zahteva izrecno soglasje po 9. členu GDPR za spol in '
+            'preference za ujemanje, ki jih uporabljamo za iskanje '
+            'ujemanj. Gre za posebno kategorijo osebnih podatkov.\n\nTvoji '
+            'podatki ostanejo znotraj Trembla. Nikoli se ne prodajajo, '
+            'nikoli ne delijo z oglaševalci, nikoli ne uporabljajo za '
+            'analitiko. Samo uporabniki, ki so tudi soglašali, so lahko '
+            'ocenjeni glede na tvojo usmerjenost.\n\nČe zavrneš, lahko '
+            'Tremble še naprej uporabljaš, a bo ujemanje onemogočeno, dokler '
+            'ne podaš soglasja.',
+    'backfill_consent_accept': 'Izrecno soglašam',
+    'backfill_consent_decline': 'Ne zdaj — samo brskanje',
     'consent_age_18': 'Star sem najmanj 18 let.',
     'dating_preferences_title': 'Preference za zmenke',
     'dating_preference': 'Preference za zmenke',
@@ -4305,6 +4455,81 @@ const Map<String, Map<String, String>> _translations = {
     'something_else': 'Nešto drugo',
     'consent_subtitle':
         'Nastavkom se slažete s našim Uvjetima pružanja usluge i Politikom privatnosti.',
+    'consent_art9_orientation_v1':
+        'Izričito pristajem da Tremble obrađuje moj rod i preferencije za '
+            'povezivanje kako bi me spojio s kompatibilnim korisnicima. Iz '
+            'ovih polja može se zaključiti moja seksualna orijentacija — '
+            'riječ je o posebnoj kategoriji osobnih podataka prema članku 9. '
+            'GDPR-a. Ovi podaci koriste se isključivo unutar Tremble, nikada '
+            'se ne prodaju, nikada ne dijele s oglašivačkim mrežama, nikada '
+            'ne koriste za analitiku i dvostrano su fail-closed (samo '
+            'korisnici koji su također pristali mogu biti ocijenjeni prema '
+            'mojoj orijentaciji). Pristanak mogu opozvati u bilo kojem '
+            'trenutku u Postavkama; nakon opoziva moj rod i preferencije za '
+            'povezivanje trajno se brišu iz Tremble.',
+    'consent_art9_religion_v1':
+        'Izričito pristajem da Tremble obrađuje moje vjersko uvjerenje za '
+            'povezivanje — riječ je o posebnoj kategoriji osobnih podataka '
+            'prema članku 9. GDPR-a. Moja vjera koristi se isključivo unutar '
+            'Tremble za ocjenu kompatibilnosti, nikada se ne prodaje, nikada '
+            'ne dijeli s oglašivačkim mrežama, nikada ne koristi za '
+            'analitiku i dvostrano je fail-closed. Pristanak mogu opozvati u '
+            'bilo kojem trenutku u Postavkama; nakon opoziva moja vjera '
+            'trajno se briše iz Tremble. Ako polje ne označim, moja vjera ne '
+            'utječe na moja povezivanja.',
+    'consent_art9_ethnicity_v1':
+        'Izričito pristajem da Tremble obrađuje moje etničko podrijetlo za '
+            'povezivanje — riječ je o posebnoj kategoriji osobnih podataka '
+            'prema članku 9. GDPR-a. Moje etničko podrijetlo koristi se '
+            'isključivo unutar Tremble za ocjenu kompatibilnosti, nikada se '
+            'ne prodaje, nikada ne dijeli s oglašivačkim mrežama, nikada ne '
+            'koristi za analitiku i dvostrano je fail-closed. Pristanak mogu '
+            'opozvati u bilo kojem trenutku u Postavkama; nakon opoziva moje '
+            'etničko podrijetlo trajno se briše iz Tremble. Ako polje ne '
+            'označim, moje podrijetlo ne utječe na moja povezivanja.',
+    'consent_art9_learn_more': 'Saznaj više',
+    'privacy_consents_section_title': 'Pristanci za osjetljive podatke',
+    'privacy_consents_section_subtitle':
+        'Bilo koji pristanak prema članku 9. GDPR-a možeš opozvati u '
+            'nastavku. Opoziv trajno briše odgovarajuće podatke iz Tremble.',
+    'privacy_consents_orientation_label':
+        'Rod + preferencije za povezivanje (orijentacija)',
+    'privacy_consents_religion_label': 'Vjera',
+    'privacy_consents_ethnicity_label': 'Etničko podrijetlo',
+    'privacy_consents_state_granted': 'Dano',
+    'privacy_consents_state_withdrawn': 'Opozvano',
+    'privacy_consents_state_never': 'Nije pitano',
+    'privacy_consents_withdraw_button': 'Opozovi',
+    'privacy_consents_regrant_button': 'Ponovno pristani',
+    'privacy_consents_withdraw_orientation_confirm':
+        'Ovo će trajno izbrisati tvoj rod i preferencije za povezivanje iz '
+            'Tremble. Nećeš se pojavljivati u povezivanjima ocijenjenima po '
+            'toj dimenziji. Kasnije možeš ponovno pristati, ali ćeš morati '
+            'ponovno unijeti podatke.',
+    'privacy_consents_withdraw_religion_confirm':
+        'Ovo će trajno izbrisati tvoju vjeru iz Tremble. Kasnije možeš '
+            'ponovno pristati, ali ćeš morati ponovno unijeti podatak.',
+    'privacy_consents_withdraw_ethnicity_confirm':
+        'Ovo će trajno izbrisati tvoje etničko podrijetlo iz Tremble. '
+            'Kasnije možeš ponovno pristati, ali ćeš morati ponovno unijeti '
+            'podatak.',
+    'privacy_consents_confirm_button': 'Da, opozovi',
+    'privacy_consents_cancel_button': 'Odustani',
+    'privacy_consents_version_label': 'Verzija',
+    'backfill_consent_title':
+        'Potrebno ažuriranje — pristanak za osjetljive podatke',
+    'backfill_consent_body':
+        'Tremble sada zahtijeva izričit pristanak prema članku 9. GDPR-a za '
+            'rod i preferencije za povezivanje koje koristimo za pronalaženje '
+            'tvojih povezivanja. Riječ je o posebnoj kategoriji osobnih '
+            'podataka.\n\nTvoji podaci ostaju unutar Tremble. Nikada se ne '
+            'prodaju, nikada ne dijele s oglašivačima, nikada ne koriste za '
+            'analitiku. Samo korisnici koji su također pristali mogu biti '
+            'ocijenjeni prema tvojoj orijentaciji.\n\nAko odbiješ, Tremble '
+            'možeš koristiti i dalje, ali povezivanje je onemogućeno dok ne '
+            'daš pristanak.',
+    'backfill_consent_accept': 'Izričito pristajem',
+    'backfill_consent_decline': 'Ne sada — samo pregledavanje',
     'nobody_here': 'Još nikoga nema vani',
     'map_title': 'Tremble Mapa',
     'pulsing_here': '{count} ljudi je vani večeras',
