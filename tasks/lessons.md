@@ -4,6 +4,20 @@
 
 ---
 
+**Rule #83 — Verify Handoff Intel Against `git log` + `gh pr list` BEFORE Cutting a Fix Branch.**
+[2026-07-14] A handoff prompt that names a specific commit hash, branch, or "still-open" ticket is a claim about state _at write time_ — not now. Session 2026-07-14 was spawned to fix the "flaky GymStep test" and inherited a PLAN_00 §"Pokvarjeno / odprto" list of 8 live blockers. Verification revealed 5 of the 8 were already merged (PR #14 ci.yml injection, PR #13 stopBilling CF, PR #17 CROSSING_PATHS, PR #18 prefer_not_to_say) or cannot-reproduce (KORAK 3.8-2 flaky GymStep = 43/43 pass). ~90 minutes lost rediscovering resolved work before the phantom-blocker pattern became visible.
+
+**How to apply — before cutting ANY fix branch off a handoff:**
+- `git log --all --oneline | head -30` — is the fix already in `main`?
+- `git branch --contains <commit-hash>` — for every commit hash the handoff names, confirm it's on `main` (or NOT on `main`) as claimed.
+- `gh pr view <N> --json state,mergedAt,title` — for every PR number the handoff references, verify state matches the narrative.
+- If the fix already landed: close the ticket with evidence (merge commit + PR link) and STOP. Do not cut the branch. Report to founder in one sentence and await next lane.
+- If only PART of the handoff is stale: narrow the branch scope to just the still-open work and note the discrepancy in the PR body's Verification section.
+
+**Why:** Handoffs are written under context that ages. Every CLI session that skips verification pays a compounding cost — hours per session, until the founder or a future session notices the pattern. The verification step is 60 seconds; the cost of skipping it is 60+ minutes _and_ a false-progress commit if you push a fix for something already fixed.
+
+Source: Session 2026-07-14 stale-intel audit. Codified as PLAN_00 §"Pokvarjeno / odprto" post-audit annotation. Related: [[mpc-preflight-before-every-gh-pr-create]] (Rule #79 corollary — pre-flight is process discipline; this rule is intel discipline).
+
 **Rule #82 — Info.plist Can Lie to Apple While Runtime Prompts Tell Users the Truth. Audit Three Surfaces Before Every Submission.**
 [2026-07-13] BLOCKER-STORE-002 (Apple 5.1.1 rejection risk) sat open for 7 days because the audit only saw one lie. Fixing it surfaced two more that had been latent since the Anonymity Mode feature first shipped:
 

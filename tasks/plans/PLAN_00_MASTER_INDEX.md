@@ -75,28 +75,28 @@ Vse ostalo je zaporedno, razen kjer je izrecno označeno "vzporedno".
 - 221/221 Flutter testov, 77/77 CF testov na main
 
 **Pokvarjeno / odprto (podrobnosti v fazi datotekah):**
-- ci.yml: shell injection prek PR title/body — fix na branchu
-  `security/fix-ci-pr-body-injection` (commit 6923a42), PR ŠE NI ODPRT
-- stop-billing-10eur CF: crashira na VSAKEM budget sporočilu v produkciji
-  — nadomestek na branchu `feat/stop-billing-cf` (PR #13), čaka na security fix
-- CROSSING_PATHS notifikacija: arhitekturno nevidna na OBEH platformah
-  (Android data-only brez notification bloka; iOS loc-key brez Localizable.strings)
-- prefer_not_to_say: prikazuje surov ključ (manjka v translations.dart)
 - Testni napravi verjetno poganjata STARE builde (updateProfile 400 na obeh)
 - R2 fotografije + Redis ključi 4 izbrisanih računov: niso počiščeni
 - Repo je JAVEN — org + private migracija načrtovana
 - Play Console background location deklaracija: STATUS NEZNAN — preveri!
 - Prava pravna konzultacija: NI izvedena (samo Gemini pass)
 
+> _Post-session 2026-07-14 audit:_ 4 prior "odprto" alineje (ci.yml
+> injection, stopBilling CF, CROSSING_PATHS notifikacija,
+> prefer_not_to_say) so bile mergeane prek PR #14, PR #13, PR #17, PR
+> #18 (2026-07-12). KORAK 3.8-2 flaky GymStep test je zaprt kot
+> cannot-repro (43/43). Vsak nov handoff verificira preostale postavke
+> proti `git log` + `gh pr list` (Rule #83).
+
 **Todoist (projekt 6fxxh6MXfmh2q3FP) — živi taski s polnimi prompti:**
-- 6h4rx2R9CC3WvxGw — stopBilling (Infra, p1)
-- 6h4xVHjRqhp56VQP — CI injection (Infra, p1)
-- 6h4rx2JH52hFHxQw — CROSSING_PATHS (App, p1)
 - 6h4rx2M8RfPF9QmP — build verifikacija (Blockers, p1)
 - 6h4rx2WHvf5728Xw — R2/Redis cleanup (Infra, p2)
-- 6h4rx2VJmmW7XjHP — prefer_not_to_say (App, p3)
-- 6h4rqCpQ3jjg9vjw — flaky GymStep test (App, p3)
 - 6h4mGfW5FjMhvGmw — founder-approval environment (Infra, p1)
+
+> _Post-session 2026-07-14 audit:_ 5 prior Todoist tasks so zaprti
+> (6h4rx2R9CC3WvxGw stopBilling, 6h4xVHjRqhp56VQP CI injection,
+> 6h4rx2JH52hFHxQw CROSSING_PATHS, 6h4rx2VJmmW7XjHP prefer_not_to_say
+> — vsi mergeani; 6h4rqCpQ3jjg9vjw flaky GymStep — cannot-repro 43/43).
 
 ## POVEZANI DOKUMENTI
 - `TREMBLE_MASTER_COMPLIANCE_REPORT_06JUL2026.md` — izvorni compliance audit
