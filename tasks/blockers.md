@@ -77,9 +77,27 @@
 
 ### BLOCKER-LEGAL-005 — Paywall False Advertising
 **Date:** 2026-07-06
-**Status:** OPEN
-**Impact:** Paywall advertises features that don't exist in code ("unlimited geofence pings") and hides features that are actually gated ("see who waved"). Violates Apple 3.1.2 and consumer protection laws.
-**Action:** Sync `premium_screen.dart` with actual backend gate logic. (Task 6h3pmrF84Cf6JVQP)
+**Status:** RESOLVED 2026-07-14 — verified via bullet↔gate audit (KORAK 3.9-3)
+**Impact:** Paywall advertised features that didn't exist in code ("unlimited geofence pings") and hid features that were actually gated ("see who waved"). Apple 3.1.2 rejection risk + consumer protection.
+**Resolution (audit evidence, 2026-07-14):**
+
+The KORAK 3.7 series (2026-07-13) already rewrote `premium_screen.dart` against the ADR-007 tier matrix. Every current Premium bullet maps to a real, implemented code gate:
+
+| Bullet key | Backend / client gate | Evidence |
+|---|---|---|
+| `premium_feature_radar_extended` | 250 m + −85 dBm (vs Free 100 m + −75 dBm) | `lib/src/core/geo_service.dart:20-21` + `functions/src/modules/proximity/` |
+| `premium_feature_mutual_waves_20` | Monthly cap 20 (vs Free 5), `Europe/Ljubljana` counter | `functions/src/modules/matches/matches.functions.ts:38-56` |
+| `premium_feature_open_profile_cards` | Compound gate `isPremium && hasMutualWave` — three-state render | `lib/src/features/matches/presentation/matches_screen.dart:143` + `MatchProfile.hasMutualWave` field (`match_repository.dart:70`) |
+| `premium_feature_recap_full` | Recap TTL 10-min + `isReadOnly = !isPremium \|\| isHistory \|\| isExpired` gates wave button and profile tap | `lib/src/features/recap/providers/recap_ttl_provider.dart` + `run_recap_screen.dart:498-503` |
+| `premium_feature_near_miss_history` | Tab visible only when `isPremium`; Free shows upsell banner | `matches_screen.dart:40,54` |
+| `premium_feature_hard_filters` | Soft-labelled "coming soon" in 8 locales per ADR-007 Amendment §2/§6 | `premium_screen_test.dart:99-153` locks localisation |
+| `premium_feature_event_insights` | `effectiveIsPremium` gates participant count + heatmap chip | `lib/src/features/map/presentation/event_pin_sheet.dart:138,154,171` |
+
+**Retired keys (LEGAL-005's original complaints) are gone AND test-locked as gone** in `test/features/settings/premium_screen_test.dart:75-97`: `premium_feature_unlimited_geofence`, `premium_feature_wider_radar`, `premium_feature_custom_themes`, `premium_feature_advanced_filters`, `premium_free_gym_mode`, `premium_free_local_radar`, `premium_free_wave_limit`, `premium_feature_distance_100`, `premium_free_distance_50`.
+
+**Copy-rule enforcement** via `premium_screen_test.dart:155-189` scans user-facing strings for banned phrases (`revolutionary`, `seamless`, `game-changing`, `find love today`, `find your person`, `swipe`, `match queue`, `chat`) per ADR-007 §3.
+
+**Follow-up (non-blocker, deferred):** ADR-007 §4 mandate — one *pair* of consistency tests per gate (Free hits gate / Premium doesn't). Partial coverage exists in `test/features/matches/matches_three_state_test.dart`, `test/features/subscriptions/revenuecat_subscription_test.dart`, and the `test/features/recap/` suite, but not systematically per-bullet. Not gating LEGAL-005 closure because the copy↔gate mapping is verified above; captured as a MEDIUM test-hardening lane in `tasks/plan.md` §3. (Task 6h3pmrF84Cf6JVQP)
 
 ---
 
