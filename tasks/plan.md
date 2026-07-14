@@ -1,9 +1,9 @@
 # Active Implementation Plan
 Plan ID: 20260714-legal-003-art9-consent-hardening
 Risk Level: HIGH (Art. 9 GDPR consent enforcement + core matching pipeline + backend write gate + on-launch UX)
+Status: RESOLVED 2026-07-14 — PR #41 merged into `main` @ cce1f1c; Cloud Functions deployed to prod (`am---dating-app`) same day. Downstream lanes unblocked: LEGAL-001 DPIA rewrite, LEGAL-004 Weekend Pass timezone, PLAN_04 KORAK 4.2/4.3, STORE-003/004 Play Console declarations.
 Founder Approval Required: YES (approved 2026-07-14 in the pre-cut discuss-phase — this file IS the record)
-Branch: feature/legal-003-art9-consent-code (code follow-up to merged
-docs branch feature/legal-003-art9-consent-hardening / PR #40)
+Branch: feature/legal-003-art9-consent-code (merged as PR #41; code follow-up to the docs branch feature/legal-003-art9-consent-hardening / PR #40)
 
 ## 0. AUDIT RESULT — LEGAL-003 gap analysis (2026-07-14)
 

@@ -78,7 +78,7 @@ Cannabis is unreachable across every surface of the product:
 
 ### BLOCKER-LEGAL-003 — Sexual Orientation (GDPR Art. 9) Missing Consent
 **Date:** 2026-07-06
-**Status:** IN-REVIEW 2026-07-14 — 7-step hardening shipped on branch `feature/legal-003-art9-consent-code`, pending founder + code-reviewer sign-off + merge. Marks as RESOLVED on merge.
+**Status:** RESOLVED 2026-07-14 — PR #41 merged into `main` @ cce1f1c. Cloud Functions deployed to prod (`am---dating-app`, europe-west1) same day; `withdrawArt9Consent` created, `updateProfile` + `completeOnboarding` updated with the enforcement.
 **Impact:** The combination of `gender` + `lookingFor` implicitly reveals sexual orientation. As an Art. 9 category, processing without explicit consent is a massive GDPR violation (Grindr fined NOK 65M for this).
 **Resolution (branch pending merge, Plan-ID 20260714-legal-003-art9-consent-hardening):**
 - Server write-time enforcement in `updateProfile` — Art. 9 field writes (gender / lookingFor / religion / ethnicity) rejected unless the effective consent for that category is `=== true`. Same-request grants honoured; same-request withdrawals rejected.
@@ -90,7 +90,7 @@ Cannabis is unreachable across every surface of the product:
 - App-launch backfill modal (`backfill_consent_modal.dart`) for pre-migration users with `sexualOrientationConsent == null`; PopScope-locked, accept/decline both server-first (not optimistic) so a network failure keeps the modal open.
 - Server stamps `{category}ConsentVersion = "v1"` + `{category}ConsentAt = serverTimestamp()` on every grant OR withdrawal so future consent-text bumps can re-prompt v1 users through the same backfill machinery.
 - Test coverage: 10 new CF assertions in `users.test.ts`, 4 new pair-of-tests in `compatibility_calculator.test.ts`, 7 widget assertions in `backfill_consent_modal_test.dart`, 3 in `privacy_consents_section_test.dart`, updated `consent_step_test.dart` (17 assertions after Step 3+4). 134/134 CF + 275/275 Flutter tests green.
-**Action:** Merge the PR after founder + code-reviewer sign-off. Then close BLOCKER-LEGAL-001 (DPIA rewrite) since this PR is its code-truth foundation, and send the pisno mnenje request to counsel per PLAN_04 KORAK 4.2 (they should opine on shipped code, not a proposal). (Task 6h3j9q65vh3mG64P)
+**Action:** DONE (PR merged, prod deployed). Downstream lanes now unblocked: BLOCKER-LEGAL-001 (DPIA rewrite), PLAN_04 KORAK 4.2 (pisno mnenje to counsel — send with the two mandatory questions now that shipped code exists to reference), PLAN_04 KORAK 4.3 (Privacy Policy §art9-* anchors). (Task 6h3j9q65vh3mG64P — mark done)
 
 ### BLOCKER-LEGAL-004 — Weekend Window ToS Mismatch + user-local timezone
 **Date:** 2026-07-06 (rescoped 2026-07-14)
