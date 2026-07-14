@@ -234,3 +234,32 @@ Align git HEAD with the release artifacts (AAB + IPA) that carry the first publi
 - Title: `[PLAN-ID: 20260714-release-b17] chore(release): bump build to 1.0.0+17`. NOTE — slug intentionally omits the `1.0.0` dots; CI regex `[a-z0-9\-]+` rejects `.`. Lesson learned; recording here so future release chores use `bXY` slugs (build number, no version dots).
 - Body contains `## Verification checklist` naming `unit tests`, `integration tests`, `security scan` (all `n/a` with reasons — release chore, no source paths changed).
 - Plan-ID present on this line: `20260714-release-b17`.
+
+### Post-ship note — b17 was DOA
+
+Build 17 shipped with `--dart-define=FLAVOR=prod` and NOTHING else. `PLACES_KEY_PROD` / `REVENUECAT_APPLE_API_KEY` / `REVENUECAT_GOOGLE_API_KEY` / `SENTRY_DSN` all resolved to empty string. TestFlight smoke test confirmed: gym search returned "no gyms found nearby" during registration; new-user signup blocked. Superseded by lane below (`release-b18`). See Rule #84 in `tasks/lessons.md` for the durable fix.
+
+---
+
+# Active Release Chore
+Plan ID: 20260714-release-b18
+Risk Level: LOW (version string bump + repo doc updates; no code paths, no infra, no auth, no PII)
+Status: IN-REVIEW 2026-07-14 — TestFlight upload 1.0.0 (18) in flight via altool; AAB awaiting manual Play Console upload; PR to be opened.
+Founder Approval Required: NO (LOW risk; supersedes DOA build 17 with corrected env-file build flag).
+Branch: chore/release-b18
+
+## Objective
+
+Ship a working 1.0.0 (18) to Play Console + TestFlight after build 17 was found DOA on TestFlight smoke test (gym search broken because `PLACES_KEY_PROD` was empty; IAP would also break because RevenueCat keys were empty). This build uses `--dart-define-from-file=.env.prod.json` for both platforms so every prod key from the file is compiled in.
+
+## Scope
+
+- `pubspec.yaml`: version `1.0.0+17` → `1.0.0+18` — SSOT bump (memory: `android-version-source-of-truth`).
+- `tasks/lessons.md`: adds Rule #84 documenting the DOA root cause and the required build flags, so the mistake is durable in-repo, not just in personal memory.
+- `tasks/plan.md`: this section, plus the "Post-ship note" annotation on the b17 lane above.
+
+## Verification for MPC PR pre-flight
+
+- Title: `[PLAN-ID: 20260714-release-b18] chore(release): rebuild 1.0.0+18 with env file — supersedes DOA b17`.
+- Body contains `## Verification checklist` naming `unit tests`, `integration tests`, `security scan` (all `n/a` with reasons — release chore + docs).
+- Plan-ID present on this line: `20260714-release-b18`.

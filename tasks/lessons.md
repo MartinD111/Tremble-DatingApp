@@ -4,6 +4,35 @@
 
 ---
 
+**Rule #84 — Prod release builds MUST use `--dart-define-from-file=.env.prod.json`, not a bare `--dart-define=FLAVOR=prod`.**
+[2026-07-14] Build 1.0.0+17 was uploaded to Play Console (AAB) and TestFlight (IPA) during the LEGAL-003 close-out session using a build script that passed only `--dart-define=FLAVOR=prod`. Consequences observed on TestFlight iOS build 17:
+- `PlacesService._apiKey` resolved to empty string → Google Places autocomplete returned auth error → **"No gyms found nearby"** during the gym step of registration → new-user signup was completely blocked.
+- `REVENUECAT_APPLE_API_KEY` / `REVENUECAT_GOOGLE_API_KEY` empty → RevenueCat SDK cannot initialize → Weekend Pass / any IAP purchase would silently fail.
+- `SENTRY_DSN` empty → no crash telemetry from the DOA build (masking the failure).
+
+**How to apply — every prod release, both platforms:**
+
+```bash
+flutter build appbundle --release --flavor prod \
+  --dart-define-from-file=.env.prod.json \
+  --obfuscate --split-debug-info=build/symbols/android
+
+flutter build ipa --release --flavor prod \
+  --dart-define-from-file=.env.prod.json \
+  --obfuscate --split-debug-info=build/symbols/ios \
+  --export-options-plist=ios/ExportOptions.plist
+```
+
+Do NOT accept a release script that lists individual `--dart-define` flags — it silently drifts when a new key is added to `.env.prod.json`. Always pass the file, not the keys.
+
+**Smoke-test hint before shipping:** on a fresh install of the AAB/IPA, register a test user through the gym step. If "no gyms found nearby" appears for common queries ("Fitnes", major chains), the env file was skipped — bump the build number and rebuild before uploading to any store channel.
+
+This rule tightens Rule #1 — which says "provide the explicit dev or prod flavor flags" but does not explicitly require `--dart-define-from-file` for release BUILDS (only mentions it for `flutter run` dev commands). Rule #84 removes that ambiguity for builds.
+
+Source: Build 17 DOA post-mortem, 2026-07-14. Related: [[release-build-must-use-env-file]] (personal memory).
+
+---
+
 **Rule #83 — Verify Handoff Intel Against `git log` + `gh pr list` BEFORE Cutting a Fix Branch.**
 [2026-07-14] A handoff prompt that names a specific commit hash, branch, or "still-open" ticket is a claim about state _at write time_ — not now. Session 2026-07-14 was spawned to fix the "flaky GymStep test" and inherited a PLAN_00 §"Pokvarjeno / odprto" list of 8 live blockers. Verification revealed 5 of the 8 were already merged (PR #14 ci.yml injection, PR #13 stopBilling CF, PR #17 CROSSING_PATHS, PR #18 prefer_not_to_say) or cannot-reproduce (KORAK 3.8-2 flaky GymStep = 43/43 pass). ~90 minutes lost rediscovering resolved work before the phantom-blocker pattern became visible.
 
