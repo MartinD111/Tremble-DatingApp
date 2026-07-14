@@ -1050,6 +1050,17 @@ class AuthRepository {
     await _api.call('updateProfile', data: user.toApiPayload());
   }
 
+  /// Withdraw a single Art. 9 consent — hits the server callable which
+  /// (a) writes consent=false + version + timestamp and
+  /// (b) FieldValue.delete()s the corresponding sensitive field(s).
+  /// Orientation withdrawal deletes both gender and lookingFor.
+  ///
+  /// Accepts one of: 'orientation', 'religion', 'ethnicity'. Any other
+  /// value is rejected server-side with invalid-argument.
+  Future<void> withdrawArt9Consent(String category) async {
+    await _api.call('withdrawArt9Consent', data: {'category': category});
+  }
+
   // ── Update selected gyms (direct Firestore — bypasses strict CF schema) ──
   Future<void> updateSelectedGyms(String uid, List<SelectedGym> gyms) async {
     await _users.doc(uid).update({
@@ -1242,6 +1253,36 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
     // Optimistic update
     state = state?.copyWith(selectedGyms: gyms);
     await _repository.updateSelectedGyms(uid, gyms);
+  }
+
+  /// Withdraw an Art. 9 consent. Applies an optimistic local state update
+  /// so the settings UI reflects the change immediately; the server call
+  /// then makes the deletion authoritative. On server error the local
+  /// state stays optimistic — a subsequent app cold-start reconciles from
+  /// Firestore (same pattern as [updateProfile]).
+  Future<void> withdrawArt9Consent(String category) async {
+    final current = state;
+    if (current == null) return;
+    switch (category) {
+      case 'orientation':
+        state = current.copyWith(sexualOrientationConsent: false);
+        break;
+      case 'religion':
+        state = current.copyWith(religionConsent: false);
+        break;
+      case 'ethnicity':
+        state = current.copyWith(ethnicityConsent: false);
+        break;
+      default:
+        return;
+    }
+    try {
+      await _repository.withdrawArt9Consent(category);
+    } catch (e) {
+      if (kDebugMode)
+        debugPrint('[AUTH] withdrawArt9Consent($category) API error: $e');
+      rethrow;
+    }
   }
 
   Future<bool> reloadVerification() async {
