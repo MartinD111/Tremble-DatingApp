@@ -1,56 +1,84 @@
 # Active Implementation Plan
-Plan ID: 20260714-legal-002-cannabis-close
-Risk Level: LOW
-Founder Approval Required: NO
-Branch: docs/legal-002-cannabis-close-20260714
+Plan ID: 20260714-adr007-pair-of-tests-hardening
+Risk Level: MEDIUM (billing-adjacent test surface — tests only, no runtime code change)
+Founder Approval Required: YES (approved 2026-07-14 in the pre-cut coverage-matrix review)
+Branch: test/adr007-pair-of-tests-hardening
 
-## 0. AUDIT RESULT — BLOCKER-LEGAL-002 cannabis removal
+## 0. AUDIT RESULT — ADR-007 §4 pair-of-tests coverage matrix (2026-07-14)
 
-Founder flagged 2026-07-14 that cannabis has been fully removed from
-the product. Session 2026-07-14 verified across every surface where
-cannabis could persist. Docs-only close; zero runtime edit.
+Ship-side PR #37 (LEGAL-005 close) recorded the "pair-of-tests per
+gate" mandate as a MEDIUM test-hardening follow-up lane. This PR
+executes that lane against the seven Premium bullets in
+`premium_screen.dart` `premiumOnlyFeatureBullets`.
 
-### Cannabis is unreachable — 4-surface evidence
+### Coverage matrix as of `main @ 1301d54`
 
-| Surface | Evidence | Verified |
-|---|---|---|
-| Registration UI | `lib/src/features/auth/presentation/widgets/registration_steps/nicotine_step.dart:15-19` — only 5 options: `cigarettes`, `vape`, `iqos`, `zyn`, `shisha`. No cannabis chip. | ✅ |
-| Server API (Zod) | `functions/src/modules/users/users.schema.ts:17-23` — `nicotineUseValueSchema = z.enum(["cigarettes", "vape", "iqos", "zyn", "shisha"])`. Requests carrying `"cannabis"` are rejected with 400 at the API boundary. | ✅ |
-| Edit-profile display | `lib/src/features/profile/presentation/edit_profile_screen.dart:124` — `..addAll(user.nicotineUse.where((v) => v != 'cannabis'))` defensively filters any residual legacy Firestore entries out of the render. | ✅ |
-| Legacy Firestore data | `functions/src/scripts/remove_cannabis.ts` migration ran against **prod (`am---dating-app`)** — founder confirmed 2026-07-14. `FieldValue.arrayRemove("cannabis")` is idempotent; subsequent writes cannot re-introduce it. | ✅ |
+| # | Paywall bullet | Gate location | (a) Free hits | (b) Premium bypasses | Verdict |
+|---|---|---|---|---|---|
+| 1 | `premium_feature_radar_extended` | `lib/src/core/geo_service.dart:257` (`radiusTier = _isPremium ? 'pro' : 'free'`) → CFs read tier | MISSING | MISSING | **GAP — filled this PR** |
+| 2 | `premium_feature_mutual_waves_20` | Client `AuthUser.hasReachedWaveLimit`; server `matches.functions.ts:38-56, 256-260` | Client PRESENT (`auth_user_wave_limit_test.dart:6,49,82`); server PARTIAL (helper `mutualWaveLimitForUser` returns 5 — `matches.test.ts:397` — but no `count >= limit` rejection pair) | Client PRESENT (line 16, 60, 82); server PARTIAL | **PARTIAL server side — filled this PR** |
+| 3 | `premium_feature_open_profile_cards` | `matches_screen.dart:143` compound `isPremium && hasMutualWave` | PRESENT (`matches_three_state_test.dart:25`) | PRESENT (`:64` + 4-cell truth-table at `:118`) | COVERED |
+| 4 | `premium_feature_recap_full` | `run_recap_screen.dart:498` + `matches_screen.dart:467` | PRESENT (`viewed_recaps_test.dart:6, 28`) + wiring pin | PRESENT (`viewed_recaps_test.dart:50`) + wiring pin | COVERED |
+| 5 | `premium_feature_near_miss_history` | `matches_screen.dart:40, 54` | PRESENT (`near_miss_locked_state_test.dart:41`) | PRESENT (`:49`) | COVERED |
+| 6 | `premium_feature_hard_filters` | Soft-labelled "coming soon" — no behavioural gate (Amendment §2 paused) | n/a | n/a | SKIP per ADR-007 Amendment §2 |
+| 7 | `premium_feature_event_insights` | `event_pin_sheet.dart:138, 154, 171` | PRESENT (`event_pin_sheet_tier_gates_test.dart:38, 85`) | PRESENT (`:59, 104`) | COVERED (PR #30) |
 
-### Why stronger than the original ask
+### What this PR ships
 
-BLOCKER-LEGAL-002's original action was "separate cannabis into its
-own field pending legal review." The founder chose to *remove*
-cannabis entirely instead. No collection → no consent needed → no
-Art. 10 GDPR "criminal offense data" exposure — resolved without
-waiting on a per-jurisdiction legal opinion.
+Two gaps closed, ~50 LoC added, zero runtime code change:
 
-PLAN_00 §Deluje already recorded "Kanabis + politična pripadnost:
-odstranjena iz kode (grep = 0 zadetkov v main)" but the corresponding
-blocker was never marked RESOLVED. This PR closes that documentation
-gap so future sessions and audits see the full evidence chain.
+1. **Gate 1 (radar_extended)** — new
+   `test/core/geo_service_radar_tier_test.dart`. Source-scan pair
+   pinning the Free tuple (100 m + −75 dBm), the Premium tuple (250 m
+   + −85 dBm), the shared `_isPremium ? 'pro' : 'free'` ternary that
+   writes both branches, and the `updatePremiumTier` runtime hook.
+   Behavioural render is untestable in isolation without dwarfing
+   the assertion signal (Firestore + Battery + Geolocator mocking);
+   source-scan mirrors the pattern already used by
+   `recap_ui_wiring_test.dart` and `near_miss_locked_state_test.dart:146`.
+2. **Gate 2 (mutual_waves_20 — server side)** — two additional
+   assertions in `functions/src/__tests__/matches.test.ts` under the
+   existing `mutual wave monthly counters` block. Uses the exported
+   `mutualWaveLimitForUser` + `mutualWaveCountForUser` helpers to
+   verify that the `count >= limit` comparison at
+   `matches.functions.ts:256` correctly rejects at Free-tier=5,
+   accepts Premium at 5, and rejects Premium at 20.
+
+Everything else stays untouched. Gates 3, 5, 7 have widget-level
+behavioural pairs; Gate 4 is behaviourally covered on the
+viewedRecaps surface and wiring-pinned on the read-only render
+surface. Gate 6 is skipped per ADR-007 Amendment §2.
 
 ## 1. OBJECTIVE
-Close BLOCKER-LEGAL-002 with concrete evidence so future sessions
-don't inherit stale "OPEN" state (Rule #83 verify-intel discipline).
+Close the ADR-007 §4 pair-of-tests deferred lane recorded in PR #37
+LEGAL-005 close-out. Every gated feature now has an (a) Free hits
+gate + (b) Premium bypasses gate assertion so a future refactor
+cannot silently un-gate a Premium-only bullet without a CI failure.
 
 ## 2. SCOPE
-- `tasks/blockers.md` — BLOCKER-LEGAL-002 → RESOLVED with the
-  4-surface evidence chain.
-- `tasks/plan.md` — this file; Plan-ID + §0 audit evidence + §3
-  index refresh (LEGAL-002 removed from deferred list).
 
-**Not touched:** any code under `lib/`, `functions/`, `test/`,
-`ios/`, `android/`, `.github/`. Zero runtime code, zero test change.
-Cannabis was already removed from all four surfaces long before this
-session began; this PR only records the closure.
+**Files this PR touches:**
+- `test/core/geo_service_radar_tier_test.dart` — NEW (Gate 1 pair).
+- `functions/src/__tests__/matches.test.ts` — extend existing
+  `describe("mutual wave monthly counters")` block with Gate 2 pair.
+- `tasks/plan.md` — this file; Plan-ID rewrite + coverage matrix.
+- `tasks/blockers.md` — append pair-of-tests close-out note under
+  BLOCKER-LEGAL-005 (deferred lane resolved).
+- `tasks/plans/PLAN_03_APP_CODE.md` — append KORAK 3.9-3-followup
+  Output block under KORAK 3.9.
+
+**Files this PR does NOT touch:** anything under `lib/`,
+`functions/src/modules/`, `functions/src/middleware/`, `ios/`,
+`android/`, `.github/`, `firebase.json`, `firestore.rules`,
+`firestore.indexes.json`, `PrivacyInfo.xcprivacy`. Zero runtime code
+path modified; zero CF handler modified; zero native config; zero
+CI change; zero test assertion that already passes gets rewritten
+(only extension).
 
 ## 3. NEXT LANES — durable index of deferred work
 
-After both PR #37 (LEGAL-005) and this PR merge, remaining ship-side
-blockers indexed here for future sessions:
+After this PR merges, remaining ship-side blockers indexed here for
+future sessions (unchanged from PR #38 §3):
 
 ### Ship-critical blockers
 
@@ -67,35 +95,38 @@ blockers indexed here for future sessions:
 - **BLOCKER-LEGAL-001** — DPIA false claims (`getPublicProfile` leak
   claim + TTLs mismatch). Task `6h3jFhxVHpRmph9P`.
 - **BLOCKER-LEGAL-003** — `gender` + `lookingFor` = implicit Art. 9
-  sexual-orientation category; explicit consent gate missing (Grindr
-  precedent: NOK 65M fine). Task `6h3j9q65vh3mG64P`.
-- **BLOCKER-LEGAL-004** — ToS §7 promises automatic weekend window
-  (Fri 19h – Sun 19h), code enforces user-triggered activation
-  (Rule: single write path via `activateWeekendPass`). Sync ToS to
-  code or code to ToS. Task `6h332RFRW946QWXw`.
-
-### Test-hardening lane
-
-- **ADR-007 §4 pair-of-tests per gate.** MEDIUM risk (billing-adjacent
-  test surface). Founder approval required to start. Not gating any
-  blocker closure — separate quality investment.
+  sexual-orientation category; explicit consent gate missing. Task
+  `6h3j9q65vh3mG64P`.
+- **BLOCKER-LEGAL-004** — ToS §7 promises automatic weekend window;
+  code enforces user-triggered activation. Sync ToS to code or code
+  to ToS. Task `6h332RFRW946QWXw`.
 
 ## 4. RISKS & TRADEOFFS
-- Zero runtime change; zero submission risk.
-- Docs-only closure — the code state that resolves LEGAL-002 has been
-  in `main` for weeks; this PR only aligns the tracking documents
-  with that reality.
+
+- **Zero runtime change.** Both files are test-only additions; the
+  handlers, providers, and UI paths compile and behave identically
+  before and after.
+- **Billing-adjacent test surface** — mutual-wave enforcement is the
+  RevenueCat entitlement contract. Extending the server helper pair
+  with a threshold-rejection assertion tightens the safety net
+  around a Free→Premium boundary without touching the boundary
+  itself.
+- **Source-scan wiring pattern (Gate 1)** — pins string literals
+  in `geo_service.dart`. If a future refactor renames the tier
+  strings or moves the ternary, the wiring test needs a coordinated
+  update — same maintenance shape as `recap_ui_wiring_test.dart`.
+  Accepted trade-off.
 
 ## 5. VERIFICATION
-- `git diff --stat` on branch → 2 files under `tasks/**`.
-- `flutter analyze` → 0 issues (pre-commit hook re-verifies).
-- `flutter test` → 263-baseline preserved.
-- unit tests — n/a (docs-only, no runtime code).
-- integration tests — n/a (docs-only).
-- security scan — branch diff limited to `tasks/**`. Zero secrets,
-  zero PII, zero auth/billing/security-boundary change.
+
+- **unit tests** — 2 new Dart assertions (`test/core/geo_service_radar_tier_test.dart`) + 2 new server assertions (`functions/src/__tests__/matches.test.ts`).
+- **integration tests** — n/a (test-only PR; no new runtime paths to exercise).
+- **security scan** — n/a. Test files only; no auth/PII/billing runtime code path modified.
+- `flutter analyze` → 0 issues.
+- `flutter test` → 265/265 pass (263 baseline + 2 new).
+- `cd functions && npm test` → 119/119 pass (117 baseline + 2 new).
 - MPC PR pre-flight (Rules #79 + #80):
-  - Title: `[PLAN-ID: 20260714-legal-002-cannabis-close] docs(blockers+plan): close BLOCKER-LEGAL-002 — cannabis removed from all 4 surfaces`.
+  - Title: `[PLAN-ID: 20260714-adr007-pair-of-tests-hardening] test(gates): ADR-007 §4 pair-of-tests coverage for 2 Premium gates`.
   - Body contains `## Verification checklist` naming `unit tests`,
     `integration tests`, `security scan`.
   - Body contains zero Rule #80 naive-regex trigger substrings.

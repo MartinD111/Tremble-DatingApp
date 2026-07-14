@@ -917,6 +917,61 @@ Deferred:            ADR-007 §4 pair-of-tests hardening (MEDIUM,
                      as a separate lane, founder approval required.
 ```
 
+### KORAK 3.9-3-followup — ADR-007 §4 pair-of-tests hardening (deferred lane from PR #37)
+
+**Cilj:** Izvedi "pair of tests per gate" nalog iz ADR-007 §4 —
+follow-up naveden v PR #37 LEGAL-005 close-out kot deferred MEDIUM
+test-hardening lane. Za vsakega izmed 7 Premium bullet-ov v
+`premium_screen.dart` `premiumOnlyFeatureBullets` seznamu preveri, da
+obstaja (a) Free-hits-gate + (b) Premium-bypasses-gate assertion.
+
+**Scope (test files + docs only, zero runtime code):**
+- `test/core/geo_service_radar_tier_test.dart` — NEW (Gate 1 pair).
+- `functions/src/__tests__/matches.test.ts` — extend existing
+  `mutual wave monthly counters` block (Gate 2 server-side pair).
+- `tasks/blockers.md` — append pair-of-tests close-out note under
+  BLOCKER-LEGAL-005 "deferred lane resolved" marker.
+- `tasks/plan.md` — Plan-ID rewrite + coverage matrix.
+- `tasks/plans/PLAN_03_APP_CODE.md` — this section.
+
+**Files NOT touched:** anything under `lib/`, `functions/src/modules/`,
+`functions/src/middleware/`, `ios/`, `android/`, `.github/`,
+`firebase.json`, `firestore.rules`, `firestore.indexes.json`,
+`PrivacyInfo.xcprivacy`. Zero runtime code, zero CF handler, zero
+native config, zero CI. No existing passing assertion gets rewritten
+(extension only).
+
+**Risk:** MEDIUM (billing-adjacent test surface — tests only, no
+runtime code path modified) · **Founder approval:** YES (approved
+2026-07-14 in the pre-cut coverage-matrix review) · **Branch:**
+`test/adr007-pair-of-tests-hardening` · **Plan-ID:**
+`20260714-adr007-pair-of-tests-hardening`
+
+**Output:**
+```text
+PR#:                  (fill after opening)
+Merge commit:         (fill after merge)
+Coverage matrix:      7 gates surveyed. 4 already covered
+                      (open_profile_cards, recap_full,
+                      near_miss_history, event_insights). 1 excluded
+                      by ADR-007 Amendment §2 (hard_filters — soft
+                      "coming soon", no behavioural gate). 2 gaps
+                      filled this PR.
+Gate 1 pair added:    test/core/geo_service_radar_tier_test.dart
+                      (source-scan on `_isPremium ? 'pro' : 'free'`
+                      ternary + Free tuple 100 m/−75 dBm + Premium
+                      tuple 250 m/−85 dBm).
+Gate 2 pair added:    functions/src/__tests__/matches.test.ts
+                      extension — Free at count=5 satisfies
+                      `count >= limit`; Premium at count=5 does not;
+                      Premium at count=20 does.
+Verification:         `flutter analyze` clean · `flutter test`
+                      265/265 (263 baseline + 2 new) · `npm test`
+                      119/119 (117 baseline + 2 new).
+BLOCKER-LEGAL-005:    Deferred-lane close-out note appended under
+                      the existing close-out block. No re-open.
+```
+
 ### KORAK 3.9-4 — Brand-voice review Prominent Disclosure copy (BLOCKER-STORE-003 companion)
 
 **Cilj:** 4 nove Prominent Disclosure translation ključe (EN + SL)

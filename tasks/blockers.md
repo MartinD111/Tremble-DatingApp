@@ -112,6 +112,15 @@ The KORAK 3.7 series (2026-07-13) already rewrote `premium_screen.dart` against 
 
 **Follow-up (non-blocker, deferred):** ADR-007 §4 mandate — one *pair* of consistency tests per gate (Free hits gate / Premium doesn't). Partial coverage exists in `test/features/matches/matches_three_state_test.dart`, `test/features/subscriptions/revenuecat_subscription_test.dart`, and the `test/features/recap/` suite, but not systematically per-bullet. Not gating LEGAL-005 closure because the copy↔gate mapping is verified above; captured as a MEDIUM test-hardening lane in `tasks/plan.md` §3. (Task 6h3pmrF84Cf6JVQP)
 
+**Deferred pair-of-tests lane — RESOLVED 2026-07-14 (Plan-ID `20260714-adr007-pair-of-tests-hardening`, branch `test/adr007-pair-of-tests-hardening`).** Coverage matrix across the 7 Premium bullets found 4 gates already well-covered (open_profile_cards, recap_full, near_miss_history, event_insights), 1 gate excluded by ADR-007 Amendment §2 (hard_filters — soft-labelled "coming soon", no behavioural gate), and 2 gaps to fill:
+
+| Gate | Before | Added this lane |
+|---|---|---|
+| `premium_feature_radar_extended` | No test — the `_isPremium ? 'pro' : 'free'` tier ternary at `geo_service.dart:257` sits behind a Firebase-auth + `SharedPreferences` singleton, so a behavioural render is uneconomic. | New `test/core/geo_service_radar_tier_test.dart` — source-scan pair pinning the Free tuple (100 m + −75 dBm), the Premium tuple (250 m + −85 dBm), the shared ternary that writes both branches, and the `updatePremiumTier` runtime hook. Pattern mirrors `test/features/recap/recap_ui_wiring_test.dart` + `test/features/match/near_miss_locked_state_test.dart:146`. |
+| `premium_feature_mutual_waves_20` (server) | Helper `mutualWaveLimitForUser` values pinned at `functions/src/__tests__/matches.test.ts:397` (Free=5, Premium=20). Client-side `hasReachedWaveLimit` already has an exhaustive threshold pair in `test/features/auth/auth_user_wave_limit_test.dart`. No server-side "at threshold, `count >= limit` is true" pair. | Two additional assertions in the existing `describe("mutual wave monthly counters")` block. Verifies that Free at count=5 satisfies the rejection predicate, Premium at count=5 does NOT, and Premium at count=20 does — mirrors the client-side threshold coverage at the server contract. |
+
+All other gates have real widget or behavioural pairs; those files stay untouched. This close-out captures the deferred-lane execution referenced in the "Follow-up (non-blocker, deferred)" note above.
+
 ---
 
 ## ARCHIVED BLOCKERS (Resolved)
