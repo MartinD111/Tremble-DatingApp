@@ -1732,6 +1732,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 }
 
+bool _isRequestingEventPermission = false;
+
 /// Fetches active events, sorts by proximity/time, and shows a selection sheet.
 /// If no events are found, shows a "No events nearby" snackbar instead.
 /// Exported so it can be called from matches_screen.dart without circular import issues.
@@ -1742,7 +1744,13 @@ Future<void> showEventActivationFlow(
 ) async {
   var permission = await Geolocator.checkPermission();
   if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
+    if (_isRequestingEventPermission) return;
+    _isRequestingEventPermission = true;
+    try {
+      permission = await Geolocator.requestPermission();
+    } finally {
+      _isRequestingEventPermission = false;
+    }
   }
   if (permission == LocationPermission.denied ||
       permission == LocationPermission.deniedForever) {

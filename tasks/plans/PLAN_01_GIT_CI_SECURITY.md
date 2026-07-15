@@ -14,7 +14,7 @@ PR se ne sme mergati. Vse ostale faze so odvisne od delujočega, varnega CI.
 
 ---
 
-## KORAK 1.1 — 🧑‍⚖️ FOUNDER: Odpri in mergaj security fix PR
+## KORAK 1.1 ✅ — 🧑‍⚖️ FOUNDER: Odpri in mergaj security fix PR
 
 **Stanje:** Koda je narejena in pushana. Branch `security/fix-ci-pr-body-injection`,
 commit `6923a42`. Fix: 4 stepi v job-u ① (Check Plan-ID, Check verification
@@ -48,7 +48,7 @@ PR številka:
 Datum merge:
 ```
 
-## KORAK 1.2 — 🧑‍⚖️ FOUNDER (Martin): Environment + branch protection nastavitev
+## KORAK 1.2 ✅ — 🧑‍⚖️ FOUNDER (Martin): Environment + branch protection nastavitev
 
 **Kaj narediti (Martin, ~3 minute, natančno tako):**
 1. Repo → Settings → Environments → New environment → ime TOČNO:
@@ -75,7 +75,7 @@ Required reviewer:
 Branch protection posodobljena (da/ne):
 ```
 
-## KORAK 1.3 — 🧑‍⚖️ FOUNDER: Rebase in merge PR #13 (stopBilling)
+## KORAK 1.3 ✅ — 🧑‍⚖️ FOUNDER: Rebase in merge PR #13 (stopBilling)
 
 **Šele PO 1.1 in 1.2.**
 

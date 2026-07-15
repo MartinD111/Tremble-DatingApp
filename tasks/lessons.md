@@ -294,6 +294,10 @@ Source: Android OS Integration, April 2026.
 [2026-04-25] Android QS tiles require a single-color vector drawable. The system applies Material You tinting at runtime — do NOT embed brand colors in the drawable.
 Source: Android OS Integration, April 2026.
 
+**Rule #38 — Never set restricted fields (e.g. `isPremium`, `isAdmin`) from client-side `set()` during registration.**
+[2026-07-15] If `firestore.rules`'s `validCreateKeys()` prevents these fields, including them in the initial `AuthRepository.registerWithEmail` payload will cause the `set()` operation to silently fail on the client. This leaves document creation entirely up to backend triggers, creating a race condition where immediate `.update()` calls (like selecting a gym) will crash with `PERMISSION_DENIED` because the document (`resource.data`) doesn't exist yet. Always use `SetOptions(merge: true)` for subsequent writes during onboarding.
+Source: Sentry Audit (Issue 1), July 2026.
+
 **Rule #37 — `flutter_launcher_icons` adaptive foreground must use padded source.**
 [2026-04-24] Use `tremble_splash_source.png` (icon at 50% of 2048px canvas) for `adaptive_icon_foreground` to prevent clipping in all launcher shapes (circle, squircle, etc.).
 Source: Launcher Icon Fix, April 2026.

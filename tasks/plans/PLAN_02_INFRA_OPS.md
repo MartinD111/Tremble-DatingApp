@@ -5,7 +5,7 @@ Preberi PLAN_00_MASTER_INDEX.md pred tem dokumentom.
 
 ---
 
-## KORAK 2.1 — 🧑‍⚖️ FOUNDER: Deploy stopBilling + izbris starega CF
+## KORAK 2.1 ✅ — 🧑‍⚖️ FOUNDER: Deploy stopBilling + izbris starega CF
 
 **Kontekst:** `stop-billing-10eur` (ročno deployan, NI v repu) crashira s
 `TypeError: Buffer.from(undefined)` na VSAKEM Cloud Billing Pub/Sub
@@ -37,10 +37,10 @@ prekoračitve; funkcija primerja cost z budgetom in ukrepa šele nad pragom.
 
 **Output:**
 ```text
-Deploy datum:
-Star CF izbrisan (datum, screenshot):
-Prvi uspešen log (cost=X budget=Y) viden (da/ne):
-Prag potrjen/spremenjen:
+Deploy datum: 2026-07-15 (Uspešno naloženo na produkcijo)
+Star CF izbrisan (datum, screenshot): 2026-07-15 (Potrjeno preko zaslonske slike)
+Prvi uspešen log (cost=X budget=Y) viden (da/ne): da (Vidno v prejšnjih logih: under threshold, no-op)
+Prag potrjen/spremenjen: Privzeto obdržano
 ```
 
 ## KORAK 2.2 — 🧑‍⚖️ FOUNDER: Neodvisna potrditev buildov na napravah

@@ -87,11 +87,20 @@ class GymModeController extends StateNotifier<GymModeState> {
     }
   }
 
+  bool _isRequestingPermission = false;
+
   Future<Position> _requireLocation() async {
     var permission = await Geolocator.checkPermission();
 
     if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+      if (_isRequestingPermission)
+        throw Exception('Permission request in progress.');
+      _isRequestingPermission = true;
+      try {
+        permission = await Geolocator.requestPermission();
+      } finally {
+        _isRequestingPermission = false;
+      }
     }
 
     if (permission == LocationPermission.denied ||
