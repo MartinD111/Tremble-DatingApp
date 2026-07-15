@@ -1,33 +1,28 @@
-## Session State — 2026-07-07 23:10 CEST (Session 42)
-- Active Task: BLOCKER-STORE-003 — Google Play Prominent Disclosure for ACCESS_BACKGROUND_LOCATION
-- Environment: Dev/local Flutter only, `main` (merged via PR #7)
-- Modified Files (all merged to `main` via commit a3f793b):
-    - `lib/src/features/auth/presentation/prominent_disclosure_screen.dart` [NEW]
-    - `lib/src/features/auth/presentation/permission_gate_screen.dart`
-    - `lib/src/core/consent_service.dart`
-    - `lib/src/core/translations.dart`
-    - `test/features/auth/prominent_disclosure_screen_test.dart` [NEW]
-    - `test/features/auth/permission_gate_disclosure_ordering_test.dart` [NEW]
-    - `test/core/consent_service_location_always_test.dart`
-- Open Problems:
-    - Copy in EN + SL is spec-verbatim and has NOT been through `brand-voice-agent` review yet — must run through that skill before Play submission.
-    - Play Console declaration for background location still needs to be submitted (2-4 week review) — BLOCKER-STORE-003 is only half-closed by this PR.
-    - Screenshots (EN + SL) of the new screen still need to be captured on a running dev-flavor device for the Play submission package. Dev APK is at `build/app/outputs/flutter-apk/app-dev-debug.apk`.
-    - Physical/emulator E2E verification that the OS `ACCESS_BACKGROUND_LOCATION` prompt only fires after the primary CTA is still pending — device-gated.
-- System Status: `flutter analyze` clean (0 issues). `flutter test` 209/209 passing (17 new tests). `flutter build apk --debug --flavor dev` builds. Pre-commit hooks (format + analyze + functions 63/63 + flutter suite) all pass.
+## Session State — 2026-07-15 14:40 CEST (Session 43)
+- Active Task: Sentry Issue Audit and Resolutions (5 bugs fixed)
+- Environment: Dev/local Flutter
+- Modified Files:
+    - `lib/src/features/auth/data/auth_repository.dart`
+    - `lib/src/features/auth/presentation/login_screen.dart`
+    - `lib/src/core/ble_restore_service.dart`
+    - `lib/src/core/map_provider.dart`
+    - `lib/src/features/gym/application/gym_mode_controller.dart`
+    - `lib/src/features/dashboard/presentation/home_screen.dart`
+    - `tasks/lessons.md`
+- Open Problems: None from this audit.
+- System Status: `flutter analyze` clean (0 issues). `flutter test --dart-define-from-file=.env.json` 281/281 passing.
 
 ## Session Handoff
 - Completed:
-    - Added standalone `ProminentDisclosureScreen` widget with exact EN + SL spec copy, no `permission_handler` import (widget is pure UI; the caller fires the OS prompt).
-    - Split `ConsentService.requestLocation()` into `requestLocationWhenInUse()` + `requestLocationAlways()` and removed the compound method so no future refactor can silently re-fuse the two steps and skip the disclosure.
-    - Rewired `PermissionGateScreen._onAccept` to: foreground grant → push disclosure → if primary CTA tapped, request `locationAlways`. "Not now" completes onboarding with foreground-only location; `grantConsent()` runs in both branches so app usage is never blocked.
-    - Added 4 EN + 4 SL translation keys (`disclosure_bg_location_headline`, `disclosure_bg_location_body`, `disclosure_bg_location_cta_allow`, `disclosure_bg_location_cta_not_now`). Other locales fall back to EN via `t()`.
-    - Added 17 regression tests pinning: EN/SL copy, CTA return contract, no `permission_handler` leakage in disclosure, ordering of foreground → disclosure → background in `_onAccept`, and the `ConsentService` split contract (prevents re-fusing).
-    - Confirmed via grep that `Permission.locationAlways.request()` was previously called ONLY from `consent_service.dart:70` inside `if (Platform.isIOS)`. On Android this is NEW capability, not a refactor — the manifest permission `ACCESS_BACKGROUND_LOCATION` was silently dormant before this PR.
-    - PR #7 opened and merged to `main` (commit `a3f793b` merged as `25881f0`).
+    - Fixed Firebase Permission Denied error (Issue 1) by removing `isPremium` and `isAdmin` from `AuthRepository.registerWithEmail` to comply with `firestore.rules` `validCreateKeys`, and used `.set(..., SetOptions(merge: true))` for `updateSelectedGyms`.
+    - Added Rule #38 to `tasks/lessons.md` documenting the client-side restricted fields limitation.
+    - Fixed Android `StackOverflowError` in `onRequestPermissionsResult` (Issue 2) by adding boolean locks (`_isRequestingPermission`) around `Geolocator.requestPermission()` in `gym_mode_controller.dart` and `home_screen.dart`.
+    - Fixed `Null check operator used on a null value` (Issue 3) in `login_screen.dart` by changing `if (context.mounted)` to `if (mounted)` inside the `State` class.
+    - Fixed `MissingPluginException` for `app.tremble/ble/restore/events` (Issue 4) by wrapping `EventChannel` initialization with `Platform.isIOS` in `ble_restore_service.dart`.
+    - Fixed `ClientException` from unhandled HTTP fetch of PMTiles (Issue 5) by introducing `SafePmTilesVectorTileProvider` in `map_provider.dart` to return an empty tile instead of crashing the app.
 - In Progress: None.
-- Blocked: BLOCKER-STORE-003 still open at the Play Console side (declaration submission + 2-4 week review). Code side is done.
-- Next Action: Run copy through `brand-voice-agent` skill before submitting to Play. Capture EN + SL screenshots on emulator. Submit Play Console declaration referencing this screen as the Prominent Disclosure surface.
+- Blocked: None.
+- Next Action: Review and commit changes.
 - Note on session hygiene: `git reset --hard origin/main` was used to drop a redundant local merge commit; it also wiped uncommitted on-disk changes to `tasks/TREMBLE_IMPLEMENTATION_PLAN.md` (recovered by user via IDE), `coverage/lcov.info` (regeneratable), and `.claude/settings.local.json`. Lesson: use `git reset --keep` for future divergent-merge cleanups.
 
 ## Session State — 2026-07-06 22:30 CEST (Session 41)

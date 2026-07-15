@@ -93,7 +93,7 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
     try {
       await action();
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_authErrorMessage(e))),
         );

@@ -940,8 +940,6 @@ class AuthRepository {
         {
           'email': email.trim(),
           'isOnboarded': false,
-          'isPremium': false,
-          'isAdmin': false,
           // onUserDocCreated trigger will add createdAt/updatedAt server timestamps
         },
         SetOptions(merge: true),
@@ -1084,9 +1082,12 @@ class AuthRepository {
 
   // ── Update selected gyms (direct Firestore — bypasses strict CF schema) ──
   Future<void> updateSelectedGyms(String uid, List<SelectedGym> gyms) async {
-    await _users.doc(uid).update({
-      'selectedGyms': gyms.map((g) => g.toMap()).toList(),
-    });
+    await _users.doc(uid).set(
+      {
+        'selectedGyms': gyms.map((g) => g.toMap()).toList(),
+      },
+      SetOptions(merge: true),
+    );
   }
 
   // ── Logout ────────────────────────────────────────────────────────────────

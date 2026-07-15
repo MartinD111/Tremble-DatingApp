@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -33,15 +35,20 @@ class BleRestoreService {
     if (_initialized) return;
     _initialized = true;
 
-    const channel = EventChannel(_eventChannelName);
-    _eventSub = channel.receiveBroadcastStream().listen(
-      _onNativeEvent,
-      onError: (Object error) {
-        if (kDebugMode) debugPrint('[BleRestore] EventChannel error: $error');
-      },
-    );
-    if (kDebugMode)
-      debugPrint('[BleRestore] Initialized — listening for restore events');
+    if (!kIsWeb && Platform.isIOS) {
+      const channel = EventChannel(_eventChannelName);
+      _eventSub = channel.receiveBroadcastStream().listen(
+        _onNativeEvent,
+        onError: (Object error) {
+          if (kDebugMode) debugPrint('[BleRestore] EventChannel error: $error');
+        },
+      );
+      if (kDebugMode)
+        debugPrint('[BleRestore] Initialized — listening for restore events');
+    } else {
+      if (kDebugMode)
+        debugPrint('[BleRestore] Skipping native listener — not on iOS');
+    }
   }
 
   void dispose() {

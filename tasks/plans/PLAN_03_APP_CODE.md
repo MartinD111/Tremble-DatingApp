@@ -7,7 +7,7 @@ founder preveri Output polje in dokaze, preden gre naprej.
 
 ---
 
-## KORAK 3.1 — CROSSING_PATHS vidna notifikacija (P1 — jedrna mehanika)
+## KORAK 3.1 ✅ — CROSSING_PATHS vidna notifikacija (P1 — jedrna mehanika)
 
 **Kontekst:** Backend deluje (proximity_events zapisan 11. jul), ampak
 uporabnik v ozadju NIKOLI ne vidi obvestila:
@@ -1016,7 +1016,7 @@ BLOCKER-STORE-003 progress: brand-voice review DONE. Preostalo
   Console declaration.
 ```
 
-## KORAK 3.10 — LEGAL-003 Art. 9 consent hardening (P1 — legal launch blocker)
+## KORAK 3.10 ✅ — LEGAL-003 Art. 9 consent hardening (P1 — legal launch blocker)
 
 **Cilj:** Zapri BLOCKER-LEGAL-003 (Art. 9 GDPR explicit consent gate)
 z enim koherentnim PR-jem, ki hkrati zapre 4 HIGH-severity code gap-e
