@@ -263,3 +263,33 @@ Ship a working 1.0.0 (18) to Play Console + TestFlight after build 17 was found 
 - Title: `[PLAN-ID: 20260714-release-b18] chore(release): rebuild 1.0.0+18 with env file — supersedes DOA b17`.
 - Body contains `## Verification checklist` naming `unit tests`, `integration tests`, `security scan` (all `n/a` with reasons — release chore + docs).
 - Plan-ID present on this line: `20260714-release-b18`.
+
+---
+
+# Active Release Chore
+Plan ID: 20260715-release-b20
+Risk Level: LOW (version string bump + font-preload restore + tiny UI version marker; no infra, no auth, no PII, no schema changes)
+Status: IN-REVIEW 2026-07-15 — b20 IPA already built locally (per prior session log); PR to be opened.
+Founder Approval Required: NO (LOW risk; no code paths cross a system boundary; net additions are: one guarded async preload, one 10pt Text widget, and a version-string bump).
+Branch: chore/release-b20
+
+## Objective
+
+Ship 1.0.0 (20) to Play Console + TestFlight. b20 rolls up three small carry-over changes that accumulated locally after b18 shipped but were never committed:
+
+1. `GoogleFonts.pendingFonts([...])` preload is re-enabled in `main.dart`, wrapped in `try/catch` so a font-CDN failure at cold start cannot crash the app (fallback: Flutter uses its bundled fonts).
+2. A small `'v20'` label under the registration Continue button so QA / TestFlight users can identify the running build without opening Settings.
+3. `pubspec.yaml` bump 1.0.0+18 → 1.0.0+20. b19 is intentionally skipped (a local b19 IPA existed briefly but was never uploaded; b20 supersedes it so store version-code monotonicity is preserved either way).
+
+## Scope
+
+- `pubspec.yaml`: version `1.0.0+18` → `1.0.0+20` — SSOT bump (memory: `android-version-source-of-truth`).
+- `lib/main.dart`: re-enable `GoogleFonts.pendingFonts([...])` inside a `try/catch` (`if (kDebugMode) debugPrint(...)` on failure — silent in release per `dart/security.md` "no logging sensitive data" and to avoid noisy prod logs). Rationale: without preload, first-frame paint uses fallback fonts then swaps — visible flash on cold start.
+- `lib/src/features/auth/presentation/widgets/registration_steps/email_location_step.dart`: wrap the existing Continue button in a `Column(mainAxisSize: MainAxisSize.min, ...)` and append a `Text('v20', style: TextStyle(color: white30 / black38 by theme, fontSize: 10))` version marker. Purely additive; button semantics/enabled logic unchanged.
+- `tasks/plan.md`: this section.
+
+## Verification for MPC PR pre-flight
+
+- Title: `[PLAN-ID: 20260715-release-b20] chore(release): 1.0.0+20 — GoogleFonts preload + v20 label`.
+- Body contains `## Verification checklist` naming `unit tests`, `integration tests`, `security scan` (release chore — `n/a` with reasons documented per lane).
+- Plan-ID present on this line: `20260715-release-b20`.

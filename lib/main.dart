@@ -21,15 +21,20 @@ import 'src/core/notification_service.dart';
 import 'src/core/translations.dart';
 
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-// await GoogleFonts.pendingFonts([
-//   GoogleFonts.playfairDisplay(),
-//   GoogleFonts.lora(),
-//   GoogleFonts.instrumentSans(),
-// ]);
+  try {
+    await GoogleFonts.pendingFonts([
+      GoogleFonts.playfairDisplay(),
+      GoogleFonts.lora(),
+      GoogleFonts.instrumentSans(),
+    ]);
+  } catch (e) {
+    if (kDebugMode) debugPrint('Failed to preload GoogleFonts: $e');
+  }
 
   if (Platform.isAndroid) {
     SystemChrome.setSystemUIOverlayStyle(

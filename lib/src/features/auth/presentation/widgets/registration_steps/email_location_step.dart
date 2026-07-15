@@ -432,21 +432,36 @@ class _EmailLocationStepState extends State<EmailLocationStep> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-            child: widget.isRegistering
-                ? Center(
-                    child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.primary))
-                : ContinueButton(
-                    enabled: widget.locationController.text.isNotEmpty &&
-                        (isSocialUser ||
-                            (isAlreadyLoggedIn && isVerifiedPasswordUser) ||
-                            (widget.emailController.text.isNotEmpty &&
-                                _isPasswordValid &&
-                                widget.passwordController.text ==
-                                    _confirmPasswordController.text)),
-                    onTap: widget.onContinue,
-                    label: widget.tr('continue_btn'),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                widget.isRegistering
+                    ? Center(
+                        child: CircularProgressIndicator(
+                            color: Theme.of(context).colorScheme.primary))
+                    : ContinueButton(
+                        enabled: widget.locationController.text.isNotEmpty &&
+                            (isSocialUser ||
+                                (isAlreadyLoggedIn && isVerifiedPasswordUser) ||
+                                (widget.emailController.text.isNotEmpty &&
+                                    _isPasswordValid &&
+                                    widget.passwordController.text ==
+                                        _confirmPasswordController.text)),
+                        onTap: widget.onContinue,
+                        label: widget.tr('continue_btn'),
+                      ),
+                const SizedBox(height: 8),
+                Text(
+                  'v20',
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white30
+                        : Colors.black38,
+                    fontSize: 10,
                   ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
