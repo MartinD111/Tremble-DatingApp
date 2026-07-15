@@ -164,35 +164,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (user != null) {
         NotificationService.saveToken(user.id);
         BleRestoreService().initialize();
-        NotificationService.initialize(
-          onForegroundWave: ({
-            required String name,
-            required int age,
-            required String imageUrl,
-            required String targetUid,
-            required bool isIncomingWave,
-          }) {
-            if (!mounted) return;
-            WavePillService.show(
-              overlay: Overlay.of(context),
-              data: WavePillData(
-                name: name,
-                age: age,
-                imageUrl: imageUrl,
-                targetUid: targetUid,
-                isIncomingWave: isIncomingWave,
-              ),
-              onWave: (uid) async {
-                final user = ref.read(authStateProvider);
-                if (user?.hasReachedWaveLimit == true) {
-                  PremiumPaywallBottomSheet.show(context);
-                  return;
-                }
-                await ref.read(waveRepositoryProvider).sendWave(uid);
-              },
-            );
-          },
-        );
       }
       ref.read(tutorialProvider.notifier).checkFirstLaunch();
     });

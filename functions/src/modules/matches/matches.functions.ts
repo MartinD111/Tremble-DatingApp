@@ -10,7 +10,8 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { getMessaging } from "firebase-admin/messaging";
+import { getMessaging, Message } from "firebase-admin/messaging";
+import { randomUUID } from "node:crypto";
 import { requireAuth, requireAdmin, assertNotBanned } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { assertValidDocumentId } from "../../middleware/validate";
@@ -38,6 +39,100 @@ function redactUid(uid: string): string {
 const MUTUAL_WAVE_FREE_LIMIT = 5;
 const MUTUAL_WAVE_PREMIUM_LIMIT = 20;
 const MUTUAL_WAVE_COUNTER_TIME_ZONE = "Europe/Ljubljana";
+const WAVE_DELIVERY_TTL_SECS = 24 * 60 * 60;
+const WAVE_PROCESSING_TTL_SECS = 60;
+const MAX_DELIVERY_ATTEMPTS = 3;
+
+type DeliveryOutcome = {
+    status: "accepted" | "terminal" | "failed";
+    error?: unknown;
+};
+
+function waveDeliveryKey(waveId: string, suffix: string): string {
+    return `wave-delivery:${waveId}:${suffix}`;
+}
+
+function deliveryErrorCode(error: unknown): string {
+    if (error && typeof error === "object" && "code" in error) {
+        const code = (error as { code?: unknown }).code;
+        if (typeof code === "string" && code.trim() !== "") return code;
+    }
+    return "unknown";
+}
+
+function isPermanentDeliveryError(errorCode: string): boolean {
+    return new Set([
+        "messaging/invalid-argument",
+        "messaging/invalid-recipient",
+        "messaging/invalid-registration-token",
+        "messaging/registration-token-not-registered",
+        "messaging/invalid-package-name",
+        "messaging/mismatched-credential",
+        "messaging/authentication-error",
+        "messaging/invalid-apns-credentials",
+        "messaging/third-party-auth-error",
+    ]).has(errorCode);
+}
+
+function birthDateValue(value: unknown): Date | null {
+    if (typeof value === "string") {
+        const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+        const dateTime = /^(\d{4})-(\d{2})-(\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.exec(value);
+        const components = dateOnly ?? dateTime;
+        if (!components) return null;
+        const year = Number(components[1]);
+        const month = Number(components[2]);
+        const day = Number(components[3]);
+        const calendarCheck = new Date(Date.UTC(year, month - 1, day));
+        if (
+            calendarCheck.getUTCFullYear() !== year
+            || calendarCheck.getUTCMonth() !== month - 1
+            || calendarCheck.getUTCDate() !== day
+        ) {
+            return null;
+        }
+        if (dateOnly) return new Date(year, month - 1, day);
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    if (value && typeof value === "object" && "toDate" in value) {
+        const toDate = (value as { toDate?: unknown }).toDate;
+        if (typeof toDate === "function") {
+            const parsed = toDate.call(value);
+            return parsed instanceof Date && !Number.isNaN(parsed.getTime()) ? parsed : null;
+        }
+    }
+    return null;
+}
+
+function notificationIdentity(userData: FirebaseFirestore.DocumentData | undefined): {
+    name: string;
+    age: number;
+    photoUrl: string;
+} {
+    const canonicalName = typeof userData?.name === "string" && userData.name.trim() !== ""
+        ? userData.name.trim()
+        : "Someone";
+    const numericAge = userData?.age;
+    let age = typeof numericAge === "number" && Number.isFinite(numericAge) && numericAge >= 0
+        ? Math.floor(numericAge)
+        : 0;
+    if (age === 0) {
+        const dob = birthDateValue(userData?.birthDate);
+        if (dob) {
+            const today = new Date();
+            age = today.getFullYear() - dob.getFullYear();
+            const monthDelta = today.getMonth() - dob.getMonth();
+            if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < dob.getDate())) age--;
+            if (age < 0) age = 0;
+        }
+    }
+    const photoUrl = Array.isArray(userData?.photoUrls)
+        && typeof userData.photoUrls[0] === "string"
+        ? userData.photoUrls[0]
+        : "";
+    return { name: canonicalName, age, photoUrl };
+}
 
 export function mutualWaveCounterField(now = new Date()): string {
     const parts = new Intl.DateTimeFormat("en-CA", {
@@ -68,6 +163,147 @@ export function mutualWaveCountForUser(
 ): number {
     const value = userData?.[counterField];
     return typeof value === "number" ? value : 0;
+}
+
+async function releaseProcessingClaim(
+    redis: ReturnType<typeof getRedis>,
+    processingKey: string,
+    owner: string,
+): Promise<void> {
+    await redis.eval(
+        "if redis.call('get', KEYS[1]) == ARGV[1] then "
+            + "return redis.call('del', KEYS[1]) else return 0 end",
+        [processingKey],
+        [owner],
+    );
+}
+
+async function transitionProcessingClaim(
+    redis: ReturnType<typeof getRedis>,
+    processingKey: string,
+    owner: string,
+    terminalState: string,
+): Promise<void> {
+    await redis.eval(
+        "if redis.call('get', KEYS[1]) == ARGV[1] then "
+            + "redis.call('set', KEYS[1], ARGV[2], 'EX', ARGV[3]); return 1 "
+            + "else return 0 end",
+        [processingKey],
+        [owner, terminalState, WAVE_DEDUP_SECS.toString()],
+    );
+}
+
+async function deliverWaveNotification(options: {
+    redis: ReturnType<typeof getRedis>;
+    waveId: string;
+    recipientUid: string;
+    message: Message;
+    deliveryType: "incoming_wave" | "mutual_wave";
+}): Promise<DeliveryOutcome> {
+    const { redis, waveId, recipientUid, message, deliveryType } = options;
+    const startedAt = Date.now();
+    const recipientUidRedacted = redactUid(recipientUid);
+    const recipientBase = waveDeliveryKey(waveId, `recipient:${recipientUid}`);
+    const deliveredKey = `${recipientBase}:delivered`;
+    const noTokenKey = `${recipientBase}:no-token`;
+    const permanentFailureKey = `${recipientBase}:permanent-failure`;
+    const attemptsKey = `${recipientBase}:attempts`;
+
+    if (await redis.get(deliveredKey)) {
+        logStructured({
+            fn: "onWaveCreated",
+            event: "dedup_skip",
+            waveId,
+            recipientUid: recipientUidRedacted,
+            reason: "delivered",
+            durationMs: Date.now() - startedAt,
+        });
+        return { status: "accepted" };
+    }
+    if (await redis.get(noTokenKey)) {
+        logStructured({
+            fn: "onWaveCreated",
+            event: "dedup_skip",
+            waveId,
+            recipientUid: recipientUidRedacted,
+            reason: "no_token",
+            durationMs: Date.now() - startedAt,
+        });
+        return { status: "terminal" };
+    }
+    if (await redis.get(permanentFailureKey)) {
+        logStructured({
+            fn: "onWaveCreated",
+            event: "dedup_skip",
+            waveId,
+            recipientUid: recipientUidRedacted,
+            reason: "permanent_failure",
+            durationMs: Date.now() - startedAt,
+        });
+        return { status: "terminal" };
+    }
+    if (!("token" in message) || typeof message.token !== "string" || message.token.trim() === "") {
+        await redis.set(noTokenKey, "1", { ex: WAVE_DELIVERY_TTL_SECS });
+        logStructured({
+            fn: "onWaveCreated",
+            event: "no_token",
+            waveId,
+            recipientUid: recipientUidRedacted,
+            retryDisposition: "permanent",
+            durationMs: Date.now() - startedAt,
+        });
+        return { status: "terminal" };
+    }
+
+    const attempt = await redis.incr(attemptsKey);
+    if (attempt === 1) await redis.expire(attemptsKey, WAVE_DELIVERY_TTL_SECS);
+    if (attempt > MAX_DELIVERY_ATTEMPTS) {
+        logStructured({
+            fn: "onWaveCreated",
+            event: "dedup_skip",
+            waveId,
+            recipientUid: recipientUidRedacted,
+            reason: "retry_exhausted",
+            durationMs: Date.now() - startedAt,
+        });
+        return { status: "terminal" };
+    }
+
+    try {
+        await getMessaging().send(message);
+        await redis.set(deliveredKey, "1", { ex: WAVE_DELIVERY_TTL_SECS });
+        logStructured({
+            fn: "onWaveCreated",
+            event: "delivery_success",
+            waveId,
+            recipientUid: recipientUidRedacted,
+            deliveryType,
+            attempt,
+            durationMs: Date.now() - startedAt,
+        });
+        return { status: "accepted" };
+    } catch (error) {
+        const errorCode = deliveryErrorCode(error);
+        const permanent = isPermanentDeliveryError(errorCode);
+        if (permanent) {
+            await redis.set(permanentFailureKey, "1", { ex: WAVE_DELIVERY_TTL_SECS });
+        }
+        const shouldRetry = !permanent && attempt < MAX_DELIVERY_ATTEMPTS;
+        logStructured({
+            fn: "onWaveCreated",
+            event: "delivery_error",
+            waveId,
+            recipientUid: recipientUidRedacted,
+            deliveryType,
+            attempt,
+            errorCode,
+            retryDisposition: permanent ? "permanent" : shouldRetry ? "retry" : "exhausted",
+            durationMs: Date.now() - startedAt,
+        });
+        return shouldRetry
+            ? { status: "failed", error }
+            : { status: "terminal" };
+    }
 }
 
 /**
@@ -155,10 +391,28 @@ export const sendWave = onCall(
  *    with deep link payload {type: MUTUAL_WAVE, path: /radar, matchId}.
  */
 export const onWaveCreated = onDocumentCreated(
-    { document: "waves/{waveId}", region: "europe-west1" },
+    { document: "waves/{waveId}", region: "europe-west1", retry: true },
     async (event) => {
         const startedAt = Date.now();
-        logStructured({ fn: "onWaveCreated", event: "entry", uid: "system", waveId: event.params.waveId });
+        const waveId = event.params.waveId;
+        const redis = getRedis();
+        const processingKey = waveDeliveryKey(waveId, "processing");
+        const processingOwner = randomUUID();
+        const claimed = await redis.set(processingKey, processingOwner, {
+            ex: WAVE_PROCESSING_TTL_SECS,
+            nx: true,
+        });
+        if (claimed === null) {
+            logStructured({
+                fn: "onWaveCreated",
+                event: "dedup_skip",
+                waveId,
+                reason: "processing",
+                durationMs: Date.now() - startedAt,
+            });
+            return;
+        }
+        let directionalClaim: { key: string; owner: string } | null = null;
 
         try {
         const snapshot = event.data;
@@ -169,22 +423,28 @@ export const onWaveCreated = onDocumentCreated(
         const toUid = waveData.toUid as string;
 
         if (!fromUid || !toUid) return;
-        logStructured({ fn: "onWaveCreated", event: "entry", uid: fromUid, waveId: event.params.waveId });
+        const redactedFromUid = redactUid(fromUid);
+        const redactedToUid = redactUid(toUid);
 
-        // ── Wave deduplication (Redis, 5-min TTL) ─────────────────
-        //    Prevents INCOMING_WAVE spam from rapid double-taps or
-        //    duplicate Firestore trigger retries.
-        const redis = getRedis();
         const dedupKey = waveDedupKey(fromUid, toUid);
-        const dedupSet = await redis.set(dedupKey, "1", {
+        const directionalOwner = `processing:${waveId}:${processingOwner}`;
+        const directionalClaimed = await redis.set(dedupKey, directionalOwner, {
             ex: WAVE_DEDUP_SECS,
-            nx: true, // Only set if key doesn't exist
+            nx: true,
         });
-
-        if (dedupSet === null) {
-            console.log(`[WAVE] Dedup: wave ${fromUid}→${toUid} already processed — skipping`);
+        if (directionalClaimed === null) {
+            logStructured({
+                fn: "onWaveCreated",
+                event: "dedup_skip",
+                waveId,
+                senderUid: redactedFromUid,
+                recipientUid: redactedToUid,
+                reason: "pair_cooldown",
+                durationMs: Date.now() - startedAt,
+            });
             return;
         }
+        directionalClaim = { key: dedupKey, owner: directionalOwner };
 
         // Fetch both user profiles upfront (needed for both branches)
         const [senderDoc, receiverDoc] = await Promise.all([
@@ -192,24 +452,15 @@ export const onWaveCreated = onDocumentCreated(
             db.collection("users").doc(toUid).get(),
         ]);
 
-        const senderName = (senderDoc.data()?.name as string | undefined) ?? "Nekdo";
-        const senderPhoto = (senderDoc.data()?.photoUrls as string[] | undefined)?.[0] ?? "";
-        const receiverName = (receiverDoc.data()?.name as string | undefined) ?? "Nekdo";
-        const receiverPhoto = (receiverDoc.data()?.photoUrls as string[] | undefined)?.[0] ?? "";
+        const senderIdentity = notificationIdentity(senderDoc.data());
+        const receiverIdentity = notificationIdentity(receiverDoc.data());
+        const senderName = senderIdentity.name;
+        const senderPhoto = senderIdentity.photoUrl;
+        const receiverName = receiverIdentity.name;
+        const receiverPhoto = receiverIdentity.photoUrl;
         const receiverToken = receiverDoc.data()?.fcmToken as string | undefined;
         const senderToken = senderDoc.data()?.fcmToken as string | undefined;
-
-        let senderAge = 0;
-        const dob = senderDoc.data()?.dateOfBirth;
-        if (dob) {
-            const dobDate = dob.toDate();
-            const today = new Date();
-            senderAge = today.getFullYear() - dobDate.getFullYear();
-            const m = today.getMonth() - dobDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
-                senderAge--;
-            }
-        }
+        const senderAge = senderIdentity.age;
 
         // Check for reciprocal wave (mutual match)
         const reciprocalQuery = await db
@@ -219,9 +470,18 @@ export const onWaveCreated = onDocumentCreated(
             .limit(1)
             .get();
 
-        const messaging = getMessaging();
+        const branchKey = waveDeliveryKey(waveId, "branch");
+        let branch = await redis.get<"incoming" | "mutual">(branchKey);
+        if (!branch) {
+            const detectedBranch = reciprocalQuery.empty ? "incoming" : "mutual";
+            await redis.set(branchKey, detectedBranch, {
+                ex: WAVE_DELIVERY_TTL_SECS,
+                nx: true,
+            });
+            branch = await redis.get<"incoming" | "mutual">(branchKey) ?? detectedBranch;
+        }
 
-        if (!reciprocalQuery.empty) {
+        if (branch === "mutual") {
             // ── MUTUAL_WAVE: Create match + notify both ───
 
             const uids = [fromUid, toUid].sort();
@@ -230,10 +490,10 @@ export const onWaveCreated = onDocumentCreated(
             const userARef = db.collection("users").doc(uids[0]);
             const userBRef = db.collection("users").doc(uids[1]);
             const matchRef = db.collection("matches").doc(matchId);
-            const reciprocalWaveRef = reciprocalQuery.docs[0].ref;
+            const reciprocalWaveRef = reciprocalQuery.docs[0]?.ref;
             const counterField = mutualWaveCounterField();
 
-            await db.runTransaction(async (transaction) => {
+            const ownsNotifications = await db.runTransaction(async (transaction) => {
                 const [matchDoc, userADoc, userBDoc] = await Promise.all([
                     transaction.get(matchRef),
                     transaction.get(userARef),
@@ -241,8 +501,8 @@ export const onWaveCreated = onDocumentCreated(
                 ]);
 
                 if (matchDoc.exists) {
-                    console.log(`[WAVE] Match ${matchId} already exists — skipping duplicate trigger`);
-                    return;
+                    transaction.delete(snapshot.ref);
+                    return matchDoc.data()?.notificationOwnerWaveId === waveId;
                 }
 
                 const userAData = userADoc.data();
@@ -286,6 +546,7 @@ export const onWaveCreated = onDocumentCreated(
                     expiresAt: new Date(Date.now() + 30 * 60 * 1000),
                     status: "pending",
                     seenBy: [fromUid],
+                    notificationOwnerWaveId: waveId,
                 });
 
                 transaction.update(userARef, {
@@ -297,72 +558,135 @@ export const onWaveCreated = onDocumentCreated(
                 });
 
                 transaction.delete(snapshot.ref);
-                transaction.delete(reciprocalWaveRef);
+                if (reciprocalWaveRef) transaction.delete(reciprocalWaveRef);
+                return true;
             });
 
-            console.log(`[WAVE] Mutual wave → match created: ${matchId}`);
+            if (!ownsNotifications) {
+                await transitionProcessingClaim(
+                    redis,
+                    dedupKey,
+                    directionalOwner,
+                    `terminal:${waveId}`,
+                );
+                directionalClaim = null;
+                logStructured({
+                    fn: "onWaveCreated",
+                    event: "dedup_skip",
+                    waveId,
+                    senderUid: redactedFromUid,
+                    recipientUid: redactedToUid,
+                    reason: "mutual_non_owner",
+                    durationMs: Date.now() - startedAt,
+                });
+                return;
+            }
 
             // Send "Odpremo radar?" to both users
-            const notifications: Promise<string>[] = [];
-
-            if (receiverToken) {
-                notifications.push(
-                    messaging.send({
-                        token: receiverToken,
-                        notification: {
-                            title: `${senderName} ti je pomahal-a nazaj!`,
-                            body: "Odpremo radar?",
-                            imageUrl: senderPhoto || undefined,
-                        },
-                        data: {
-                            type: "MUTUAL_WAVE",
-                            matchId,
-                            path: "/radar",
-                        },
-                        apns: {
-                            payload: {
-                                aps: {
-                                    contentAvailable: true,
-                                    sound: "default",
-                                    "mutable-content": 1,
+            const notifications: Array<{
+                recipientUid: string;
+                promise: Promise<DeliveryOutcome>;
+            }> = [
+                {
+                    recipientUid: toUid,
+                    promise: deliverWaveNotification({
+                        redis,
+                        waveId,
+                        recipientUid: toUid,
+                        deliveryType: "mutual_wave",
+                        message: {
+                            token: receiverToken ?? "",
+                            notification: {
+                                title: `${senderName} ti je pomahal-a nazaj!`,
+                                body: "Odpremo radar?",
+                                imageUrl: senderPhoto || undefined,
+                            },
+                            data: {
+                                type: "MUTUAL_WAVE",
+                                waveId,
+                                matchId,
+                                path: "/radar",
+                            },
+                            apns: {
+                                payload: {
+                                    aps: {
+                                        contentAvailable: true,
+                                        sound: "default",
+                                        "mutable-content": 1,
+                                    },
                                 },
                             },
+                            android: { priority: "high" },
                         },
-                        android: { priority: "high" },
-                    })
-                );
-            }
-
-            if (senderToken) {
-                notifications.push(
-                    messaging.send({
-                        token: senderToken,
-                        notification: {
-                            title: `${receiverName} ti je pomahal-a nazaj!`,
-                            body: "Odpremo radar?",
-                            imageUrl: receiverPhoto || undefined,
-                        },
-                        data: {
-                            type: "MUTUAL_WAVE",
-                            matchId,
-                            path: "/radar",
-                        },
-                        apns: {
-                            payload: {
-                                aps: {
-                                    contentAvailable: true,
-                                    sound: "default",
-                                    "mutable-content": 1,
+                    }),
+                },
+                {
+                    recipientUid: fromUid,
+                    promise: deliverWaveNotification({
+                        redis,
+                        waveId,
+                        recipientUid: fromUid,
+                        deliveryType: "mutual_wave",
+                        message: {
+                            token: senderToken ?? "",
+                            notification: {
+                                title: `${receiverName} ti je pomahal-a nazaj!`,
+                                body: "Odpremo radar?",
+                                imageUrl: receiverPhoto || undefined,
+                            },
+                            data: {
+                                type: "MUTUAL_WAVE",
+                                waveId,
+                                matchId,
+                                path: "/radar",
+                            },
+                            apns: {
+                                payload: {
+                                    aps: {
+                                        contentAvailable: true,
+                                        sound: "default",
+                                        "mutable-content": 1,
+                                    },
                                 },
                             },
+                            android: { priority: "high" },
                         },
-                        android: { priority: "high" },
-                    })
-                );
-            }
+                    }),
+                },
+            ];
 
-            await Promise.allSettled(notifications);
-            logStructured({ fn: "onWaveCreated", event: "success", uid: fromUid, matchId, result: "mutual_wave", durationMs: Date.now() - startedAt });
+            const notificationResults = await Promise.allSettled(
+                notifications.map((notification) => notification.promise)
+            );
+            let retryError: unknown;
+            let hasTerminalOutcome = false;
+            for (let index = 0; index < notificationResults.length; index++) {
+                const result = notificationResults[index];
+                if (result.status === "rejected") {
+                    retryError ??= result.reason;
+                    logStructured({
+                        fn: "onWaveCreated",
+                        event: "delivery_error",
+                        waveId,
+                        recipientUid: redactUid(notifications[index].recipientUid),
+                        errorCode: deliveryErrorCode(result.reason),
+                        retryDisposition: "retry",
+                        durationMs: Date.now() - startedAt,
+                    });
+                } else if (result.value.status === "failed") {
+                    retryError ??= result.value.error;
+                } else if (result.value.status === "terminal") {
+                    hasTerminalOutcome = true;
+                }
+            }
+            if (retryError) throw retryError;
+            await transitionProcessingClaim(
+                redis,
+                dedupKey,
+                directionalOwner,
+                hasTerminalOutcome ? `terminal:${waveId}` : `delivered:${waveId}`,
+            );
+            directionalClaim = null;
 
             // Also send match email (fire-and-forget)
             const senderEmail = senderDoc.data()?.email as string | undefined;
@@ -372,70 +696,86 @@ export const onWaveCreated = onDocumentCreated(
 
         } else {
             // ── INCOMING_WAVE: Rich Push to receiver ──────
-
-            if (!receiverToken) {
-                console.log(`[WAVE] No FCM token for receiver ${toUid}`);
-                return;
-            }
-
             const recipientData = receiverDoc.data();
-            const isSilent = recipientData?.isRunModeActive === true 
-                || !!recipientData?.activeGymId 
+            const isSilent = recipientData?.isRunModeActive === true
+                || !!recipientData?.activeGymId
                 || !!recipientData?.activeEventId;
-
-            if (isSilent) {
-                await messaging.send({
-                    token: receiverToken,
-                    data: {
-                        type: "INCOMING_WAVE",
-                        senderId: fromUid,
-                        senderName,
-                        senderAge: senderAge.toString(),
-                        senderPhotoUrl: senderPhoto,
-                        // WAVE_BACK_ACTION is handled silently in background by Flutter
-                        click_action: "WAVE_BACK_ACTION",
-                    },
-                    apns: {
-                        payload: {
-                            aps: {
-                                contentAvailable: true,
-                            },
-                        },
-                    },
+            const data = {
+                type: "INCOMING_WAVE",
+                waveId,
+                senderId: fromUid,
+                senderName,
+                senderAge: senderAge.toString(),
+                senderPhotoUrl: senderPhoto,
+            };
+            const message: Message = isSilent
+                ? {
+                    token: receiverToken ?? "",
+                    data,
+                    apns: { payload: { aps: { contentAvailable: true } } },
                     android: { priority: "high" },
-                });
-            } else {
-                await messaging.send({
-                    token: receiverToken,
-                    data: {
-                        type: "INCOMING_WAVE",
-                        senderId: fromUid,
-                        senderName,
-                        senderAge: senderAge.toString(),
-                        senderPhotoUrl: senderPhoto,
-                        // WAVE_BACK_ACTION is handled silently in background by Flutter
-                        click_action: "WAVE_BACK_ACTION",
+                }
+                : {
+                    token: receiverToken ?? "",
+                    notification: {
+                        title: `${senderName} waved`,
+                        body: "Wave back?",
+                        imageUrl: senderPhoto || undefined,
                     },
+                    data,
                     apns: {
                         payload: {
                             aps: {
                                 contentAvailable: true,
-                                // WAVE_CATEGORY enables action buttons on iOS
                                 category: "WAVE_CATEGORY",
+                                sound: "default",
                                 "mutable-content": 1,
                             },
                         },
                     },
-                    android: { priority: "high" },
-                });
-            }
-
-            console.log(`[WAVE] INCOMING_WAVE sent: ${fromUid} → ${toUid}`);
-            logStructured({ fn: "onWaveCreated", event: "success", uid: fromUid, result: "incoming_wave", durationMs: Date.now() - startedAt });
+                    android: {
+                        priority: "high",
+                        notification: {
+                            channelId: "tremble_wave",
+                            sound: "default",
+                        },
+                    },
+                };
+            const result = await deliverWaveNotification({
+                redis,
+                waveId,
+                recipientUid: toUid,
+                message,
+                deliveryType: "incoming_wave",
+            });
+            if (result.status === "failed") throw result.error;
+            await transitionProcessingClaim(
+                redis,
+                dedupKey,
+                directionalOwner,
+                result.status === "terminal" ? `terminal:${waveId}` : `delivered:${waveId}`,
+            );
+            directionalClaim = null;
         }
         } catch (error) {
-            logStructured({ fn: "onWaveCreated", event: "error", uid: "system", error: errorMessage(error), durationMs: Date.now() - startedAt });
+            if (directionalClaim) {
+                try {
+                    await releaseProcessingClaim(
+                        redis,
+                        directionalClaim.key,
+                        directionalClaim.owner,
+                    );
+                } catch {
+                    // Directional processing state has a bounded TTL.
+                }
+            }
             throw error;
+        } finally {
+            try {
+                await releaseProcessingClaim(redis, processingKey, processingOwner);
+            } catch {
+                // The ownership lease expires quickly; never mask the delivery result.
+            }
         }
     }
 );

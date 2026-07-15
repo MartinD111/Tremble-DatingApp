@@ -2,6 +2,7 @@ import Flutter
 import UIKit
 import CoreMotion
 import WidgetKit
+import UserNotifications
 import flutter_background_service_ios
 
 public class TrembleNativePlugin: NSObject, FlutterPlugin {
@@ -228,6 +229,91 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+    private static let pendingNotificationActionsKey = "app.tremble.pendingNotificationActions"
+    private static let maxPendingNotificationActions = 100
+    private var notificationActionsChannel: FlutterMethodChannel?
+
+    private func setupNotificationActionsChannel() {
+        guard let controller = window?.rootViewController as? FlutterViewController else { return }
+        let channel = FlutterMethodChannel(
+            name: "app.tremble/notification_actions",
+            binaryMessenger: controller.binaryMessenger
+        )
+        channel.setMethodCallHandler { call, result in
+            switch call.method {
+            case "getPendingActions":
+                result(self.pendingNotificationActions())
+            case "acknowledgeAction":
+                guard let arguments = call.arguments as? [String: Any],
+                      let id = arguments["id"] as? String else {
+                    result(FlutterError(code: "INVALID_ARGS", message: "Missing action id", details: nil))
+                    return
+                }
+                self.removePendingNotificationAction(id: id)
+                result(nil)
+            default:
+                result(FlutterMethodNotImplemented)
+            }
+        }
+        notificationActionsChannel = channel
+    }
+
+    private func pendingNotificationActions() -> [[String: String]] {
+        UserDefaults.standard.array(forKey: Self.pendingNotificationActionsKey)
+            as? [[String: String]] ?? []
+    }
+
+    private func persistWaveBackAction(response: UNNotificationResponse) {
+        guard response.actionIdentifier == "WAVE_BACK_ACTION" else { return }
+
+        let userInfo = response.notification.request.content.userInfo
+        let gcmMessageId = userInfo["gcm.message_id"] as? String
+        let waveId = userInfo["waveId"] as? String
+        guard userInfo["type"] as? String == "INCOMING_WAVE",
+              let messageId = [gcmMessageId, waveId]
+            .compactMap({ $0?.trimmingCharacters(in: .whitespacesAndNewlines) })
+            .first(where: { !$0.isEmpty }),
+              let senderId = (userInfo["senderId"] as? String)?
+                .trimmingCharacters(in: .whitespacesAndNewlines),
+              !senderId.isEmpty else { return }
+
+        let id = "WAVE_BACK_ACTION|\(messageId)|\(senderId)"
+        var record: [String: String] = [
+            "id": id,
+            "actionIdentifier": response.actionIdentifier,
+            "senderId": senderId,
+            "type": "INCOMING_WAVE",
+        ]
+        if let gcmMessageId, !gcmMessageId.isEmpty {
+            record["gcm.message_id"] = gcmMessageId
+        }
+        if let waveId, !waveId.isEmpty {
+            record["waveId"] = waveId
+        }
+
+        var pending = pendingNotificationActions()
+        guard !pending.contains(where: { $0["id"] == id }) else { return }
+        pending.append(record)
+        if pending.count > Self.maxPendingNotificationActions {
+            pending.removeFirst(pending.count - Self.maxPendingNotificationActions)
+        }
+        UserDefaults.standard.set(pending, forKey: Self.pendingNotificationActionsKey)
+        notificationActionsChannel?.invokeMethod("pendingActionsChanged", arguments: nil)
+    }
+
+    private func removePendingNotificationAction(id: String) {
+        let remaining = pendingNotificationActions().filter { $0["id"] != id }
+        UserDefaults.standard.set(remaining, forKey: Self.pendingNotificationActionsKey)
+    }
+
+    override func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        persistWaveBackAction(response: response)
+        super.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
+    }
 
 
 
@@ -259,6 +345,7 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
         if let registrar = self.registrar(forPlugin: "TrembleNativePlugin") {
             TrembleNativePlugin.register(with: registrar)
         }
+        setupNotificationActionsChannel()
 
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
