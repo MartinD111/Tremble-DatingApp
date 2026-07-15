@@ -293,3 +293,36 @@ Ship 1.0.0 (20) to Play Console + TestFlight. b20 rolls up three small carry-ove
 - Title: `[PLAN-ID: 20260715-release-b20] chore(release): 1.0.0+20 — GoogleFonts preload + v20 label`.
 - Body contains `## Verification checklist` naming `unit tests`, `integration tests`, `security scan` (release chore — `n/a` with reasons documented per lane).
 - Plan-ID present on this line: `20260715-release-b20`.
+
+---
+
+# Active Release Chore
+Plan ID: 20260715-release-b21
+Risk Level: LOW (version string bump only; ships the Sentry-fix rollup PR #46 that already landed on main)
+Status: IN-PROGRESS 2026-07-15 — cutting release branch off main @ 168013d (post-#46 merge).
+Founder Approval Required: NO (LOW risk; pubspec version bump only; no code paths cross a system boundary in this commit).
+Branch: chore/release-b21
+
+## Objective
+
+Ship 1.0.0 (21) to Play Console + TestFlight. b21 packages the 5 Sentry-fix rollup that merged as PR #46 (`bc14dc8` → squashed to main as `168013d`):
+
+- Issue 1 — Firebase Permission Denied guard on unauth Firestore reads during login race.
+- Issue 2 — Android StackOverflow in `onRequestPermissionsResult` (recursive callback loop on Android 14).
+- Issue 3 — Null-check operator crash in `map_provider.dart` (null-aware fallbacks).
+- Issue 4 — `MissingPluginException` guard for platforms without flutter_blue_plus channel.
+- Issue 5 — Unhandled `ClientException` from PMTiles fetch (soft-fail error boundary).
+
+Rebuilt against `1.0.0+21` so store `versionCode` monotonicity is preserved (last shipped: +20).
+
+## Scope
+
+- `pubspec.yaml`: version `1.0.0+20` → `1.0.0+21` — SSOT bump (memory: `android-version-source-of-truth`).
+- `tasks/plan.md`: this section.
+- `android/local.properties`: local `flutter.versionCode` mirror bumped 20→21 on this machine (gitignored; not part of the commit — pubspec remains SSOT per memory rule).
+
+## Verification for MPC PR pre-flight
+
+- Title: `[PLAN-ID: 20260715-release-b21] chore(release): 1.0.0+21 — Sentry-fix rollup rebuild`.
+- Body contains `## Verification checklist` naming `unit tests`, `integration tests`, `security scan` (release chore — `n/a` with reasons documented per lane).
+- Plan-ID present on this line: `20260715-release-b21`.
