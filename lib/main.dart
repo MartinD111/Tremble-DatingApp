@@ -3,7 +3,8 @@ import 'dart:isolate';
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart'
+    show kDebugMode, LicenseEntry, LicenseEntryWithLineBreaks, LicenseRegistry;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,17 +24,48 @@ import 'src/core/translations.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// OFL requires the licence text to travel with the fonts we ship, and the
+/// about-box reads this registry.
+Stream<LicenseEntry> _bundledFontLicenses() async* {
+  for (final family in const [
+    'instrumentsans',
+    'playfairdisplay',
+    'lora',
+    'jetbrainsmono',
+  ]) {
+    final text = await rootBundle.loadString('assets/fonts/OFL-$family.txt');
+    yield LicenseEntryWithLineBreaks(['google_fonts', family], text);
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Brand typefaces ship in assets/fonts/, so refuse to reach for the network.
+  // The old runtime fetch awaited an HTTP download before runApp: a slow
+  // connection stalled first launch and a bad one threw "Failed to load font
+  // with url". Assets are matched by filename, so every GoogleFonts.* call site
+  // keeps working — it just resolves locally now.
+  //
+  // This must be set before the first GoogleFonts.* call, or that call races the
+  // config and can still fetch.
+  GoogleFonts.config.allowRuntimeFetching = false;
+  LicenseRegistry.addLicense(_bundledFontLicenses);
+
   try {
+    // Now an asset read rather than a download. Kept so the first frame paints
+    // in brand type instead of swapping after a fallback.
     await GoogleFonts.pendingFonts([
       GoogleFonts.playfairDisplay(),
       GoogleFonts.lora(),
       GoogleFonts.instrumentSans(),
+      GoogleFonts.jetBrainsMono(),
     ]);
   } catch (e) {
-    if (kDebugMode) debugPrint('Failed to preload GoogleFonts: $e');
+    // allowRuntimeFetching = false makes a missing variant throw. Never fatal:
+    // Flutter falls back to a system face, which is a cosmetic regression, not
+    // a crashed launch.
+    if (kDebugMode) debugPrint('Failed to preload bundled fonts: $e');
   }
 
   if (Platform.isAndroid) {

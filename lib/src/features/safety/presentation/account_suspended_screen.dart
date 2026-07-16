@@ -34,7 +34,7 @@ class AccountSuspendedScreen extends StatelessWidget {
                   Text(
                     'Tvoj račun je začasno onemogočen.',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.instrumentSans(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
@@ -45,7 +45,7 @@ class AccountSuspendedScreen extends StatelessWidget {
                   Text(
                     'Za pomoč se obrni na:\ninfo@trembledating.com',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.instrumentSans(
                       fontSize: 15,
                       color: Colors.white54,
                       height: 1.6,

@@ -82,3 +82,9 @@ flutter:
   assets:
     - Logo/
     - assets/map/tremble_dark_style.json
+    # Brand typefaces, bundled so first launch never depends on the network.
+    # google_fonts matches an asset whose filename ends with its API prefix
+    # ("<Family>-<Variant>"), so these are picked up without a `fonts:` block
+    # and every GoogleFonts.* call site keeps working unchanged.
+    # Regenerate with tool/fetch_fonts.py — do not hand-rename these files.
+    - assets/fonts/
