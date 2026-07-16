@@ -10,6 +10,24 @@ import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+/// Tracks which devices have already produced a `proximity_events` write during
+/// the current scan cycle.
+///
+/// `FlutterBluePlus.scanResults` re-emits the *cumulative* result list on every
+/// advertisement packet, so one nearby device appears in dozens of emissions per
+/// scan. Writing per emission saturated the Firestore channel and inflated the
+/// monthly recap's near-miss count, which is derived from a `count()` over this
+/// collection. One write per device per scan cycle is the contract.
+class ScanCycleDedupe {
+  final Set<String> _writtenDeviceIds = <String>{};
+
+  /// Drops the previous cycle's device IDs so the next scan reports afresh.
+  void beginCycle() => _writtenDeviceIds.clear();
+
+  /// True only the first time [deviceId] is offered within a cycle.
+  bool shouldWrite(String deviceId) => _writtenDeviceIds.add(deviceId);
+}
+
 /// Tremble BLE Service — advertises presence and scans for other Tremble users.
 ///
 /// Interaction System v3.0:
@@ -33,6 +51,7 @@ class BleService {
   StreamSubscription<List<ScanResult>>? _scanSub;
   StreamSubscription<BatteryState>? _batterySub;
   Timer? _scanTimer;
+  final ScanCycleDedupe _scanDedupe = ScanCycleDedupe();
 
   bool _isLowPowerMode = false;
   bool _isRunning = false;
@@ -151,6 +170,7 @@ class BleService {
       );
 
       _scanSub?.cancel();
+      _scanDedupe.beginCycle();
       _scanSub = FlutterBluePlus.scanResults.listen((results) {
         final rssiMap = <String, int>{};
         for (final result in results) {
@@ -160,8 +180,13 @@ class BleService {
           final rssiThreshold = _isHighFrequency ? -85 : -75;
 
           if (result.rssi >= rssiThreshold) {
-            rssiMap[result.device.remoteId.str] = result.rssi;
-            _onDeviceDetected(uid, result);
+            final deviceId = result.device.remoteId.str;
+            rssiMap[deviceId] = result.rssi;
+            // This stream re-delivers every device on every advertisement
+            // packet, so the write is gated to once per device per cycle.
+            if (_scanDedupe.shouldWrite(deviceId)) {
+              unawaited(_onDeviceDetected(uid, result));
+            }
           }
         }
         if (rssiMap.isNotEmpty) {
