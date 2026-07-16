@@ -1,9 +1,74 @@
-# Active Implementation Plan
+# Active Release Chore
+Plan ID: 20260716-release-b23
+Risk Level: LOW (version bump only; the shipped code merged as PRs #52/#53/#54)
+Status: IN-REVIEW 2026-07-16 — TestFlight 1.0.0 (23) delivered (UUID
+`47784b71-08f5-4859-8b31-960c2be2c3b6`); AAB awaiting manual Play Console upload.
+Founder Approval Required: YES — granted 2026-07-16 ("deploy all")
+Branch: chore/release-b23
+
+## Objective
+
+Ship 1.0.0 (23), the first binary containing today's three fixes, and deploy the
+Cloud Functions half of the TTL lane that a binary cannot carry.
+
+## Scope
+
+- `pubspec.yaml`: `1.0.0+22` → `1.0.0+23` — sole committed source of truth for
+  both platforms' version fields.
+- `android/local.properties`: local `flutter.versionCode` mirror 22 → 23.
+  Gitignored, not committed; pubspec remains SSOT.
+- `tasks/plan.md`: this entry.
+
+## What build 23 carries
+
+| PR | Change | Why it needed a new binary |
+|---|---|---|
+| #52 | Wave pill on notification tap | build 22 predates it — Wave Back was never runnable |
+| #53 | Pill 3-minute auto-dismiss | client-side timer |
+| #54 | 44 bundled typefaces, no runtime fetch | fixes the offline first-launch crash |
+
+## Production deploy (executed 2026-07-16)
+
+`onWaveCreated` and `scanProximityPairs` deployed to `am---dating-app`
+(europe-west1, v2, Node 22) and verified live via `functions:list`. This is the
+server half of PR #53: the 5-minute expiry is inert without it, and it ships
+independently of any binary.
+
+## Verification (artifact-level, not assumed)
+
+- versionCode `23` / versionName `1.0.0` / package `tremble.dating.app` read out
+  of the built prodRelease manifest — not inferred from pubspec. `local.properties`
+  had a stale `flutter.versionCode=22` that would have produced a Play Store
+  version-code rejection; caught pre-build and synced.
+- Prod `--dart-define-from-file=.env.prod.json` values verified present in the
+  compiled binaries, the exact check build 17 failed: IPA `App.framework` carries
+  PLACES_KEY_PROD + REVENUECAT_APPLE_API_KEY + SENTRY_DSN; AAB `libapp.so` carries
+  PLACES_KEY_PROD + REVENUECAT_GOOGLE_API_KEY + SENTRY_DSN. Each platform's unused
+  RevenueCat key is absent because AOT const-folds `Platform.isIOS`/`isAndroid` and
+  tree-shakes the dead branch — expected, not a gap.
+- 44 .ttf + 4 OFL licences present inside both AAB and IPA.
+- AAB 67.5 MB against the 120 MB budget, with the fonts included.
+- Flutter 322/322, analyzer clean, Functions 154/154, lint/build clean.
+- Artifacts preserved under ignored `release-symbols/b23/`; AAB sha256 prefix
+  `97673544002a…`.
+
+## Open — device verification (cannot be proven from CI)
+
+1. Offline first launch: fresh install, airplane mode, cold start — the actual
+   proof of PR #54. No test can show this.
+2. Wave Back via the iOS notification action — first binary in which it can work.
+3. Foreground / background / killed notification display, closing the
+   BLOCKER-STORE-005 device matrix.
+4. TTL: a wave to an offline handset must NOT arrive after 5 minutes.
+
+---
+
+# Prior Implementation Plan
 Plan ID: 20260716-bundle-fonts-offline
 Risk Level: MEDIUM
-Status: IN-REVIEW — awaiting protected-branch PR merge
+Status: RESOLVED 2026-07-16 — PR #54 merged into `main` @ 53ddd64
 Founder Approval Required: YES — granted 2026-07-16
-Branch: fix/bundle-fonts-offline
+Branch: fix/bundle-fonts-offline (merged)
 
 ## 1. OBJECTIVE
 
