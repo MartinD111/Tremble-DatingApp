@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/registration_flow.dart';
@@ -34,7 +33,6 @@ import '../shared/ui/wave_pill_service.dart';
 import 'consent_service.dart';
 import 'notification_service.dart';
 import 'theme.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 // ── Navigator Key ─────────────────────────────────────────────────────────────
 // Exposed so notification handlers (outside the widget tree) can navigate.
@@ -182,7 +180,6 @@ Future<void> handleNotificationNavigation(
   Duration delay = Duration.zero,
 }) async {
   final type = data['type'] as String?;
-  final actionId = data['actionId'] as String?;
 
   // 0. Run Club intercept — tap opens the RunRecapScreen
   if (type == 'RUN_INTERCEPT') {
@@ -194,29 +191,7 @@ Future<void> handleNotificationNavigation(
     return;
   }
 
-  // 1. Handle "Wave" action button from Proximity Notification
-  if (actionId == 'NEARBY_WAVE_ACTION') {
-    final targetUid = data['fromUid'] as String?;
-    final myUid = FirebaseAuth.instance.currentUser?.uid;
-    if (targetUid != null && myUid != null) {
-      try {
-        await FirebaseFirestore.instance.collection('waves').add({
-          'fromUid': myUid,
-          'toUid': targetUid,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-        if (kDebugMode)
-          debugPrint(
-              '[ROUTER] Auto-wave sent via notification action: $myUid → $targetUid');
-      } catch (e) {
-        if (kDebugMode) debugPrint('[ROUTER] Auto-wave failed: $e');
-      }
-    }
-    // After waving, we might want to stay on the current screen or show a confirmation.
-    // For now, we just proceed.
-  }
-
-  // 2. Handle navigation for Mutual Waves (Matches)
+  // Handle navigation for Mutual Waves (Matches).
   final matchId = data['matchId'] as String?;
   if (type == 'MUTUAL_WAVE' && matchId != null) {
     final path = data['path'] as String?;
@@ -516,6 +491,9 @@ final routerProvider = Provider<GoRouter>((ref) {
     onNotificationTap: (data) {
       handleNotificationNavigation(data);
     },
+    onExplicitWaveAction: (targetUid) {
+      return ref.read(waveRepositoryProvider).sendWave(targetUid);
+    },
     onForegroundWave: ({
       required String name,
       required int age,
@@ -550,23 +528,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     // HomeScreen navigate to MatchRevealScreen — no overlay needed here.
     onForegroundMatch: null,
   );
-
-  // ── Notification deep link: cold start (app was terminated) ──────────────
-  // Runs once when the router is first created.
-  // Delay of 500ms ensures GoRouter is fully mounted before navigating.
-  FirebaseMessaging.instance.getInitialMessage().then((message) {
-    if (message != null) {
-      handleNotificationNavigation(
-        message.data,
-        delay: const Duration(milliseconds: 500),
-      );
-    }
-  });
-
-  // ── Notification deep link: app brought from background ───────────────────
-  FirebaseMessaging.onMessageOpenedApp.listen((message) {
-    handleNotificationNavigation(message.data);
-  });
 
   return router;
 });

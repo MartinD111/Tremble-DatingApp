@@ -183,6 +183,66 @@ export function resolveNotificationLocale(
     return code === "sl" ? "sl" : "en";
 }
 
+function birthDateValue(value: unknown): Date | null {
+    if (typeof value === "string") {
+        const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+        const dateTime = /^(\d{4})-(\d{2})-(\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.exec(value);
+        const components = dateOnly ?? dateTime;
+        if (!components) return null;
+        const year = Number(components[1]);
+        const month = Number(components[2]);
+        const day = Number(components[3]);
+        const calendarCheck = new Date(Date.UTC(year, month - 1, day));
+        if (
+            calendarCheck.getUTCFullYear() !== year
+            || calendarCheck.getUTCMonth() !== month - 1
+            || calendarCheck.getUTCDate() !== day
+        ) {
+            return null;
+        }
+        if (dateOnly) return new Date(year, month - 1, day);
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    if (value && typeof value === "object" && "toDate" in value) {
+        const toDate = (value as { toDate?: unknown }).toDate;
+        if (typeof toDate === "function") {
+            const parsed = toDate.call(value);
+            return parsed instanceof Date && !Number.isNaN(parsed.getTime()) ? parsed : null;
+        }
+    }
+    return null;
+}
+
+function notificationIdentity(userData: FirebaseFirestore.DocumentData): {
+    name: string;
+    age: number;
+    photoUrl: string;
+} {
+    const canonicalName = typeof userData.name === "string" && userData.name.trim() !== ""
+        ? userData.name.trim()
+        : "Someone";
+    const numericAge = userData.age;
+    let age = typeof numericAge === "number" && Number.isFinite(numericAge) && numericAge >= 0
+        ? Math.floor(numericAge)
+        : 0;
+    if (age === 0) {
+        const dob = birthDateValue(userData.birthDate);
+        if (dob) {
+            const today = new Date();
+            age = today.getFullYear() - dob.getFullYear();
+            const monthDelta = today.getMonth() - dob.getMonth();
+            if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < dob.getDate())) age--;
+            if (age < 0) age = 0;
+        }
+    }
+    const photoUrl = Array.isArray(userData.photoUrls)
+        && typeof userData.photoUrls[0] === "string"
+        ? userData.photoUrls[0]
+        : "";
+    return { name: canonicalName, age, photoUrl };
+}
+
 // ── F11: Nicotine Compatibility Helpers ─────────────────────
 
 function userSmokes(nicotineUse: string[]): boolean {
@@ -813,16 +873,6 @@ export const scanProximityPairs = onSchedule(
                         }
 
 
-                        const buildAge = (userData: FirebaseFirestore.DocumentData): number => {
-                            if (!userData.dateOfBirth) return 0;
-                            const dob = (userData.dateOfBirth as Timestamp).toDate();
-                            const today = new Date();
-                            let age = today.getFullYear() - dob.getFullYear();
-                            const m = today.getMonth() - dob.getMonth();
-                            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-                            return age;
-                        };
-
                         // Result semantics (plan 20260712-fix-crossing-paths-visibility):
                         // `sent: true` means messaging.send() succeeded AND the recipient
                         // received a user-visible notification. Silent-mode wakes and
@@ -854,9 +904,7 @@ export const scanProximityPairs = onSchedule(
                                 || !!recipientData?.activeGymId
                                 || !!recipientData?.activeEventId;
 
-                            const name = (senderData.displayName as string | undefined) || "Someone";
-                            const photoUrl = (senderData.photoUrls as string[] | undefined)?.[0] ?? "";
-                            const age = buildAge(senderData);
+                            const { name, age, photoUrl } = notificationIdentity(senderData);
 
                             const dataPayload = {
                                 type: "CROSSING_PATHS",

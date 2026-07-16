@@ -2,13 +2,42 @@
  * Tremble — Match Functions Unit Tests
  */
 
-import { describe, it, expect, jest } from "@jest/globals";
+import { describe, it, expect, jest, beforeEach, afterEach } from "@jest/globals";
 
 const mockDb = {
     collection: jest.fn(),
     batch: jest.fn(),
     getAll: jest.fn<(...refs: unknown[]) => Promise<unknown[]>>(),
     runTransaction: jest.fn(),
+};
+const mockMessagingSend = jest.fn<(message: unknown) => Promise<string>>();
+const mockSendMatchNotificationEmail = jest.fn<() => Promise<void>>();
+const mockTransactionSet = jest.fn();
+const mockOnDocumentCreated = jest.fn((_: unknown, handler: unknown) => handler);
+const mockRedisValues = new Map<string, string>();
+const mockRedis = {
+    set: jest.fn(async (key: string, value: string, options?: { nx?: boolean }) => {
+        if (options?.nx && mockRedisValues.has(key)) return null;
+        mockRedisValues.set(key, value);
+        return "OK";
+    }),
+    get: jest.fn(async (key: string) => mockRedisValues.get(key) ?? null),
+    incr: jest.fn(async (key: string) => {
+        const next = Number(mockRedisValues.get(key) ?? "0") + 1;
+        mockRedisValues.set(key, next.toString());
+        return next;
+    }),
+    expire: jest.fn(async () => 1),
+    eval: jest.fn(async (_script: string, keys: string[], args: unknown[]) => {
+        const key = keys[0];
+        if (mockRedisValues.get(key) !== String(args[0])) return 0;
+        if (args.length >= 2) {
+            mockRedisValues.set(key, String(args[1]));
+            return 1;
+        }
+        mockRedisValues.delete(key);
+        return 1;
+    }),
 };
 
 jest.mock("firebase-admin/firestore", () => ({
@@ -21,12 +50,12 @@ jest.mock("firebase-admin/firestore", () => ({
 
 jest.mock("firebase-admin/messaging", () => ({
     getMessaging: jest.fn(() => ({
-        send: jest.fn(),
+        send: mockMessagingSend,
     })),
 }));
 
 jest.mock("firebase-functions/v2/firestore", () => ({
-    onDocumentCreated: jest.fn((_, handler) => handler),
+    onDocumentCreated: mockOnDocumentCreated,
 }));
 
 jest.mock("firebase-functions/v2/https", () => ({
@@ -55,12 +84,12 @@ jest.mock("../../src/middleware/validate", () => ({
 }));
 
 jest.mock("../../src/modules/email/email.functions", () => ({
-    sendMatchNotificationEmail: jest.fn(),
+    sendMatchNotificationEmail: mockSendMatchNotificationEmail,
 }));
 
 jest.mock("../../src/core/redis", () => ({
-    getRedis: jest.fn(),
-    waveDedupKey: jest.fn(),
+    getRedis: jest.fn(() => mockRedis),
+    waveDedupKey: jest.fn((fromUid: string, toUid: string) => `wave:${fromUid}:${toUid}`),
     WAVE_DEDUP_SECS: 300,
 }));
 
@@ -68,7 +97,480 @@ jest.mock("../../src/config/env", () => ({
     ENFORCE_APP_CHECK: false,
 }));
 
+type WaveProfile = Record<string, unknown>;
+
+const defaultSender: WaveProfile = {
+    name: "User Alpha",
+    displayName: "Legacy Alpha",
+    age: 31,
+    birthDate: "1990-01-01T00:00:00.000Z",
+    photoUrls: ["https://media.example.test/user-alpha.jpg"],
+    fcmToken: "fcm-alpha",
+};
+
+const defaultReceiver: WaveProfile = {
+    name: "User Beta",
+    displayName: "Legacy Beta",
+    age: 29,
+    birthDate: { toDate: () => new Date("1997-05-01T00:00:00.000Z") },
+    photoUrls: ["https://media.example.test/user-beta.jpg"],
+    fcmToken: "fcm-beta",
+};
+
+function setupWaveTriggerDb(options: {
+    sender?: WaveProfile;
+    receiver?: WaveProfile;
+    reciprocal?: () => boolean;
+    profileGate?: Promise<void>;
+    existingMatchOwnerWaveId?: string;
+} = {}): void {
+    const sender = options.sender ?? defaultSender;
+    const receiver = options.receiver ?? defaultReceiver;
+    const reciprocalRef = { kind: "reciprocal", path: "waves/reciprocal-wave" };
+    const matchRef = { kind: "match", path: "matches/senderUid_receiverUid" };
+    const senderRef = { kind: "user", uid: "senderUid", path: "users/senderUid" };
+    const receiverRef = { kind: "user", uid: "receiverUid", path: "users/receiverUid" };
+    let matchOwnerWaveId = options.existingMatchOwnerWaveId;
+    mockTransactionSet.mockImplementation((_ref: unknown, rawData: unknown) => {
+        const data = rawData as Record<string, unknown>;
+        if (typeof data.notificationOwnerWaveId === "string") {
+            matchOwnerWaveId = data.notificationOwnerWaveId;
+        }
+    });
+
+    mockDb.collection.mockImplementation((collectionName: unknown) => {
+        if (collectionName === "users") {
+            return {
+                doc: jest.fn((uid: string) => {
+                    const ref = uid === "senderUid" ? senderRef : receiverRef;
+                    const data = uid === "senderUid" ? sender : receiver;
+                    return {
+                        ...ref,
+                        get: jest.fn(async () => {
+                            await options.profileGate;
+                            return { exists: true, data: () => data };
+                        }),
+                    };
+                }),
+            };
+        }
+        if (collectionName === "waves") {
+            const query = {
+                where: jest.fn(),
+                limit: jest.fn(),
+                get: jest.fn(async () => options.reciprocal?.() === true
+                    ? { empty: false, docs: [{ ref: reciprocalRef }] }
+                    : { empty: true, docs: [] }),
+            };
+            query.where.mockReturnValue(query);
+            query.limit.mockReturnValue(query);
+            return query;
+        }
+        if (collectionName === "matches") {
+            return { doc: jest.fn(() => matchRef) };
+        }
+        throw new Error(`Unexpected collection: ${String(collectionName)}`);
+    });
+
+    mockDb.runTransaction.mockImplementation(async (callback: unknown) => {
+        const transaction = {
+            get: jest.fn(async (ref: { kind?: string; uid?: string }) => {
+                if (ref.kind === "match") {
+                    return matchOwnerWaveId
+                        ? {
+                            exists: true,
+                            data: () => ({
+                                notificationOwnerWaveId: matchOwnerWaveId,
+                            }),
+                        }
+                        : { exists: false, data: () => undefined };
+                }
+                if (ref.uid === "senderUid") return { exists: true, data: () => sender };
+                return { exists: true, data: () => receiver };
+            }),
+            set: mockTransactionSet,
+            update: jest.fn(),
+            delete: jest.fn(),
+        };
+        return (callback as (transaction: unknown) => Promise<unknown>)(transaction);
+    });
+}
+
+async function invokeWaveTrigger(waveId = "wave-event-1"): Promise<void> {
+    const { onWaveCreated } = await import("../../src/modules/matches/matches.functions");
+    const trigger = onWaveCreated as unknown as (event: unknown) => Promise<void>;
+    await trigger({
+        id: `event-${waveId}`,
+        params: { waveId },
+        data: {
+            ref: { path: `waves/${waveId}` },
+            data: () => ({ fromUid: "senderUid", toUid: "receiverUid" }),
+        },
+    });
+}
+
+function structuredLogs(logSpy: jest.SpiedFunction<typeof console.log>): Array<Record<string, unknown>> {
+    return logSpy.mock.calls
+        .map(([message]) => {
+            if (typeof message !== "string" || !message.startsWith("{")) return null;
+            return JSON.parse(message) as Record<string, unknown>;
+        })
+        .filter((entry): entry is Record<string, unknown> => entry !== null);
+}
+
 describe("Matches Module", () => {
+    describe("onWaveCreated delivery", () => {
+        let logSpy: jest.SpiedFunction<typeof console.log>;
+
+        beforeEach(() => {
+            jest.resetModules();
+            jest.useFakeTimers();
+            jest.setSystemTime(new Date("2026-07-15T12:00:00.000Z"));
+            jest.clearAllMocks();
+            mockRedisValues.clear();
+            mockMessagingSend.mockReset();
+            mockSendMatchNotificationEmail.mockReset();
+            mockTransactionSet.mockReset();
+            logSpy = jest.spyOn(console, "log").mockImplementation(() => undefined);
+        });
+
+        afterEach(() => {
+            logSpy.mockRestore();
+            jest.useRealTimers();
+        });
+
+        it("configures Firestore retries and sends a visible canonical INCOMING_WAVE payload", async () => {
+            setupWaveTriggerDb();
+            mockMessagingSend.mockResolvedValue("message-id");
+
+            await invokeWaveTrigger();
+
+            expect(mockOnDocumentCreated).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    document: "waves/{waveId}",
+                    region: "europe-west1",
+                    retry: true,
+                }),
+                expect.any(Function),
+            );
+            expect(mockMessagingSend).toHaveBeenCalledWith({
+                token: "fcm-beta",
+                notification: {
+                    title: "User Alpha waved",
+                    body: "Wave back?",
+                    imageUrl: "https://media.example.test/user-alpha.jpg",
+                },
+                data: {
+                    type: "INCOMING_WAVE",
+                    waveId: "wave-event-1",
+                    senderId: "senderUid",
+                    senderName: "User Alpha",
+                    senderAge: "31",
+                    senderPhotoUrl: "https://media.example.test/user-alpha.jpg",
+                },
+                apns: {
+                    payload: {
+                        aps: {
+                            contentAvailable: true,
+                            category: "WAVE_CATEGORY",
+                            sound: "default",
+                            "mutable-content": 1,
+                        },
+                    },
+                },
+                android: {
+                    priority: "high",
+                    notification: {
+                        channelId: "tremble_wave",
+                        sound: "default",
+                    },
+                },
+            });
+            expect(JSON.stringify(mockMessagingSend.mock.calls)).not.toContain("click_action");
+        });
+
+        it("uses Timestamp-like and ISO birthDate fallbacks only when numeric age is absent", async () => {
+            setupWaveTriggerDb({
+                sender: {
+                    ...defaultSender,
+                    age: undefined,
+                    birthDate: { toDate: () => new Date("1996-06-01T00:00:00.000Z") },
+                },
+            });
+            mockMessagingSend.mockResolvedValue("message-id");
+            await invokeWaveTrigger("timestamp-wave");
+            expect((mockMessagingSend.mock.calls[0][0] as {
+                data: Record<string, string>;
+            }).data.senderAge).toBe("30");
+
+            jest.resetModules();
+            mockMessagingSend.mockClear();
+            mockRedisValues.clear();
+            setupWaveTriggerDb({
+                sender: {
+                    ...defaultSender,
+                    age: undefined,
+                    birthDate: "1998-08-01T00:00:00.000Z",
+                },
+            });
+            await invokeWaveTrigger("iso-wave");
+            expect((mockMessagingSend.mock.calls[0][0] as {
+                data: Record<string, string>;
+            }).data.senderAge).toBe("27");
+        });
+
+        it("does not derive sender age from locale or free-form birthDate strings", async () => {
+            setupWaveTriggerDb({
+                sender: {
+                    ...defaultSender,
+                    age: undefined,
+                    birthDate: "June 1, 1996",
+                },
+            });
+            mockMessagingSend.mockResolvedValue("message-id");
+
+            await invokeWaveTrigger("free-form-birth-date-wave");
+
+            expect((mockMessagingSend.mock.calls[0][0] as {
+                data: Record<string, string>;
+            }).data.senderAge).toBe("0");
+        });
+
+        it("releases only its processing claim after a failed incoming send and retries next invocation", async () => {
+            let reciprocal = false;
+            setupWaveTriggerDb({ reciprocal: () => reciprocal });
+            const transientError = Object.assign(new Error("transient"), {
+                code: "messaging/internal-error",
+            });
+            mockMessagingSend
+                .mockRejectedValueOnce(transientError)
+                .mockResolvedValueOnce("message-id");
+
+            await expect(invokeWaveTrigger("retry-wave")).rejects.toMatchObject({
+                code: "messaging/internal-error",
+            });
+            expect(mockRedisValues.has("wave-delivery:retry-wave:processing")).toBe(false);
+
+            // The delivery branch is fixed per event even if reciprocal state changes.
+            reciprocal = true;
+            await expect(invokeWaveTrigger("retry-wave")).resolves.toBeUndefined();
+
+            expect(mockMessagingSend).toHaveBeenCalledTimes(2);
+            expect(mockMessagingSend).toHaveBeenLastCalledWith(
+                expect.objectContaining({
+                    data: expect.objectContaining({ type: "INCOMING_WAVE" }),
+                }),
+            );
+            expect(mockRedisValues.get(
+                "wave-delivery:retry-wave:recipient:receiverUid:delivered"
+            )).toBe("1");
+        });
+
+        it("retains the delivered marker after accepted send and skips duplicate invocation", async () => {
+            setupWaveTriggerDb();
+            mockMessagingSend.mockResolvedValue("message-id");
+
+            await invokeWaveTrigger("delivered-wave");
+            await invokeWaveTrigger("delivered-wave");
+
+            expect(mockMessagingSend).toHaveBeenCalledTimes(1);
+            expect(mockRedisValues.get(
+                "wave-delivery:delivered-wave:recipient:receiverUid:delivered"
+            )).toBe("1");
+            expect(structuredLogs(logSpy)).toEqual(expect.arrayContaining([
+                expect.objectContaining({ event: "dedup_skip", recipientUid: "receiver..." }),
+            ]));
+        });
+
+        it("bounds transient incoming delivery to three attempts per event", async () => {
+            setupWaveTriggerDb();
+            const transientError = Object.assign(new Error("transient"), {
+                code: "messaging/internal-error",
+            });
+            mockMessagingSend.mockRejectedValue(transientError);
+
+            await expect(invokeWaveTrigger("bounded-wave")).rejects.toBe(transientError);
+            await expect(invokeWaveTrigger("bounded-wave")).rejects.toBe(transientError);
+            await expect(invokeWaveTrigger("bounded-wave")).resolves.toBeUndefined();
+            await expect(invokeWaveTrigger("bounded-wave")).resolves.toBeUndefined();
+
+            expect(mockMessagingSend).toHaveBeenCalledTimes(3);
+            expect(structuredLogs(logSpy)).toEqual(expect.arrayContaining([
+                expect.objectContaining({
+                    event: "delivery_error",
+                    errorCode: "messaging/internal-error",
+                    retryDisposition: "exhausted",
+                }),
+            ]));
+        });
+
+        it("does not retry permanent invalid-token delivery failures", async () => {
+            setupWaveTriggerDb();
+            const permanentError = Object.assign(new Error("invalid token"), {
+                code: "messaging/registration-token-not-registered",
+            });
+            mockMessagingSend.mockRejectedValue(permanentError);
+
+            await expect(invokeWaveTrigger("permanent-wave")).resolves.toBeUndefined();
+            await expect(invokeWaveTrigger("permanent-wave")).resolves.toBeUndefined();
+
+            expect(mockMessagingSend).toHaveBeenCalledTimes(1);
+            expect(structuredLogs(logSpy)).toEqual(expect.arrayContaining([
+                expect.objectContaining({
+                    event: "delivery_error",
+                    errorCode: "messaging/registration-token-not-registered",
+                    retryDisposition: "permanent",
+                }),
+            ]));
+        });
+
+        it("does not retry permanent third-party authentication failures", async () => {
+            setupWaveTriggerDb();
+            const permanentError = Object.assign(new Error("APNs auth rejected"), {
+                code: "messaging/third-party-auth-error",
+            });
+            mockMessagingSend.mockRejectedValue(permanentError);
+
+            await expect(invokeWaveTrigger("third-party-auth-wave")).resolves.toBeUndefined();
+            await expect(invokeWaveTrigger("third-party-auth-wave")).resolves.toBeUndefined();
+
+            expect(mockMessagingSend).toHaveBeenCalledTimes(1);
+            expect(structuredLogs(logSpy)).toEqual(expect.arrayContaining([
+                expect.objectContaining({
+                    event: "delivery_error",
+                    errorCode: "messaging/third-party-auth-error",
+                    retryDisposition: "permanent",
+                }),
+            ]));
+        });
+
+        it("atomically skips a concurrent same-direction event while the first owns processing", async () => {
+            let releaseProfiles!: () => void;
+            const profileGate = new Promise<void>((resolve) => {
+                releaseProfiles = resolve;
+            });
+            setupWaveTriggerDb({ profileGate });
+            mockMessagingSend.mockResolvedValue("message-id");
+
+            const firstInvocation = invokeWaveTrigger("same-direction-owner");
+            for (let turn = 0; turn < 20; turn++) {
+                if (mockRedisValues.has("wave:senderUid:receiverUid")) break;
+                await Promise.resolve();
+            }
+            const stateBeforeProfileRead = mockRedisValues.get("wave:senderUid:receiverUid");
+            const contenderInvocation = invokeWaveTrigger("same-direction-contender");
+            releaseProfiles();
+            await expect(firstInvocation).resolves.toBeUndefined();
+            await expect(contenderInvocation).resolves.toBeUndefined();
+
+            expect(stateBeforeProfileRead).toMatch(/^processing:same-direction-owner:/);
+            expect(mockMessagingSend).toHaveBeenCalledTimes(1);
+            expect(mockRedisValues.get("wave:senderUid:receiverUid")).toBe(
+                "delivered:same-direction-owner"
+            );
+        });
+
+        it("marks a reciprocal non-owner trigger terminal without notification or email", async () => {
+            setupWaveTriggerDb({
+                reciprocal: () => true,
+                existingMatchOwnerWaveId: "owner-wave",
+                sender: { ...defaultSender, email: "alpha@example.test" },
+                receiver: { ...defaultReceiver, email: "beta@example.test" },
+            });
+            mockMessagingSend.mockResolvedValue("message-id");
+            mockSendMatchNotificationEmail.mockResolvedValue(undefined);
+
+            await expect(invokeWaveTrigger("non-owner-wave")).resolves.toBeUndefined();
+
+            expect(mockMessagingSend).not.toHaveBeenCalled();
+            expect(mockSendMatchNotificationEmail).not.toHaveBeenCalled();
+            expect(mockRedisValues.get("wave:senderUid:receiverUid")).toBe(
+                "terminal:non-owner-wave"
+            );
+        });
+
+        it("keeps mutual notification ownership and retries only the failed recipient", async () => {
+            setupWaveTriggerDb({ reciprocal: () => true });
+            const transientError = Object.assign(new Error("transient"), {
+                code: "messaging/server-unavailable",
+            });
+            mockMessagingSend
+                .mockResolvedValueOnce("receiver-message-id")
+                .mockRejectedValueOnce(transientError)
+                .mockResolvedValueOnce("sender-message-id");
+
+            await expect(invokeWaveTrigger("mutual-owner-retry")).rejects.toBe(transientError);
+            await expect(invokeWaveTrigger("mutual-owner-retry")).resolves.toBeUndefined();
+
+            expect(mockTransactionSet).toHaveBeenCalledWith(
+                expect.objectContaining({ kind: "match" }),
+                expect.objectContaining({
+                    notificationOwnerWaveId: "mutual-owner-retry",
+                }),
+            );
+            const sentTokens = mockMessagingSend.mock.calls.map(([message]) =>
+                (message as { token: string }).token
+            );
+            expect(sentTokens.filter((token) => token === "fcm-beta")).toHaveLength(1);
+            expect(sentTokens.filter((token) => token === "fcm-alpha")).toHaveLength(2);
+            expect(mockRedisValues.get("wave:senderUid:receiverUid")).toBe(
+                "delivered:mutual-owner-retry"
+            );
+        });
+
+        it("keeps silent Run/Gym/Event incoming delivery data-only with waveId", async () => {
+            setupWaveTriggerDb({
+                receiver: { ...defaultReceiver, isRunModeActive: true },
+            });
+            mockMessagingSend.mockResolvedValue("message-id");
+
+            await invokeWaveTrigger("silent-wave");
+
+            const payload = mockMessagingSend.mock.calls[0][0] as {
+                notification?: unknown;
+                data: Record<string, string>;
+            };
+            expect(payload.notification).toBeUndefined();
+            expect(payload.data).toEqual(expect.objectContaining({
+                type: "INCOMING_WAVE",
+                waveId: "silent-wave",
+            }));
+        });
+
+        it("logs mutual partial failure and does not report aggregate delivery success", async () => {
+            setupWaveTriggerDb({ reciprocal: () => true });
+            const transientError = Object.assign(new Error("transient"), {
+                code: "messaging/server-unavailable",
+            });
+            mockMessagingSend
+                .mockResolvedValueOnce("receiver-message-id")
+                .mockRejectedValueOnce(transientError);
+
+            await expect(invokeWaveTrigger("mutual-wave")).rejects.toBe(transientError);
+
+            const logs = structuredLogs(logSpy);
+            expect(logs).toEqual(expect.arrayContaining([
+                expect.objectContaining({
+                    event: "delivery_error",
+                    errorCode: "messaging/server-unavailable",
+                    retryDisposition: "retry",
+                }),
+            ]));
+            expect(logs).not.toEqual(expect.arrayContaining([
+                expect.objectContaining({
+                    event: "delivery_success",
+                    result: "mutual_wave",
+                }),
+            ]));
+            expect(mockRedisValues.get(
+                "wave-delivery:mutual-wave:recipient:receiverUid:delivered"
+            )).toBe("1");
+            expect(mockRedisValues.has(
+                "wave-delivery:mutual-wave:recipient:senderUid:delivered"
+            )).toBe(false);
+        });
+    });
+
     describe("getMatches", () => {
         it("uses the lower read endpoint rate limit", async () => {
             jest.clearAllMocks();
