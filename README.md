@@ -25,17 +25,17 @@ Tremble is built using a modern, scalable stack designed for global performance:
 
 ## 🚦 Development
 
-This repository is governed by the rules in `AGENTS.md`. Read `tasks/context.md`, `tasks/blockers.md`, and `tasks/todo.md` before code changes.
+This repository is governed by the rules in `AGENTS.md`. Read `tasks/context.md`, `tasks/blockers.md`, and `tasks/todo.md` before code changes. The parallel GSD control plane lives in `.planning/` (`PROJECT.md`, `ROADMAP.md`, `STATE.md`).
 
-Currently, the project is in the **Launch Polish & Compliance Phase** (July 2026). All new work must align with unblocking App Store/Play Store submissions and resolving legal/GDPR risks.
+Currently the project is in the **v1.3 Launch** milestone (July 2026). The signed production build `1.0.0+22` is preserved and App Store-validated; remaining work is external release gates — APNs credential + physical-iPhone verification, DPIA reconciliation, Weekend Getaway timezone/ToS alignment, App Store Connect metadata + IAP configuration, and Play Console background-location + foreground-services declarations. See `tasks/blockers.md` for the authoritative list.
 
 Run the app with the checked-in Dart define file:
 
 ```bash
-flutter run --dart-define-from-file=.env.json
+flutter run --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev
 ```
 
-Local commits should pass `.git/hooks/pre-commit`, which runs Flutter format, analyze, tests with `FLAVOR=dev`, and backend lint/build/tests.
+Local commits should pass `.git/hooks/pre-commit`, which runs Flutter format, analyze, 293 Flutter tests with `FLAVOR=dev`, and backend lint/build plus the 149 Cloud Functions tests.
 
 ## Local Setup — Required Files
 
