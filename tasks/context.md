@@ -15,7 +15,7 @@
     - Merged the canonical identity, reliable notification delivery, retry/deduplication, and explicit iOS notification-action repair as PR #48 (`eef99c0`).
     - Merged the permanent 15-case Firestore emulator regression suite for production FCM-token recovery as PR #49 (`1cf5446`).
     - Verified 293 Flutter tests, Flutter analyzer, 149 Functions tests, backend lint/build, security gates, and flavored dev APK builds through local hooks and protected CI.
-    - Preserved production IPA `1.0.0+22` with SHA-256 `e8ba81e7c13639623cbf7bbda8b0b0fa75ba0ea514f878ebfe838f2d3e75c5b1` outside disposable worktrees.
+    - Preserved production IPA `1.0.0+22` outside disposable worktrees and verified its SHA-256 locally (`e8ba81e7c136…`).
     - Reconciled stale Apple membership, RevenueCat, App Check, Privacy Policy, blocker, roadmap, and checklist records with verified repository/live evidence.
     - Reclassified local transcript exposure accurately: rotate genuine server credentials as prudent hygiene; do not treat public SDK identifiers as secrets or block submission without evidence of external exposure.
     - Removed a stale focused Jest runner from the merged iOS worktree after it had consumed a CPU core for nearly ten hours; a clean Flutter build cache restored deterministic hook completion.
@@ -64,7 +64,7 @@
 - Open Problems:
     - Scheduled `scanProximityPairs` still does not forward `sexualOrientationConsent` into `calculateCompatibilityScore`; complete this as a separate GDPR/scanner lane after the controlled device test.
     - Scanner exit observability and the unrelated `updateProfile` HTTP 400 reproduction remain open.
-- System Status: Production Firestore release now points to token-only recovery ruleset `projects/am---dating-app/rulesets/dabebbe6-db3e-45a8-9e44-36e6cafc1702` with verified SHA-256 `7fe2102123500f2522d2eceeeb3af3557528b4ec3520f351a3faac89d29f69d0`.
+- System Status: Production Firestore release now points to token-only recovery ruleset `projects/am---dating-app/rulesets/dabebbe6-db3e-45a8-9e44-36e6cafc1702` with locally verified SHA-256 prefix `7fe210212350…`.
 
 ## Session Handoff
 - Completed:
