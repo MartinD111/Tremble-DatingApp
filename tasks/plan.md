@@ -1,4 +1,81 @@
-# Active Release Chore
+# Implementation Plan
+Plan ID: 20260716-ble-scan-write-storm
+Risk Level: HIGH — touches the BLE service (AGENTS/CLAUDE escalation list)
+Founder Approval Required: YES — granted 2026-07-16 ("just fix this shit",
+"open the PR and I'll merge it")
+Branch: fix/ble-scan-write-storm
+
+## 0. WHAT THIS IS NOT
+
+This does **not** fix the iOS stack overflow in 1.0.0+23
+(Sentry TREMBLE-FUNCTIONS-Q). That root cause is still unidentified. The BLE
+storm is the leading hypothesis for the accompanying main-thread hang, not a
+proven cause of the recursion. Build 24 may still freeze.
+
+## 1. OBJECTIVE
+
+Stop the BLE scan loop from issuing hundreds of unbounded, un-awaited Firestore
+writes per scan window, and make the Profile build configuration buildable.
+
+## 2. SCOPE
+
+Changes:
+- `lib/src/core/ble_service.dart` — add `ScanCycleDedupe`; gate the
+  `proximity_events` write to once per device per scan cycle.
+- `test/core/ble_scan_dedupe_test.dart` — new, 5 cases.
+- `ios/Profile.xcconfig` — repoint the include at `Flutter/Release.xcconfig`.
+
+Does NOT change: notification delivery, the wave pill, the router, Cloud
+Functions, Firestore rules, the `proximity_events` schema, or `rssi` semantics
+(unread server-side).
+
+## 3. FINDING (evidence, not assumption)
+
+`FlutterBluePlus.scanResults` re-emits the *cumulative* result list on every
+advertisement packet. `ble_service.dart:154` iterated that list per emission and
+called `_onDeviceDetected` per result, un-awaited — each doing a Firestore
+`.get()` plus an `.add()`.
+
+Consequences, all verified by reading the consumers:
+1. Unbounded concurrent writes saturate the Firestore platform channel. Peak
+   coincides with two phones scanning each other — exactly when a proximity pair
+   fires. Matches the Sentry AppHang stack (Thread 0 in `_dispatch_sync_f_slow`)
+   and the 70KB/5s Crashlytics firelog uploads in the breadcrumbs.
+2. Every write invokes `onBleProximity` (`proximity.functions.ts:1043`), which is
+   deprecated and returns immediately — pure cost, no cascade.
+3. `notifications.functions.ts:50` derives the monthly recap's near-miss count
+   from a `count()` over `proximity_events`. The count shown to users has been
+   inflated by orders of magnitude.
+
+`scanProximityPairs` reads the `proximity` collection, not `proximity_events`,
+so pairing behaviour is unaffected by this change.
+
+## 4. RISKS & TRADEOFFS
+
+- Fewer `proximity_events` docs. Intended: the recap count becomes truthful
+  (one encounter per device per scan). No other consumer reads the collection.
+- `rssi` is not read server-side, so collapsing duplicate emissions loses no
+  information.
+- Dedupe state is per-cycle and reset on scan start, so a device that leaves and
+  returns is re-reported on the next cycle.
+- Profile config change affects only Profile builds; Debug-dev and Release-prod
+  are untouched, so no release path changes.
+- Residual: the stack overflow may persist. Device verification required before
+  claiming otherwise.
+
+## 5. VERIFICATION
+
+- Unit tests: 5 new `ScanCycleDedupe` cases, incl. a 200-emission burst
+  asserting exactly one write. Full suite 327/327.
+- Integration tests: backend Jest suite green via pre-commit hook; no server
+  contract changed.
+- Security scan: pre-commit secret scan clean; no secrets, auth, or rules
+  touched.
+- Analyzer: `flutter analyze` clean.
+- Device: OUTSTANDING — two phones in proximity on build 24 to confirm the
+  Firestore write volume drops and to re-test the freeze.
+
+# Prior Release Chore
 Plan ID: 20260716-release-b23
 Risk Level: LOW (version bump only; the shipped code merged as PRs #52/#53/#54)
 Status: IN-REVIEW 2026-07-16 — TestFlight 1.0.0 (23) delivered (UUID
