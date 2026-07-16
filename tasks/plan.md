@@ -1,4 +1,53 @@
 # Active Implementation Plan
+Plan ID: 20260715-crossing-paths-ios-delivery
+Risk Level: HIGH
+Status: IMPLEMENTED — awaiting protected-branch PR review and merge
+Founder Approval Required: YES — approved in the 2026-07-15 audit handoff and reaffirmed on 2026-07-16
+Branch: fix/crossing-paths-ios-delivery
+
+## 1. OBJECTIVE
+
+Restore canonical sender identity and reliable iOS delivery for
+`CROSSING_PATHS` and `INCOMING_WAVE`, while allowing a reciprocal Wave
+only after an explicit notification action.
+
+## 2. SCOPE
+
+- Cloud Functions identity, notification payloads, bounded retry,
+  delivery-state deduplication, structured redacted logging, and focused tests.
+- Flutter notification lifecycle ownership and explicit action dispatch tests.
+- Native iOS bridging for the real `UNNotificationResponse.actionIdentifier`.
+- Production build number `1.0.0+22`.
+- No Firestore schema, Rules, profile migration, or unrelated Firebase change.
+
+## 3. STEPS
+
+1. Lock production-shaped canonical identity and delivery behavior in tests.
+2. Implement server delivery, retry, deduplication, and safe logging changes.
+3. Remove receipt-triggered Wave writes and preserve explicit iOS actions.
+4. Deploy only the two approved Functions and produce the signed build-22 IPA.
+5. Merge through protected `main`, then complete the APNs/device release gate.
+
+## 4. RISKS & TRADEOFFS
+
+- Retry and deduplication must land together to avoid duplicate delivery.
+- Native/Flutter cold-start action handling must remain idempotent.
+- APNs credentials and physical-device delivery remain an external release gate;
+  the code change alone cannot prove that stored Apple credentials are valid.
+
+## 5. VERIFICATION
+
+- unit tests: all Functions tests and Flutter tests pass.
+- integration tests: focused notification payload, retry, deduplication, and
+  explicit-action paths pass; production Functions deployed independently.
+- security scan: staged and committed diffs contain no credentials or PII.
+- Flutter analyzer clean; dev-flavor APK succeeds.
+- Signed production IPA exports with production APNs entitlement and passes
+  App Store validation.
+
+---
+
+# Prior Implementation Plan
 Plan ID: 20260714-legal-003-art9-consent-hardening
 Risk Level: HIGH (Art. 9 GDPR consent enforcement + core matching pipeline + backend write gate + on-launch UX)
 Status: RESOLVED 2026-07-14 — PR #41 merged into `main` @ cce1f1c; Cloud Functions deployed to prod (`am---dating-app`) same day. Downstream lanes unblocked: LEGAL-001 DPIA rewrite, LEGAL-004 Weekend Pass timezone, PLAN_04 KORAK 4.2/4.3, STORE-003/004 Play Console declarations.
