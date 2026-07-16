@@ -173,11 +173,18 @@ class _SplashLoadingScreen extends StatelessWidget {
 }
 
 // ── Notification Deep Link Handler ────────────────────────────────────────────
-// Routes MUTUAL_WAVE notifications to the MatchRevealScreen.
+// Routes MUTUAL_WAVE notifications to the MatchRevealScreen and INCOMING_WAVE /
+// CROSSING_PATHS notifications to the wave pill.
 // Fetches the Match document from Firestore using the matchId in the payload.
+//
+// [showWavePill] is injected rather than called directly because presenting the
+// pill needs `ref` (wave repository + paywall), which a top-level function has
+// no access to. The router provider supplies the same presenter it uses for the
+// foreground path, so both paths share one pill-show implementation.
 Future<void> handleNotificationNavigation(
   Map<String, dynamic> data, {
   Duration delay = Duration.zero,
+  void Function(WavePillData data)? showWavePill,
 }) async {
   final type = data['type'] as String?;
 
@@ -188,6 +195,33 @@ Future<void> handleNotificationNavigation(
     if (ctx != null && ctx.mounted) {
       ctx.push('/run-recap');
     }
+    return;
+  }
+
+  // 1. Wave / proximity tap — surface the pill over the current screen.
+  // Payload keys mirror the foreground parser in notification_service.dart so
+  // the tap path and the foreground path cannot drift apart.
+  final isPillEvent = type == TrembleNotificationType.incomingWave ||
+      type == TrembleNotificationType.crossingPaths;
+  if (isPillEvent) {
+    if (showWavePill == null) return;
+
+    final senderUid =
+        (data['senderId'] ?? data['fromUid'] ?? '') as String? ?? '';
+    final senderName = (data['senderName'] ?? '') as String? ?? '';
+    if (senderUid.isEmpty || senderName.isEmpty) return;
+
+    if (delay > Duration.zero) await Future.delayed(delay);
+
+    showWavePill(
+      WavePillData(
+        name: senderName,
+        age: int.tryParse((data['senderAge'] ?? '') as String? ?? '') ?? 0,
+        imageUrl: (data['senderPhotoUrl'] ?? '') as String? ?? '',
+        targetUid: senderUid,
+        isIncomingWave: type == TrembleNotificationType.incomingWave,
+      ),
+    );
     return;
   }
 
@@ -487,9 +521,40 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 
   // ── Local Notification handling (including action buttons) ───────────────
+
+  // The one place a wave pill is shown. Both the foreground FCM listener and
+  // the notification-tap handler go through here, so the two paths can never
+  // diverge in guards, paywall behaviour, or wave wiring.
+  void presentWavePill(WavePillData data) {
+    // A tap can arrive while signed out or mid-onboarding — the router is about
+    // to redirect to /login, and a pill must never float over it.
+    if (ref.read(authStateProvider) == null) return;
+
+    final context = rootNavigatorKey.currentContext;
+    if (context == null || !context.mounted) return;
+
+    // maybeOf, not of: a tap can land before the Navigator's overlay exists,
+    // and Overlay.of would throw inside a notification callback.
+    final overlay = Overlay.maybeOf(context);
+    if (overlay == null) return;
+
+    WavePillService.show(
+      overlay: overlay,
+      data: data,
+      onWave: (uid) async {
+        final user = ref.read(authStateProvider);
+        if (user?.hasReachedWaveLimit == true) {
+          PremiumPaywallBottomSheet.show(context);
+          return;
+        }
+        await ref.read(waveRepositoryProvider).sendWave(uid);
+      },
+    );
+  }
+
   NotificationService.initialize(
     onNotificationTap: (data) {
-      handleNotificationNavigation(data);
+      handleNotificationNavigation(data, showWavePill: presentWavePill);
     },
     onExplicitWaveAction: (targetUid) {
       return ref.read(waveRepositoryProvider).sendWave(targetUid);
@@ -501,27 +566,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       required String targetUid,
       required bool isIncomingWave,
     }) {
-      final context = rootNavigatorKey.currentContext;
-      if (context == null || !context.mounted) return;
-
-      final overlay = Overlay.of(context);
-      WavePillService.show(
-        overlay: overlay,
-        data: WavePillData(
+      presentWavePill(
+        WavePillData(
           name: name,
           age: age,
           imageUrl: imageUrl,
           targetUid: targetUid,
           isIncomingWave: isIncomingWave,
         ),
-        onWave: (uid) async {
-          final user = ref.read(authStateProvider);
-          if (user?.hasReachedWaveLimit == true) {
-            PremiumPaywallBottomSheet.show(context);
-            return;
-          }
-          await ref.read(waveRepositoryProvider).sendWave(uid);
-        },
       );
     },
     // Foreground MUTUAL_WAVE: let the activeMatchesStream listener in
