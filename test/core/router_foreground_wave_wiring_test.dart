@@ -8,7 +8,9 @@ void main() {
 
     expect(routerSource, contains('onForegroundWave:'));
     expect(routerSource, contains('rootNavigatorKey.currentContext'));
-    expect(routerSource, contains('Overlay.of(context)'));
+    // Overlay.maybeOf since the shared presenter landed — see
+    // router_notification_pill_test.dart.
+    expect(routerSource, contains('Overlay.maybeOf(context)'));
     expect(routerSource, contains('WavePillService.show'));
     expect(routerSource, contains('WavePillData('));
     expect(routerSource, contains('waveRepositoryProvider'));

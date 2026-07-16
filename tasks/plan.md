@@ -1,9 +1,70 @@
 # Active Implementation Plan
-Plan ID: 20260716-docs-agents-readme-handoff-refresh
-Risk Level: LOW
+Plan ID: 20260716-notification-tap-wave-pill
+Risk Level: MEDIUM
 Status: IN-REVIEW — awaiting protected-branch PR merge
 Founder Approval Required: NO
-Branch: docs/agents-readme-handoff-refresh
+Branch: fix/notification-tap-wave-pill
+
+## 1. OBJECTIVE
+
+Tapping an `INCOMING_WAVE` or `CROSSING_PATHS` system notification opens the
+app and presents the WavePill over whatever screen the router lands on.
+
+## 2. SCOPE
+
+- `lib/src/core/router.dart` — extend `handleNotificationNavigation` with an
+  injected pill presenter; extract the existing `onForegroundWave` closure into
+  a single shared `presentWavePill`.
+- `test/core/router_notification_pill_test.dart` [NEW] — 11 behavioural dispatch
+  assertions plus 4 source-level wiring assertions.
+- `test/core/router_foreground_wave_wiring_test.dart` — repoint one pinned token
+  from `Overlay.of` to `Overlay.maybeOf`.
+- No change to `notification_service.dart`, `wave_pill_service.dart`, the FCM
+  payload contract, Cloud Functions, Firebase config, native config, or the
+  existing `MUTUAL_WAVE` / `RUN_INTERCEPT` paths.
+
+## 3. STEPS
+
+1. Register this Plan-ID entry in `tasks/plan.md`.
+2. RED: assert tap-dispatch parses the sender payload and presents the pill.
+3. GREEN: add the pill branch to `handleNotificationNavigation`.
+4. Refactor both paths onto one `presentWavePill` owning every guard.
+5. Verify analyzer, full Flutter suite, and dev APK; merge through protected
+   `main`.
+
+## 4. RISKS & TRADEOFFS
+
+- Presenting the pill needs `ref`, which the top-level handler lacks. Injecting
+  a presenter avoids a second pill path that would drift from the foreground
+  one; the trade-off is one extra parameter on a public function.
+- A tap can arrive signed out, mid-onboarding, or before the Navigator's
+  overlay exists. The presenter fails closed on auth, null context, and missing
+  overlay; `Overlay.maybeOf` replaces `Overlay.of`, which throws.
+- The foreground path newly inherits the auth guard. Intentional and strictly
+  safer — a pill should never render for a signed-out user.
+- Wiring assertions are source-level because the provider body cannot run
+  without Firebase; dispatch logic itself is covered behaviourally.
+
+## 5. VERIFICATION
+
+- unit tests: 15 new assertions, each observed RED before implementation; full
+  suite 308/308 (293 baseline + 15).
+- integration tests: n/a — no service boundary crossed; the change is client
+  routing only. Real delivery is exercised by the physical-device notification
+  test from the build-22 lane.
+- security scan: no credentials, keys, or PII in the diff; no new network,
+  auth, or persistence surface. Payload values are read-only and already
+  present on the device.
+- `flutter analyze` clean; `dart format` clean; dev-flavor APK builds.
+
+---
+
+# Prior Implementation Plan
+Plan ID: 20260716-docs-agents-readme-handoff-refresh
+Risk Level: LOW
+Status: RESOLVED 2026-07-16 — PR #51 merged into `main` @ 8674eb2
+Founder Approval Required: NO
+Branch: docs/agents-readme-handoff-refresh (merged)
 
 ## 1. OBJECTIVE
 
