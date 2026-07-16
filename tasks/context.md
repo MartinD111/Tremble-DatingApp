@@ -8,7 +8,7 @@
     - Production APNs credentials still require Firebase Console/Apple Developer inspection and a successful build-22 physical-iPhone foreground/background/killed plus explicit Wave Back test.
     - DPIA reconciliation, Weekend Getaway timezone/ToS alignment, `/sl/tos`, `/dsa-contact`, and App Store/Play Console configuration remain open release gates.
     - Runtime values printed into a local authenticated transcript are a security-hygiene follow-up, not evidence of public/source-control exposure and not an App Store submission blocker.
-- System Status: Source PRs #48 and #49 are merged with protected CI green. The signed, App Store-validated build-22 IPA is preserved under ignored `release-symbols/`; launch-state reconciliation is ready for protected review.
+- System Status: PRs #48, #49, and #50 are merged through protected `main` with CI green. The signed, App Store-validated build-22 IPA is preserved under ignored `release-symbols/`; the repository has one clean worktree and no retained topic branches.
 
 ## Session Handoff
 - Completed:
@@ -19,7 +19,8 @@
     - Reconciled stale Apple membership, RevenueCat, App Check, Privacy Policy, blocker, roadmap, and checklist records with verified repository/live evidence.
     - Reclassified local transcript exposure accurately: rotate genuine server credentials as prudent hygiene; do not treat public SDK identifiers as secrets or block submission without evidence of external exposure.
     - Removed a stale focused Jest runner from the merged iOS worktree after it had consumed a CPU core for nearly ten hours; a clean Flutter build cache restored deterministic hook completion.
-- In Progress: Protected merge of the documentation reconciliation, followed by removal of all merged worktrees and local/remote topic branches.
+- Completed the launch-state reconciliation as PR #50 and removed all merged worktrees plus local/remote topic branches.
+- In Progress: None.
 - Blocked: None for repository cleanup.
 - Next Action: Start the dedicated APNs credential/device-verification lane from clean `main`, then complete legal and store-console gates as separate scoped work.
 

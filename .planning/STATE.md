@@ -8,7 +8,7 @@ progress:
   total_phases: 11
   completed_phases: 10
   total_plans: 17
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Project State: Tremble
