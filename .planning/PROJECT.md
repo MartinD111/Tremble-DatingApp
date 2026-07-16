@@ -36,14 +36,14 @@ The proximity event — the moment two Tremble users are physically near each ot
 - ✓ Profile unlock after mutual wave (name, photo, bio) — Phase 7 (v1.1)
 - ✓ Match reveal screen with brand-aligned glassmorphic animation — Phase 7 (v1.1)
 - ✓ 30-minute match session constraint — Phase 7 (v1.1)
-- ✓ Push notifications: CROSSING_PATHS (anonymous), INCOMING_WAVE, MUTUAL_WAVE — Phase 7 (v1.1)
+- ✓ Push notifications: CROSSING_PATHS, INCOMING_WAVE, and MUTUAL_WAVE with canonical sender identity — Phase 7 (v1.1; delivery repair v1.3)
 - ✓ WAVE_BACK_ACTION — send wave-back from notification without opening app — Phase 7 (v1.1)
-- ✓ FCM (Android) + APNs (iOS) configured — Phase 7 (v1.1)
+- ✓ FCM notification code and platform registration configured; production APNs credential/device verification remains a Phase 10 gate — Phase 7 (v1.1)
 - ✓ Weekend Getaway plan defined — €2,99/vikend, Friday 19:00 to Sunday 19:00, Signal Yellow accent — Phase 8 (v1.2)
 - ✓ Premium screen: 5-card carousel for Signal Prime (€7,99/mo), Weekend Getaway (€2,99/vikend), Yearly (€59,99/yr), Lifetime (€149,99), and Free Tier — Phase 8 (v1.2)
 - ✓ Premium carousel uses 3D perspective PageView, haptic feedback, infinite scroll, and dots indicator — Phase 8 (v1.2)
 - ✓ `LiquidNavBar` modular `itemWrapper` support for tutorial spotlight targeting — Phase 10 (v1.2)
-- ✓ `WavePillService` OverlayEntry pill for foreground waves — FCM wiring still pending — Phase 7 follow-up (v1.2)
+- ✓ `WavePillService` OverlayEntry pill and foreground FCM wiring — Phase 7 follow-up (v1.2)
 - ✓ 6-step tutorial spotlight overlay with opt-in first-launch flow and SharedPreferences persistence — Phase 10 (v1.2)
 - ✓ Places API session tokens wired to reduce autocomplete cost — Infrastructure (v1.2)
 - ✓ Croatian translations complete: 608/608 strings — Localization (v1.2)
@@ -51,22 +51,24 @@ The proximity event — the moment two Tremble users are physically near each ot
 
 ### Active
 
-#### Paywall / Tremble Pro (Phase 8)
-- [ ] **WAVE-07**: Freemium limit: 5 outgoing waves/month on free tier
-- [ ] **PAY-01**: Free tier allows 5 outgoing waves/month
-- [ ] **PAY-02**: Paywall appears after first proximity event (value proven before ask)
-- [ ] **PAY-03**: Tremble Pro (~€9.99/month): unlimited waves + priority match visibility
-- [ ] **PAY-04**: RevenueCat integration for cross-platform subscription management (`purchases_flutter` not yet in `pubspec.yaml`; current upgrade flow is `_simulateUpgrade()` mock)
-- [ ] **PAY-05**: Subscription state synced to Firestore user record
-- [ ] **PAY-06**: Graceful downgrade when Pro subscription lapses
+#### Paywall / Tremble Pro (Phase 8 — code complete)
+- [x] **WAVE-07**: Freemium limit: 5 outgoing waves/month on free tier
+- [x] **PAY-01**: Free tier allows 5 outgoing waves/month
+- [x] **PAY-02**: Paywall appears after the first proximity event
+- [x] **PAY-03**: Premium tier gates and plan UI are implemented
+- [x] **PAY-04**: Real RevenueCat SDK purchase, restore, offering, paywall, and customer-info paths are wired
+- [x] **PAY-05**: Subscription state is synchronized to the application user state
+- [x] **PAY-06**: Lapsed entitlement gracefully returns to free-tier limits
 
-#### Security & Compliance (Phase 9)
-- [ ] **SEC-01**: Firebase App Check enforced in all Cloud Functions (currently configured but not enforced)
-- [ ] **SEC-02**: Firestore Security Rules audit — deny-by-default, user-specific read/write per document
-- [ ] **SEC-03**: GDPR deletion pipeline validated end-to-end (cascading delete: Firestore + R2 + Auth)
-- [ ] **SEC-04**: 72h deletion SLA documented and tested
-- [ ] **SEC-05**: PII encryption at rest verified (email, date of birth)
-- [ ] **SEC-06**: Proximity data confirmed never written to persistent storage (RAM-only verified)
+Store product/offer configuration and sandbox purchase verification remain Phase 10 release work, not missing application code.
+
+#### Security & Compliance (Phase 9 — complete)
+- [x] **SEC-01**: Firebase App Check enforced on callable Cloud Functions
+- [x] **SEC-02**: Firestore Security Rules hardened and production token-write recovery test-locked
+- [x] **SEC-03**: GDPR deletion pipeline validated end-to-end (Firestore + R2 + Auth)
+- [x] **SEC-04**: 72h deletion SLA documented and tested
+- [x] **SEC-05**: Provider encryption at rest verified for persisted PII
+- [x] **SEC-06**: Raw BLE/RSSI observations remain local; only coarse encounter/location derivatives are persisted as documented
 
 #### Launch (Phase 10)
 - [ ] **LAUNCH-01**: App Store Connect listing — metadata, keywords, screenshots, preview video
@@ -92,11 +94,11 @@ The proximity event — the moment two Tremble users are physically near each ot
 
 ## Context
 
-### Current State (May 2026)
+### Current State (July 2026)
 
-- **Shipped milestones:** v1.0 Foundation (2026-04-08) + v1.1 Core Product (2026-04-09)
-- **Current milestone:** v1.2 Monetization & Security in progress
-- **Codebase stats:** 157 Dart files in `lib/`, 13 Dart test files, 11 Cloud Functions source files matching `functions/src/**/*.functions.ts`
+- **Shipped milestones:** v1.0 Foundation, v1.1 Core Product, and v1.2 Monetization & Security
+- **Current milestone:** v1.3 Launch; signed production build `1.0.0+22` is preserved and App Store validated
+- **Codebase stats:** 175 Dart files in `lib/`, 51 Dart test files, and 149 Cloud Functions tests
 - **Stack:** Flutter 3 + Riverpod 2 + GoRouter | Firebase (Auth, Firestore, Functions, europe-west1) | Cloudflare R2 | Upstash Redis | Resend
 - **Environments:** `tremble-dev` (dev) | `am---dating-app` (prod) — strict separation enforced
 - **Bundle IDs:** `com.pulse` (dev) | `tremble.dating.app` (prod)
@@ -115,12 +117,12 @@ The proximity event — the moment two Tremble users are physically near each ot
 
 | ID | Issue | Impact |
 |----|-------|--------|
-| BLOCKER-005 | iOS dev provisioning for `com.pulse`; physical-device `flutter run` fails | iOS QA blocked |
-| BLOCKER-006 | Photo upload E2E not verified on `tremble-dev` | Onboarding launch risk |
-| BLOCKER-007 | `purchases_flutter` not in `pubspec.yaml`; RevenueCat is `_simulateUpgrade()` mock | Phase 8 billing blocked |
-| BLOCKER-008 | `active_run_crosses` Firestore rule missing; prod still returns `PERMISSION_DENIED` because rules were deployed to `tremble-dev` only | Production proximity rule gap |
-| BLOCKER-009 | `WavePillService` → `HomeScreen` wiring missing for FCM foreground `onForegroundWave` callback | Foreground wave UX incomplete |
-| BLOCKER-010 | Privacy Policy and Terms of Service are not confirmed live on `trembledating.com` | Store review risk |
+| STORE-005 | Firebase-stored APNs credential and build-22 physical-iPhone push/action test are not yet verified | iOS push readiness gate |
+| LEGAL-001 | DPIA must be reconciled with the shipped architecture | Legal submission gate |
+| LEGAL-004 | Weekend Getaway user-local timezone behavior and ToS wording remain inconsistent | Product/legal submission gate |
+| STORE-CONFIG | Apple metadata/privacy labels/IAP/reviewer assets and RevenueCat offerings require console verification | App Store submission gate |
+| WEB-LEGAL | `/sl/tos` and `/dsa-contact` are not live | Legal publication gap |
+| STORE-003/004 | Android background-location and foreground-service declarations remain pending | Play Store launch gate |
 
 ### Known Tech Debt
 
@@ -128,7 +130,7 @@ The proximity event — the moment two Tremble users are physically near each ot
 |----|------|----------|
 | D-29 | Map screen tile render test on physical device deferred (from 06-03) | Low |
 | D-30 | Phase 7 executed outside GSD framework — no PLAN files, SUMMARY reconstructed retroactively | Low |
-| D-31 | `.planning/` docs are one month behind actual codebase | Medium |
+| D-31 | Legacy phase directories do not mirror every historical Roadmap phase | Low |
 | D-32 | `MainApplication` extends deprecated `io.flutter.app.FlutterApplication`; migrate to `android.app.Application` | Medium |
 
 ## Constraints
@@ -153,8 +155,8 @@ The proximity event — the moment two Tremble users are physically near each ot
 | `TrembleTheme.telemetryTextStyle()` pattern | Canonical entry point for all JetBrains Mono telemetry text — prevents drift | ✓ Good — v1.1 |
 | `{name}` removed from wave_sent toast | Privacy: unidirectional mechanic — sender should not know recipient identity | ✓ Good — v1.1 |
 | PUSH-03 closed N/A | "No chat started" condition always true; requirement is vestigial post chat removal | ✓ Good — v1.1 |
-| Paywall after first proximity event | Value proven before monetization ask — higher conversion intent | — Pending v1.2 |
-| RevenueCat for subscriptions | Cross-platform subscription management; avoids StoreKit/Play Billing complexity | — Pending v1.2 |
+| Paywall after first proximity event | Value proven before monetization ask — higher conversion intent | ✓ Implemented v1.2 |
+| RevenueCat for subscriptions | Cross-platform subscription management; avoids StoreKit/Play Billing complexity | ✓ SDK wired; store configuration pending v1.3 |
 
 ## Evolution
 
@@ -174,4 +176,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-25 — v1.2 in progress. Premium UI mock exists; RevenueCat dependency and live billing are still blocked.*
+*Last updated: 2026-07-16 — v1.3 launch state reconciled with build 22 and remaining external gates.*

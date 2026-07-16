@@ -19,13 +19,13 @@
 
 ### BLOCKER-STORE-002 — iOS Info.plist Contacts Contradiction
 **Date:** 2026-07-06
-**Status:** RESOLVED 2026-07-13 — code side reconciled
+**Status:** RESOLVED 2026-07-16 — code and live policy reconciled
 **Impact:** `Info.plist` stated contacts are not accessed, but Privacy Policy §2.5 says they are. Apple 5.1.1 rejection risk.
 **Resolution (PR fix/info-plist-contacts-reconcile, KORAK 3.8-1):**
 - Master `NSContactsUsageDescription` rewritten to match localized `en.lproj/InfoPlist.strings` verbatim (describes Anonymity Mode / ADR-004).
 - Three duplicate permission keys removed from Info.plist (NSCameraUsageDescription, NSPhotoLibraryUsageDescription, NSPhotoLibraryAddUsageDescription). Founder decision 2026-07-13: kept the L46/L48 wording that covers Pulse Intercept (v1 feature); L50-51 replaced with the Apple-preferred explicit-consent NSPhotoLibraryAdd variant.
 - `PrivacyInfo.xcprivacy` now declares `NSPrivacyCollectedDataTypeContacts` (Linked=false per ADR-004 hash-only transmission; Tracking=false; Purpose=AppFunctionality).
-**Still-owed (founder, PLAN_04 KORAK 4.2):** align `trembledating.com/privacy` §2.5 web copy with Anonymity Mode + hashed transmission. Required before actual App Store submission.
+**Live-policy verification (2026-07-16):** `trembledating.com/privacy` §2.5 now describes the on-device SHA-256 Anonymity Mode flow and states that hashes are not stored. The previously owed web-copy correction is complete.
 (Task 6h3p8gWpxpq7rWXw)
 
 ### BLOCKER-STORE-003 — Android Background Location Declaration
@@ -46,6 +46,29 @@
 **Status:** OPEN
 **Impact:** FGS types (location, connectedDevice, dataSync) require Google Play declaration.
 **Action:** Submit FGS declaration to Google Play. (Task 6h3p8gc78572RF9P)
+
+### BLOCKER-STORE-005 — Production APNs Credential Verification
+**Date:** 2026-07-16
+**Status:** OPEN — code-side repair deployed; Firebase/Apple credential gate pending
+**Impact:** Production iOS FCM delivery previously returned the invalid-APNs-credential error class. Bundle ID `tremble.dating.app`, Firebase iOS App ID `1:343655004163:ios:5eea92b9656fc3b8fc3636`, Team ID `LB6LS532CV`, production entitlement, and build-22 signing metadata align, leaving the APNs credential stored under the Firebase Apple app as the strongest unresolved cause. App Store submission must not be declared push-ready until a controlled device send succeeds.
+**Progress:**
+- ✅ `scanProximityPairs` and `onWaveCreated` identity/delivery/retry fixes deployed to `am---dating-app` in `europe-west1` on 2026-07-16.
+- ✅ Build 22 signed production archive and App Store IPA exported successfully.
+- ✅ Background receipt no longer creates a reciprocal Wave; explicit iOS action bridge is implemented and test-locked.
+- ⏳ Firebase CLI cannot reveal the stored APNs Key ID/certificate state; no authenticated Firebase/Apple browser session is available in the current environment.
+- ⏳ Physical-iPhone foreground/background/killed and Wave Back verification is required.
+**Action:** Inspect Firebase Cloud Messaging Apple credentials and Apple Developer key status, upload a valid retained `.p8` if necessary, then run the approved controlled production device test with build 22 before App Store upload.
+
+---
+
+## Security Follow-ups (Not Submission Blockers)
+
+### FOLLOWUP-SEC-002 — Production Runtime Values Printed in a Local Tool Transcript
+**Date:** 2026-07-16
+**Status:** OPEN — security-hygiene follow-up; no public or source-control exposure found
+**Impact:** A globally enabled shell `DEBUG` variable caused Firebase CLI diagnostics to print runtime configuration into the local authenticated tool transcript. This was not a public chat, no value entered Git history, and committed-diff scans passed. A local transcript has a wider retention surface than the terminal, so true server-side credentials should still be rotated as prudent hygiene, but this is not evidence of public compromise and does not block App Store submission.
+**Scope:** Rotate only actual server secrets (for example R2, Resend, and Upstash credentials). Do not classify public client identifiers such as a RevenueCat SDK key or Sentry DSN as secrets. Provider-restricted client keys should be reviewed against their platform restrictions before deciding whether rotation adds value.
+**Action:** Remove or scope the global `DEBUG` variable, rotate genuine server secrets in a separate approved production-config lane, validate each replacement before revoking the old value, and never paste credential values into issues, commits, or chat.
 
 ---
 

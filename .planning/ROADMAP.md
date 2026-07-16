@@ -9,7 +9,7 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 - ✅ **v1.0 Foundation** — Phases 1–5 (shipped 2026-04-08) — [archive](milestones/v1.1-ROADMAP.md)
 - ✅ **v1.1 Core Product** — Phases 6–7 (brand alignment + wave mechanic + push notifications, shipped 2026-04-09) — [archive](milestones/v1.1-ROADMAP.md)
 - ✅ **v1.2 Monetization & Security** — Phases 8–9, 11 (shipped 2026-05-28)
-- [ ] **v1.3 Launch** — Phase 10 (Beta Ready, pending Apple Dev Account Connect)
+- [ ] **v1.3 Launch** — Phase 10 (signed build 22 ready; external release gates remain)
 
 ## Phases
 
@@ -68,7 +68,7 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 **Milestone Goal:** Revenue layer is live and the app meets production security and compliance requirements.
 
 #### Phase 8: Paywall / Tremble Pro
-**Status**: 🟡 In progress (mock)
+**Status**: ✅ Code complete; store products/configuration remain a Phase 10 release gate
 **Goal**: The freemium wave limit and Tremble Pro subscription are live and purchasable on both platforms
 **Depends on**: Phase 7
 **Requirements**: WAVE-07, PAY-01, PAY-02, PAY-03, PAY-04, PAY-05, PAY-06
@@ -78,7 +78,7 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
   3. User can subscribe to Signal Prime (€7,99/month), Weekend Getaway (€2,99/weekend), Yearly (€59,99/year), or Lifetime (€149,99) via App Store (StoreKit) and Play Store (Play Billing) through RevenueCat
   4. Pro subscription state is synced to Firestore and respected by wave-limit enforcement
   5. When a Pro subscription lapses, the user gracefully reverts to free tier limits without data loss or crash
-**Current implementation**: Premium screen is implemented with a 5-card carousel refactored to solid brand colors/fonts. RevenueCat purchases library is wired, but billing is mock pending store configurations.
+**Current implementation**: Premium UI and real RevenueCat SDK purchase/restore/customer-info paths are wired and test-covered. App Store Connect, Play Console, and RevenueCat dashboard products/offerings still require store-side configuration and live sandbox verification.
 
 #### Phase 9: Security Hardening & GDPR
 **Status**: ✅ DONE
@@ -121,8 +121,8 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
   - [x] TASK-10-01: Identity Injection (Icons & Splash)
   - [x] TASK-10-02: Ghost State UX (System Nominal)
   - [ ] TASK-10-03: Framing & Metadata
-  - [ ] TASK-10-04: TestFlight / Internal Beta
-  - [ ] TASK-10-05: Landing Page (trembledating.com)
+  - [ ] TASK-10-04: Build-22 physical-iPhone verification and TestFlight / Internal Beta
+  - [x] TASK-10-05: Landing Page (trembledating.com)
 
 ---
 
@@ -137,12 +137,12 @@ Tremble is a proximity-based dating app built on Flutter + Firebase. The core me
 | 5. Auth & Routing | v1.0 | - | ✅ Complete | 2026-04-08 |
 | 6. Brand Alignment | v1.1 | 3/3 | ✅ Complete | 2026-04-09 |
 | 7. Wave Mechanic + Push Notifications | v1.1 | - | ✅ Complete | 2026-04-09 |
-| 8. Paywall / Tremble Pro | v1.2 | 1/1 | 🟡 In progress (mock) | - |
+| 8. Paywall / Tremble Pro | v1.2 | 1/1 | ✅ Code complete; store config pending | 2026-05-28 |
 | 9. Security Hardening & GDPR | v1.2 | 1/1 | ✅ Complete | 2026-05-28 |
-| 10. Launch Polish & Store Deploy | v1.3 | 2/5 | 🟡 In progress | - |
+| 10. Launch Polish & Store Deploy | v1.3 | 3/5 | 🟡 In progress | - |
 | 11. SECURITY-01: Technical Security Audit & Hardening | v1.2 | 1/1 | ✅ Complete | 2026-05-28 |
 
 ---
 
 *Roadmap created: 2026-04-08*
-*Updated: 2026-05-28 — synchronized with actual v1.2 app state.*
+*Updated: 2026-07-16 — synchronized with build 22 and the remaining release gates.*

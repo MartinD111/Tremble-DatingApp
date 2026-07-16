@@ -1,9 +1,56 @@
 # Active Implementation Plan
+Plan ID: 20260716-launch-state-cleanup
+Risk Level: LOW
+Status: RESOLVED 2026-07-16 — PR #50 merged through protected `main`; repository cleanup verified
+Founder Approval Required: NO
+Branch: docs/launch-state-cleanup (merged)
+
+## 1. OBJECTIVE
+
+Reconcile launch records with the verified build-22 repository and live-service
+state, then leave one clean protected `main` as the baseline for remaining work.
+
+## 2. SCOPE
+
+- Update control-plane launch status, blocker classification, checklist state,
+  milestone state, and the current handoff.
+- Record only outcomes supported by repository, CI, deployment, live-page, and
+  signed-build evidence.
+- Do not change application code, production configuration, credentials, store
+  consoles, or legal-policy content.
+
+## 3. STEPS
+
+1. Merge the verified iOS delivery repair through protected `main`.
+2. Merge the permanent FCM-token Rules regression suite through protected `main`.
+3. Reconcile stale launch, legal, security, and store records.
+4. Preserve the signed build-22 IPA outside disposable worktrees.
+5. Remove merged branches/worktrees and prove the final checkout is clean.
+
+## 4. RISKS & TRADEOFFS
+
+- Marking code complete must not imply an external credential, device, legal,
+  or console gate passed.
+- Historical phase-directory warnings remain documented rather than fabricating
+  empty GSD phase artifacts.
+
+## 5. VERIFICATION
+
+- unit tests: no application behavior changes; protected CI must remain green.
+- integration tests: no service mutation; existing emulator and notification
+  integration suites remain green on the merged baseline.
+- security scan: no credentials enter the documentation diff.
+- Markdown diff check, Plan-ID metadata, protected-branch CI, final Git status,
+  worktree list, branch inventory, PR inventory, and artifact checksum verified.
+
+---
+
+# Prior Implementation Plan
 Plan ID: 20260715-fcm-token-rules-recovery
 Risk Level: LOW
-Status: IMPLEMENTED — awaiting protected-branch PR review and merge
+Status: RESOLVED 2026-07-16 — PR #49 merged into `main` @ 1cf5446
 Founder Approval Required: NO
-Branch: fix/session44-fcm-rules-recovery
+Branch: fix/session44-fcm-rules-recovery (merged)
 
 ## 1. OBJECTIVE
 
@@ -40,17 +87,17 @@ emulator-backed regression suite without changing the deployed rules.
   unauthenticated, cross-user, invalid-type, and unexpected-field cases.
 - security scan: the dedicated package reports zero vulnerabilities and the
   committed diff contains no credentials.
-- Flutter analyzer and 281 Flutter tests pass; Functions lint, build, and all
-  134 Functions tests pass through the repository commit hook.
+- Flutter analyzer and 293 Flutter tests pass; Functions lint, build, and all
+  149 Functions tests pass through the repository commit hook and protected CI.
 
 ---
 
 # Prior Implementation Plan
 Plan ID: 20260715-crossing-paths-ios-delivery
 Risk Level: HIGH
-Status: IMPLEMENTED — awaiting protected-branch PR review and merge
+Status: RESOLVED 2026-07-16 — PR #48 merged into `main` @ eef99c0
 Founder Approval Required: YES — approved in the 2026-07-15 audit handoff and reaffirmed on 2026-07-16
-Branch: fix/crossing-paths-ios-delivery
+Branch: fix/crossing-paths-ios-delivery (merged)
 
 ## 1. OBJECTIVE
 
