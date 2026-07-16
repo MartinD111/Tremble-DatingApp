@@ -1,3 +1,99 @@
+## Session State — 2026-07-16 00:17 CEST (Session 46)
+- Active Task: Repair production CROSSING_PATHS/INCOMING_WAVE identity, delivery reliability, and explicit iOS Wave action handling
+- Environment: Production (`am---dating-app`) + isolated branch `fix/crossing-paths-ios-delivery`
+- Modified Files:
+    - Production source commit `6cbec74` in `/Users/aleksandarbojic/AMSSolutions/Tremble/Pulse---Dating-app-crossing-paths-ios-delivery`
+    - `tasks/context.md` (this handoff; preserves the existing uncommitted Session 45 handoff)
+    - `tasks/blockers.md` (BLOCKER-STORE-005 APNs credential/device gate)
+- Open Problems:
+    - FOLLOWUP-SEC-002: Firebase CLI inherited a global `DEBUG` variable and printed runtime configuration into a local authenticated tool transcript. No value entered source control or a public channel. Rotate genuine server secrets as a separate hygiene lane; this is not an App Store submission blocker.
+    - Firebase/Apple console access is still required to inspect or replace the APNs credential stored for Firebase iOS app `1:343655004163:ios:5eea92b9656fc3b8fc3636` and verify a controlled production iOS send. The CLI exposes app registration metadata but not the stored APNs Key ID/certificate state.
+    - Build 22 must be installed on a physical iPhone to verify background/killed notification display and the real `UNNotificationResponse.actionIdentifier` Wave Back path exactly once.
+    - App Store Connect upload/store-side product configuration remains outside this code/deploy lane.
+- System Status: `scanProximityPairs` and `onWaveCreated` deployed successfully to production in `europe-west1`; build 22 App Store IPA exported successfully; code, tests, analyzer, backend lint/build, Android dev build, and iOS archive/export are green.
+
+## Session Handoff
+- Completed:
+    - Replaced legacy notification identity reads with canonical `name`, numeric `age`, `birthDate` fallback, and first `photoUrls` entry. New tests use neutral `User Alpha` / `User Beta` fixtures; no fake production accounts or data were created.
+    - Made `INCOMING_WAVE` OS-visible, added bounded retry with processing/delivered Redis state, inspected all mutual-delivery results, and added privacy-safe structured delivery logging.
+    - Removed receipt-triggered reciprocal Wave creation. Only a real iOS `WAVE_BACK_ACTION` notification response can invoke the existing callable `sendWave` path; cold-start actions are queued, acknowledged, and deduplicated.
+    - Consolidated notification initialization/listener ownership in the router and removed HomeScreen duplication.
+    - Deployed only `scanProximityPairs` and `onWaveCreated` to production `am---dating-app`; both updates completed successfully and are active v2 Node 22 Functions in `europe-west1`.
+    - Verified Functions build/lint and all 149 tests; Flutter analyzer clean and all 293 tests; flavored dev APK build; signed production build-22 archive and App Store IPA export (`tremble.dating.app`, `1.0.0+22`).
+    - Fixed the repository pre-commit hook's Git-environment leak so Flutter SDK version detection works inside hooks. The hook independently repeated format/analyze/293 Flutter tests/backend lint/build/149 tests before commit `6cbec74`.
+- In Progress: APNs credential inspection/replacement and controlled physical-iPhone verification. Genuine server-secret rotation remains a separate security-hygiene follow-up.
+- Blocked: Firebase Cloud Messaging and Apple Developer credential screens are not available through the authenticated CLI or current in-app browser session. No post-deploy delivery attempt has occurred yet, so the prior APNs authentication failure cannot be declared resolved.
+- Next Action:
+    1. Open Firebase Console → `am---dating-app` → Project settings → Cloud Messaging → Apple app `…5eea92…`; record credential type, Key ID, Team ID, and certificate expiry if applicable.
+    2. Verify the Key ID under Apple Team `LB6LS532CV`; upload/replace the valid APNs `.p8` if missing/revoked/wrong, retaining the prior key until a send succeeds.
+    3. Install build 22 on a physical iPhone and run the approved foreground/background/killed + explicit Wave Back procedure with dedicated production test accounts.
+    4. After a successful controlled send, upload the preserved build-22 IPA to App Store Connect and complete the remaining store-side product configuration.
+    5. Execute FOLLOWUP-SEC-002 as a separate approved production-configuration hygiene lane; revoke old server credentials only after each replacement works.
+
+## Session State — 2026-07-15 19:52 CEST (Session 45)
+- Active Task: Restore production FCM token persistence for CROSSING_PATHS delivery
+- Environment: Production (`am---dating-app`) + isolated local branch `fix/session44-fcm-rules-recovery`
+- Modified Files:
+    - `tasks/context.md` (session handoff)
+    - `firestore_rules_tests/` in sibling worktree (staged; commit hook blocked by local Flutter SDK resolution)
+- Open Problems:
+    - Scheduled `scanProximityPairs` still does not forward `sexualOrientationConsent` into `calculateCompatibilityScore`; complete this as a separate GDPR/scanner lane after the controlled device test.
+    - Scanner exit observability and the unrelated `updateProfile` HTTP 400 reproduction remain open.
+- System Status: Production Firestore release now points to token-only recovery ruleset `projects/am---dating-app/rulesets/dabebbe6-db3e-45a8-9e44-36e6cafc1702` with verified SHA-256 `7fe2102123500f2522d2eceeeb3af3557528b4ec3520f351a3faac89d29f69d0`.
+
+## Session Handoff
+- Completed:
+    - Rejected the broad affected-key production candidate because it would have reopened arbitrary and consent-field mutations on legacy profiles.
+    - Added a byte-pinned production baseline, a narrowly scoped `fcmToken`-only candidate, and a permanent Node Firestore emulator suite in the isolated worktree.
+    - Proved the stale baseline failure RED and the candidate/local core behavior GREEN; emulator suite passes 15/15, including owner/auth boundaries, type/size limits, protected fields, deletion, and combined-write denials.
+    - Security review returned GO with no findings.
+    - Verified `flutter analyze` clean, Flutter tests 281/281, Cloud Functions tests 134/134, Android dev APK build successful, and npm audit for the new rules package found zero vulnerabilities.
+    - Created immutable production ruleset `dabebbe6-db3e-45a8-9e44-36e6cafc1702`, repointed only `cloud.firestore`, and verified the active release and fetched source hash. Previous ruleset `4d10e919-6ded-4b35-9255-1ad5e336edeb` remains the rollback target.
+- In Progress: Controlled build-21 device verification by Aleksandar and Martin.
+- Blocked: None for the matching test. Local commit is blocked by the pre-commit environment resolving Flutter as `0.0.0-unknown`, despite direct analyzer/test/build commands passing with Flutter 3.41.4.
+- Next Action:
+    1. Force-close and reopen build 21 on both Android and iOS, sign in, and reach the dashboard so `NotificationService.saveToken()` runs.
+    2. Confirm both production user documents gain a string `fcmToken`.
+    3. With the earlier 30-minute cooldown expired, activate radar/proximity on both devices and wait for the next scheduled scan; verify two visible `notification_sent` events and the CROSSING_PATHS pill/notification on both devices.
+    4. After Martin's test, implement the separate consent-pass-through and scanner-observability lane.
+
+## Session State — 2026-07-15 17:32 CEST (Session 44)
+- Active Task: Diagnose production proximity pair detected but no CROSSING_PATHS match surfaced on either device
+- Environment: Production read-only investigation (`am---dating-app`) + local `main`
+- Modified Files:
+    - `tasks/context.md` (session handoff only)
+- Open Problems:
+    - Production Firestore is still running ruleset `projects/am---dating-app/rulesets/4d10e919-6ded-4b35-9255-1ad5e336edeb`, created `2026-05-30T21:00:00Z`. Its user-update validation requires `lookingFor` to be a string and validates the full merged document, while current onboarding stores `lookingFor` as a list. This rejects otherwise isolated client writes such as `{fcmToken: ...}`.
+    - Both newly registered production user documents lack `fcmToken`; `scanProximityPairs` silently returns `skipped: "no_token"` for both recipients, so no CROSSING_PATHS notification/pill is delivered.
+    - `scanProximityPairs` does not forward `sexualOrientationConsent` into `calculateCompatibilityScore`; the LEGAL-003 bilateral `lookingFor` consent gate is therefore skipped in scheduled scans. This did not cause this pair's failure but is a GDPR/matching consistency defect.
+    - Two production `updateProfile` calls returned HTTP 400. Auth and App Check were valid, but the function does not log the Zod/consent error and the release client suppresses the exception outside debug mode, so the exact offending payload field remains unknown.
+    - Scanner completion logs expose only aggregate `pairsEvaluated` / `pairsNotified`; cooldown, `no_token`, filter, score, throttle, and send-error exits are not summarized, making successful matching look like rejection.
+- System Status: Root cause confirmed. No source, Firebase, Redis, or production data changes performed. Exact profile replay scored `0.76` against the production scanner payload, above the normal `0.70` threshold.
+
+## Session Handoff
+- Completed:
+    - Traced the scheduled scanner from geohash grouping through distance, Redis cooldown, block/flag, mutual gender, mutual age, nicotine, compatibility, encounter creation, and FCM delivery.
+    - Confirmed the first relevant scan at `2026-07-15T14:38:02Z` evaluated one pair, wrote the supplied `proximity_events` document, and completed with `pairsNotified: 0`. Because the event write occurs only after the `0.70` threshold gate, the compatibility path succeeded.
+    - Replayed the supplied Aleksandar/Martin profile attributes through `calculateCompatibilityScore`; score was `0.76` both with the scanner's current payload and with bilateral orientation consent included.
+    - Confirmed the later `pairsEvaluated: 1, pairsNotified: 0` scans were inside the pair's 30-minute Redis cooldown. `pairsEvaluated` increments before the cooldown check, so these entries do not indicate repeated compatibility failures.
+    - Confirmed both supplied user documents have no `fcmToken`, and `sendCrossingPaths()` returns `no_token` without a structured log entry.
+    - Read the active production Firestore rules through the Firebase Rules API. The deployed May 30 ruleset is stale and rejects token-only updates on current list-shaped `lookingFor` documents.
+    - Confirmed local `firestore.rules` already contains affected-field-only update validation and list-shaped `lookingFor` support, but the full local-vs-production rules diff must be audited before any production deploy; do not blindly deploy the entire file.
+    - Confirmed deployed `updateProfile` is active at revision `updateprofile-00019-diz`, updated `2026-07-14T22:25:25Z`, with Firebase Functions hash `3a5c73e17c31a5fb094f0a0662d04dfdf8455a57`.
+- Decisions:
+    - Treat the incident primarily as a stale production Firestore-rules / FCM-token persistence failure, not a compatibility-score regression.
+    - Keep remediation in separate lanes: (1) production rules recovery and device verification; (2) GDPR consent pass-through plus scanner observability; (3) targeted `updateProfile` 400 reproduction. Do not combine unrelated fixes in one commit or deploy.
+- In Progress: None; investigation is complete and ready for a fresh implementation session.
+- Blocked:
+    - Any production Firestore rules deployment is HIGH risk and requires founder approval after an explicit active-prod-vs-local diff review and emulator verification.
+    - Exact `updateProfile` 400 diagnosis requires the client-side `FirebaseFunctionsException.code/message/details` or a controlled reproduction with redacted structured validation logging.
+- Next Action:
+    1. Read `tasks/context.md`, `tasks/blockers.md`, `tasks/lessons.md`, `tasks/plan.md`, `firestore.rules`, `lib/src/core/notification_service.dart`, `lib/src/features/dashboard/presentation/home_screen.dart`, `functions/src/modules/proximity/proximity.functions.ts`, and `functions/src/modules/compatibility/compatibility_calculator.ts`.
+    2. Prepare a 5-step HIGH-risk plan that fetches the active prod rules, audits the complete diff against local, adds/executes Firestore emulator regression tests for token-only updates on current onboarding documents, and stops for founder approval before deployment.
+    3. After approved rules deployment, force-close/reopen both apps, confirm each `users/{uid}` document gains `fcmToken`, wait for the 30-minute pair cooldown (or obtain explicit approval before clearing only that pair key), then verify a new encounter emits two visible `notification_sent` events and `pairsNotified: 2`.
+    4. In a separate TDD change, forward `sexualOrientationConsent` for both users into scheduled compatibility scoring and add privacy-safe per-exit counters/logs, especially `cooldown`, `no_token`, `below_threshold`, `throttled`, and `send_error`.
+    5. Reproduce one `updateProfile` 400 with the exact outgoing payload and capture the typed callable error before proposing a schema or client fix.
+
 ## Session State — 2026-07-15 14:40 CEST (Session 43)
 - Active Task: Sentry Issue Audit and Resolutions (5 bugs fixed)
 - Environment: Dev/local Flutter
