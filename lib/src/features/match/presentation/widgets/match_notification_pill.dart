@@ -694,7 +694,7 @@ class _LabelText extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.instrumentSans(
                   color: titleColor,
                   fontSize: 15.0,
                   fontWeight: FontWeight.w700,
@@ -720,7 +720,7 @@ class _LabelText extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.instrumentSans(
               color: subtitleColor,
               fontSize: 11.5,
               fontWeight: FontWeight.w400,

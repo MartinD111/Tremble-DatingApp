@@ -290,6 +290,9 @@ style_contract:
   - No Material default blue (#2196F3) — use Tremble brand tokens
   - Primary rose: #F4436C | Signal yellow: #F5C842 | Confirm green: #2D9B6F | Deep graphite: #1A1A18 | Warm cream: #FAFAF7
   - Typography: Playfair Display / Lora / Instrument Sans / JetBrains Mono
+  - Those four ship in `assets/fonts/` and `allowRuntimeFetching` is off — no
+    other GoogleFonts family may be called, it would fetch at runtime and crash
+    first launch offline. Add variants via `tool/fetch_fonts.py`.
   - Forbidden: glassmorphism on content cards in dark theme, 3D phone mockups, stock couple photos
   - Forbidden copy: revolutionary, seamless, game-changing, "find love today"
 ```

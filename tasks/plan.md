@@ -1,9 +1,100 @@
 # Active Implementation Plan
-Plan ID: 20260716-notification-ttl-and-pill-auto-dismiss
+Plan ID: 20260716-bundle-fonts-offline
 Risk Level: MEDIUM
 Status: IN-REVIEW — awaiting protected-branch PR merge
+Founder Approval Required: YES — granted 2026-07-16
+Branch: fix/bundle-fonts-offline
+
+## 1. OBJECTIVE
+
+First launch must never depend on the network to render text. `main()` awaited
+an HTTP download of the brand typefaces before `runApp`: a slow connection
+stalled startup and a bad one produced the production Android crash
+"Failed to load font with url".
+
+## 2. AUDIT (what the code actually calls)
+
+| Family | Call sites | In AGENTS.md contract |
+|---|---|---|
+| `instrumentSans` | 293 | yes |
+| `playfairDisplay` | 34 | yes |
+| `jetBrainsMono` | 17 | yes |
+| `lora` | 15 | yes |
+| `inter` | 4 | **NO** |
+
+`GoogleFonts.inter` violated the AGENTS.md:292 typography contract and would
+have kept fetching from the network. Its 4 sites are plain UI text (wave-pill
+name/subtitle, account-suspended screen), so they move to Instrument Sans — the
+contract's UI sans. Visual change, deliberate.
+
+## 3. WHY THE FULL VARIANT SET, NOT THE AUDITED ONE
+
+Three findings from reading google_fonts 8.0.2 rather than assuming:
+
+1. An asset matches when its path ENDS with the API prefix
+   (`google_fonts_base.dart:329`), so `assets/fonts/` works and no `fonts:`
+   block is needed — all 363 call sites keep working untouched.
+2. A requested weight resolves to the family's CLOSEST AVAILABLE variant
+   (`_closestMatch`, `google_fonts_base.dart:97`). Instrument Sans ships no
+   ExtraBold, so the w800 call sites legitimately resolve to Bold — an audit
+   that bundled "the weights we call" would have fetched a file that does not
+   exist.
+3. `TrembleTheme.displayFont/bodyFont/uiFont` take an arbitrary `FontWeight`,
+   so no static audit of call sites can stay correct as code changes.
+
+Bundling every variant of the four families (44 files, 4.6 MB) removes the
+whole "missed weight → silent fallback typeface" class permanently.
+
+## 4. SCOPE
+
+- `assets/fonts/` [NEW] — 44 .ttf + 4 OFL licence texts.
+- `tool/fetch_fonts.py` [NEW] — regenerates the set from the hashes google_fonts
+  itself embeds, so bundled bytes are identical to the runtime download.
+- `pubspec.yaml` — declare `assets/fonts/`.
+- `lib/main.dart` — `allowRuntimeFetching = false` before any font call;
+  register OFL licences; preload from assets.
+- `match_notification_pill.dart`, `account_suspended_screen.dart` — Inter →
+  Instrument Sans.
+- `test/core/bundled_fonts_test.dart` [NEW].
+- NOT touched: `theme.dart` and the other 363 call sites; no version bump.
+
+## 5. RISKS & TRADEOFFS
+
+- +4.6 MB of assets. Accepted: the release budget is 120 MB and the failure it
+  removes is a launch crash.
+- Inter → Instrument Sans is a real visual change in 4 places.
+- `allowRuntimeFetching = false` makes a missing variant throw instead of
+  fetching. Non-fatal (caught; Flutter falls back to a system face) but it is a
+  cosmetic regression, which the pinned-manifest test exists to prevent.
+- The behavioural load test stalls rather than failing cleanly when an asset is
+  absent, so a fast deterministic manifest pin sits in front of it.
+
+## 6. VERIFICATION
+
+- unit tests: 8 new assertions — all weights and italics of all four families
+  load with fetching disabled; the manifest pin; licences present and
+  registered; fetch-disabled ordering; no non-contract family in `lib/`.
+  Flutter 322/322 (314 + 8).
+- Mutation-checked, not assumed: removing `Lora-SemiBold.ttf` makes the
+  manifest test fail (exit 1, `Actual: Set:['Lora-SemiBold.ttf']`). An earlier
+  version of this test passed with the file deleted — it was reading Flutter's
+  `build/unit_test_assets/` cache — and was rewritten.
+- integration tests: n/a — no service boundary. Offline first-launch is a
+  device check for build 23.
+- security scan: no credentials or PII. Fonts fetched from the same
+  fonts.gstatic.com URLs google_fonts uses, each length-validated against the
+  package's expected size. OFL permits redistribution; licence texts ship with
+  the binaries.
+- `flutter analyze` clean; `dart format` clean; dev-flavor APK builds.
+
+---
+
+# Prior Implementation Plan
+Plan ID: 20260716-notification-ttl-and-pill-auto-dismiss
+Risk Level: MEDIUM
+Status: RESOLVED 2026-07-16 — PR #53 merged into `main` @ fcc0585
 Founder Approval Required: YES — granted 2026-07-16 (touches Cloud Functions)
-Branch: fix/notification-ttl-and-pill-auto-dismiss
+Branch: fix/notification-ttl-and-pill-auto-dismiss (merged)
 
 ## 0. FINDING THAT RESCOPED THIS LANE
 
