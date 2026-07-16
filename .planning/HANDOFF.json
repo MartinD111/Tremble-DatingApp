@@ -1,42 +1,56 @@
 {
-  "version": "1.0",
-  "timestamp": "2026-04-10T06:50:23.114Z",
-  "phase": "2D",
-  "phase_name": "Registration Monolith Extraction",
-  "phase_dir": "n/a (tracked in tasks/context.md)",
-  "status": "COMPLETE",
-  "completed_tasks": [
-    {"id": 1, "name": "Extract LanguagesStep (p21)", "status": "done", "commit": "79e9d48"},
-    {"id": 2, "name": "Extract DatingPreferencesStep (p22)", "status": "done", "commit": "79e9d48"},
-    {"id": 3, "name": "Extract WhatToMeetStep (p23)", "status": "done", "commit": "79e9d48"},
-    {"id": 4, "name": "Extract BirthdayStep (p4)", "status": "done", "commit": "34f8b11"},
-    {"id": 5, "name": "Extract HeightStep (p8)", "status": "done", "commit": "34f8b11"},
-    {"id": 6, "name": "Extract EmailLocationStep (p5)", "status": "done", "commit": "uncommitted"},
-    {"id": 7, "name": "Extract HobbiesStep (p24)", "status": "done", "commit": "uncommitted"},
-    {"id": 8, "name": "Extract PhotosStep (p25)", "status": "done", "commit": "uncommitted"},
-    {"id": 9, "name": "Extract ConsentStep (p26)", "status": "done", "commit": "uncommitted"},
-    {"id": 10, "name": "Cleanup orphaned helpers from registration_flow.dart", "status": "done", "commit": "uncommitted"}
+  "version": "1.3",
+  "timestamp": "2026-07-16T09:32:00.000+02:00",
+  "milestone": "v1.3 Launch",
+  "phase": "10",
+  "phase_name": "Launch Polish & Store Deploy",
+  "phase_dir": "n/a (tracked in tasks/context.md + .planning/STATE.md)",
+  "status": "CODE_COMPLETE_EXTERNAL_GATES_OPEN",
+  "signed_release_artifact": {
+    "flavor": "prod",
+    "bundle_id": "tremble.dating.app",
+    "version_name": "1.0.0",
+    "version_code": 22,
+    "ipa_path": "release-symbols/ios-1.0.0+22/tremble.dating.app-1.0.0+22.ipa",
+    "app_store_validation": "passed",
+    "apns_entitlement": "production",
+    "team_id": "LB6LS532CV"
+  },
+  "recent_shipped_prs": [
+    {"pr": 48, "commit": "eef99c0", "plan_id": "20260715-crossing-paths-ios-delivery", "summary": "Canonical CROSSING_PATHS / INCOMING_WAVE identity, retry+dedup delivery, explicit iOS Wave Back bridge; scanProximityPairs + onWaveCreated deployed to am---dating-app europe-west1"},
+    {"pr": 49, "commit": "1cf5446", "plan_id": "20260715-fcm-token-rules-recovery", "summary": "Permanent Firestore-emulator regression suite locking FCM-token-only recovery ruleset"},
+    {"pr": 50, "commit": "a0254fc", "plan_id": "20260716-launch-state-cleanup", "summary": "Reconciled launch, legal, security, store records against verified build-22 and live-service state; clean protected-main baseline"}
   ],
-  "remaining_tasks": [],
-  "blockers": [
-    {"description": "ADR-001: flutter_blue_plus not wired in background_service.dart", "type": "technical", "workaround": "mock timer still in place"},
-    {"description": "SEC-001: Firebase App Check not enforced in Cloud Functions", "type": "technical", "workaround": "none"}
+  "verification_evidence": {
+    "flutter_tests": "293 passed",
+    "flutter_analyzer": "clean",
+    "functions_tests": "149 passed across 13 suites",
+    "notification_action_dispatcher_tests": "12 passed",
+    "dev_flavored_apk_build": "passed",
+    "signed_prod_ipa_export": "passed",
+    "app_store_ipa_validation": "passed",
+    "protected_main_ci": "green"
+  },
+  "open_blockers": [
+    {"id": "BLOCKER-STORE-005", "type": "external_gate", "owner": "founder", "description": "Firebase-stored APNs credential inspection + build-22 physical-iPhone foreground/background/killed + explicit Wave Back verification"},
+    {"id": "BLOCKER-STORE-003", "type": "external_gate", "owner": "founder", "description": "Play Console background-location declaration, screenshots, demo video"},
+    {"id": "BLOCKER-STORE-004", "type": "external_gate", "owner": "founder", "description": "Play Console foreground-services declaration"},
+    {"id": "BLOCKER-LEGAL-001", "type": "content", "owner": "founder", "description": "DPIA reconciliation with shipped architecture"},
+    {"id": "BLOCKER-LEGAL-004", "type": "code_and_content", "owner": "engineering", "description": "getNextWeekendWindow(userTimezone) refactor + user timezone field + DST handling + traveler snapshot decision + ToS §7 rewrite"},
+    {"id": "FOLLOWUP-SEC-002", "type": "security_hygiene", "owner": "founder", "description": "Scope local DEBUG env; rotate genuine server credentials (R2 / Resend / Upstash) exposed only to a local authenticated tool transcript"}
   ],
-  "human_actions_pending": [],
-  "decisions": [
-    {"decision": "All 27 registration steps extracted to individual files in widgets/registration_steps/", "rationale": "Monolith decomposition for maintainability", "phase": "2D"},
-    {"decision": "Consent state (4 booleans) moved fully into ConsentStep", "rationale": "Only needed locally; step ensures consent before calling onComplete", "phase": "2D"},
-    {"decision": "Password controllers kept in parent (emailController, passwordController, locationController)", "rationale": "Used by _registerUser and completeRegistration in parent", "phase": "2D"},
-    {"decision": "ExpansibleController for hobby tiles moved into HobbiesStep internal state", "rationale": "Only used by that step", "phase": "2D"}
+  "resolved_blockers_this_milestone": [
+    {"id": "BLOCKER-STORE-001", "date": "2026-07-14", "note": "iOS Privacy Manifest + ITSAppUsesNonExemptEncryption"},
+    {"id": "BLOCKER-STORE-002", "date": "2026-07-16", "note": "iOS Contacts permission copy + live Privacy Policy §2.5 reconciled"},
+    {"id": "BLOCKER-LEGAL-002", "date": "2026-07-14", "note": "Cannabis removed from product entirely"},
+    {"id": "BLOCKER-LEGAL-003", "date": "2026-07-14", "note": "Art. 9 sexual-orientation consent enforcement — PR #41 merged + CF prod deploy"},
+    {"id": "BLOCKER-LEGAL-005", "date": "2026-07-14", "note": "Paywall bullets ↔ real code gates verified + test-locked"}
   ],
-  "uncommitted_files": [
-    "lib/src/features/auth/presentation/registration_flow.dart",
-    "lib/src/features/auth/presentation/widgets/registration_steps/consent_step.dart",
-    "lib/src/features/auth/presentation/widgets/registration_steps/email_location_step.dart",
-    "lib/src/features/auth/presentation/widgets/registration_steps/hobbies_step.dart",
-    "lib/src/features/auth/presentation/widgets/registration_steps/photos_step.dart",
-    "tasks/context.md"
+  "decisions_this_milestone": [
+    {"decision": "Retry + Redis-keyed dedup landed together on onWaveCreated", "rationale": "Retry alone would cause duplicate iOS pushes on transient APNs errors; dedup alone would drop permanently on the first failure", "phase": "10"},
+    {"decision": "Notification receipt is never intent — reciprocal Wave requires OS actionIdentifier through native MethodChannel bridge", "rationale": "Background handler previously wrote reciprocal wave on any INCOMING_WAVE receipt; auditor flagged as consent-adjacent abuse vector before public launch", "phase": "10"},
+    {"decision": "Local DEBUG-env transcript exposure classified as security hygiene, not App Store submission blocker", "rationale": "No value entered source control or a public channel; scan of committed diffs was clean; still rotate genuine server credentials as prudent hygiene", "phase": "10"}
   ],
-  "next_action": "Commit Phase 2D completion, then start Phase 8 (RevenueCat/Paywall) or Phase 9 Step 3 (App Check enforcement)",
-  "context_notes": "Phase 2D is fully complete. registration_flow.dart reduced from ~3046 lines to ~1400 lines. All 27 steps extracted. flutter analyze clean. Need to commit and update tasks/context.md."
+  "next_action": "Open Firebase Console → am---dating-app → Cloud Messaging → Apple app 1:343655004163:ios:5eea92b9656fc3b8fc3636; inspect stored APNs Key ID / Team ID / expiry against Apple Developer team LB6LS532CV; upload valid retained .p8 if missing/revoked; install build 22 on physical iPhone and run approved foreground/background/killed + explicit Wave Back procedure with dedicated production test accounts before App Store Connect upload.",
+  "context_notes": "Working tree clean, main synced at a0254fc, no retained topic branches or worktrees. All application-code lanes for the crossing-paths / iOS delivery repair, Art. 9 consent enforcement, paywall truth, and FCM token rules recovery are shipped. What remains is credential/device verification + legal document reconciliation + store-console configuration — none of which are code lanes."
 }

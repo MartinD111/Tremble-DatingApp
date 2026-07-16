@@ -1,4 +1,54 @@
 # Active Implementation Plan
+Plan ID: 20260716-docs-agents-readme-handoff-refresh
+Risk Level: LOW
+Status: IN-REVIEW — awaiting protected-branch PR merge
+Founder Approval Required: NO
+Branch: docs/agents-readme-handoff-refresh
+
+## 1. OBJECTIVE
+
+Realign `AGENTS.md`, `README.md`, and `.planning/HANDOFF.json` with the
+verified v1.3 launch state so downstream audit tooling and future sessions
+read a truthful snapshot.
+
+## 2. SCOPE
+
+- Replace stale "None" active-blocker list in `AGENTS.md` with the current
+  post-merge inventory; refresh file/test counts; append lessons rules #7–#9
+  capturing the CROSSING_PATHS / INCOMING_WAVE repair learnings.
+- Update `README.md` v1.3 launch note and run command flavor flags.
+- Replace April Phase-2D `.planning/HANDOFF.json` snapshot with a build-22
+  handoff carrying signed-release metadata, shipped PRs, verification
+  evidence, open external gates, and the exact next action.
+- Add this Plan-ID entry to `tasks/plan.md`.
+- No application code, Firebase, credential, store console, or production
+  data change.
+
+## 3. STEPS
+
+1. Register this Plan-ID entry in `tasks/plan.md`.
+2. Commit the four documentation files under this Plan-ID.
+3. Push branch and open PR with compliant MPC metadata.
+4. Wait for protected-main CI green, then merge.
+5. Update local `main` and delete branch.
+
+## 4. RISKS & TRADEOFFS
+
+- Documentation drift if merged with an already-out-of-date artifact —
+  offset by piggy-backing on the same day's build-22 verification lane.
+- No production or credential impact.
+
+## 5. VERIFICATION
+
+- unit tests: n/a — documentation-only diff; no runtime code changed.
+- integration tests: n/a — no service surface touched.
+- security scan: manual review of the staged diff for credential, key,
+  PII, or private URL exposure.
+- Protected-branch CI must remain green.
+
+---
+
+# Prior Implementation Plan
 Plan ID: 20260716-launch-state-cleanup
 Risk Level: LOW
 Status: RESOLVED 2026-07-16 — PR #50 merged through protected `main`; repository cleanup verified

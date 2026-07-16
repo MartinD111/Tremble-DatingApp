@@ -17,11 +17,18 @@ When this file is detected, immediately adopt the role of **Technical Co-Founder
 
 ---
 
-## Active Blockers (as of 2026-07)
+## Active Blockers (as of 2026-07-16)
+
+Signed production build `1.0.0+22` is preserved and App Store-validated. Remaining blockers are external gates — no application code work is queued on any of them. Full detail in `tasks/blockers.md`.
 
 | ID | Blocker | Impact |
 |----|---------|--------|
-| None | No active blockers at this time | All clear |
+| BLOCKER-STORE-005 | Firebase-stored APNs credential + build-22 physical-iPhone foreground/background/killed + explicit Wave Back verification | iOS push readiness gate |
+| BLOCKER-STORE-003 | Play Console background-location declaration, screenshots, demo video | Android launch gate |
+| BLOCKER-STORE-004 | Play Console foreground-services declaration | Android launch gate |
+| BLOCKER-LEGAL-001 | DPIA reconciliation with the shipped architecture | Legal submission gate |
+| BLOCKER-LEGAL-004 | Weekend Getaway user-local timezone code refactor + ToS wording alignment | Product/legal submission gate |
+| FOLLOWUP-SEC-002 | Scoped `DEBUG` env + rotation of genuine server credentials (R2/Resend/Upstash) exposed in a local authenticated tool transcript | Security hygiene (not a submission blocker) |
 
 > BLOCKER-003 (AMS Solutions d.o.o. registration) ✅ RESOLVED 2026-05-07
 > ADR-001 (iOS BLE Background State Restoration) ✅ RESOLVED 2026-04-29 — NativeMotionService EventChannel wired.
@@ -31,6 +38,13 @@ When this file is detected, immediately adopt the role of **Technical Co-Founder
 > B007 (Legal Web Pages / RevenueCat SDK wired) ✅ RESOLVED
 > B008 (Prod Firestore Rules active_run_crosses) ✅ RESOLVED 2026-05-24 — Verified active on am---dating-app.
 > B009 (WavePillService FCM) ✅ RESOLVED 2026-05-26 — Wired in router.dart.
+> BLOCKER-STORE-001 (iOS Privacy Manifest + encryption declaration) ✅ RESOLVED 2026-07-14.
+> BLOCKER-STORE-002 (iOS Info.plist Contacts contradiction) ✅ RESOLVED 2026-07-16.
+> BLOCKER-LEGAL-002 (Cannabis Art. 10 exposure) ✅ RESOLVED 2026-07-14 — removed from product.
+> BLOCKER-LEGAL-003 (Art. 9 sexual-orientation consent) ✅ RESOLVED 2026-07-14 — PR #41 + CF prod deploy.
+> BLOCKER-LEGAL-005 (Paywall false advertising) ✅ RESOLVED 2026-07-14.
+> Crossing-Paths iOS delivery repair ✅ RESOLVED 2026-07-16 — PR #48 `eef99c0` (canonical identity, bounded retry, Redis dedup, explicit iOS Wave Back action bridge).
+> FCM token Firestore Rules recovery regression suite ✅ RESOLVED 2026-07-16 — PR #49 `1cf5446`.
 
 ---
 
@@ -120,11 +134,11 @@ Staleness rule: if this block is >48h old, re-validate before executing.
 | 3 | Proximity Engine — BLE + Geohash Radius | ✅ |
 | 4 | Signals & Push Notifications (Waves, FCM, WavePillService) | ✅ |
 | 5 | Matching Algorithm — Event/Gym/Run scoring, Match Categories | ✅ |
-| 6 | Infra & Security — App Check, Firestore Rules | ✅ |
+| 6 | Infra & Security — App Check, Firestore Rules, GDPR deletion pipeline | ✅ |
 | F1 | Protomaps — Google Maps SDK replaced, planet.pmtiles on R2, Worker at maps.trembledating.com | ✅ |
-| 7 | Launch Polish — Paywall, Store Deploy | ⏳ Pending store-side configuration |
+| 7 | Launch Polish — signed `1.0.0+22` IPA preserved; APNs/device + legal + store-console gates pending | ⏳ External gates only — no code lane queued |
 
-Phase does not close until all exit criteria pass.
+Phase does not close until all exit criteria pass. See `.planning/ROADMAP.md` for the 11-phase GSD framing used by the `.planning/` control plane.
 
 ---
 
@@ -145,6 +159,15 @@ Source: TTL verification sprint, May 2026.
 
 **Rule #6** — Never assume CF schema matches Flutter model field types. CF validation errors (Expected string, received array / received object) are silent in the UI — only visible in logcat. Always verify toApiPayload() output against CF Zod schema before device testing.
 Source: completeOnboarding serialization fix, June 2026.
+
+**Rule #7** — Client and server must read the same canonical user fields. Production writes `name`, `age`, `birthDate` (via `auth_repository.dart`). Any Cloud Function that reads `displayName` or `dateOfBirth` will silently produce "Someone, 0" payloads in production while unit tests pass on a mismatched fixture. Tests must assert on the values pushed into the FCM payload, not the mere presence of a field.
+Source: CROSSING_PATHS / INCOMING_WAVE identity repair, July 2026 (PR #48).
+
+**Rule #8** — Notification receipt is never user intent. Background handlers may refresh silent state (e.g. `proximity.updatedAt`) but must not write waves, matches, or any other action document. A reciprocal Wave is only legal when the OS delivers a real `UNNotificationResponse.actionIdentifier` (iOS) or Android tap action, forwarded through the `app.tremble/notification_actions` MethodChannel to `NotificationActionDispatcher`.
+Source: background-wave abuse audit, July 2026 (PR #48).
+
+**Rule #9** — Firestore `onDocumentCreated` triggers that call FCM must set `retry: true` and pair retry with Redis-keyed deduplication (`delivered`, `no-token`, `permanent-failure`, `attempts`). Retry without dedup produces duplicate delivery; dedup without retry drops permanently on the first APNs error.
+Source: `onWaveCreated` delivery hardening, July 2026 (PR #48).
 
 Add new rules here immediately after any mistake. Format: `**Rule #N** — [rule]. Source: [context], [date].`
 
@@ -232,11 +255,13 @@ lib/src/
 └── shared/                        ← GlassCard (useGlassEffect default: false), Buttons, shared hooks
 
 Infrastructure:
-- 173 Dart files, 40 test files, 200 Flutter tests passing, 11 CF src files (37 exported functions)
+- 175 Dart files, 51 Dart test files, 293 Flutter tests passing, Cloud Functions 149 tests / 13 suites passing
+- Signed production build `1.0.0+22` preserved under ignored `release-symbols/ios-1.0.0+22/`; App Store validation passed
 - Platforms: iOS (Swift base), Android (Kotlin base)
-- CI/CD: GitHub Actions
+- CI/CD: GitHub Actions — protected `main`; PR-Metadata gate requires `[PLAN-ID: YYYYMMDD-short-name]` title + `Verification checklist / unit tests / integration tests / security scan` body sections
 - Firestore TTL: proximity ✅ ACTIVE, rateLimits ✅ ACTIVE
-- Legal pages live: trembledating.com/privacy ✅ trembledating.com/tos ✅ trembledating.com/erasure ✅
+- Firestore Rules: token-only recovery ruleset active on `am---dating-app`, protected by a permanent 15-case emulator regression suite (PR #49)
+- Legal pages live: trembledating.com/privacy ✅ trembledating.com/tos (EN) ✅ trembledating.com/erasure ✅ — `/sl/tos` and `/dsa-contact` still pending publication
 ```
 
 ---
