@@ -99,6 +99,12 @@ jest.mock("../../src/config/env", () => ({
 
 type WaveProfile = Record<string, unknown>;
 
+// The onWaveCreated suite pins the clock to 2026-07-15T12:00:00.000Z, so the
+// absolute APNs deadline is deterministic: send time + 300s.
+const EXPECTED_APNS_EXPIRATION = String(
+    Math.floor(Date.parse("2026-07-15T12:00:00.000Z") / 1000) + 300,
+);
+
 const defaultSender: WaveProfile = {
     name: "User Alpha",
     displayName: "Legacy Alpha",
@@ -269,6 +275,7 @@ describe("Matches Module", () => {
                     senderPhotoUrl: "https://media.example.test/user-alpha.jpg",
                 },
                 apns: {
+                    headers: { "apns-expiration": EXPECTED_APNS_EXPIRATION },
                     payload: {
                         aps: {
                             contentAvailable: true,
@@ -280,6 +287,7 @@ describe("Matches Module", () => {
                 },
                 android: {
                     priority: "high",
+                    ttl: 300_000,
                     notification: {
                         channelId: "tremble_wave",
                         sound: "default",
@@ -287,6 +295,49 @@ describe("Matches Module", () => {
                 },
             });
             expect(JSON.stringify(mockMessagingSend.mock.calls)).not.toContain("click_action");
+        });
+
+        // ── Message expiry ───────────────────────────────────────────────────
+        // "X waved at you" is only worth delivering while it is still true. If
+        // the handset is offline, FCM must drop the wave rather than surface it
+        // hours later. TTL bounds the delivery window only — it does not remove
+        // a notification that already landed on the device.
+        //
+        // Android takes a relative duration in milliseconds; APNs takes an
+        // absolute UNIX epoch in seconds, as a string header.
+        describe("message expiry", () => {
+            it("expires a silent INCOMING_WAVE wake on the same 5-minute window", async () => {
+                setupWaveTriggerDb({
+                    receiver: { ...defaultReceiver, isRunModeActive: true },
+                });
+                mockMessagingSend.mockResolvedValue("message-id");
+
+                await invokeWaveTrigger();
+
+                const sent = mockMessagingSend.mock.calls[0][0] as {
+                    notification?: unknown;
+                    android?: { ttl?: number };
+                    apns?: { headers?: Record<string, string> };
+                };
+                expect(sent.notification).toBeUndefined();
+                expect(sent.android?.ttl).toBe(300_000);
+                expect(sent.apns?.headers?.["apns-expiration"]).toBe(EXPECTED_APNS_EXPIRATION);
+            });
+
+            it("derives the APNs deadline from send time, not a fixed constant", async () => {
+                jest.setSystemTime(new Date("2026-07-15T12:30:00.000Z"));
+                setupWaveTriggerDb();
+                mockMessagingSend.mockResolvedValue("message-id");
+
+                await invokeWaveTrigger();
+
+                const sent = mockMessagingSend.mock.calls[0][0] as {
+                    apns?: { headers?: Record<string, string> };
+                };
+                expect(sent.apns?.headers?.["apns-expiration"]).toBe(
+                    String(Math.floor(Date.parse("2026-07-15T12:30:00.000Z") / 1000) + 300),
+                );
+            });
         });
 
         it("uses Timestamp-like and ISO birthDate fallbacks only when numeric age is absent", async () => {

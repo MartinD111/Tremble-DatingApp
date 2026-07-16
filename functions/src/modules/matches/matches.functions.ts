@@ -14,6 +14,7 @@ import { getMessaging, Message } from "firebase-admin/messaging";
 import { randomUUID } from "node:crypto";
 import { requireAuth, requireAdmin, assertNotBanned } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
+import { apnsExpirationHeaders, NOTIFICATION_TTL_MILLIS } from "../../core/notification_expiry";
 import { assertValidDocumentId } from "../../middleware/validate";
 import { sendMatchNotificationEmail } from "../email/email.functions";
 import { getRedis, waveDedupKey, WAVE_DEDUP_SECS } from "../../core/redis";
@@ -712,8 +713,11 @@ export const onWaveCreated = onDocumentCreated(
                 ? {
                     token: receiverToken ?? "",
                     data,
-                    apns: { payload: { aps: { contentAvailable: true } } },
-                    android: { priority: "high" },
+                    apns: {
+                        headers: apnsExpirationHeaders(),
+                        payload: { aps: { contentAvailable: true } },
+                    },
+                    android: { priority: "high", ttl: NOTIFICATION_TTL_MILLIS },
                 }
                 : {
                     token: receiverToken ?? "",
@@ -724,6 +728,7 @@ export const onWaveCreated = onDocumentCreated(
                     },
                     data,
                     apns: {
+                        headers: apnsExpirationHeaders(),
                         payload: {
                             aps: {
                                 contentAvailable: true,
@@ -735,6 +740,7 @@ export const onWaveCreated = onDocumentCreated(
                     },
                     android: {
                         priority: "high",
+                        ttl: NOTIFICATION_TTL_MILLIS,
                         notification: {
                             channelId: "tremble_wave",
                             sound: "default",

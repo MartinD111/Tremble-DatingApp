@@ -1,9 +1,102 @@
 # Active Implementation Plan
-Plan ID: 20260716-notification-tap-wave-pill
+Plan ID: 20260716-notification-ttl-and-pill-auto-dismiss
 Risk Level: MEDIUM
 Status: IN-REVIEW — awaiting protected-branch PR merge
+Founder Approval Required: YES — granted 2026-07-16 (touches Cloud Functions)
+Branch: fix/notification-ttl-and-pill-auto-dismiss
+
+## 0. FINDING THAT RESCOPED THIS LANE
+
+The request was "add ttl=300s so the notification disappears from the lock
+screen if unread within 5 minutes". TTL does not do that. It bounds only how
+long FCM/APNs keeps *retrying delivery* to an unreachable handset; once
+delivered, a notification persists until the user dismisses it.
+
+Verified against the vendored SDK types, not from memory:
+- `AndroidConfig.ttl` — "Time-to-live duration of the message in milliseconds",
+  a delivery lifespan (`firebase-admin/lib/messaging/messaging-api.d.ts:349`).
+- `AndroidNotification` exposes no `timeoutAfter` field, so FCM v1 has no
+  server-side display timeout at all.
+
+TTL is still worth shipping, for a different reason than requested: a handset
+that is offline or in Doze currently receives the backlog on reconnect and is
+told someone is 100 m away an hour after they left. That is a correctness bug
+for a proximity product, and it got sharper after PR #52 — tapping a stale
+notification now opens a WavePill for someone long gone, where before it did
+nothing.
+
+Founder decision 2026-07-16: ship TTL as scoped; accept that a delivered
+notification stays until dismissed. Rejected alternatives: Android data-only +
+client-rendered `setTimeoutAfter` (trades away killed-state delivery, the exact
+subject of STORE-005) and iOS collapse-id + follow-up silent push (needs a
+scheduler and a second push per wave).
+
+## 1. OBJECTIVE
+
+Stop time-sensitive pushes from being delivered after they stop being true, and
+stop an unanswered pill from occupying the screen indefinitely.
+
+## 2. SCOPE
+
+- `functions/src/core/notification_expiry.ts` [NEW] — single source for the
+  window; the two platforms take different units and must not drift.
+- `functions/src/modules/matches/matches.functions.ts` — INCOMING_WAVE, silent
+  and visible branches.
+- `functions/src/modules/proximity/proximity.functions.ts` — CROSSING_PATHS,
+  silent and visible branches.
+- `lib/src/shared/ui/wave_pill_service.dart` — auto-dismiss timer plus its
+  cancellation paths.
+- Tests: `test/shared/ui/wave_pill_auto_dismiss_test.dart` [NEW],
+  `functions/src/__tests__/matches.test.ts`,
+  `functions/src/__tests__/proximity_crossing_paths.test.ts`.
+- NOT touched: SECOND_ENCOUNTER and the run-mode sends
+  (`proximity.functions.ts` ~1116/1138), MUTUAL_WAVE, the FCM payload contract,
+  Firestore Rules, native config, `pubspec.yaml`.
+
+## 3. STEPS
+
+1. Register this Plan-ID entry in `tasks/plan.md`.
+2. RED/GREEN the four send sites against a shared expiry helper.
+3. RED/GREEN the pill auto-dismiss timer and its cancellation paths.
+4. Verify Functions lint/build/tests, Flutter analyzer/tests, dev APK.
+5. Merge through protected `main`; deploy the two Functions as a separate
+   approved lane.
+
+## 4. RISKS & TRADEOFFS
+
+- Android takes a relative duration in milliseconds; APNs takes an absolute
+  UNIX epoch in seconds as a string header. One shared helper keeps them
+  aligned. `deliverWaveNotification` retries a prebuilt message: the absolute
+  iOS deadline correctly survives the retry, the Android relative window
+  restarts. Retries are bounded to seconds, so the drift is immaterial.
+- The pill timer must be cancelled on reaction, not merely ignored: a Wave
+  tapped at 2:59 with a slow network would otherwise be torn down mid-request.
+  Cancellation is covered by a test that holds the send open past the deadline.
+- TTL changes nothing until the two Functions are deployed. The pill timer
+  ships in build 23. Neither is live on merge.
+
+## 5. VERIFICATION
+
+- unit tests: 5 new Functions assertions (visible + silent expiry per type,
+  send-time derivation, priority preserved) and 6 new Flutter assertions
+  (fires, holds, cancel-on-wave, cancel-on-dismiss, cancel-on-replace,
+  three-minute default). Functions 154/154; Flutter 314/314. Each observed RED
+  first.
+- integration tests: n/a — no new cross-service flow. Real delivery behaviour
+  is exercised by the physical-device notification procedure.
+- security scan: no credentials, keys, or PII in the diff; no new network,
+  auth, or persistence surface. The expiry helper reads only the clock.
+- `flutter analyze` clean; `dart format` clean; Functions `tsc --noEmit` and
+  eslint clean; dev-flavor APK builds.
+
+---
+
+# Prior Implementation Plan
+Plan ID: 20260716-notification-tap-wave-pill
+Risk Level: MEDIUM
+Status: RESOLVED 2026-07-16 — PR #52 merged into `main` @ 7e768c7
 Founder Approval Required: NO
-Branch: fix/notification-tap-wave-pill
+Branch: fix/notification-tap-wave-pill (merged)
 
 ## 1. OBJECTIVE
 

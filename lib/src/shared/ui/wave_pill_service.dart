@@ -54,6 +54,19 @@ class WavePillService {
   static OverlayEntry? _entry;
   static OverlayEntry? _confettiEntry;
 
+  // ── Auto-dismiss ──────────────────────────────────────────────────────────
+  // An unanswered pill covers the UI, and the proximity claim behind it goes
+  // stale, so it self-closes after a quiet period. Any user reaction cancels
+  // the timer — without that, a Wave tapped just before the deadline would be
+  // torn down mid-request.
+  static const Duration defaultAutoDismissAfter = Duration(minutes: 3);
+  static Timer? _autoDismissTimer;
+
+  static void _cancelAutoDismiss() {
+    _autoDismissTimer?.cancel();
+    _autoDismissTimer = null;
+  }
+
   // ── Swipe-hint counter ────────────────────────────────────────────────────
   // Show "Swipe away to ignore" hint for the first 3 pills ever shown.
   static const _hintKey = 'wave_pill_hint_count';
@@ -86,8 +99,10 @@ class WavePillService {
     required WavePillData data,
     required FutureOr<void> Function(String targetUid) onWave,
     VoidCallback? onTap,
+    Duration autoDismissAfter = defaultAutoDismissAfter,
   }) {
-    // Replace any existing pill instead of stacking.
+    // Replace any existing pill instead of stacking. Also cancels the outgoing
+    // pill's timer, so it cannot dismiss the replacement.
     _forceDismiss();
 
     final showHint = shouldShowHint;
@@ -111,7 +126,12 @@ class WavePillService {
               pillState: data.isIncomingWave
                   ? PillState.waveReceived
                   : PillState.waitingForAction,
-              onWave: () => onWave(data.targetUid),
+              // The user reacted — stop the clock before the send starts, so a
+              // slow network cannot let the timer fire mid-request.
+              onWave: () {
+                _cancelAutoDismiss();
+                return onWave(data.targetUid);
+              },
               onIgnore: () => _removeEntry(entry),
               // Match reveal handled by activeMatchesStream → MatchRevealScreen.
               onMatch: null,
@@ -125,6 +145,7 @@ class WavePillService {
 
     _entry = entry;
     overlay.insert(entry);
+    _autoDismissTimer = Timer(autoDismissAfter, () => _removeEntry(entry));
   }
 
   /// Programmatically dismiss the active pill (e.g. when the user navigates away).
@@ -154,6 +175,7 @@ class WavePillService {
   }
 
   static void _forceDismiss() {
+    _cancelAutoDismiss();
     if (_entry != null && _entry!.mounted) _entry!.remove();
     _entry = null;
     _removeConfetti();
@@ -168,7 +190,10 @@ class WavePillService {
 
   static void _removeEntry(OverlayEntry entry) {
     if (entry.mounted) entry.remove();
-    if (_entry == entry) _entry = null;
+    if (_entry == entry) {
+      _entry = null;
+      _cancelAutoDismiss();
+    }
   }
 
   static void _removeConfettiEntry(OverlayEntry entry) {
