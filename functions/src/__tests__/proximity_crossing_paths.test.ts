@@ -7,7 +7,7 @@
  * successful visible sends, not optimistic pre-send increments.
  */
 
-import { describe, it, expect, jest, beforeEach } from "@jest/globals";
+import { describe, it, expect, jest, beforeEach, afterEach } from "@jest/globals";
 
 const mockProximityEventsAdd = jest.fn<() => Promise<void>>();
 const mockProximityDocs: Array<{ id: string; data: () => Record<string, unknown> }> = [];
@@ -125,7 +125,11 @@ function setupHappyPathPair(langA: string, langB: string): void {
         interestedIn: ["Female"],
         fcmToken: "fcm-a",
         appLanguage: langA,
-        displayName: "Ana",
+        name: "User Alpha",
+        displayName: "Legacy Alpha",
+        age: 31,
+        birthDate: "1990-01-01",
+        photoUrls: ["https://media.example.test/user-alpha.jpg"],
     });
     mockUsersById.set("userB", {
         ...mutualMatchBase,
@@ -133,7 +137,11 @@ function setupHappyPathPair(langA: string, langB: string): void {
         interestedIn: ["Male"],
         fcmToken: "fcm-b",
         appLanguage: langB,
-        displayName: "Bojan",
+        name: "User Beta",
+        displayName: "Legacy Beta",
+        age: 29,
+        birthDate: { toDate: () => new Date("1980-01-01T00:00:00.000Z") },
+        photoUrls: ["https://media.example.test/user-beta.jpg"],
     });
     mockRedis.set.mockImplementation(async () => "OK");
     mockRedis.del.mockImplementation(async () => 1);
@@ -144,6 +152,8 @@ function setupHappyPathPair(langA: string, langB: string): void {
 
 describe("scanProximityPairs — CROSSING_PATHS visible notification", () => {
     beforeEach(() => {
+        jest.useFakeTimers();
+        jest.setSystemTime(new Date("2026-07-15T12:00:00.000Z"));
         jest.resetModules();
         mockProximityEventsAdd.mockClear();
         mockProximityDocs.length = 0;
@@ -155,7 +165,11 @@ describe("scanProximityPairs — CROSSING_PATHS visible notification", () => {
         mockMessaging.send.mockReset();
     });
 
-    it("sends visible notification.title/body in EN when recipient appLanguage=en", async () => {
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    it("sends exact reciprocal production-shaped identity and body in EN", async () => {
         setupHappyPathPair("en", "en");
         const { scanProximityPairs, CROSSING_PATHS_STRINGS } =
             await import("../../src/modules/proximity/proximity.functions");
@@ -163,15 +177,82 @@ describe("scanProximityPairs — CROSSING_PATHS visible notification", () => {
         await (scanProximityPairs as unknown as () => Promise<void>)();
 
         const payloads = sentPayloads();
-        expect(payloads.length).toBe(2);
-        for (const p of payloads) {
-            expect(p.notification?.title).toBe(CROSSING_PATHS_STRINGS.en.title);
-            expect(p.notification?.body).toContain("is nearby");
-            expect(p.data?.type).toBe("CROSSING_PATHS");
-            expect(p.data?.senderName).toBeDefined();
-            expect(p.apns?.payload?.aps).not.toHaveProperty("alert-body-loc-key");
-            expect(p.apns?.payload?.aps).not.toHaveProperty("alert-title-loc-key");
+        expect(payloads).toHaveLength(2);
+        const toAlpha = payloads.find((payload) => payload.token === "fcm-a");
+        const toBeta = payloads.find((payload) => payload.token === "fcm-b");
+
+        expect(toAlpha).toMatchObject({
+            notification: {
+                title: CROSSING_PATHS_STRINGS.en.title,
+                body: "User Beta, 29 is nearby. Want to send a wave?",
+            },
+            data: {
+                type: "CROSSING_PATHS",
+                senderName: "User Beta",
+                senderAge: "29",
+                senderPhotoUrl: "https://media.example.test/user-beta.jpg",
+            },
+        });
+        expect(toBeta).toMatchObject({
+            notification: {
+                title: CROSSING_PATHS_STRINGS.en.title,
+                body: "User Alpha, 31 is nearby. Want to send a wave?",
+            },
+            data: {
+                type: "CROSSING_PATHS",
+                senderName: "User Alpha",
+                senderAge: "31",
+                senderPhotoUrl: "https://media.example.test/user-alpha.jpg",
+            },
+        });
+        for (const payload of payloads) {
+            expect(payload.apns?.payload?.aps).not.toHaveProperty("alert-body-loc-key");
+            expect(payload.apns?.payload?.aps).not.toHaveProperty("alert-title-loc-key");
         }
+    });
+
+    it("falls back to Timestamp-like and ISO birthDate when numeric age is absent", async () => {
+        setupHappyPathPair("en", "en");
+        mockUsersById.set("userA", {
+            ...mockUsersById.get("userA"),
+            age: undefined,
+            birthDate: { toDate: () => new Date("1996-06-01T00:00:00.000Z") },
+        });
+        mockUsersById.set("userB", {
+            ...mockUsersById.get("userB"),
+            age: undefined,
+            birthDate: "1998-08-01T00:00:00.000Z",
+        });
+
+        const { scanProximityPairs } =
+            await import("../../src/modules/proximity/proximity.functions");
+        await (scanProximityPairs as unknown as () => Promise<void>)();
+
+        const payloads = sentPayloads();
+        expect(payloads.find((payload) => payload.token === "fcm-b")?.data?.senderAge).toBe("30");
+        expect(payloads.find((payload) => payload.token === "fcm-a")?.data?.senderAge).toBe("27");
+    });
+
+    it("does not derive age from locale or free-form birthDate strings", async () => {
+        setupHappyPathPair("en", "en");
+        mockUsersById.set("userA", {
+            ...mockUsersById.get("userA"),
+            age: undefined,
+            birthDate: "June 1, 1996",
+        });
+        mockUsersById.set("userB", {
+            ...mockUsersById.get("userB"),
+            age: undefined,
+            birthDate: "08/01/1998",
+        });
+
+        const { scanProximityPairs } =
+            await import("../../src/modules/proximity/proximity.functions");
+        await (scanProximityPairs as unknown as () => Promise<void>)();
+
+        const payloads = sentPayloads();
+        expect(payloads.find((payload) => payload.token === "fcm-b")?.data?.senderAge).toBe("0");
+        expect(payloads.find((payload) => payload.token === "fcm-a")?.data?.senderAge).toBe("0");
     });
 
     it("localizes per recipient — SL and EN in the same pair", async () => {
@@ -218,7 +299,10 @@ describe("scanProximityPairs — CROSSING_PATHS visible notification", () => {
             interestedIn: ["Female"],
             fcmToken: "fcm-a",
             appLanguage: "en",
-            displayName: "Ana",
+            name: "User Alpha",
+            age: 31,
+            birthDate: "1995-01-01",
+            photoUrls: ["https://media.example.test/user-alpha.jpg"],
         });
         mockUsersById.set("userB", {
             ...mutualMatchBase,
@@ -226,7 +310,10 @@ describe("scanProximityPairs — CROSSING_PATHS visible notification", () => {
             interestedIn: ["Male"],
             fcmToken: undefined,
             appLanguage: "en",
-            displayName: "Bojan",
+            name: "User Beta",
+            age: 29,
+            birthDate: "1997-01-01",
+            photoUrls: ["https://media.example.test/user-beta.jpg"],
         });
         mockRedis.set.mockImplementation(async () => "OK");
         mockRedis.del.mockImplementation(async () => 1);
@@ -255,7 +342,10 @@ describe("scanProximityPairs — CROSSING_PATHS visible notification", () => {
             interestedIn: ["Female"],
             fcmToken: "fcm-a",
             appLanguage: "en",
-            displayName: "Ana",
+            name: "User Alpha",
+            age: 31,
+            birthDate: "1995-01-01",
+            photoUrls: ["https://media.example.test/user-alpha.jpg"],
             isRunModeActive: true, // silent branch AND lowers threshold to 0.55
         });
         mockUsersById.set("userB", {
@@ -264,7 +354,10 @@ describe("scanProximityPairs — CROSSING_PATHS visible notification", () => {
             interestedIn: ["Male"],
             fcmToken: "fcm-b",
             appLanguage: "en",
-            displayName: "Bojan",
+            name: "User Beta",
+            age: 29,
+            birthDate: "1997-01-01",
+            photoUrls: ["https://media.example.test/user-beta.jpg"],
         });
         mockRedis.set.mockImplementation(async () => "OK");
         mockRedis.del.mockImplementation(async () => 1);

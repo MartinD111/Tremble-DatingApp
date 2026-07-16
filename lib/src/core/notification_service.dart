@@ -1,68 +1,60 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'background_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Background Message Handler — MUST be a top-level function.
 //
-// Handles silent background actions when the app is terminated or in background.
-// Called when user taps "Pomahaj nazaj" action button in the OS notification.
-//
-// Important: Riverpod is NOT available here. We write directly to Firestore.
+// Message receipt is not user intent. This handler only refreshes proximity for
+// the two silent proximity wake types; notification actions are dispatched in
+// the foreground isolate from an explicit OS action identifier.
 // ─────────────────────────────────────────────────────────────────────────────
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  final clickAction = message.data['click_action'];
-  final type = message.data['type'];
-
-  // Handle "Pomahaj nazaj" or "Wave back" silent background actions
-  // clickAction covers iOS category actions, type covers generic FCM data
-  if (clickAction == 'WAVE_BACK_ACTION' ||
-      clickAction == 'NEARBY_WAVE_ACTION' ||
-      type == 'INCOMING_WAVE') {
-    final targetUid = message.data['senderId'] ?? message.data['fromUid'];
-    final myUid = FirebaseAuth.instance.currentUser?.uid;
-
-    if (targetUid != null && targetUid.isNotEmpty && myUid != null) {
-      try {
-        // Direct Firestore write — bypasses Riverpod (not available in isolate)
-        await FirebaseFirestore.instance.collection('waves').add({
-          'fromUid': myUid,
-          'toUid': targetUid,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-        if (kDebugMode)
-          debugPrint('[NOTIFY] Background wave sent: $myUid → $targetUid');
-      } catch (e) {
-        if (kDebugMode) debugPrint('[NOTIFY] Background wave failed: $e');
+  await processBackgroundNotificationData(
+    message.data,
+    refreshProximity: () async {
+      final myUid = FirebaseAuth.instance.currentUser?.uid;
+      if (myUid != null) {
+        try {
+          await FirebaseFirestore.instance
+              .collection('proximity')
+              .doc(myUid)
+              .update({'updatedAt': FieldValue.serverTimestamp()});
+          if (kDebugMode) {
+            debugPrint('[NOTIFY] Proximity updatedAt refreshed for $myUid');
+          }
+        } catch (error) {
+          if (kDebugMode) {
+            debugPrint(
+              '[NOTIFY] Proximity updatedAt refresh failed: $error',
+            );
+          }
+        }
       }
-    }
-  }
+    },
+  );
+}
 
-  // Keep proximity.updatedAt fresh on silent push wake so
-  // scanProximityPairs does not exclude this user via 2-minute cutoff.
+@visibleForTesting
+Future<void> processBackgroundNotificationData(
+  Map<String, dynamic> data, {
+  required Future<void> Function() refreshProximity,
+}) async {
+  final type = data['type'];
   if (type == 'CROSSING_PATHS' || type == 'SECOND_ENCOUNTER') {
-    final myUid = FirebaseAuth.instance.currentUser?.uid;
-    if (myUid != null) {
-      try {
-        await FirebaseFirestore.instance
-            .collection('proximity')
-            .doc(myUid)
-            .update({'updatedAt': FieldValue.serverTimestamp()});
-        if (kDebugMode)
-          debugPrint('[NOTIFY] Proximity updatedAt refreshed for $myUid');
-      } catch (e) {
-        if (kDebugMode)
-          debugPrint('[NOTIFY] Proximity updatedAt refresh failed: $e');
-      }
-    }
+    await refreshProximity();
   }
 }
 
@@ -82,6 +74,194 @@ abstract class TrembleNotificationType {
   static const String crossingPaths = 'CROSSING_PATHS';
   static const String incomingWave = 'INCOMING_WAVE';
   static const String mutualWave = 'MUTUAL_WAVE';
+}
+
+enum NotificationActionDispatchStatus {
+  ignored,
+  sent,
+  alreadyProcessed,
+  inFlight,
+  failed,
+}
+
+class NotificationActionDispatchResult {
+  const NotificationActionDispatchResult(this.status, {this.actionKey});
+
+  final NotificationActionDispatchStatus status;
+  final String? actionKey;
+
+  bool get canAcknowledgeNativeAction =>
+      status == NotificationActionDispatchStatus.sent ||
+      status == NotificationActionDispatchStatus.alreadyProcessed;
+}
+
+/// Converts an OS-provided action identifier into one callable wave operation.
+/// Notification payload metadata is deliberately never interpreted as intent.
+class NotificationActionDispatcher {
+  NotificationActionDispatcher({
+    required SharedPreferences preferences,
+    required Future<void> Function(String targetUid) sendWave,
+    this.maxProcessedActions = 100,
+  })  : _preferences = preferences,
+        _sendWave = sendWave,
+        _processedKeys = LinkedHashSet<String>.of(
+          preferences.getStringList(processedKeysKey) ?? const <String>[],
+        );
+
+  static const String processedKeysKey =
+      'notification.processed_explicit_action_keys';
+
+  final SharedPreferences _preferences;
+  final Future<void> Function(String targetUid) _sendWave;
+  final int maxProcessedActions;
+  final LinkedHashSet<String> _processedKeys;
+  final Set<String> _inFlightKeys = <String>{};
+
+  Future<NotificationActionDispatchResult> dispatch({
+    required String? actionIdentifier,
+    required Map<String, dynamic> data,
+  }) async {
+    final action = _parseValidAction(actionIdentifier, data);
+    if (action == null) {
+      return const NotificationActionDispatchResult(
+        NotificationActionDispatchStatus.ignored,
+      );
+    }
+
+    if (_processedKeys.contains(action.key)) {
+      return NotificationActionDispatchResult(
+        NotificationActionDispatchStatus.alreadyProcessed,
+        actionKey: action.key,
+      );
+    }
+    if (!_inFlightKeys.add(action.key)) {
+      return NotificationActionDispatchResult(
+        NotificationActionDispatchStatus.inFlight,
+        actionKey: action.key,
+      );
+    }
+
+    try {
+      await _sendWave(action.targetUid);
+      _processedKeys
+        ..remove(action.key)
+        ..add(action.key);
+      while (_processedKeys.length > maxProcessedActions) {
+        _processedKeys.remove(_processedKeys.first);
+      }
+      await _preferences.setStringList(
+        processedKeysKey,
+        _processedKeys.toList(growable: false),
+      );
+      return NotificationActionDispatchResult(
+        NotificationActionDispatchStatus.sent,
+        actionKey: action.key,
+      );
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('[NOTIFY] Explicit notification action failed: $error');
+      }
+      return NotificationActionDispatchResult(
+        NotificationActionDispatchStatus.failed,
+        actionKey: action.key,
+      );
+    } finally {
+      _inFlightKeys.remove(action.key);
+    }
+  }
+
+  _ExplicitNotificationAction? _parseValidAction(
+    String? actionIdentifier,
+    Map<String, dynamic> data,
+  ) {
+    final type = _nonEmptyString(data['type']);
+    final messageId = _nonEmptyString(data['gcm.message_id']) ??
+        _nonEmptyString(data['waveId']);
+    if (messageId == null) return null;
+
+    String? targetUid;
+    if (actionIdentifier == 'WAVE_BACK_ACTION' &&
+        type == TrembleNotificationType.incomingWave) {
+      targetUid = _nonEmptyString(data['senderId']);
+    } else if (actionIdentifier == 'NEARBY_WAVE_ACTION' &&
+        type == TrembleNotificationType.crossingPaths) {
+      targetUid =
+          _nonEmptyString(data['senderId']) ?? _nonEmptyString(data['fromUid']);
+    }
+    if (targetUid == null) return null;
+
+    final key = '$actionIdentifier|$messageId|$targetUid';
+    return _ExplicitNotificationAction(key: key, targetUid: targetUid);
+  }
+
+  String? _nonEmptyString(Object? value) {
+    if (value is! String) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+}
+
+class _ExplicitNotificationAction {
+  const _ExplicitNotificationAction({
+    required this.key,
+    required this.targetUid,
+  });
+
+  final String key;
+  final String targetUid;
+}
+
+class NativeNotificationActionBridge {
+  NativeNotificationActionBridge({
+    MethodChannel channel = const MethodChannel(
+      'app.tremble/notification_actions',
+    ),
+  }) : _channel = channel;
+
+  final MethodChannel _channel;
+
+  Future<void> start(NotificationActionDispatcher dispatcher) async {
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'pendingActionsChanged') {
+        await drainPendingActions(dispatcher);
+      }
+    });
+    await drainPendingActions(dispatcher);
+  }
+
+  Future<void> drainPendingActions(
+    NotificationActionDispatcher dispatcher,
+  ) async {
+    final pending = await _channel.invokeMethod<List<dynamic>>(
+          'getPendingActions',
+        ) ??
+        const <dynamic>[];
+    for (final rawAction in pending) {
+      if (rawAction is! Map) continue;
+      final action = Map<String, dynamic>.from(rawAction);
+      final result = await dispatcher.dispatch(
+        actionIdentifier: action['actionIdentifier'] as String?,
+        data: action,
+      );
+      await acknowledgeHandledAction(
+        result,
+        nativeActionId: action['id'] as String?,
+      );
+    }
+  }
+
+  Future<void> acknowledgeHandledAction(
+    NotificationActionDispatchResult result, {
+    String? nativeActionId,
+  }) async {
+    if (!result.canAcknowledgeNativeAction) return;
+    final id = nativeActionId ?? result.actionKey;
+    if (id == null || id.isEmpty) return;
+    await _channel.invokeMethod<void>(
+      'acknowledgeAction',
+      <String, dynamic>{'id': id},
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -115,6 +295,9 @@ class NotificationService {
     /// Receives the notification payload data Map.
     void Function(Map<String, dynamic> data)? onNotificationTap,
 
+    /// Invokes the authenticated sendWave callable for a verified OS action.
+    required Future<void> Function(String targetUid) onExplicitWaveAction,
+
     /// Called when an INCOMING_WAVE or CROSSING_PATHS message arrives while the
     /// app is in the foreground. Use this to show [WavePillService.show].
     ///
@@ -132,6 +315,30 @@ class NotificationService {
     /// someone accepted a wave the current user sent. Triggers confetti + haptic.
     VoidCallback? onForegroundMatch,
   }) async {
+    final preferences = await SharedPreferences.getInstance();
+    final actionDispatcher = NotificationActionDispatcher(
+      preferences: preferences,
+      sendWave: onExplicitWaveAction,
+    );
+    final nativeActionBridge = NativeNotificationActionBridge();
+
+    Future<void> dispatchExplicitAction(
+      String? actionIdentifier,
+      Map<String, dynamic> data,
+    ) async {
+      final result = await actionDispatcher.dispatch(
+        actionIdentifier: actionIdentifier,
+        data: data,
+      );
+      if (Platform.isIOS) {
+        try {
+          await nativeActionBridge.acknowledgeHandledAction(result);
+        } on MissingPluginException {
+          // Older app binary without the native bridge; leave retry state intact.
+        }
+      }
+    }
+
     // ── Local Notifications init ──────────────────────────
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -200,14 +407,14 @@ class NotificationService {
       InitializationSettings(android: androidSettings, iOS: iosSettings),
       onDidReceiveBackgroundNotificationResponse:
           runClubNotificationTapBackground,
-      onDidReceiveNotificationResponse: (details) {
+      onDidReceiveNotificationResponse: (details) async {
         if (details.actionId != null &&
             details.actionId!.startsWith('RUN_CLUB_')) {
           runClubNotificationTapBackground(details);
           return;
         }
 
-        if (details.payload != null && onNotificationTap != null) {
+        if (details.payload != null) {
           try {
             final data =
                 Map<String, dynamic>.from(json.decode(details.payload!));
@@ -215,15 +422,24 @@ class NotificationService {
             if (details.actionId != null) {
               data['actionId'] = details.actionId;
             }
-            onNotificationTap(data);
+            await dispatchExplicitAction(details.actionId, data);
+            onNotificationTap?.call(data);
           } catch (e) {
             if (kDebugMode)
               debugPrint('[NOTIFY] Error decoding notification payload: $e');
-            onNotificationTap({'type': details.payload});
+            onNotificationTap?.call({'type': details.payload});
           }
         }
       },
     );
+
+    if (Platform.isIOS) {
+      try {
+        await nativeActionBridge.start(actionDispatcher);
+      } on MissingPluginException {
+        // Allows a rolling upgrade from app binaries without this bridge.
+      }
+    }
 
     // ── Foreground FCM messages ───────────────────────────
     // Haptic throttle: suppress duplicate vibrations within 2 seconds.
@@ -294,6 +510,12 @@ class NotificationService {
         onNotificationTap(message.data);
       }
     });
+
+    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null && onNotificationTap != null) {
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      onNotificationTap(initialMessage.data);
+    }
 
     // ── FCM token refresh ─────────────────────────────────
     // Persist rotated tokens so pushes keep landing on the active install.
@@ -411,12 +633,18 @@ class NotificationService {
 
     final details = NotificationDetails(android: androidDetails);
 
+    final payloadData = <String, dynamic>{...message.data};
+    final messageId = message.messageId;
+    if (messageId != null && messageId.isNotEmpty) {
+      payloadData.putIfAbsent('gcm.message_id', () => messageId);
+    }
+
     await notifications.show(
       message.hashCode,
       notification.title,
       notification.body,
       details,
-      payload: json.encode(message.data),
+      payload: json.encode(payloadData),
     );
   }
 }
