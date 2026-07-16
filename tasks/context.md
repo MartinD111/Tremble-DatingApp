@@ -1,3 +1,28 @@
+## Session State — 2026-07-16 09:32 CEST (Session 47)
+- Active Task: Consolidate verified repair lanes and establish a truthful, clean launch baseline
+- Environment: Local/GitHub release management; no additional production mutation
+- Modified Files:
+    - `.planning/PROJECT.md`, `.planning/ROADMAP.md`, `.planning/STATE.md`
+    - `tasks/blockers.md`, `tasks/context.md`, `tasks/plan.md`, `tasks/todo.md`
+- Open Problems:
+    - Production APNs credentials still require Firebase Console/Apple Developer inspection and a successful build-22 physical-iPhone foreground/background/killed plus explicit Wave Back test.
+    - DPIA reconciliation, Weekend Getaway timezone/ToS alignment, `/sl/tos`, `/dsa-contact`, and App Store/Play Console configuration remain open release gates.
+    - Runtime values printed into a local authenticated transcript are a security-hygiene follow-up, not evidence of public/source-control exposure and not an App Store submission blocker.
+- System Status: Source PRs #48 and #49 are merged with protected CI green. The signed, App Store-validated build-22 IPA is preserved under ignored `release-symbols/`; launch-state reconciliation is ready for protected review.
+
+## Session Handoff
+- Completed:
+    - Merged the canonical identity, reliable notification delivery, retry/deduplication, and explicit iOS notification-action repair as PR #48 (`eef99c0`).
+    - Merged the permanent 15-case Firestore emulator regression suite for production FCM-token recovery as PR #49 (`1cf5446`).
+    - Verified 293 Flutter tests, Flutter analyzer, 149 Functions tests, backend lint/build, security gates, and flavored dev APK builds through local hooks and protected CI.
+    - Preserved production IPA `1.0.0+22` with SHA-256 `e8ba81e7c13639623cbf7bbda8b0b0fa75ba0ea514f878ebfe838f2d3e75c5b1` outside disposable worktrees.
+    - Reconciled stale Apple membership, RevenueCat, App Check, Privacy Policy, blocker, roadmap, and checklist records with verified repository/live evidence.
+    - Reclassified local transcript exposure accurately: rotate genuine server credentials as prudent hygiene; do not treat public SDK identifiers as secrets or block submission without evidence of external exposure.
+    - Removed a stale focused Jest runner from the merged iOS worktree after it had consumed a CPU core for nearly ten hours; a clean Flutter build cache restored deterministic hook completion.
+- In Progress: Protected merge of the documentation reconciliation, followed by removal of all merged worktrees and local/remote topic branches.
+- Blocked: None for repository cleanup.
+- Next Action: Start the dedicated APNs credential/device-verification lane from clean `main`, then complete legal and store-console gates as separate scoped work.
+
 ## Session State — 2026-07-16 00:17 CEST (Session 46)
 - Active Task: Repair production CROSSING_PATHS/INCOMING_WAVE identity, delivery reliability, and explicit iOS Wave action handling
 - Environment: Production (`am---dating-app`) + isolated branch `fix/crossing-paths-ios-delivery`

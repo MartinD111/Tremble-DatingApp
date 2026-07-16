@@ -1,0 +1,13 @@
+{
+  "name": "tremble-firestore-rules-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test rules.test.cjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.1",
+    "firebase": "12.16.0"
+  }
+}
