@@ -1,4 +1,51 @@
 # Active Implementation Plan
+Plan ID: 20260715-fcm-token-rules-recovery
+Risk Level: LOW
+Status: IMPLEMENTED — awaiting protected-branch PR review and merge
+Founder Approval Required: NO
+Branch: fix/session44-fcm-rules-recovery
+
+## 1. OBJECTIVE
+
+Preserve the production FCM-token Firestore Rules recovery as a permanent,
+emulator-backed regression suite without changing the deployed rules.
+
+## 2. SCOPE
+
+- Add an isolated candidate rules fixture and a production-baseline fixture.
+- Add Firestore emulator tests for allowed self token writes and denied profile,
+  cross-user, unauthenticated, type-confused, and unexpected-field writes.
+- Keep production `firestore.rules`, Firebase configuration, and application code
+  unchanged.
+
+## 3. STEPS
+
+1. Capture the candidate and production-baseline policies as test fixtures.
+2. Exercise the token-only contract against the Firestore emulator.
+3. Verify the dedicated test package has no high-severity dependency findings.
+4. Run the repository Flutter and Functions gates through the commit hook.
+5. Merge the regression suite through protected `main`.
+
+## 4. RISKS & TRADEOFFS
+
+- Fixtures can drift from production, so both the intended candidate and the
+  previously deployed baseline are retained for explicit comparison.
+- This lane proves policy behavior locally; it does not redeploy or mutate the
+  already recovered production ruleset.
+
+## 5. VERIFICATION
+
+- unit tests: 15 focused rules assertions pass against the emulator.
+- integration tests: Firestore emulator execution passes for authenticated,
+  unauthenticated, cross-user, invalid-type, and unexpected-field cases.
+- security scan: the dedicated package reports zero vulnerabilities and the
+  committed diff contains no credentials.
+- Flutter analyzer and 281 Flutter tests pass; Functions lint, build, and all
+  134 Functions tests pass through the repository commit hook.
+
+---
+
+# Prior Implementation Plan
 Plan ID: 20260715-crossing-paths-ios-delivery
 Risk Level: HIGH
 Status: IMPLEMENTED — awaiting protected-branch PR review and merge

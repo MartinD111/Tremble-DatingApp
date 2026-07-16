@@ -1,0 +1,224 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    // SEC-001 + SEC-002: blockedBy, blockedUserIds, flaggedForReview added to protected keys.
+    // SEC-001: blockedBy/blockedUserIds — blocked user was able to remove blocker's UID from
+    //          their own document, bypassing the block entirely.
+    // SEC-002: flaggedForReview — flagged/banned user could set this to false on their own
+    //          document, immediately restoring active status in proximity matching.
+    // Both fields must only be written by Cloud Functions via Admin SDK.
+    function validCreateKeys() {
+      return !request.resource.data.keys().hasAny([
+        'isPremium',
+        'isAdmin',
+        'activeGymId',
+        'gymModeUntil',
+        'activeEventId',
+        'ageConfirmed',
+        'ageConfirmedAt',
+        'blockedBy',
+        'blockedUserIds',
+        'flaggedForReview'
+      ]);
+    }
+
+    function validUpdateKeys() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'isPremium',
+        'isAdmin',
+        'activeGymId',
+        'gymModeUntil',
+        'activeEventId',
+        'ageConfirmed',
+        'ageConfirmedAt',
+        'blockedBy',
+        'blockedUserIds',
+        'flaggedForReview'
+      ]);
+    }
+
+    // SEC-005 + SEC-006: Type safety and size limits for user profile fields.
+    // Without these, a client could write wrong types (crashes CF + Dart parsing)
+    // or oversized arrays/strings (DoS via inflated Firestore document costs).
+    function validUserTypes(data) {
+      return (!data.keys().hasAny(['displayName'])   || data.displayName is string)
+          && (!data.keys().hasAny(['bio'])            || data.bio is string)
+          && (!data.keys().hasAny(['age'])            || data.age is int)
+          && (!data.keys().hasAny(['photoUrls'])      || data.photoUrls is list)
+          && (!data.keys().hasAny(['gender'])         || data.gender is string)
+          && (!data.keys().hasAny(['lookingFor'])     || data.lookingFor is string)
+          && (!data.keys().hasAny(['radarActive'])    || data.radarActive is bool)
+          && (!data.keys().hasAny(['isActive'])       || data.isActive is bool);
+    }
+
+    function validUserSizes(data) {
+      return (!data.keys().hasAny(['displayName'])   || data.displayName.size() <= 50)
+          && (!data.keys().hasAny(['bio'])            || data.bio.size() <= 500)
+          && (!data.keys().hasAny(['photoUrls'])      || data.photoUrls.size() <= 6);
+    }
+
+    function isWaveParticipant(data) {
+      return signedIn() && (
+        request.auth.uid == data.senderId ||
+        request.auth.uid == data.receiverId ||
+        request.auth.uid == data.fromUid ||
+        request.auth.uid == data.toUid
+      );
+    }
+
+    function isWaveSender(data) {
+      return signedIn() && (
+        request.auth.uid == data.senderId ||
+        request.auth.uid == data.fromUid
+      );
+    }
+
+    function isSessionParticipant(data) {
+      return signedIn() && (
+        request.auth.uid == data.senderId ||
+        request.auth.uid == data.receiverId ||
+        (data.keys().hasAny(['userIds']) && request.auth.uid in data.userIds)
+      );
+    }
+
+    // USERS — own profile only.
+    match /users/{userId} {
+      allow read: if isSelf(userId);
+      allow create: if isSelf(userId)
+                    && validCreateKeys()
+                    && validUserTypes(request.resource.data)
+                    && validUserSizes(request.resource.data);
+      allow update: if isSelf(userId)
+                    && validUpdateKeys()
+                    && validUserTypes(request.resource.data)
+                    && validUserSizes(request.resource.data);
+      allow delete: if isSelf(userId);
+    }
+
+    match /users/{uid}/viewedRecaps/{recapId} {
+      allow read, write: if isSelf(uid);
+    }
+
+    match /drafts/{userId} {
+      allow read, write: if isSelf(userId);
+    }
+
+    // WAITLIST — public signup only.
+    match /waitlist/{document=**} {
+      allow create: if
+        request.resource.data.email is string &&
+        request.resource.data.email.size() <= 254 &&
+        request.resource.data.email.matches('.+@.+\\..+') &&
+        request.resource.data.source in ['website', 'website-undo'] &&
+        request.resource.data.unsubscribeToken is string &&
+        request.resource.data.subscribedAt is timestamp;
+      allow read, write, update, delete: if false;
+    }
+
+    // MATCHES — participants only.
+    match /matches/{matchId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.userIds;
+      allow update: if signedIn() &&
+                    request.auth.uid in resource.data.userIds &&
+                    request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['seenBy']);
+      allow create, delete: if false;
+    }
+
+    // WAVES — participants can read, only the sender can create, no mutation.
+    match /waves/{waveId} {
+      allow read: if isWaveParticipant(resource.data);
+      allow create: if isWaveSender(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    // SESSIONS — participants can read, clients cannot write.
+    match /sessions/{sessionId} {
+      allow read: if isSessionParticipant(resource.data);
+      allow create, update, delete: if false;
+    }
+
+    // EVENTS — authenticated read, backend-only writes.
+    match /events/{eventId} {
+      allow read: if signedIn();
+      allow create, update, delete: if false;
+    }
+
+    // PROXIMITY — SEC-003: deviceId hijack fix.
+    // Original rule allowed arbitrary write to proximity/{userId}.
+    // An attacker could write another user's deviceId into their own proximity doc —
+    // backend would then map BLE pings to the wrong user.
+    // Fix: whitelist only the fields a client is permitted to write.
+    // PROXIMITY — backend-readable only. Clients may write only their own
+    // ephemeral geohash document; Admin SDK bypasses rules for Cloud Functions.
+    match /proximity/{userId} {
+      allow read: if false;
+      allow write: if isSelf(userId)
+        && request.resource.data.keys().hasOnly([
+          'geohash',
+          'radiusTier',
+          'isActive',
+          'radarActive',
+          'updatedAt',
+          'isLowPowerMode',
+          'geoHashExpiresAt'
+        ])
+        && (!request.resource.data.keys().hasAny(['geohash'])          || request.resource.data.geohash is string)
+        && (!request.resource.data.keys().hasAny(['radiusTier'])       || request.resource.data.radiusTier is string)
+        && (!request.resource.data.keys().hasAny(['isActive'])         || request.resource.data.isActive is bool)
+        && (!request.resource.data.keys().hasAny(['radarActive'])      || request.resource.data.radarActive is bool)
+        && (!request.resource.data.keys().hasAny(['isLowPowerMode'])   || request.resource.data.isLowPowerMode is bool)
+        && (!request.resource.data.keys().hasAny(['updatedAt'])        || request.resource.data.updatedAt is timestamp)
+        && (!request.resource.data.keys().hasAny(['geoHashExpiresAt']) || request.resource.data.geoHashExpiresAt is timestamp);
+    }
+
+    // ACTIVE RUN CROSSES — involved users can read, backend-only writes.
+    match /active_run_crosses/{docId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.userIds;
+      allow create, update, delete: if false;
+    }
+
+    // PROXIMITY EVENTS — SEC-004: allow write → allow create.
+    // Original rule used 'allow write' which permits update and delete.
+    // An attacker could modify an existing proximity event (change RSSI, timestamp)
+    // after it was written, interfering with CF trigger processing.
+    // Fix: 'allow create' only — documents are immutable once written.
+    match /proximity_events/{eventId} {
+      allow create: if signedIn() &&
+        request.resource.data.from == request.auth.uid &&
+        request.resource.data.keys().hasAll(['from', 'toDeviceId', 'rssi', 'timestamp', 'ttl']) &&
+        request.resource.data.rssi is int &&
+        request.resource.data.timestamp is timestamp;
+      allow read, update, delete: if false;
+    }
+
+    match /rateLimits/{docId} {
+      allow read: if request.auth != null &&
+        docId.matches(request.auth.uid + ':.*');
+      allow write: if false;
+    }
+
+    match /idempotencyKeys/{doc} {
+      allow read, write: if false;
+    }
+
+    match /gdprRequests/{doc} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // DEFAULT DENY
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
