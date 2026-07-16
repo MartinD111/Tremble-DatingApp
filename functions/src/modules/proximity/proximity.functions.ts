@@ -17,6 +17,7 @@ import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { requireAuth, assertNotBanned } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
+import { apnsExpirationHeaders, NOTIFICATION_TTL_MILLIS } from "../../core/notification_expiry";
 import { z } from "zod";
 import { validateRequest } from "../../middleware/validate";
 import {
@@ -921,11 +922,15 @@ export const scanProximityPairs = onSchedule(
                                         token: fcmToken,
                                         data: dataPayload,
                                         apns: {
+                                            headers: apnsExpirationHeaders(),
                                             payload: {
                                                 aps: { contentAvailable: true },
                                             },
                                         },
-                                        android: { priority: "high" },
+                                        android: {
+                                            priority: "high",
+                                            ttl: NOTIFICATION_TTL_MILLIS,
+                                        },
                                     });
                                     logStructured({
                                         fn: "scanProximityPairs",
@@ -962,6 +967,7 @@ export const scanProximityPairs = onSchedule(
                                     },
                                     data: dataPayload,
                                     apns: {
+                                        headers: apnsExpirationHeaders(),
                                         payload: {
                                             aps: {
                                                 contentAvailable: true,
@@ -972,6 +978,7 @@ export const scanProximityPairs = onSchedule(
                                     },
                                     android: {
                                         priority: "high",
+                                        ttl: NOTIFICATION_TTL_MILLIS,
                                         notification: {
                                             channelId: "tremble_proximity",
                                             sound: "default",

@@ -106,8 +106,11 @@ type SentPayload = {
     token: string;
     notification?: { title?: string; body?: string };
     data?: Record<string, string>;
-    apns?: { payload?: { aps?: Record<string, unknown> } };
-    android?: { priority?: string; notification?: Record<string, unknown> };
+    apns?: {
+        headers?: Record<string, string>;
+        payload?: { aps?: Record<string, unknown> };
+    };
+    android?: { priority?: string; ttl?: number; notification?: Record<string, unknown> };
 };
 
 function sentPayloads(): SentPayload[] {
@@ -377,5 +380,91 @@ describe("scanProximityPairs — CROSSING_PATHS visible notification", () => {
         // userB is not silent → gets a visible notification.
         const toB = payloads.find((p) => p.token === "fcm-b");
         expect(toB?.notification?.title).toBeDefined();
+    });
+
+    // ── Message expiry ───────────────────────────────────────────────────────
+    // A proximity alert is only true for a few minutes. If the handset is
+    // offline, FCM must drop the message rather than deliver "X is nearby"
+    // after X has left. TTL governs the delivery window only; it does not
+    // retract a notification that already reached the device.
+    //
+    // The two platforms disagree on units: Android takes a relative duration in
+    // milliseconds, APNs takes an absolute UNIX epoch in seconds as a string.
+    describe("message expiry", () => {
+        // beforeEach pins the clock to 2026-07-15T12:00:00.000Z.
+        const expectedApnsExpiration = String(
+            Math.floor(Date.parse("2026-07-15T12:00:00.000Z") / 1000) + 300,
+        );
+
+        it("expires a visible CROSSING_PATHS after 5 minutes on both platforms", async () => {
+            setupHappyPathPair("en", "en");
+            const { scanProximityPairs } =
+                await import("../../src/modules/proximity/proximity.functions");
+
+            await (scanProximityPairs as unknown as () => Promise<void>)();
+
+            const payloads = sentPayloads();
+            expect(payloads).toHaveLength(2);
+            for (const payload of payloads) {
+                expect(payload.android?.ttl).toBe(300_000);
+                expect(payload.apns?.headers?.["apns-expiration"]).toBe(expectedApnsExpiration);
+            }
+        });
+
+        it("expires a silent CROSSING_PATHS wake on the same window", async () => {
+            mockProximityDocs.push(
+                { id: "userA", data: () => ({ geohash: "u24pruy", radiusTier: "free" }) },
+                { id: "userB", data: () => ({ geohash: "u24pruy", radiusTier: "free" }) },
+            );
+            mockUsersById.set("userA", {
+                ...mutualMatchBase,
+                gender: "Male",
+                interestedIn: ["Female"],
+                fcmToken: "fcm-a",
+                appLanguage: "en",
+                name: "User Alpha",
+                age: 31,
+                birthDate: "1995-01-01",
+                photoUrls: ["https://media.example.test/user-alpha.jpg"],
+                isRunModeActive: true, // recipient is silent
+            });
+            mockUsersById.set("userB", {
+                ...mutualMatchBase,
+                gender: "Female",
+                interestedIn: ["Male"],
+                fcmToken: "fcm-b",
+                appLanguage: "en",
+                name: "User Beta",
+                age: 29,
+                birthDate: "1997-01-01",
+                photoUrls: ["https://media.example.test/user-beta.jpg"],
+            });
+            mockRedis.set.mockImplementation(async () => "OK");
+            mockRedis.del.mockImplementation(async () => 1);
+            mockRedis.incr.mockImplementation(async () => 1);
+            mockRedis.expire.mockImplementation(async () => 1);
+            mockMessaging.send.mockImplementation(async () => "message-id");
+
+            const { scanProximityPairs } =
+                await import("../../src/modules/proximity/proximity.functions");
+            await (scanProximityPairs as unknown as () => Promise<void>)();
+
+            const silent = sentPayloads().find((p) => p.token === "fcm-a");
+            expect(silent?.notification).toBeUndefined();
+            expect(silent?.android?.ttl).toBe(300_000);
+            expect(silent?.apns?.headers?.["apns-expiration"]).toBe(expectedApnsExpiration);
+        });
+
+        it("keeps the high-priority delivery hint alongside the expiry", async () => {
+            setupHappyPathPair("en", "en");
+            const { scanProximityPairs } =
+                await import("../../src/modules/proximity/proximity.functions");
+
+            await (scanProximityPairs as unknown as () => Promise<void>)();
+
+            for (const payload of sentPayloads()) {
+                expect(payload.android?.priority).toBe("high");
+            }
+        });
     });
 });
