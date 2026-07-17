@@ -341,6 +341,19 @@ class RadarEventStreamHandler: NSObject, FlutterStreamHandler {
     ) -> Bool {
         SwiftFlutterBackgroundServicePlugin.taskIdentifier = "app.tremble.radar"
 
+        // Own the notification-center delegate BEFORE plugin registration.
+        // firebase_messaging skips replacing the delegate when it already
+        // conforms to FlutterAppLifeCycleProvider (which FlutterAppDelegate
+        // does), specifically to avoid an infinite willPresentNotification
+        // forwarding loop (flutterfire#4026). Without this line the Firebase
+        // app-delegate-proxy claims the delegate first, the plugin then wraps
+        // it, and every foreground push recurses until the stack overflows —
+        // the 1.0.0+23/+24 freeze (Sentry TREMBLE-FUNCTIONS-V/-W). Swizzling
+        // stays enabled, so FCM token handling is unaffected.
+        if #available(iOS 10.0, *) {
+            UNUserNotificationCenter.current().delegate = self
+        }
+
         GeneratedPluginRegistrant.register(with: self)
         if let registrar = self.registrar(forPlugin: "TrembleNativePlugin") {
             TrembleNativePlugin.register(with: registrar)
