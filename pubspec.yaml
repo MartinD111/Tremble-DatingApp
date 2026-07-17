@@ -1,7 +1,7 @@
 name: tremble
 description: Tremble – Passive proximity-based dating app.
 publish_to: 'none'
-version: 1.0.0+24
+version: 1.0.0+25
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -123,4 +123,12 @@ sentry:
   project: tremble-functions
   upload_debug_symbols: true
   upload_sources: false
+  # commits: false disables release-commit association (suspect-commits). It
+  # needs a Sentry<->GitHub integration AND linear git history; this repo
+  # squash-merges, so the previous release's commit SHA vanishes and the plugin
+  # aborts with "Could not find the SHA of the previous release" — which killed
+  # the build 25 run AFTER symbols had already uploaded. Symbolication does not
+  # need commit association, so switch it off rather than paper over it with
+  # ignore_missing.
+  commits: false
   log_level: info

@@ -1,4 +1,44 @@
 # Active Release Chore
+Plan ID: 20260717-release-b25
+Risk Level: LOW (version bump only; ships the freeze fix already reviewed as PR #60)
+Founder Approval Required: NO for the build; TestFlight upload authorised 2026-07-17 ("go" after merge, same flow as build 24).
+Branch: chore/release-b25
+
+## Objective
+
+Ship 1.0.0 (25) — the FIRST binary containing the foreground-push freeze fix
+(PR #60). Build 24 shipped before that fix and still crashes on any foreground
+push; 25 is what the device verification actually runs against.
+
+## What build 25 carries (delta over 24)
+
+| PR | Change |
+|---|---|
+| #60 | Own the UNUserNotificationCenter delegate before plugin registration — stops the willPresent swizzle recursion (the freeze) |
+| #59 | build_prod.sh hardening (versionCode guard, --skip-build, AAB preserve) |
+
+## Scope
+
+- `pubspec.yaml`: `1.0.0+24` → `1.0.0+25` — sole version source.
+- `tasks/plan.md`: this entry.
+- `android/local.properties`: NOT edited (flutter build rewrites it from pubspec).
+
+## Verification
+
+- Artifact-level: AAB versionCode 25; prod `.env.prod.json` keys compiled into
+  both binaries; Sentry lists debug files for dist 25 BEFORE TestFlight.
+- The FCM fix is source-pinned by
+  `test/core/appdelegate_notification_delegate_test.dart` (merged in #60).
+
+## Open — device verification (the actual proof, cannot come from CI)
+
+1. **Foreground push presents a banner and does NOT crash** — the build-24 repro, now passing.
+2. Background/killed push delivers; Wave Back via the notification action works.
+3. If anything crashes, Sentry renders a real stack (dist 25 symbols uploaded).
+
+---
+
+# Prior Release Chore
 Plan ID: 20260717-release-b24
 Risk Level: LOW (version string bump only; the shipped code merged as PRs #56/#57/#58)
 Founder Approval Required: NO for the build. YES for the TestFlight upload (outward-facing).
