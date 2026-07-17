@@ -223,7 +223,20 @@ preserve() {
       echo "  Runner.app.dSYM $(dwarfdump --uuid "$PRESERVE/ios-dsyms/Runner.app.dSYM" 2>/dev/null | head -1 | awk '{print $2}')"
     fi
   fi
-  find build -maxdepth 4 \( -name "*.ipa" -o -name "*-release.aab" \) -exec cp {} "$PRESERVE/" \; 2>/dev/null || true
+  # No -maxdepth: the AAB lives 5 levels down
+  # (build/app/outputs/bundle/prodRelease/*.aab) and a maxdepth of 4 silently
+  # skipped it — the artifact you most need for a Play upload, missing without
+  # a word. Prune the noisy intermediates instead of guessing a depth.
+  find build \( -path "*/intermediates" -o -path "*/tmp" \) -prune -o \
+       \( -name "*.ipa" -o -name "*-release.aab" \) -print0 2>/dev/null \
+    | xargs -0 -I{} cp {} "$PRESERVE/" 2>/dev/null || true
+
+  local kept
+  kept=$(find "$PRESERVE" -maxdepth 1 \( -name "*.ipa" -o -name "*.aab" \) | wc -l | tr -d ' ')
+  [ "$kept" -gt 0 ] || warn "no .ipa/.aab preserved — check the build output paths"
+  for f in "$PRESERVE"/*.ipa "$PRESERVE"/*.aab; do
+    [ -e "$f" ] && echo "  kept $(basename "$f") ($(du -h "$f" | cut -f1))"
+  done
   ok "preserved to $PRESERVE ($(du -sh "$PRESERVE" | cut -f1))"
 }
 
