@@ -1,4 +1,87 @@
 # Implementation Plan
+Plan ID: 20260717-crash-reporter-storm
+Risk Level: HIGH — rewrites the global error handlers in main.dart
+Founder Approval Required: YES — granted 2026-07-17 ("go")
+Branch: fix/crash-reporter-storm
+
+## 1. OBJECTIVE
+
+Stop the app killing itself from inside its own crash reporter. Root cause of
+the 1.0.0+23 iOS freeze (Sentry TREMBLE-FUNCTIONS-Q), proven from a symbolicated
+device stack — not inferred.
+
+## 2. THE CHAIN (evidence)
+
+Symbolicated crash, com.apple.main-thread:
+
+    FIRCLSProcessRecordAllThreads  <- FIRCLSHandler
+    <- FIRCLSExceptionRecordOnDemand
+    <- -[FIRCrashlytics recordOnDemandExceptionModel:]
+    <- -[FLTFirebaseCrashlyticsPlugin recordError:withMethodCallResult:]
+
+1. `maps.trembledating.com` DNS fails offline → every vector tile throws,
+   continuously (`ClientException with SocketException: Failed host lookup`).
+2. `CrashFilter` matched `vector_map_tiles` / `future_tile_provider.dart` /
+   `_FutureImageProvider`. AOT strips package URIs, and the real frames are
+   `tile_loader.dart`, `vector_tile_loading_cache.dart`, `caches_tile_provider.dart`,
+   `isolate_executor.dart`, `concurrency_executor.dart`, `pool_executor.dart`.
+   The filter matched none of them: it worked in debug, missed in release. Its
+   test asserted an assumed AOT stack that happened to match, so it passed.
+3. Unfiltered → `recordFlutterFatalError` filed each failed tile as a FATAL
+   crash on the main thread.
+4. Crashlytics walks every thread per report; this process runs dozens of
+   DartWorker + ~15 gRPC threads. Storm → main thread stalls → 2s AppHang →
+   stack overflow raised from inside the reporter.
+
+This also explains the ~70KB/5s firelog uploads from launch and the os_log
+frames at the base of the stack.
+
+Corroborated by Crashlytics: tile_loader.dart:72, isolate_executor.dart:69,
+map_controller_impl.dart:66, main.dart:102 — all "FlutterError - Cancelled",
+all filed as Crash.
+
+## 3. SCOPE
+
+- `lib/src/core/crash_filter.dart` — match real AOT frames; suppress network
+  failures as well as cancellations; only for the tile pipeline.
+- `lib/src/core/crash_report_throttle.dart` — NEW. Sliding window, 8/min.
+- `lib/main.dart` — throttle all three reporting paths; `recordFlutterError`
+  instead of `recordFlutterFatalError`; suppressed-path `presentError` becomes
+  debug-only (it dumped to os_log per failed tile in release).
+- `lib/src/features/map/presentation/tremble_map_screen.dart` — `_mapReady` via
+  `onMapReady`; guard `_setZoom` and `_resolveUserCenter`.
+
+Does NOT change: notifications, the wave pill, BLE, Cloud Functions, rules.
+
+## 4. RISKS & TRADEOFFS
+
+- Throttling drops reports beyond 8/min. Intended: a storm's first few reports
+  identify it as well as ten thousand. Isolated errors are unaffected.
+- `recordFlutterError` files non-fatally — correct, since the framework catches
+  these and the app keeps running. Crash-free-users metrics will shift as
+  benign tile failures stop being counted as crashes.
+- Filter is deliberately narrow: cancellations and network failures only, and
+  only on the tile pipeline. A real defect there still reports (tested).
+- `_mapReady`: a zoom tap before the map renders now records the level without
+  moving the camera, instead of throwing.
+- Residual: the map still has no offline UX and surfaces a raw SocketException
+  string. Tracked separately; not this PR.
+
+## 5. VERIFICATION
+
+- Unit tests: 14 CrashFilter cases (7 real production frames from the device
+  report, offline lookup failure, plus negative controls proving genuine errors
+  and non-tile network failures still report) + 5 CrashReportThrottle cases
+  including a 60s storm asserting a bounded 8 reports and no retained-history
+  leak. Full suite 343/343.
+- Integration tests: backend Jest green via pre-commit hook; no server contract
+  touched.
+- Security scan: pre-commit secret scan clean; no secrets/auth/rules touched.
+- Analyzer: clean.
+- Device: OUTSTANDING — airplane mode on the map must no longer hang or crash,
+  and the two-phone proximity freeze must be re-tested.
+
+# Prior Implementation Plan
 Plan ID: 20260716-ble-scan-write-storm
 Risk Level: HIGH — touches the BLE service (AGENTS/CLAUDE escalation list)
 Founder Approval Required: YES — granted 2026-07-16 ("just fix this shit",

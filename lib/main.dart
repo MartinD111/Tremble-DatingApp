@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'src/app.dart';
 import 'src/core/background_service.dart';
 import 'src/core/crash_filter.dart';
+import 'src/core/crash_report_throttle.dart';
 import 'src/core/firebase_options_dev.dart';
 import 'src/core/firebase_options_prod.dart';
 import 'src/core/theme_provider.dart';
@@ -115,12 +116,26 @@ Future<void> main() async {
         : AppleAppAttestProvider(),
   );
 
+  // Recording is expensive: Crashlytics runs on the main thread and walks every
+  // thread in the process, and this app has dozens. An unbounded stream of
+  // reports stalls the main thread and, in 1.0.0+23, overflowed the stack from
+  // inside the reporter. Every path below is therefore throttled.
+  final crashThrottle = CrashReportThrottle();
+
   FlutterError.onError = (details) {
     if (CrashFilter.shouldSuppressFlutterError(details)) {
-      FlutterError.presentError(details);
+      // Debug only. In release this dumps to os_log on every failed tile, and
+      // offline that is thousands of writes — the log pressure visible at the
+      // base of the 1.0.0+23 crash stack.
+      if (kDebugMode) FlutterError.presentError(details);
       return;
     }
-    FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    if (!crashThrottle.allow(DateTime.now())) return;
+
+    // Not fatal: a FlutterError is caught by the framework and the app keeps
+    // running. Reporting these as fatal filed benign tile failures as crashes
+    // and forced the costlier on-demand recording path.
+    FirebaseCrashlytics.instance.recordFlutterError(details);
     Sentry.captureException(
       details.exception,
       stackTrace: details.stack,
@@ -131,6 +146,7 @@ Future<void> main() async {
   // StateError: "Cannot use ref after the widget was disposed"
   // from background callbacks. FlutterError.onError misses these.
   PlatformDispatcher.instance.onError = (error, stack) {
+    if (!crashThrottle.allow(DateTime.now())) return true;
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     Sentry.captureException(error, stackTrace: stack);
     return true;
@@ -143,6 +159,7 @@ Future<void> main() async {
     final stack = errorAndStack.length > 1 && errorAndStack[1] != null
         ? StackTrace.fromString(errorAndStack[1].toString())
         : StackTrace.current;
+    if (!crashThrottle.allow(DateTime.now())) return;
     await Sentry.captureException(
       errorAndStack[0],
       stackTrace: stack,
