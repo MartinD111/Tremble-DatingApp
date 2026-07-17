@@ -31,6 +31,15 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
   late final MapController _mapController;
   _MapZoom _zoom = _MapZoom.city;
 
+  /// True once FlutterMap has rendered and the controller is safe to drive.
+  ///
+  /// Every MapController member — including `camera` — throws until the widget
+  /// has rendered once, so readiness cannot be probed from the controller
+  /// itself; it has to be recorded when the map reports it. Driving the
+  /// controller early threw on a plain zoom tap and, before the reporting
+  /// throttle, each throw became a main-thread crash report.
+  bool _mapReady = false;
+
   static const bool _isDev =
       String.fromEnvironment('FLAVOR', defaultValue: 'dev') != 'prod';
 
@@ -82,7 +91,10 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
       setState(() {
         _userCenter = LatLng(pos.latitude, pos.longitude);
       });
-      if (_mapController.camera.zoom > 0) {
+      // Reading `camera` was itself unsafe — it throws the same "not rendered"
+      // exception it was meant to prevent. If the map has not rendered yet,
+      // MapOptions.initialCenter already picks up _effectiveCenter.
+      if (_mapReady) {
         _mapController.move(_userCenter!, _zoomLevels[_zoom]!);
       }
     } catch (_) {
@@ -104,6 +116,9 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
 
   void _setZoom(_MapZoom zoom) {
     setState(() => _zoom = zoom);
+    // A tap can land before the map reports ready — the toggle is painted over
+    // the map, so it is hittable first. The zoom level is still recorded above.
+    if (!_mapReady) return;
     _mapController.move(_effectiveCenter, _zoomLevels[zoom]!);
   }
 
@@ -406,6 +421,9 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                                   initialCenter: _effectiveCenter,
                                   initialZoom: _zoomLevels[_MapZoom.city]!,
                                   maxZoom: 16.0,
+                                  onMapReady: () {
+                                    if (mounted) _mapReady = true;
+                                  },
                                   interactionOptions: const InteractionOptions(
                                     flags: InteractiveFlag.all &
                                         ~InteractiveFlag.rotate,
