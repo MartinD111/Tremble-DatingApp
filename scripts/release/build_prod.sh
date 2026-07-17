@@ -14,11 +14,19 @@
 #
 # Usage:
 #   export SENTRY_AUTH_TOKEN=...        # scopes: project:releases, org:read
-#   scripts/release/build_prod.sh                 # both platforms
-#   scripts/release/build_prod.sh ios             # iOS only
-#   scripts/release/build_prod.sh android         # Android only
-#   scripts/release/build_prod.sh ios --no-upload # build, skip Sentry
+#   scripts/release/build_prod.sh                  # both platforms
+#   scripts/release/build_prod.sh ios              # iOS only
+#   scripts/release/build_prod.sh android          # Android only
+#   scripts/release/build_prod.sh ios --no-upload  # build, skip Sentry
+#   scripts/release/build_prod.sh all --skip-build # upload/preserve existing artifacts
 #
+# --skip-build exists because the upload can fail after a 20-minute build; there
+# is no reason to rebuild identical bits to retry it. It verifies the on-disk
+# archive still matches pubspec before trusting it.
+#
+# NOTE: run this WITHOUT piping to `tail`/`head`. The script relies on a
+# non-zero exit, and a pipeline reports the LAST command's status, which masks
+# a failure as success unless the caller also sets pipefail.
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
@@ -32,9 +40,15 @@ step() { echo; echo "── $* ────────────────�
 
 TARGET="${1:-all}"
 UPLOAD=1
-for arg in "$@"; do [ "$arg" = "--no-upload" ] && UPLOAD=0; done
-case "$TARGET" in ios|android|all|--no-upload) ;; *) die "unknown target '$TARGET' (want: ios | android | all)";; esac
-[ "$TARGET" = "--no-upload" ] && TARGET=all
+SKIP_BUILD=0
+for arg in "$@"; do
+  case "$arg" in
+    --no-upload)  UPLOAD=0 ;;
+    --skip-build) SKIP_BUILD=1 ;;
+  esac
+done
+case "$TARGET" in ios|android|all|--no-upload|--skip-build) ;; *) die "unknown target '$TARGET' (want: ios | android | all)";; esac
+case "$TARGET" in --no-upload|--skip-build) TARGET=all ;; esac
 
 # ── Preflight ───────────────────────────────────────────────────────────────
 step "Preflight"
@@ -125,7 +139,42 @@ build_android() {
   flutter build appbundle --release --flavor prod \
     --dart-define-from-file=.env.prod.json \
     --obfuscate --split-debug-info="$SYMROOT/android"
+
+  local aab
+  aab=$(find build/app/outputs/bundle -name "*-release.aab" 2>/dev/null | head -1) || true
+  [ -n "$aab" ] || die "no AAB produced"
   ok "Android AAB built"
+  verify_android_version "$aab"
+}
+
+# Guard against shipping a duplicate/lower versionCode, which Play Store rejects
+# only after a full upload round-trip. The chain is: `flutter build` rewrites
+# android/local.properties' flutter.versionCode from pubspec
+# (gradle_utils.dart:1168), then Gradle reads it back (FlutterPlugin.kt:130 —
+# note it defaults to "1" when the key is ABSENT, so those lines must exist and
+# must never be hand-edited). This function checks the bundle itself when
+# bundletool is available, and otherwise checks the value Gradle actually
+# resolved. It never aborts the build on its own failure to read — a guard that
+# cannot read is a reason to warn, not to throw away a good build.
+verify_android_version() {
+  local aab="$1" vc=""
+
+  if command -v bundletool >/dev/null 2>&1; then
+    vc=$(bundletool dump manifest --bundle="$aab" --xpath=/manifest/@android:versionCode 2>/dev/null | tr -dc '0-9') || vc=""
+    [ -n "$vc" ] && ok "AAB manifest versionCode: $vc (read from the bundle)"
+  fi
+
+  if [ -z "$vc" ]; then
+    vc=$(grep -E '^flutter\.versionCode=' android/local.properties 2>/dev/null | cut -d= -f2 | tr -dc '0-9') || vc=""
+    [ -n "$vc" ] && warn "bundletool absent — checked the versionCode Gradle resolved ($vc), not the bundle manifest itself"
+  fi
+
+  if [ -z "$vc" ]; then
+    warn "could not determine versionCode — verify manually before any Play upload"
+    return 0
+  fi
+  [ "$vc" = "$BUILD_NUMBER" ] || die "versionCode is '$vc', expected '$BUILD_NUMBER' — Play Store would reject this"
+  ok "Android versionCode $vc matches pubspec"
 }
 
 # ── Sentry upload ───────────────────────────────────────────────────────────
@@ -179,12 +228,24 @@ preserve() {
 }
 
 # ── Run ─────────────────────────────────────────────────────────────────────
+if [ "$SKIP_BUILD" = "1" ]; then
+  step "Skipping build — verifying the artifacts already on disk"
+  archived=$(/usr/libexec/PlistBuddy -c "Print :ApplicationProperties:CFBundleVersion" "$ARCHIVE/Info.plist" 2>/dev/null || echo "")
+  [ "$archived" = "$BUILD_NUMBER" ] || die "on-disk archive is build '$archived', expected '$BUILD_NUMBER' — rebuild instead of uploading stale symbols"
+  ok "on-disk archive is build $archived"
+  aab=$(find build/app/outputs/bundle -name "*-release.aab" 2>/dev/null | head -1) || true
+  [ -n "$aab" ] && verify_android_version "$aab"
+fi
+
 case "$TARGET" in
-  ios)     build_ios;   [ "$UPLOAD" = "1" ] && upload_ios ;;
-  android) build_android; [ "$UPLOAD" = "1" ] && upload_android ;;
+  ios)
+    [ "$SKIP_BUILD" = "1" ] || build_ios
+    [ "$UPLOAD" = "1" ] && upload_ios ;;
+  android)
+    [ "$SKIP_BUILD" = "1" ] || build_android
+    [ "$UPLOAD" = "1" ] && upload_android ;;
   all)
-    build_ios
-    build_android
+    if [ "$SKIP_BUILD" != "1" ]; then build_ios; build_android; fi
     if [ "$UPLOAD" = "1" ]; then upload_ios; upload_android; fi
     ;;
 esac
