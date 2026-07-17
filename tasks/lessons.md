@@ -4,6 +4,78 @@
 
 ---
 
+**Rule #85 — The Flutter app reports to the Sentry project `tremble-functions`, NOT `tremble-app`. A release that uploads no debug symbols is not a release.**
+[2026-07-17] Two separate traps, both of which cost real hours.
+
+**(a) The project name is a lie waiting to happen.** There are three Sentry
+projects — `tremble-app`, `tremble-functions`, `tremble-website`. The obvious
+guess for the Flutter app is `tremble-app`. It is wrong. `SENTRY_DSN` in
+`.env.prod.json` resolves to project id `4511554698936400`, which is
+`tremble-functions`. Every iOS crash lands there: `TREMBLE-FUNCTIONS-Q`
+(EXC_BAD_ACCESS), `-S` (AppHang), `-R` (MapController), `-P` (gstatic font) —
+all `platform: cocoa`, `release: tremble.dating.app@1.0.0+23`. `tremble-app`
+exists and receives nothing. `tasks/context.md` (Session 39) instructs a future
+reader to "confirm Sentry **tremble-app** project receives events" — that line
+is wrong; do not act on it. Uploading symbols to `tremble-app` would succeed,
+report success, and symbolicate nothing.
+
+**(b) Symbols were never uploaded at all.** Releases ship `--obfuscate
+--split-debug-info` but nothing was ever sent to Sentry, so every native frame
+arrived as `<redacted>` and every Dart issue title as `lM: Cancelled` /
+`cJ: [permission-denied]`. Session 48 spent ~5 hours reconstructing the 1.0.0+23
+crash-reporter storm by hand for exactly this reason.
+
+**The artifacts are not interchangeable, and iOS/Android are asymmetric.**
+Verified with `sentry-cli debug-files check` on build 23, not assumed:
+
+| Artifact | Debug ID | Fixes |
+|---|---|---|
+| `Runner.app.dSYM` | `89bb20ec-…` — **usable** | `<redacted>` native frames (Obj-C/Swift/system) |
+| `App.framework.dSYM` | `72002995-…` — **usable** | **iOS Dart AOT frames** |
+| `app.android-arm64.symbols` | `30f93e7a-…` — **usable** | **Android Dart frames** |
+| `app.ios-arm64.symbols` | `00000000-…` — **UNUSABLE** | nothing — Sentry rejects it |
+| `obfuscation_map.json` | paired to a debug ID | obfuscated Dart issue *titles* (`lM:`, `cJ:`) |
+
+**The trap:** on iOS the `--split-debug-info` `.symbols` file is stripped of its
+debug identifier (`Usable: no (missing debug identifier, likely stripped)`), and
+`sentry-cli debug-files upload` reports "Found 0 debug information files". It is
+for `flutter symbolize` only. iOS Dart frames are decoded by
+**`App.framework.dSYM`** from the `.xcarchive` instead. On **Android** the
+`.symbols` file DOES carry a real debug ID and is the right artifact. So
+"upload the .symbols files" is correct for Android and useless for iOS — do not
+assume the platforms behave the same.
+
+**Symbolication happens at INGEST.** Uploading dSYMs after a crash has been
+stored does NOT retroactively fix it — build 23's events stayed `<redacted>`
+even after a verified upload of the exact matching debug IDs. Symbols must be up
+BEFORE the build ships, which is why the script uploads as part of the build.
+
+**How to apply:**
+- Build prod via `scripts/release/build_prod.sh` only. It enforces Rule #84,
+  produces all three artifacts, uploads them, and preserves them under
+  `release-symbols/b<N>/`.
+- Never let a build's dSYMs live only in `build/` — `flutter clean` destroys
+  them and with them any hope of reading that build's crashes. Build 23's dSYMs
+  survived by pure luck (`Runner.app.dSYM` UUID `89BB20EC-14F6-3E25-980F-6885FCF9E740`,
+  which matches the `app_id` on the live TREMBLE-FUNCTIONS-Q event).
+- Verify debug files are listed for the new `dist` BEFORE uploading to
+  TestFlight: https://aleksandar-bojic.sentry.io/settings/projects/tremble-functions/debug-symbols/
+- Use an **organization** token (`sntrys_…`) from
+  `/settings/auth-tokens/`. It has no scope picker — the fixed `org:ci` scope
+  DOES cover `debug-files upload` despite the UI blurb saying only "Source Map
+  Upload, Release Creation, Code Mappings" (verified 2026-07-17). It is
+  upload-only: reading or reprocessing issues returns HTTP 403, which is correct
+  least privilege for a build token.
+- The org is EU-region, but do NOT set `url:` / `SENTRY_URL`. An org token embeds
+  its own `url` + `region_url`; sentry-cli uses the embedded value and warns that
+  it is ignoring yours. Only a personal token would need an explicit region.
+- `SENTRY_AUTH_TOKEN` is an env var, never a pubspec value — `pubspec.yaml` is
+  committed and the pre-commit secret scan reads it.
+
+Source: Sentry dSYM pipeline lane, 2026-07-17. Related: Rule #84.
+
+---
+
 **Rule #84 — Prod release builds MUST use `--dart-define-from-file=.env.prod.json`, not a bare `--dart-define=FLAVOR=prod`.**
 [2026-07-14] Build 1.0.0+17 was uploaded to Play Console (AAB) and TestFlight (IPA) during the LEGAL-003 close-out session using a build script that passed only `--dart-define=FLAVOR=prod`. Consequences observed on TestFlight iOS build 17:
 - `PlacesService._apiKey` resolved to empty string → Google Places autocomplete returned auth error → **"No gyms found nearby"** during the gym step of registration → new-user signup was completely blocked.
@@ -13,6 +85,17 @@
 **How to apply — every prod release, both platforms:**
 
 ```bash
+export SENTRY_AUTH_TOKEN=...          # see Rule #85
+scripts/release/build_prod.sh         # both platforms, builds + uploads symbols
+```
+
+**Use the script.** It is the only supported path. It enforces this rule (and
+fails the build if any required key in `.env.prod.json` is empty — the exact
+build-17 failure), adds the `--save-obfuscation-map` that the hand-written
+commands below always omitted, uploads debug symbols per Rule #85, and preserves
+the artifacts. The commands it runs are, for reference only:
+
+```bash
 flutter build appbundle --release --flavor prod \
   --dart-define-from-file=.env.prod.json \
   --obfuscate --split-debug-info=build/symbols/android
@@ -20,10 +103,16 @@ flutter build appbundle --release --flavor prod \
 flutter build ipa --release --flavor prod \
   --dart-define-from-file=.env.prod.json \
   --obfuscate --split-debug-info=build/symbols/ios \
+  --extra-gen-snapshot-options=--save-obfuscation-map=<abs>/build/symbols/ios/obfuscation_map.json \
   --export-options-plist=ios/ExportOptions.plist
 ```
 
 Do NOT accept a release script that lists individual `--dart-define` flags — it silently drifts when a new key is added to `.env.prod.json`. Always pass the file, not the keys.
+
+**Still-open violation (2026-07-17):** `.github/workflows/deploy.yml` `build-apk`
+runs `--dart-define=FLAVOR=$FLAVOR` with no env file and no obfuscation — this
+rule's exact failure. It builds an APK rather than the AAB that ships, so it
+appears to be dead weight. Fix or delete it; do not use it to cut a release.
 
 **Smoke-test hint before shipping:** on a fresh install of the AAB/IPA, register a test user through the gym step. If "no gyms found nearby" appears for common queries ("Fitnes", major chains), the env file was skipped — bump the build number and rebuild before uploading to any store channel.
 

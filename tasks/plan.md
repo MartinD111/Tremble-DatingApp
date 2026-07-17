@@ -1,8 +1,131 @@
 # Implementation Plan
+Plan ID: 20260717-sentry-debug-symbol-pipeline
+Risk Level: MEDIUM — build tooling only; no product code, no prod deploy
+Founder Approval Required: NO for the code. YES for one action — minting the Sentry auth token.
+Branch: ci/sentry-debug-symbol-pipeline
+
+## 1. OBJECTIVE
+
+Make the next production crash readable on arrival. Releases ship
+`--obfuscate --split-debug-info` and upload nothing to Sentry, so every frame
+arrives as `<redacted>` and every Dart issue title as `lM:` / `cJ:`. Session 48
+spent ~5 hours hand-reconstructing the 1.0.0+23 freeze for exactly this reason.
+
+Done looks like: `TREMBLE-FUNCTIONS-Q` renders `FIRCLSProcessRecordAllThreads`
+instead of `<redacted>`, and build 24 cannot be cut without its symbols going up.
+
+## 2. SCOPE
+
+- `pubspec.yaml` — `sentry_dart_plugin ^3.4.0` dev dependency + `sentry:` block.
+- `scripts/release/build_prod.sh` [NEW] — the single production release entry point.
+- `tasks/lessons.md` — Rule #85 [NEW]; Rule #84 amended to call the script.
+- `release-symbols/b23/ios-dsyms/` — build 23 dSYMs rescued (gitignored).
+
+Does NOT change: any `lib/` code, any Cloud Function, Firestore rules, native
+config, or the pubspec version. No deploy. Build 24 is not cut here.
+
+## 3. STEPS
+
+| # | Action | Verification |
+|---|---|---|
+| 0 | Rescue build 23 dSYMs from `build/ios/archive` before a `flutter clean` destroys them | DONE — 71 dSYMs copied; `Runner.app.dSYM` UUID `89BB20EC-14F6-3E25-980F-6885FCF9E740` matches the live event's `app_id` |
+| 1 | **Founder:** mint an org token (`sntrys_…`, fixed `org:ci` scope) | DONE 2026-07-17 — `sentry-cli info` reports `Scopes: org:ci`; `org:ci` does cover debug-files upload |
+| 2 | Add the plugin + `sentry:` config | DONE — plugin reads config from pubspec, downloads sentry-cli 2.58.6 (checksum verified) |
+| 3 | Backfill build 23 | DONE with a caveat — see §3a |
+| 4 | Add `scripts/release/build_prod.sh` | DONE — preflight computes `tremble.dating.app@1.0.0+23` / dist 23, matching the live event exactly |
+| 5 | Rule #85 + Rule #84 amendment | — |
+
+## 3a. STEP 3 RESULT — what is proven, and what is not
+
+**Proven.** Build 23's dSYMs uploaded to `tremble-functions` and are confirmed
+stored server-side via the Sentry API:
+
+| Debug ID | Object | Decodes |
+|---|---|---|
+| `89bb20ec-14f6-3e25-980f-6885fcf9e740` | `Runner` | native frames — byte-identical to the `app_id` on live event TREMBLE-FUNCTIONS-Q |
+| `72002995-135e-3ab9-9477-67b6ad6bbe8d` | `App` | iOS Dart AOT frames |
+
+Right files, right project, right debug IDs, upload works with an `org:ci` token.
+
+**NOT proven: end-to-end ingest-time symbolication.** TREMBLE-FUNCTIONS-Q still
+renders `<redacted>` after the upload, because **Sentry symbolicates at ingest**
+— it does not retroactively rewrite events already stored. Reprocessing would be
+required, and the `org:ci` token returns HTTP 403 on every issue endpoint (it is
+upload-only by design). So the backfill did NOT make build 23's three existing
+events readable, and cannot.
+
+This does not weaken the lane: the crash it would have re-proven was already
+symbolicated from the device in Session 48 and fixed in PR #57. The backfill's
+job was to validate the chain, and the debug-ID match does that — `89bb20ec…` is
+the exact join key Sentry uses. The final link (a *new* event rendering a real
+stack) is proven by build 24's first crash, which is why §5 puts the check there.
+
+**Two corrections the evidence forced** (both were wrong in the approved plan):
+1. iOS `app.ios-arm64.symbols` is UNUSABLE — debug ID `00000000-…`, and
+   sentry-cli reports "Found 0 debug information files". iOS Dart frames are
+   decoded by `App.framework.dSYM`. Android's `.symbols` DOES have a real ID.
+2. `url: https://de.sentry.io` was wrong and is removed — org tokens embed their
+   own region, and sentry-cli ignores a manual URL with a warning.
+
+## 4. RISKS & TRADEOFFS
+
+- **The project is `tremble-functions`, not `tremble-app`.** The DSN resolves to
+  project id `4511554698936400`; the live iOS crashes (platform `cocoa`, release
+  `tremble.dating.app@1.0.0+23`) are all in `tremble-functions`. `tremble-app`
+  exists and receives nothing. `tasks/context.md` (Session 39) says to verify
+  "tremble-app" — following that would upload symbols to an empty project and
+  leave the next crash just as unreadable. Highest-risk detail in the lane.
+- **Android obfuscation maps are deliberately not uploaded.** The plugin's
+  collector always searches `build/ios` and pairs one map with the UNION of both
+  platforms' debug files (`dart_symbol_map_debug_files_collector.dart:101,113`).
+  iOS and Android obfuscate in separate `gen_snapshot` runs, so their maps
+  differ; pairing Android's map to an iOS debug ID would rename types
+  *incorrectly* — worse than no map, precisely when someone is reading a crash.
+  The script scopes `symbols_path` per platform and uploads the map for iOS only.
+  Android Dart frames still symbolicate via `.symbols`; only Android issue
+  *titles* stay obfuscated. Debt, recorded in §6.
+- **Token handling.** `auth_token` never enters `pubspec.yaml` (tracked file;
+  `secret_scan.sh` runs pre-commit). Supplied via `SENTRY_AUTH_TOKEN`.
+- **Assumption not yet proven:** that the uploaded dSYMs actually resolve the
+  stack. Step 3 tests exactly that against a crash whose true stack is already
+  known, so a wrong config fails now rather than during the next incident.
+
+## 5. VERIFICATION
+
+- unit tests: n/a — no runtime code changed. Full suite must stay green (343).
+- integration tests: n/a — no service boundary crossed. The real end-to-end
+  check is step 3 against live Sentry.
+- security scan: `scripts/ci/secret_scan.sh` clean — proves no token reached a
+  tracked file. No auth, rules, or PII surface touched.
+- `flutter analyze` clean; `dart format` clean.
+- Step 3: dSYM upload verified server-side by debug ID (§3a). Retroactive
+  symbolication of build 23 is NOT possible — symbols bind at ingest.
+- **Build 24 carries the remaining proof.** Run the script, confirm Sentry lists
+  debug files for dist 24 BEFORE the IPA reaches TestFlight, then confirm the
+  first build-24 event renders a real stack rather than `<redacted>`. Until an
+  event is ingested with symbols already present, ingest-time symbolication is
+  verified by construction (matching debug IDs), not by observation.
+
+## 6. FOLLOW-UPS (found, not fixed here)
+
+- `deploy.yml` `build-apk` uses a bare `--dart-define=FLAVOR=$FLAVOR` with no
+  `.env.prod.json` and no obfuscation — a live Rule #84 violation. It builds an
+  APK, not the AAB that ships, so it looks like dead weight. Fix or delete in
+  its own lane.
+- Android obfuscation map (see §4).
+- `lib/src/features/match/domain/wave.dart` — dead code; models `createdAt` but
+  is imported nowhere. It is why the pill-TTL requirement *reads* as feasible.
+- `recap_ttl_provider.dart` — named TTL, is actually a blind countdown. Same bug
+  class as the wave pill.
+
+---
+
+# Prior Implementation Plan
 Plan ID: 20260717-crash-reporter-storm
 Risk Level: HIGH — rewrites the global error handlers in main.dart
+Status: RESOLVED 2026-07-17 — PR #57 merged into `main` @ 38be73b
 Founder Approval Required: YES — granted 2026-07-17 ("go")
-Branch: fix/crash-reporter-storm
+Branch: fix/crash-reporter-storm (merged)
 
 ## 1. OBJECTIVE
 

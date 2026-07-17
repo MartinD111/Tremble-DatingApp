@@ -1,3 +1,72 @@
+## Session State — 2026-07-17 (Session 48)
+- Active Task: Root-caused and fixed the 1.0.0+23 iOS freeze. Three follow-ups open.
+- Environment: local + GitHub. No production mutation this session.
+- System Status: `main` @ `38be73b`, clean tree, no open PRs. PRs #56 and #57 merged.
+  `pubspec.yaml` is still `1.0.0+23` — **build 24 does not exist**.
+
+## ROOT CAUSE FOUND (proven, not inferred)
+
+The app was killed by its own crash reporter. Symbolicated device stack:
+
+    Crashed: com.apple.main-thread
+    FIRCLSProcessRecordAllThreads <- FIRCLSHandler
+    <- FIRCLSExceptionRecordOnDemand
+    <- -[FLTFirebaseCrashlyticsPlugin recordError:withMethodCallResult:]
+
+Chain: `maps.trembledating.com` unresolvable offline → every vector tile throws
+continuously → `CrashFilter` missed them **in release only** (it matched
+`vector_map_tiles`, but AOT strips package URIs; real frames are
+`tile_loader.dart`, `vector_tile_loading_cache.dart`, `caches_tile_provider.dart`,
+`isolate_executor.dart`, `concurrency_executor.dart`, `pool_executor.dart`) →
+each hit `recordFlutterFatalError` on the main thread → Crashlytics walks every
+thread per report (dozens of DartWorkers + ~15 gRPC threads) → main thread
+stalls → 2s AppHang → stack overflow inside the reporter.
+
+Explains: the ~70KB/5s firelog uploads from launch, the os_log/syslog frames at
+the stack base, and Sentry TREMBLE-FUNCTIONS-Q + -S.
+
+Why it survived review: the old `crash_filter_test.dart` asserted an *assumed*
+AOT stack (`future_tile_provider.dart`) that happened to match, so it passed
+while production burned. Lesson: assert against real device frames.
+
+## Merged this session
+
+- **PR #57** `fix/crash-reporter-storm` — the root-cause fix. CrashFilter matches
+  real AOT frames + network failures (tile pipeline only); new
+  `CrashReportThrottle` caps every reporting path at 8/min; `recordFlutterError`
+  not `recordFlutterFatalError`; suppressed-path `presentError` debug-only;
+  MapController guarded via `onMapReady`. 343/343 tests, analyzer clean.
+- **PR #56** `fix/ble-scan-write-storm` — `ScanCycleDedupe`: one `proximity_events`
+  write per device per scan. `FlutterBluePlus.scanResults` re-emits the cumulative
+  list per advertisement packet, so writes were unbounded. NOTE: this was NOT the
+  freeze cause (my hypothesis was wrong), but it is a real defect — the monthly
+  recap's near-miss count (`notifications.functions.ts:50` `count()` over
+  `proximity_events`) was inflated by orders of magnitude. Also fixed
+  `ios/Profile.xcconfig` (broken since April; Profile builds were impossible).
+
+## OPEN — next session
+
+1. **Map offline UX** — map still surfaces a raw
+   `ClientException with SocketException: Failed host lookup:
+   'maps.trembledating.com'` in airplane mode. No longer crashes; still ugly.
+   Needs a real offline/error state.
+2. **Wave pill 5-min TTL** — `wave_pill_service.dart:62`
+   `defaultAutoDismissAfter = Duration(minutes: 3)`, a blind timer. Requirement:
+   5 minutes validated against the wave's `createdAt`, so a pill surfaced late
+   (or after resume) expires correctly rather than getting a fresh 3 min.
+3. **Build 24 + device verification** — bump `pubspec.yaml` to `1.0.0+24`, build
+   with `--dart-define-from-file=.env.prod.json` (MANDATORY), upload via
+   `xcrun altool`. Then verify: (a) airplane mode on map no longer hangs,
+   (b) two-phone proximity freeze is gone, (c) Wave Back via iOS notification action.
+4. **Optional but high value** — wire `sentry-cli upload-dif` into the release so
+   crashes symbolicate. This session cost ~5h because they didn't.
+
+## Fonts — DONE, do not re-do
+
+ADR-008 / PR #54 bundled all 44 variants with `allowRuntimeFetching = false`
+(`main.dart:52`). The Sentry gstatic font error is `release: 1.0.0+22`, Android
+OnePlus8Pro — it predates the fix. Verified 2026-07-17.
+
 ## Session State — 2026-07-16 09:32 CEST (Session 47)
 - Active Task: Consolidate verified repair lanes and establish a truthful, clean launch baseline
 - Environment: Local/GitHub release management; no additional production mutation
