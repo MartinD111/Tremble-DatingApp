@@ -74,6 +74,7 @@ dev_dependencies:
   riverpod_generator: ^2.3.11
   build_runner: ^2.4.9
   flutter_launcher_icons: ^0.13.1
+  sentry_dart_plugin: ^3.4.0
 
 flutter:
   uses-material-design: true
@@ -88,3 +89,38 @@ flutter:
     # and every GoogleFonts.* call site keeps working unchanged.
     # Regenerate with tool/fetch_fonts.py — do not hand-rename these files.
     - assets/fonts/
+
+# ── Sentry debug-symbol upload (sentry_dart_plugin) ─────────────────────────
+# Releases ship --obfuscate --split-debug-info, so without these uploads every
+# production frame arrives as `<redacted>` and every Dart issue title as `lM:`.
+# Run via scripts/release/build_prod.sh — never by hand.
+#
+# project: events land in `tremble-functions`, NOT `tremble-app`. The DSN in
+# .env.prod.json resolves to project id 4511554698936400, and the live iOS
+# crashes (TREMBLE-FUNCTIONS-Q/-S, platform cocoa, release
+# tremble.dating.app@1.0.0+23) are in that project. `tremble-app` exists but
+# receives nothing — uploading there symbolicates nothing.
+#
+# url: deliberately NOT set. The org is EU-region, but an org auth token
+# (sntrys_…) embeds its own url + region_url, and sentry-cli uses the embedded
+# value — a manual `url:` is ignored and emits "Using https://sentry.io
+# (embedded in token) rather than manually-configured URL". Only set this if we
+# ever switch to a personal token, which carries no region.
+#
+# auth_token is deliberately absent: this file is committed and
+# scripts/ci/secret_scan.sh runs pre-commit. Supply SENTRY_AUTH_TOKEN instead.
+#
+# symbols_path and dart_symbol_map_path are deliberately NOT set here. They are
+# passed per-platform by the release script via --sentry-define, because the
+# plugin's dart-symbol-map collector always searches build/ios for iOS dSYMs and
+# returns the UNION of Android + iOS debug files
+# (dart_symbol_map_debug_files_collector.dart:101,113). A single map would then
+# be paired with both platforms' debug IDs — but iOS and Android obfuscate in
+# separate gen_snapshot runs, so their maps differ. Scoping symbols_path per
+# platform is what keeps each map paired only with its own build.
+sentry:
+  org: aleksandar-bojic
+  project: tremble-functions
+  upload_debug_symbols: true
+  upload_sources: false
+  log_level: info
