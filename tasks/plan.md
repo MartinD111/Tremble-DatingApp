@@ -1,5 +1,65 @@
-# Implementation Plan
+# Active Release Chore
+Plan ID: 20260717-release-b24
+Risk Level: LOW (version string bump only; the shipped code merged as PRs #56/#57/#58)
+Founder Approval Required: NO for the build. YES for the TestFlight upload (outward-facing).
+Branch: chore/release-b24
+
+## Objective
+
+Ship 1.0.0 (24) — the first binary containing the crash-reporter fix, and the
+first binary whose crashes are readable in Sentry.
+
+Build 24's job is to PROVE the crash fix. Nothing else rides along: the map
+offline UX and the wave pill TTL are deliberately excluded so a failed device
+test has exactly one plausible cause.
+
+## What build 24 carries
+
+| PR | Change | Why it needs a new binary |
+|---|---|---|
+| #57 | Crash reporter no longer kills the app on an offline map | client-side error handlers |
+| #56 | BLE ScanCycleDedupe — one proximity_events write per device per scan | client-side BLE loop |
+| #58 | Debug symbols uploaded at build time | first build whose crashes symbolicate |
+
+PR #58 is why this build is cut now rather than yesterday: without it, a build-24
+device failure would be as unreadable as build 23's was, and Session 48's ~5-hour
+reconstruction would repeat.
+
+## Scope
+
+- `pubspec.yaml`: `1.0.0+23` → `1.0.0+24` — sole committed source of truth for
+  both platforms (memory: `android-version-source-of-truth`).
+- `scripts/release/build_prod.sh`: add a post-build assertion that the AAB's
+  versionCode matches pubspec.
+- `tasks/plan.md`: this entry.
+- `android/local.properties`: NOT edited. `flutter build` rewrites
+  `flutter.versionCode` from pubspec (`gradle_utils.dart:1168`) and Gradle reads
+  it back (`FlutterPlugin.kt:130`, defaulting to "1" if absent — so the lines
+  must exist but must never be hand-set). Gitignored; pubspec stays SSOT.
+
+## Verification
+
+- unit tests: n/a — no source paths changed. Full suite green via pre-commit.
+- integration tests: n/a — no service boundary. Backend Jest green via pre-commit.
+- security scan: pre-commit secret scan; no credentials in the diff.
+- Artifact-level (not inferred from pubspec): AAB versionCode == 24; prod
+  `.env.prod.json` keys present in the compiled binaries (the check build 17
+  failed); Sentry lists debug files for dist 24 BEFORE any store upload.
+
+## Open — device verification (cannot be proven from CI)
+
+1. Two-phone proximity: the 1.0.0+23 freeze must be GONE. This is the point.
+2. Airplane mode on the map: no hang, no crash. (Raw error text is expected and
+   is a separate lane.)
+3. Wave Back via the iOS notification action.
+4. If anything crashes: confirm Sentry renders a real stack, not `<redacted>`.
+   That is PR #58's end-to-end proof, only observable on an ingested event.
+
+---
+
+# Prior Implementation Plan
 Plan ID: 20260717-sentry-debug-symbol-pipeline
+Status: RESOLVED 2026-07-17 — PR #58 merged into `main` @ 3d0c0a1
 Risk Level: MEDIUM — build tooling only; no product code, no prod deploy
 Founder Approval Required: NO for the code. YES for one action — minting the Sentry auth token.
 Branch: ci/sentry-debug-symbol-pipeline
