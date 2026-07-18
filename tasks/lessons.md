@@ -4,6 +4,18 @@
 
 ---
 
+**Rule #88 — Test foreground/tap push behaviour with `functions/src/scripts/send_test_push.ts`, not by waiting on `scanProximityPairs`.**
+[2026-07-18] The scheduled scan's 10-min global throttle + per-pair cooldown almost never coincide with the app being foregrounded on-screen, so foreground pushes (the freeze + pill paths) cannot be reproduced by walking around — this cost two inconclusive device sessions. The script sends ONE CROSSING_PATHS / INCOMING_WAVE directly to a device (by `--uid=` → `users/{uid}.fcmToken`, or raw `--token=`), reusing the exact prod payloads + `apnsExpirationHeaders`. Use `--project=am---dating-app --i-know-this-is-prod` for prod. Angle-bracket placeholders in docs are LITERAL shell metacharacters — pass a real uid with no `<>` or zsh throws `parse error near '\n'`.
+Source: device-verification tooling, 2026-07-18 (PR #63).
+
+**Rule #87 — Verify framework / plugin / native internals against REAL source, not reasoning, before blaming them.**
+[2026-07-18] The "tap did nothing" and the freeze were misdiagnosed repeatedly by reasoning about how firebase_messaging / FlutterAppDelegate forward notifications. The handoff suspected PR #60's delegate change broke `didReceiveNotificationResponse` forwarding. Reading the actual Flutter engine `.mm` for the pinned engine commit (`e4b8dca`) showed `FlutterAppDelegate` + `FlutterPluginAppLifeCycleDelegate` forward it to plugins identically to `willPresentNotification` — REFUTED. The real bug was in our own Dart (Rule #86). Same failure mode as the crash-filter bug and the two freeze misdiagnoses: assert against real device stacks / real source, never assumed ones.
+Source: wave-pill render sprint, 2026-07-18.
+
+**Rule #86 — A global overlay (wave pill, app-wide banner) MUST come from `rootNavigatorKey.currentState.overlay`, never `Overlay.maybeOf(rootNavigatorKey.currentContext)`.**
+[2026-07-18] `Overlay.maybeOf(rootNavigatorKey.currentContext)` is ALWAYS null: the root Navigator (GoRouter `navigatorKey`) builds its `Overlay` as a CHILD, so the Overlay is a *descendant* of the navigator's context, and `maybeOf` only walks *ancestors*. `presentWavePill` used the context lookup, so the CROSSING_PATHS / wave pill never rendered — foreground AND tap, regardless of auth or timing. Proven on device (build 25, 2026-07-18 08:48:03: two visible pushes, `pairsNotified:2`, nothing shown) and by `test/core/root_overlay_resolution_test.dart`. Fix: `rootNavigatorKey.currentState?.overlay` (the Navigator's own `OverlayState`); present sheets/paywalls from `overlay.context`. See `presentWavePill` in `lib/src/core/router.dart`.
+Source: wave-pill render sprint, 2026-07-18 (PR #65).
+
 **Rule #85 — The Flutter app reports to the Sentry project `tremble-functions`, NOT `tremble-app`. A release that uploads no debug symbols is not a release.**
 [2026-07-17] Two separate traps, both of which cost real hours.
 

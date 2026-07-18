@@ -2,6 +2,8 @@
 - Active Task: Root-caused + fixed the wave pill never rendering; shipped build 26 to TestFlight.
 - Environment: local + GitHub; one prod build → TestFlight (founder-approved). No prod backend/rules/config mutation.
 - System Status: `main` clean; pubspec `1.0.0+26`; build 26 live on TestFlight (Delivery UUID `2024e76c-bed2-4b21-a6f2-f0f57c4b6835`). Sentry dist-26 dSYMs + Dart symbol maps uploaded/finalized. Artifacts in `release-symbols/b26/`.
+- Android AAB (versionCode 26, signed prod) at `release-symbols/b26/app-prod-release.aab` — ready for a Play Console **internal testing** upload to cross-check the pill on Android (NOT production: Play prod is gated on STORE-003/004). Not yet uploaded.
+- Open PRs at handoff: **#67** (this Session 49 docs record). PRs #62/#63/#64/#65/#66 all merged.
 
 ### ROOT CAUSE FOUND — wave pill never rendered (foreground AND tap)
 Device evidence (build 25, 2026-07-18 08:48:03): scanProximityPairs sent TWO visible

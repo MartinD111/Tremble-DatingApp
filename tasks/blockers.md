@@ -53,11 +53,11 @@
 **Impact:** Production iOS FCM delivery previously returned the invalid-APNs-credential error class. Bundle ID `tremble.dating.app`, Firebase iOS App ID `1:343655004163:ios:5eea92b9656fc3b8fc3636`, Team ID `LB6LS532CV`, production entitlement, and build-22 signing metadata align, leaving the APNs credential stored under the Firebase Apple app as the strongest unresolved cause. App Store submission must not be declared push-ready until a controlled device send succeeds.
 **Progress:**
 - ✅ `scanProximityPairs` and `onWaveCreated` identity/delivery/retry fixes deployed to `am---dating-app` in `europe-west1` on 2026-07-16.
-- ✅ Build 22 signed production archive and App Store IPA exported successfully.
-- ✅ Background receipt no longer creates a reciprocal Wave; explicit iOS action bridge is implemented and test-locked.
-- ⏳ Firebase CLI cannot reveal the stored APNs Key ID/certificate state; no authenticated Firebase/Apple browser session is available in the current environment.
-- ⏳ Physical-iPhone foreground/background/killed and Wave Back verification is required.
-**Action:** Inspect Firebase Cloud Messaging Apple credentials and Apple Developer key status, upload a valid retained `.p8` if necessary, then run the approved controlled production device test with build 22 before App Store upload.
+- ✅ APNs delivery CONFIRMED working: 2026-07-18 08:48:03 prod scan sent two visible CROSSING_PATHS (`pairsNotified:2`, `notification_sent`) to both test accounts — the credential class error is resolved in practice. Delivery is no longer the blocker.
+- ✅ **Wave pill render bug fixed (build 26)** — `presentWavePill` read the overlay from `Overlay.maybeOf(currentContext)` (always null), so the pill never showed foreground OR tap. Fixed to `currentState.overlay` (PR #65) + bounded readiness retry + Sentry give-up (PR #62). See Rule #86. This was the actual cause of "nothing showed", NOT APNs.
+- ✅ **Freeze fix (PR #60) shipped in build 25**; build 26 carries it too. Both platforms of build 26 are up (TestFlight Delivery UUID `2024e76c-bed2-4b21-a6f2-f0f57c4b6835`; AAB at `release-symbols/b26/`).
+- ⏳ **Device verification of build 26 is the only remaining gate**, using `send_test_push.ts` (Rule #88): (a) foreground → pill, no freeze; (b) background tap → pill; (c) killed tap → cold-launch pill; (d) airplane map → offline card. If a pill drops, Sentry (`tremble-functions`, dist 26) logs `wave pill dropped: auth-null|no-overlay`.
+**Action:** Founder runs the build-26 device matrix (Rule #88). On green, STORE-005 closes and the freeze fix is proven in the same pass. APNs credential inspection is no longer required — delivery is confirmed.
 
 ---
 
