@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/registration_flow.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
@@ -526,30 +527,70 @@ final routerProvider = Provider<GoRouter>((ref) {
   // the notification-tap handler go through here, so the two paths can never
   // diverge in guards, paywall behaviour, or wave wiring.
   void presentWavePill(WavePillData data) {
-    // A tap can arrive while signed out or mid-onboarding — the router is about
-    // to redirect to /login, and a pill must never float over it.
-    if (ref.read(authStateProvider) == null) return;
+    // A tap on a killed app cold-launches it, and the tap fires (once, on a
+    // blind 500 ms delay) before Firebase Auth restores the session or the
+    // Navigator builds its Overlay. The original presenter returned on the
+    // first null and dropped the pill silently — the 2026-07-17 "tapped and
+    // nothing happened". Instead, poll for readiness across a bounded window
+    // so a slow cold launch heals itself, and if it truly never becomes ready,
+    // leave a readable Sentry trace of WHICH precondition blocked it.
+    const maxAttempts = 20; // 20 × 250 ms ≈ 5 s
+    const retryInterval = Duration(milliseconds: 250);
 
-    final context = rootNavigatorKey.currentContext;
-    if (context == null || !context.mounted) return;
+    void attempt(int n) {
+      final user = ref.read(authStateProvider);
+      final context = rootNavigatorKey.currentContext;
+      // maybeOf, not of: a tap can land before the Navigator's overlay exists,
+      // and Overlay.of would throw inside a notification callback.
+      final overlay = (context != null && context.mounted)
+          ? Overlay.maybeOf(context)
+          : null;
 
-    // maybeOf, not of: a tap can land before the Navigator's overlay exists,
-    // and Overlay.of would throw inside a notification callback.
-    final overlay = Overlay.maybeOf(context);
-    if (overlay == null) return;
+      // Ready: authenticated, a mounted root context, and a live Overlay. A
+      // signed-out user keeps `user == null`, so a pill never floats over
+      // /login — the original guard's intent is preserved, just not raced.
+      if (user != null &&
+          context != null &&
+          context.mounted &&
+          overlay != null) {
+        WavePillService.show(
+          overlay: overlay,
+          data: data,
+          onWave: (uid) async {
+            final current = ref.read(authStateProvider);
+            if (current?.hasReachedWaveLimit == true) {
+              PremiumPaywallBottomSheet.show(context);
+              return;
+            }
+            await ref.read(waveRepositoryProvider).sendWave(uid);
+          },
+        );
+        return;
+      }
 
-    WavePillService.show(
-      overlay: overlay,
-      data: data,
-      onWave: (uid) async {
-        final user = ref.read(authStateProvider);
-        if (user?.hasReachedWaveLimit == true) {
-          PremiumPaywallBottomSheet.show(context);
-          return;
+      if (n >= maxAttempts) {
+        final reason = user == null
+            ? 'auth-null'
+            : context == null
+                ? 'no-context'
+                : !context.mounted
+                    ? 'context-unmounted'
+                    : 'no-overlay';
+        if (kDebugMode) {
+          debugPrint('[ROUTER] wave pill dropped ($reason) after '
+              '$maxAttempts attempts');
         }
-        await ref.read(waveRepositoryProvider).sendWave(uid);
-      },
-    );
+        unawaited(Sentry.captureMessage(
+          'wave pill dropped: $reason',
+          level: SentryLevel.warning,
+        ));
+        return;
+      }
+
+      Future.delayed(retryInterval, () => attempt(n + 1));
+    }
+
+    attempt(0);
   }
 
   NotificationService.initialize(

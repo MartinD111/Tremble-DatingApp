@@ -1,4 +1,25 @@
-# Active Release Chore
+# Active Lane
+Plan ID: 20260718-crossing-paths-tap-pill-resilience
+Risk Level: MEDIUM (Dart-only; notification tap → wave-pill presentation + diagnostics)
+Founder Approval Required: NO (Dart-only, no native/Firebase/rules/deploy); founder said "go".
+Branch: fix/crossing-paths-tap-pill-resilience
+
+## Objective (this lane)
+
+Fix the 2026-07-17 "tapped the CROSSING_PATHS notification and nothing happened".
+Root cause: PR #60 iOS forwarding is NOT the culprit (verified against real
+Flutter engine source e4b8dca — didReceiveNotificationResponse forwards to
+firebase_messaging identically to willPresentNotification). The drop is in the
+Dart presenter: `router.presentWavePill` failed closed on the first null
+(auth / context / overlay) with no retry and no log, so a cold-launch tap that
+beat auth hydration / Overlay build was silently dropped. Fix: bounded readiness
+polling (20 × 250 ms) + a Sentry trace naming the blocking precondition on
+give-up, plus path breadcrumbs (background vs cold-launch). Ships build 26 as the
+device-verification vehicle for STORE-005 CROSSING_PATHS tap→pill.
+
+---
+
+# Prior Release Chore (build 25 — shipped)
 Plan ID: 20260717-release-b25
 Risk Level: LOW (version bump only; ships the freeze fix already reviewed as PR #60)
 Founder Approval Required: NO for the build; TestFlight upload authorised 2026-07-17 ("go" after merge, same flow as build 24).

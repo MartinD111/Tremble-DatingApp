@@ -185,6 +185,41 @@ void main() {
         reason: 'Overlay.of throws; the tap path runs at unpredictable times',
       );
     });
+
+    // Slice covering just the presenter body — everything between its
+    // signature and the NotificationService.initialize() call that follows it.
+    String presenterBody() {
+      final start =
+          routerSource.indexOf('void presentWavePill(WavePillData data)');
+      final end = routerSource.indexOf('NotificationService.initialize', start);
+      return routerSource.substring(start, end);
+    }
+
+    test('polls for readiness instead of failing closed on the first miss', () {
+      // A cold-launch tap (killed app) routinely beats auth restore and the
+      // Navigator's Overlay. The original presenter returned on the first null
+      // and dropped the pill with no retry. It must now retry within a bounded
+      // window rather than give up immediately.
+      final body = presenterBody();
+      expect(
+        body,
+        contains('Future.delayed'),
+        reason: 'the presenter must re-attempt while auth/overlay warm up',
+      );
+    });
+
+    test('leaves a readable trace when it ultimately drops the pill', () {
+      // Every give-up used to be a silent `return`, which is why a dropped tap
+      // was uninvestigable. The final give-up must surface which precondition
+      // never became ready.
+      final body = presenterBody();
+      expect(body, contains('wave pill dropped'));
+      expect(
+        body,
+        contains('Sentry.captureMessage'),
+        reason: 'a production drop needs a readable Sentry event, not silence',
+      );
+    });
   });
 
   group('no regression on existing types', () {
