@@ -1012,4 +1012,177 @@ describe("Matches Module", () => {
             }
         );
     });
+
+    // Backend-authoritative match-state writes. The /matches collection is
+    // locked in firestore.rules (update: hasOnly(['seenBy'])), so the client
+    // cannot write status/isFound/foundAt or gestures directly — those writes
+    // returned permission-denied and crashed the trembling window. These
+    // callables perform the writes via the Admin SDK after a participant check.
+    describe("markMatchFound", () => {
+        it("sets found status + caller cooldown when the caller is a participant", async () => {
+            const authGuard = await import("../../src/middleware/authGuard");
+            const validate = await import("../../src/middleware/validate");
+            const { markMatchFound } = await import("../../src/modules/matches/matches.functions");
+
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userA");
+            jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
+
+            const matchUpdate = jest.fn(async () => undefined);
+            const userUpdate = jest.fn(async () => undefined);
+            const matchGet = jest.fn(async () => ({
+                exists: true,
+                data: () => ({ userIds: ["userA", "userB"] }),
+            }));
+
+            mockDb.collection.mockImplementation((name: unknown) => {
+                if (name === "matches") {
+                    return { doc: jest.fn(() => ({ get: matchGet, update: matchUpdate })) };
+                }
+                if (name === "users") {
+                    return { doc: jest.fn(() => ({ update: userUpdate })) };
+                }
+                throw new Error(`Unexpected collection: ${String(name)}`);
+            });
+
+            const callable = markMatchFound as unknown as (r: unknown) => Promise<unknown>;
+            const result = await callable({
+                auth: { uid: "userA", token: {} },
+                data: { matchId: "userA_userB" },
+            } as never);
+
+            expect(result).toMatchObject({ success: true });
+            expect(matchUpdate).toHaveBeenCalledWith(expect.objectContaining({
+                status: "found",
+                isFound: true,
+                foundAt: "SERVER_TIMESTAMP",
+            }));
+            expect(userUpdate).toHaveBeenCalledWith(expect.objectContaining({
+                lastWaveFoundAt: "SERVER_TIMESTAMP",
+            }));
+        });
+
+        it("rejects a non-participant with permission-denied and writes nothing", async () => {
+            const authGuard = await import("../../src/middleware/authGuard");
+            const validate = await import("../../src/middleware/validate");
+            const { markMatchFound } = await import("../../src/modules/matches/matches.functions");
+
+            jest.mocked(authGuard.requireAuth).mockReturnValue("intruder");
+            jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
+
+            const matchUpdate = jest.fn();
+            const userUpdate = jest.fn();
+            const matchGet = jest.fn(async () => ({
+                exists: true,
+                data: () => ({ userIds: ["userA", "userB"] }),
+            }));
+
+            mockDb.collection.mockImplementation((name: unknown) => {
+                if (name === "matches") {
+                    return { doc: jest.fn(() => ({ get: matchGet, update: matchUpdate })) };
+                }
+                if (name === "users") {
+                    return { doc: jest.fn(() => ({ update: userUpdate })) };
+                }
+                throw new Error(`Unexpected collection: ${String(name)}`);
+            });
+
+            const callable = markMatchFound as unknown as (r: unknown) => Promise<unknown>;
+            await expect(callable({
+                auth: { uid: "intruder", token: {} },
+                data: { matchId: "userA_userB" },
+            } as never)).rejects.toMatchObject({ code: "permission-denied" });
+
+            expect(matchUpdate).not.toHaveBeenCalled();
+            expect(userUpdate).not.toHaveBeenCalled();
+        });
+
+        it("rejects with not-found when the match document does not exist", async () => {
+            const authGuard = await import("../../src/middleware/authGuard");
+            const validate = await import("../../src/middleware/validate");
+            const { markMatchFound } = await import("../../src/modules/matches/matches.functions");
+
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userA");
+            jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
+
+            const matchGet = jest.fn(async () => ({ exists: false, data: () => undefined }));
+            mockDb.collection.mockImplementation((name: unknown) => {
+                if (name === "matches") {
+                    return { doc: jest.fn(() => ({ get: matchGet, update: jest.fn() })) };
+                }
+                throw new Error(`Unexpected collection: ${String(name)}`);
+            });
+
+            const callable = markMatchFound as unknown as (r: unknown) => Promise<unknown>;
+            await expect(callable({
+                auth: { uid: "userA", token: {} },
+                data: { matchId: "userA_userB" },
+            } as never)).rejects.toMatchObject({ code: "not-found" });
+        });
+    });
+
+    describe("sendMatchGesture", () => {
+        it("sets the caller's gesture flag when a participant", async () => {
+            const authGuard = await import("../../src/middleware/authGuard");
+            const validate = await import("../../src/middleware/validate");
+            const { sendMatchGesture } = await import("../../src/modules/matches/matches.functions");
+
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userB");
+            jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
+
+            const matchUpdate = jest.fn(async () => undefined);
+            const matchGet = jest.fn(async () => ({
+                exists: true,
+                data: () => ({ userIds: ["userA", "userB"] }),
+            }));
+
+            mockDb.collection.mockImplementation((name: unknown) => {
+                if (name === "matches") {
+                    return { doc: jest.fn(() => ({ get: matchGet, update: matchUpdate })) };
+                }
+                throw new Error(`Unexpected collection: ${String(name)}`);
+            });
+
+            const callable = sendMatchGesture as unknown as (r: unknown) => Promise<unknown>;
+            const result = await callable({
+                auth: { uid: "userB", token: {} },
+                data: { matchId: "userA_userB" },
+            } as never);
+
+            expect(result).toMatchObject({ success: true });
+            expect(matchUpdate).toHaveBeenCalledWith(expect.objectContaining({
+                "gestures.userB": true,
+                lastUpdatedAt: "SERVER_TIMESTAMP",
+            }));
+        });
+
+        it("rejects a non-participant with permission-denied and writes nothing", async () => {
+            const authGuard = await import("../../src/middleware/authGuard");
+            const validate = await import("../../src/middleware/validate");
+            const { sendMatchGesture } = await import("../../src/modules/matches/matches.functions");
+
+            jest.mocked(authGuard.requireAuth).mockReturnValue("intruder");
+            jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
+
+            const matchUpdate = jest.fn();
+            const matchGet = jest.fn(async () => ({
+                exists: true,
+                data: () => ({ userIds: ["userA", "userB"] }),
+            }));
+
+            mockDb.collection.mockImplementation((name: unknown) => {
+                if (name === "matches") {
+                    return { doc: jest.fn(() => ({ get: matchGet, update: matchUpdate })) };
+                }
+                throw new Error(`Unexpected collection: ${String(name)}`);
+            });
+
+            const callable = sendMatchGesture as unknown as (r: unknown) => Promise<unknown>;
+            await expect(callable({
+                auth: { uid: "intruder", token: {} },
+                data: { matchId: "userA_userB" },
+            } as never)).rejects.toMatchObject({ code: "permission-denied" });
+
+            expect(matchUpdate).not.toHaveBeenCalled();
+        });
+    });
 });

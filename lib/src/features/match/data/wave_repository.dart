@@ -35,14 +35,15 @@ class WaveRepository {
   }
 
   /// Performs a gesture (Greet/Accept) on a match document.
+  ///
+  /// Routed through a Cloud Function because firestore.rules only permits a
+  /// client to change `seenBy` on /matches; a direct gesture-field write is
+  /// denied.
   Future<void> sendGesture(String matchId) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
 
-    await _firestore.collection('matches').doc(matchId).update({
-      'gestures.${currentUser.uid}': true,
-      'lastUpdatedAt': FieldValue.serverTimestamp(),
-    });
+    await _api.call('sendMatchGesture', data: {'matchId': matchId});
   }
 
   /// Označi match kot viden s strani trenutnega uporabnika.
@@ -56,21 +57,16 @@ class WaveRepository {
   }
 
   /// Označi, da sta se osebi našli.
+  ///
+  /// Routed through a Cloud Function: the match status write and the
+  /// `lastWaveFoundAt` cooldown stamp are both backend-authoritative. A direct
+  /// client write to /matches (status/isFound/foundAt) is denied by
+  /// firestore.rules and previously crashed the trembling window.
   Future<void> markMatchAsFound(String matchId) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
 
-    // 1. Update match status
-    await _firestore.collection('matches').doc(matchId).update({
-      'status': 'found',
-      'isFound': true,
-      'foundAt': FieldValue.serverTimestamp(),
-    });
-
-    // 2. Update user last found timestamp to enforce 30m cooldown for free users
-    await _firestore.collection('users').doc(currentUser.uid).update({
-      'lastWaveFoundAt': FieldValue.serverTimestamp(),
-    });
+    await _api.call('markMatchFound', data: {'matchId': matchId});
   }
 
   /// Označi, da je čas za iskanje potekel.
