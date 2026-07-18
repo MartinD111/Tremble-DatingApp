@@ -17,13 +17,32 @@ Sits on top of PR #62 (bounded readiness retry + Sentry give-up). Ships build 26
 
 ---
 
+# Prior Lane (merged — PR #64)
+Plan ID: 20260718-map-cold-offline-ux
+Risk Level: MEDIUM (client-only; map error-state UI + i18n)
+Founder Approval Required: NO (Dart-only, no native/Firebase/rules/deploy).
+Branch: fix/map-cold-offline-ux
+
+## Objective (prior lane)
+
+Replace the raw `Error loading map: <ClientException … Failed host lookup>` red
+text that airplane mode surfaced (tremble_map_screen.dart error branch) with a
+compact, on-brand offline card + retry. New `MapOfflineCard` (fits the rounded
+map slot, unlike the full-screen dead-code TrembleOutageScreen); retry wired to
+`ref.invalidate(mapInitProvider)` so a transient host-lookup failure recovers on
+reconnect. i18n `map_offline_title` / `map_offline_subtitle` added to all 8
+locales (+ hr `try_again`, previously English-fallback). Ships build 26 with the
+tap→pill fix.
+
+---
+
 # Prior Lane (merged — PR #63)
 Plan ID: 20260718-fcm-test-push-trigger
 Risk Level: LOW (dev-only Node script; not deployable; prod send gated behind --i-know-this-is-prod)
 Founder Approval Required: NO (no code path in the app, no deploy, no default prod mutation).
 Branch: chore/fcm-test-push-trigger
 
-## Objective (this lane)
+## Objective (prior lane)
 
 Give device verification a deterministic trigger. `functions/src/scripts/send_test_push.ts`
 sends ONE CROSSING_PATHS or INCOMING_WAVE push directly to a device (by uid or
