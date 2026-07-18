@@ -1,10 +1,30 @@
 # Active Lane
+Plan ID: 20260718-fcm-test-push-trigger
+Risk Level: LOW (dev-only Node script; not deployable; prod send gated behind --i-know-this-is-prod)
+Founder Approval Required: NO (no code path in the app, no deploy, no default prod mutation).
+Branch: chore/fcm-test-push-trigger
+
+## Objective (this lane)
+
+Give device verification a deterministic trigger. `functions/src/scripts/send_test_push.ts`
+sends ONE CROSSING_PATHS or INCOMING_WAVE push directly to a device (by uid or
+raw token), reusing the exact prod payloads + apnsExpirationHeaders so it can't
+drift. Unblocks proving the freeze fix (PR #60, still unproven — willPresent
+never coincided with a foregrounded app) AND the tap→pill fix (PR #62) without
+waiting on scanProximityPairs / the 10-min throttle / per-pair cooldown.
+Run: `cd functions && npm run build && node ./lib/scripts/send_test_push.js
+--project=tremble-dev --uid=<uid>`. Test matrix (a foreground / b background-tap
+/ c killed-tap) documented in the script header.
+
+---
+
+# Prior Lane (merged — PR #62)
 Plan ID: 20260718-crossing-paths-tap-pill-resilience
 Risk Level: MEDIUM (Dart-only; notification tap → wave-pill presentation + diagnostics)
 Founder Approval Required: NO (Dart-only, no native/Firebase/rules/deploy); founder said "go".
 Branch: fix/crossing-paths-tap-pill-resilience
 
-## Objective (this lane)
+## Objective (prior lane)
 
 Fix the 2026-07-17 "tapped the CROSSING_PATHS notification and nothing happened".
 Root cause: PR #60 iOS forwarding is NOT the culprit (verified against real
