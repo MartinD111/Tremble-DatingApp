@@ -378,6 +378,111 @@ export const sendWave = onCall(
 );
 
 /**
+ * Load a match document and assert the caller participates in it.
+ *
+ * The /matches collection is backend-authoritative: firestore.rules only lets
+ * a client change `seenBy`. Every other match-state mutation goes through a
+ * callable so the participant check runs server-side with the Admin SDK.
+ */
+async function loadParticipantMatch(matchId: string, uid: string) {
+    const matchRef = db.collection("matches").doc(matchId);
+    const snapshot = await matchRef.get();
+    if (!snapshot.exists) {
+        throw new HttpsError("not-found", "Match not found.");
+    }
+    const userIds = (snapshot.data()?.userIds as string[] | undefined) ?? [];
+    if (!userIds.includes(uid)) {
+        throw new HttpsError("permission-denied", "Not a participant in this match.");
+    }
+    return matchRef;
+}
+
+/**
+ * markMatchFound — participant ends the trembling window ("we found each
+ * other"). Sets the match to found and stamps the caller's `lastWaveFoundAt`
+ * so the 30-minute free-tier cooldown applies. Idempotent.
+ */
+export const markMatchFound = onCall(
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+    async (request) => {
+        const uid = requireAuth(request);
+        const startedAt = Date.now();
+        logStructured({ fn: "markMatchFound", event: "entry", uid: redactUid(uid) });
+
+        try {
+            const matchId = assertValidDocumentId(request.data?.matchId, "matchId");
+            const matchRef = await loadParticipantMatch(matchId, uid);
+
+            await matchRef.update({
+                status: "found",
+                isFound: true,
+                foundAt: FieldValue.serverTimestamp(),
+            });
+            await db.collection("users").doc(uid).update({
+                lastWaveFoundAt: FieldValue.serverTimestamp(),
+            });
+
+            logStructured({
+                fn: "markMatchFound",
+                event: "success",
+                uid: redactUid(uid),
+                durationMs: Date.now() - startedAt,
+            });
+            return { success: true };
+        } catch (error) {
+            logStructured({
+                fn: "markMatchFound",
+                event: "error",
+                uid: redactUid(uid),
+                error: errorMessage(error),
+                durationMs: Date.now() - startedAt,
+            });
+            throw error;
+        }
+    }
+);
+
+/**
+ * sendMatchGesture — participant performs a Greet/Accept gesture on the match.
+ * Writes only the caller's own gesture flag.
+ */
+export const sendMatchGesture = onCall(
+    { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+    async (request) => {
+        const uid = requireAuth(request);
+        const startedAt = Date.now();
+        logStructured({ fn: "sendMatchGesture", event: "entry", uid: redactUid(uid) });
+
+        try {
+            const matchId = assertValidDocumentId(request.data?.matchId, "matchId");
+            const matchRef = await loadParticipantMatch(matchId, uid);
+
+            await matchRef.update({
+                [`gestures.${uid}`]: true,
+                lastUpdatedAt: FieldValue.serverTimestamp(),
+            });
+
+            logStructured({
+                fn: "sendMatchGesture",
+                event: "success",
+                uid: redactUid(uid),
+                durationMs: Date.now() - startedAt,
+            });
+            return { success: true };
+        } catch (error) {
+            logStructured({
+                fn: "sendMatchGesture",
+                event: "error",
+                uid: redactUid(uid),
+                error: errorMessage(error),
+                durationMs: Date.now() - startedAt,
+            });
+            throw error;
+        }
+    }
+);
+
+/**
  * onWaveCreated — Firestore trigger on waves/{waveId}
  *
  * Two states:

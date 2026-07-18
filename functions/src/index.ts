@@ -32,6 +32,8 @@ export {
     onWaveCreated,
     getMatches,
     sendWave,
+    markMatchFound,
+    sendMatchGesture,
 } from "./modules/matches/matches.functions";
 
 export {
