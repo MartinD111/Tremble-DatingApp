@@ -16,6 +16,7 @@ import '../../auth/data/auth_repository.dart';
 import '../../gym/data/gym_repository.dart';
 import 'event_pin_sheet.dart';
 import '../../../core/map_provider.dart';
+import 'widgets/map_offline_card.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 
 class TrembleMapScreen extends ConsumerStatefulWidget {
@@ -404,14 +405,11 @@ class _TrembleMapScreenState extends ConsumerState<TrembleMapScreen> {
                               ),
                             ),
                           ),
-                          error: (e, _) => Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text(
-                                'Error loading map: $e',
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                            ),
+                          error: (e, _) => MapOfflineCard(
+                            title: t('map_offline_title', lang),
+                            subtitle: t('map_offline_subtitle', lang),
+                            retryLabel: t('try_again', lang),
+                            onRetry: () => ref.invalidate(mapInitProvider),
                           ),
                           data: (initData) => Stack(
                             children: [
