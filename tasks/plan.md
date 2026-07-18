@@ -1,4 +1,23 @@
 # Active Lane
+Plan ID: 20260718-wave-pill-root-overlay
+Risk Level: MEDIUM (Dart-only; the actual wave-pill render fix)
+Founder Approval Required: NO (Dart-only, no native/Firebase/rules/deploy).
+Branch: fix/wave-pill-root-overlay
+
+## Objective (this lane)
+
+THE fix for "foreground push delivered (pairsNotified:2) but no pill" and the
+tap→pill drop. Proven on device logs (build 25, 2026-07-18 08:48:03: two visible
+CROSSING_PATHS sent, nothing shown). Root cause: presentWavePill read the
+overlay via Overlay.maybeOf(rootNavigatorKey.currentContext), which is ALWAYS
+null — the root Navigator's Overlay is a descendant of that context, not an
+ancestor. The pill could never insert, foreground or tap. Fix: use
+rootNavigatorKey.currentState.overlay. Proven by root_overlay_resolution_test.
+Sits on top of PR #62 (bounded readiness retry + Sentry give-up). Ships build 26.
+
+---
+
+# Prior Lane (merged — PR #63)
 Plan ID: 20260718-fcm-test-push-trigger
 Risk Level: LOW (dev-only Node script; not deployable; prod send gated behind --i-know-this-is-prod)
 Founder Approval Required: NO (no code path in the app, no deploy, no default prod mutation).

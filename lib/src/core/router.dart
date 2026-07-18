@@ -527,39 +527,36 @@ final routerProvider = Provider<GoRouter>((ref) {
   // the notification-tap handler go through here, so the two paths can never
   // diverge in guards, paywall behaviour, or wave wiring.
   void presentWavePill(WavePillData data) {
-    // A tap on a killed app cold-launches it, and the tap fires (once, on a
-    // blind 500 ms delay) before Firebase Auth restores the session or the
-    // Navigator builds its Overlay. The original presenter returned on the
-    // first null and dropped the pill silently — the 2026-07-17 "tapped and
-    // nothing happened". Instead, poll for readiness across a bounded window
-    // so a slow cold launch heals itself, and if it truly never becomes ready,
-    // leave a readable Sentry trace of WHICH precondition blocked it.
+    // Two bugs collapsed the wave pill to nothing — foreground AND tap:
+    //
+    // 1. Wrong overlay source. Reading the overlay from maybeOf on
+    //    rootNavigatorKey.currentContext yields null: the root Navigator's
+    //    Overlay is a DESCENDANT of that context, not an ancestor, so an
+    //    ancestor walk never finds it and the pill could never insert. Use the
+    //    Navigator's own OverlayState (proven: root_overlay_resolution_test.dart).
+    // 2. Blind timing. A killed-app cold launch fires the tap once, on a blind
+    //    500 ms delay, before the Navigator exists or auth restores.
+    //
+    // Fix: read the overlay from currentState.overlay, and poll for readiness
+    // across a bounded window so a slow cold launch heals itself. On genuine
+    // give-up, leave a readable Sentry trace of which precondition blocked it.
     const maxAttempts = 20; // 20 × 250 ms ≈ 5 s
     const retryInterval = Duration(milliseconds: 250);
 
     void attempt(int n) {
       final user = ref.read(authStateProvider);
-      final context = rootNavigatorKey.currentContext;
-      // maybeOf, not of: a tap can land before the Navigator's overlay exists,
-      // and Overlay.of would throw inside a notification callback.
-      final overlay = (context != null && context.mounted)
-          ? Overlay.maybeOf(context)
-          : null;
+      final overlay = rootNavigatorKey.currentState?.overlay;
 
-      // Ready: authenticated, a mounted root context, and a live Overlay. A
-      // signed-out user keeps `user == null`, so a pill never floats over
-      // /login — the original guard's intent is preserved, just not raced.
-      if (user != null &&
-          context != null &&
-          context.mounted &&
-          overlay != null) {
+      // Ready: authenticated + a mounted root Overlay. A signed-out user keeps
+      // `user == null`, so a pill never floats over /login.
+      if (user != null && overlay != null && overlay.mounted) {
         WavePillService.show(
           overlay: overlay,
           data: data,
           onWave: (uid) async {
             final current = ref.read(authStateProvider);
             if (current?.hasReachedWaveLimit == true) {
-              PremiumPaywallBottomSheet.show(context);
+              PremiumPaywallBottomSheet.show(overlay.context);
               return;
             }
             await ref.read(waveRepositoryProvider).sendWave(uid);
@@ -569,13 +566,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (n >= maxAttempts) {
-        final reason = user == null
-            ? 'auth-null'
-            : context == null
-                ? 'no-context'
-                : !context.mounted
-                    ? 'context-unmounted'
-                    : 'no-overlay';
+        final reason = user == null ? 'auth-null' : 'no-overlay';
         if (kDebugMode) {
           debugPrint('[ROUTER] wave pill dropped ($reason) after '
               '$maxAttempts attempts');

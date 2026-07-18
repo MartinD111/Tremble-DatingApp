@@ -177,13 +177,18 @@ void main() {
       );
     });
 
-    test('does not throw when no Overlay is mounted', () {
-      expect(routerSource, contains('Overlay.maybeOf(context)'));
+    test('resolves the overlay from the navigator state, not the context', () {
+      // Overlay.maybeOf(rootNavigatorKey.currentContext) is ALWAYS null — the
+      // root Navigator's Overlay is a descendant of that context, not an
+      // ancestor — so the pill could never insert (foreground and tap alike).
+      // root_overlay_resolution_test.dart proves the mechanism.
+      expect(routerSource, contains('rootNavigatorKey.currentState?.overlay'));
       expect(
         routerSource,
-        isNot(contains('Overlay.of(context)')),
-        reason: 'Overlay.of throws; the tap path runs at unpredictable times',
+        isNot(contains('Overlay.maybeOf(')),
+        reason: 'maybeOf on the navigator context resolves to null',
       );
+      expect(routerSource, isNot(contains('Overlay.of(context)')));
     });
 
     // Slice covering just the presenter body — everything between its
