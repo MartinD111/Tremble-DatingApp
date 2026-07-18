@@ -607,8 +607,45 @@ export const onWaveCreated = onDocumentCreated(
                 ]);
 
                 if (matchDoc.exists) {
+                    const existing = matchDoc.data();
+                    // This exact wave already owns the current window (a
+                    // reprocess of the same event) — re-notify, don't restart.
+                    if (existing?.notificationOwnerWaveId === waveId) {
+                        transaction.delete(snapshot.ref);
+                        return true;
+                    }
+                    // Only restart when the previous window is POSITIVELY over:
+                    // a terminal status, or a known createdAt older than the
+                    // 30-min window. Unknown state (no status/createdAt) is
+                    // treated as in-flight — including the reciprocal wave of
+                    // the same mutual burst — and must NOT reset or re-notify.
+                    const status = existing?.status;
+                    const createdAtMs =
+                        existing?.createdAt?.toDate?.()?.getTime?.();
+                    const expired =
+                        createdAtMs !== undefined &&
+                        Date.now() - createdAtMs > 30 * 60 * 1000;
+                    const windowOver =
+                        status === "found" || status === "expired" || expired;
+                    if (!windowOver) {
+                        transaction.delete(snapshot.ref);
+                        return false;
+                    }
+                    // Genuine re-engagement: restart the trembling window for
+                    // BOTH users (seenBy cleared → both get the reveal again)
+                    // and claim notification ownership for this wave.
+                    transaction.update(matchRef, {
+                        createdAt: FieldValue.serverTimestamp(),
+                        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+                        status: "pending",
+                        seenBy: [],
+                        isFound: FieldValue.delete(),
+                        foundAt: FieldValue.delete(),
+                        notificationOwnerWaveId: waveId,
+                    });
                     transaction.delete(snapshot.ref);
-                    return matchDoc.data()?.notificationOwnerWaveId === waveId;
+                    if (reciprocalWaveRef) transaction.delete(reciprocalWaveRef);
+                    return true;
                 }
 
                 const userAData = userADoc.data();
@@ -651,7 +688,10 @@ export const onWaveCreated = onDocumentCreated(
                     createdAt: FieldValue.serverTimestamp(),
                     expiresAt: new Date(Date.now() + 30 * 60 * 1000),
                     status: "pending",
-                    seenBy: [fromUid],
+                    // Both users must get the "We have a match" reveal. Do NOT
+                    // pre-mark the sender (the wave-back completer) as seen, or
+                    // their reveal listener never fires (TREMBLE asymmetry bug).
+                    seenBy: [],
                     notificationOwnerWaveId: waveId,
                 });
 

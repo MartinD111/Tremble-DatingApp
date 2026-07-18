@@ -13,6 +13,7 @@ const mockDb = {
 const mockMessagingSend = jest.fn<(message: unknown) => Promise<string>>();
 const mockSendMatchNotificationEmail = jest.fn<() => Promise<void>>();
 const mockTransactionSet = jest.fn();
+const mockTransactionUpdate = jest.fn();
 const mockOnDocumentCreated = jest.fn((_: unknown, handler: unknown) => handler);
 const mockRedisValues = new Map<string, string>();
 const mockRedis = {
@@ -45,6 +46,7 @@ jest.mock("firebase-admin/firestore", () => ({
     FieldValue: {
         increment: jest.fn((value: number) => ({ increment: value })),
         serverTimestamp: jest.fn(() => "SERVER_TIMESTAMP"),
+        delete: jest.fn(() => "DELETE_FIELD"),
     },
 }));
 
@@ -129,6 +131,7 @@ function setupWaveTriggerDb(options: {
     reciprocal?: () => boolean;
     profileGate?: Promise<void>;
     existingMatchOwnerWaveId?: string;
+    existingMatch?: { ownerWaveId?: string; status?: string; createdAt?: Date };
 } = {}): void {
     const sender = options.sender ?? defaultSender;
     const receiver = options.receiver ?? defaultReceiver;
@@ -182,6 +185,20 @@ function setupWaveTriggerDb(options: {
         const transaction = {
             get: jest.fn(async (ref: { kind?: string; uid?: string }) => {
                 if (ref.kind === "match") {
+                    if (options.existingMatch) {
+                        return {
+                            exists: true,
+                            data: () => ({
+                                userIds: ["senderUid", "receiverUid"],
+                                notificationOwnerWaveId:
+                                    options.existingMatch!.ownerWaveId,
+                                status: options.existingMatch!.status,
+                                createdAt: options.existingMatch!.createdAt
+                                    ? { toDate: () => options.existingMatch!.createdAt }
+                                    : undefined,
+                            }),
+                        };
+                    }
                     return matchOwnerWaveId
                         ? {
                             exists: true,
@@ -195,7 +212,7 @@ function setupWaveTriggerDb(options: {
                 return { exists: true, data: () => receiver };
             }),
             set: mockTransactionSet,
-            update: jest.fn(),
+            update: mockTransactionUpdate,
             delete: jest.fn(),
         };
         return (callback as (transaction: unknown) => Promise<unknown>)(transaction);
@@ -1011,6 +1028,84 @@ describe("Matches Module", () => {
                 expect(atCount >= premiumLimit).toBe(true);
             }
         );
+    });
+
+    // Symmetric reveal + window restart. A fresh mutual match must clear
+    // seenBy so BOTH users get the reveal (the sender was previously
+    // pre-marked seen and never saw it). A re-wave of a STALE match restarts
+    // the window; an in-flight window (or the reciprocal wave of the same
+    // burst) must not reset.
+    describe("onWaveCreated mutual reveal + restart", () => {
+        let logSpy: jest.SpiedFunction<typeof console.log>;
+
+        beforeEach(() => {
+            jest.resetModules();
+            jest.useFakeTimers();
+            jest.setSystemTime(new Date("2026-07-15T12:00:00.000Z"));
+            jest.clearAllMocks();
+            mockRedisValues.clear();
+            mockMessagingSend.mockReset();
+            mockSendMatchNotificationEmail.mockReset();
+            mockTransactionSet.mockReset();
+            mockTransactionUpdate.mockReset();
+            logSpy = jest.spyOn(console, "log").mockImplementation(() => undefined);
+        });
+
+        afterEach(() => {
+            logSpy.mockRestore();
+            jest.useRealTimers();
+        });
+
+        it("clears seenBy on a fresh mutual match so both users get the reveal",
+            async () => {
+                setupWaveTriggerDb({ reciprocal: () => true });
+                mockMessagingSend.mockResolvedValue("message-id");
+
+                await invokeWaveTrigger();
+
+                expect(mockTransactionSet).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.objectContaining({ seenBy: [], status: "pending" }),
+                );
+            });
+
+        it("restarts the window when a stale (found) match is re-waved",
+            async () => {
+                setupWaveTriggerDb({
+                    reciprocal: () => true,
+                    existingMatch: { ownerWaveId: "old-wave", status: "found" },
+                });
+                mockMessagingSend.mockResolvedValue("message-id");
+
+                await invokeWaveTrigger();
+
+                expect(mockTransactionUpdate).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.objectContaining({
+                        status: "pending",
+                        seenBy: [],
+                        notificationOwnerWaveId: "wave-event-1",
+                    }),
+                );
+                expect(mockMessagingSend).toHaveBeenCalled();
+            });
+
+        it("does NOT restart an in-flight window (same-burst reciprocal wave)",
+            async () => {
+                setupWaveTriggerDb({
+                    reciprocal: () => true,
+                    existingMatch: {
+                        ownerWaveId: "other-wave",
+                        status: "pending",
+                        createdAt: new Date("2026-07-15T12:00:00.000Z"),
+                    },
+                });
+                mockMessagingSend.mockResolvedValue("message-id");
+
+                await invokeWaveTrigger();
+
+                expect(mockTransactionUpdate).not.toHaveBeenCalled();
+            });
     });
 
     // Backend-authoritative match-state writes. The /matches collection is
