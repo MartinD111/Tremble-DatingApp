@@ -1,4 +1,23 @@
 # Active Lane
+Plan ID: 20260718-release-b26
+Risk Level: HIGH (prod build → TestFlight; outward-facing)
+Founder Approval Required: YES — granted 2026-07-18 ("lets build new testflight").
+Branch: chore/release-b26
+
+## Objective (this lane)
+
+Cut 1.0.0 (26) to TestFlight — the FIRST binary where the wave pill actually
+renders. Carries: PR #62 (bounded readiness retry + Sentry give-up), PR #64 (map
+offline card), PR #65 (overlay render fix — presentWavePill now reads
+rootNavigatorKey.currentState.overlay; Overlay.maybeOf(currentContext) was always
+null). Plus the freeze fix already in build 25. Flow: bump pubspec (done) →
+build_prod.sh all (both platforms, Sentry dSYM+Dart symbol upload, preserve to
+release-symbols/b26/) → verify Sentry lists dist-26 debug files → upload IPA via
+xcrun altool (key V24BM2VRC2). Then on-device verify with send_test_push.ts.
+
+---
+
+# Prior Lane (merged — PR #65)
 Plan ID: 20260718-wave-pill-root-overlay
 Risk Level: MEDIUM (Dart-only; the actual wave-pill render fix)
 Founder Approval Required: NO (Dart-only, no native/Firebase/rules/deploy).
