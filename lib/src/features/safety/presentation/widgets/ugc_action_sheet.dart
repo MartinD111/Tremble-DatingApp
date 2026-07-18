@@ -93,47 +93,51 @@ class UgcActionSheet extends ConsumerWidget {
   }
 
   void _showBlockDialog(BuildContext context, WidgetRef ref, String lang) {
-    showPlatformDialog(
+    // Pop via the dialog's OWN builder context (dialogCtx), never the
+    // UgcActionSheet context — the sheet is dismissed before this dialog
+    // opens, so its context is defunct and Navigator.pop(context) crashes
+    // (TREMBLE-FUNCTIONS-10). The app-level messenger is captured before the
+    // pop because dialogCtx is gone afterwards.
+    showDialog<void>(
       context: context,
-      backgroundColor: TrembleTheme.textColor,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(
-        t('block_user', lang).replaceAll('{name}', targetName),
-        style: GoogleFonts.playfairDisplay(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      content: Text(
-        t('block_confirm_desc', lang).replaceAll('{name}', targetName),
-        style: GoogleFonts.instrumentSans(color: Colors.white70),
-      ),
-      actions: [
-        TrembleDialogAction(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            t('cancel', lang),
-            style: GoogleFonts.instrumentSans(color: Colors.white54),
+      builder: (dialogCtx) => TrembleAlertDialog(
+        backgroundColor: TrembleTheme.textColor,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          t('block_user', lang).replaceAll('{name}', targetName),
+          style: GoogleFonts.playfairDisplay(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        TrembleDialogAction(
-          isDestructive: true,
-          onPressed: () async {
-            Navigator.pop(context);
-            try {
-              await ref.read(safetyRepositoryProvider).blockUser(targetUid);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
+        content: Text(
+          t('block_confirm_desc', lang).replaceAll('{name}', targetName),
+          style: GoogleFonts.instrumentSans(color: Colors.white70),
+        ),
+        actions: [
+          TrembleDialogAction(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: Text(
+              t('cancel', lang),
+              style: GoogleFonts.instrumentSans(color: Colors.white54),
+            ),
+          ),
+          TrembleDialogAction(
+            isDestructive: true,
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(dialogCtx);
+              Navigator.pop(dialogCtx);
+              try {
+                await ref.read(safetyRepositoryProvider).blockUser(targetUid);
+                messenger.showSnackBar(
                   SnackBar(
                     content: Text(t('block_success', lang)
                         .replaceAll('{name}', targetName)),
                   ),
                 );
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
+              } catch (e) {
+                messenger.showSnackBar(
                   const SnackBar(
                     content: Text(
                       'Uporabnika ni bilo mogoče blokirati. Povezava ali dovoljenje ni uspelo. Poskusi znova.',
@@ -141,15 +145,15 @@ class UgcActionSheet extends ConsumerWidget {
                   ),
                 );
               }
-            }
-          },
-          child: Text(
-            t('block_user', lang).replaceAll(' {name}', ''),
-            style: GoogleFonts.instrumentSans(
-                color: Colors.white, fontWeight: FontWeight.w600),
+            },
+            child: Text(
+              t('block_user', lang).replaceAll(' {name}', ''),
+              style: GoogleFonts.instrumentSans(
+                  color: Colors.white, fontWeight: FontWeight.w600),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
