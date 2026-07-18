@@ -1,4 +1,19 @@
 # Active Lane
+Plan ID: 20260718-context-session-49
+Risk Level: LOW (docs only — session handoff record)
+Founder Approval Required: NO.
+Branch: chore/context-session-49
+
+## Objective (this lane)
+
+Record Session 49 in tasks/context.md: the wave-pill root cause (overlay source),
+PRs #62/#63/#64/#65/#66, build 26 → TestFlight, and the open on-device
+verification. Next real lanes queued in the Session 49 entry (on-device verify =
+founder; then STORE-003 longest pole / wave-pill TTL / LEGAL-001).
+
+---
+
+# Prior Lane (merged — PR #66)
 Plan ID: 20260718-release-b26
 Risk Level: HIGH (prod build → TestFlight; outward-facing)
 Founder Approval Required: YES — granted 2026-07-18 ("lets build new testflight").
