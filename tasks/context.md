@@ -1,3 +1,33 @@
+## Session State — 2026-07-18 (Session 49)
+- Active Task: Root-caused + fixed the wave pill never rendering; shipped build 26 to TestFlight.
+- Environment: local + GitHub; one prod build → TestFlight (founder-approved). No prod backend/rules/config mutation.
+- System Status: `main` clean; pubspec `1.0.0+26`; build 26 live on TestFlight (Delivery UUID `2024e76c-bed2-4b21-a6f2-f0f57c4b6835`). Sentry dist-26 dSYMs + Dart symbol maps uploaded/finalized. Artifacts in `release-symbols/b26/`.
+
+### ROOT CAUSE FOUND — wave pill never rendered (foreground AND tap)
+Device evidence (build 25, 2026-07-18 08:48:03): scanProximityPairs sent TWO visible
+CROSSING_PATHS (`pairsNotified:2`, `mode:"visible"`) while the app was foreground →
+nothing shown. `presentWavePill` read the overlay via
+`Overlay.maybeOf(rootNavigatorKey.currentContext)`, which is ALWAYS null — the root
+Navigator's Overlay is a DESCENDANT of that context, not an ancestor, so maybeOf (walks
+ancestors) never finds it. The pill could never insert, foreground or tap. Fix:
+`rootNavigatorKey.currentState.overlay`. Proven by `test/core/root_overlay_resolution_test.dart`.
+The handoff's PR #60-forwarding suspicion was REFUTED against real Flutter engine source
+(e4b8dca): didReceiveNotificationResponse forwards to firebase_messaging fine. See memory
+`crossing-paths-tap-pill-root-cause`.
+
+### Merged this session
+- **PR #62** — presentWavePill bounded readiness retry (20×250ms) + `Sentry.captureMessage('wave pill dropped: auth-null|no-overlay')` on give-up + path breadcrumbs (background vs cold-launch).
+- **PR #63** — `functions/src/scripts/send_test_push.ts`: deterministic on-demand FCM trigger (CROSSING_PATHS / INCOMING_WAVE, by uid or --token, prod payloads reused). Unblocks device verification without the scan/cooldown.
+- **PR #64** — map cold-offline card: `MapOfflineCard` + retry via `ref.invalidate(mapInitProvider)`; replaces raw `Failed host lookup` red text. i18n added to all 8 locales (+ hr `try_again`).
+- **PR #65** — THE overlay render fix (above).
+- **PR #66** — release 1.0.0+26 → TestFlight.
+
+### OPEN — next session
+1. **On-device verification (FOUNDER, build 26)** — the payoff of all the above, still unproven. Use `send_test_push.ts`. Matrix: (a) app FOREGROUND + push → pill, no freeze; (b) BACKGROUND + tap → pill; (c) KILLED + tap → cold-launch pill; (d) airplane mode on map → offline card. If a pill still drops, Sentry (tremble-functions, dist 26) logs which precondition. Closes STORE-005 + proves the freeze fix (PR #60) in one pass.
+2. **STORE-003 Android bg-location Play Console declaration** — the 2–4 WEEK longest pole. Code done; remaining = EN+SL screenshots of the prominent-disclosure screen, demo video, Play Console declaration submission (mostly founder-side; declaration copy can be prepped).
+3. **Wave pill 5-min TTL** — HIGH (Cloud Functions + prod deploy, founder approval). Add `sentAt` to both FCM payloads (matches + proximity), client validates 5 min, fall back to full window when absent.
+4. **LEGAL-001 DPIA false claims**, **LEGAL-004 weekend timezone (HIGH)** — remaining launch gates.
+
 ## Session State — 2026-07-17 (Session 48)
 - Active Task: Root-caused and fixed the 1.0.0+23 iOS freeze. Three follow-ups open.
 - Environment: local + GitHub. No production mutation this session.
