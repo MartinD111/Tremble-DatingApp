@@ -1,10 +1,29 @@
 # Active Lane
+Plan ID: 20260718-wave-pill-root-overlay
+Risk Level: MEDIUM (Dart-only; the actual wave-pill render fix)
+Founder Approval Required: NO (Dart-only, no native/Firebase/rules/deploy).
+Branch: fix/wave-pill-root-overlay
+
+## Objective (this lane)
+
+THE fix for "foreground push delivered (pairsNotified:2) but no pill" and the
+tap→pill drop. Proven on device logs (build 25, 2026-07-18 08:48:03: two visible
+CROSSING_PATHS sent, nothing shown). Root cause: presentWavePill read the
+overlay via Overlay.maybeOf(rootNavigatorKey.currentContext), which is ALWAYS
+null — the root Navigator's Overlay is a descendant of that context, not an
+ancestor. The pill could never insert, foreground or tap. Fix: use
+rootNavigatorKey.currentState.overlay. Proven by root_overlay_resolution_test.
+Sits on top of PR #62 (bounded readiness retry + Sentry give-up). Ships build 26.
+
+---
+
+# Prior Lane (merged — PR #64)
 Plan ID: 20260718-map-cold-offline-ux
 Risk Level: MEDIUM (client-only; map error-state UI + i18n)
 Founder Approval Required: NO (Dart-only, no native/Firebase/rules/deploy).
 Branch: fix/map-cold-offline-ux
 
-## Objective (this lane)
+## Objective (prior lane)
 
 Replace the raw `Error loading map: <ClientException … Failed host lookup>` red
 text that airplane mode surfaced (tremble_map_screen.dart error branch) with a

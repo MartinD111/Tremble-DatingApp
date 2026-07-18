@@ -18,10 +18,15 @@ void main() {
             .readAsStringSync();
     final router = File('lib/src/core/router.dart').readAsStringSync();
 
-    for (final source in [profileDetail, matchDialog, router]) {
+    for (final source in [profileDetail, matchDialog]) {
       expect(source, contains('hasReachedWaveLimit'));
       expect(source, contains('PremiumPaywallBottomSheet.show(context)'));
     }
+    // The router's shared pill presenter shows the paywall from the overlay's
+    // context (the navigator context resolves to null — see
+    // root_overlay_resolution_test.dart), but still guards the limit first.
+    expect(router, contains('hasReachedWaveLimit'));
+    expect(router, contains('PremiumPaywallBottomSheet.show(overlay.context)'));
   });
 
   test('profile Wave UI uses optimistic AsyncValue state with inline rollback',
