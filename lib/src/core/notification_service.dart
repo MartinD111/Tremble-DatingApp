@@ -506,6 +506,9 @@ class NotificationService {
     await _onMessageOpenedAppSub?.cancel();
     _onMessageOpenedAppSub =
         FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      if (kDebugMode)
+        debugPrint('[NOTIFY] tap → onMessageOpenedApp (backgrounded): '
+            'type=${message.data['type']}');
       if (onNotificationTap != null) {
         onNotificationTap(message.data);
       }
@@ -513,6 +516,13 @@ class NotificationService {
 
     final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null && onNotificationTap != null) {
+      if (kDebugMode)
+        debugPrint('[NOTIFY] tap → getInitialMessage (cold launch): '
+            'type=${initialMessage.data['type']}');
+      // The pill presenter (router.presentWavePill) now polls for auth/overlay
+      // readiness, so a cold launch that beats hydration heals itself. This
+      // short delay still lets GoRouter mount for the non-pill nav paths
+      // (MUTUAL_WAVE / RUN_INTERCEPT) that read currentContext directly.
       await Future<void>.delayed(const Duration(milliseconds: 500));
       onNotificationTap(initialMessage.data);
     }
