@@ -113,7 +113,12 @@ class WavePillService {
       builder: (ctx) {
         final topPad = MediaQuery.of(ctx).padding.top;
         return Positioned(
-          top: topPad + 14,
+          // Sit below the top control bar (mode selector + Tremble title +
+          // schedule button live at padding.top + 20, height 50 → bottom at
+          // +70). +80 matches the in-app _MatchNotificationPillOverlay so the
+          // two pill paths align and neither covers the radar-mode / schedule
+          // controls (UI-POSTMATCH-PILLS).
+          top: topPad + 80,
           left: 16,
           right: 16,
           child: Material(
