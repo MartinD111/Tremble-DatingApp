@@ -1087,6 +1087,10 @@ export const onRunCrossUpdated = onDocumentUpdated(
                 userIds: userIds,
                 matchType: "run_club",
                 matchContext: null,
+                // Mutual run-club wave is the mutual gesture — seed both sides so
+                // hasMutualWave (ADR-007 §1) is true and the pair shows in colour
+                // (not greyscale) in history. Premium full-card gate unchanged.
+                gestures: { [userIds[0]]: true, [userIds[1]]: true },
                 createdAt: FieldValue.serverTimestamp(),
                 expiresAt: new Date(Date.now() + 30 * 60 * 1000),
                 status: "pending",
