@@ -304,16 +304,14 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
 
     final profile =
         ref.watch(publicProfileProvider(partnerId)).whenOrNull(data: (p) => p);
+    final myHobbies = ref.watch(authStateProvider)?.hobbies ?? const [];
 
     return Scaffold(
       backgroundColor: _bgDeep,
-      body: GestureDetector(
-        onTap: () => context.pop(),
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedBuilder(
-          animation: _ctrl,
-          builder: (context, _) => _buildScene(context, profile, partnerId),
-        ),
+      body: AnimatedBuilder(
+        animation: _ctrl,
+        builder: (context, _) =>
+            _buildScene(context, profile, partnerId, myHobbies),
       ),
     );
   }
@@ -322,6 +320,7 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
     BuildContext context,
     PublicProfile? profile,
     String partnerId,
+    List<Map<String, dynamic>> myHobbies,
   ) {
     final size = MediaQuery.of(context).size;
 
@@ -348,7 +347,7 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
     final msgTy = (1.0 - _easeOut((t - 1.70) / 0.52)) * 10.0;
     final noteOp = _easeOut((t - 1.95) / 0.36);
     final noteTy = (1.0 - _easeOut((t - 1.95) / 0.42)) * 6.0;
-    // "Tap anywhere to start radar" — last to appear, gentle pulse afterwards
+    // Start radar button — last to appear, gentle pulse afterwards
     final hintOp = _easeOut((t - 2.40) / 0.50);
     final hintPulse =
         t > 2.90 ? 0.55 + 0.45 * (0.5 + 0.5 * math.sin((t - 2.90) * 2.2)) : 1.0;
@@ -359,6 +358,10 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
         : null;
     final name = profile?.name ?? '';
     final age = profile?.age;
+    final commonHobbies = _pickCommonHobbies(
+      myHobbies,
+      profile?.hobbies ?? const <Map<String, dynamic>>[],
+    );
 
     // Dynamic font size: shorter messages render larger
     final msgLen = _pep.message.length;
@@ -425,6 +428,17 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
                           ),
                         ],
                       ),
+                    ),
+                  ],
+                  if (commonHobbies.isNotEmpty) ...[
+                    const SizedBox(height: 18),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        for (final h in commonHobbies) _HobbyChip(label: h),
+                      ],
                     ),
                   ],
                 ],
@@ -528,16 +542,10 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
                     ],
                     const SizedBox(height: 28),
                     Opacity(
-                      opacity: hintOp * hintPulse,
-                      child: Text(
-                        'Tap anywhere to start radar',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.instrumentSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: _cream.withValues(alpha: 0.55),
-                          letterSpacing: 0.6,
-                        ),
+                      opacity: hintOp,
+                      child: _StartRadarButton(
+                        pulse: hintPulse,
+                        onPressed: () => context.pop(),
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -553,6 +561,33 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
         ),
       ],
     );
+  }
+
+  /// Picks up to 3 hobby names for the reveal card — shared hobbies first
+  /// (matched by id), then the partner's remaining hobbies at random to fill.
+  List<String> _pickCommonHobbies(
+    List<Map<String, dynamic>> mine,
+    List<Map<String, dynamic>> partner,
+  ) {
+    String? idOf(Map<String, dynamic> h) => (h['id'] ?? h['name']) as String?;
+    String nameOf(Map<String, dynamic> h) =>
+        ((h['name'] ?? h['id'] ?? '') as String).trim();
+
+    final myIds = mine.map(idOf).whereType<String>().toSet();
+    final shared = <String>[];
+    final rest = <String>[];
+    for (final h in partner) {
+      final name = nameOf(h);
+      if (name.isEmpty) continue;
+      final id = idOf(h);
+      if (id != null && myIds.contains(id)) {
+        shared.add(name);
+      } else {
+        rest.add(name);
+      }
+    }
+    rest.shuffle();
+    return [...shared, ...rest].take(3).toList();
   }
 
   Widget _buildPulseInterceptActions(String targetUid) {
@@ -799,6 +834,91 @@ class _PulseInterceptButton extends StatelessWidget {
                       letterSpacing: 0.2,
                     ),
                   ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A single shared/partner hobby pill on the match reveal card.
+class _HobbyChip extends StatelessWidget {
+  final String label;
+  const _HobbyChip({required this.label});
+
+  static const _cream = TrembleTheme.backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        borderRadius: BorderRadius.circular(100),
+        color: Colors.white.withValues(alpha: 0.05),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.instrumentSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: _cream.withValues(alpha: 0.85),
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
+/// The explicit "Start radar" call-to-action that replaced the invisible
+/// tap-anywhere gesture on the reveal. [pulse] drives a gentle breathing
+/// opacity in sync with the scene animation.
+class _StartRadarButton extends StatelessWidget {
+  final double pulse;
+  final VoidCallback onPressed;
+  const _StartRadarButton({required this.pulse, required this.onPressed});
+
+  static const _greenLight = Color(0xFF5BBF93);
+  static const _greenDark = TrembleTheme.successGreen;
+  static const _cream = TrembleTheme.backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      behavior: HitTestBehavior.opaque,
+      child: Opacity(
+        opacity: (0.85 + 0.15 * pulse).clamp(0.0, 1.0),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 15),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [_greenLight, _greenDark],
+            ),
+            borderRadius: BorderRadius.circular(100),
+            boxShadow: [
+              BoxShadow(
+                color: _greenDark.withValues(alpha: 0.4),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.radar, size: 18, color: _cream),
+              const SizedBox(width: 10),
+              Text(
+                'Start radar',
+                style: GoogleFonts.instrumentSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: _cream,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
           ),
         ),
       ),
