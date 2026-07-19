@@ -6,7 +6,7 @@
 
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { requireAuth, requireVerifiedEmail } from "../../middleware/authGuard";
+import { requireAuth } from "../../middleware/authGuard";
 import { checkRateLimit } from "../../middleware/rateLimit";
 import { assertValidDocumentId, validateRequest } from "../../middleware/validate";
 import { updateProfileSchema, PublicProfile } from "./users.schema";
@@ -216,12 +216,18 @@ export const getProfile = onCall(
 
 /**
  * Get another user's public profile — limited fields only.
- * Requires verified email.
+ *
+ * Requires authentication only (not a verified email). Access is already gated
+ * on an existing mutual match between caller and target (see the match lookup
+ * below), which is a stronger authorization signal than email verification —
+ * an unverified but matched user must be able to see their match's reveal card.
+ * Requiring `email_verified` here blocked the post-match reveal for legitimate
+ * (unverified test/early) accounts (BLOCKER-POSTMATCH-PHOTO).
  */
 export const getPublicProfile = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request) => {
-        const uid = requireVerifiedEmail(request);
+        const uid = requireAuth(request);
         await checkRateLimit(uid, "getPublicProfile", { maxRequests: 20, windowMs: 60000 });
 
         const { userId: rawUserId } = request.data as { userId: unknown };
