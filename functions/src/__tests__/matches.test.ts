@@ -1296,4 +1296,46 @@ describe("Matches Module", () => {
             expect(matchUpdate).not.toHaveBeenCalled();
         });
     });
+
+    describe("backfillMatchGestures", () => {
+        it("seeds gestures on legacy mutual matches, skipping near-miss and "
+            + "already-mutual docs", async () => {
+            const authGuard = await import("../../src/middleware/authGuard");
+            const rateLimit = await import("../../src/middleware/rateLimit");
+            jest.mocked(authGuard.requireAdmin).mockReturnValue("adminUid");
+            jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+
+            const batchUpdate = jest.fn();
+            const batchCommit = jest.fn(async () => undefined);
+            mockDb.batch.mockReturnValue({
+                update: batchUpdate,
+                commit: batchCommit,
+            });
+
+            const docs = [
+                { ref: "ref-legacy", data: () => ({ matchType: "standard", userIds: ["u1", "u2"] }) },
+                { ref: "ref-nearmiss", data: () => ({ matchType: "activity", userIds: ["u3", "u4"] }) },
+                { ref: "ref-mutual", data: () => ({ matchType: "standard", userIds: ["u5", "u6"], gestures: { u5: true, u6: true } }) },
+                { ref: "ref-badshape", data: () => ({ matchType: "standard", userIds: ["only-one"] }) },
+            ];
+            mockDb.collection.mockImplementation((name: unknown) => {
+                if (name === "matches") {
+                    return { get: jest.fn(async () => ({ docs })) };
+                }
+                throw new Error(`Unexpected collection: ${String(name)}`);
+            });
+
+            const { backfillMatchGestures } = await import("../../src/modules/matches/matches.functions");
+            const callable = backfillMatchGestures as unknown as (r: unknown) => Promise<{ updatedCount: number }>;
+            const result = await callable({ auth: { uid: "adminUid", token: {} } } as never);
+
+            expect(result.updatedCount).toBe(1);
+            expect(batchUpdate).toHaveBeenCalledTimes(1);
+            expect(batchUpdate).toHaveBeenCalledWith("ref-legacy", {
+                "gestures.u1": true,
+                "gestures.u2": true,
+            });
+            expect(batchCommit).toHaveBeenCalledTimes(1);
+        });
+    });
 });

@@ -34,6 +34,7 @@ export {
     sendWave,
     markMatchFound,
     sendMatchGesture,
+    backfillMatchGestures,
 } from "./modules/matches/matches.functions";
 
 export {
