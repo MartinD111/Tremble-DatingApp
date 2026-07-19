@@ -946,7 +946,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                         DateTime.now()
                                             .add(const Duration(minutes: 30)),
                                     showMutualFlash: devSim.showMutualFlash,
-                                    onStop: () => ref
+                                    onStop: () async => ref
                                         .read(devSimulationControllerProvider
                                             .notifier)
                                         .stopAndPersist(),

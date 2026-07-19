@@ -21,7 +21,11 @@ class RadarSearchSession {
 
   /// Caller invokes this when the user wants to terminate the search
   /// successfully — "Found each other" or "Stop Search".
-  final VoidCallback onStop;
+  ///
+  /// Returns a [Future] so the overlay can show progress while the backend
+  /// `markMatchFound` round-trip completes and surface an error (rather than
+  /// silently swallowing it and leaving the window open) if it fails.
+  final Future<void> Function() onStop;
 
   const RadarSearchSession({
     required this.partnerName,

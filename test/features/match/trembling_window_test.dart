@@ -241,7 +241,7 @@ void main() {
                   partnerName: 'Sarah',
                   partnerUid: 'partner_456',
                   expiresAt: clock.now().add(const Duration(minutes: 30)),
-                  onStop: () {},
+                  onStop: () async {},
                 ),
               ),
             ),
@@ -267,7 +267,7 @@ void main() {
                 session: RadarSearchSession(
                   partnerName: 'Sarah',
                   expiresAt: clock.now().add(const Duration(minutes: 30)),
-                  onStop: () {},
+                  onStop: () async {},
                 ),
               ),
             ),
@@ -294,7 +294,7 @@ void main() {
                 session: RadarSearchSession(
                   partnerName: 'Sarah',
                   expiresAt: expiresAt,
-                  onStop: () => stopped = true,
+                  onStop: () async => stopped = true,
                 ),
               ),
             ),
@@ -319,6 +319,70 @@ void main() {
       // Pump past expiration
       await tester.pump(const Duration(minutes: 30));
       expect(find.text('00:00'), findsOneWidget);
+    });
+
+    testWidgets('Stop shows a spinner while the onStop round-trip is in flight',
+        (WidgetTester tester) async {
+      final completer = Completer<void>();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _defaultOverrides,
+          child: MaterialApp(
+            home: Scaffold(
+              body: RadarSearchOverlay(
+                session: RadarSearchSession(
+                  partnerName: 'Sarah',
+                  expiresAt: clock.now().add(const Duration(minutes: 30)),
+                  onStop: () => completer.future,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // No spinner until Stop is tapped.
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      await tester.tap(find.text('STOP'));
+      await tester.pump();
+
+      // Spinner is shown while awaiting; the label stays visible.
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('STOP'), findsOneWidget);
+
+      // Completing the round-trip clears the spinner.
+      completer.complete();
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+
+    testWidgets('Stop surfaces a retry snackbar and re-enables when it fails',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _defaultOverrides,
+          child: MaterialApp(
+            home: Scaffold(
+              body: RadarSearchOverlay(
+                session: RadarSearchSession(
+                  partnerName: 'Sarah',
+                  expiresAt: clock.now().add(const Duration(minutes: 30)),
+                  onStop: () async => throw Exception('markMatchFound failed'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('STOP'));
+      await tester.pump(); // start the future
+      await tester.pump(); // let the error propagate + snackbar insert
+
+      // The failure is surfaced (not swallowed), and the button re-enables.
+      expect(find.text('Try again'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
     testWidgets('mutual wave triggers Trembling Window UI state in HomeScreen',
