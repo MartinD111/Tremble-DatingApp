@@ -1,7 +1,7 @@
 ## Session State — 2026-07-19 (Session 51) — POST-MATCH FLOW REPAIR (BATCH 2 SHIPPED)
 
 - **Branch:** `fix/post-match-flow-repair`, **PR #69 OPEN + CI GREEN** (the Session-50 CI-red is fixed). pubspec `1.0.0+29`.
-- **Build 29 shipped:** iOS TestFlight (Delivery UUID `6d2cbef2-aaf2-4cea-b0ca-9bff4453a6f2`, 71 dSYMs), Android AAB `release-symbols/b29/app-prod-release.aab` (versionCode 29, founder uploads to Play). Built via `scripts/release/build_prod.sh all --no-upload` — **Sentry symbols NOT uploaded** (no `SENTRY_AUTH_TOKEN`); symbols preserved at `release-symbols/b29/`. To symbolicate build-29 crashes later: `SENTRY_AUTH_TOKEN=… scripts/release/build_prod.sh all --skip-build`.
+- **Build 29 shipped:** iOS TestFlight (Delivery UUID `6d2cbef2-aaf2-4cea-b0ca-9bff4453a6f2`, 71 dSYMs), Android AAB `release-symbols/b29/app-prod-release.aab` (versionCode 29, founder uploads to Play). **Sentry symbols UPLOADED** — release `tremble.dating.app@1.0.0+29` created+finalized in `tremble-functions` (iOS dSYMs + Dart maps + Android arm64/arm/x64), so build-29 crashes symbolicate. NOTE: `SENTRY_AUTH_TOKEN` lives in `~/.zshrc` (interactive-only) — a non-interactive Bash shell can't see it; load it with `export SENTRY_AUTH_TOKEN="$(zsh -ic 'printf %s "$SENTRY_AUTH_TOKEN"')"` before any `build_prod.sh` upload.
 - **Prod deploy this session:** `getPublicProfile` (relaxed to `requireAuth`) — additive/validated, fixes reveal photo on build 28 too.
 
 ### DONE + committed on the branch (all CI-green)
