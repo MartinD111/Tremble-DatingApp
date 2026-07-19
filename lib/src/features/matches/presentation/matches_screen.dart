@@ -145,6 +145,36 @@ MatchDisplayState resolveMatchDisplayState({
       : MatchDisplayState.mutualFree;
 }
 
+/// Up to [max] partner hobby *names* for a matches tile — shared hobbies first
+/// (matched by id, kept in the partner's order), then the partner's remaining
+/// hobbies in their given order. Deterministic (no shuffle) so a list tile does
+/// not reshuffle its chips on every rebuild. Powers the ADR-007 §1 free
+/// "basic card" preview.
+List<String> sharedFirstHobbyNames(
+  List<Map<String, dynamic>> mine,
+  List<Map<String, dynamic>> partner, {
+  int max = 3,
+}) {
+  String? idOf(Map<String, dynamic> h) => (h['id'] ?? h['name']) as String?;
+  String nameOf(Map<String, dynamic> h) =>
+      ((h['name'] ?? h['id'] ?? '') as String).trim();
+
+  final myIds = mine.map(idOf).whereType<String>().toSet();
+  final shared = <String>[];
+  final rest = <String>[];
+  for (final h in partner) {
+    final name = nameOf(h);
+    if (name.isEmpty) continue;
+    final id = idOf(h);
+    if (id != null && myIds.contains(id)) {
+      shared.add(name);
+    } else {
+      rest.add(name);
+    }
+  }
+  return [...shared, ...rest].take(max).toList();
+}
+
 class MatchesScreen extends ConsumerStatefulWidget {
   const MatchesScreen({super.key});
 
@@ -801,6 +831,14 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                       final canOpenFullCard =
                           displayState == MatchDisplayState.mutualPremium;
 
+                      // ADR-007 §1 free "basic card" preview — up to 3 hobbies
+                      // (shared first) on mutual tiles. Not shown for near-miss
+                      // or non-mutual (greyscale) rows.
+                      final tileHobbies = (isMutualFree || canOpenFullCard)
+                          ? sharedFirstHobbyNames(
+                              user?.hobbies ?? const [], profile.hobbies)
+                          : const <String>[];
+
                       final hideDetails = isNearMissLocked;
                       final disableTrailingActions =
                           isNearMissLocked || isNearMissReadOnly;
@@ -925,6 +963,44 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                                                   ],
                                                 ],
                                               ),
+                                              if (tileHobbies.isNotEmpty) ...[
+                                                const SizedBox(height: 6),
+                                                Wrap(
+                                                  spacing: 6,
+                                                  runSpacing: 4,
+                                                  children: [
+                                                    for (final hobby
+                                                        in tileHobbies)
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                horizontal: 8,
+                                                                vertical: 3),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: primary
+                                                              .withValues(
+                                                                  alpha: 0.14),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                      999),
+                                                        ),
+                                                        child: Text(
+                                                          hobby,
+                                                          style: GoogleFonts
+                                                              .instrumentSans(
+                                                            fontSize: 11,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: subtextColor,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ],
                                             ],
                                           ],
                                         ),
