@@ -1,3 +1,24 @@
+## Session State — 2026-07-19 (Session 51) — POST-MATCH FLOW REPAIR (BATCH 2 SHIPPED)
+
+- **Branch:** `fix/post-match-flow-repair`, **PR #69 OPEN + CI GREEN** (the Session-50 CI-red is fixed). pubspec `1.0.0+29`.
+- **Build 29 shipped:** iOS TestFlight (Delivery UUID `6d2cbef2-aaf2-4cea-b0ca-9bff4453a6f2`, 71 dSYMs), Android AAB `release-symbols/b29/app-prod-release.aab` (versionCode 29, founder uploads to Play). Built via `scripts/release/build_prod.sh all --no-upload` — **Sentry symbols NOT uploaded** (no `SENTRY_AUTH_TOKEN`); symbols preserved at `release-symbols/b29/`. To symbolicate build-29 crashes later: `SENTRY_AUTH_TOKEN=… scripts/release/build_prod.sh all --skip-build`.
+- **Prod deploy this session:** `getPublicProfile` (relaxed to `requireAuth`) — additive/validated, fixes reveal photo on build 28 too.
+
+### DONE + committed on the branch (all CI-green)
+- **Step 1 — Safety sheets (`a9ba5eb`):** block + report rebuilt as themed **Material bottom sheets** (dropped `CupertinoAlertDialog`). Fixes the iOS `Material.of` crash (TREMBLE-FUNCTIONS-12), #8 can't-block, #9 too-light popup, #10 broken report, AND the CI-red test. **Corrected root cause (see lesson #93):** the CI failure was NOT #12 — it was a `ListTile`-under-opaque-`DecoratedBox` assert that only fires on CI's newer Flutter stable (local is pinned 3.41.4). Two distinct Material-ancestor bugs, both fixed structurally.
+- **Step 2 — Photo gate (`dbbc7b7`, DEPLOYED):** `getPublicProfile` → `requireAuth` (already match-gated). Fixes reveal photo/name/age/hobbies "?" (#1,#3,#7).
+- **Step 5 — Pills (`e094a5d`):** foreground wave pill moved `topPad+14 → topPad+80`, clears the gym/run/event + schedule control bar. (iOS 2× dedup NOT addressed — still open, needs device.)
+- **Step 3 — Pulse Intercept move (`095b50c`):** Send Phone/Send Photo extracted to new `PulseInterceptBar` widget, now rendered in the **trembling window** (`RadarSearchOverlay`, above the countdown) when `partnerUid != null`; removed from `match_reveal_screen` (reveal = photo+age+3 hobbies only). `RadarSearchSession` gained `partnerUid`.
+
+### OPEN — Session 51 handoff (priority order)
+1. **Device-verify build 29** (founder): reveal photo loads; block/report work + readable on iOS; report scrolls with a Submit; pill sits below the control bar; Send Phone/Photo appears in the trembling window (radar search), NOT the reveal.
+2. **Step 4 (NOT DONE)** — tapping a "nearby"/"wave" notification must open the partner's **profile card** (free vs premium view differs). Deferred: needs the notification-tap handler wiring + the free/premium card, plus device verification. Investigate `router.dart` notification-tap path + `wave_pill_service`/`notification_service`.
+3. **iOS pill dedup (cluster 2)** — "wave sent" shows 2× overlapping "is nearby". Local pill (`_MatchNotificationPillOverlay`, +80) vs APNs pill (`WavePillService`, now +80) presentation dedup. Needs device repro.
+4. **Cluster 4** — radar not spinning / partner not plotted during window (uninvestigated).
+5. **5d** — history greyscale → free-user basic card.
+6. **Merge PR #69** once device-verified (CI green; "MPC — Founder Approval" + "Quality Gate" show as *skipped*, not failing).
+- IGNORE: TREMBLE-FUNCTIONS-11 (CancellationException, benign backgrounding).
+
 ## Session State — 2026-07-19 (Session 50) — POST-MATCH FLOW REPAIR (IN PROGRESS)
 
 - **Branch:** `fix/post-match-flow-repair` (6 commits, NOT merged). **PR #69 OPEN + CI RED.**

@@ -2,27 +2,27 @@
 
 ---
 
-## POST-MATCH FLOW REPAIR (Session 50 — branch `fix/post-match-flow-repair`, PR #69)
+## POST-MATCH FLOW REPAIR (Session 50-51 — branch `fix/post-match-flow-repair`, PR #69)
 
-> Full detail + priority order in `context.md` Session 50. Root causes below.
+> Full detail + priority order in `context.md` Session 51. Batch 2 shipped in build 29.
 
-### BLOCKER-POSTMATCH-CI — PR #69 CI red (blocks merge)
-**Status:** OPEN. `test/features/safety/ugc_action_sheet_block_dialog_test.dart` fails in CI (Linux), passes locally (macOS). "Multiple exceptions (2)" — the block-dialog crash still fires in CI env, so the Cluster-6 fix (`showDialog` + builder ctx) is incomplete or env-sensitive. Must be green before merge. Likely same root as TREMBLE-FUNCTIONS-12.
+### BLOCKER-POSTMATCH-CI — PR #69 CI red (blocked merge)
+**Status:** ✅ RESOLVED (Session 51, `a9ba5eb`). **The Session-50 root-cause guess was wrong.** The CI failure was NOT TREMBLE-FUNCTIONS-12 — it was a Flutter framework assert *"ListTile background color or ink splashes may be invisible"* (×2), fired because `UgcActionSheet` wrapped its `ListTile`s in an opaque `Container`/`DecoratedBox` with no `Material` between. It only reproduces on CI's newer `stable` Flutter (local is pinned 3.41.4 → passes locally). Fixed structurally: the sheet surface is now a `Material(color:)`. See lesson #93.
 
 ### BLOCKER-POSTMATCH-DIALOGS — iOS block + report broken (crash TREMBLE-FUNCTIONS-12)
-**Status:** OPEN. `Material.of` null → `_InkState._build` → `WidgetStateProperty` (iOS dist 28, fatal). Material widgets rendered inside `CupertinoAlertDialog` (no Material ancestor). Symptoms: #8 can't block, #9 block popup too light + white text invisible, #10 report TOTALLY broken (endless scroll, 0 buttons). **Fix = rebuild block + report as themed bottom sheets (drop CupertinoAlertDialog for these).** `lib/src/features/safety/presentation/widgets/ugc_action_sheet.dart` + `ReportDialog` + `lib/src/shared/ui/tremble_alert_dialog.dart`.
+**Status:** ✅ RESOLVED (Session 51, `a9ba5eb`). Block + report rebuilt as themed **Material bottom sheets**; dropped `CupertinoAlertDialog`/`TrembleAlertDialog` for these two. No more `Platform.isIOS` branch → no `Material.of` null, testable on all platforms, dark-themed (#9), report scrolls with a Submit (#10), block works (#8). `ugc_action_sheet.dart` rebuilt (`_BlockConfirmSheet` + `_ReportSheet`). NOTE: `tremble_alert_dialog.dart` still used by settings/edit-profile/discard/safe-zones/email-location — those are Text-only confirms (no Material-in-Cupertino), left as-is. **Needs iOS device verification on build 29.**
 
-### BLOCKER-POSTMATCH-PHOTO — reveal still "?" (email gate)
-**Status:** OPEN. 5a routed the reveal through `getPublicProfile` CF, but it calls `requireVerifiedEmail` (`functions/src/middleware/authGuard.ts:34`); test accounts are unverified → CF denies → profile null → no photo/name/age/hobbies. **FOUNDER DECISION: relax to `requireAuth`** (the CF is already gated on an existing match = sufficient auth). HIGH-risk CF change + deploy `getPublicProfile`. File: `functions/src/modules/users/users.functions.ts:224`.
+### BLOCKER-POSTMATCH-PHOTO — reveal "?" (email gate)
+**Status:** ✅ RESOLVED + DEPLOYED (Session 51, `dbbc7b7`). `getPublicProfile` relaxed `requireVerifiedEmail` → `requireAuth` (`users.functions.ts`); already match-gated. Deployed to prod `am---dating-app` europe-west1. Fixes reveal photo/name/age/hobbies (#1,#3,#7) on build 28 AND 29.
 
 ### FEATURE-POSTMATCH-INTERCEPT — move Pulse Intercept into the trembling window
-**Status:** OPEN (design). Send Phone / Send Photo currently live on the match reveal (`_buildPulseInterceptActions` in `match_reveal_screen.dart`). Founder: they are **assistance DURING the meetup**, not matching — move them into the **trembling window / radar search phase**. Match reveal keeps only photo + age + 3 hobbies. Also: pulse-intercept notifications arrive but image never viewable + duplicate 2× (cluster 3, uninvestigated on the send/camera side).
+**Status:** ✅ RESOLVED (Session 51, `095b50c`). New `PulseInterceptBar` widget (`match/presentation/widgets/`); rendered in `RadarSearchOverlay` (the trembling window) above the countdown when `session.partnerUid != null` (prod passes computed `partnerId`, dev-sim `profile.id`). Removed from `match_reveal_screen` (reveal = photo+age+3 hobbies). **Needs device verification of placement.** Still OPEN (uninvestigated, cluster 3): pulse-intercept notification image never viewable + duplicate 2× on the send/receive side.
+
+### UI-POSTMATCH-PILLS — in-app pills too high
+**Status:** ✅ PARTIAL (Session 51, `e094a5d`). `WavePillService` pill moved `topPad+14 → topPad+80` (matches `_MatchNotificationPillOverlay`), clears the mode + schedule control bar. **STILL OPEN:** iOS "wave sent" shows 2× overlapping "is nearby" — presentation dedup between the local pill and the APNs pill (cluster 2). Needs device repro.
 
 ### FEATURE-POSTMATCH-NOTIFTAP — notification tap opens profile card
-**Status:** OPEN. Tapping a "nearby" / "wave" notification must open the partner's profile card (free vs premium view differs). New wiring in the notification-tap handler (router / notification_service).
-
-### UI-POSTMATCH-PILLS — in-app pills too high (iOS dedup)
-**Status:** OPEN. Pills render too high, covering radar-mode buttons (gym/run/event) + schedule-radar button (top-right). Move lower. iOS-only: "wave sent" shows 2× and overlaps "is nearby" — dedup local pill vs APNs push presentation (cluster 2).
+**Status:** OPEN (Step 4, NOT done). Tapping a "nearby" / "wave" notification must open the partner's profile card (free vs premium view differs). Deferred: needs notification-tap handler wiring (`router.dart` / `notification_service` / `wave_pill_service`) + the free/premium card + device verification.
 
 ---
 
