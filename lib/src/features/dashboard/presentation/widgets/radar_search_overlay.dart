@@ -10,6 +10,7 @@ import 'package:tremble/src/features/dashboard/application/warmth_controller.dar
 import 'package:tremble/src/features/dashboard/domain/warmth_direction.dart';
 import 'package:tremble/src/features/dashboard/application/radar_search_session.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
+import 'package:tremble/src/features/match/presentation/widgets/pulse_intercept_bar.dart';
 import '../../../../core/translations.dart';
 import '../../../../core/theme.dart';
 
@@ -137,6 +138,8 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
       ),
     );
 
+    final partnerUid = widget.session.partnerUid;
+
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.end,
@@ -149,6 +152,16 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
               lang: lang,
             ),
           ),
+        // Pulse Intercept — meetup assistance (Send Phone / Send Photo) shown
+        // DURING the trembling window, not on the match reveal. Constrained so
+        // the buttons stay compact above the timer and the radar stays visible.
+        if (partnerUid != null) ...[
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 340),
+            child: PulseInterceptBar(targetUid: partnerUid),
+          ),
+          const SizedBox(height: 10),
+        ],
         // Warmth Indicator (Hot/Cold Navigation)
         _warmthIndicator(warmth, colorScheme),
         isUrgent

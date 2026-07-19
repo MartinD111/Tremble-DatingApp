@@ -14,6 +14,11 @@ class RadarSearchSession {
   final DateTime expiresAt;
   final bool showMutualFlash;
 
+  /// The matched partner's uid. Drives the Pulse Intercept (Send Phone / Send
+  /// Photo) meetup-assist buttons in the overlay. Null when unavailable (e.g. a
+  /// dev simulation with no real partner uid) → the intercept is hidden.
+  final String? partnerUid;
+
   /// Caller invokes this when the user wants to terminate the search
   /// successfully — "Found each other" or "Stop Search".
   final VoidCallback onStop;
@@ -22,6 +27,7 @@ class RadarSearchSession {
     required this.partnerName,
     required this.expiresAt,
     required this.onStop,
+    this.partnerUid,
     this.showMutualFlash = false,
   });
 }

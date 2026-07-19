@@ -12,7 +12,7 @@ import 'package:tremble/src/features/dashboard/domain/warmth_direction.dart';
 import 'package:tremble/src/features/dashboard/data/run_club_repository.dart';
 import 'package:tremble/src/features/match/application/match_service.dart';
 import 'package:tremble/src/features/match/domain/match.dart' as wave_match;
-import 'package:tremble/src/features/match/presentation/match_reveal_screen.dart';
+import 'package:tremble/src/features/match/presentation/widgets/pulse_intercept_bar.dart';
 import 'package:tremble/src/features/auth/data/auth_repository.dart';
 import 'package:tremble/src/features/profile/data/profile_repository.dart';
 import 'package:tremble/src/features/profile/domain/public_profile.dart';
@@ -149,40 +149,25 @@ void main() {
   });
 
   group('Trembling Window Widget Tests', () {
-    testWidgets('MatchRevealScreen sends phone and photo intercept requests',
+    // Pulse Intercept now lives DURING the trembling window (radar search),
+    // not on the match reveal. It is meetup assistance, not part of the reveal.
+    testWidgets('PulseInterceptBar sends phone and photo intercept requests',
         (WidgetTester tester) async {
       final requests = <({String targetUid, String type})>[];
-      final match = wave_match.Match(
-        id: 'match_123',
-        userIds: const ['me', 'partner_456'],
-        createdAt: DateTime.now(),
-        seenBy: const [],
-        status: 'pending',
-        gestures: const {'me': true, 'partner_456': true},
-      );
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            ..._defaultOverrides,
-            publicProfileProvider('partner_456')
-                .overrideWith((ref) async => PublicProfile(
-                      id: 'partner_456',
-                      name: 'Sarah',
-                      age: 24,
-                      photoUrls: const [],
-                      hobbies: const [],
-                    )),
-          ],
           child: MaterialApp(
-            home: MatchRevealScreen(
-              match: match,
-              requestPulseIntercept: ({
-                required String targetUid,
-                required String type,
-              }) async {
-                requests.add((targetUid: targetUid, type: type));
-              },
+            home: Scaffold(
+              body: PulseInterceptBar(
+                targetUid: 'partner_456',
+                requestPulseIntercept: ({
+                  required String targetUid,
+                  required String type,
+                }) async {
+                  requests.add((targetUid: targetUid, type: type));
+                },
+              ),
             ),
           ),
         ),
@@ -210,42 +195,24 @@ void main() {
       expect(find.text('Photo Sent'), findsOneWidget);
     });
 
-    testWidgets('MatchRevealScreen shows inline pulse intercept errors',
+    testWidgets('PulseInterceptBar shows inline pulse intercept errors',
         (WidgetTester tester) async {
-      final match = wave_match.Match(
-        id: 'match_123',
-        userIds: const ['me', 'partner_456'],
-        createdAt: DateTime.now(),
-        seenBy: const [],
-        status: 'pending',
-        gestures: const {'me': true, 'partner_456': true},
-      );
-
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            ..._defaultOverrides,
-            publicProfileProvider('partner_456')
-                .overrideWith((ref) async => PublicProfile(
-                      id: 'partner_456',
-                      name: 'Sarah',
-                      age: 24,
-                      photoUrls: const [],
-                      hobbies: const [],
-                    )),
-          ],
           child: MaterialApp(
-            home: MatchRevealScreen(
-              match: match,
-              requestPulseIntercept: ({
-                required String targetUid,
-                required String type,
-              }) async {
-                throw TrembleApiException(
-                  code: 'failed-precondition',
-                  message: 'Add your phone number before sending it.',
-                );
-              },
+            home: Scaffold(
+              body: PulseInterceptBar(
+                targetUid: 'partner_456',
+                requestPulseIntercept: ({
+                  required String targetUid,
+                  required String type,
+                }) async {
+                  throw TrembleApiException(
+                    code: 'failed-precondition',
+                    message: 'Add your phone number before sending it.',
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -259,6 +226,57 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Send Phone'), findsOneWidget);
+    });
+
+    testWidgets(
+        'RadarSearchOverlay shows Pulse Intercept when partnerUid is set',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _defaultOverrides,
+          child: MaterialApp(
+            home: Scaffold(
+              body: RadarSearchOverlay(
+                session: RadarSearchSession(
+                  partnerName: 'Sarah',
+                  partnerUid: 'partner_456',
+                  expiresAt: clock.now().add(const Duration(minutes: 30)),
+                  onStop: () {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(PulseInterceptBar), findsOneWidget);
+      expect(find.text('Send Phone'), findsOneWidget);
+      expect(find.text('Send Photo'), findsOneWidget);
+    });
+
+    testWidgets(
+        'RadarSearchOverlay hides Pulse Intercept when partnerUid is null',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _defaultOverrides,
+          child: MaterialApp(
+            home: Scaffold(
+              body: RadarSearchOverlay(
+                session: RadarSearchSession(
+                  partnerName: 'Sarah',
+                  expiresAt: clock.now().add(const Duration(minutes: 30)),
+                  onStop: () {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(PulseInterceptBar), findsNothing);
     });
 
     testWidgets('RadarSearchOverlay displays ticking timer that stops at 00:00',
