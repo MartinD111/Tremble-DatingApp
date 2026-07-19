@@ -233,22 +233,31 @@ export const getPublicProfile = onCall(
         const { userId: rawUserId } = request.data as { userId: unknown };
         const userId = assertValidDocumentId(rawUserId, "userId");
 
+        // TEMP DIAGNOSTIC (BLOCKER-POSTMATCH-PHOTO, Session 52) — surface which
+        // branch nulls the reveal. Remove once the "?" root cause is confirmed.
+        const logTag = `[USERS getPublicProfile] caller=${uid.substring(0, 8)} target=${userId.substring(0, 8)}`;
+
         const doc = await db.collection("users").doc(userId).get();
         if (!doc.exists) {
+            console.log(`${logTag} → null (target user doc missing)`);
             return { profile: null };
         }
 
         const data = doc.data()!;
         const blockedBy: string[] = data.blockedBy ?? [];
         if (blockedBy.includes(uid)) {
+            console.log(`${logTag} → null (caller in target.blockedBy)`);
             return { profile: null };
         }
 
         const matchId = [uid, userId].sort().join("_");
         const matchDoc = await db.collection("matches").doc(matchId).get();
         if (!matchDoc.exists) {
+            console.log(`${logTag} → null (no match doc at ${matchId.substring(0, 20)})`);
             return { profile: null };
         }
+
+        console.log(`${logTag} → OK (returning public profile)`);
 
         // Return only public fields — never expose email, admin status, etc.
         //

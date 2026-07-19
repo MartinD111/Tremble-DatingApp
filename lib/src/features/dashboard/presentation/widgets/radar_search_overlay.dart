@@ -45,6 +45,29 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
   late Timer _timer;
   late Duration _remaining;
 
+  /// True while the backend `markMatchFound` round-trip (via [onStop]) is in
+  /// flight — drives the Stop button's spinner and prevents double-taps.
+  bool _stopping = false;
+
+  /// Awaits [onStop] with visible progress. On success the match stream removes
+  /// this session and disposes the overlay. On failure the button re-enables
+  /// and a retry snackbar is shown, so Stop never fails silently.
+  Future<void> _handleStop() async {
+    if (_stopping) return;
+    setState(() => _stopping = true);
+    try {
+      await widget.session.onStop();
+      if (mounted) setState(() => _stopping = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _stopping = false);
+      final lang = ref.read(appLanguageProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t('try_again', lang))),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -111,15 +134,24 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
           const SizedBox(width: 14),
           // Compact stop button
           GestureDetector(
-            onTap: widget.session.onStop,
+            onTap: _stopping ? null : _handleStop,
             behavior: HitTestBehavior.opaque,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(LucideIcons.square,
-                      size: 14, color: colorScheme.onSurface),
+                  _stopping
+                      ? SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colorScheme.onSurface,
+                          ),
+                        )
+                      : Icon(LucideIcons.square,
+                          size: 14, color: colorScheme.onSurface),
                   const SizedBox(width: 6),
                   Text(
                     t('stop', lang).toUpperCase(),

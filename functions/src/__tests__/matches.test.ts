@@ -1069,6 +1069,22 @@ describe("Matches Module", () => {
                 );
             });
 
+        it("seeds gestures for both users so a genuine mutual match reads as "
+            + "hasMutualWave (colour, not greyscale, in history)",
+            async () => {
+                setupWaveTriggerDb({ reciprocal: () => true });
+                mockMessagingSend.mockResolvedValue("message-id");
+
+                await invokeWaveTrigger();
+
+                expect(mockTransactionSet).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.objectContaining({
+                        gestures: { receiverUid: true, senderUid: true },
+                    }),
+                );
+            });
+
         it("restarts the window when a stale (found) match is re-waved",
             async () => {
                 setupWaveTriggerDb({

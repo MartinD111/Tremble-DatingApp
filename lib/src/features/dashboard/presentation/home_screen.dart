@@ -44,6 +44,8 @@ import '../application/dev_simulation_controller.dart';
 import '../application/radar_search_session.dart';
 import '../application/tutorial_notifier.dart';
 import '../../match/presentation/widgets/match_notification_pill.dart';
+import '../../match/presentation/widgets/trembling_partner_card.dart';
+import '../../matches/data/match_repository.dart';
 import '../../../shared/ui/wave_pill_service.dart';
 import '../../../shared/ui/premium_paywall.dart';
 import 'package:geolocator/geolocator.dart';
@@ -806,6 +808,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
+  /// Opens the trembling-window partner's full profile card, gated by tier:
+  /// premium users see the profile, free users see the paywall (mirrors the
+  /// notification-pill avatar tap at the bottom of this screen).
+  void _openTremblingPartner(BuildContext context, MatchProfile partner) {
+    if (!ref.read(effectiveIsPremiumProvider)) {
+      PremiumPaywallBottomSheet.show(context);
+      return;
+    }
+    context.push('/profile', extra: partner);
+  }
+
   Widget _buildRadarView(
       WidgetRef ref,
       BuildContext context,
@@ -874,8 +887,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         },
                       ),
                     )
-                  else if (isSearchActive)
-                    // Bottom-anchored, NOT centered, NOT dimmed — the radar
+                  else if (isSearchActive) ...[
+                    // TOP — always-visible partner identity card (circle photo +
+                    // name/age). Tap opens the full profile (premium) or the
+                    // paywall (free). Sourced from the getMatches path
+                    // (MatchProfile), never getPublicProfile, which rendered the
+                    // reveal/window as "?" (BLOCKER-POSTMATCH-PHOTO).
+                    Positioned(
+                      top: MediaQuery.of(context).padding.top + 90,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: isDevSearchActive
+                            ? (devSim.profile == null
+                                ? const SizedBox.shrink()
+                                : TremblingPartnerCard(
+                                    partner: devSim.profile!,
+                                    onTap: () => _openTremblingPartner(
+                                        context, devSim.profile!),
+                                  ))
+                            : Consumer(
+                                builder: (context, ref, child) {
+                                  final partnerId =
+                                      activeMatch!.getPartnerId(user?.id ?? '');
+                                  final partner = ref
+                                      .watch(partnerMatchProfileProvider(
+                                          partnerId))
+                                      .valueOrNull;
+                                  if (partner == null) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return TremblingPartnerCard(
+                                    partner: partner,
+                                    onTap: () =>
+                                        _openTremblingPartner(context, partner),
+                                  );
+                                },
+                              ),
+                      ).animate().fadeIn(),
+                    ),
+                    // BOTTOM — anchored, NOT centered, NOT dimmed — the radar
                     // canvas + ping must remain 100% visible during a mutual
                     // wave so the user can see the partner approaching.
                     Positioned(
@@ -895,7 +946,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                         DateTime.now()
                                             .add(const Duration(minutes: 30)),
                                     showMutualFlash: devSim.showMutualFlash,
-                                    onStop: () => ref
+                                    onStop: () async => ref
                                         .read(devSimulationControllerProvider
                                             .notifier)
                                         .stopAndPersist(),
@@ -905,8 +956,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                   builder: (context, ref, child) {
                                     final partnerId = activeMatch!
                                         .getPartnerId(user?.id ?? '');
-                                    final profile = ref.watch(
-                                        publicProfileProvider(partnerId));
+                                    final partnerAsync = ref.watch(
+                                        partnerMatchProfileProvider(partnerId));
                                     Widget buildOverlay(String name) =>
                                         RadarSearchOverlay(
                                           session: RadarSearchSession(
@@ -921,8 +972,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                     activeMatch.id),
                                           ),
                                         );
-                                    return profile.when(
-                                      data: (p) => buildOverlay(p.name),
+                                    return partnerAsync.when(
+                                      data: (p) => buildOverlay(
+                                          p?.name ?? t('someone_nearby', lang)),
                                       loading: () => TrembleLoadingSpinner(
                                         style: LoadingStyle.dynamic,
                                         duration: const Duration(seconds: 2),
@@ -939,8 +991,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 ),
                         ),
                       ).animate().fade(),
-                    )
-                  else ...[
+                    ),
+                  ] else ...[
                     // ── Pulsing Primary Action ────────────────────────
                     Center(
                       child: _TutorialTarget(

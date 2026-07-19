@@ -1,7 +1,56 @@
+## Session State — 2026-07-19 (Session 52 cont.) — BATCH 3 SHIPPED → BUILD 30 ON TESTFLIGHT
+
+- **Branch:** `fix/post-match-flow-repair`, PR #69 (do NOT merge yet). **Build 30 live on TestFlight** — Delivery UUID `a136a10b-ac5d-4c68-af98-c8cfed277048`; AAB + dSYMs at `release-symbols/b30/` (versionCode 30, founder uploads AAB to Play); Sentry symbols uploaded for `tremble.dating.app@1.0.0+30`. pubspec `1.0.0+30`.
+- **Shipped this batch (all TDD, 387/387 Flutter + 34 matches CF green, analyze clean):**
+  1. **P0 "?" KILLED** (`e87f73c`) — reveal + trembling window re-sourced from `getMatches`/`MatchProfile` via new `partnerMatchProfileProvider` (not `getPublicProfile`). New always-visible `TremblingPartnerCard` at top of radar (circle photo + name/age; tap → `/profile` premium / paywall free).
+  2. **Stop button** (`a645730`) — `onStop` now `Future<void>`; overlay shows a spinner while `markMatchFound` round-trips and surfaces a retry snackbar on failure (no more silent hang).
+  3. **History greyscale fixed** — `onWaveCreated` + `onRunCrossUpdated` now seed `gestures{uidA,uidB}=true` at match creation (`c3d9514`, **DEPLOYED to prod**) so genuine matches are `hasMutualWave` → colour. `sharedFirstHobbyNames` adds up to 3 hobbies to mutual tiles (`3727b54`). Legacy prod matches backfilled via `functions/src/scripts/backfill_match_gestures.ts` (`0c85358`) — **applied to prod: 2 docs seeded, idempotent re-run = 0**.
+- **Prod deploys this session (am---dating-app, europe-west1):** `getPublicProfile` (requireAuth + TEMP per-branch diagnostic, `fc737e6`), `onWaveCreated`, `onRunCrossUpdated`.
+- **STILL OPEN / on founder:**
+  - 🔴 **Secret rotation** — R2_SECRET_ACCESS_KEY, RESEND_API_KEY, UPSTASH_REDIS_REST_TOKEN exposed in a pasted Cloud Run revision spec (FOLLOWUP-SEC-002 updated). Rotate in the config lane.
+  - **getPublicProfile root cause** — still unconfirmed; read the `[USERS getPublicProfile]` log line (Logs Explorer, service_name=getpublicprofile) after a device tap. Client no longer depends on it, but **recap still does** (`run_recap_screen.dart:476`). Remove the temp diagnostic once known.
+  - **Device-verify build 30:** reveal/window identity, partner card + tap gate, Stop spinner/close + failure toast, history in colour with hobbies (new match AND the 2 backfilled).
+- **Deferred to build 31:** #3 notif-tap → card; #5 Pulse Intercept camera/dialer flow (own TDD lanes).
+
+---
+
+## Session State — 2026-07-19 (Session 52) — BUILD 29 TESTED → REDESIGN THE TREMBLING WINDOW
+
+- **Branch:** `fix/post-match-flow-repair`, PR #69 GREEN, build 29 on TestFlight. Build 29 device test done — results below.
+- **WORKS on build 29 (device-confirmed):** Pulse Intercept (Send Photo / Send Phone) now renders in the trembling window above the timer/stop (Step 3 ✅). Timer counts down.
+
+### Build 29 device findings (NEW)
+1. **P0 — match reveal STILL "?"** (no photo/name/age/hobbies), AND the trembling-window partner shows no identity either. So `publicProfileProvider(partnerId)` → `getPublicProfile` returns null/throws in BOTH places, DESPITE the `requireAuth` deploy. **It is silently swallowed:** the reveal uses `.whenOrNull(data:)`, and `ProfileRepository.getPublicProfile` throws on `profile==null` — no Sentry event exists for build 29 (checked errors dataset, `release:…@1.0.0+29` = 0). Static analysis this session RULED OUT: match-ID mismatch (both creation `matches.functions.ts:593` and CF lookup use sorted `uidA_uidB`) and schema (match doc has userA/userB/userIds/status; `matches.functions.ts:682`). Cause is still unknown — need to surface the swallowed error.
+2. **No always-visible partner profile card** in the trembling window — founder wants the matched user's card always accessible (tap → free/premium view) so you can re-check who you matched with.
+3. **Stop button** — unclear if it works or is delayed. Needs verification (`markMatchAsFound` callable via `onStop`).
+4. **History still greyscale** — shows past matches (Nikolina, Martin) greyscaled; should be a free-user basic card (5d).
+
+### FOUNDER TARGET SPEC (locked — this is the redesign)
+**Flow:** send wave OR receive one → mutual → **match page** → home/trembling window.
+- **Match page:** partner photo, name, age, 3 hobbies (shared first), Start radar. (Current "?" is the P0 bug.)
+- **Trembling window / home (top → bottom):**
+  1. **Partner profile card** — circle photo + **name/age shown under the photo**, ALWAYS visible. Tap → opens the full profile card gated by the viewer's package (free vs premium view differs).
+  2. **Radar** — spinning; a dot appears past the circle edge = the other user's location.
+  3. **Pulse Intercept** (already here): **Send Photo opens the camera to take/choose a photo (Snapchat-style) then send**; **Send Phone** sends the number. Receiver gets a notification/pill → tapping it opens the photo, or for a phone number **opens the dialer / starts calling**. Plus the **timer + Stop** (Stop must actually work).
+- **History:** free-user basic card (photo + name/age + 3 hobbies), not greyscale.
+
+### KEY DIRECTION for the fix (found this session)
+`getMatches` (CF `matches.functions.ts:964-988`) ALREADY returns partner `name/age/photoUrls/hobbies/hasMutualWave` via Admin SDK and is proven working for the matches list. Client side: `MatchProfile.fromApi` + `getMatches()` in `match_repository.dart:126/189`. **Recommend sourcing the reveal card + the always-visible trembling-window profile card + history from `getMatches`/`MatchProfile` instead of `getPublicProfile`** — one proven data path, sidesteps whatever gate is nulling `getPublicProfile`, and directly enables the profile card + history card. (Still worth root-causing WHY getPublicProfile returns null — add a temporary `Sentry.captureException` in `ProfileRepository.getPublicProfile` catch, or per-branch logging in the CF + redeploy, to learn if it's permission/App-Check/match-gate.)
+
+### PRIORITY ORDER (Session 52)
+1. **P0 — kill the "?"**: surface the swallowed getPublicProfile error to learn the cause; then either fix the CF or (preferred) re-source the partner card from `getMatches`/`MatchProfile`. Verify on match page + trembling window.
+2. **Always-visible partner profile card** above the radar (circle photo + name/age under it), tap → free/premium full card. New widget in `RadarSearchOverlay` (has `partnerUid` now; add name/age/photo — pull from `MatchProfile`).
+3. **Step 4** — notification tap → partner profile card (free/premium). Ties into #2's card.
+4. **Stop button** — verify/fix (`onStop` → `markMatchAsFound`); check for delay.
+5. **Pulse Intercept full flow** — Send Photo → camera picker → upload → recipient notification/pill → tap opens photo; Send Phone → recipient notification → tap → dialer/call. (cluster 3: image never viewable + 2×.)
+6. **History** free-user basic card (5d), drop greyscale.
+7. iOS pill 2× dedup (cluster 2); radar-not-spinning/partner-not-plotted (cluster 4).
+- Build 30 after a meaningful batch (bump pubspec, `build_prod.sh all` — load SENTRY token via zsh first, see below).
+
 ## Session State — 2026-07-19 (Session 51) — POST-MATCH FLOW REPAIR (BATCH 2 SHIPPED)
 
 - **Branch:** `fix/post-match-flow-repair`, **PR #69 OPEN + CI GREEN** (the Session-50 CI-red is fixed). pubspec `1.0.0+29`.
-- **Build 29 shipped:** iOS TestFlight (Delivery UUID `6d2cbef2-aaf2-4cea-b0ca-9bff4453a6f2`, 71 dSYMs), Android AAB `release-symbols/b29/app-prod-release.aab` (versionCode 29, founder uploads to Play). Built via `scripts/release/build_prod.sh all --no-upload` — **Sentry symbols NOT uploaded** (no `SENTRY_AUTH_TOKEN`); symbols preserved at `release-symbols/b29/`. To symbolicate build-29 crashes later: `SENTRY_AUTH_TOKEN=… scripts/release/build_prod.sh all --skip-build`.
+- **Build 29 shipped:** iOS TestFlight (Delivery UUID `6d2cbef2-aaf2-4cea-b0ca-9bff4453a6f2`, 71 dSYMs), Android AAB `release-symbols/b29/app-prod-release.aab` (versionCode 29, founder uploads to Play). **Sentry symbols UPLOADED** — release `tremble.dating.app@1.0.0+29` created+finalized in `tremble-functions` (iOS dSYMs + Dart maps + Android arm64/arm/x64), so build-29 crashes symbolicate. NOTE: `SENTRY_AUTH_TOKEN` lives in `~/.zshrc` (interactive-only) — a non-interactive Bash shell can't see it; load it with `export SENTRY_AUTH_TOKEN="$(zsh -ic 'printf %s "$SENTRY_AUTH_TOKEN"')"` before any `build_prod.sh` upload.
 - **Prod deploy this session:** `getPublicProfile` (relaxed to `requireAuth`) — additive/validated, fixes reveal photo on build 28 too.
 
 ### DONE + committed on the branch (all CI-green)

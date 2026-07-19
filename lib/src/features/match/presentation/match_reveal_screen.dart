@@ -7,7 +7,7 @@ import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../auth/data/auth_repository.dart';
-import '../../profile/data/profile_repository.dart';
+import '../../matches/data/match_repository.dart';
 import '../../../features/profile/domain/public_profile.dart';
 import '../domain/match.dart';
 import '../../../features/safety/screen_protection_service.dart';
@@ -136,6 +136,22 @@ const List<_Pep> _pepTalks = [
 
 _Pep _pickPep() => _pepTalks[math.Random().nextInt(_pepTalks.length)];
 
+/// Adapts a [MatchProfile] (from the getMatches path) into the [PublicProfile]
+/// shape the reveal scene renders, so `_buildScene` stays unchanged. Returns
+/// null when the partner is not yet in the matches list.
+PublicProfile? _publicProfileFromMatch(MatchProfile? match) {
+  if (match == null) return null;
+  return PublicProfile(
+    id: match.id,
+    name: match.name,
+    age: match.age,
+    photoUrls: match.photoUrls,
+    hobbies: match.hobbies,
+    lookingFor: match.lookingFor.isNotEmpty ? match.lookingFor.first : null,
+    isTraveler: match.isTraveler,
+  );
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 class MatchRevealScreen extends ConsumerStatefulWidget {
@@ -247,8 +263,13 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
       );
     }
 
-    final profile =
-        ref.watch(publicProfileProvider(partnerId)).whenOrNull(data: (p) => p);
+    // Partner identity is sourced from the getMatches path (MatchProfile), not
+    // getPublicProfile — the latter returned null and rendered the reveal as "?"
+    // (BLOCKER-POSTMATCH-PHOTO). whenOrNull keeps `profile` null while the
+    // stream loads so the reveal animation plays and fills in on arrival.
+    final profile = ref
+        .watch(partnerMatchProfileProvider(partnerId))
+        .whenOrNull(data: _publicProfileFromMatch);
     final myHobbies = ref.watch(authStateProvider)?.hobbies ?? const [];
 
     return Scaffold(

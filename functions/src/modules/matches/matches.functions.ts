@@ -685,6 +685,13 @@ export const onWaveCreated = onDocumentCreated(
                     userIds: uids,
                     matchType,
                     matchContext,
+                    // A mutual proximity wave IS the mutual gesture — seed both
+                    // sides so `hasMutualWave` (ADR-007 §1) is true immediately.
+                    // Without this the pair renders greyscale (nonMutual) in
+                    // history until each user separately calls sendMatchGesture.
+                    // Free users still only get the colour basic card (mutualFree
+                    // → upsell); the premium full-card gate is unchanged.
+                    gestures: { [uids[0]]: true, [uids[1]]: true },
                     createdAt: FieldValue.serverTimestamp(),
                     expiresAt: new Date(Date.now() + 30 * 60 * 1000),
                     status: "pending",

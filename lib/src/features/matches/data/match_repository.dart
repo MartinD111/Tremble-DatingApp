@@ -365,6 +365,28 @@ final matchesStreamProvider =
   });
 });
 
+/// Live [MatchProfile] for a single partner, looked up by [partnerId] from the
+/// [matchesStreamProvider] (backed by the `getMatches` Cloud Function — the same
+/// proven data path the People tab uses).
+///
+/// The post-match reveal and the trembling-window partner card source partner
+/// photo/name/age/hobbies from here instead of `getPublicProfile`, which was
+/// returning null and rendering the reveal as "?" (BLOCKER-POSTMATCH-PHOTO,
+/// Session 52). A resolved `null` means the partner is genuinely absent from the
+/// caller's matches; [AsyncLoading] is preserved so callers show a spinner
+/// rather than a placeholder while the stream settles.
+final partnerMatchProfileProvider =
+    Provider.autoDispose.family<AsyncValue<MatchProfile?>, String>(
+  (ref, partnerId) {
+    return ref.watch(matchesStreamProvider).whenData((matches) {
+      for (final match in matches) {
+        if (match.id == partnerId) return match;
+      }
+      return null;
+    });
+  },
+);
+
 /// Controller to handle user actions (Like/Pass/Greet)
 class MatchController extends StateNotifier<MatchProfile?> {
   final WaveRepository _waveRepo;
