@@ -1,4 +1,10 @@
-## Session State — 2026-07-19 (Session 52 cont.) — BATCH 3 SHIPPED → BUILD 30 ON TESTFLIGHT
+## Session State — 2026-07-20 (Session 52 cont.) — BATCH 3 SHIPPED → BUILD 30 ON TESTFLIGHT + PR #70 MERGEABLE
+
+### PR #70 conflicts resolved + gates green (do the merge when ready)
+- **PR #69 was squash-merged into `main` (`e937fd9`).** The branch kept batch 1 as individual commits + batch 2/3 → PR #70 conflicted on 6 files. Resolved by merging `origin/main` and taking `--ours` (branch is a strict superset); verified 387 Flutter + 164 functions green, analyze clean, no markers (`aa89ce8`). Branch now **0 behind / 27 ahead**. See lesson #94.
+- **PR #70 title+body set** for the MPC gate: `[PLAN-ID: 20260719-post-match-flow-repair]` + Verification checklist (unit/integration/security) + `ADR-007` (required because pubspec.yaml is touched). **Required gates ①–⑧ all green**; ⑦ Founder Approval **skips** (body declares low/medium risk — the prod deploys already had live founder approval). Merge state `UNSTABLE` = mergeable; only the **non-required** "Build Dev APK" was still building. **Founder: squash-merge PR #70 when ready** (not merged by assistant).
+
+### (below) BATCH 3 shipped → BUILD 30
 
 - **Branch:** `fix/post-match-flow-repair`, PR #69 (do NOT merge yet). **Build 30 live on TestFlight** — Delivery UUID `a136a10b-ac5d-4c68-af98-c8cfed277048`; AAB + dSYMs at `release-symbols/b30/` (versionCode 30, founder uploads AAB to Play); Sentry symbols uploaded for `tremble.dating.app@1.0.0+30`. pubspec `1.0.0+30`.
 - **Shipped this batch (all TDD, 387/387 Flutter + 34 matches CF green, analyze clean):**
