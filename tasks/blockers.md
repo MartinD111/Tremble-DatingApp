@@ -104,6 +104,13 @@
 **Scope:** Rotate only actual server secrets (for example R2, Resend, and Upstash credentials). Do not classify public client identifiers such as a RevenueCat SDK key or Sentry DSN as secrets. Provider-restricted client keys should be reviewed against their platform restrictions before deciding whether rotation adds value.
 **Action:** Remove or scope the global `DEBUG` variable, rotate genuine server secrets in a separate approved production-config lane, validate each replacement before revoking the old value, and never paste credential values into issues, commits, or chat.
 
+**2026-07-19 — second exposure (Session 52).** During the getPublicProfile diagnostic redeploy, a Cloud Run revision spec (full `env` block) was pasted into the assistant chat transcript, printing plaintext values of three genuine server secrets. Rotate these in the approved config lane, validating each new value before revoking the old:
+- `R2_SECRET_ACCESS_KEY` (+ its `R2_ACCESS_KEY_ID`)
+- `RESEND_API_KEY`
+- `UPSTASH_REDIS_REST_TOKEN`
+
+Public/client identifiers in the same block (`SENTRY_DSN`, `REVENUECAT_APPLE_API_KEY`) are NOT secrets; `PLACES_KEY_PROD` is a provider-restricted client key — review its API restrictions rather than rotate. To read function logs without dumping env, use Logs Explorer filtered to `resource.labels.service_name` + a `textPayload:` term, not the revision spec. Not an App Store submission blocker.
+
 ---
 
 ## CRITICAL — Legal Blockers (Pred Submissionom)
