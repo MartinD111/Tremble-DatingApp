@@ -1,3 +1,19 @@
+## Session State — 2026-07-19 (Session 52 cont.) — BATCH 3 SHIPPED → BUILD 30 ON TESTFLIGHT
+
+- **Branch:** `fix/post-match-flow-repair`, PR #69 (do NOT merge yet). **Build 30 live on TestFlight** — Delivery UUID `a136a10b-ac5d-4c68-af98-c8cfed277048`; AAB + dSYMs at `release-symbols/b30/` (versionCode 30, founder uploads AAB to Play); Sentry symbols uploaded for `tremble.dating.app@1.0.0+30`. pubspec `1.0.0+30`.
+- **Shipped this batch (all TDD, 387/387 Flutter + 34 matches CF green, analyze clean):**
+  1. **P0 "?" KILLED** (`e87f73c`) — reveal + trembling window re-sourced from `getMatches`/`MatchProfile` via new `partnerMatchProfileProvider` (not `getPublicProfile`). New always-visible `TremblingPartnerCard` at top of radar (circle photo + name/age; tap → `/profile` premium / paywall free).
+  2. **Stop button** (`a645730`) — `onStop` now `Future<void>`; overlay shows a spinner while `markMatchFound` round-trips and surfaces a retry snackbar on failure (no more silent hang).
+  3. **History greyscale fixed** — `onWaveCreated` + `onRunCrossUpdated` now seed `gestures{uidA,uidB}=true` at match creation (`c3d9514`, **DEPLOYED to prod**) so genuine matches are `hasMutualWave` → colour. `sharedFirstHobbyNames` adds up to 3 hobbies to mutual tiles (`3727b54`). Legacy prod matches backfilled via `functions/src/scripts/backfill_match_gestures.ts` (`0c85358`) — **applied to prod: 2 docs seeded, idempotent re-run = 0**.
+- **Prod deploys this session (am---dating-app, europe-west1):** `getPublicProfile` (requireAuth + TEMP per-branch diagnostic, `fc737e6`), `onWaveCreated`, `onRunCrossUpdated`.
+- **STILL OPEN / on founder:**
+  - 🔴 **Secret rotation** — R2_SECRET_ACCESS_KEY, RESEND_API_KEY, UPSTASH_REDIS_REST_TOKEN exposed in a pasted Cloud Run revision spec (FOLLOWUP-SEC-002 updated). Rotate in the config lane.
+  - **getPublicProfile root cause** — still unconfirmed; read the `[USERS getPublicProfile]` log line (Logs Explorer, service_name=getpublicprofile) after a device tap. Client no longer depends on it, but **recap still does** (`run_recap_screen.dart:476`). Remove the temp diagnostic once known.
+  - **Device-verify build 30:** reveal/window identity, partner card + tap gate, Stop spinner/close + failure toast, history in colour with hobbies (new match AND the 2 backfilled).
+- **Deferred to build 31:** #3 notif-tap → card; #5 Pulse Intercept camera/dialer flow (own TDD lanes).
+
+---
+
 ## Session State — 2026-07-19 (Session 52) — BUILD 29 TESTED → REDESIGN THE TREMBLING WINDOW
 
 - **Branch:** `fix/post-match-flow-repair`, PR #69 GREEN, build 29 on TestFlight. Build 29 device test done — results below.
