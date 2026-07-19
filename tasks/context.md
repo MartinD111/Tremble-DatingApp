@@ -1,3 +1,36 @@
+## Session State — 2026-07-19 (Session 52) — BUILD 29 TESTED → REDESIGN THE TREMBLING WINDOW
+
+- **Branch:** `fix/post-match-flow-repair`, PR #69 GREEN, build 29 on TestFlight. Build 29 device test done — results below.
+- **WORKS on build 29 (device-confirmed):** Pulse Intercept (Send Photo / Send Phone) now renders in the trembling window above the timer/stop (Step 3 ✅). Timer counts down.
+
+### Build 29 device findings (NEW)
+1. **P0 — match reveal STILL "?"** (no photo/name/age/hobbies), AND the trembling-window partner shows no identity either. So `publicProfileProvider(partnerId)` → `getPublicProfile` returns null/throws in BOTH places, DESPITE the `requireAuth` deploy. **It is silently swallowed:** the reveal uses `.whenOrNull(data:)`, and `ProfileRepository.getPublicProfile` throws on `profile==null` — no Sentry event exists for build 29 (checked errors dataset, `release:…@1.0.0+29` = 0). Static analysis this session RULED OUT: match-ID mismatch (both creation `matches.functions.ts:593` and CF lookup use sorted `uidA_uidB`) and schema (match doc has userA/userB/userIds/status; `matches.functions.ts:682`). Cause is still unknown — need to surface the swallowed error.
+2. **No always-visible partner profile card** in the trembling window — founder wants the matched user's card always accessible (tap → free/premium view) so you can re-check who you matched with.
+3. **Stop button** — unclear if it works or is delayed. Needs verification (`markMatchAsFound` callable via `onStop`).
+4. **History still greyscale** — shows past matches (Nikolina, Martin) greyscaled; should be a free-user basic card (5d).
+
+### FOUNDER TARGET SPEC (locked — this is the redesign)
+**Flow:** send wave OR receive one → mutual → **match page** → home/trembling window.
+- **Match page:** partner photo, name, age, 3 hobbies (shared first), Start radar. (Current "?" is the P0 bug.)
+- **Trembling window / home (top → bottom):**
+  1. **Partner profile card** — circle photo + **name/age shown under the photo**, ALWAYS visible. Tap → opens the full profile card gated by the viewer's package (free vs premium view differs).
+  2. **Radar** — spinning; a dot appears past the circle edge = the other user's location.
+  3. **Pulse Intercept** (already here): **Send Photo opens the camera to take/choose a photo (Snapchat-style) then send**; **Send Phone** sends the number. Receiver gets a notification/pill → tapping it opens the photo, or for a phone number **opens the dialer / starts calling**. Plus the **timer + Stop** (Stop must actually work).
+- **History:** free-user basic card (photo + name/age + 3 hobbies), not greyscale.
+
+### KEY DIRECTION for the fix (found this session)
+`getMatches` (CF `matches.functions.ts:964-988`) ALREADY returns partner `name/age/photoUrls/hobbies/hasMutualWave` via Admin SDK and is proven working for the matches list. Client side: `MatchProfile.fromApi` + `getMatches()` in `match_repository.dart:126/189`. **Recommend sourcing the reveal card + the always-visible trembling-window profile card + history from `getMatches`/`MatchProfile` instead of `getPublicProfile`** — one proven data path, sidesteps whatever gate is nulling `getPublicProfile`, and directly enables the profile card + history card. (Still worth root-causing WHY getPublicProfile returns null — add a temporary `Sentry.captureException` in `ProfileRepository.getPublicProfile` catch, or per-branch logging in the CF + redeploy, to learn if it's permission/App-Check/match-gate.)
+
+### PRIORITY ORDER (Session 52)
+1. **P0 — kill the "?"**: surface the swallowed getPublicProfile error to learn the cause; then either fix the CF or (preferred) re-source the partner card from `getMatches`/`MatchProfile`. Verify on match page + trembling window.
+2. **Always-visible partner profile card** above the radar (circle photo + name/age under it), tap → free/premium full card. New widget in `RadarSearchOverlay` (has `partnerUid` now; add name/age/photo — pull from `MatchProfile`).
+3. **Step 4** — notification tap → partner profile card (free/premium). Ties into #2's card.
+4. **Stop button** — verify/fix (`onStop` → `markMatchAsFound`); check for delay.
+5. **Pulse Intercept full flow** — Send Photo → camera picker → upload → recipient notification/pill → tap opens photo; Send Phone → recipient notification → tap → dialer/call. (cluster 3: image never viewable + 2×.)
+6. **History** free-user basic card (5d), drop greyscale.
+7. iOS pill 2× dedup (cluster 2); radar-not-spinning/partner-not-plotted (cluster 4).
+- Build 30 after a meaningful batch (bump pubspec, `build_prod.sh all` — load SENTRY token via zsh first, see below).
+
 ## Session State — 2026-07-19 (Session 51) — POST-MATCH FLOW REPAIR (BATCH 2 SHIPPED)
 
 - **Branch:** `fix/post-match-flow-repair`, **PR #69 OPEN + CI GREEN** (the Session-50 CI-red is fixed). pubspec `1.0.0+29`.
