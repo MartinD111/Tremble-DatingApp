@@ -2,6 +2,30 @@
 
 ---
 
+## POST-MATCH FLOW REPAIR (Session 50 — branch `fix/post-match-flow-repair`, PR #69)
+
+> Full detail + priority order in `context.md` Session 50. Root causes below.
+
+### BLOCKER-POSTMATCH-CI — PR #69 CI red (blocks merge)
+**Status:** OPEN. `test/features/safety/ugc_action_sheet_block_dialog_test.dart` fails in CI (Linux), passes locally (macOS). "Multiple exceptions (2)" — the block-dialog crash still fires in CI env, so the Cluster-6 fix (`showDialog` + builder ctx) is incomplete or env-sensitive. Must be green before merge. Likely same root as TREMBLE-FUNCTIONS-12.
+
+### BLOCKER-POSTMATCH-DIALOGS — iOS block + report broken (crash TREMBLE-FUNCTIONS-12)
+**Status:** OPEN. `Material.of` null → `_InkState._build` → `WidgetStateProperty` (iOS dist 28, fatal). Material widgets rendered inside `CupertinoAlertDialog` (no Material ancestor). Symptoms: #8 can't block, #9 block popup too light + white text invisible, #10 report TOTALLY broken (endless scroll, 0 buttons). **Fix = rebuild block + report as themed bottom sheets (drop CupertinoAlertDialog for these).** `lib/src/features/safety/presentation/widgets/ugc_action_sheet.dart` + `ReportDialog` + `lib/src/shared/ui/tremble_alert_dialog.dart`.
+
+### BLOCKER-POSTMATCH-PHOTO — reveal still "?" (email gate)
+**Status:** OPEN. 5a routed the reveal through `getPublicProfile` CF, but it calls `requireVerifiedEmail` (`functions/src/middleware/authGuard.ts:34`); test accounts are unverified → CF denies → profile null → no photo/name/age/hobbies. **FOUNDER DECISION: relax to `requireAuth`** (the CF is already gated on an existing match = sufficient auth). HIGH-risk CF change + deploy `getPublicProfile`. File: `functions/src/modules/users/users.functions.ts:224`.
+
+### FEATURE-POSTMATCH-INTERCEPT — move Pulse Intercept into the trembling window
+**Status:** OPEN (design). Send Phone / Send Photo currently live on the match reveal (`_buildPulseInterceptActions` in `match_reveal_screen.dart`). Founder: they are **assistance DURING the meetup**, not matching — move them into the **trembling window / radar search phase**. Match reveal keeps only photo + age + 3 hobbies. Also: pulse-intercept notifications arrive but image never viewable + duplicate 2× (cluster 3, uninvestigated on the send/camera side).
+
+### FEATURE-POSTMATCH-NOTIFTAP — notification tap opens profile card
+**Status:** OPEN. Tapping a "nearby" / "wave" notification must open the partner's profile card (free vs premium view differs). New wiring in the notification-tap handler (router / notification_service).
+
+### UI-POSTMATCH-PILLS — in-app pills too high (iOS dedup)
+**Status:** OPEN. Pills render too high, covering radar-mode buttons (gym/run/event) + schedule-radar button (top-right). Move lower. iOS-only: "wave sent" shows 2× and overlaps "is nearby" — dedup local pill vs APNs push presentation (cluster 2).
+
+---
+
 ## CRITICAL — Store Blockers (Pred Submissionom)
 
 ### BLOCKER-STORE-001 — iOS Privacy Manifest & Encryption Declaration

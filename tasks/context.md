@@ -1,3 +1,34 @@
+## Session State — 2026-07-19 (Session 50) — POST-MATCH FLOW REPAIR (IN PROGRESS)
+
+- **Branch:** `fix/post-match-flow-repair` (6 commits, NOT merged). **PR #69 OPEN + CI RED.**
+- **Build 28 shipped:** iOS TestFlight (Delivery UUID `597d5be8-99f8-4fea-903c-2d02da4e6f50`), Android AAB at `release-symbols/b28/app-prod-release.aab` (Play internal upload = manual, founder-side). pubspec `1.0.0+28`.
+- **Prod deploys this session (am---dating-app, europe-west1):** `markMatchFound`, `sendMatchGesture` (new callables), `onWaveCreated` (reveal fix). All additive/validated.
+
+### DONE + committed on the branch
+- **Cluster 6** (`5e86d89`) — block dialog crash (TREMBLE-FUNCTIONS-10): dialog popped via dismissed-sheet dead context. Rebuilt with `showDialog` + builder ctx. ⚠️ **Its own test FAILS in CI (passes locally) — see BLOCKER-POSTMATCH-CI.**
+- **Cluster 1** (`770b949`) — symmetric reveal + window restart in `onWaveCreated`. `seenBy:[]` (was `[fromUid]` → wave-back completer never saw reveal); re-wave on a positively-over window restarts it. **DEPLOYED + DEVICE-VALIDATED (both users get the match page).**
+- **Cluster 5a** (`acb7691`) — reveal read partner `/users` doc directly (denied) → "?". Routed through `getPublicProfile` CF. ⚠️ **STILL "?" on device — CF has a SECOND gate `requireVerifiedEmail` (authGuard.ts:34); test accounts unverified. DECISION: relax to `requireAuth` (match-gated is enough).**
+- **Cluster 5b/5c** (`3acaa3a`) — explicit `_StartRadarButton` (replaced invisible tap-anywhere) + shared-hobby chips on reveal. Button works on device; chips/photo blocked by the same email gate as 5a.
+
+### OPEN — Session 50 test findings (build 28), PRIORITY ORDER
+See BLOCKER-POSTMATCH-* in blockers.md. Founder-locked decisions:
+- **Photo gate:** relax `getPublicProfile` to `requireAuth` (HIGH-risk CF + deploy).
+- **Next priority:** (1) fix CI red on PR #69 + squash TREMBLE-FUNCTIONS-12 crash + rebuild block/report iOS dialogs → merge; (2) photo gate; (3) rest.
+
+1. **CI RED (blocks PR #69 merge)** — `test/features/safety/ugc_action_sheet_block_dialog_test.dart` fails in CI, passes locally (macOS). "Multiple exceptions" = the crash still fires in the CI (Linux) env. Cluster-6 fix incomplete/env-sensitive.
+2. **TREMBLE-FUNCTIONS-12** (iOS, dist 28, fatal, unhandled) — `Material.of` null → `_InkState._build` → `WidgetStateProperty`. Material widgets inside a `CupertinoAlertDialog` (no Material ancestor). = the **Report dialog** (#10) + block dialog on iOS.
+3. **Photo/hobbies still "?"** (#1,#3,#7) — relax email gate (above). Alt considered: feed reveal from getMatches data.
+4. **Safety flow iOS** (#8 can't block, #9 block popup too light/white-text-invisible, #10 report TOTALLY broken — endless scroll, 0 buttons) → **rebuild block+report as themed bottom sheets, not CupertinoAlertDialog.** One lane; fixes crash #2 too.
+5. **#6 ARCHITECTURE** — move Send Phone/Send Photo (Pulse Intercept) OUT of match reveal (`match_reveal_screen.dart` `_buildPulseInterceptActions`) INTO the **trembling window** (radar search phase). It's *assistance during the meetup*, NOT matching. Match page keeps: photo + age + 3 hobbies only.
+6. **#4 NEW FEATURE** — tapping a "nearby"/"wave" notification must open the partner's **profile card** (free vs premium view differs).
+7. **#5 UI** — in-app pills render TOO HIGH; cover the radar-mode buttons (gym/run/event) + the schedule-radar button (top-right). Move pills lower. (This is also cluster 2 territory: iOS shows "wave sent" 2× overlapping "is nearby" — iOS-only presentation dedup.)
+8. **Cluster 4** — radar not spinning during window / partner not plotted (uninvestigated).
+9. **5d** — history greyscale → free-user basic card (photo+age+3 hobbies).
+10. **TREMBLE-FUNCTIONS-11** — CancellationException "Cancelled", handled, benign (cancelled future on backgrounding). IGNORE.
+
+### Control-plane refactor note
+Session-49 lessons #86-88 were cherry-picked onto this branch (`20254ab`) after `chore/context-session-49` was deleted; they land in main when PR #69 merges.
+
 ## Session State — 2026-07-18 (Session 49)
 - Active Task: Root-caused + fixed the wave pill never rendering; shipped build 26 to TestFlight.
 - Environment: local + GitHub; one prod build → TestFlight (founder-approved). No prod backend/rules/config mutation.

@@ -508,3 +508,15 @@ Source: Multi-Env Setup, March 2026.
 **Rule #74 — `package:http` does NOT use NSURLSession on iOS by default.**
 [2026-06-18] It wraps `dart:io HttpClient` (BoringSSL), whose TLS stack fails the handshake against Cloudflare R2 with `SSLV3_ALERT_HANDSHAKE_FAILURE`. For R2 — or any endpoint failing TLS on iOS — use `cupertino_http`'s `CupertinoClient` (NSURLSession / Network.framework). See `lib/src/core/upload_service.dart`.
 Source: R2 upload TLS sprint, June 2026.
+
+**Rule #89 — Client cross-user reads are denied; route through a CF.**
+[2026-07-19] Multiple "phantom" failures (reveal "?", trembling-window collapse) were all one root cause: the client reading data Firestore rules forbid. `/users` is `read: if isSelf`, `/matches` update is `hasOnly(['seenBy'])`. `markMatchAsFound`, `sendGesture`, and `ProfileRepository.getPublicProfile` all did denied reads/writes → permission-denied → silent nulls or crashes. Fix pattern: move to an Admin-SDK callable (`markMatchFound`, `sendMatchGesture`, `getPublicProfile`). BEFORE wiring a client to a CF, check the CF's OWN guards — `getPublicProfile` adds `requireVerifiedEmail`, a second gate that still returns null for unverified accounts.
+
+**Rule #90 — Cupertino alert dialogs cannot hold Material widgets or big content.**
+[2026-07-19] `CupertinoAlertDialog` has no Material ancestor → any `InkWell`/`TextButton`/`WidgetStateProperty` inside throws `Material.of null` (TREMBLE-FUNCTIONS-12). It also can't scroll a large form → the report dialog was "endless scroll, 0 buttons" on iOS, and white text was invisible on its light surface. Lesson: for anything beyond a trivial 1-2 line confirm, use a themed bottom sheet, not `showPlatformDialog`/`CupertinoAlertDialog`. Also: a widget test passing on macOS does NOT prove the iOS path — `Platform.isIOS` is false on the macOS test host, so the Cupertino branch is never exercised locally.
+
+**Rule #91 — Match reveal `seenBy` was asymmetric by construction.**
+[2026-07-19] `onWaveCreated` created the match with `seenBy:[fromUid]` — the wave-back completer was pre-marked seen, so their home-screen reveal listener (`!seenBy.contains(myUid)`) never fired. Only ONE user ever saw "We have a match". Fix: `seenBy:[]`. Also, the persistent match doc (`uidA_uidB`) meant a re-wave was a no-op — restart the window only when the prior one is POSITIVELY over (terminal status or known-expired createdAt), never on the same-burst reciprocal wave.
+
+**Rule #92 — Pulse Intercept (Send Phone/Photo) is meetup ASSISTANCE, not matching.**
+[2026-07-19] Founder product rule: Send Phone / Send Photo belong in the TREMBLING WINDOW (radar search phase, helping two matched people physically find each other), NOT on the match reveal page. The match reveal shows only photo + age + 3 hobbies (shared first). Do not conflate the two surfaces.
