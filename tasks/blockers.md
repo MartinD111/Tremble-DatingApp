@@ -2,6 +2,30 @@
 
 ---
 
+## POST-MATCH FLOW REPAIR (Session 50-51 — branch `fix/post-match-flow-repair`, PR #69)
+
+> Full detail + priority order in `context.md` Session 51. Batch 2 shipped in build 29.
+
+### BLOCKER-POSTMATCH-CI — PR #69 CI red (blocked merge)
+**Status:** ✅ RESOLVED (Session 51, `a9ba5eb`). **The Session-50 root-cause guess was wrong.** The CI failure was NOT TREMBLE-FUNCTIONS-12 — it was a Flutter framework assert *"ListTile background color or ink splashes may be invisible"* (×2), fired because `UgcActionSheet` wrapped its `ListTile`s in an opaque `Container`/`DecoratedBox` with no `Material` between. It only reproduces on CI's newer `stable` Flutter (local is pinned 3.41.4 → passes locally). Fixed structurally: the sheet surface is now a `Material(color:)`. See lesson #93.
+
+### BLOCKER-POSTMATCH-DIALOGS — iOS block + report broken (crash TREMBLE-FUNCTIONS-12)
+**Status:** ✅ RESOLVED (Session 51, `a9ba5eb`). Block + report rebuilt as themed **Material bottom sheets**; dropped `CupertinoAlertDialog`/`TrembleAlertDialog` for these two. No more `Platform.isIOS` branch → no `Material.of` null, testable on all platforms, dark-themed (#9), report scrolls with a Submit (#10), block works (#8). `ugc_action_sheet.dart` rebuilt (`_BlockConfirmSheet` + `_ReportSheet`). NOTE: `tremble_alert_dialog.dart` still used by settings/edit-profile/discard/safe-zones/email-location — those are Text-only confirms (no Material-in-Cupertino), left as-is. **Needs iOS device verification on build 29.**
+
+### BLOCKER-POSTMATCH-PHOTO — reveal "?" (email gate)
+**Status:** ✅ RESOLVED + DEPLOYED (Session 51, `dbbc7b7`). `getPublicProfile` relaxed `requireVerifiedEmail` → `requireAuth` (`users.functions.ts`); already match-gated. Deployed to prod `am---dating-app` europe-west1. Fixes reveal photo/name/age/hobbies (#1,#3,#7) on build 28 AND 29.
+
+### FEATURE-POSTMATCH-INTERCEPT — move Pulse Intercept into the trembling window
+**Status:** ✅ RESOLVED (Session 51, `095b50c`). New `PulseInterceptBar` widget (`match/presentation/widgets/`); rendered in `RadarSearchOverlay` (the trembling window) above the countdown when `session.partnerUid != null` (prod passes computed `partnerId`, dev-sim `profile.id`). Removed from `match_reveal_screen` (reveal = photo+age+3 hobbies). **Needs device verification of placement.** Still OPEN (uninvestigated, cluster 3): pulse-intercept notification image never viewable + duplicate 2× on the send/receive side.
+
+### UI-POSTMATCH-PILLS — in-app pills too high
+**Status:** ✅ PARTIAL (Session 51, `e094a5d`). `WavePillService` pill moved `topPad+14 → topPad+80` (matches `_MatchNotificationPillOverlay`), clears the mode + schedule control bar. **STILL OPEN:** iOS "wave sent" shows 2× overlapping "is nearby" — presentation dedup between the local pill and the APNs pill (cluster 2). Needs device repro.
+
+### FEATURE-POSTMATCH-NOTIFTAP — notification tap opens profile card
+**Status:** OPEN (Step 4, NOT done). Tapping a "nearby" / "wave" notification must open the partner's profile card (free vs premium view differs). Deferred: needs notification-tap handler wiring (`router.dart` / `notification_service` / `wave_pill_service`) + the free/premium card + device verification.
+
+---
+
 ## CRITICAL — Store Blockers (Pred Submissionom)
 
 ### BLOCKER-STORE-001 — iOS Privacy Manifest & Encryption Declaration
@@ -53,11 +77,11 @@
 **Impact:** Production iOS FCM delivery previously returned the invalid-APNs-credential error class. Bundle ID `tremble.dating.app`, Firebase iOS App ID `1:343655004163:ios:5eea92b9656fc3b8fc3636`, Team ID `LB6LS532CV`, production entitlement, and build-22 signing metadata align, leaving the APNs credential stored under the Firebase Apple app as the strongest unresolved cause. App Store submission must not be declared push-ready until a controlled device send succeeds.
 **Progress:**
 - ✅ `scanProximityPairs` and `onWaveCreated` identity/delivery/retry fixes deployed to `am---dating-app` in `europe-west1` on 2026-07-16.
-- ✅ Build 22 signed production archive and App Store IPA exported successfully.
-- ✅ Background receipt no longer creates a reciprocal Wave; explicit iOS action bridge is implemented and test-locked.
-- ⏳ Firebase CLI cannot reveal the stored APNs Key ID/certificate state; no authenticated Firebase/Apple browser session is available in the current environment.
-- ⏳ Physical-iPhone foreground/background/killed and Wave Back verification is required.
-**Action:** Inspect Firebase Cloud Messaging Apple credentials and Apple Developer key status, upload a valid retained `.p8` if necessary, then run the approved controlled production device test with build 22 before App Store upload.
+- ✅ APNs delivery CONFIRMED working: 2026-07-18 08:48:03 prod scan sent two visible CROSSING_PATHS (`pairsNotified:2`, `notification_sent`) to both test accounts — the credential class error is resolved in practice. Delivery is no longer the blocker.
+- ✅ **Wave pill render bug fixed (build 26)** — `presentWavePill` read the overlay from `Overlay.maybeOf(currentContext)` (always null), so the pill never showed foreground OR tap. Fixed to `currentState.overlay` (PR #65) + bounded readiness retry + Sentry give-up (PR #62). See Rule #86. This was the actual cause of "nothing showed", NOT APNs.
+- ✅ **Freeze fix (PR #60) shipped in build 25**; build 26 carries it too. Both platforms of build 26 are up (TestFlight Delivery UUID `2024e76c-bed2-4b21-a6f2-f0f57c4b6835`; AAB at `release-symbols/b26/`).
+- ⏳ **Device verification of build 26 is the only remaining gate**, using `send_test_push.ts` (Rule #88): (a) foreground → pill, no freeze; (b) background tap → pill; (c) killed tap → cold-launch pill; (d) airplane map → offline card. If a pill drops, Sentry (`tremble-functions`, dist 26) logs `wave pill dropped: auth-null|no-overlay`.
+**Action:** Founder runs the build-26 device matrix (Rule #88). On green, STORE-005 closes and the freeze fix is proven in the same pass. APNs credential inspection is no longer required — delivery is confirmed.
 
 ---
 

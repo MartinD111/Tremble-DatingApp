@@ -342,7 +342,7 @@ describe("Users Module", () => {
             const rateLimit = await import("../../src/middleware/rateLimit");
             const { getPublicProfile } = await import("../../src/modules/users/users.functions");
 
-            jest.mocked(authGuard.requireVerifiedEmail).mockReturnValue("callerUid");
+            jest.mocked(authGuard.requireAuth).mockReturnValue("callerUid");
             jest.mocked(rateLimit.checkRateLimit).mockRejectedValue(new Error("rate limit stop"));
 
             const callableGetPublicProfile = getPublicProfile as unknown as (request: unknown) => Promise<unknown>;
@@ -359,13 +359,72 @@ describe("Users Module", () => {
             );
         });
 
+        it("returns the profile for an authenticated but UNVERIFIED-email caller who has a match", async () => {
+            // Regression for BLOCKER-POSTMATCH-PHOTO: the reveal must work for
+            // matched users whose email is not verified. requireAuth (not
+            // requireVerifiedEmail) gates the callable; the mutual-match lookup
+            // is the real authorization boundary.
+            jest.clearAllMocks();
+            const authGuard = await import("../../src/middleware/authGuard");
+            const rateLimit = await import("../../src/middleware/rateLimit");
+            const validate = await import("../../src/middleware/validate");
+            const { getPublicProfile } = await import("../../src/modules/users/users.functions");
+
+            jest.mocked(authGuard.requireAuth).mockReturnValue("callerUid");
+            jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+            jest.mocked(validate.assertValidDocumentId).mockReturnValue("targetUid");
+
+            const targetGet = jest.fn<() => Promise<{
+                exists: boolean;
+                data: () => Record<string, unknown>;
+            }>>().mockResolvedValue({
+                exists: true,
+                data: () => ({
+                    name: "Target",
+                    age: 27,
+                    photoUrls: ["https://example.com/a.jpg"],
+                    hobbies: ["Hiking"],
+                    blockedBy: [],
+                }),
+            });
+            const matchGet = jest.fn<() => Promise<{ exists: boolean }>>().mockResolvedValue({
+                exists: true,
+            });
+
+            mockDb.collection.mockImplementation((collectionName: unknown) => {
+                if (collectionName === "users") {
+                    return { doc: jest.fn(() => ({ get: targetGet })) };
+                }
+                if (collectionName === "matches") {
+                    return { doc: jest.fn(() => ({ get: matchGet })) };
+                }
+                throw new Error(`Unexpected collection: ${collectionName}`);
+            });
+
+            const callableGetPublicProfile = getPublicProfile as unknown as (request: unknown) => Promise<{ profile: Record<string, unknown> | null }>;
+
+            // Note: NO email_verified token — an unverified but matched caller.
+            const response = await callableGetPublicProfile({
+                auth: { uid: "callerUid", token: {} },
+                data: { userId: "targetUid" },
+            });
+
+            expect(response.profile).toMatchObject({
+                id: "targetUid",
+                name: "Target",
+                age: 27,
+                photoUrls: ["https://example.com/a.jpg"],
+                hobbies: ["Hiking"],
+            });
+        });
+
         it("returns null when the caller has no match with the target user", async () => {
             const authGuard = await import("../../src/middleware/authGuard");
             const rateLimit = await import("../../src/middleware/rateLimit");
             const validate = await import("../../src/middleware/validate");
             const { getPublicProfile } = await import("../../src/modules/users/users.functions");
 
-            jest.mocked(authGuard.requireVerifiedEmail).mockReturnValue("callerUid");
+            jest.mocked(authGuard.requireAuth).mockReturnValue("callerUid");
             jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
             jest.mocked(validate.assertValidDocumentId).mockReturnValue("targetUid");
 
@@ -410,7 +469,7 @@ describe("Users Module", () => {
             const validate = await import("../../src/middleware/validate");
             const { getPublicProfile } = await import("../../src/modules/users/users.functions");
 
-            jest.mocked(authGuard.requireVerifiedEmail).mockReturnValue("callerUid");
+            jest.mocked(authGuard.requireAuth).mockReturnValue("callerUid");
             jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
             jest.mocked(validate.assertValidDocumentId).mockReturnValue("targetUid");
 
@@ -515,7 +574,7 @@ describe("Users Module", () => {
             const validate = await import("../../src/middleware/validate");
             const { getPublicProfile } = await import("../../src/modules/users/users.functions");
 
-            jest.mocked(authGuard.requireVerifiedEmail).mockReturnValue("callerUid");
+            jest.mocked(authGuard.requireAuth).mockReturnValue("callerUid");
             jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
             jest.mocked(validate.assertValidDocumentId).mockReturnValue("targetUid");
 

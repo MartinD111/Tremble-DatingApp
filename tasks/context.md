@@ -1,7 +1,61 @@
+## Session State — 2026-07-19 (Session 51) — POST-MATCH FLOW REPAIR (BATCH 2 SHIPPED)
+
+- **Branch:** `fix/post-match-flow-repair`, **PR #69 OPEN + CI GREEN** (the Session-50 CI-red is fixed). pubspec `1.0.0+29`.
+- **Build 29 shipped:** iOS TestFlight (Delivery UUID `6d2cbef2-aaf2-4cea-b0ca-9bff4453a6f2`, 71 dSYMs), Android AAB `release-symbols/b29/app-prod-release.aab` (versionCode 29, founder uploads to Play). Built via `scripts/release/build_prod.sh all --no-upload` — **Sentry symbols NOT uploaded** (no `SENTRY_AUTH_TOKEN`); symbols preserved at `release-symbols/b29/`. To symbolicate build-29 crashes later: `SENTRY_AUTH_TOKEN=… scripts/release/build_prod.sh all --skip-build`.
+- **Prod deploy this session:** `getPublicProfile` (relaxed to `requireAuth`) — additive/validated, fixes reveal photo on build 28 too.
+
+### DONE + committed on the branch (all CI-green)
+- **Step 1 — Safety sheets (`a9ba5eb`):** block + report rebuilt as themed **Material bottom sheets** (dropped `CupertinoAlertDialog`). Fixes the iOS `Material.of` crash (TREMBLE-FUNCTIONS-12), #8 can't-block, #9 too-light popup, #10 broken report, AND the CI-red test. **Corrected root cause (see lesson #93):** the CI failure was NOT #12 — it was a `ListTile`-under-opaque-`DecoratedBox` assert that only fires on CI's newer Flutter stable (local is pinned 3.41.4). Two distinct Material-ancestor bugs, both fixed structurally.
+- **Step 2 — Photo gate (`dbbc7b7`, DEPLOYED):** `getPublicProfile` → `requireAuth` (already match-gated). Fixes reveal photo/name/age/hobbies "?" (#1,#3,#7).
+- **Step 5 — Pills (`e094a5d`):** foreground wave pill moved `topPad+14 → topPad+80`, clears the gym/run/event + schedule control bar. (iOS 2× dedup NOT addressed — still open, needs device.)
+- **Step 3 — Pulse Intercept move (`095b50c`):** Send Phone/Send Photo extracted to new `PulseInterceptBar` widget, now rendered in the **trembling window** (`RadarSearchOverlay`, above the countdown) when `partnerUid != null`; removed from `match_reveal_screen` (reveal = photo+age+3 hobbies only). `RadarSearchSession` gained `partnerUid`.
+
+### OPEN — Session 51 handoff (priority order)
+1. **Device-verify build 29** (founder): reveal photo loads; block/report work + readable on iOS; report scrolls with a Submit; pill sits below the control bar; Send Phone/Photo appears in the trembling window (radar search), NOT the reveal.
+2. **Step 4 (NOT DONE)** — tapping a "nearby"/"wave" notification must open the partner's **profile card** (free vs premium view differs). Deferred: needs the notification-tap handler wiring + the free/premium card, plus device verification. Investigate `router.dart` notification-tap path + `wave_pill_service`/`notification_service`.
+3. **iOS pill dedup (cluster 2)** — "wave sent" shows 2× overlapping "is nearby". Local pill (`_MatchNotificationPillOverlay`, +80) vs APNs pill (`WavePillService`, now +80) presentation dedup. Needs device repro.
+4. **Cluster 4** — radar not spinning / partner not plotted during window (uninvestigated).
+5. **5d** — history greyscale → free-user basic card.
+6. **Merge PR #69** once device-verified (CI green; "MPC — Founder Approval" + "Quality Gate" show as *skipped*, not failing).
+- IGNORE: TREMBLE-FUNCTIONS-11 (CancellationException, benign backgrounding).
+
+## Session State — 2026-07-19 (Session 50) — POST-MATCH FLOW REPAIR (IN PROGRESS)
+
+- **Branch:** `fix/post-match-flow-repair` (6 commits, NOT merged). **PR #69 OPEN + CI RED.**
+- **Build 28 shipped:** iOS TestFlight (Delivery UUID `597d5be8-99f8-4fea-903c-2d02da4e6f50`), Android AAB at `release-symbols/b28/app-prod-release.aab` (Play internal upload = manual, founder-side). pubspec `1.0.0+28`.
+- **Prod deploys this session (am---dating-app, europe-west1):** `markMatchFound`, `sendMatchGesture` (new callables), `onWaveCreated` (reveal fix). All additive/validated.
+
+### DONE + committed on the branch
+- **Cluster 6** (`5e86d89`) — block dialog crash (TREMBLE-FUNCTIONS-10): dialog popped via dismissed-sheet dead context. Rebuilt with `showDialog` + builder ctx. ⚠️ **Its own test FAILS in CI (passes locally) — see BLOCKER-POSTMATCH-CI.**
+- **Cluster 1** (`770b949`) — symmetric reveal + window restart in `onWaveCreated`. `seenBy:[]` (was `[fromUid]` → wave-back completer never saw reveal); re-wave on a positively-over window restarts it. **DEPLOYED + DEVICE-VALIDATED (both users get the match page).**
+- **Cluster 5a** (`acb7691`) — reveal read partner `/users` doc directly (denied) → "?". Routed through `getPublicProfile` CF. ⚠️ **STILL "?" on device — CF has a SECOND gate `requireVerifiedEmail` (authGuard.ts:34); test accounts unverified. DECISION: relax to `requireAuth` (match-gated is enough).**
+- **Cluster 5b/5c** (`3acaa3a`) — explicit `_StartRadarButton` (replaced invisible tap-anywhere) + shared-hobby chips on reveal. Button works on device; chips/photo blocked by the same email gate as 5a.
+
+### OPEN — Session 50 test findings (build 28), PRIORITY ORDER
+See BLOCKER-POSTMATCH-* in blockers.md. Founder-locked decisions:
+- **Photo gate:** relax `getPublicProfile` to `requireAuth` (HIGH-risk CF + deploy).
+- **Next priority:** (1) fix CI red on PR #69 + squash TREMBLE-FUNCTIONS-12 crash + rebuild block/report iOS dialogs → merge; (2) photo gate; (3) rest.
+
+1. **CI RED (blocks PR #69 merge)** — `test/features/safety/ugc_action_sheet_block_dialog_test.dart` fails in CI, passes locally (macOS). "Multiple exceptions" = the crash still fires in the CI (Linux) env. Cluster-6 fix incomplete/env-sensitive.
+2. **TREMBLE-FUNCTIONS-12** (iOS, dist 28, fatal, unhandled) — `Material.of` null → `_InkState._build` → `WidgetStateProperty`. Material widgets inside a `CupertinoAlertDialog` (no Material ancestor). = the **Report dialog** (#10) + block dialog on iOS.
+3. **Photo/hobbies still "?"** (#1,#3,#7) — relax email gate (above). Alt considered: feed reveal from getMatches data.
+4. **Safety flow iOS** (#8 can't block, #9 block popup too light/white-text-invisible, #10 report TOTALLY broken — endless scroll, 0 buttons) → **rebuild block+report as themed bottom sheets, not CupertinoAlertDialog.** One lane; fixes crash #2 too.
+5. **#6 ARCHITECTURE** — move Send Phone/Send Photo (Pulse Intercept) OUT of match reveal (`match_reveal_screen.dart` `_buildPulseInterceptActions`) INTO the **trembling window** (radar search phase). It's *assistance during the meetup*, NOT matching. Match page keeps: photo + age + 3 hobbies only.
+6. **#4 NEW FEATURE** — tapping a "nearby"/"wave" notification must open the partner's **profile card** (free vs premium view differs).
+7. **#5 UI** — in-app pills render TOO HIGH; cover the radar-mode buttons (gym/run/event) + the schedule-radar button (top-right). Move pills lower. (This is also cluster 2 territory: iOS shows "wave sent" 2× overlapping "is nearby" — iOS-only presentation dedup.)
+8. **Cluster 4** — radar not spinning during window / partner not plotted (uninvestigated).
+9. **5d** — history greyscale → free-user basic card (photo+age+3 hobbies).
+10. **TREMBLE-FUNCTIONS-11** — CancellationException "Cancelled", handled, benign (cancelled future on backgrounding). IGNORE.
+
+### Control-plane refactor note
+Session-49 lessons #86-88 were cherry-picked onto this branch (`20254ab`) after `chore/context-session-49` was deleted; they land in main when PR #69 merges.
+
 ## Session State — 2026-07-18 (Session 49)
 - Active Task: Root-caused + fixed the wave pill never rendering; shipped build 26 to TestFlight.
 - Environment: local + GitHub; one prod build → TestFlight (founder-approved). No prod backend/rules/config mutation.
 - System Status: `main` clean; pubspec `1.0.0+26`; build 26 live on TestFlight (Delivery UUID `2024e76c-bed2-4b21-a6f2-f0f57c4b6835`). Sentry dist-26 dSYMs + Dart symbol maps uploaded/finalized. Artifacts in `release-symbols/b26/`.
+- Android AAB (versionCode 26, signed prod) at `release-symbols/b26/app-prod-release.aab` — ready for a Play Console **internal testing** upload to cross-check the pill on Android (NOT production: Play prod is gated on STORE-003/004). Not yet uploaded.
+- Open PRs at handoff: **#67** (this Session 49 docs record). PRs #62/#63/#64/#65/#66 all merged.
 
 ### ROOT CAUSE FOUND — wave pill never rendered (foreground AND tap)
 Device evidence (build 25, 2026-07-18 08:48:03): scanProximityPairs sent TWO visible

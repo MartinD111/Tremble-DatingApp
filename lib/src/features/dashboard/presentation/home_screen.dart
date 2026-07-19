@@ -890,6 +890,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                   session: RadarSearchSession(
                                     partnerName: devSim.profile?.name ??
                                         t('someone_nearby', lang),
+                                    partnerUid: devSim.profile?.id,
                                     expiresAt: devSim.mutualWaveExpiresAt ??
                                         DateTime.now()
                                             .add(const Duration(minutes: 30)),
@@ -910,6 +911,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                         RadarSearchOverlay(
                                           session: RadarSearchSession(
                                             partnerName: name,
+                                            partnerUid: partnerId,
                                             expiresAt: activeMatch.createdAt
                                                 .add(const Duration(
                                                     minutes: 30)),

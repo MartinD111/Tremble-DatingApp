@@ -4,6 +4,18 @@
 
 ---
 
+**Rule #88 — Test foreground/tap push behaviour with `functions/src/scripts/send_test_push.ts`, not by waiting on `scanProximityPairs`.**
+[2026-07-18] The scheduled scan's 10-min global throttle + per-pair cooldown almost never coincide with the app being foregrounded on-screen, so foreground pushes (the freeze + pill paths) cannot be reproduced by walking around — this cost two inconclusive device sessions. The script sends ONE CROSSING_PATHS / INCOMING_WAVE directly to a device (by `--uid=` → `users/{uid}.fcmToken`, or raw `--token=`), reusing the exact prod payloads + `apnsExpirationHeaders`. Use `--project=am---dating-app --i-know-this-is-prod` for prod. Angle-bracket placeholders in docs are LITERAL shell metacharacters — pass a real uid with no `<>` or zsh throws `parse error near '\n'`.
+Source: device-verification tooling, 2026-07-18 (PR #63).
+
+**Rule #87 — Verify framework / plugin / native internals against REAL source, not reasoning, before blaming them.**
+[2026-07-18] The "tap did nothing" and the freeze were misdiagnosed repeatedly by reasoning about how firebase_messaging / FlutterAppDelegate forward notifications. The handoff suspected PR #60's delegate change broke `didReceiveNotificationResponse` forwarding. Reading the actual Flutter engine `.mm` for the pinned engine commit (`e4b8dca`) showed `FlutterAppDelegate` + `FlutterPluginAppLifeCycleDelegate` forward it to plugins identically to `willPresentNotification` — REFUTED. The real bug was in our own Dart (Rule #86). Same failure mode as the crash-filter bug and the two freeze misdiagnoses: assert against real device stacks / real source, never assumed ones.
+Source: wave-pill render sprint, 2026-07-18.
+
+**Rule #86 — A global overlay (wave pill, app-wide banner) MUST come from `rootNavigatorKey.currentState.overlay`, never `Overlay.maybeOf(rootNavigatorKey.currentContext)`.**
+[2026-07-18] `Overlay.maybeOf(rootNavigatorKey.currentContext)` is ALWAYS null: the root Navigator (GoRouter `navigatorKey`) builds its `Overlay` as a CHILD, so the Overlay is a *descendant* of the navigator's context, and `maybeOf` only walks *ancestors*. `presentWavePill` used the context lookup, so the CROSSING_PATHS / wave pill never rendered — foreground AND tap, regardless of auth or timing. Proven on device (build 25, 2026-07-18 08:48:03: two visible pushes, `pairsNotified:2`, nothing shown) and by `test/core/root_overlay_resolution_test.dart`. Fix: `rootNavigatorKey.currentState?.overlay` (the Navigator's own `OverlayState`); present sheets/paywalls from `overlay.context`. See `presentWavePill` in `lib/src/core/router.dart`.
+Source: wave-pill render sprint, 2026-07-18 (PR #65).
+
 **Rule #85 — The Flutter app reports to the Sentry project `tremble-functions`, NOT `tremble-app`. A release that uploads no debug symbols is not a release.**
 [2026-07-17] Two separate traps, both of which cost real hours.
 
@@ -496,3 +508,18 @@ Source: Multi-Env Setup, March 2026.
 **Rule #74 — `package:http` does NOT use NSURLSession on iOS by default.**
 [2026-06-18] It wraps `dart:io HttpClient` (BoringSSL), whose TLS stack fails the handshake against Cloudflare R2 with `SSLV3_ALERT_HANDSHAKE_FAILURE`. For R2 — or any endpoint failing TLS on iOS — use `cupertino_http`'s `CupertinoClient` (NSURLSession / Network.framework). See `lib/src/core/upload_service.dart`.
 Source: R2 upload TLS sprint, June 2026.
+
+**Rule #89 — Client cross-user reads are denied; route through a CF.**
+[2026-07-19] Multiple "phantom" failures (reveal "?", trembling-window collapse) were all one root cause: the client reading data Firestore rules forbid. `/users` is `read: if isSelf`, `/matches` update is `hasOnly(['seenBy'])`. `markMatchAsFound`, `sendGesture`, and `ProfileRepository.getPublicProfile` all did denied reads/writes → permission-denied → silent nulls or crashes. Fix pattern: move to an Admin-SDK callable (`markMatchFound`, `sendMatchGesture`, `getPublicProfile`). BEFORE wiring a client to a CF, check the CF's OWN guards — `getPublicProfile` adds `requireVerifiedEmail`, a second gate that still returns null for unverified accounts.
+
+**Rule #90 — Cupertino alert dialogs cannot hold Material widgets or big content.**
+[2026-07-19] `CupertinoAlertDialog` has no Material ancestor → any `InkWell`/`TextButton`/`WidgetStateProperty` inside throws `Material.of null` (TREMBLE-FUNCTIONS-12). It also can't scroll a large form → the report dialog was "endless scroll, 0 buttons" on iOS, and white text was invisible on its light surface. Lesson: for anything beyond a trivial 1-2 line confirm, use a themed bottom sheet, not `showPlatformDialog`/`CupertinoAlertDialog`. Also: a widget test passing on macOS does NOT prove the iOS path — `Platform.isIOS` is false on the macOS test host, so the Cupertino branch is never exercised locally.
+
+**Rule #91 — Match reveal `seenBy` was asymmetric by construction.**
+[2026-07-19] `onWaveCreated` created the match with `seenBy:[fromUid]` — the wave-back completer was pre-marked seen, so their home-screen reveal listener (`!seenBy.contains(myUid)`) never fired. Only ONE user ever saw "We have a match". Fix: `seenBy:[]`. Also, the persistent match doc (`uidA_uidB`) meant a re-wave was a no-op — restart the window only when the prior one is POSITIVELY over (terminal status or known-expired createdAt), never on the same-burst reciprocal wave.
+
+**Rule #92 — Pulse Intercept (Send Phone/Photo) is meetup ASSISTANCE, not matching.**
+[2026-07-19] Founder product rule: Send Phone / Send Photo belong in the TREMBLING WINDOW (radar search phase, helping two matched people physically find each other), NOT on the match reveal page. The match reveal shows only photo + age + 3 hobbies (shared first). Do not conflate the two surfaces. DONE Session 51 (`095b50c`): `PulseInterceptBar` widget lives in `RadarSearchOverlay`, gated on `RadarSearchSession.partnerUid != null`; removed from `match_reveal_screen`.
+
+**Rule #93 — A red CI + green-local Flutter split is almost always a Flutter-version delta, not "env-sensitive flakiness". Verify the actual assert; don't inherit a handoff's guessed root cause.**
+[2026-07-19] Session 50 handed off that the `ugc_action_sheet_block_dialog_test` CI failure was TREMBLE-FUNCTIONS-12 (`Material.of` null in Cupertino). WRONG. Pulling the CI log showed the real failure: *"ListTile background color or ink splashes may be invisible"* (×2) — a Flutter framework assert that fires when a `ListTile` sits under an opaque `DecoratedBox`/`Container` with no `Material` between them. It reproduces only on CI because CI uses `subosito/flutter-action` with `channel: stable` (UNPINNED → latest stable, which tightened this assert), while local is pinned `3.41.4` and never fires it. Two lessons: (1) when a test is red in CI but green locally, suspect a Flutter/toolchain version delta first and read the CI log for the *actual* exception — a handoff's assumed cause can be wrong. (2) Because local can't reproduce the newer-Flutter assert, the fix must be STRUCTURAL (guarantee a `Material` ancestor), not "went green locally". Consider pinning the CI Flutter version to match local so this class of split stops happening. Build 29 (`1.0.0+29`) TestFlight Delivery UUID `6d2cbef2-aaf2-4cea-b0ca-9bff4453a6f2`.

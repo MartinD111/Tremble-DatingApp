@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/hobby_utils.dart';
 
 class PublicProfile {
@@ -20,15 +19,18 @@ class PublicProfile {
     this.isTraveler = false,
   });
 
-  factory PublicProfile.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  /// Parses the `profile` object returned by the `getPublicProfile` Cloud
+  /// Function. A client cannot read another user's `/users` document directly
+  /// (Firestore rules: `read: if isSelf`), so the partner's public view always
+  /// arrives as a plain map from the callable rather than a Firestore doc.
+  factory PublicProfile.fromMap(Map<String, dynamic> data) {
     return PublicProfile(
-      id: doc.id,
-      name: data['name'] ?? 'Neznano',
-      age: data['age'] ?? 18,
-      photoUrls: List<String>.from(data['photoUrls'] ?? []),
+      id: data['id'] as String? ?? '',
+      name: data['name'] as String? ?? 'Neznano',
+      age: (data['age'] as num?)?.toInt() ?? 18,
+      photoUrls: List<String>.from(data['photoUrls'] ?? const <String>[]),
       hobbies: HobbyUtils.parseHobbies(data['hobbies']),
-      lookingFor: data['lookingFor'],
+      lookingFor: data['lookingFor'] as String?,
       isTraveler: data['isTraveler'] as bool? ?? false,
     );
   }
