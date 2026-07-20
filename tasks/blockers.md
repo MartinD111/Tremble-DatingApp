@@ -60,6 +60,52 @@
 
 ---
 
+## SESSION 54 — BUILD 31 DEVICE FINDINGS (2026-07-20)
+
+> Build 31 tested on device (iPhone + Samsung SM-S916B). iOS on TestFlight (UUID `db31765d-8d5a-450b-a628-659e9e2eb847`), Android on Play (versionCode 31). Each item below = its own TDD lane / branch / PR next session. Fixes are proposals, not yet implemented.
+
+### BUG-MATCH-PAGE-LAYOUT — reveal photo overlaps the hobby pills
+**Date:** 2026-07-20 · **Status:** SHIPPED (Session 55, PR #76) — single centered scroll-safe column; geometric no-overlap test. Device-review vertical rhythm. · **Risk:** MEDIUM (visual)
+**Symptom:** On the match reveal + "We have a match" page, the circular partner photo is drawn **over** the hobby pills (e.g. "Pohodništ…" / "Plavanje" clipped behind the photo). Layout/z-order bug — hobbies should sit fully above the photo.
+**Where:** `match_reveal_screen` (hobby row + circular avatar stacking). **Fix:** restructure the column so the hobby pill row has its own vertical band above the avatar (no `Stack` overlap / fix ordering + spacing). Golden/widget test for no-overlap. NOTE: the profile card itself is "bad but doable for MVP" — do NOT redesign the card this lane; only fix the overlap.
+
+### BUG-IS-NEARBY-PERSISTS — "is nearby" pill never dismisses
+**Date:** 2026-07-20 · **Status:** SHIPPED (Session 55, PR #78) — `WavePillService.dismissForTarget(uid)` from `WaveController.handleWave` on success + `dismiss()` in `MatchRevealScreen.initState`. Cluster-2 iOS 2× dedup still deferred. · **Risk:** MEDIUM
+**Symptom:** The "{name} is nearby" pill stays on screen after (a) you wave to that person, and (b) you navigate into the match page. It should clear in both cases.
+**Where:** `WavePillService` / `_MatchNotificationPillOverlay` (same surfaces as UI-POSTMATCH-PILLS). **Fix:** dismiss the pill for a given partner uid when a wave is sent to that uid AND on match-page/trembling-window entry; add lifecycle test. Pairs with cluster-2 (iOS 2× pill dedup) — consider one pill-lifecycle lane.
+
+### BUG-RADAR-DOT → RECLASSIFIED **FEATURE-RADAR-SONAR** — privacy-by-design search-and-rescue sonar
+**Date:** 2026-07-20 · **Status:** DEFERRED to its own session (Session 55, founder-chosen) · **Risk:** HIGH (core feature + sensors + BLE, device-only) · **(cluster 4)**
+> **Session-55 update:** root cause CONFIRMED — the dot painter is fully wired (`radar_painter.dart:115` draws when `pingDistance != null`); the only writer of `pingDistance/pingAngleProvider` is the dev-sim bridge (`home_screen.dart:445`), so real mutual waves never feed a dot. NOT a render bug — a missing production data source. Founder's real ask is a **sonar/search-and-rescue radar**: stop-sweep, dot pulses every 1–2s (closer/further), turn-to-find via the device compass, NO fixed location (privacy is the point). BLE has no bearing → direction must be inferred from **RSSI×compass-heading**. Needs compass wiring + estimator + redesigned pulse overlay; device-only to validate. Do brainstorm→plan→approval next session. Full vision: memory `radar-sonar-search-feature`. Original Session-54 lead below (superseded).
+**Symptom:** Trembling window is ~90% visually complete, but the radar doesn't work — critically **the partner's dot never appears on the radar**. Founder's hard requirement: the dot MUST show up (past the inner circle edge = other user's relative location), **whether or not the sweep animation is spinning**. Decouple "dot present" from "sweep animating".
+**Where + LEAD (Session 54, code-traced):** the radar canvas is `_buildRadarView` (`home_screen.dart:822`) which **already receives `double? pingDistance` + `double? pingAngle`** — so a bearing/distance signal for a dot DOES exist in the plumbing (this is NOT a "no data" wall). `RadarSearchOverlay` (the overlay drawn on top, `radar_search_overlay.dart`) renders only a **warmth indicator** (warmer/colder text via `WarmthDirection`), NO positioned dot. So the dot is plottable from `pingAngle`/`pingDistance`; the likely root cause is that during the trembling/mutual-wave window those values are null / not fed, or the ping-dot painter isn't invoked in that state. **Next-session first step (systematic-debugging):** trace where `pingDistance`/`pingAngle` are computed and whether they're populated once a match is active — confirm null-vs-not-rendered BEFORE writing dot code. Then render a persistent dot decoupled from the sweep tween (dot present even if sweep isn't animating — founder's explicit ask). TDD the dot-placement math. Last blocker to "trembling window done".
+
+### BUG-TREMBLE-PROFILE-TAP — tapping partner card in trembling window throws RevenueCat error
+**Date:** 2026-07-20 · **Status:** SHIPPED (Session 55, PR #75) — Free tap opens `BasicMatchProfileScreen` (no RevenueCat); premium unchanged. Real cure for empty offerings is still CONFIG-REVENUECAT-OFFERINGS (founder). · **Risk:** HIGH (change is client-only nav; declared MEDIUM in PR)
+**Symptom:** In the trembling window, tapping the partner profile surfaces the RevenueCat "You have configured the SDK with an App Store API key, but there are no App Store products registered … offerings empty" red overlay (see image) instead of opening the profile card. The paywall/offerings failure is bleeding into the trembling window.
+**ROOT CAUSE — CONFIRMED (Session 54, code-traced):** `_openTremblingPartner` (`home_screen.dart:814-820`) sends **free** users straight to the paywall:
+```dart
+void _openTremblingPartner(BuildContext context, MatchProfile partner) {
+  if (!ref.read(effectiveIsPremiumProvider)) {
+    PremiumPaywallBottomSheet.show(context);   // free → paywall → RevenueCat offerings (EMPTY) → red debug overlay
+    return;
+  }
+  context.push('/profile', extra: partner);     // premium → full profile
+}
+```
+`PremiumPaywallBottomSheet` pulls RevenueCat **offerings**, which are empty (`CONFIG-REVENUECAT-OFFERINGS`), so the SDK renders the "offerings empty" debug overlay. History (PR #73) does NOT do this — its free tap opens `BasicMatchProfileScreen` first and only reaches the paywall via the "See full profile" CTA. So the trembling window and history diverge on the free path.
+**Fix (precise):** change `_openTremblingPartner` so the **free** branch opens `BasicMatchProfileScreen(partner)` (the PR #73 basic card), NOT `PremiumPaywallBottomSheet.show`. Premium branch unchanged (`/profile`). This (a) matches the founder requirement (open the basic card gated by package, same as history) and (b) insulates the trembling window — the basic-card path never touches RevenueCat offerings, so empty offerings can't bleed in. Secondary hardening (separate/optional): make the paywall sheet degrade gracefully when offerings are empty (no debug overlay) — but the primary fix removes the offerings call from this tap entirely. TDD: free tap → basic card (no paywall, no RevenueCat); premium tap → `/profile`; prove no offerings query on the free path.
+
+### BUG-SENTRY-TILE-CANCELLED-NOISE — `fL: Cancelled` map-tile spam in prod Sentry
+**Date:** 2026-07-20 · **Status:** SHIPPED (Session 55, PR #77) — `options.beforeSend` drops tile-pipeline `Cancelled`/network events via shared `CrashFilter` predicate. Verify TREMBLE-FUNCTIONS-13/14/15 rate → ~0 after build 32. · **Risk:** LOW (noise, not a crash) · **Sentry:** TREMBLE-FUNCTIONS-13/14/15, dist 31
+**Symptom:** Repeated `fL: Cancelled` errors in prod Sentry, stacktrace `TileLoader._renderTile`/`_renderJob` in `tile_loader.dart` (vector_map_tiles / flutter_map). These are **benign** — in-flight map tile render jobs cancelled when the map/radar is disposed or navigated away. They flood the prod issue stream as `error` level.
+**Fix:** add a `beforeSend` filter in Sentry init to drop tile-loader cancellation exceptions (match on type `Cancelled` originating from `tile_loader.dart`), or cancel the tile futures cleanly on dispose. Verify prod issue rate drops. See lesson #96.
+
+### WATCH — TREMBLE-FUNCTIONS-12 (`Material.of` null) still in Sentry but dist 28
+**Date:** 2026-07-20 · **Status:** WATCH (likely stale) · The `TypeError: Null check operator used on a null value` (`Material.of` → InkWell without a Material ancestor) event is dated Jul 19 on **dist 28** (old build), iOS. Rule #90/#93 structural fixes (Material bottom sheets) shipped after 28. Confirm it does NOT recur on **dist 31** before spending a lane on it; if it does, hunt the remaining InkWell-without-Material (candidate: a tappable in the profile/partner card path).
+
+---
+
 ## CRITICAL — Store Blockers (Pred Submissionom)
 
 ### BLOCKER-STORE-001 — iOS Privacy Manifest & Encryption Declaration

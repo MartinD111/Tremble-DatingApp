@@ -1,3 +1,35 @@
+## Session State — 2026-07-21 (Session 55) — BUILD-31 BUG BATCH: 4 LANES SHIPPED (PRs #75–78), RADAR RECLASSIFIED
+
+- **PR #74 (build 31) is MERGED to main** (squash `226fb66`). main is now the build-31 baseline. All Session-55 lanes branched off it.
+- **4 quick lanes shipped as separate TDD PRs (each metadata gate green, Founder-Approval skips on MEDIUM/LOW):**
+  1. **BUG-TREMBLE-PROFILE-TAP** → **PR #75** (GREEN, all 8 gates). Root cause CONFIRMED in code: `_openTremblingPartner` (home_screen.dart:814) sent Free users to `PremiumPaywallBottomSheet` → empty RevenueCat offerings → red overlay. Fix: Free opens `BasicMatchProfileScreen` (`/profile?showActions=false&basic=true`), mirroring history PR #73; premium unchanged. RED test stack literally showed `PremiumPaywallBottomSheet.show`. **PR #75 also carries the CI unblock** (`npm audit fix` → brace-expansion GHSA-3jxr-9vmj-r5cp; the `npm audit --audit-level=high` gate was failing repo-wide).
+  2. **BUG-MATCH-PAGE-LAYOUT** → **PR #76** (GREEN). Reveal photo painted over hobby pills: hobby band (top-anchored Positioned) + centered avatar (Positioned.fill) were uncoordinated Stack layers. Fix: single centered, scroll-safe vertical flow (title→name→hobbies→avatar→peptalk); animations preserved. Geometric test `reveal-hobbies.bottom ≤ reveal-avatar.top`. **Device-review the vertical rhythm** (can't validate spacing in sim).
+  3. **BUG-SENTRY-TILE-CANCELLED-NOISE** → **PR #77** (MPC gates green; build jobs finishing). `fL: Cancelled` escaped `FlutterError.onError` and reached Sentry via `PlatformDispatcher.onError`/isolate listener unfiltered. Fix: `options.beforeSend` runs the shared `CrashFilter` tile predicate → drops them; `.contains('Cancelled')` (release minifies type). Verify TREMBLE-FUNCTIONS-13/14/15 rate → ~0 after build 32.
+  4. **BUG-IS-NEARBY-PERSISTS** → **PR #78** (MPC gates green; build jobs finishing). Fix: `WavePillService.dismissForTarget(uid)` (uid-scoped) called from `WaveController.handleWave` on success (trigger a) + `WavePillService.dismiss()` in `MatchRevealScreen.initState` (trigger b).
+- **BUG-RADAR-DOT → RECLASSIFIED to FEATURE-RADAR-SONAR (deferred to its own session, founder-chosen).** Root cause CONFIRMED: the dot painter is fully wired (`radar_painter.dart:115` draws when `pingDistance != null`) but `pingDistance/pingAngleProvider` (home_screen.dart:64) have ONE writer — the dev-sim bridge (home_screen.dart:445). Production mutual waves never feed them → no dot. **Founder's real ask is a privacy-by-design search-and-rescue SONAR** (stop-sweep, pulse every 1–2s, turn-to-find via device compass; no fixed location). BLE has no bearing → direction must come from RSSI×heading (compass). HIGH-risk, sensor-bound, device-only to validate. Needs brainstorm→plan→approval. Full vision in memory `radar-sonar-search-feature`.
+- **Still deferred (unchanged):** FEATURE-POSTMATCH-NOTIFTAP (step 4), Pulse Intercept full flow (cluster 3), cluster-2 iOS pill 2× dedup (pairs with the pill-lifecycle work in PR #78), `getPublicProfile` recap-log read + temp-diagnostic removal, CONFIG-REVENUECAT-OFFERINGS (founder attaches store products — the real cure for empty offerings).
+- **Founder actions:** review/squash-merge PRs #75–78; then BUILD 32 (bump pubspec, `build_prod.sh all`, then **manual `xcrun altool`** for TestFlight — lesson #95). Radar sonar = next session.
+
+---
+
+## Session State — 2026-07-20 (Session 54) — BUILD 31 TESTED → NEXT BUG BATCH SCOPED
+
+- **Build 31 is LIVE on both stores.** iOS: manually uploaded to TestFlight this session — Delivery UUID `db31765d-8d5a-450b-a628-659e9e2eb847` (68.9 MB, no errors). Android: founder uploaded the AAB to Play Console; versionCode **31** verified straight from the bundle manifest (not a mislabeled 30). AAB/IPA/symbols preserved at `release-symbols/b31/`.
+- **⚠️ ROOT CAUSE of "build 31 missing from TestFlight": `scripts/release/build_prod.sh all` does NOT auto-upload to TestFlight** — it builds+preserves the IPA and prints "Next: … BEFORE uploading to TestFlight". The old handoff claim that it auto-uploads was WRONG. Must run `xcrun altool --upload-app` yourself after every prod build. See **lesson #95** + updated memory `appstore-connect-api-key`.
+- **PR #74 (`chore/build-31` → main):** metadata gate was red (title had no `[PLAN-ID]`, empty body). FIXED this session — title now carries `[PLAN-ID: 20260720-build-31-release]` + Verification-checklist body; ① MPC PR Metadata now passes. **Founder: squash-merge PR #74 to main when the non-required Build-Dev-APK check goes green.**
+
+### BUILD 31 DEVICE FINDINGS (founder, 2026-07-20) → next batch
+Full detail + proposed fixes in `blockers.md` "SESSION 54". Summary:
+1. **Match page layout BAD** — the circular partner photo **overlaps the hobby pills** on the reveal / "We have a match" page. Fix layout (photo below hobbies). → `BUG-MATCH-PAGE-LAYOUT`.
+2. **"is nearby" pill won't dismiss** — persists after you wave to that person AND after entering the match page. Pill lifecycle cleanup. → `BUG-IS-NEARBY-PERSISTS`.
+3. **Radar still dead + partner DOT never plots** — trembling window is ~90% visually done; founder's hard requirement: **the partner dot MUST appear on the radar** (works whether or not the sweep spins). → `BUG-RADAR-DOT` (cluster 4).
+4. **Trembling-window profile tap throws** — tapping the partner card surfaces the RevenueCat "offerings empty" red overlay instead of opening the gated card. Must open the **same** `BasicMatchProfileScreen`(free)/full(premium) as history, and RevenueCat/paywall state must NOT bleed into or crash the trembling window. → `BUG-TREMBLE-PROFILE-TAP`.
+5. **Sentry noise** — `fL: Cancelled` (TREMBLE-FUNCTIONS-13/14/15) = map **tile-loader cancellations** (`tile_loader.dart`, benign) flooding prod as errors. Add a `beforeSend` filter. → `BUG-SENTRY-TILE-CANCELLED-NOISE` + lesson #96.
+6. **Profile card visual = "bad but doable for MVP"** — NOT a blocker; low-priority polish, not this batch.
+- **Still deferred:** Step 4 notif-tap → gated card (`FEATURE-POSTMATCH-NOTIFTAP`); Step 5 Pulse Intercept full flow (camera→send→pill→open photo / phone→dialer, cluster 3); cluster 2 iOS pill 2× dedup; `getPublicProfile` "?" recap-log read + temp-diagnostic removal (still needs a recap opened on device); `CONFIG-REVENUECAT-OFFERINGS` (founder attaches App Store/Play products to the offering).
+
+---
+
 ## Session State — 2026-07-20 (Session 53) — 2 BUG LANES SHIPPED → BUILD 31
 
 - **main @ ffcf6b3** (PRs #72 + #73 merged; branches deleted). Build 31 (`1.0.0+31`) built + uploaded this session via `chore/build-31` (`8ab9060`) — `scripts/release/build_prod.sh all` (iOS TestFlight + Android AAB, Sentry symbols for `tremble.dating.app@1.0.0+31`). **Founder: check `/tmp/build31.log` for the TestFlight Delivery UUID + AAB path; upload AAB to Play.**
