@@ -40,14 +40,15 @@
 
 ### BUG-BLOCKED-USERS-LIST — Blocked Users screen fails to load whenever ≥1 user is blocked
 **Date:** 2026-07-20
-**Status:** OPEN — root cause CONFIRMED by static analysis (not a guess)
+**Status:** ✅ RESOLVED (Session 53) — PR #72 merged to main (`f11c30c`); `getBlockedUsers` callable **DEPLOYED to prod** (`am---dating-app`/europe-west1, created 2026-07-20). Ships in **build 31**. Device-verify: block a user → Settings → Blocked Users renders them (name + photo); unblock works.
+**(root cause, for reference)** CONFIRMED by static analysis (not a guess)
 **Symptom (device, build 30):** Opening Settings → Blocked Users shows the red error "Blokiranih uporabnikov ni bilo mogoče naložiti. Preveri povezavo in poskusi znova." An empty blocklist renders the "Nobody blocked" empty state fine; after blocking Martin (toast "Martin has been blocked" confirms the write succeeded), the list errors.
 **Root cause:** `blockedUsersProvider` (`lib/src/features/safety/presentation/blocked_users_screen.dart:28-30`) does a **direct** `FirebaseFirestore.instance.collection('users').doc(id).get()` for each blocked UID. Firestore rules `firestore.rules:141` — `match /users/{userId} { allow read: if isSelf(userId); }` — permit reading **only your own** doc. Every blocked user's doc is a non-self read → `PERMISSION_DENIED` → `Future.wait` throws → the provider's `error:` branch. The empty case works only because it returns `[]` early (line 26) before any cross-user read. **This is the same bug class as the reveal "?" (BLOCKER-POSTMATCH-PHOTO): a client reading arbitrary `/users/{id}` docs directly instead of via a Cloud Function.** The block/unblock writes themselves are fine — they route through the `blockUser`/`unblockUser` callables (`safety_repository.dart:16-22`).
 **Fix (proposed, MEDIUM):** add a `getBlockedUsers` callable (Admin SDK, returns `{id, name, imageUrl}` for the caller's `blockedUserIds`) and re-source the provider from it — mirrors the batch-3 `getMatches` re-source pattern. Do NOT loosen `firestore.rules:141`. TDD lane, own branch/PR.
 
 ### BUG-HISTORY-CARD-TAP — history tile tap must open the gated profile card
 **Date:** 2026-07-20
-**Status:** OPEN (founder spec, Session 53). Overlaps FEATURE-POSTMATCH-TREMBLING-REDESIGN's card gate + the LEGAL-005 `open_profile_cards` gate.
+**Status:** ✅ RESOLVED (Session 53) — PR #73 merged to main (`ffcf6b3`). Free + mutual tap → `BasicMatchProfileScreen` (photo + name/age + 3 hobbies + "See full profile · Premium" CTA → paywall); Premium → full card. Client-only, ships in **build 31** (no deploy). ADR-007 §1 Amendment + LEGAL-005 note recorded. Device-verify: Free mutual tap → basic card + CTA→paywall; Premium mutual tap → full card.
 **Spec:** In Your Matches / history, a mutually-matched tile currently shows name + age + photo + hobbies (read-only). Tapping it must open the full profile card the **same way Settings opens the own-profile card** — gated by the viewer's package: **Free** sees name + age + photo + 3 hobbies; **Premium** sees the entire profile card (as if viewing their own). This is the `TremblingPartnerCard` tap→`/profile`(premium)/paywall(free) gate applied to history tiles too. Reuse `MatchProfile` + `effectiveIsPremiumProvider` — no new direct reads. TDD lane; pairs naturally with the build-31 notif-tap card (both open the same gated card).
 
 ### CONFIG-REVENUECAT-OFFERINGS — RevenueCat "offerings empty" debug banner

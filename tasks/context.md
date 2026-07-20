@@ -1,3 +1,26 @@
+## Session State — 2026-07-20 (Session 53) — 2 BUG LANES SHIPPED → BUILD 31
+
+- **main @ ffcf6b3** (PRs #72 + #73 merged; branches deleted). Build 31 (`1.0.0+31`) built + uploaded this session via `chore/build-31` (`8ab9060`) — `scripts/release/build_prod.sh all` (iOS TestFlight + Android AAB, Sentry symbols for `tremble.dating.app@1.0.0+31`). **Founder: check `/tmp/build31.log` for the TestFlight Delivery UUID + AAB path; upload AAB to Play.**
+- **Shipped (both TDD, merged):**
+  1. **BUG-BLOCKED-USERS-LIST** (PR #72) — Blocked Users screen errored whenever ≥1 user blocked: it did direct `/users/{id}` reads (rules = self-only). New `getBlockedUsers` Admin-SDK callable; provider re-sourced off it. **Callable DEPLOYED to prod** (`am---dating-app`, created 2026-07-20). Same bug class as the reveal "?".
+  2. **BUG-HISTORY-CARD-TAP** (PR #73) — Free mutual-tile tap → new `BasicMatchProfileScreen` (photo+name/age+3 hobbies + "See full profile · Premium" CTA→paywall); Premium → full card. ADR-007 §1 Amendment + LEGAL-005 note. Client-only.
+- **Also:** labeled CONFIG-REVENUECAT-OFFERINGS (red banner = no App Store products attached to the RevenueCat offering — founder/dashboard, not code). Added reusable `test/support/network_image_mock.dart`.
+- **Secret rotation (FOLLOWUP-SEC-002): founder de-prioritized ("ignore the leak"). Off the active list.**
+
+### DEVICE TEST MATRIX — build 31 (founder)
+1. **Blocked Users:** block a user → Settings → Blocked Users shows them (name+photo), no red error; unblock removes them. (needs the deployed callable — done.)
+2. **History card tap:** Free acct → tap a mutual match → **basic card** (photo+name/age+3 hobbies) + "See full profile" → paywall. Premium acct → tap mutual match → **full** profile card.
+3. **Carry-over from build 30 (still unverified):** reveal + trembling window show real photo/name/age; partner-card tap → profile(premium)/paywall(free); Stop → spinner→close, failure→toast; history in colour with hobbies (a NEW match + backfilled Nikolina/Martin).
+4. **getPublicProfile "?" root cause:** open a **recap** on build 31 (recap is the last caller after batch-3 re-sourced the reveal) → then read `[USERS getPublicProfile]` prod log → confirm cause → remove temp diagnostic.
+
+### STILL OPEN → next session (build 31+ lanes)
+- **Step 4** notif-tap → partner profile card (reuse the new `BasicMatchProfileScreen` gate + `effectiveIsPremiumProvider`; wire `router.dart`/`notification_service`/`wave_pill_service`).
+- **Step 5** Pulse Intercept full flow (Send Photo→camera→upload→recipient pill→tap opens photo; Send Phone→recipient notif→dialer/call). cluster 3.
+- cluster 2 (iOS pill 2× dedup), cluster 4 (radar not spinning / partner not plotted).
+- getPublicProfile diagnostic removal (after the recap log read).
+
+---
+
 ## Session State — 2026-07-20 (Session 52 cont.) — BATCH 3 SHIPPED → BUILD 30 ON TESTFLIGHT + PR #70 MERGEABLE
 
 ### PR #70 conflicts resolved + gates green (do the merge when ready)
