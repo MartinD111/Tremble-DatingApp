@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Decides which `FlutterError`s are benign enough to keep out of Crashlytics
 /// and Sentry.
@@ -37,15 +38,56 @@ class CrashFilter {
   ];
 
   static bool shouldSuppressFlutterError(FlutterErrorDetails details) {
-    final exceptionText = details.exceptionAsString();
-    final stackText = details.stack?.toString() ?? '';
+    return _isBenignTileFailure(
+      exceptionText: details.exceptionAsString(),
+      stackText: details.stack?.toString() ?? '',
+    );
+  }
 
+  /// Sentry `beforeSend` guard for the same tile-pipeline noise.
+  ///
+  /// These `Cancelled` failures escape [FlutterError.onError] and reach Sentry
+  /// through `PlatformDispatcher.onError` / the isolate error listener, which
+  /// capture unfiltered — so they flooded prod Sentry as errors
+  /// (TREMBLE-FUNCTIONS-13/14/15) despite the [FlutterError] filter above.
+  /// Returning `null` from `beforeSend` for these events drops them. Release
+  /// builds minify the exception type (e.g. `fL`), so match on the value text
+  /// (`Cancelled`) plus a tile-pipeline stack frame, never on the type.
+  static bool shouldSuppressSentryEvent(SentryEvent event) {
+    final exceptions = event.exceptions;
+    if (exceptions == null || exceptions.isEmpty) return false;
+
+    for (final exception in exceptions) {
+      final exceptionText = '${exception.type ?? ''}: ${exception.value ?? ''}';
+      final stackText = exception.stackTrace?.frames
+              .map((f) =>
+                  '${f.fileName ?? ''} ${f.function ?? ''} ${f.package ?? ''} ${f.absPath ?? ''}')
+              .join('\n') ??
+          '';
+      if (_isBenignTileFailure(
+        exceptionText: exceptionText,
+        stackText: stackText,
+      )) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Shared predicate: a benign tile-pipeline cancellation or network failure.
+  /// Gated behind a tile-pipeline stack frame so real defects on any other
+  /// stack still report.
+  static bool _isBenignTileFailure({
+    required String exceptionText,
+    required String stackText,
+  }) {
     final isFromTilePipeline =
         _tilePipelineFrames.any((frame) => stackText.contains(frame));
     if (!isFromTilePipeline) return false;
 
-    // A tile is cancelled every time the camera moves.
-    final isCancellation = exceptionText == 'Cancelled' ||
+    // A tile is cancelled every time the camera moves. `.contains` (not `==`)
+    // so a minified/prefixed value like "fL: Cancelled" still matches.
+    final isCancellation = exceptionText.contains('Cancelled') ||
         exceptionText.contains('CancellationException');
 
     // Offline / bad network: DNS for the tile host fails, so tiles in flight
