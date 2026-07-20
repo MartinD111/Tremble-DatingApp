@@ -147,9 +147,22 @@ non-greyed Free-shape (photo + name + age + 3 shared hobbies).
 - Widget render layer applies three states in order: (a) no mutual
   wave → greyscale + minimal, (b) mutual wave + Free → colour +
   Free-shape, (c) mutual wave + Premium → colour + full card.
-- Card-open tap gate: `isPremium && hasMutualWave`.
+- Card-open (FULL card) tap gate: `isPremium && hasMutualWave`.
 - Greyscale is achieved via `ColorFilter.matrix(_greyscaleMatrix)`
   wrapping the photo widget when `!hasMutualWave`.
+
+**§1 Amendment — Session 53 (2026-07-20), founder-approved.** The Free +
+mutual tap now opens the **basic card** (its own read-only screen
+`BasicMatchProfileScreen`: photo + name/age + up to 3 shared-first
+hobbies) instead of jumping straight to the paywall. The card carries a
+subtle **"See full profile" CTA** (`t('see_full_profile')`) that opens
+`PremiumPaywallBottomSheet` — so the conversion point is preserved while
+honouring §1's original "tap leads to the Free shape" intent. The
+compound gate is unchanged: only `isPremium && hasMutualWave` opens the
+**full** `ProfileDetailScreen` (route `/profile`); Free routes to
+`/profile?...&basic=true`. This keeps the `premium_feature_open_profile_cards`
+paywall bullet truthful (the *full* card remains Premium-only, and the
+CTA explicitly advertises it) — see LEGAL-005.
 
 ### §2 — Hard filters PAUSED until post-launch
 

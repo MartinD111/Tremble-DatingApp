@@ -216,8 +216,11 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
     super.dispose();
   }
 
-  void _openProfile(MatchProfile match) {
-    context.push('/profile?showActions=false', extra: match);
+  void _openProfile(MatchProfile match, {bool basic = false}) {
+    // ADR-007 §1 (Session-53) — Free users open the reduced basic card
+    // (`basic=true`); Premium opens the full ProfileDetailScreen.
+    final query = basic ? 'showActions=false&basic=true' : 'showActions=false';
+    context.push('/profile?$query', extra: match);
   }
 
   void _removeMatch(String matchId, String name) {
@@ -869,11 +872,11 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                         );
                       }
 
-                      // Tap semantics (per ADR-007 §1):
+                      // Tap semantics (per ADR-007 §1, Session-53 update):
                       // - near-miss locked → paywall (existing behaviour)
                       // - non-mutual → no-op (card is not tappable)
-                      // - mutual + Free → paywall upsell (Free preview
-                      //   card with 3 hobbies is a follow-up)
+                      // - mutual + Free → basic card (photo + name/age + 3
+                      //   hobbies) with a "See full profile" CTA → paywall
                       // - mutual + Premium → open full profile card
                       // - edit mode → no tap (per-row X handles delete)
                       final VoidCallback? onTap = _isEditMode
@@ -883,8 +886,7 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen>
                               : isNonMutual
                                   ? null
                                   : isMutualFree
-                                      ? () => PremiumPaywallBottomSheet.show(
-                                          context)
+                                      ? () => _openProfile(profile, basic: true)
                                       : canOpenFullCard
                                           ? () => _openProfile(profile)
                                           : null;

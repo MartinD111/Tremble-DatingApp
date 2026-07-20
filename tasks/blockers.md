@@ -197,6 +197,8 @@ The KORAK 3.7 series (2026-07-13) already rewrote `premium_screen.dart` against 
 
 All other gates have real widget or behavioural pairs; those files stay untouched. This close-out captures the deferred-lane execution referenced in the "Follow-up (non-blocker, deferred)" note above.
 
+**Session-53 amendment (2026-07-20) — `premium_feature_open_profile_cards` gate boundary.** BUG-HISTORY-CARD-TAP changed the Free + mutual tap from a bare paywall to a read-only **basic card** (`BasicMatchProfileScreen`: photo + name/age + 3 hobbies) with a subtle "See full profile · Premium" CTA → paywall. The paywall bullet stays truthful because the **full** profile card (`ProfileDetailScreen`) remains Premium-only (`isPremium && hasMutualWave`, route `/profile`; Free routes to `/profile?...&basic=true`) and the CTA explicitly advertises it. See ADR-007 §1 Amendment (Session 53). No paywall-copy change required.
+
 ---
 
 ## ARCHIVED BLOCKERS (Resolved)

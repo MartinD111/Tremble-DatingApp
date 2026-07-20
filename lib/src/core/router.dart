@@ -18,6 +18,7 @@ import '../features/settings/presentation/settings_screen.dart';
 import '../features/settings/presentation/premium_screen.dart';
 import '../features/matches/data/match_repository.dart';
 import '../features/profile/presentation/profile_detail_screen.dart';
+import '../features/profile/presentation/basic_match_profile_screen.dart';
 import '../features/profile/presentation/profile_card_preview.dart';
 import '../features/profile/presentation/edit_profile_screen.dart';
 import '../features/safety/presentation/blocked_users_screen.dart';
@@ -428,8 +429,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           final match = state.extra as MatchProfile?;
           final showActions =
               state.uri.queryParameters['showActions'] != 'false';
+          // ADR-007 §1 (Session-53) — Free users tapping a mutual match open a
+          // reduced "basic card"; Premium opens the full ProfileDetailScreen.
+          final basic = state.uri.queryParameters['basic'] == 'true';
           if (match == null) {
             return const _ProfileNotFoundRedirect();
+          }
+          if (basic) {
+            return BasicMatchProfileScreen(match: match);
           }
           return ProfileDetailScreen(match: match, showActions: showActions);
         },
