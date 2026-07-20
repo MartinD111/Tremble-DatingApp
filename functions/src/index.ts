@@ -66,6 +66,7 @@ export { resendVerificationEmail } from "./modules/email/email.functions";
 export {
     blockUser,
     unblockUser,
+    getBlockedUsers,
     reportUser,
     onContactAnonymityCheck,
     onReportCreated,

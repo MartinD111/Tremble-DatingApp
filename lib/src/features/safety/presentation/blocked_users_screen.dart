@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/translations.dart';
 import '../../../core/theme.dart';
@@ -12,38 +11,28 @@ import '../../../shared/ui/warmth_empty_state.dart';
 import '../../auth/data/auth_repository.dart';
 import '../data/safety_repository.dart';
 
+/// Fallback avatar used when a blocked user has no photo. Kept as a null-safe
+/// default so the tile's [NetworkImage] never receives a null URL.
+const _kBlockedAvatarFallback = 'https://via.placeholder.com/150';
+
 final blockedUsersProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final user = ref.watch(authStateProvider);
   if (user == null) return [];
 
-  final doc =
-      await FirebaseFirestore.instance.collection('users').doc(user.id).get();
-  if (!doc.exists) return [];
+  // Cross-user reads are denied by Firestore rules (self-only), so the list is
+  // sourced from the `getBlockedUsers` callable (Admin SDK) instead of a direct
+  // client fan-out over `blockedUserIds`. See BUG-BLOCKED-USERS-LIST.
+  final repo = ref.watch(safetyRepositoryProvider);
+  final blocked = await repo.getBlockedUsers();
 
-  final data = doc.data()!;
-  final blockedIds = List<String>.from(data['blockedUserIds'] ?? []);
-  if (blockedIds.isEmpty) return [];
-
-  final futures = blockedIds.map(
-      (id) => FirebaseFirestore.instance.collection('users').doc(id).get());
-  final snapshots = await Future.wait(futures);
-
-  final List<Map<String, dynamic>> blockedUsers = [];
-  for (var snap in snapshots) {
-    if (snap.exists) {
-      final userData = snap.data()!;
-      final photoUrls = List<String>.from(userData['photoUrls'] ?? []);
-      blockedUsers.add({
-        'id': snap.id,
-        'name': userData['name'] ?? 'Unknown User',
-        'imageUrl': photoUrls.isNotEmpty
-            ? photoUrls.first
-            : 'https://via.placeholder.com/150',
-      });
-    }
-  }
-  return blockedUsers;
+  return blocked
+      .map((b) => {
+            'id': b['id'],
+            'name': b['name'] ?? 'Unknown User',
+            'imageUrl': (b['imageUrl'] as String?) ?? _kBlockedAvatarFallback,
+          })
+      .toList(growable: false);
 });
 
 class BlockedUsersScreen extends ConsumerStatefulWidget {
