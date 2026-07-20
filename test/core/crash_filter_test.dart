@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:tremble/src/core/crash_filter.dart';
 
 void main() {
@@ -134,6 +135,89 @@ void main() {
       );
 
       expect(CrashFilter.shouldSuppressFlutterError(details), isFalse);
+    });
+
+    // ── Sentry beforeSend path ─────────────────────────────────────────────
+    // The same tile cancellations escape FlutterError.onError and reach Sentry
+    // via PlatformDispatcher.onError / the isolate error listener, flooding prod
+    // Sentry as errors (TREMBLE-FUNCTIONS-13/14/15). beforeSend drops them.
+    group('shouldSuppressSentryEvent', () {
+      SentryEvent eventWith({
+        required String type,
+        required String value,
+        required String fileName,
+      }) =>
+          SentryEvent(
+            exceptions: [
+              SentryException(
+                type: type,
+                value: value,
+                stackTrace: SentryStackTrace(
+                  frames: [SentryStackFrame(fileName: fileName)],
+                ),
+              ),
+            ],
+          );
+
+      test('suppresses minified "Cancelled" from the tile pipeline (release)',
+          () {
+        // Release minifies the exception type (e.g. `fL`); match on value+frame,
+        // never on the type.
+        expect(
+          CrashFilter.shouldSuppressSentryEvent(
+            eventWith(
+                type: 'fL', value: 'Cancelled', fileName: 'tile_loader.dart'),
+          ),
+          isTrue,
+        );
+      });
+
+      test('suppresses an offline tile network failure', () {
+        expect(
+          CrashFilter.shouldSuppressSentryEvent(
+            eventWith(
+              type: 'X',
+              value: "ClientException with SocketException: Failed host lookup",
+              fileName: 'vector_tile_loading_cache.dart',
+            ),
+          ),
+          isTrue,
+        );
+      });
+
+      test('does NOT suppress a Cancelled outside the tile pipeline', () {
+        expect(
+          CrashFilter.shouldSuppressSentryEvent(
+            eventWith(
+              type: 'StateError',
+              value: 'Cancelled',
+              fileName: 'auth_repository.dart',
+            ),
+          ),
+          isFalse,
+        );
+      });
+
+      test('does NOT suppress a real error sharing the tile pipeline stack',
+          () {
+        expect(
+          CrashFilter.shouldSuppressSentryEvent(
+            eventWith(
+              type: 'RangeError',
+              value: 'Invalid value: Not in inclusive range',
+              fileName: 'tile_loader.dart',
+            ),
+          ),
+          isFalse,
+        );
+      });
+
+      test('returns false for an event with no exceptions', () {
+        expect(
+          CrashFilter.shouldSuppressSentryEvent(SentryEvent()),
+          isFalse,
+        );
+      });
     });
   });
 }

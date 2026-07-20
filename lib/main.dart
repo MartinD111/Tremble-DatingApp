@@ -186,6 +186,11 @@ Future<void> main() async {
       options.environment = flavor;
       options.tracesSampleRate = flavor == 'prod' ? 0.1 : 0.0;
       options.attachStacktrace = true;
+      // Drop benign vector-tile cancellation noise that escapes
+      // FlutterError.onError and otherwise floods prod Sentry as errors
+      // (TREMBLE-FUNCTIONS-13/14/15). See CrashFilter.
+      options.beforeSend = (event, hint) =>
+          CrashFilter.shouldSuppressSentryEvent(event) ? null : event;
     },
     appRunner: () => runApp(
       ProviderScope(
