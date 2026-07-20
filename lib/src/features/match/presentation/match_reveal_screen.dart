@@ -342,180 +342,191 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
         // Background
         Positioned.fill(child: _buildBackground(bgIn)),
 
-        // "We have a match" + partner name — anchored near top
-        Positioned(
-          top: 148,
-          left: 28,
-          right: 28,
-          child: Opacity(
-            opacity: titleOp,
-            child: Transform.translate(
-              offset: Offset(0, titleTy),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'We have a match',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w900,
-                      color: _cream,
-                      height: 1.0,
-                      letterSpacing: -1.4,
-                      shadows: const [
-                        Shadow(
-                          color: Colors.black38,
-                          blurRadius: 32,
-                          offset: Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (name.isNotEmpty || age != null) ...[
-                    const SizedBox(height: 14),
-                    Text(
-                      '$name${age != null ? ', $age' : ''}',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 32,
-                        fontStyle: FontStyle.italic,
-                        fontWeight: FontWeight.w600,
-                        color: _cream.withValues(alpha: 0.92),
-                        height: 1.1,
-                        letterSpacing: -0.48,
-                        shadows: const [
-                          Shadow(
-                            color: Colors.black38,
-                            blurRadius: 22,
-                            offset: Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  if (commonHobbies.isNotEmpty) ...[
-                    const SizedBox(height: 18),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        for (final h in commonHobbies) _HobbyChip(label: h),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-
-        // Center column: avatar + pep talk
+        // Single vertical flow — title → name → hobbies → avatar → pep talk.
+        // Kept in ONE column (not two independent Positioned layers) so the
+        // hobby band always sits fully ABOVE the partner photo instead of the
+        // centered avatar being painted over it (BUG-MATCH-PAGE-LAYOUT). The
+        // ConstrainedBox+scroll view keeps the group vertically centered when
+        // it fits and scrolls it on short screens instead of overflowing.
         Positioned.fill(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Avatar — Y-axis spin + rise from below
-              RepaintBoundary(
-                child: Opacity(
-                  opacity: avatarOp,
-                  child: Transform.translate(
-                    offset: Offset(0, avatarOffsetY),
-                    child: SizedBox(
-                      width: 188,
-                      height: 188,
-                      child: Stack(
-                        children: [
-                          // Back face (green disc, visible mid-spin)
-                          if (!isFront)
-                            Transform(
-                              transform: _rotateY(spinRad + math.pi),
-                              alignment: Alignment.center,
-                              child: Container(
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 28, vertical: 32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // "We have a match" + name + hobbies — fade/slide in
+                        // together as one top band.
+                        Opacity(
+                          opacity: titleOp,
+                          child: Transform.translate(
+                            offset: Offset(0, titleTy),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'We have a match',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.playfairDisplay(
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.w900,
+                                    color: _cream,
+                                    height: 1.0,
+                                    letterSpacing: -1.4,
+                                    shadows: const [
+                                      Shadow(
+                                        color: Colors.black38,
+                                        blurRadius: 32,
+                                        offset: Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (name.isNotEmpty || age != null) ...[
+                                  const SizedBox(height: 14),
+                                  Text(
+                                    '$name${age != null ? ', $age' : ''}',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.playfairDisplay(
+                                      fontSize: 32,
+                                      fontStyle: FontStyle.italic,
+                                      fontWeight: FontWeight.w600,
+                                      color: _cream.withValues(alpha: 0.92),
+                                      height: 1.1,
+                                      letterSpacing: -0.48,
+                                      shadows: const [
+                                        Shadow(
+                                          color: Colors.black38,
+                                          blurRadius: 22,
+                                          offset: Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                if (commonHobbies.isNotEmpty) ...[
+                                  const SizedBox(height: 18),
+                                  Wrap(
+                                    key: const Key('reveal-hobbies'),
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    alignment: WrapAlignment.center,
+                                    children: [
+                                      for (final h in commonHobbies)
+                                        _HobbyChip(label: h),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
+
+                        // Avatar — Y-axis spin + rise from below.
+                        RepaintBoundary(
+                          child: Opacity(
+                            opacity: avatarOp,
+                            child: Transform.translate(
+                              offset: Offset(0, avatarOffsetY),
+                              child: SizedBox(
+                                key: const Key('reveal-avatar'),
                                 width: 188,
                                 height: 188,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [_greenDark, _greenLight],
-                                  ),
+                                child: Stack(
+                                  children: [
+                                    // Back face (green disc, visible mid-spin)
+                                    if (!isFront)
+                                      Transform(
+                                        transform: _rotateY(spinRad + math.pi),
+                                        alignment: Alignment.center,
+                                        child: Container(
+                                          width: 188,
+                                          height: 188,
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [_greenDark, _greenLight],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    // Front face (photo or initial)
+                                    if (isFront)
+                                      Transform(
+                                        transform: _rotateY(spinRad),
+                                        alignment: Alignment.center,
+                                        child: _buildFrontFace(photoUrl, name),
+                                      ),
+                                  ],
                                 ),
                               ),
                             ),
-                          // Front face (photo or initial)
-                          if (isFront)
-                            Transform(
-                              transform: _rotateY(spinRad),
-                              alignment: Alignment.center,
-                              child: _buildFrontFace(photoUrl, name),
+                          ),
+                        ),
+
+                        // Pep talk text
+                        const SizedBox(height: 28),
+                        Opacity(
+                          opacity: msgOp,
+                          child: Transform.translate(
+                            offset: Offset(0, msgTy),
+                            child: Text(
+                              _pep.message,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.instrumentSans(
+                                fontSize: msgSize,
+                                fontWeight: FontWeight.w600,
+                                color: _greenLight,
+                                height: 1.3,
+                                letterSpacing: -0.005 * msgSize,
+                              ),
                             ),
+                          ),
+                        ),
+                        if (_pep.note != null) ...[
+                          const SizedBox(height: 14),
+                          Opacity(
+                            opacity: noteOp,
+                            child: Transform.translate(
+                              offset: Offset(0, noteTy),
+                              child: Text(
+                                _pep.note!,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w400,
+                                  fontStyle: FontStyle.italic,
+                                  color: _cream.withValues(alpha: 0.42),
+                                  height: 1.5,
+                                  letterSpacing: 0.42,
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
-                      ),
+                        const SizedBox(height: 28),
+                        Opacity(
+                          opacity: hintOp,
+                          child: _StartRadarButton(
+                            pulse: hintPulse,
+                            onPressed: () => context.pop(),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-
-              // Pep talk text
-              const SizedBox(height: 28),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Opacity(
-                      opacity: msgOp,
-                      child: Transform.translate(
-                        offset: Offset(0, msgTy),
-                        child: Text(
-                          _pep.message,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.instrumentSans(
-                            fontSize: msgSize,
-                            fontWeight: FontWeight.w600,
-                            color: _greenLight,
-                            height: 1.3,
-                            letterSpacing: -0.005 * msgSize,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (_pep.note != null) ...[
-                      const SizedBox(height: 14),
-                      Opacity(
-                        opacity: noteOp,
-                        child: Transform.translate(
-                          offset: Offset(0, noteTy),
-                          child: Text(
-                            _pep.note!,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.jetBrainsMono(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w400,
-                              fontStyle: FontStyle.italic,
-                              color: _cream.withValues(alpha: 0.42),
-                              height: 1.5,
-                              letterSpacing: 0.42,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 28),
-                    Opacity(
-                      opacity: hintOp,
-                      child: _StartRadarButton(
-                        pulse: hintPulse,
-                        onPressed: () => context.pop(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ],
