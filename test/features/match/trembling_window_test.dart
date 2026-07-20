@@ -13,6 +13,9 @@ import 'package:tremble/src/features/dashboard/data/run_club_repository.dart';
 import 'package:tremble/src/features/match/application/match_service.dart';
 import 'package:tremble/src/features/match/domain/match.dart' as wave_match;
 import 'package:tremble/src/features/match/presentation/widgets/pulse_intercept_bar.dart';
+import 'package:tremble/src/features/match/presentation/widgets/trembling_partner_card.dart';
+import 'package:tremble/src/features/matches/data/match_repository.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tremble/src/features/auth/data/auth_repository.dart';
 import 'package:tremble/src/features/profile/data/profile_repository.dart';
 import 'package:tremble/src/features/profile/domain/public_profile.dart';
@@ -457,6 +460,102 @@ void main() {
           find.text('30:00').evaluate().isNotEmpty ||
               find.text('29:59').evaluate().isNotEmpty,
           isTrue);
+    });
+  });
+
+  // BUG-TREMBLE-PROFILE-TAP (Session 55): tapping the trembling-window partner
+  // card must open the SAME gated card as history (basic for Free, full for
+  // Premium) and must NEVER route Free users through the paywall — the empty
+  // RevenueCat offerings there rendered a debug "offerings empty" overlay ON
+  // TOP of the trembling window.
+  group('Trembling partner tap gating', () {
+    const partnerId = 'partner_456';
+    final match = wave_match.Match(
+      id: 'match_123',
+      userIds: const ['me', partnerId],
+      createdAt: DateTime(2026, 7, 20),
+      seenBy: const [],
+      status: 'pending',
+      gestures: const {'me': true, partnerId: true},
+    );
+    final partner = MatchProfile(
+      id: partnerId,
+      name: 'Sarah',
+      age: 24,
+      imageUrl: '',
+      hobbies: const [],
+      bio: '',
+      photoUrls: const [],
+    );
+
+    Future<List<String>> _tapPartnerCard(
+      WidgetTester tester, {
+      required bool isPremium,
+    }) async {
+      final pushed = <String>[];
+      final user = AuthUser(
+        id: 'me',
+        name: 'Me',
+        isPremium: isPremium,
+        isOnboarded: true,
+        isEmailVerified: true,
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          ..._defaultOverrides,
+          currentSearchProvider.overrideWith((ref) => match),
+          authStateProvider.overrideWith((ref) => MockAuthNotifier(user)),
+          effectiveIsPremiumProvider.overrideWith((ref) => isPremium),
+          partnerMatchProfileProvider(partnerId)
+              .overrideWith((ref) => AsyncData(partner)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+          GoRoute(
+            path: '/profile',
+            builder: (_, state) {
+              pushed.add(state.uri.toString());
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byType(TremblingPartnerCard), findsOneWidget);
+      await tester.tap(find.byType(TremblingPartnerCard));
+      await tester.pump();
+      await tester.pump();
+      return pushed;
+    }
+
+    testWidgets('Free user opens the basic card, never the paywall',
+        (tester) async {
+      final pushed = await _tapPartnerCard(tester, isPremium: false);
+
+      // Free path routes to the reduced basic card (mirrors history), so the
+      // RevenueCat paywall/offerings are never touched from this tap.
+      expect(pushed, ['/profile?showActions=false&basic=true']);
+    });
+
+    testWidgets('Premium user opens the full profile card', (tester) async {
+      final pushed = await _tapPartnerCard(tester, isPremium: true);
+
+      expect(pushed, ['/profile']);
     });
   });
 }
