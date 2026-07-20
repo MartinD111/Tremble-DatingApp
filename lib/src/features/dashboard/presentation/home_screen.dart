@@ -808,12 +808,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  /// Opens the trembling-window partner's full profile card, gated by tier:
-  /// premium users see the profile, free users see the paywall (mirrors the
-  /// notification-pill avatar tap at the bottom of this screen).
+  /// Opens the trembling-window partner card, gated by tier and mirroring the
+  /// history tap (ADR-007 §1): Free users open the reduced [BasicMatchProfileScreen]
+  /// (`basic=true`), Premium users open the full [ProfileDetailScreen].
+  ///
+  /// The Free path deliberately routes to the basic card and NOT the paywall:
+  /// `PremiumPaywallBottomSheet` pulls RevenueCat offerings, which are currently
+  /// empty (CONFIG-REVENUECAT-OFFERINGS), rendering a debug "offerings empty"
+  /// overlay on top of the trembling window (BUG-TREMBLE-PROFILE-TAP). The basic
+  /// card never touches RevenueCat, so that failure can't bleed in here.
   void _openTremblingPartner(BuildContext context, MatchProfile partner) {
     if (!ref.read(effectiveIsPremiumProvider)) {
-      PremiumPaywallBottomSheet.show(context);
+      context.push('/profile?showActions=false&basic=true', extra: partner);
       return;
     }
     context.push('/profile', extra: partner);
@@ -890,7 +896,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   else if (isSearchActive) ...[
                     // TOP — always-visible partner identity card (circle photo +
                     // name/age). Tap opens the full profile (premium) or the
-                    // paywall (free). Sourced from the getMatches path
+                    // basic card (free) — never the paywall. Sourced from the
+                    // getMatches path
                     // (MatchProfile), never getPublicProfile, which rendered the
                     // reveal/window as "?" (BLOCKER-POSTMATCH-PHOTO).
                     Positioned(
