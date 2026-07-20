@@ -34,6 +34,9 @@ class _FakeSafetyRepository implements SafetyRepository {
   Future<void> unblockUser(String targetUid) async {}
 
   @override
+  Future<List<Map<String, dynamic>>> getBlockedUsers() async => [];
+
+  @override
   Future<void> reportUser(
       String reportedUid, List<String> reasons, String explanation) async {
     reportCalls++;

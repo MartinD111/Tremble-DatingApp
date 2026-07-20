@@ -36,6 +36,29 @@
 
 ---
 
+## SESSION 53 — NEW DEVICE FINDINGS (build 30, 2026-07-20)
+
+### BUG-BLOCKED-USERS-LIST — Blocked Users screen fails to load whenever ≥1 user is blocked
+**Date:** 2026-07-20
+**Status:** OPEN — root cause CONFIRMED by static analysis (not a guess)
+**Symptom (device, build 30):** Opening Settings → Blocked Users shows the red error "Blokiranih uporabnikov ni bilo mogoče naložiti. Preveri povezavo in poskusi znova." An empty blocklist renders the "Nobody blocked" empty state fine; after blocking Martin (toast "Martin has been blocked" confirms the write succeeded), the list errors.
+**Root cause:** `blockedUsersProvider` (`lib/src/features/safety/presentation/blocked_users_screen.dart:28-30`) does a **direct** `FirebaseFirestore.instance.collection('users').doc(id).get()` for each blocked UID. Firestore rules `firestore.rules:141` — `match /users/{userId} { allow read: if isSelf(userId); }` — permit reading **only your own** doc. Every blocked user's doc is a non-self read → `PERMISSION_DENIED` → `Future.wait` throws → the provider's `error:` branch. The empty case works only because it returns `[]` early (line 26) before any cross-user read. **This is the same bug class as the reveal "?" (BLOCKER-POSTMATCH-PHOTO): a client reading arbitrary `/users/{id}` docs directly instead of via a Cloud Function.** The block/unblock writes themselves are fine — they route through the `blockUser`/`unblockUser` callables (`safety_repository.dart:16-22`).
+**Fix (proposed, MEDIUM):** add a `getBlockedUsers` callable (Admin SDK, returns `{id, name, imageUrl}` for the caller's `blockedUserIds`) and re-source the provider from it — mirrors the batch-3 `getMatches` re-source pattern. Do NOT loosen `firestore.rules:141`. TDD lane, own branch/PR.
+
+### BUG-HISTORY-CARD-TAP — history tile tap must open the gated profile card
+**Date:** 2026-07-20
+**Status:** OPEN (founder spec, Session 53). Overlaps FEATURE-POSTMATCH-TREMBLING-REDESIGN's card gate + the LEGAL-005 `open_profile_cards` gate.
+**Spec:** In Your Matches / history, a mutually-matched tile currently shows name + age + photo + hobbies (read-only). Tapping it must open the full profile card the **same way Settings opens the own-profile card** — gated by the viewer's package: **Free** sees name + age + photo + 3 hobbies; **Premium** sees the entire profile card (as if viewing their own). This is the `TremblingPartnerCard` tap→`/profile`(premium)/paywall(free) gate applied to history tiles too. Reuse `MatchProfile` + `effectiveIsPremiumProvider` — no new direct reads. TDD lane; pairs naturally with the build-31 notif-tap card (both open the same gated card).
+
+### CONFIG-REVENUECAT-OFFERINGS — RevenueCat "offerings empty" debug banner
+**Date:** 2026-07-20
+**Status:** OPEN — **configuration, NOT a code bug** (founder/dashboard lane)
+**Symptom (device, build 30):** A red RevenueCat debug overlay: "You have configured the SDK with an App Store API key, but there are no App Store products registered in the RevenueCat dashboard for your offerings … https://rev.cat/why-are-offerings-empty". Appears app-wide (seen behind the Matches screen), unrelated to the block flow it was captured next to.
+**Cause:** RevenueCat SDK is initialised with the Apple API key, but the Offerings in the RevenueCat dashboard have no App Store Connect products attached (products/offerings not yet configured for `tremble.dating.app`). Client code is not at fault.
+**Action (founder):** In App Store Connect create the IAP/subscription products (Premium, Weekend Getaway) and attach them to the RevenueCat offering; verify the offering returns products. Until then the paywall has nothing to sell. Ties into BLOCKER-LEGAL-004 (weekend package) + LEGAL-005 (paywall bullets). Not an assistant code lane; no rotation/secret involved.
+
+---
+
 ## CRITICAL — Store Blockers (Pred Submissionom)
 
 ### BLOCKER-STORE-001 — iOS Privacy Manifest & Encryption Declaration

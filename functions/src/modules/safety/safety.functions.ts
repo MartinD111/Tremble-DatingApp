@@ -70,6 +70,49 @@ export const blockUser = onCall(
 );
 
 /**
+ * List the caller's blocked users with display info.
+ *
+ * The Blocked Users screen cannot read other users' `/users/{id}` docs
+ * directly — Firestore rules permit only self reads (`allow read: if
+ * isSelf(userId)`), so a client fan-out over `blockedUserIds` fails with
+ * PERMISSION_DENIED whenever the list is non-empty (BUG-BLOCKED-USERS-LIST).
+ * This callable reads them through the Admin SDK and returns only the minimal
+ * fields the screen renders: id, name, and the first photo URL.
+ */
+export const getBlockedUsers = onCall(
+    { maxInstances: 50, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
+    async (request) => {
+        const uid = requireAuth(request);
+        await checkRateLimit(uid, "getBlockedUsers", { maxRequests: 20, windowMs: 60000 });
+
+        const userDoc = await db.collection("users").doc(uid).get();
+        const blockedIds: string[] = userDoc.exists
+            ? (userDoc.data()?.blockedUserIds ?? [])
+            : [];
+        if (blockedIds.length === 0) {
+            return { blockedUsers: [] };
+        }
+
+        const refs = blockedIds.map((id) => db.collection("users").doc(id));
+        const snapshots = await db.getAll(...refs);
+
+        const blockedUsers = snapshots
+            .filter((snap) => snap.exists)
+            .map((snap) => {
+                const data = snap.data() ?? {};
+                const photoUrls: string[] = Array.isArray(data.photoUrls) ? data.photoUrls : [];
+                return {
+                    id: snap.id,
+                    name: typeof data.name === "string" ? data.name : "Unknown User",
+                    imageUrl: photoUrls.length > 0 ? photoUrls[0] : null,
+                };
+            });
+
+        return { blockedUsers };
+    }
+);
+
+/**
  * Unblock a user.
  * - Removes targetUid from caller's `blockedUserIds` array.
  */

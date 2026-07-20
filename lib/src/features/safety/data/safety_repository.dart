@@ -22,6 +22,21 @@ class SafetyRepository {
     await _api.call('unblockUser', data: {'targetUid': targetUid});
   }
 
+  /// Lists the caller's blocked users with display info (id, name, imageUrl).
+  ///
+  /// Goes through the `getBlockedUsers` callable because Firestore rules
+  /// forbid a client from reading other users' `/users/{id}` docs directly
+  /// (self-only reads) — a client fan-out over `blockedUserIds` fails with
+  /// PERMISSION_DENIED whenever the list is non-empty. `imageUrl` may be null
+  /// when the blocked user has no photos.
+  Future<List<Map<String, dynamic>>> getBlockedUsers() async {
+    final result = await _api.call('getBlockedUsers');
+    final list = result['blockedUsers'] as List<dynamic>? ?? [];
+    return list
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList(growable: false);
+  }
+
   /// Reports a user for moderation and issues a personal block.
   Future<void> reportUser(
       String reportedUid, List<String> reasons, String explanation) async {
