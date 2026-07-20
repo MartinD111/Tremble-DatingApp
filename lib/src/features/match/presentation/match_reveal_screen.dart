@@ -13,6 +13,7 @@ import '../domain/match.dart';
 import '../../../features/safety/screen_protection_service.dart';
 import '../application/match_service.dart';
 import '../../../shared/ui/tremble_loading_spinner.dart';
+import '../../../shared/ui/wave_pill_service.dart';
 import '../../../core/theme.dart';
 
 // ── Pep talk data ────────────────────────────────────────────────────────────
@@ -184,6 +185,9 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
   @override
   void initState() {
     super.initState();
+    // Entering the match page — clear any lingering "{name} is nearby" pill so
+    // it doesn't float over the reveal / trembling window (BUG-IS-NEARBY-PERSISTS).
+    WavePillService.dismiss();
     _pep = _pickPep();
     _ctrl = AnimationController(
       vsync: this,

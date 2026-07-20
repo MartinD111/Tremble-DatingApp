@@ -54,6 +54,11 @@ class WavePillService {
   static OverlayEntry? _entry;
   static OverlayEntry? _confettiEntry;
 
+  // The partner the currently-visible pill is about. Lets callers dismiss the
+  // "{name} is nearby" pill for a specific person (e.g. once a wave is sent to
+  // them) without tearing down a pill that belongs to someone else.
+  static String? _currentTargetUid;
+
   // ── Auto-dismiss ──────────────────────────────────────────────────────────
   // An unanswered pill covers the UI, and the proximity claim behind it goes
   // stale, so it self-closes after a quiet period. Any user reaction cancels
@@ -105,6 +110,8 @@ class WavePillService {
     // pill's timer, so it cannot dismiss the replacement.
     _forceDismiss();
 
+    _currentTargetUid = data.targetUid;
+
     final showHint = shouldShowHint;
     if (showHint) _recordPillShown();
 
@@ -153,8 +160,19 @@ class WavePillService {
     _autoDismissTimer = Timer(autoDismissAfter, () => _removeEntry(entry));
   }
 
-  /// Programmatically dismiss the active pill (e.g. when the user navigates away).
+  /// Programmatically dismiss the active pill (e.g. when the user navigates away
+  /// or enters the match / trembling-window page).
   static void dismiss() => _forceDismiss();
+
+  /// Dismiss the active pill only if it is the "{name} is nearby" pill for
+  /// [targetUid] — e.g. once a wave has been sent to that person, the nearby
+  /// prompt for them is stale. A no-op if no pill is showing, or the visible
+  /// pill is about someone else.
+  static void dismissForTarget(String targetUid) {
+    if (_entry != null && _currentTargetUid == targetUid) {
+      _forceDismiss();
+    }
+  }
 
   /// Show the match reveal overlay standalone — call this when a MUTUAL_WAVE
   /// FCM message arrives and there is no active pill to trigger onMatch.
@@ -183,6 +201,7 @@ class WavePillService {
     _cancelAutoDismiss();
     if (_entry != null && _entry!.mounted) _entry!.remove();
     _entry = null;
+    _currentTargetUid = null;
     _removeConfetti();
   }
 
@@ -197,6 +216,7 @@ class WavePillService {
     if (entry.mounted) entry.remove();
     if (_entry == entry) {
       _entry = null;
+      _currentTargetUid = null;
       _cancelAutoDismiss();
     }
   }
