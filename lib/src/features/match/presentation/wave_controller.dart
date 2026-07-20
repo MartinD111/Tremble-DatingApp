@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/api_client.dart';
+import '../../../shared/ui/wave_pill_service.dart';
 import '../data/wave_repository.dart';
 
 part 'wave_controller.g.dart';
@@ -59,6 +60,9 @@ class WaveController extends _$WaveController {
       final operation = writeWave ??
           () => ref.read(waveRepositoryProvider).sendWave(targetUid);
       await operation().timeout(timeout);
+      // The wave landed — the "{name} is nearby" prompt for this person is now
+      // stale, so clear it if it is still floating (BUG-IS-NEARBY-PERSISTS).
+      WavePillService.dismissForTarget(targetUid);
     } catch (error) {
       state = AsyncData(previousValue.withInlineError(
         targetUid,
