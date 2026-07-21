@@ -1,28 +1,38 @@
 # Active Lane
-Plan ID: 20260721-radar-sonar-turn-to-find
-Risk Level: HIGH (new sensor dependency + prod Cloud Function deploy + core trembling flow)
-Founder Approval Required: YES — granted 2026-07-21 ("phase b - approval granted"); deploy authorized same session ("Deploy now").
-Branch: feature/radar-sonar-phase-b
+Plan ID: 20260721-build-33-release
+Risk Level: HIGH (prod build → TestFlight + Play; outward-facing)
+Founder Approval Required: YES — granted 2026-07-21 ("upload to testflight, prepare playconsole update").
+Branch: chore/build-33
 
 ## Objective (this lane)
 
-FEATURE-RADAR-SONAR **Phase B** — turn-to-find direction. Built on the build-32
-baseline (PR #81). Five tasks, all TDD:
-- **B0** dev-only radar diagnostic overlay (RSSI/radius/state/bearing/bucket/heading),
-  `kDebugMode`-guarded — makes the prod-only two-phone test sessions debuggable.
-- **B1** `flutter_compass_v2 ^1.0.3` + **ADR-009** (compass dependency; the
-  plan/handoffs said "ADR-008" but that slug was taken — recorded as ADR-009).
-- **B2** server `computeBearing`/`distanceBucket` (pure) + best-effort writer
-  stamping `bearingFor{uid}` + `distanceBucket` on an active pending match during
-  the proximity scan. Reuses `decodeGeohash`; partner geohash never reaches the
-  client. **Prod Cloud Function deploy to `am---dating-app`/europe-west1.**
-- **B3** `compassHeadingProvider` + `dotAngle`/`smoothHeading` math + `Match`
-  `bearingFor`/`distanceBucket` fields.
-- **B4** `SonarPingController` watches compass + bearing → `dotAngle(bearing−heading)`,
-  orbit fallback; `bucketToRadius` approach-stage dot before BLE lock.
+Cut 1.0.0 (33) to TestFlight (iOS) and preserve the AAB for the founder's Play
+upload (Android). Payload = FEATURE-RADAR-SONAR **Phase B** (PR #82, merged
+`43ec787`): turn-to-find direction — server geohash bearing (deployed to prod
+this session) + `flutter_compass_v2` heading drive the radar dot; B0 dev-only
+diagnostic overlay for the device pass. Bump pubspec ONLY (Rule #100/Android
+source-of-truth); `build_prod.sh all` (obfuscated, `.env.prod.json` Rule #84,
+Sentry symbols dist 33); manual `xcrun altool` to TestFlight (Rule #95); founder
+uploads AAB. **The combined two-phone device pass of the radar sonar (Phase A+B)
+is owed on this build** — read the B0 overlay on-device if the dot misbehaves.
 
-Verification: `flutter analyze` clean, Flutter 438/438, jest 182/182, tsc clean,
-functions eslint clean. Combined two-phone device pass (build 33) is owed.
+---
+
+# Prior Lane (merged — PR #82)
+Plan ID: 20260721-radar-sonar-turn-to-find
+Risk Level: HIGH (new sensor dependency + prod Cloud Function deploy + core trembling flow)
+Founder Approval Required: YES — granted 2026-07-21 ("phase b - approval granted"); deploy authorized ("Deploy now").
+Branch: feature/radar-sonar-phase-b (merged 2026-07-21 `43ec787`, branch deleted)
+
+## Objective (this lane)
+
+FEATURE-RADAR-SONAR **Phase B** — turn-to-find direction. B0 dev-only diagnostic
+overlay (`kDebugMode`); B1 `flutter_compass_v2 ^1.0.3` + **ADR-009**; B2 server
+`computeBearing`/`distanceBucket` (`bearing.ts`) + `updateActiveMatchBearing`
+writer, **deployed to `am---dating-app`/europe-west1**; B3 `compassHeadingProvider`
++ `dotAngle`/`smoothHeading` + `Match.bearingFor`; B4 controller integration
+(`dotAngle(bearing−heading)`, orbit fallback, `bucketToRadius`). analyze clean,
+Flutter 438/438, jest 182/182, tsc clean.
 
 ---
 
