@@ -73,6 +73,7 @@ class SonarPingController extends _$SonarPingController {
       state = SonarPing(
         radius: _lastRadius,
         angle: orbitAngle(_orbit.elapsed),
+        rssi: _smoothedRssi,
         signalState: SonarSignalState.fresh,
       );
 
@@ -108,6 +109,7 @@ class SonarPingController extends _$SonarPingController {
         state = SonarPing(
           radius: _lastRadius,
           angle: angle,
+          rssi: _smoothedRssi,
           signalState: signalState,
         );
       case SonarSignalState.searching:
@@ -115,6 +117,7 @@ class SonarPingController extends _$SonarPingController {
         state = SonarPing(
           radius: null,
           angle: angle,
+          rssi: _smoothedRssi,
           signalState: SonarSignalState.searching,
         );
     }

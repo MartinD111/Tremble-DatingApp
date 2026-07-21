@@ -7,26 +7,32 @@ enum SonarSignalState { fresh, graceHold, searching }
 ///
 /// [radius]: `0.0` = center (close) … `1.0` = edge (far); `null` = no dot.
 /// [angle]: radians for the dot's bearing on the radar; `null` = unknown.
+/// [rssi]: raw smoothed signal strength (dBm) — diagnostic only, surfaced by
+/// the dev radar overlay (`kDebugMode`); never rendered in production UI.
 @immutable
 class SonarPing {
   const SonarPing({
     this.radius,
     this.angle,
+    this.rssi,
     this.signalState = SonarSignalState.searching,
   });
 
   final double? radius;
   final double? angle;
+  final double? rssi;
   final SonarSignalState signalState;
 
   SonarPing copyWith({
     double? radius,
     double? angle,
+    double? rssi,
     SonarSignalState? signalState,
   }) =>
       SonarPing(
         radius: radius ?? this.radius,
         angle: angle ?? this.angle,
+        rssi: rssi ?? this.rssi,
         signalState: signalState ?? this.signalState,
       );
 
