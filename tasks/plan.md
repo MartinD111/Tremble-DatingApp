@@ -1,15 +1,19 @@
 # Active Lane
-Plan ID: 20260718-context-session-49
-Risk Level: LOW (docs only — session handoff record)
-Founder Approval Required: NO.
-Branch: chore/context-session-49
+Plan ID: 20260721-radar-sonar-turn-to-find
+Risk Level: MEDIUM (Phase A — client-only, no new dependency, no server/PII change)
+Founder Approval Required: NO (Phase A). Phase B (compass dep + server bearing) = YES via ADR-008.
+Branch: feature/radar-sonar
 
 ## Objective (this lane)
 
-Record Session 49 in tasks/context.md: the wave-pill root cause (overlay source),
-PRs #62/#63/#64/#65/#66, build 26 → TestFlight, and the open on-device
-verification. Next real lanes queued in the Session 49 entry (on-device verify =
-founder; then STORE-003 longest pole / wave-pill TTL / LEGAL-001).
+FEATURE-RADAR-SONAR Phase A: give the trembling-window partner dot a production
+data source. `SonarPingController` maps real BLE RSSI → dot radius (near=center)
++ pulse rate; a production writer in home_screen.dart:445 feeds the ping
+providers during a live mutual wave; slow orbit angle (no bearing yet); signal
+loss holds-then-fades to a "Searching…" caption. Pure math is TDD'd; felt
+behavior is device-only (founder two-phone pass). Phase B (turn-to-find via
+flutter_compass_v2 + server geohash bearing) is a separate chat/branch, gated on
+the Phase A device pass + ADR-008. Full design + plan in docs/superpowers/.
 
 ---
 

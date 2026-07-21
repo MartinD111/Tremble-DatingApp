@@ -1,3 +1,19 @@
+## Session State — 2026-07-21 (Session 56) — FEATURE-RADAR-SONAR **PHASE A SHIPPED** (dot resurrected); Phase B = next chat
+
+- **One chat per phase (founder's workflow).** This session = brainstorm → design → plan → **Phase A build (TDD, 6 commits)**. Phase B (turn-to-find) is a fresh chat off main after this PR merges.
+- **Branch `feature/radar-sonar` off main (build-31 baseline).** PR opened for merge. Also cleaned up the stale squash-diverged `docs/session-55` branch (deleted local+remote; its only unique content — the radar scouting block — was cherry-picked here).
+- **Design decisions (founder-approved, full detail in `docs/superpowers/specs/2026-07-21-radar-sonar-turn-to-find-design.md`):**
+  - Founder wants the FULL turn-to-find sonar (rotate phone → dot turns), privacy > precision. But split into phases.
+  - **Hybrid direction model:** geohash-7 bearing (already published by `geo_service.dart`, ~75m fuzz = privacy by existing design) for the 250m approach + BLE warmth for the final ~30m. The scary RSSI-peak direction inference is OFF the critical path — direction is deterministic geohash math (Phase B).
+  - Root cause CONFIRMED: dot painter fully wired; `pingDistance/Angle` had ONE writer (dev-sim, `home_screen.dart:445`). **Missing production data source, not a render bug.**
+  - Big finding: pulse-rate-by-distance + sweep-stop were ALREADY built (`radar_animation.dart`); an orphaned `ProximityPingController` already did RSSI smoothing (zero consumers). Phase A largely resurrected dead code.
+- **Phase A shipped (all TDD, full suite green ~413 tests, analyze clean):** `SonarPing` model + `rssiToRadius` + signal-state machine + `orbitAngle` (pure, unit-tested) → `SonarPingController` (evolved the orphan) emits `SonarPing` from real RSSI → production writer arm feeds ping providers during a live mutual wave (+ keep-alive `ref.watch` in `_RadarSection`) → "Searching…" caption on signal loss (EN/SL/HR). No new dependency, no server, no PII change → low-risk, Founder-Approval gate should skip.
+- **DEVICE PASS OWED (founder, two phones, real mutual wave):** dot appears; closer→center+faster ping, farther→edge+slower; dot orbits (no bearing yet — expected); walk away → fades to "Searching…". This gates Phase B.
+- **Phase B (next chat):** ADR-008 for `flutter_compass_v2` (YOUR approval) + `compassHeadingProvider` + server geohash `bearing`/`distanceBucket` (reuse `decodeGeohash` in `proximity.functions.ts`) + `dotAngle = wrap(bearing − heading)`. Full task breakdown already written in `docs/superpowers/plans/2026-07-21-radar-sonar-turn-to-find.md` (Phase B section). **Branch FRESH off main after this PR merges** (lesson #94 — don't stack on a squashed branch).
+- **Still deferred (unchanged):** FEATURE-POSTMATCH-NOTIFTAP, Pulse Intercept full flow (cluster 3), cluster-2 iOS pill 2× dedup, `getPublicProfile` recap-log read, CONFIG-REVENUECAT-OFFERINGS.
+
+---
+
 ## Session State — 2026-07-21 (Session 55) — BUILD-31 BUG BATCH: 4 LANES SHIPPED (PRs #75–78), RADAR RECLASSIFIED
 
 - **PR #74 (build 31) is MERGED to main** (squash `226fb66`). main is now the build-31 baseline. All Session-55 lanes branched off it.

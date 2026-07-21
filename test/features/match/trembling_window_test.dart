@@ -8,7 +8,9 @@ import 'package:tremble/src/features/dashboard/presentation/home_screen.dart';
 import 'package:tremble/src/features/dashboard/presentation/widgets/radar_search_overlay.dart';
 import 'package:tremble/src/features/dashboard/application/radar_search_session.dart';
 import 'package:tremble/src/features/dashboard/application/warmth_controller.dart';
+import 'package:tremble/src/features/dashboard/application/proximity_ping_controller.dart';
 import 'package:tremble/src/features/dashboard/domain/warmth_direction.dart';
+import 'package:tremble/src/features/dashboard/domain/sonar_ping.dart';
 import 'package:tremble/src/features/dashboard/data/run_club_repository.dart';
 import 'package:tremble/src/features/match/application/match_service.dart';
 import 'package:tremble/src/features/match/domain/match.dart' as wave_match;
@@ -67,6 +69,15 @@ class MockProfileRepository implements ProfileRepository {
 class FakeWarmthController extends WarmthController {
   @override
   WarmthDirection build() => WarmthDirection.neutral;
+}
+
+/// Stubs the sonar so pumping the radar never starts its real BLE
+/// subscription or freshness timers (which widget tests flag as pending).
+/// Returns a benign `fresh` state so the "Searching…" caption (and its
+/// animation ticker) is not rendered in these overlay tests.
+class FakeSonarPingController extends SonarPingController {
+  @override
+  SonarPing build() => const SonarPing(signalState: SonarSignalState.fresh);
 }
 
 class MyMockPlatform extends FlutterBackgroundServicePlatform {
@@ -133,6 +144,7 @@ List<Override> get _defaultOverrides => [
       activeMatchesStreamProvider.overrideWith((ref) => const Stream.empty()),
       activeRunCrossesProvider.overrideWith((ref, id) => const Stream.empty()),
       warmthControllerProvider.overrideWith(() => FakeWarmthController()),
+      sonarPingControllerProvider.overrideWith(() => FakeSonarPingController()),
       firebaseAuthProvider.overrideWithValue(MockFirebaseAuth()),
       firestoreProvider.overrideWithValue(MockFirestore()),
       waveRepositoryProvider.overrideWithValue(FakeWaveRepository()),
