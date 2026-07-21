@@ -1,3 +1,18 @@
+## Session State — 2026-07-21 (Session 57) — BUILD 32 CUT → iOS ON TESTFLIGHT, AAB READY FOR PLAY
+
+- **PR #80 (radar sonar Phase A) merged to main** at 12:25 UTC; `feature/radar-sonar` deleted (local + remote + stale tracking ref pruned). main is the build-32 baseline.
+- **Founder skipped the Phase A two-phone device pass this session** ("ill test later — suboptimal but currently i have no choice"). **STILL OWED** before Phase B: dot appears → closer=center+faster ping, farther=edge+slower → orbits → walk away → "Searching…". Any miss there is a Phase A fix first.
+- **BUILD 32 (`1.0.0+32`) cut and shipped:**
+  - Payload = radar sonar Phase A (#80) + build-31 bug batch: tremble free tap→basic card (#75), reveal hobbies above photo (#76), Sentry tile-cancel noise filter (#77), is-nearby pill dismiss (#78).
+  - `scripts/release/build_prod.sh all` — obfuscated, `.env.prod.json` validated (Rule #84), split-debug-info. iOS IPA 66 MB (build 32, 71 dSYMs). Android AAB 64 MB (versionCode 32 verified via Gradle-resolved value; bundletool absent). Sentry symbols both platforms, Dart symbol maps 2/2, release `tremble.dating.app@1.0.0+32` (dist 32) finalized.
+  - **iOS uploaded to TestFlight** via `xcrun altool` (key `V24BM2VRC2`) — **Delivery UUID `2580a533-e1ee-4f00-9ee6-314f85f14fae`**, 68.9 MB, no errors (lesson #95 — altool is manual after build_prod.sh; it does NOT auto-upload).
+  - **Android AAB preserved at `release-symbols/b32/app-prod-release.aab` — FOUNDER: upload this to Play Console** (versionCode 32).
+- **PR #81 (`chore/build-32` → main, `[PLAN-ID: 20260721-build-32-release]`):** carries the pubspec bump + plan.md lane + this context entry. ① MPC Metadata + ② MPC Policy green; Flutter/Backend build gates running. Squash-merge when green.
+- **Sentry verify (optional):** debug files for dist 32 at https://aleksandar-bojic.sentry.io/settings/projects/tremble-functions/debug-symbols/ — build cut a new release so symbols are already listed.
+- **Phase B (next chat, unchanged):** ADR-008 for `flutter_compass_v2` + compassHeadingProvider + server geohash bearing. Branch FRESH off main (lesson #94). Gated on the Phase A device pass. Prompt saved in scratchpad `PHASE_B_PROMPT.md`; plan in `docs/superpowers/`.
+
+---
+
 ## Session State — 2026-07-21 (Session 56) — FEATURE-RADAR-SONAR **PHASE A SHIPPED** (dot resurrected); Phase B = next chat
 
 - **One chat per phase (founder's workflow).** This session = brainstorm → design → plan → **Phase A build (TDD, 6 commits)**. Phase B (turn-to-find) is a fresh chat off main after this PR merges.
