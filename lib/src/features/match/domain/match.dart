@@ -83,6 +83,14 @@ class Match {
   final MatchType matchType;
   final MatchContext? matchContext;
 
+  // FEATURE-RADAR-SONAR Phase B — server-computed turn-to-find signals.
+  // `bearingFor[uid]` = absolute compass bearing (0–359° from north) that user
+  // should face to head toward the partner; `distanceBucket` = coarse band
+  // ('close' | '~50m' | '~150m' | 'far'). The partner's coordinates never reach
+  // the client — only these derived values do. Written by the proximity scan.
+  final Map<String, double> bearingFor;
+  final String? distanceBucket;
+
   Match({
     required this.id,
     required this.userIds,
@@ -94,10 +102,28 @@ class Match {
     this.expiresAt,
     this.matchType = MatchType.standard,
     this.matchContext,
+    this.bearingFor = const {},
+    this.distanceBucket,
   });
 
   bool get isMutual => gestures.length >= 2;
   bool hasWaved(String uid) => gestures.containsKey(uid);
+
+  /// Absolute bearing (0–359°) the given [uid] should face toward the partner,
+  /// or `null` when the server has not written one yet (dot falls back to the
+  /// orbit angle).
+  double? bearingForUser(String uid) => bearingFor[uid];
+
+  /// Coerces a Firestore `bearingFor` map (values arrive as `int` or `double`)
+  /// into `Map<String, double>`. Non-map / null input yields an empty map.
+  static Map<String, double> parseBearingFor(dynamic raw) {
+    if (raw is! Map) return const {};
+    final result = <String, double>{};
+    raw.forEach((key, value) {
+      if (key is String && value is num) result[key] = value.toDouble();
+    });
+    return result;
+  }
 
   factory Match.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -121,6 +147,8 @@ class Match {
           ? MatchContext.fromMap(
               Map<String, dynamic>.from(data['matchContext'] as Map))
           : null,
+      bearingFor: parseBearingFor(data['bearingFor']),
+      distanceBucket: data['distanceBucket'] as String?,
     );
   }
 

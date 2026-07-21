@@ -31,6 +31,7 @@ import {
 import { ENFORCE_APP_CHECK } from "../../config/env";
 import { Sentry } from "../../core/sentry";
 import { calculateCompatibilityScore } from "../compatibility/compatibility_calculator";
+import { computeBearing, distanceBucket } from "./bearing";
 
 const db = getFirestore();
 
@@ -132,6 +133,70 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
         Math.cos((lat2 * Math.PI) / 180) *
         Math.sin(dLng / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * FEATURE-RADAR-SONAR Phase B — turn-to-find bearing.
+ *
+ * When two in-range proximity users have an ACTIVE mutual-wave match
+ * (`status: "pending"`, not expired), write each user's bearing-to-partner
+ * (0-359° from north) plus a coarse distance bucket onto the match doc. The
+ * client combines `bearingFor[myUid]` with its device compass heading to swing
+ * the radar dot toward the partner.
+ *
+ * Privacy: only the derived bearing + coarse bucket are written — never the
+ * partner's coordinates or geohash. Best-effort: any failure is swallowed so it
+ * can never break the proximity scan (mirrors the crossing-paths tolerance).
+ */
+async function updateActiveMatchBearing(
+    aUid: string,
+    bUid: string,
+    aCenter: { lat: number; lng: number },
+    bCenter: { lat: number; lng: number },
+    distanceMeters: number,
+): Promise<void> {
+    try {
+        const uids = [aUid, bUid].sort();
+        const matchId = `${uids[0]}_${uids[1]}`;
+        const matchRef = db.collection("matches").doc(matchId);
+        const snap = await matchRef.get();
+        if (!snap.exists) return;
+
+        const data = snap.data();
+        if (data?.status !== "pending") return;
+
+        // Duck-typed expiry: real Firestore Timestamps expose toMillis()/
+        // toDate(); a plain Date exposes getTime(). Avoids `instanceof` so it
+        // works against both the Admin SDK and test doubles.
+        const expiresAtRaw = data?.expiresAt as
+            | { toMillis?: () => number; toDate?: () => Date }
+            | Date
+            | undefined;
+        const expiresMs =
+            typeof (expiresAtRaw as { toMillis?: () => number })?.toMillis === "function"
+                ? (expiresAtRaw as { toMillis: () => number }).toMillis()
+                : typeof (expiresAtRaw as { toDate?: () => Date })?.toDate === "function"
+                    ? (expiresAtRaw as { toDate: () => Date }).toDate().getTime()
+                    : expiresAtRaw instanceof Date
+                        ? expiresAtRaw.getTime()
+                        : 0;
+        if (expiresMs <= Date.now()) return; // window already over
+
+        await matchRef.update({
+            bearingFor: {
+                [aUid]: Math.round(computeBearing(aCenter, bCenter)),
+                [bUid]: Math.round(computeBearing(bCenter, aCenter)),
+            },
+            distanceBucket: distanceBucket(distanceMeters),
+            bearingUpdatedAt: FieldValue.serverTimestamp(),
+        });
+    } catch (error) {
+        logStructured({
+            fn: "updateActiveMatchBearing",
+            event: "error",
+            error: errorMessage(error),
+        });
+    }
 }
 
 // ── Server-side notification i18n ─────────────────────────
@@ -637,6 +702,12 @@ export const scanProximityPairs = onSchedule(
                         const bCenter = decodeGeohash(b.geohash!);
                         const distM = haversineMeters(aCenter.lat, aCenter.lng, bCenter.lat, bCenter.lng);
                         if (distM > radiusM) continue;
+
+                        // Radar turn-to-find: refresh the bearing on an active
+                        // mutual-wave window. Runs BEFORE the crossing-paths
+                        // cooldown so the hunting dot keeps updating; no-ops
+                        // (one cheap read) when the pair has no active match.
+                        await updateActiveMatchBearing(a.uid, b.uid, aCenter, bCenter, distM);
 
                         const pairKey = proximityCooldownKey(a.uid, b.uid);
                         const pairSet = await redis.set(pairKey, "1", {

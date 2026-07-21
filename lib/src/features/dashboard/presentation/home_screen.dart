@@ -39,6 +39,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'widgets/radar_search_overlay.dart';
 import 'widgets/radar_schedule_modal.dart';
 import 'widgets/premium_tutorial_overlay.dart';
+import 'widgets/radar_diagnostic_overlay.dart';
 import '../../profile/data/profile_repository.dart';
 import '../application/dev_simulation_controller.dart';
 import '../application/proximity_ping_controller.dart';
@@ -1388,6 +1389,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
         ),
+
+        // ── DEV diagnostic overlay (kDebugMode only) ──────────────────
+        // Live sonar signals (RSSI / radius / bearing / heading) for the
+        // prod-only two-phone test sessions. Compiles out of release builds.
+        if (kDebugMode && isSearchActive)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 74,
+            left: 6,
+            child: const RadarDiagnosticOverlay(),
+          ),
 
         // Match notification pill is rendered globally in HomeScreen.build —
         // see the main Stack above the LiquidNavBar. This keeps it visible

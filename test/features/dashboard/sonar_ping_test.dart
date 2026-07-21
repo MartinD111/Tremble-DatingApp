@@ -18,6 +18,22 @@ void main() {
     });
   });
 
+  group('bucketToRadius', () {
+    test('maps coarse distance bands to increasing radii', () {
+      expect(bucketToRadius('close'), lessThan(bucketToRadius('~50m')!));
+      expect(bucketToRadius('~50m'), lessThan(bucketToRadius('~150m')!));
+      expect(bucketToRadius('~150m'), lessThan(bucketToRadius('far')!));
+    });
+    test("'close' sits near the center, 'far' near the edge", () {
+      expect(bucketToRadius('close'), lessThan(0.3));
+      expect(bucketToRadius('far'), greaterThan(0.8));
+    });
+    test('unknown / null bucket → null (no dot)', () {
+      expect(bucketToRadius(null), isNull);
+      expect(bucketToRadius('nonsense'), isNull);
+    });
+  });
+
   group('signalStateFor', () {
     test('fresh within grace', () {
       expect(
@@ -49,5 +65,22 @@ void main() {
     expect(q.radius, 0.4);
     expect(q.angle, 1.0);
     expect(q.signalState, SonarSignalState.searching);
+  });
+
+  test('SonarPing carries raw rssi for diagnostics + copyWith preserves it',
+      () {
+    const p = SonarPing(
+      radius: 0.4,
+      angle: 1.0,
+      rssi: -62.5,
+      signalState: SonarSignalState.fresh,
+    );
+    expect(p.rssi, -62.5);
+    // copyWith without rssi keeps the previous value…
+    expect(p.copyWith(radius: 0.2).rssi, -62.5);
+    // …and can override it.
+    expect(p.copyWith(rssi: -80.0).rssi, -80.0);
+    // empty ping has no rssi.
+    expect(SonarPing.empty.rssi, isNull);
   });
 }

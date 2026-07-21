@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibration/vibration.dart';
 import 'package:tremble/src/core/ble_service.dart';
+import 'package:tremble/src/core/compass_service.dart';
 import 'package:tremble/src/features/dashboard/domain/sonar_ping.dart';
 import 'package:tremble/src/features/dashboard/domain/sonar_math.dart';
 import 'package:tremble/src/features/match/application/match_service.dart';
@@ -29,6 +30,13 @@ class SonarPingController extends _$SonarPingController {
   final Stopwatch _orbit = Stopwatch();
   Timer? _freshnessTimer;
 
+  // Phase B turn-to-find: absolute bearing to the partner (server, 0-359°) +
+  // smoothed device heading (compass). When both are present the dot points at
+  // the real direction; otherwise it falls back to the slow orbit.
+  double? _bearing;
+  double? _heading;
+  String? _distanceBucket;
+
   // Smoothing factor (0.0 to 1.0, lower = smoother but slower to react).
   static const double _smoothingAlpha = 0.3;
 
@@ -49,14 +57,31 @@ class SonarPingController extends _$SonarPingController {
       ..reset()
       ..start();
 
+    final myUid = ref.read(authStateProvider)?.id ?? '';
+
+    // Phase B: server-computed bearing to the partner + coarse distance bucket
+    // (re-read whenever the match doc updates → build re-runs). The partner's
+    // location never reaches here — only these derived values.
+    _bearing = search.bearingForUser(myUid);
+    _distanceBucket = search.distanceBucket;
+
+    // Live device heading (compass) → smoothed, re-aims the dot as the phone
+    // turns without rebuilding the whole controller. Raw source is null-safe.
+    ref.listen(compassHeadingProvider, (_, next) {
+      final h = next.valueOrNull;
+      if (h == null) return;
+      _heading = _heading == null ? h : smoothHeading(_heading!, h);
+      // Re-aim the current dot at compass framerate (keeps radius/state).
+      state = state.copyWith(angle: _currentAngle());
+    });
+
     // Freshness heartbeat — fades the dot to "searching" when RSSI goes quiet,
     // and keeps the orbit angle advancing between samples.
     _freshnessTimer?.cancel();
     _freshnessTimer = Timer.periodic(
         const Duration(milliseconds: 500), (_) => _tickFreshness());
 
-    final partnerId =
-        search.getPartnerId(ref.read(authStateProvider)?.id ?? '');
+    final partnerId = search.getPartnerId(myUid);
 
     final sub = ble.proximityStream.listen((rssiMap) {
       if (!rssiMap.containsKey(partnerId)) return;
@@ -72,7 +97,8 @@ class SonarPingController extends _$SonarPingController {
       _lastRadius = rssiToRadius(_smoothedRssi!);
       state = SonarPing(
         radius: _lastRadius,
-        angle: orbitAngle(_orbit.elapsed),
+        angle: _currentAngle(),
+        rssi: _smoothedRssi,
         signalState: SonarSignalState.fresh,
       );
 
@@ -101,23 +127,41 @@ class SonarPingController extends _$SonarPingController {
         ? const Duration(days: 1)
         : DateTime.now().difference(last);
     final signalState = signalStateFor(sinceLastSample: since);
-    final angle = orbitAngle(_orbit.elapsed);
+    final angle = _currentAngle();
     switch (signalState) {
       case SonarSignalState.fresh:
       case SonarSignalState.graceHold:
         state = SonarPing(
           radius: _lastRadius,
           angle: angle,
+          rssi: _smoothedRssi,
           signalState: signalState,
         );
       case SonarSignalState.searching:
         _stopPingLoop();
+        // Approach stage: no fresh BLE lock, but if the server has given a
+        // coarse distance bucket, still show the dot at that range so the user
+        // can hunt by direction from ~150m out. Falls to null (no dot) only
+        // when we have neither RSSI nor a bucket.
         state = SonarPing(
-          radius: null,
+          radius: bucketToRadius(_distanceBucket),
           angle: angle,
+          rssi: _smoothedRssi,
           signalState: SonarSignalState.searching,
         );
     }
+  }
+
+  /// The dot's screen angle: the real bearing (partner direction relative to
+  /// where the phone points) when both server bearing and compass heading are
+  /// available, otherwise the slow searching orbit.
+  double _currentAngle() {
+    final bearing = _bearing;
+    final heading = _heading;
+    if (bearing != null && heading != null) {
+      return dotAngle(bearingDeg: bearing, headingDeg: heading);
+    }
+    return orbitAngle(_orbit.elapsed);
   }
 
   void _reset() {
@@ -128,6 +172,9 @@ class SonarPingController extends _$SonarPingController {
     _smoothedRssi = null;
     _lastRadius = null;
     _lastSampleAt = null;
+    _bearing = null;
+    _heading = null;
+    _distanceBucket = null;
   }
 
   void _startPingLoop() {
