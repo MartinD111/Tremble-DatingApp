@@ -1,8 +1,27 @@
 # Active Lane
+Plan ID: 20260721-build-32-release
+Risk Level: HIGH (prod build → TestFlight + Play; outward-facing)
+Founder Approval Required: YES — granted 2026-07-21 ("lets proceed with the build - ill test later").
+Branch: chore/build-32
+
+## Objective (this lane)
+
+Cut 1.0.0 (32) to TestFlight (iOS) and preserve the AAB for the founder's Play
+upload (Android). Payload = radar sonar Phase A (PR #80 — partner dot production
+data source) plus the build-31 bug batch: trembling-window free tap opens basic
+card (PR #75), reveal hobbies above photo (PR #76), Sentry tile-cancel noise
+filter (PR #77), is-nearby pill dismiss (PR #78). Bump pubspec only;
+`build_prod.sh all` (obfuscated, `.env.prod.json`, Sentry symbols dist 32);
+manual `xcrun altool` to TestFlight (lesson #95). Device validation of the radar
+sonar (two-phone mutual wave) is owed and deferred by founder to a later test.
+
+---
+
+# Prior Lane (merged — PR #80)
 Plan ID: 20260721-radar-sonar-turn-to-find
 Risk Level: MEDIUM (Phase A — client-only, no new dependency, no server/PII change)
 Founder Approval Required: NO (Phase A). Phase B (compass dep + server bearing) = YES via ADR-008.
-Branch: feature/radar-sonar
+Branch: feature/radar-sonar (merged 2026-07-21, branch deleted)
 
 ## Objective (this lane)
 
