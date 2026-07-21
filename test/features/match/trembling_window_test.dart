@@ -73,9 +73,11 @@ class FakeWarmthController extends WarmthController {
 
 /// Stubs the sonar so pumping the radar never starts its real BLE
 /// subscription or freshness timers (which widget tests flag as pending).
+/// Returns a benign `fresh` state so the "Searching…" caption (and its
+/// animation ticker) is not rendered in these overlay tests.
 class FakeSonarPingController extends SonarPingController {
   @override
-  SonarPing build() => SonarPing.empty;
+  SonarPing build() => const SonarPing(signalState: SonarSignalState.fresh);
 }
 
 class MyMockPlatform extends FlutterBackgroundServicePlatform {

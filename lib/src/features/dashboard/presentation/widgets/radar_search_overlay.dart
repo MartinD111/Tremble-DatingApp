@@ -7,7 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:tremble/src/features/dashboard/application/warmth_controller.dart';
+import 'package:tremble/src/features/dashboard/application/proximity_ping_controller.dart';
 import 'package:tremble/src/features/dashboard/domain/warmth_direction.dart';
+import 'package:tremble/src/features/dashboard/domain/sonar_ping.dart';
 import 'package:tremble/src/features/dashboard/application/radar_search_session.dart';
 import 'package:tremble/src/shared/ui/glass_card.dart';
 import 'package:tremble/src/features/match/presentation/widgets/pulse_intercept_bar.dart';
@@ -103,6 +105,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
     final isUrgent = _remaining.inMinutes < 5 && _remaining.inSeconds > 0;
     final timerColor = isUrgent ? colorScheme.primary : colorScheme.onSurface;
     final warmth = ref.watch(warmthControllerProvider);
+    final sonar = ref.watch(sonarPingControllerProvider);
     final lang = ref.watch(appLanguageProvider);
 
     final pill = GlassCard(
@@ -194,8 +197,13 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
           ),
           const SizedBox(height: 10),
         ],
-        // Warmth Indicator (Hot/Cold Navigation)
-        _warmthIndicator(warmth, colorScheme),
+        // Warmth Indicator (Hot/Cold Navigation) — replaced by a "Searching…"
+        // caption when the partner signal is lost (warmer/colder is meaningless
+        // with no fresh RSSI). Mirrors the dot fading on the radar.
+        if (sonar.signalState == SonarSignalState.searching)
+          _searchingIndicator(colorScheme)
+        else
+          _warmthIndicator(warmth, colorScheme),
         isUrgent
             ? pill
                 .animate(onPlay: (c) => c.repeat(reverse: true))
@@ -205,6 +213,30 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
     );
 
     return content;
+  }
+
+  Widget _searchingIndicator(ColorScheme colorScheme) {
+    final lang = ref.watch(appLanguageProvider);
+    final color = colorScheme.onSurface.withValues(alpha: 0.5);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(LucideIcons.radar, size: 12, color: color),
+          const SizedBox(width: 6),
+          Text(
+            t('searching', lang),
+            style: GoogleFonts.instrumentSans(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ],
+      ),
+    ).animate(key: const ValueKey('searching')).fadeIn(duration: 300.ms);
   }
 
   Widget _warmthIndicator(WarmthDirection direction, ColorScheme colorScheme) {
