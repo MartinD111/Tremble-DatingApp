@@ -41,6 +41,7 @@ import 'widgets/radar_schedule_modal.dart';
 import 'widgets/premium_tutorial_overlay.dart';
 import '../../profile/data/profile_repository.dart';
 import '../application/dev_simulation_controller.dart';
+import '../application/proximity_ping_controller.dart';
 import '../application/radar_search_session.dart';
 import '../application/tutorial_notifier.dart';
 import '../../match/presentation/widgets/match_notification_pill.dart';
@@ -451,6 +452,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ref.read(pingDistanceProvider.notifier).state = null;
         ref.read(pingAngleProvider.notifier).state = null;
       }
+    });
+
+    // ── Production Sonar → Radar Ping bridge ───────────────────────────────
+    // Feeds the ping providers from real BLE RSSI (SonarPingController) during
+    // a live mutual-wave search. The dev-sim arm above owns the providers when
+    // a simulation is running, so this defers to it in that case.
+    ref.listen(sonarPingControllerProvider, (prev, next) {
+      final searching = ref.read(currentSearchProvider) != null;
+      final devActive =
+          ref.read(devSimulationControllerProvider).isMutualWaveActive;
+      if (!searching || devActive) return;
+      ref.read(pingDistanceProvider.notifier).state = next.radius;
+      ref.read(pingAngleProvider.notifier).state = next.angle;
     });
 
     final lang = ref.watch(appLanguageProvider);
@@ -2271,6 +2285,10 @@ class _RadarSection extends ConsumerWidget {
     final isScanning = ref.watch(isScanningProvider);
     final pingDistance = ref.watch(pingDistanceProvider);
     final pingAngle = ref.watch(pingAngleProvider);
+    // Keep the sonar controller alive during a search so its BLE subscription
+    // and freshness loop run; the production writer arm below pipes its output
+    // into the ping providers above.
+    ref.watch(sonarPingControllerProvider);
     final radarMode = ref.watch(radarModeProvider);
     final batteryLevel = ref.watch(radarBatteryLevelProvider);
     final bool bypassRadar = ref.watch(bypassRadarProvider);
