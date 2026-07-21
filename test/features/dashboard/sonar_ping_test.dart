@@ -1,0 +1,32 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:tremble/src/features/dashboard/domain/sonar_ping.dart';
+
+void main() {
+  group('rssiToRadius', () {
+    test('very close (-40 dBm) maps to center (0.0)', () {
+      expect(rssiToRadius(-40), closeTo(0.0, 0.001));
+    });
+    test('far (-100 dBm) maps to edge (1.0)', () {
+      expect(rssiToRadius(-100), closeTo(1.0, 0.001));
+    });
+    test('mid (-70 dBm) maps to ~0.5', () {
+      expect(rssiToRadius(-70), closeTo(0.5, 0.02));
+    });
+    test('clamps values beyond the range', () {
+      expect(rssiToRadius(-10), 0.0);
+      expect(rssiToRadius(-140), 1.0);
+    });
+  });
+
+  test('SonarPing.copyWith overrides only given fields', () {
+    const p = SonarPing(
+      radius: 0.4,
+      angle: 1.0,
+      signalState: SonarSignalState.fresh,
+    );
+    final q = p.copyWith(signalState: SonarSignalState.searching);
+    expect(q.radius, 0.4);
+    expect(q.angle, 1.0);
+    expect(q.signalState, SonarSignalState.searching);
+  });
+}
