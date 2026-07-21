@@ -1,19 +1,28 @@
 # Active Lane
-Plan ID: 20260721-build-32-release
-Risk Level: HIGH (prod build → TestFlight + Play; outward-facing)
-Founder Approval Required: YES — granted 2026-07-21 ("lets proceed with the build - ill test later").
-Branch: chore/build-32
+Plan ID: 20260721-radar-sonar-turn-to-find
+Risk Level: HIGH (new sensor dependency + prod Cloud Function deploy + core trembling flow)
+Founder Approval Required: YES — granted 2026-07-21 ("phase b - approval granted"); deploy authorized same session ("Deploy now").
+Branch: feature/radar-sonar-phase-b
 
 ## Objective (this lane)
 
-Cut 1.0.0 (32) to TestFlight (iOS) and preserve the AAB for the founder's Play
-upload (Android). Payload = radar sonar Phase A (PR #80 — partner dot production
-data source) plus the build-31 bug batch: trembling-window free tap opens basic
-card (PR #75), reveal hobbies above photo (PR #76), Sentry tile-cancel noise
-filter (PR #77), is-nearby pill dismiss (PR #78). Bump pubspec only;
-`build_prod.sh all` (obfuscated, `.env.prod.json`, Sentry symbols dist 32);
-manual `xcrun altool` to TestFlight (lesson #95). Device validation of the radar
-sonar (two-phone mutual wave) is owed and deferred by founder to a later test.
+FEATURE-RADAR-SONAR **Phase B** — turn-to-find direction. Built on the build-32
+baseline (PR #81). Five tasks, all TDD:
+- **B0** dev-only radar diagnostic overlay (RSSI/radius/state/bearing/bucket/heading),
+  `kDebugMode`-guarded — makes the prod-only two-phone test sessions debuggable.
+- **B1** `flutter_compass_v2 ^1.0.3` + **ADR-009** (compass dependency; the
+  plan/handoffs said "ADR-008" but that slug was taken — recorded as ADR-009).
+- **B2** server `computeBearing`/`distanceBucket` (pure) + best-effort writer
+  stamping `bearingFor{uid}` + `distanceBucket` on an active pending match during
+  the proximity scan. Reuses `decodeGeohash`; partner geohash never reaches the
+  client. **Prod Cloud Function deploy to `am---dating-app`/europe-west1.**
+- **B3** `compassHeadingProvider` + `dotAngle`/`smoothHeading` math + `Match`
+  `bearingFor`/`distanceBucket` fields.
+- **B4** `SonarPingController` watches compass + bearing → `dotAngle(bearing−heading)`,
+  orbit fallback; `bucketToRadius` approach-stage dot before BLE lock.
+
+Verification: `flutter analyze` clean, Flutter 438/438, jest 182/182, tsc clean,
+functions eslint clean. Combined two-phone device pass (build 33) is owed.
 
 ---
 
