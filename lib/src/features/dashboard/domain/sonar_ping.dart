@@ -33,6 +33,19 @@ class SonarPing {
   static const empty = SonarPing();
 }
 
+/// Classifies the partner signal by how long since the last RSSI sample.
+/// `<= grace` → [SonarSignalState.fresh]; `<= lost` → [SonarSignalState.graceHold]
+/// (hold the last hint briefly); beyond → [SonarSignalState.searching].
+SonarSignalState signalStateFor({
+  required Duration sinceLastSample,
+  Duration grace = const Duration(seconds: 3),
+  Duration lost = const Duration(seconds: 6),
+}) {
+  if (sinceLastSample <= grace) return SonarSignalState.fresh;
+  if (sinceLastSample <= lost) return SonarSignalState.graceHold;
+  return SonarSignalState.searching;
+}
+
 /// Maps smoothed RSSI (dBm) to a radar radius. `-40 dBm` (close) → `0.0`
 /// (center), `-100 dBm` (far) → `1.0` (edge). Mirrors the proximity factor
 /// range already used by the vibration ping loop.

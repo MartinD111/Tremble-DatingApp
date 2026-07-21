@@ -18,6 +18,27 @@ void main() {
     });
   });
 
+  group('signalStateFor', () {
+    test('fresh within grace', () {
+      expect(
+        signalStateFor(sinceLastSample: const Duration(seconds: 1)),
+        SonarSignalState.fresh,
+      );
+    });
+    test('graceHold between grace and lost', () {
+      expect(
+        signalStateFor(sinceLastSample: const Duration(seconds: 4)),
+        SonarSignalState.graceHold,
+      );
+    });
+    test('searching past lost threshold', () {
+      expect(
+        signalStateFor(sinceLastSample: const Duration(seconds: 7)),
+        SonarSignalState.searching,
+      );
+    });
+  });
+
   test('SonarPing.copyWith overrides only given fields', () {
     const p = SonarPing(
       radius: 0.4,
