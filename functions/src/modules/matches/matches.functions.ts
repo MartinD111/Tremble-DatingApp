@@ -9,7 +9,7 @@
 
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getMessaging, Message } from "firebase-admin/messaging";
 import { randomUUID } from "node:crypto";
 import { requireAuth, requireAdmin, assertNotBanned } from "../../middleware/authGuard";
@@ -40,6 +40,7 @@ function redactUid(uid: string): string {
 const MUTUAL_WAVE_FREE_LIMIT = 5;
 const MUTUAL_WAVE_PREMIUM_LIMIT = 20;
 const MUTUAL_WAVE_COUNTER_TIME_ZONE = "Europe/Ljubljana";
+const WAVE_RECIPROCITY_WINDOW_MS = 30 * 60 * 1000;
 const WAVE_DELIVERY_TTL_SECS = 24 * 60 * 60;
 const WAVE_PROCESSING_TTL_SECS = 60;
 const MAX_DELIVERY_ATTEMPTS = 3;
@@ -353,7 +354,9 @@ export const sendWave = onCall(
             fromUid: uid,
             toUid: targetUid,
             createdAt: FieldValue.serverTimestamp(),
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            expiresAt: new Date(
+                Date.now() + WAVE_RECIPROCITY_WINDOW_MS + 5 * 60 * 1000
+            ),
         });
 
         logStructured({
@@ -569,10 +572,13 @@ export const onWaveCreated = onDocumentCreated(
         const senderAge = senderIdentity.age;
 
         // Check for reciprocal wave (mutual match)
+        const cutoff = Timestamp.fromMillis(Date.now() - WAVE_RECIPROCITY_WINDOW_MS);
         const reciprocalQuery = await db
             .collection("waves")
             .where("fromUid", "==", toUid)
             .where("toUid", "==", fromUid)
+            .where("createdAt", ">=", cutoff)
+            .orderBy("createdAt", "desc")
             .limit(1)
             .get();
 
