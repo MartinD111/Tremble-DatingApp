@@ -15,6 +15,9 @@ const mockSendMatchNotificationEmail = jest.fn<() => Promise<void>>();
 const mockTransactionSet = jest.fn();
 const mockTransactionUpdate = jest.fn();
 const mockOnDocumentCreated = jest.fn((_: unknown, handler: unknown) => handler);
+const mockTimestampFromMillis = jest.fn((millis: number) => ({
+    toMillis: () => millis,
+}));
 const mockRedisValues = new Map<string, string>();
 const mockRedis = {
     set: jest.fn(async (key: string, value: string, options?: { nx?: boolean }) => {
@@ -47,6 +50,9 @@ jest.mock("firebase-admin/firestore", () => ({
         increment: jest.fn((value: number) => ({ increment: value })),
         serverTimestamp: jest.fn(() => "SERVER_TIMESTAMP"),
         delete: jest.fn(() => "DELETE_FIELD"),
+    },
+    Timestamp: {
+        fromMillis: mockTimestampFromMillis,
     },
 }));
 
@@ -129,16 +135,48 @@ function setupWaveTriggerDb(options: {
     sender?: WaveProfile;
     receiver?: WaveProfile;
     reciprocal?: () => boolean;
+    reciprocalCreatedAt?: Date;
     profileGate?: Promise<void>;
     existingMatchOwnerWaveId?: string;
     existingMatch?: { ownerWaveId?: string; status?: string; createdAt?: Date };
-} = {}): void {
+} = {}): {
+    where: jest.Mock;
+    orderBy: jest.Mock;
+    limit: jest.Mock;
+} {
     const sender = options.sender ?? defaultSender;
     const receiver = options.receiver ?? defaultReceiver;
     const reciprocalRef = { kind: "reciprocal", path: "waves/reciprocal-wave" };
     const matchRef = { kind: "match", path: "matches/senderUid_receiverUid" };
     const senderRef = { kind: "user", uid: "senderUid", path: "users/senderUid" };
     const receiverRef = { kind: "user", uid: "receiverUid", path: "users/receiverUid" };
+    const whereCalls: Array<[unknown, unknown, unknown]> = [];
+    const wavesQuery = {
+        where: jest.fn((...args: [unknown, unknown, unknown]) => {
+            whereCalls.push(args);
+            return wavesQuery;
+        }),
+        orderBy: jest.fn(),
+        limit: jest.fn(),
+        get: jest.fn(async () => {
+            const recencyFilter = whereCalls.find(
+                ([field, operator]) => field === "createdAt" && operator === ">=",
+            );
+            const cutoffMillis = (
+                recencyFilter?.[2] as { toMillis?: () => number } | undefined
+            )?.toMillis?.();
+            const reciprocalIsRecent = options.reciprocalCreatedAt !== undefined
+                && (cutoffMillis === undefined
+                    || options.reciprocalCreatedAt.getTime() >= cutoffMillis);
+            const hasReciprocal = options.reciprocal?.() === true
+                || reciprocalIsRecent;
+            return hasReciprocal
+                ? { empty: false, docs: [{ ref: reciprocalRef }] }
+                : { empty: true, docs: [] };
+        }),
+    };
+    wavesQuery.orderBy.mockReturnValue(wavesQuery);
+    wavesQuery.limit.mockReturnValue(wavesQuery);
     let matchOwnerWaveId = options.existingMatchOwnerWaveId;
     mockTransactionSet.mockImplementation((_ref: unknown, rawData: unknown) => {
         const data = rawData as Record<string, unknown>;
@@ -164,16 +202,7 @@ function setupWaveTriggerDb(options: {
             };
         }
         if (collectionName === "waves") {
-            const query = {
-                where: jest.fn(),
-                limit: jest.fn(),
-                get: jest.fn(async () => options.reciprocal?.() === true
-                    ? { empty: false, docs: [{ ref: reciprocalRef }] }
-                    : { empty: true, docs: [] }),
-            };
-            query.where.mockReturnValue(query);
-            query.limit.mockReturnValue(query);
-            return query;
+            return wavesQuery;
         }
         if (collectionName === "matches") {
             return { doc: jest.fn(() => matchRef) };
@@ -217,6 +246,8 @@ function setupWaveTriggerDb(options: {
         };
         return (callback as (transaction: unknown) => Promise<unknown>)(transaction);
     });
+
+    return wavesQuery;
 }
 
 async function invokeWaveTrigger(waveId = "wave-event-1"): Promise<void> {
@@ -637,6 +668,47 @@ describe("Matches Module", () => {
                 "wave-delivery:mutual-wave:recipient:senderUid:delivered"
             )).toBe(false);
         });
+
+        it("treats a reciprocal wave older than 30 minutes as incoming", async () => {
+            const reciprocalQuery = setupWaveTriggerDb({
+                reciprocalCreatedAt: new Date("2026-07-15T11:29:59.999Z"),
+            });
+            mockMessagingSend.mockResolvedValue("message-id");
+
+            await invokeWaveTrigger("stale-reciprocal-wave");
+
+            expect(mockTimestampFromMillis).toHaveBeenCalledWith(
+                Date.parse("2026-07-15T11:30:00.000Z"),
+            );
+            expect(reciprocalQuery.where).toHaveBeenCalledWith(
+                "createdAt",
+                ">=",
+                expect.objectContaining({ toMillis: expect.any(Function) }),
+            );
+            expect(reciprocalQuery.orderBy).toHaveBeenCalledWith("createdAt", "desc");
+            expect(reciprocalQuery.limit).toHaveBeenCalledWith(1);
+            expect(mockTransactionSet).not.toHaveBeenCalled();
+            expect(mockMessagingSend).toHaveBeenCalledTimes(1);
+            expect(mockMessagingSend).toHaveBeenCalledWith(expect.objectContaining({
+                data: expect.objectContaining({ type: "INCOMING_WAVE" }),
+            }));
+        });
+
+        it("creates one mutual match for a reciprocal wave within 30 minutes", async () => {
+            setupWaveTriggerDb({
+                reciprocalCreatedAt: new Date("2026-07-15T11:45:00.000Z"),
+            });
+            mockMessagingSend.mockResolvedValue("message-id");
+
+            await invokeWaveTrigger("recent-reciprocal-wave");
+
+            expect(mockTransactionSet).toHaveBeenCalledTimes(1);
+            expect(mockTransactionSet).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({ status: "pending" }),
+            );
+            expect(mockMessagingSend).toHaveBeenCalledTimes(2);
+        });
     });
 
     describe("getMatches", () => {
@@ -950,6 +1022,65 @@ describe("Matches Module", () => {
 
             expect(addMock).not.toHaveBeenCalled();
             expect(rateLimit.checkRateLimit).not.toHaveBeenCalled();
+        });
+
+        it("expires a new wave five minutes after the reciprocity window", async () => {
+            jest.useFakeTimers();
+            jest.setSystemTime(new Date("2026-07-15T12:00:00.000Z"));
+
+            try {
+                const authGuard = await import("../../src/middleware/authGuard");
+                const rateLimit = await import("../../src/middleware/rateLimit");
+                const validate = await import("../../src/middleware/validate");
+                const { sendWave } = await import(
+                    "../../src/modules/matches/matches.functions"
+                );
+
+                jest.mocked(authGuard.requireAuth).mockReturnValue("senderUid");
+                jest.mocked(authGuard.assertNotBanned).mockImplementation(() => undefined);
+                jest.mocked(validate.assertValidDocumentId).mockReturnValue("targetUid");
+                jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+
+                const getMock = jest.fn<() => Promise<{
+                    exists: boolean;
+                    data: () => Record<string, unknown>;
+                }>>()
+                    .mockResolvedValueOnce({
+                        exists: true,
+                        data: () => ({ isBanned: false }),
+                    })
+                    .mockResolvedValueOnce({
+                        exists: true,
+                        data: () => ({ blockedUserIds: [] }),
+                    });
+                const docMock = jest.fn(() => ({ get: getMock }));
+                const addMock = jest.fn(async () => ({ id: "wave-id" }));
+
+                mockDb.collection.mockImplementation((collectionName: unknown) => {
+                    if (collectionName === "users") {
+                        return { doc: docMock };
+                    }
+                    if (collectionName === "waves") {
+                        return { add: addMock };
+                    }
+                    throw new Error(`Unexpected collection: ${collectionName}`);
+                });
+
+                const callableSendWave = sendWave as unknown as (
+                    request: unknown
+                ) => Promise<unknown>;
+
+                await expect(callableSendWave({
+                    auth: { uid: "senderUid", token: {} },
+                    data: { targetUid: "targetUid" },
+                } as never)).resolves.toEqual({ success: true });
+
+                expect(addMock).toHaveBeenCalledWith(expect.objectContaining({
+                    expiresAt: new Date("2026-07-15T12:35:00.000Z"),
+                }));
+            } finally {
+                jest.useRealTimers();
+            }
         });
     });
 

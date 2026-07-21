@@ -221,6 +221,24 @@
                     "order": "ASCENDING"
                 }
             ]
+        },
+        {
+            "collectionGroup": "waves",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "fromUid",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "toUid",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
         }
     ],
     "fieldOverrides": []
