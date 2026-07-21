@@ -12,6 +12,8 @@ import { describe, it, expect, jest, beforeEach, afterEach } from "@jest/globals
 const mockProximityEventsAdd = jest.fn<() => Promise<void>>();
 const mockProximityDocs: Array<{ id: string; data: () => Record<string, unknown> }> = [];
 const mockUsersById = new Map<string, Record<string, unknown>>();
+const mockMatchesById = new Map<string, Record<string, unknown> | undefined>();
+const mockMatchUpdate = jest.fn<(patch: Record<string, unknown>) => Promise<void>>();
 const mockRedis = {
     set: jest.fn<() => Promise<string | null>>(),
     del: jest.fn<() => Promise<number>>(),
@@ -41,6 +43,17 @@ const mockDb = {
                     get: jest.fn(async () => ({
                         data: () => mockUsersById.get(uid),
                     })),
+                })),
+            };
+        }
+        if (name === "matches") {
+            return {
+                doc: jest.fn((id: string) => ({
+                    get: jest.fn(async () => ({
+                        exists: mockMatchesById.has(id),
+                        data: () => mockMatchesById.get(id),
+                    })),
+                    update: mockMatchUpdate,
                 })),
             };
         }
@@ -161,6 +174,9 @@ describe("scanProximityPairs — CROSSING_PATHS visible notification", () => {
         mockProximityEventsAdd.mockClear();
         mockProximityDocs.length = 0;
         mockUsersById.clear();
+        mockMatchesById.clear();
+        mockMatchUpdate.mockReset();
+        mockMatchUpdate.mockImplementation(async () => undefined);
         mockRedis.set.mockReset();
         mockRedis.del.mockReset();
         mockRedis.incr.mockReset();
@@ -465,6 +481,63 @@ describe("scanProximityPairs — CROSSING_PATHS visible notification", () => {
             for (const payload of sentPayloads()) {
                 expect(payload.android?.priority).toBe("high");
             }
+        });
+    });
+
+    // FEATURE-RADAR-SONAR Phase B — server bearing on an active match doc.
+    describe("scanProximityPairs — radar turn-to-find bearing", () => {
+        it("writes reciprocal bearingFor + distanceBucket on an active window", async () => {
+            setupHappyPathPair("en", "en");
+            // sorted(userA,userB) → matchId "userA_userB"; active pending window.
+            mockMatchesById.set("userA_userB", {
+                status: "pending",
+                userIds: ["userA", "userB"],
+                expiresAt: new Date("2026-07-15T12:20:00.000Z"), // 20 min ahead
+            });
+            const { scanProximityPairs } =
+                await import("../../src/modules/proximity/proximity.functions");
+
+            await (scanProximityPairs as unknown as () => Promise<void>)();
+
+            expect(mockMatchUpdate).toHaveBeenCalledTimes(1);
+            const patch = mockMatchUpdate.mock.calls[0][0] as {
+                bearingFor: Record<string, number>;
+                distanceBucket: string;
+            };
+            expect(patch.bearingFor).toHaveProperty("userA");
+            expect(patch.bearingFor).toHaveProperty("userB");
+            // Same geohash bucket → ~0m apart → 'close'.
+            expect(patch.distanceBucket).toBe("close");
+            for (const uid of ["userA", "userB"]) {
+                expect(patch.bearingFor[uid]).toBeGreaterThanOrEqual(0);
+                expect(patch.bearingFor[uid]).toBeLessThan(360);
+            }
+        });
+
+        it("does NOT write bearing when the window has already expired", async () => {
+            setupHappyPathPair("en", "en");
+            mockMatchesById.set("userA_userB", {
+                status: "pending",
+                userIds: ["userA", "userB"],
+                expiresAt: new Date("2026-07-15T11:00:00.000Z"), // in the past
+            });
+            const { scanProximityPairs } =
+                await import("../../src/modules/proximity/proximity.functions");
+
+            await (scanProximityPairs as unknown as () => Promise<void>)();
+
+            expect(mockMatchUpdate).not.toHaveBeenCalled();
+        });
+
+        it("does NOT write bearing when no match exists for the pair", async () => {
+            setupHappyPathPair("en", "en");
+            // mockMatchesById left empty → doc.exists is false.
+            const { scanProximityPairs } =
+                await import("../../src/modules/proximity/proximity.functions");
+
+            await (scanProximityPairs as unknown as () => Promise<void>)();
+
+            expect(mockMatchUpdate).not.toHaveBeenCalled();
         });
     });
 });
