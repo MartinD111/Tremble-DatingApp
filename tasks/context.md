@@ -1,3 +1,18 @@
+## Session State — 2026-07-22 01:15 CEST — REVEAL AVATAR LOADING STATE FIXED
+
+- **Active Task:** Prompt D / Lane 4 — replace the match reveal avatar's transient bare `?` with a loading state.
+- **Environment:** Dev local, branch `fix/radar-sonar-ux-batch-34`. Dart-only client UI change; no Firebase, native config, secrets, or production deploy touched.
+- **Modified Files:** `lib/src/features/match/presentation/match_reveal_screen.dart`; `test/features/match/match_reveal_layout_test.dart`; `tasks/context.md`.
+- **Open Problems:** None for this lane. Store/legal/config blockers unchanged.
+- **System Status:** `dart format` stable; `flutter analyze --no-fatal-infos` clean; `flutter test --dart-define-from-file=.env.json` 442/442 passing; `flutter build apk --debug --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev` built `build/app/outputs/flutter-apk/app-dev-debug.apk`.
+
+## Session Handoff
+
+- **Completed:** `_buildFrontFace` now renders a compact `CircularProgressIndicator` while partner identity is loading or placeholder-only (`'', '?', 'Unknown', 'Neznano', 'Someone'`); real names without photos still render the initial; `CachedNetworkImage` now has a colored placeholder and never falls through to `?`.
+- **In Progress:** Nothing.
+- **Blocked:** Nothing.
+- **Next Action:** Commit the lane as `fix(match): loading state instead of "?" on reveal avatar`.
+
 ## Session State — 2026-07-21 (Session 58–59) — RADAR SONAR PHASE B MERGED + DEPLOYED + BUILD 33 CUT
 
 > ⚠️ The Session-58 handoff commit (context.md + blockers.md) did NOT survive PR #82's squash-merge — main tops out at Session 57. This entry rewrites the full current state so nothing is lost. (Lesson: after a squash-merge, verify your docs-commit content actually landed on main.)
