@@ -1,3 +1,22 @@
+## Session State — 2026-07-21 (Session 58–59) — RADAR SONAR PHASE B MERGED + DEPLOYED + BUILD 33 CUT
+
+> ⚠️ The Session-58 handoff commit (context.md + blockers.md) did NOT survive PR #82's squash-merge — main tops out at Session 57. This entry rewrites the full current state so nothing is lost. (Lesson: after a squash-merge, verify your docs-commit content actually landed on main.)
+
+- **FEATURE-RADAR-SONAR Phase B (turn-to-find) is MERGED** — PR #82 squash-merged to main (`43ec787`, 15:30 UTC); branch `feature/radar-sonar-phase-b` deleted (local + remote). 7 commits, all TDD:
+  - **B0** dev-only radar diagnostic overlay (`radar_diagnostic_overlay.dart`, `kDebugMode`-guarded, compiles out of release) — RSSI / radius / signal-state / bearing / bucket / heading. Added a diagnostic `rssi` field to `SonarPing`.
+  - **B1** `flutter_compass_v2 ^1.0.3` + **ADR-009** (`tasks/decisions/ADR-009-compass-dependency.md`). NOT "ADR-008" — that slug was already taken by brand-typefaces (Rule #100). No new OS permission (reuses location auth).
+  - **B2** pure `computeBearing`/`distanceBucket` in NEW `functions/src/modules/proximity/bearing.ts` + `updateActiveMatchBearing` writer (stamps `bearingFor{uid}`+`distanceBucket`+`bearingUpdatedAt` on an active *pending* match) called in the scanProximityPairs pair loop before the crossing-paths cooldown. Reuses `decodeGeohash`; partner geohash never reaches the client.
+  - **B3** `lib/src/core/compass_service.dart` `compassHeadingProvider` (raw) + `dotAngle`/`smoothHeading` (`sonar_math.dart`) + `Match.bearingFor`/`distanceBucket`+`parseBearingFor`/`bearingForUser`.
+  - **B4** `SonarPingController` watches compass+bearing → `dotAngle(bearing−heading)` (orbit fallback), `bucketToRadius` approach-stage dot before BLE lock; overlay wired to live values.
+- **✅ SERVER BEARING DEPLOYED TO PROD (Session 58):** `firebase deploy --only functions:scanProximityPairs --project prod` → `am---dating-app`/europe-west1, "Successful update operation" ~15:12 UTC. Verified running clean every 1 min (start→complete, no bearing errors). ⚠️ CLI's active project was `tremble-dev` — MUST use `--project prod` explicitly (Rule #101). `firebase.json` has no functions predeploy → `npm run build` first.
+- **✅ BUILD 33 (`1.0.0+33`) cut this session:** payload = Phase B turn-to-find. `scripts/release/build_prod.sh all` (obfuscated, `.env.prod.json` Rule #84, Sentry release `tremble.dating.app@1.0.0+33` dist 33 finalized, Android symbols uploaded). IPA 66M / AAB 64M preserved to `release-symbols/b33/`. **iOS uploaded to TestFlight via `xcrun altool` — Delivery UUID `34ebd05c-e7e1-48c9-a9a9-c666212bd7f4`** (one transient network retry, then UPLOAD SUCCEEDED). Android AAB preserved at **`release-symbols/b33/app-prod-release.aab`** — FOUNDER: upload to Play Console (versionCode 33). Chore branch `chore/build-33` + **PR #83** carry the pubspec bump + these docs.
+- **Reconciliations (Rule #100/#101):** ADR-008→ADR-009 numbering; `dotAngle` uses the painter's cos/sin convention (angle 0 = right, not top), unit-tested.
+- **⭐ THE ONE REMAINING GATE — combined two-phone device pass on build 33** (whole radar sonar A+B): dot appears from ~150m (server bucket radius) → swings toward partner as you turn the phone (compass + server bearing) → closer=center+faster ping (BLE RSSI) → warmth in final meters → walk away = "Searching…". If blank/wrong, read the **B0 overlay** on a kDebugMode build (`RSSI —`=writer / `bearing —`=server / `heading —`=compass). This closes FEATURE-RADAR-SONAR.
+- **Verification (Phase B):** `flutter analyze` clean · Flutter 438/438 · jest 182/182 · tsc clean · functions eslint clean.
+- **Still deferred (unchanged):** FEATURE-POSTMATCH-NOTIFTAP (step 4), Pulse Intercept full flow (cluster 3), cluster-2 iOS pill 2× dedup, `getPublicProfile` recap-log read, CONFIG-REVENUECAT-OFFERINGS (founder attaches store products). Store blockers STORE-003/004/005 + LEGAL-001/004 open (see below).
+
+---
+
 ## Session State — 2026-07-21 (Session 57) — BUILD 32 CUT → iOS ON TESTFLIGHT, AAB READY FOR PLAY
 
 - **PR #80 (radar sonar Phase A) merged to main** at 12:25 UTC; `feature/radar-sonar` deleted (local + remote + stale tracking ref pruned). main is the build-32 baseline.
