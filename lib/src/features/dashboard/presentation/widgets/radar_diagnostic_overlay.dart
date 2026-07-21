@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:tremble/src/core/compass_service.dart';
+import 'package:tremble/src/features/auth/data/auth_repository.dart';
 import 'package:tremble/src/features/dashboard/application/proximity_ping_controller.dart';
 import 'package:tremble/src/features/dashboard/domain/sonar_ping.dart';
+import 'package:tremble/src/features/match/application/match_service.dart';
 
 /// Developer-only diagnostic panel for the trembling-window radar.
 ///
@@ -25,6 +28,11 @@ class RadarDiagnosticOverlay extends ConsumerWidget {
     if (!kDebugMode) return const SizedBox.shrink();
 
     final sonar = ref.watch(sonarPingControllerProvider);
+    final search = ref.watch(currentSearchProvider);
+    final myUid = ref.watch(authStateProvider)?.id ?? '';
+    final bearing = search?.bearingForUser(myUid);
+    final bucket = search?.distanceBucket;
+    final heading = ref.watch(compassHeadingProvider).valueOrNull;
 
     return IgnorePointer(
       child: Container(
@@ -44,11 +52,11 @@ class RadarDiagnosticOverlay extends ConsumerWidget {
             _row('radius', _fmt(sonar.radius)),
             _row('angle', _fmtRad(sonar.angle)),
             _row('state', _stateLabel(sonar.signalState)),
-            // Phase B signals — wired once B2 (server bearing) + B3 (compass)
-            // land; shown as "—" until then so the panel shape is stable.
-            _row('bearing', '—'),
-            _row('bucket', '—'),
-            _row('heading', '—'),
+            // Phase B turn-to-find signals: server bearing + coarse bucket
+            // (from the active match doc) and the live device compass heading.
+            _row('bearing', _fmtDeg(bearing)),
+            _row('bucket', bucket ?? '—'),
+            _row('heading', _fmtDeg(heading)),
           ],
         ),
       ),
@@ -84,6 +92,8 @@ class RadarDiagnosticOverlay extends ConsumerWidget {
   String _fmtDbm(double? v) => v == null ? '—' : '${v.toStringAsFixed(1)} dBm';
 
   String _fmtRad(double? v) => v == null ? '—' : '${v.toStringAsFixed(2)} rad';
+
+  String _fmtDeg(double? v) => v == null ? '—' : '${v.toStringAsFixed(0)}°';
 
   String _stateLabel(SonarSignalState state) => switch (state) {
         SonarSignalState.fresh => 'fresh',

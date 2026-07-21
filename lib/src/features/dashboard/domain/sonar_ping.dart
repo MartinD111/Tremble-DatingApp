@@ -59,3 +59,15 @@ double rssiToRadius(double rssi) {
   final factor = (rssi.clamp(-100.0, -40.0) + 100.0) / 60.0; // 0 far … 1 close
   return 1.0 - factor;
 }
+
+/// Maps a server `distanceBucket` (Phase B approach stage) to a radar radius,
+/// used before BLE RSSI locks on so the dot can appear from ~150m out. Returns
+/// `null` for an unknown/absent bucket (no dot). RSSI takes over in the final
+/// meters (`rssiToRadius`).
+double? bucketToRadius(String? bucket) => switch (bucket) {
+      'close' => 0.15,
+      '~50m' => 0.45,
+      '~150m' => 0.75,
+      'far' => 0.95,
+      _ => null,
+    };

@@ -18,6 +18,22 @@ void main() {
     });
   });
 
+  group('bucketToRadius', () {
+    test('maps coarse distance bands to increasing radii', () {
+      expect(bucketToRadius('close'), lessThan(bucketToRadius('~50m')!));
+      expect(bucketToRadius('~50m'), lessThan(bucketToRadius('~150m')!));
+      expect(bucketToRadius('~150m'), lessThan(bucketToRadius('far')!));
+    });
+    test("'close' sits near the center, 'far' near the edge", () {
+      expect(bucketToRadius('close'), lessThan(0.3));
+      expect(bucketToRadius('far'), greaterThan(0.8));
+    });
+    test('unknown / null bucket → null (no dot)', () {
+      expect(bucketToRadius(null), isNull);
+      expect(bucketToRadius('nonsense'), isNull);
+    });
+  });
+
   group('signalStateFor', () {
     test('fresh within grace', () {
       expect(
