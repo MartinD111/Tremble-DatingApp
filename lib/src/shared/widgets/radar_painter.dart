@@ -49,41 +49,42 @@ class RadarPainter extends CustomPainter {
     canvas.drawLine(Offset(center.dx, center.dy - maxRadius),
         Offset(center.dx, center.dy + maxRadius), crosshairPaint);
 
-    // Draw scanning line
-    final sweepAngle = radarProgress * 2 * pi;
-    final sweepPaint = Paint()
-      ..shader = SweepGradient(
-        startAngle: sweepAngle - 0.5,
-        endAngle: sweepAngle,
-        colors: [
-          Colors.transparent,
-          brandColor.withValues(alpha: 0.0),
-          brandColor.withValues(alpha: 0.3),
-        ],
-        stops: const [0.0, 0.05, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: maxRadius))
-      ..style = PaintingStyle.fill;
+    // Draw scanning sweep only while idle; sonar mode uses the partner dot.
+    if (pingDistance == null) {
+      final sweepAngle = radarProgress * 2 * pi;
+      final sweepPaint = Paint()
+        ..shader = SweepGradient(
+          startAngle: sweepAngle - 0.5,
+          endAngle: sweepAngle,
+          colors: [
+            Colors.transparent,
+            brandColor.withValues(alpha: 0.0),
+            brandColor.withValues(alpha: 0.3),
+          ],
+          stops: const [0.0, 0.05, 1.0],
+        ).createShader(Rect.fromCircle(center: center, radius: maxRadius))
+        ..style = PaintingStyle.fill;
 
-    canvas.save();
-    final sweepPath = Path()
-      ..moveTo(center.dx, center.dy)
-      ..arcTo(
-        Rect.fromCircle(center: center, radius: maxRadius),
-        sweepAngle - 0.5,
-        0.5,
-        false,
-      )
-      ..close();
-    canvas.drawPath(sweepPath, sweepPaint);
-    canvas.restore();
+      canvas.save();
+      final sweepPath = Path()
+        ..moveTo(center.dx, center.dy)
+        ..arcTo(
+          Rect.fromCircle(center: center, radius: maxRadius),
+          sweepAngle - 0.5,
+          0.5,
+          false,
+        )
+        ..close();
+      canvas.drawPath(sweepPath, sweepPaint);
+      canvas.restore();
 
-    // Draw scanning line itself
-    final lineEndX = center.dx + maxRadius * cos(sweepAngle);
-    final lineEndY = center.dy + maxRadius * sin(sweepAngle);
-    final linePaint = Paint()
-      ..color = brandColor.withValues(alpha: 0.6)
-      ..strokeWidth = 2;
-    canvas.drawLine(center, Offset(lineEndX, lineEndY), linePaint);
+      final lineEndX = center.dx + maxRadius * cos(sweepAngle);
+      final lineEndY = center.dy + maxRadius * sin(sweepAngle);
+      final linePaint = Paint()
+        ..color = brandColor.withValues(alpha: 0.6)
+        ..strokeWidth = 2;
+      canvas.drawLine(center, Offset(lineEndX, lineEndY), linePaint);
+    }
 
     // Center dot
     final centerDotPaint = Paint()
