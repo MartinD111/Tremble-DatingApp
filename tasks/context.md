@@ -1,3 +1,18 @@
+## Session State — 2026-07-22 10:25 CEST — ANDROID FGS DATASYNC TYPE DROPPED
+
+- **Active Task:** `20260722-android-fgs-timeout` — remove the `dataSync` foreground service type from Android radar services to prevent Android 15 `ForegroundServiceDidNotStopInTimeException` after all-day radar usage.
+- **Environment:** Dev local, branch `fix/android-fgs-timeout`. HIGH risk native Android foreground-service/manifest lane; founder approval required before merge. No Firebase, secrets, production deploy, WatchdogReceiver/BootReceiver blockade, or trampoline entry path touched.
+- **Modified Files:** `android/app/src/main/AndroidManifest.xml`; `android/app/src/main/kotlin/tremble/dating/app/radar/RadarForegroundService.kt`; `lib/src/core/background_service.dart`; `tasks/blockers.md`; `tasks/plan.md`; `tasks/context.md`.
+- **Open Problems:** Full runtime validation needs an Android 14/15 physical device: start radar, confirm foreground service remains active, BLE scans continue, GPS updates continue, and no `startForeground` SecurityException/FGS timeout crash appears. No Android device is attached locally (`adb devices` empty). Store/legal/config blockers otherwise unchanged.
+- **System Status:** PR #88 opened as draft; `flutter analyze --no-fatal-infos` clean; `flutter build apk --debug --flavor dev --dart-define-from-file=.env.json --dart-define=FLAVOR=dev` built `build/app/outputs/flutter-apk/app-dev-debug.apk`; fresh `devDebug` merged + packaged manifests show `location|connectedDevice` and no `FOREGROUND_SERVICE_DATA_SYNC`; commit hook passed Flutter 442/442 and backend Jest 185/185.
+
+## Session Handoff
+
+- **Completed:** Investigation confirmed Tremble radar needs `connectedDevice` for BLE scanning and `location` for GPS; `dataSync` was only broad manifest/runtime coverage. Manifest declarations, trampoline runtime mask, and `flutter_background_service` persisted type config now use `location|connectedDevice` only. `FOREGROUND_SERVICE_DATA_SYNC` permission removed because no app code requires it.
+- **In Progress:** PR #88 review/CI.
+- **Blocked:** Device-only radar start + BLE/GPS scan validation remains founder-owned on Android 14/15 hardware; founder approval required before merge.
+- **Next Action:** Founder reviews PR #88, runs the Android 14/15 radar device pass, then approves/merges if clean.
+
 ## Session State — 2026-07-22 01:15 CEST — REVEAL AVATAR LOADING STATE FIXED
 
 - **Active Task:** Prompt D / Lane 4 — replace the match reveal avatar's transient bare `?` with a loading state.

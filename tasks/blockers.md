@@ -160,8 +160,8 @@ void _openTremblingPartner(BuildContext context, MatchProfile partner) {
 ### BLOCKER-STORE-004 — Android Foreground Services Declaration
 **Date:** 2026-07-06
 **Status:** OPEN
-**Impact:** FGS types (location, connectedDevice, dataSync) require Google Play declaration.
-**Action:** Submit FGS declaration to Google Play. (Task 6h3p8gc78572RF9P)
+**Impact:** FGS types (`location`, `connectedDevice`) require Google Play declaration. `dataSync` was removed from the app manifest/runtime mask in branch `fix/android-fgs-timeout` because radar is BLE scanning + GPS, not a long-running data-transfer operation; do not declare `dataSync` in Play after that PR lands.
+**Action:** Submit FGS declaration to Google Play for `location` + `connectedDevice` only after the HIGH-risk native fix is approved/merged. (Task 6h3p8gc78572RF9P)
 
 ### BLOCKER-STORE-005 — Production APNs Credential Verification
 **Date:** 2026-07-16
