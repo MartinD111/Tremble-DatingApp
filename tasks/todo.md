@@ -18,6 +18,12 @@ Based on the 06-JUL-2026 Master Compliance Report, the focus is strictly on unbl
 - [x] **BLOCKER-LEGAL-005:** Sync Paywall copy with actual RevenueCat gates. (Task 6h3pmrF84Cf6JVQP)
 - [ ] **BLOCKER-STORE-005:** Verify the Firebase-stored APNs credential and complete build-22 physical-iPhone notification/action tests.
 
+### ACTIVE (Build 35 — Precise Finder)
+
+- [ ] **DEVICE-PASS-B35:** Two-phone device pass on build 35 (TestFlight) — reciprocal opt-in → arrow + distance 60→10m; one declines → fallback only; background → sharing stops. Script in `blockers.md` FEATURE-RADAR-SONAR. Closes the radar-sonar feature.
+- [ ] **PLAY-B35:** Upload `release-symbols/b35/app-prod-release.aab` to Play Console (versionCode 35).
+- [x] **FINDER-BACKEND:** rules + `updateFinderLocation`/`markMatchFound` deployed to prod; TTL on `finder.expireAt` ACTIVE (2026-07-22).
+
 ### REQUIRED (Pred Javno Objavo)
 
 - [ ] **Legal:** Configure Cookie/Consent banner (e.g., Usercentrics) for web and app. (Task 6h3pmrHxhCHX7q8P)
@@ -34,4 +40,4 @@ Based on the 06-JUL-2026 Master Compliance Report, the focus is strictly on unbl
 - [ ] Move any remaining non-critical legal docs to a CMS for easier updates.
 
 ---
-*Last Updated: 2026-07-16*
+*Last Updated: 2026-07-22*

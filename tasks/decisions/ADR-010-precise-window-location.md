@@ -51,3 +51,31 @@ Consequences:
 - (Con) High-accuracy GPS at ~3s while foregrounded costs battery during a window.
 - (Con) Urban GPS (~10–30m) means the arrow guides, not lasers; final meters still
   need BLE warmth + visual confirmation.
+
+---
+
+## Addendum — implementation deltas + accepted risk (2026-07-22, post-ship, PR #89 / build 35)
+
+Deltas hardened during implementation (all founder-visible in PR #89):
+- **Window binding:** every callable request carries a `windowId` = the match's
+  `notificationOwnerWaveId`, captured once at the opt-in tap and verified
+  transactionally server-side — a delayed/replayed call from a previous window
+  fails closed as `window_over` instead of recreating purged data.
+- **Poor GPS:** accuracy > 30m returns `poor_accuracy` AND deletes the caller's
+  prior stored coordinate (no stale "good" fix survives a degraded GPS).
+- **Foreground-only nuance:** backgrounding (paused/hidden/detached) revokes;
+  transient `inactive` interruptions (call banner, Control Center, biometric
+  prompt) do NOT — matches the home_screen BLE lifecycle gate.
+- **Write hygiene:** `finderOptIn` is written only when it changes (Rule #102) —
+  cadenced match-doc writes reset radar client state.
+- **TTL:** policy on collection group `finder`, field `expireAt` is ACTIVE in
+  prod (verified 2026-07-22, enabled via Firestore Admin REST API — Rule #103).
+
+Accepted risk (conscious, not a defect): within an active window, an opted-in
+partner could submit fabricated coordinates and use repeated bearing+distance
+responses to triangulate the other user's position more precisely than the
+returned numbers alone. This is inherent to any arrow+distance design and is
+bounded by the consent context: both users explicitly opted in this window,
+matched mutually, revocation is one tap / automatic on background, data TTLs in
+~2 minutes, and the window itself expires. Revisit only if abuse reports
+surface (mitigations would be response quantization or rate-shaping).

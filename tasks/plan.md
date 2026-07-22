@@ -1,8 +1,9 @@
 # Active Lane
 Plan ID: 20260722-precise-finder
 Risk Level: HIGH (Firestore rules + Cloud Functions + precise location handling)
-Founder Approval Required: YES before merge — location-privacy posture change per ADR-010 (granted at design stage, Session 60; merge gate still explicit). Founder also owns the prod deploys + Firestore TTL policy (manual steps in the PR).
-Branch: feat/precise-finder
+Founder Approval Required: YES — granted; PR #89 approved + squash-merged by founder 2026-07-22 (`18ff23f`), deploys authorized ("proceed with everything").
+Branch: feat/precise-finder (merged, deleted) → close-out on chore/build-35
+Status: DELIVERED — backend live in prod (rules + updateFinderLocation + markMatchFound, `--project prod`; TTL on finder.expireAt ACTIVE); pre-release bug hunt fixed the finderOptIn poll-churn flicker (Rule #102, `5c033a5`, redeployed); build 35 (1.0.0+35) on TestFlight (Delivery UUID `7b6785b1-7819-4dd0-8e90-5d159c3adb41`), AAB preserved for Play. REMAINING: founder two-phone device pass on build 35 + Play AAB upload.
 
 ## Objective (this lane)
 
