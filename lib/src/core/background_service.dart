@@ -18,6 +18,23 @@ import 'firebase_options_prod.dart';
 import 'geo_service.dart';
 import 'native_motion_service.dart';
 
+/// Flutter-prefs mirror of the user's radar intent (Rule #105).
+///
+/// Written at every toggle funnel (UI toggle + native tile/widget listener in
+/// home_screen), force-reset to `false` at cold start below, and read by
+/// `firebaseMessagingBackgroundHandler` to decide whether a silent push may
+/// refresh proximity presence. Distinct from the NATIVE `radar_active` key in
+/// RadarStateBridge's `tremble_radar` prefs file — native channels are not
+/// available in the FCM background isolate, so the intent must be mirrored
+/// where that isolate can read it.
+const String radarIntentPrefsKey = 'radar_active';
+
+/// Persist the user's radar intent for background isolates to read.
+Future<void> persistRadarIntent(bool active) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool(radarIntentPrefsKey, active);
+}
+
 /// Configure and register the background service.
 /// Call once in main() before runApp().
 Future<void> initializeBackgroundService() async {
@@ -69,7 +86,7 @@ Future<void> initializeBackgroundService() async {
   // toggles the radar on, this function is not called again until the
   // process dies and respawns.
   final prefs = await SharedPreferences.getInstance();
-  final wasActive = prefs.getBool('radar_active') ?? false;
+  final wasActive = prefs.getBool(radarIntentPrefsKey) ?? false;
   final isRunning = await service.isRunning();
   if (!wasActive && isRunning) {
     // Plugin is running but our state-of-truth says it shouldn't be.
@@ -80,7 +97,7 @@ Future<void> initializeBackgroundService() async {
   // re-enable radar after a process death — matches the ghost-free
   // expectation and avoids any auto-start leakage from prior sessions.
   if (wasActive) {
-    await prefs.setBool('radar_active', false);
+    await prefs.setBool(radarIntentPrefsKey, false);
   }
 }
 

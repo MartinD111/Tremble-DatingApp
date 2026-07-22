@@ -1,4 +1,23 @@
 # Active Lane
+Plan ID: 20260723-radar-off-invisible
+Risk Level: HIGH (Cloud Functions + FCM background handler + presence semantics) — risk_level: high
+Founder Approval Required: YES — before merge (HIGH gate) and before the `sendWave` prod deploy. Not yet granted.
+Branch: fix/radar-off-discoverable (off main, build-35 baseline)
+Status: FIX BUILT — BUG-RADAR-OFF-DISCOVERABLE (P0). Radar OFF now means invisible + unnotifiable + unmatchable. 4 TDD steps committed: (1) background presence refresh gated on stored `radar_active` intent (kills the self-sustaining freshness loop); (2) `GeoService.stop()` revocation write retried 3× + Sentry, no longer swallowed; (3) cold-start reconcile writes the proximity doc inactive when local intent is off; (4) `sendWave` rejects radar-off targets (`failed-precondition {reason:'target_radar_off'}`), client friendly-mapped. Verify: analyze clean · flutter 507/507 · functions tsc+eslint clean, jest 244/244 · debug APK built. REMAINING: founder merge + `firebase deploy --only functions:sendWave --project prod` (Rule #101).
+
+## Objective (this lane)
+
+BUG-RADAR-OFF-DISCOVERABLE (Rule #105): a user with radar OFF must be
+invisible, unnotifiable, and unmatchable. Presence derives from user intent
+only — never refreshed on message receipt, never left stale by a swallowed
+revocation write — and the server re-verifies the target's current radar
+state before allowing a wave (defense-in-depth). No proximity doc schema
+change; `scanProximityPairs`/bearing/cooldown, finder invariants, and the
+blocked-user eval-without-notify path all untouched.
+
+---
+
+# Prior Lane (merged — PR #89/#90)
 Plan ID: 20260722-precise-finder
 Risk Level: HIGH (Firestore rules + Cloud Functions + precise location handling)
 Founder Approval Required: YES — granted; PR #89 approved + squash-merged by founder 2026-07-22 (`18ff23f`), deploys authorized ("proceed with everything").

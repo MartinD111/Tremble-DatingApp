@@ -2,12 +2,63 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:geolocator/geolocator.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../features/map/domain/safe_zone_repository.dart';
+import 'background_service.dart' show radarIntentPrefsKey;
+import 'radar_integration_service.dart';
 
 const geoServiceEffectivePremiumPrefsKey = 'geo_effective_is_premium';
+
+/// Attempts [write] up to [maxAttempts] times, backing off between attempts.
+///
+/// Returns true as soon as one attempt succeeds. When every attempt fails,
+/// reports the last error through [onFinalFailure] exactly once and returns
+/// false — it NEVER throws, because the caller (`GeoService.stop()`) must not
+/// crash toggle paths. [wait] is injectable so tests run without real delays.
+@visibleForTesting
+Future<bool> runRevocationWriteWithRetry(
+  Future<void> Function() write, {
+  int maxAttempts = 3,
+  Duration backoff = const Duration(milliseconds: 250),
+  Future<void> Function(Duration) wait = Future.delayed,
+  void Function(Object error, StackTrace stackTrace)? onFinalFailure,
+}) async {
+  for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await write();
+      return true;
+    } catch (error, stackTrace) {
+      if (attempt == maxAttempts) {
+        onFinalFailure?.call(error, stackTrace);
+        return false;
+      }
+      await wait(backoff * attempt);
+    }
+  }
+  return false;
+}
+
+/// Pure reconcile decision (Rule #105): when the local radar intent is OFF,
+/// the server presence doc must be marked inactive. Errors are reported, not
+/// thrown — the reconcile is a fire-and-forget boot step.
+@visibleForTesting
+Future<void> reconcileRadarIntentCore({
+  required bool localIntentActive,
+  required Future<void> Function() writeInactive,
+  required void Function(Object error) onError,
+}) async {
+  if (localIntentActive) return;
+  try {
+    await writeInactive();
+  } catch (error) {
+    onError(error);
+  }
+}
 
 /// Geo Service — uploads minimized location data to Firestore periodically.
 ///
@@ -75,6 +126,11 @@ class GeoService {
   }
 
   /// Stop all geo updates and mark user as inactive in Firestore.
+  ///
+  /// The revocation write is the MOST critical proximity write (Rule #105):
+  /// if it is lost the user stays discoverable, wave-able and matchable for
+  /// up to the 24h TTL. It retries before giving up and reports the final
+  /// failure to Sentry — but never throws into callers.
   Future<void> stop() async {
     await _positionSub?.cancel();
     _positionSub = null;
@@ -87,19 +143,73 @@ class GeoService {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
-    try {
-      await _firestore.collection('proximity').doc(uid).set({
+    await runRevocationWriteWithRetry(
+      () => _firestore.collection('proximity').doc(uid).set({
         'radarActive': false,
         'isActive': false,
         'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    } catch (_) {
-      // Non-critical — silently fail
-    }
+      }, SetOptions(merge: true)),
+      onFinalFailure: (error, stackTrace) {
+        unawaited(Sentry.captureException(
+          error,
+          stackTrace: stackTrace,
+          hint: Hint.withMap({'context': 'geo_revocation_write_failed'}),
+        ));
+      },
+    );
   }
 
   /// Returns whether geo is running in degraded (low power) mode.
   bool get isLowPowerMode => _isLowPowerMode;
+
+  // Cold-start reconcile runs once per process — the write is idempotent, the
+  // guard just avoids redundant Firestore traffic on dashboard remounts.
+  static bool _coldStartReconciled = false;
+
+  /// Reconcile server presence with local radar intent at first auth-ready
+  /// after app start (Rule #105 — reconcile-on-boot is mandatory).
+  ///
+  /// Unclean termination (force-kill, FGS death) never runs [stop], leaving
+  /// `isActive: true` on the server for up to the 24h TTL. If neither the
+  /// Flutter-prefs intent mirror nor the native radar state says the radar is
+  /// ON, the proximity doc is marked inactive. Fire-and-forget: failures leave
+  /// one Sentry breadcrumb and are otherwise swallowed. Even a wrong inactive
+  /// write self-heals — a running GeoService re-asserts presence within 90s.
+  Future<void> reconcileColdStartRadarIntent() async {
+    if (_coldStartReconciled) return;
+    _coldStartReconciled = true;
+
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    var intentActive = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      intentActive = prefs.getBool(radarIntentPrefsKey) ?? false;
+      if (!intentActive) {
+        // Belt-and-braces: tile/widget flows persist intent natively first.
+        intentActive = await RadarIntegrationService.instance.getRadarActive();
+      }
+    } catch (_) {
+      intentActive = false;
+    }
+
+    await reconcileRadarIntentCore(
+      localIntentActive: intentActive,
+      writeInactive: () => _firestore.collection('proximity').doc(uid).set({
+        'radarActive': false,
+        'isActive': false,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)),
+      onError: (error) {
+        Sentry.addBreadcrumb(Breadcrumb(
+          message: 'cold-start radar reconcile write failed',
+          level: SentryLevel.warning,
+          data: {'error': error.toString()},
+        ));
+      },
+    );
+  }
 
   // ─── Private ──────────────────────────────────────────
 

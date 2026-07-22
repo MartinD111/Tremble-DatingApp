@@ -71,9 +71,11 @@ jest.mock("firebase-functions/v2/https", () => ({
     onCall: jest.fn((_, handler) => handler),
     HttpsError: class HttpsError extends Error {
         code: string;
-        constructor(code: string, message: string) {
+        details?: unknown;
+        constructor(code: string, message: string, details?: unknown) {
             super(message);
             this.code = code;
+            this.details = details;
         }
     },
 }));
@@ -1041,6 +1043,132 @@ describe("Matches Module", () => {
             expect(rateLimit.checkRateLimit).not.toHaveBeenCalled();
         });
 
+        // Rule #105 defense-in-depth: one stale proximity doc must not make a
+        // radar-off user wave-able (and thus matchable via wave-back).
+        describe("target radar gate", () => {
+            const wireSendWaveMocks = (proximityData: {
+                exists: boolean;
+                data: Record<string, unknown>;
+            }) => {
+                const usersGetMock = jest.fn<() => Promise<{
+                    exists: boolean;
+                    data: () => Record<string, unknown>;
+                }>>()
+                    .mockResolvedValueOnce({
+                        exists: true,
+                        data: () => ({ isBanned: false }),
+                    })
+                    .mockResolvedValueOnce({
+                        exists: true,
+                        data: () => ({ blockedUserIds: [] }),
+                    });
+                const proximityGetMock = jest.fn(async () => ({
+                    exists: proximityData.exists,
+                    data: () => proximityData.data,
+                }));
+                const addMock = jest.fn(async () => ({ id: "wave-id" }));
+
+                mockDb.collection.mockImplementation((collectionName: unknown) => {
+                    if (collectionName === "users") {
+                        return { doc: jest.fn(() => ({ get: usersGetMock })) };
+                    }
+                    if (collectionName === "proximity") {
+                        return { doc: jest.fn(() => ({ get: proximityGetMock })) };
+                    }
+                    if (collectionName === "waves") {
+                        return { add: addMock };
+                    }
+                    throw new Error(`Unexpected collection: ${collectionName}`);
+                });
+                return { addMock };
+            };
+
+            const callSendWave = async () => {
+                const authGuard = await import("../../src/middleware/authGuard");
+                const rateLimit = await import("../../src/middleware/rateLimit");
+                const validate = await import("../../src/middleware/validate");
+                const { sendWave } = await import(
+                    "../../src/modules/matches/matches.functions"
+                );
+
+                jest.mocked(authGuard.requireAuth).mockReturnValue("senderUid");
+                jest.mocked(authGuard.assertNotBanned)
+                    .mockImplementation(() => undefined);
+                jest.mocked(validate.assertValidDocumentId)
+                    .mockReturnValue("targetUid");
+                jest.mocked(rateLimit.checkRateLimit).mockResolvedValue(undefined);
+
+                const callable = sendWave as unknown as (
+                    request: unknown
+                ) => Promise<unknown>;
+                return callable({
+                    auth: { uid: "senderUid", token: {} },
+                    data: { targetUid: "targetUid" },
+                } as never);
+            };
+
+            it("rejects when the target's presence is stale", async () => {
+                const { addMock } = wireSendWaveMocks({
+                    exists: true,
+                    data: {
+                        radarActive: true,
+                        isActive: true,
+                        updatedAt: { toMillis: () => Date.now() - 10 * 60 * 1000 },
+                    },
+                });
+
+                await expect(callSendWave()).rejects.toMatchObject({
+                    code: "failed-precondition",
+                    details: { reason: "target_radar_off" },
+                });
+                expect(addMock).not.toHaveBeenCalled();
+            });
+
+            it("rejects when the target's radarActive is false", async () => {
+                const { addMock } = wireSendWaveMocks({
+                    exists: true,
+                    data: {
+                        radarActive: false,
+                        isActive: false,
+                        updatedAt: { toMillis: () => Date.now() - 5_000 },
+                    },
+                });
+
+                await expect(callSendWave()).rejects.toMatchObject({
+                    code: "failed-precondition",
+                    details: { reason: "target_radar_off" },
+                });
+                expect(addMock).not.toHaveBeenCalled();
+            });
+
+            it("rejects when the target has no proximity doc", async () => {
+                const { addMock } = wireSendWaveMocks({
+                    exists: false,
+                    data: {},
+                });
+
+                await expect(callSendWave()).rejects.toMatchObject({
+                    code: "failed-precondition",
+                    details: { reason: "target_radar_off" },
+                });
+                expect(addMock).not.toHaveBeenCalled();
+            });
+
+            it("accepts a fresh, radar-active target", async () => {
+                const { addMock } = wireSendWaveMocks({
+                    exists: true,
+                    data: {
+                        radarActive: true,
+                        isActive: true,
+                        updatedAt: { toMillis: () => Date.now() - 30_000 },
+                    },
+                });
+
+                await expect(callSendWave()).resolves.toEqual({ success: true });
+                expect(addMock).toHaveBeenCalledTimes(1);
+            });
+        });
+
         it("expires a new wave five minutes after the reciprocity window", async () => {
             jest.useFakeTimers();
             jest.setSystemTime(new Date("2026-07-15T12:00:00.000Z"));
@@ -1072,10 +1200,24 @@ describe("Matches Module", () => {
                     });
                 const docMock = jest.fn(() => ({ get: getMock }));
                 const addMock = jest.fn(async () => ({ id: "wave-id" }));
+                const proximityGetMock = jest.fn(async () => ({
+                    exists: true,
+                    data: () => ({
+                        radarActive: true,
+                        isActive: true,
+                        updatedAt: {
+                            toMillis: () =>
+                                new Date("2026-07-15T11:59:30.000Z").getTime(),
+                        },
+                    }),
+                }));
 
                 mockDb.collection.mockImplementation((collectionName: unknown) => {
                     if (collectionName === "users") {
                         return { doc: docMock };
+                    }
+                    if (collectionName === "proximity") {
+                        return { doc: jest.fn(() => ({ get: proximityGetMock })) };
                     }
                     if (collectionName === "waves") {
                         return { add: addMock };

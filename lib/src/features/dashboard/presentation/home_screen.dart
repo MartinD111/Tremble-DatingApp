@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
+import 'package:firebase_core/firebase_core.dart' show Firebase;
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'radar_animation.dart';
@@ -23,6 +24,8 @@ import '../../matches/presentation/matches_screen.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
+import '../../../core/background_service.dart'
+    show persistRadarIntent; // Radar-intent mirror (Rule #105)
 import '../../../core/ble_service.dart'; // BLE must run in main isolate
 import '../../../core/ble_restore_service.dart'; // iOS BLE state restoration
 import '../../../core/geo_service.dart';
@@ -113,6 +116,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final current = ref.read(isScanningProvider);
       if (active == current) return; // already in sync
       ref.read(isScanningProvider.notifier).state = active;
+      // Mirror the native toggle into the Flutter-prefs radar intent so the
+      // FCM background handler sees the same truth (Rule #105).
+      unawaited(persistRadarIntent(active));
       if (active) {
         unawaited(
           _syncBackgroundEffectivePremium(ref.read(effectiveIsPremiumProvider)),
@@ -168,6 +174,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (user != null) {
         NotificationService.saveToken(user.id);
         BleRestoreService().initialize();
+        // Rule #105: after an unclean stop the server doc can still say
+        // isActive:true — reconcile it with local intent at first auth-ready.
+        // GeoService's field initializers need a live Firebase app, which
+        // widget tests don't have.
+        if (Firebase.apps.isNotEmpty) {
+          unawaited(GeoService().reconcileColdStartRadarIntent());
+        }
       }
       ref.read(tutorialProvider.notifier).checkFirstLaunch();
     });
@@ -1097,6 +1110,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             final newState = !isScanning;
                             ref.read(isScanningProvider.notifier).state =
                                 newState;
+                            // Persist intent BEFORE starting/stopping so the
+                            // FCM background handler never reads a stale
+                            // value mid-transition (Rule #105).
+                            await persistRadarIntent(newState);
 
                             if (newState) {
                               if (kDebugMode) {
@@ -1664,6 +1681,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                       ref
                                           .read(isScanningProvider.notifier)
                                           .state = false;
+                                      unawaited(persistRadarIntent(false));
                                       BleService().stop();
                                       if (Platform.isAndroid) {
                                         RadarIntegrationService.instance

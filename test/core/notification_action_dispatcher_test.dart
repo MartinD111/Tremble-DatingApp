@@ -187,6 +187,7 @@ void main() {
 
     await processBackgroundNotificationData(
       incomingWaveData(),
+      isRadarActive: () async => true,
       refreshProximity: () async {
         proximityRefreshes++;
       },
