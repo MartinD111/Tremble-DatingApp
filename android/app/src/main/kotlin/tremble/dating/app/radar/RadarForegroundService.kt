@@ -152,16 +152,16 @@ class RadarForegroundService : Service() {
     }
 
     /**
-     * The FGS types we may legally assert right now. DATA_SYNC needs no runtime
-     * permission and is always included so the service always has a valid type.
-     * LOCATION and CONNECTED_DEVICE are added only when their runtime permission
-     * is actually granted — asserting either without it throws SecurityException
-     * on Android 14+. All three are declared in the manifest service entry, so
-     * any subset is a legal startForeground() type mask.
+     * The FGS types we may legally assert right now. Radar only needs LOCATION
+     * for GPS and CONNECTED_DEVICE for BLE scanning; DATA_SYNC is deliberately
+     * excluded so long-running radar sessions do not consume Android 15's
+     * dataSync timeout budget. Any asserted type must be declared in the
+     * manifest service entry, so this mask must stay in lockstep with
+     * AndroidManifest.xml.
      */
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun allowedFgsTypes(): Int {
-        var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+        var types = 0
         if (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) ||
             hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
         ) {

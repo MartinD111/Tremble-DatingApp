@@ -3,7 +3,6 @@
 
     <!-- Foreground service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <!-- Required on Android 14+ when foregroundServiceType includes
          "connectedDevice" (BLE radar). Android throws SecurityException at
@@ -125,7 +124,7 @@
 
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
-            android:foregroundServiceType="dataSync|location|connectedDevice"
+            android:foregroundServiceType="location|connectedDevice"
             />
 
         <!-- ── flutter_background_service auto-restart blockade ─────────────
@@ -169,7 +168,7 @@
         <service
             android:name=".radar.RadarForegroundService"
             android:exported="false"
-            android:foregroundServiceType="dataSync|location|connectedDevice"
+            android:foregroundServiceType="location|connectedDevice"
             />
 
         <!-- ── Quick Settings tile ───────────────────────────────────────── -->

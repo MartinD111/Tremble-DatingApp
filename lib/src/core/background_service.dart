@@ -45,6 +45,10 @@ Future<void> initializeBackgroundService() async {
       initialNotificationTitle: 'Tremble Radar',
       initialNotificationContent: 'Starting…',
       foregroundServiceNotificationId: 888,
+      foregroundServiceTypes: const [
+        AndroidForegroundType.location,
+        AndroidForegroundType.connectedDevice,
+      ],
     ),
     iosConfiguration: IosConfiguration(
       autoStart: false,

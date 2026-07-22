@@ -1,4 +1,23 @@
 # Active Lane
+Plan ID: 20260722-android-fgs-timeout
+Risk Level: HIGH (Android native foreground service + manifest permissions)
+Founder Approval Required: YES before merge — native Android service/manifest behavior; code change requested, merge gate still explicit.
+Branch: fix/android-fgs-timeout
+
+## Objective (this lane)
+
+Stop Android 15 `ForegroundServiceDidNotStopInTimeException(dataSync)` for all-day
+radar sessions by removing the unnecessary `dataSync` foreground service type
+from both Tremble Android foreground services and every runtime type assertion.
+Radar's real work is BLE scanning (`connectedDevice`) plus GPS (`location`).
+Do not touch the WatchdogReceiver/BootReceiver removal blockade or the
+RadarForegroundService trampoline path. Verify with dev APK build and merged
+manifest inspection; full runtime scan validation needs founder Android 14/15
+hardware.
+
+---
+
+# Prior Lane
 Plan ID: 20260721-build-33-release
 Risk Level: HIGH (prod build → TestFlight + Play; outward-facing)
 Founder Approval Required: YES — granted 2026-07-21 ("upload to testflight, prepare playconsole update").
