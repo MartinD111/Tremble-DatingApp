@@ -414,26 +414,36 @@ export const markMatchFound = onCall(
 
         try {
             const matchId = assertValidDocumentId(request.data?.matchId, "matchId");
-            const matchRef = await loadParticipantMatch(matchId, uid);
+            const matchRef = db.collection("matches").doc(matchId);
+            const finderQuery = matchRef.collection("finder");
+            const userRef = db.collection("users").doc(uid);
 
-            await matchRef.update({
-                status: "found",
-                isFound: true,
-                foundAt: FieldValue.serverTimestamp(),
-            });
+            await db.runTransaction(async (transaction) => {
+                const matchSnapshot = await transaction.get(matchRef);
+                if (!matchSnapshot.exists) {
+                    throw new HttpsError("not-found", "Match not found.");
+                }
+                const userIds = (matchSnapshot.data()?.userIds as string[] | undefined) ?? [];
+                if (!userIds.includes(uid)) {
+                    throw new HttpsError(
+                        "permission-denied",
+                        "Not a participant in this match.",
+                    );
+                }
+                const finderSnapshot = await transaction.get(finderQuery);
 
-            const finderSnapshot = await matchRef.collection("finder").get();
-            const finderPurge = db.batch();
-            finderPurge.update(matchRef, {
-                finderOptIn: FieldValue.delete(),
-            });
-            for (const finderDoc of finderSnapshot.docs) {
-                finderPurge.delete(finderDoc.ref);
-            }
-            await finderPurge.commit();
-
-            await db.collection("users").doc(uid).update({
-                lastWaveFoundAt: FieldValue.serverTimestamp(),
+                transaction.update(matchRef, {
+                    status: "found",
+                    isFound: true,
+                    foundAt: FieldValue.serverTimestamp(),
+                    finderOptIn: FieldValue.delete(),
+                });
+                for (const finderDoc of finderSnapshot.docs) {
+                    transaction.delete(finderDoc.ref);
+                }
+                transaction.update(userRef, {
+                    lastWaveFoundAt: FieldValue.serverTimestamp(),
+                });
             });
 
             logStructured({
