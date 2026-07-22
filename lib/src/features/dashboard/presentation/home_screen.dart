@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
+import 'package:firebase_core/firebase_core.dart' show Firebase;
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'radar_animation.dart';
@@ -173,6 +174,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (user != null) {
         NotificationService.saveToken(user.id);
         BleRestoreService().initialize();
+        // Rule #105: after an unclean stop the server doc can still say
+        // isActive:true — reconcile it with local intent at first auth-ready.
+        // GeoService's field initializers need a live Firebase app, which
+        // widget tests don't have.
+        if (Firebase.apps.isNotEmpty) {
+          unawaited(GeoService().reconcileColdStartRadarIntent());
+        }
       }
       ref.read(tutorialProvider.notifier).checkFirstLaunch();
     });

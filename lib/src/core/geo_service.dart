@@ -7,7 +7,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../features/map/domain/safe_zone_repository.dart';
+import 'background_service.dart' show radarIntentPrefsKey;
+import 'radar_integration_service.dart';
 
 const geoServiceEffectivePremiumPrefsKey = 'geo_effective_is_premium';
 
@@ -38,6 +41,23 @@ Future<bool> runRevocationWriteWithRetry(
     }
   }
   return false;
+}
+
+/// Pure reconcile decision (Rule #105): when the local radar intent is OFF,
+/// the server presence doc must be marked inactive. Errors are reported, not
+/// thrown — the reconcile is a fire-and-forget boot step.
+@visibleForTesting
+Future<void> reconcileRadarIntentCore({
+  required bool localIntentActive,
+  required Future<void> Function() writeInactive,
+  required void Function(Object error) onError,
+}) async {
+  if (localIntentActive) return;
+  try {
+    await writeInactive();
+  } catch (error) {
+    onError(error);
+  }
 }
 
 /// Geo Service — uploads minimized location data to Firestore periodically.
@@ -141,6 +161,55 @@ class GeoService {
 
   /// Returns whether geo is running in degraded (low power) mode.
   bool get isLowPowerMode => _isLowPowerMode;
+
+  // Cold-start reconcile runs once per process — the write is idempotent, the
+  // guard just avoids redundant Firestore traffic on dashboard remounts.
+  static bool _coldStartReconciled = false;
+
+  /// Reconcile server presence with local radar intent at first auth-ready
+  /// after app start (Rule #105 — reconcile-on-boot is mandatory).
+  ///
+  /// Unclean termination (force-kill, FGS death) never runs [stop], leaving
+  /// `isActive: true` on the server for up to the 24h TTL. If neither the
+  /// Flutter-prefs intent mirror nor the native radar state says the radar is
+  /// ON, the proximity doc is marked inactive. Fire-and-forget: failures leave
+  /// one Sentry breadcrumb and are otherwise swallowed. Even a wrong inactive
+  /// write self-heals — a running GeoService re-asserts presence within 90s.
+  Future<void> reconcileColdStartRadarIntent() async {
+    if (_coldStartReconciled) return;
+    _coldStartReconciled = true;
+
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    var intentActive = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      intentActive = prefs.getBool(radarIntentPrefsKey) ?? false;
+      if (!intentActive) {
+        // Belt-and-braces: tile/widget flows persist intent natively first.
+        intentActive = await RadarIntegrationService.instance.getRadarActive();
+      }
+    } catch (_) {
+      intentActive = false;
+    }
+
+    await reconcileRadarIntentCore(
+      localIntentActive: intentActive,
+      writeInactive: () => _firestore.collection('proximity').doc(uid).set({
+        'radarActive': false,
+        'isActive': false,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)),
+      onError: (error) {
+        Sentry.addBreadcrumb(Breadcrumb(
+          message: 'cold-start radar reconcile write failed',
+          level: SentryLevel.warning,
+          data: {'error': error.toString()},
+        ));
+      },
+    );
+  }
 
   // ─── Private ──────────────────────────────────────────
 
