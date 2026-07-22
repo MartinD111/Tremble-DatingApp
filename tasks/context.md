@@ -1,3 +1,21 @@
+## Session State — 2026-07-22 (Session 61) — PRECISE TURN-TO-FIND BUILT (Tasks 1–7); PR OPEN FOR FOUNDER
+
+- **Active Task:** `20260722-precise-finder` — ADR-010 precise turn-to-find, executed task-by-task from `docs/superpowers/plans/2026-07-22-precise-finder.md`. Codex (ChatGPT) drove Tasks 1–5 + most of Task 6 in worktree `.worktrees/precise-finder` (branch `feat/precise-finder` off `2fec374`), ran out of tokens mid-Task-6 fix wave; Claude verified + committed the fix wave and completed Task 7.
+- **Environment:** Dev local. HIGH-risk lane (Firestore rules + Cloud Functions + precise location). NOTHING deployed — founder owns `firebase deploy --only firestore:rules --project prod`, `--only functions:updateFinderLocation,functions:markMatchFound --project prod`, and the manual Firestore TTL policy on collection group `finder` field `expireAt`.
+- **Delivered (14 commits, all TDD, per-task reviews):**
+  - T1 `haversineMeters` extracted into `bearing.ts`.
+  - T2 `updateFinderLocation` callable — server-only coords in `matches/{id}/finder/{uid}`, returns ONLY `{partnerSharing, bearing?, distanceM?, reason?}`; window-token binding (`notificationOwnerWaveId` captured at opt-in, verified transactionally) closes the restart race; revocation bypasses the polling quota; poor accuracy (>30m) deletes the prior sample; non-finite inputs rejected at the schema.
+  - T3 atomic purge on `markMatchFound` — status finalization + finder docs + `finderOptIn` + cooldown in ONE transaction (no crash window).
+  - T4 `finder/**` locked in firestore.rules (`allow read, write: if false`) + reproducible emulator rules gate: pinned local firebase-tools, `demo-tremble-rules-test` isolation, 16/16 cases; `functions/node_modules` excluded from Flutter analysis.
+  - T5 `bearingIsMeaningful` — coarse geohash arrow only at `'~150m'`/`'far'`; close-range keeps orbit.
+  - T6 `FinderRepository` + `PreciseFinderController` — window captured once at tap, 3s serialized cadence + stationary heartbeat, stop/revoke on found/expiry/toggle/generation guard, late-response + stale-location-epoch suppression, Earth-scale distance cap.
+  - T7 radar UI — "Help us find each other" CTA (per-window), waiting/active("NN m")/fallback microcopy (en/sl/hr), precise bearing feeds the dot through `SonarPingController` at compass framerate (`preciseRadius`, 75m full scale), app-background stops the session, dev-sim hides the finder (no `matchId`).
+- **Verification:** Flutter 487/487 + analyze clean + dart format stable; Functions build/tsc clean, Jest 237 passed (12 emulator-only skipped), eslint clean; emulator rules 16/16.
+- **Open / NOT done:** Task 8 (pubspec → 1.0.0+35) DEFERRED — build 34 (C/D/E) is not on main yet; bump only after it is. Founder manual steps: prod deploys + TTL policy + two-phone device pass (opt-in both sides, walk 60→10m, arrow true + distance counts down; one declines → other stays fallback; background → sharing stops).
+- **System Status:** PR open from `feat/precise-finder`, HIGH-risk → founder approval gate before merge.
+
+---
+
 ## Session State — 2026-07-22 10:25 CEST — ANDROID FGS DATASYNC TYPE DROPPED
 
 - **Active Task:** `20260722-android-fgs-timeout` — remove the `dataSync` foreground service type from Android radar services to prevent Android 15 `ForegroundServiceDidNotStopInTimeException` after all-day radar usage.
