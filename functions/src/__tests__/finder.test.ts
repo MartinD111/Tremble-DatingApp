@@ -4,6 +4,7 @@ const NOW_MS = Date.parse("2026-07-22T12:00:00.000Z");
 const CALLER_UID = "userA";
 const PARTNER_UID = "userB";
 const MATCH_ID = "userA_userB";
+const WINDOW_ID = "wave-current";
 
 let capturedOnCallOptions: unknown;
 const mockOnCall = jest.fn((options: unknown, handler: unknown) => {
@@ -22,6 +23,7 @@ const mockDeleteField = jest.fn(() => "DELETE_FIELD");
 type DocumentData = Record<string, unknown>;
 
 let matchData: DocumentData;
+let callerData: DocumentData | undefined;
 let partnerData: DocumentData | undefined;
 let matchExists: boolean;
 const matchUpdate = jest.fn<(data: DocumentData) => Promise<void>>();
@@ -43,7 +45,7 @@ function finderRef(uid: string) {
         id: uid,
         kind: "finder",
         get: jest.fn(async () => isCaller
-            ? snapshot(false)
+            ? snapshot(callerData !== undefined, callerData)
             : snapshot(partnerData !== undefined, partnerData)),
         set: isCaller ? callerSet : partnerSet,
         delete: isCaller ? callerDelete : partnerDelete,
@@ -130,6 +132,7 @@ function request(overrides: DocumentData = {}) {
         auth: { uid: CALLER_UID, token: {} },
         data: {
             matchId: MATCH_ID,
+            windowId: WINDOW_ID,
             lat: 45.548,
             lng: 13.730,
             accuracy: 8,
@@ -162,10 +165,12 @@ describe("updateFinderLocation", () => {
         matchExists = true;
         matchData = {
             userIds: [CALLER_UID, PARTNER_UID],
+            notificationOwnerWaveId: WINDOW_ID,
             status: "pending",
             expiresAt: new Date(NOW_MS + 60_000),
             finderOptIn: { [PARTNER_UID]: true },
         };
+        callerData = undefined;
         partnerData = {
             lat: 45.549,
             lng: 13.731,
@@ -185,6 +190,71 @@ describe("updateFinderLocation", () => {
             enforceAppCheck: true,
             region: "europe-west1",
         }));
+    });
+
+    it("windowId input contract rejects an absent windowId", async () => {
+        const completeInput = request();
+        const data: DocumentData = { ...completeInput.data };
+        delete data.windowId;
+        const input = { ...completeInput, data };
+
+        await expect(invoke(input)).rejects.toMatchObject({ code: "invalid-argument" });
+
+        expect(mockDb.runTransaction).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        ["empty", ""],
+        ["path-like", "old/window"],
+        ["overlong", "w".repeat(129)],
+    ])("windowId input contract rejects %s values", async (_label, windowId) => {
+        await expect(invoke(request({ windowId }))).rejects.toMatchObject({
+            code: "invalid-argument",
+        });
+
+        expect(mockDb.runTransaction).not.toHaveBeenCalled();
+    });
+
+    it("windowId input contract accepts the current Firestore-safe windowId", async () => {
+        const result = await invoke(request());
+
+        expect(result.partnerSharing).toBe(true);
+    });
+
+    it("window identity rejects a delayed request after deterministic restart", async () => {
+        matchData.notificationOwnerWaveId = "wave-restarted";
+
+        const result = await invoke(request());
+
+        expect(result).toEqual({ partnerSharing: false, reason: "window_over" });
+        expectExactKeys(result, ["partnerSharing", "reason"]);
+        expect(matchUpdate).not.toHaveBeenCalled();
+        expect(callerSet).not.toHaveBeenCalled();
+    });
+
+    it("window identity is rechecked when a transaction retry observes a new window", async () => {
+        mockDb.runTransaction.mockImplementationOnce(async (handler) => {
+            await handler({
+                get: (ref) => ref.get(),
+                update: async () => undefined,
+                set: async () => undefined,
+                delete: async () => undefined,
+            });
+            matchData.notificationOwnerWaveId = "wave-restarted";
+            return handler({
+                get: (ref) => ref.get(),
+                update: (ref, data) => ref.update(data),
+                set: (ref, data, options) => ref.set(data, options),
+                delete: (ref) => ref.delete(),
+            });
+        });
+
+        const result = await invoke(request());
+
+        expect(result).toEqual({ partnerSharing: false, reason: "window_over" });
+        expectExactKeys(result, ["partnerSharing", "reason"]);
+        expect(matchUpdate).not.toHaveBeenCalled();
+        expect(callerSet).not.toHaveBeenCalled();
     });
 
     it("rate-limits the caller with a static cadence-aware endpoint before Firestore", async () => {
@@ -350,6 +420,53 @@ describe("updateFinderLocation", () => {
         expect(callerDelete).toHaveBeenCalledTimes(1);
     });
 
+    it.each(["pending", "found", "expired"])(
+        "revocation bypasses an unavailable polling limiter for a %s window",
+        async (windowState) => {
+            mockCheckRateLimit.mockRejectedValue(Object.assign(
+                new Error("limiter unavailable"),
+                { code: "resource-exhausted" },
+            ));
+            if (windowState === "found") matchData.status = "found";
+            if (windowState === "expired") matchData.expiresAt = new Date(NOW_MS - 1);
+
+            const result = await invoke(request({ optIn: false }));
+
+            expect(result).toEqual({ partnerSharing: false });
+            expectExactKeys(result, ["partnerSharing"]);
+            expect(mockCheckRateLimit).not.toHaveBeenCalled();
+            expect(matchUpdate).toHaveBeenCalledWith({
+                [`finderOptIn.${CALLER_UID}`]: "DELETE_FIELD",
+            });
+            expect(callerDelete).toHaveBeenCalledTimes(1);
+        },
+    );
+
+    it("revocation still rejects a nonparticipant when the polling limiter is unavailable", async () => {
+        mockRequireAuth.mockReturnValue("intruder");
+        mockCheckRateLimit.mockRejectedValue(Object.assign(
+            new Error("limiter unavailable"),
+            { code: "resource-exhausted" },
+        ));
+
+        await expect(invoke(request({ optIn: false }))).rejects.toMatchObject({
+            code: "permission-denied",
+        });
+
+        expect(mockCheckRateLimit).not.toHaveBeenCalled();
+        expect(matchUpdate).not.toHaveBeenCalled();
+        expect(callerDelete).not.toHaveBeenCalled();
+    });
+
+    it("revocation validates windowId before cleanup", async () => {
+        await expect(invoke(request({ optIn: false, windowId: "" }))).rejects.toMatchObject({
+            code: "invalid-argument",
+        });
+
+        expect(matchUpdate).not.toHaveBeenCalled();
+        expect(callerDelete).not.toHaveBeenCalled();
+    });
+
     it("preserves opt-in but never stores a caller coordinate with accuracy over 30m", async () => {
         const result = await invoke(request({ accuracy: 30.01 }));
 
@@ -357,6 +474,35 @@ describe("updateFinderLocation", () => {
         expectExactKeys(result, ["partnerSharing", "reason"]);
         expect(matchUpdate).toHaveBeenCalledWith({ [`finderOptIn.${CALLER_UID}`]: true });
         expect(callerSet).not.toHaveBeenCalled();
+    });
+
+    it("poor GPS deletes a prior fresh caller coordinate while preserving current-window opt-in", async () => {
+        callerData = {
+            lat: 45.548,
+            lng: 13.730,
+            accuracy: 5,
+            updatedAt: mockTimestampFromMillis(NOW_MS - 1_000),
+            expireAt: mockTimestampFromMillis(NOW_MS + 119_000),
+        };
+
+        const result = await invoke(request({ accuracy: 30.01 }));
+
+        expect(result).toEqual({ partnerSharing: false, reason: "poor_accuracy" });
+        expectExactKeys(result, ["partnerSharing", "reason"]);
+        expect(matchUpdate).toHaveBeenCalledWith({ [`finderOptIn.${CALLER_UID}`]: true });
+        expect(callerDelete).toHaveBeenCalledTimes(1);
+        expect(callerSet).not.toHaveBeenCalled();
+    });
+
+    it("poor GPS reciprocal fallback returns partner_stale when the counterpart record is absent", async () => {
+        partnerData = undefined;
+
+        const result = await invoke(request());
+
+        expect(result).toEqual({ partnerSharing: false, reason: "partner_stale" });
+        expectExactKeys(result, ["partnerSharing", "reason"]);
+        expect(result).not.toHaveProperty("bearing");
+        expect(result).not.toHaveProperty("distanceM");
     });
 
     it("never computes a precise result from a partner coordinate with accuracy over 30m", async () => {

@@ -14,6 +14,7 @@ const MAX_ACCURACY_METERS = 30;
 
 const updateFinderLocationSchema = z.object({
     matchId: z.string().min(1).max(128).regex(/^[a-zA-Z0-9_-]+$/),
+    windowId: z.string().min(1).max(128).regex(/^[a-zA-Z0-9_-]+$/),
     lat: z.number().min(-90).max(90),
     lng: z.number().min(-180).max(180),
     accuracy: z.number().min(0),
@@ -52,11 +53,13 @@ export const updateFinderLocation = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request): Promise<FinderResponse> => {
         const callerUid = requireAuth(request);
-        await checkRateLimit(callerUid, "updateFinderLocation", {
-            maxRequests: 30,
-            windowMs: 60_000,
-        });
         const data = validateRequest(updateFinderLocationSchema, request.data);
+        if (data.optIn) {
+            await checkRateLimit(callerUid, "updateFinderLocation", {
+                maxRequests: 30,
+                windowMs: 60_000,
+            });
+        }
         const matchRef = db.collection("matches").doc(data.matchId);
         const callerFinderRef = matchRef.collection("finder").doc(callerUid);
 
@@ -83,6 +86,10 @@ export const updateFinderLocation = onCall(
                 return { partnerSharing: false };
             }
 
+            if (match?.notificationOwnerWaveId !== data.windowId) {
+                return { partnerSharing: false, reason: "window_over" };
+            }
+
             const expiresAtMs = millis(match?.expiresAt);
             if (match?.status !== "pending" || expiresAtMs === null || expiresAtMs <= now) {
                 return { partnerSharing: false, reason: "window_over" };
@@ -91,6 +98,7 @@ export const updateFinderLocation = onCall(
             const optInUpdate = { [`finderOptIn.${callerUid}`]: true };
             if (data.accuracy > MAX_ACCURACY_METERS) {
                 transaction.update(matchRef, optInUpdate);
+                transaction.delete(callerFinderRef);
                 return { partnerSharing: false, reason: "poor_accuracy" };
             }
 
