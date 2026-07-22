@@ -1,5 +1,12 @@
 import 'dart:math' as math;
 
+/// Whether a coarse server bearing is useful at this distance.
+///
+/// Geohash-derived bearings are intentionally ignored at close range, where
+/// cell-centre error can point in a misleading direction.
+bool bearingIsMeaningful(String? distanceBucket) =>
+    distanceBucket == '~150m' || distanceBucket == 'far';
+
 /// Slow orbit angle (radians) used when no real bearing is available yet —
 /// the "distance known, direction searching" state. Completes one full sweep
 /// every [period]. Result is in `[0, 2π)`.
@@ -29,6 +36,12 @@ double dotAngle({required double bearingDeg, required double headingDeg}) {
   final relativeRad = (bearingDeg - headingDeg) * math.pi / 180.0;
   return _wrapTwoPi(relativeRad - math.pi / 2);
 }
+
+/// Radar radius (0 = center, 1 = edge) for a precise partner distance in
+/// meters. The precise arrow owns roughly the final approach, so the radar's
+/// full scale is [fullScaleMeters]; anything beyond it pins to the edge.
+double preciseRadius(double distanceM, {double fullScaleMeters = 75}) =>
+    (distanceM / fullScaleMeters).clamp(0.0, 1.0);
 
 /// Angular exponential moving average for the noisy magnetometer heading.
 ///

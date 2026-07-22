@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:tremble/src/features/dashboard/application/precise_finder_controller.dart';
 import 'package:tremble/src/features/dashboard/application/warmth_controller.dart';
 import 'package:tremble/src/features/dashboard/application/proximity_ping_controller.dart';
 import 'package:tremble/src/features/dashboard/domain/warmth_direction.dart';
@@ -43,7 +44,8 @@ class RadarSearchOverlay extends ConsumerStatefulWidget {
   ConsumerState<RadarSearchOverlay> createState() => _RadarSearchOverlayState();
 }
 
-class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
+class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
+    with WidgetsBindingObserver {
   late Timer _timer;
   late Duration _remaining;
 
@@ -73,12 +75,29 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _calculateRemaining();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(_calculateRemaining);
       if (_remaining.inSeconds <= 0) _timer.cancel();
     });
+  }
+
+  /// Precise finding is strictly foreground-only (ADR-010): leaving the app
+  /// revokes sharing immediately so no coordinate outlives the user's
+  /// attention. Re-opting in on return is one tap. Only genuine backgrounding
+  /// counts — `inactive` fires for transient interruptions (incoming-call
+  /// banner, Control Center, biometric prompt) while the user is still in the
+  /// app, and must not revoke (same gate as `home_screen.dart`'s BLE stop).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final isBackgrounded = state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached;
+    if (!isBackgrounded) return;
+    if (widget.session.matchId == null) return;
+    unawaited(ref.read(preciseFinderControllerProvider.notifier).stop());
   }
 
   void _calculateRemaining() {
@@ -89,6 +108,7 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer.cancel();
     super.dispose();
   }
@@ -197,6 +217,10 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
           ),
           const SizedBox(height: 10),
         ],
+        // Precise turn-to-find (ADR-010) — per-window reciprocal opt-in.
+        // Only offered for a real match window; the dev simulation has none.
+        if (widget.session.matchId != null)
+          _finderSection(widget.session.matchId!, colorScheme, lang),
         // Warmth Indicator (Hot/Cold Navigation) — replaced by a "Searching…"
         // caption when the partner signal is lost (warmer/colder is meaningless
         // with no fresh RSSI). Mirrors the dot fading on the radar.
@@ -213,6 +237,118 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay> {
     );
 
     return content;
+  }
+
+  /// One row per finder state: idle/stopped → opt-in CTA; waiting → partner
+  /// microcopy; active → live distance; fallback → honest look-around copy.
+  Widget _finderSection(
+    String matchId,
+    ColorScheme colorScheme,
+    String lang,
+  ) {
+    final finder = ref.watch(preciseFinderControllerProvider);
+    final muted = colorScheme.onSurface.withValues(alpha: 0.5);
+
+    Widget caption(String text, {IconData? icon, Color? color}) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 12, color: color ?? muted),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                text,
+                style: GoogleFonts.instrumentSans(
+                  color: color ?? muted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
+        );
+
+    switch (finder.status) {
+      case FinderStatus.idle:
+      case FinderStatus.stopped:
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: GestureDetector(
+            onTap: () => unawaited(
+              ref
+                  .read(preciseFinderControllerProvider.notifier)
+                  .optInAndStart(matchId),
+            ),
+            behavior: HitTestBehavior.opaque,
+            // The visual pill is slimmer than 48dp; the constrained wrapper
+            // guarantees the minimum touch target around it.
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              alignment: Alignment.center,
+              child: GlassCard(
+                opacity: 0.18,
+                borderRadius: 100,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(LucideIcons.locateFixed,
+                        size: 14, color: colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      t('finder_cta', lang),
+                      style: GoogleFonts.instrumentSans(
+                        color: colorScheme.onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      case FinderStatus.waiting:
+        return caption(
+          t('finder_waiting', lang)
+              .replaceAll('{name}', widget.session.partnerName),
+          icon: LucideIcons.hourglass,
+        );
+      case FinderStatus.active:
+        final distanceM = finder.reading?.distanceM;
+        if (distanceM == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.navigation,
+                  size: 13, color: colorScheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                '${distanceM.round()} m',
+                style: GoogleFonts.jetBrainsMono(
+                  color: colorScheme.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
+        );
+      case FinderStatus.fallback:
+        return caption(
+          t('finder_look_around', lang),
+          icon: LucideIcons.eye,
+        );
+    }
   }
 
   Widget _searchingIndicator(ColorScheme colorScheme) {

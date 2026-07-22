@@ -1,4 +1,26 @@
 # Active Lane
+Plan ID: 20260722-precise-finder
+Risk Level: HIGH (Firestore rules + Cloud Functions + precise location handling)
+Founder Approval Required: YES before merge — location-privacy posture change per ADR-010 (granted at design stage, Session 60; merge gate still explicit). Founder also owns the prod deploys + Firestore TTL policy (manual steps in the PR).
+Branch: feat/precise-finder
+
+## Objective (this lane)
+
+Precise turn-to-find (ADR-010, build 35 payload): inside an active mutual
+window, with per-window RECIPROCAL opt-in from BOTH users, share precise
+location server-side to compute an accurate arrow + live distance — raw
+coordinates never reach the other client. Free for everyone. Executed
+task-by-task from `docs/superpowers/plans/2026-07-22-precise-finder.md`
+(Tasks 1–7; Task 8 pubspec bump to build 35 deferred until build 34 is on
+main). Raw coords only in `matches/{matchId}/finder/{uid}` (rules deny ALL
+client access, ~2-min TTL, purged atomically on `markMatchFound`); callable
+returns ONLY `{partnerSharing, bearing?, distanceM?, reason?}`; precise arrow
+requires both-opted + fresh (<10s) + window pending, else coarse
+geohash-arrow fallback (`bearingIsMeaningful`) + BLE warmth.
+
+---
+
+# Prior Lane (merged — PR #88)
 Plan ID: 20260722-android-fgs-timeout
 Risk Level: HIGH (Android native foreground service + manifest permissions)
 Founder Approval Required: YES before merge — native Android service/manifest behavior; code change requested, merge gate still explicit.

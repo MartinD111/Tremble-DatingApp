@@ -31,7 +31,7 @@ import {
 import { ENFORCE_APP_CHECK } from "../../config/env";
 import { Sentry } from "../../core/sentry";
 import { calculateCompatibilityScore } from "../compatibility/compatibility_calculator";
-import { computeBearing, distanceBucket } from "./bearing";
+import { computeBearing, distanceBucket, haversineMeters } from "./bearing";
 
 const db = getFirestore();
 
@@ -121,18 +121,6 @@ function decodeGeohash(geohash: string): { lat: number; lng: number } {
         lat: (latRange[0] + latRange[1]) / 2,
         lng: (lngRange[0] + lngRange[1]) / 2,
     };
-}
-
-function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6_371_000;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLng = ((lng2 - lng1) * Math.PI) / 180;
-    const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLng / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 /**

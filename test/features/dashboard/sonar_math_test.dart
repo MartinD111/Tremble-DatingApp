@@ -3,6 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tremble/src/features/dashboard/domain/sonar_math.dart';
 
 void main() {
+  group('bearingIsMeaningful', () {
+    for (final bucket in ['~150m', 'far']) {
+      test('returns true for exact approach bucket $bucket', () {
+        expect(bearingIsMeaningful(bucket), isTrue);
+      });
+    }
+
+    for (final bucket in <String?>['close', '~50m', null, 'unknown']) {
+      test('returns false for non-approach bucket $bucket', () {
+        expect(bearingIsMeaningful(bucket), isFalse);
+      });
+    }
+  });
+
   group('orbitAngle', () {
     test('starts at 0', () {
       expect(orbitAngle(Duration.zero), closeTo(0.0, 1e-9));
@@ -77,6 +91,28 @@ void main() {
       final v = smoothHeading(359, 2, alpha: 0.9);
       expect(v, greaterThanOrEqualTo(0));
       expect(v, lessThan(360));
+    });
+  });
+
+  group('preciseRadius', () {
+    test('maps 0m to the center', () {
+      expect(preciseRadius(0), 0.0);
+    });
+
+    test('maps half the full scale to the middle of the radar', () {
+      expect(preciseRadius(37.5), closeTo(0.5, 1e-9));
+    });
+
+    test('maps the full scale to the edge', () {
+      expect(preciseRadius(75), 1.0);
+    });
+
+    test('clamps distances beyond the full scale to the edge', () {
+      expect(preciseRadius(200), 1.0);
+    });
+
+    test('clamps negative distances to the center', () {
+      expect(preciseRadius(-5), 0.0);
     });
   });
 }

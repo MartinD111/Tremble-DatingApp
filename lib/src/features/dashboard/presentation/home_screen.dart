@@ -985,6 +985,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                           session: RadarSearchSession(
                                             partnerName: name,
                                             partnerUid: partnerId,
+                                            matchId: activeMatch.id,
                                             expiresAt: activeMatch.createdAt
                                                 .add(const Duration(
                                                     minutes: 30)),

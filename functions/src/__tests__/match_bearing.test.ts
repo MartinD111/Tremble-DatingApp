@@ -2,6 +2,7 @@ import { describe, it, expect } from "@jest/globals";
 import {
     computeBearing,
     distanceBucket,
+    haversineMeters,
 } from "../../src/modules/proximity/bearing";
 
 describe("computeBearing (forward azimuth, 0-359 from north)", () => {
@@ -56,5 +57,18 @@ describe("distanceBucket", () => {
         const order = ["close", "~50m", "~150m", "far"];
         const seq = [5, 40, 120, 400].map(distanceBucket);
         expect(seq).toEqual(order);
+    });
+});
+
+describe("haversineMeters", () => {
+    it("returns approximately 100m for a known pair", () => {
+        const meters = haversineMeters(0, 0, 0, 0.00089932);
+
+        expect(meters).toBeGreaterThanOrEqual(99);
+        expect(meters).toBeLessThanOrEqual(101);
+    });
+
+    it("returns zero for identical points", () => {
+        expect(haversineMeters(46.05, 14.5, 46.05, 14.5)).toBe(0);
     });
 });

@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibration/vibration.dart';
 import 'package:tremble/src/core/ble_service.dart';
 import 'package:tremble/src/core/compass_service.dart';
+import 'package:tremble/src/features/dashboard/application/precise_finder_controller.dart';
 import 'package:tremble/src/features/dashboard/domain/sonar_ping.dart';
 import 'package:tremble/src/features/dashboard/domain/sonar_math.dart';
 import 'package:tremble/src/features/match/application/match_service.dart';
@@ -37,6 +38,13 @@ class SonarPingController extends _$SonarPingController {
   double? _heading;
   String? _distanceBucket;
 
+  // Precise finder (ADR-010): server-computed bearing/distance from the
+  // reciprocal in-window session. While present they take priority over the
+  // coarse geohash bearing and the BLE radius; the raw coordinates behind
+  // them never reach the client.
+  double? _preciseBearing;
+  double? _preciseDistanceM;
+
   // Smoothing factor (0.0 to 1.0, lower = smoother but slower to react).
   static const double _smoothingAlpha = 0.3;
 
@@ -64,6 +72,15 @@ class SonarPingController extends _$SonarPingController {
     // location never reaches here — only these derived values.
     _bearing = search.bearingForUser(myUid);
     _distanceBucket = search.distanceBucket;
+
+    // Precise finder session: read the current value now (an override or an
+    // already-running session may be active before this build) and track
+    // changes without rebuilding the whole controller.
+    _updatePrecise(ref.read(preciseFinderControllerProvider));
+    ref.listen(preciseFinderControllerProvider, (_, next) {
+      _updatePrecise(next);
+      _tickFreshness();
+    });
 
     // Live device heading (compass) → smoothed, re-aims the dot as the phone
     // turns without rebuilding the whole controller. Raw source is null-safe.
@@ -95,8 +112,11 @@ class SonarPingController extends _$SonarPingController {
 
       _lastSampleAt = DateTime.now();
       _lastRadius = rssiToRadius(_smoothedRssi!);
+      final preciseDistance = _preciseDistanceM;
       state = SonarPing(
-        radius: _lastRadius,
+        radius: preciseDistance != null
+            ? preciseRadius(preciseDistance)
+            : _lastRadius,
         angle: _currentAngle(),
         rssi: _smoothedRssi,
         signalState: SonarSignalState.fresh,
@@ -118,10 +138,36 @@ class SonarPingController extends _$SonarPingController {
     return SonarPing.empty;
   }
 
+  void _updatePrecise(FinderState finder) {
+    final reading = finder.reading;
+    if (finder.status == FinderStatus.active &&
+        reading != null &&
+        reading.hasPreciseData) {
+      _preciseBearing = reading.bearing;
+      _preciseDistanceM = reading.distanceM;
+    } else {
+      _preciseBearing = null;
+      _preciseDistanceM = null;
+    }
+  }
+
   /// Recomputes freshness on a fixed cadence: holds the last hint through the
   /// grace window, then fades the dot (radius → null) once truly lost. Keeps
   /// the orbit angle live so the dot never freezes.
+  ///
+  /// A live precise-finder fix (refreshed every ~3s server round-trip) is
+  /// its own freshness source: it renders a solid dot even with no BLE lock.
   void _tickFreshness() {
+    final preciseDistance = _preciseDistanceM;
+    if (preciseDistance != null) {
+      state = SonarPing(
+        radius: preciseRadius(preciseDistance),
+        angle: _currentAngle(),
+        rssi: _smoothedRssi,
+        signalState: SonarSignalState.fresh,
+      );
+      return;
+    }
     final last = _lastSampleAt;
     final since = last == null
         ? const Duration(days: 1)
@@ -152,13 +198,20 @@ class SonarPingController extends _$SonarPingController {
     }
   }
 
-  /// The dot's screen angle: the real bearing (partner direction relative to
-  /// where the phone points) when both server bearing and compass heading are
-  /// available, otherwise the slow searching orbit.
+  /// The dot's screen angle: the precise finder bearing when the reciprocal
+  /// session is live, else the coarse bearing (partner direction relative to
+  /// where the phone points) only when it is meaningful at approach range,
+  /// otherwise the slow searching orbit.
   double _currentAngle() {
-    final bearing = _bearing;
     final heading = _heading;
-    if (bearing != null && heading != null) {
+    final precise = _preciseBearing;
+    if (precise != null && heading != null) {
+      return dotAngle(bearingDeg: precise, headingDeg: heading);
+    }
+    final bearing = _bearing;
+    if (bearing != null &&
+        heading != null &&
+        bearingIsMeaningful(_distanceBucket)) {
       return dotAngle(bearingDeg: bearing, headingDeg: heading);
     }
     return orbitAngle(_orbit.elapsed);
@@ -175,6 +228,8 @@ class SonarPingController extends _$SonarPingController {
     _bearing = null;
     _heading = null;
     _distanceBucket = null;
+    _preciseBearing = null;
+    _preciseDistanceM = null;
   }
 
   void _startPingLoop() {

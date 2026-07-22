@@ -414,15 +414,36 @@ export const markMatchFound = onCall(
 
         try {
             const matchId = assertValidDocumentId(request.data?.matchId, "matchId");
-            const matchRef = await loadParticipantMatch(matchId, uid);
+            const matchRef = db.collection("matches").doc(matchId);
+            const finderQuery = matchRef.collection("finder");
+            const userRef = db.collection("users").doc(uid);
 
-            await matchRef.update({
-                status: "found",
-                isFound: true,
-                foundAt: FieldValue.serverTimestamp(),
-            });
-            await db.collection("users").doc(uid).update({
-                lastWaveFoundAt: FieldValue.serverTimestamp(),
+            await db.runTransaction(async (transaction) => {
+                const matchSnapshot = await transaction.get(matchRef);
+                if (!matchSnapshot.exists) {
+                    throw new HttpsError("not-found", "Match not found.");
+                }
+                const userIds = (matchSnapshot.data()?.userIds as string[] | undefined) ?? [];
+                if (!userIds.includes(uid)) {
+                    throw new HttpsError(
+                        "permission-denied",
+                        "Not a participant in this match.",
+                    );
+                }
+                const finderSnapshot = await transaction.get(finderQuery);
+
+                transaction.update(matchRef, {
+                    status: "found",
+                    isFound: true,
+                    foundAt: FieldValue.serverTimestamp(),
+                    finderOptIn: FieldValue.delete(),
+                });
+                for (const finderDoc of finderSnapshot.docs) {
+                    transaction.delete(finderDoc.ref);
+                }
+                transaction.update(userRef, {
+                    lastWaveFoundAt: FieldValue.serverTimestamp(),
+                });
             });
 
             logStructured({
@@ -647,8 +668,12 @@ export const onWaveCreated = onDocumentCreated(
                         seenBy: [],
                         isFound: FieldValue.delete(),
                         foundAt: FieldValue.delete(),
+                        finderOptIn: FieldValue.delete(),
                         notificationOwnerWaveId: waveId,
                     });
+                    for (const uid of uids) {
+                        transaction.delete(matchRef.collection("finder").doc(uid));
+                    }
                     transaction.delete(snapshot.ref);
                     if (reciprocalWaveRef) transaction.delete(reciprocalWaveRef);
                     return true;

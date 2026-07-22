@@ -41,6 +41,8 @@ export {
     getPulseIntercept,
 } from "./modules/matches/intercept.functions";
 
+export { updateFinderLocation } from "./modules/matches/finder.functions";
+
 // ── Uploads Module (Cloudflare R2) ───────────────────────
 export { generateUploadUrl } from "./modules/uploads/uploads.functions";
 

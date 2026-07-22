@@ -14,6 +14,7 @@ const mockMessagingSend = jest.fn<(message: unknown) => Promise<string>>();
 const mockSendMatchNotificationEmail = jest.fn<() => Promise<void>>();
 const mockTransactionSet = jest.fn();
 const mockTransactionUpdate = jest.fn();
+const mockTransactionDelete = jest.fn();
 const mockOnDocumentCreated = jest.fn((_: unknown, handler: unknown) => handler);
 const mockTimestampFromMillis = jest.fn((millis: number) => ({
     toMillis: () => millis,
@@ -138,7 +139,12 @@ function setupWaveTriggerDb(options: {
     reciprocalCreatedAt?: Date;
     profileGate?: Promise<void>;
     existingMatchOwnerWaveId?: string;
-    existingMatch?: { ownerWaveId?: string; status?: string; createdAt?: Date };
+    existingMatch?: {
+        ownerWaveId?: string;
+        status?: string;
+        createdAt?: Date;
+        finderOptIn?: Record<string, boolean>;
+    };
 } = {}): {
     where: jest.Mock;
     orderBy: jest.Mock;
@@ -147,7 +153,17 @@ function setupWaveTriggerDb(options: {
     const sender = options.sender ?? defaultSender;
     const receiver = options.receiver ?? defaultReceiver;
     const reciprocalRef = { kind: "reciprocal", path: "waves/reciprocal-wave" };
-    const matchRef = { kind: "match", path: "matches/senderUid_receiverUid" };
+    const matchRef = {
+        kind: "match",
+        path: "matches/senderUid_receiverUid",
+        collection: jest.fn((name: string) => ({
+            doc: jest.fn((uid: string) => ({
+                kind: name,
+                uid,
+                path: `matches/senderUid_receiverUid/${name}/${uid}`,
+            })),
+        })),
+    };
     const senderRef = { kind: "user", uid: "senderUid", path: "users/senderUid" };
     const receiverRef = { kind: "user", uid: "receiverUid", path: "users/receiverUid" };
     const whereCalls: Array<[unknown, unknown, unknown]> = [];
@@ -222,6 +238,7 @@ function setupWaveTriggerDb(options: {
                                 notificationOwnerWaveId:
                                     options.existingMatch!.ownerWaveId,
                                 status: options.existingMatch!.status,
+                                finderOptIn: options.existingMatch!.finderOptIn,
                                 createdAt: options.existingMatch!.createdAt
                                     ? { toDate: () => options.existingMatch!.createdAt }
                                     : undefined,
@@ -242,7 +259,7 @@ function setupWaveTriggerDb(options: {
             }),
             set: mockTransactionSet,
             update: mockTransactionUpdate,
-            delete: jest.fn(),
+            delete: mockTransactionDelete,
         };
         return (callback as (transaction: unknown) => Promise<unknown>)(transaction);
     });
@@ -1179,6 +1196,7 @@ describe("Matches Module", () => {
             mockSendMatchNotificationEmail.mockReset();
             mockTransactionSet.mockReset();
             mockTransactionUpdate.mockReset();
+            mockTransactionDelete.mockReset();
             logSpy = jest.spyOn(console, "log").mockImplementation(() => undefined);
         });
 
@@ -1237,6 +1255,36 @@ describe("Matches Module", () => {
                 expect(mockMessagingSend).toHaveBeenCalled();
             });
 
+        it("clears prior finder consent and coordinates on immediate re-engagement",
+            async () => {
+                setupWaveTriggerDb({
+                    reciprocal: () => true,
+                    existingMatch: {
+                        ownerWaveId: "old-wave",
+                        status: "found",
+                        finderOptIn: { senderUid: true, receiverUid: true },
+                    },
+                });
+                mockMessagingSend.mockResolvedValue("message-id");
+
+                await invokeWaveTrigger();
+
+                expect(mockTransactionUpdate).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.objectContaining({ finderOptIn: "DELETE_FIELD" }),
+                );
+                expect(mockTransactionDelete).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        path: "matches/senderUid_receiverUid/finder/senderUid",
+                    }),
+                );
+                expect(mockTransactionDelete).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        path: "matches/senderUid_receiverUid/finder/receiverUid",
+                    }),
+                );
+            });
+
         it("does NOT restart an in-flight window (same-burst reciprocal wave)",
             async () => {
                 setupWaveTriggerDb({
@@ -1261,30 +1309,126 @@ describe("Matches Module", () => {
     // returned permission-denied and crashed the trembling window. These
     // callables perform the writes via the Admin SDK after a participant check.
     describe("markMatchFound", () => {
-        it("sets found status + caller cooldown when the caller is a participant", async () => {
+        function setupMarkFoundDb(options: {
+            exists?: boolean;
+            participant?: boolean;
+            status?: string;
+            transactionFailure?: Error;
+        } = {}) {
+            const finderRefs = [
+                { kind: "finderDoc", path: "matches/userA_userB/finder/userA" },
+                { kind: "finderDoc", path: "matches/userA_userB/finder/userB" },
+                { kind: "finderDoc", path: "matches/userA_userB/finder/stale-extra-doc" },
+            ];
+            const matchSnapshot = {
+                exists: options.exists ?? true,
+                data: () => ({
+                    userIds: options.participant === false
+                        ? ["userB", "userC"]
+                        : ["userA", "userB"],
+                    status: options.status ?? "pending",
+                }),
+            };
+            const finderSnapshot = {
+                docs: finderRefs.map((ref) => ({ ref })),
+            };
+            const operationOrder: string[] = [];
+            const queuedWrites: Array<Record<string, unknown>> = [];
+            const committedWrites: Array<Record<string, unknown>> = [];
+
+            const directMatchGet = jest.fn(async () => matchSnapshot);
+            const directMatchUpdate = jest.fn(async () => undefined);
+            const directFinderGet = jest.fn(async () => finderSnapshot);
+            const directUserUpdate = jest.fn(async () => undefined);
+            const finderQuery = {
+                kind: "finderQuery",
+                path: "matches/userA_userB/finder",
+                get: directFinderGet,
+            };
+            const matchRef = {
+                kind: "match",
+                path: "matches/userA_userB",
+                get: directMatchGet,
+                update: directMatchUpdate,
+                collection: jest.fn(() => finderQuery),
+            };
+            const userRef = {
+                kind: "user",
+                path: "users/userA",
+                update: directUserUpdate,
+            };
+            const directBatch = {
+                update: jest.fn(),
+                delete: jest.fn(),
+                commit: jest.fn(async () => undefined),
+            };
+
+            const transactionGet = jest.fn(async (ref: { kind: string }) => {
+                operationOrder.push(`get:${ref.kind}`);
+                if (ref.kind === "match") return matchSnapshot;
+                if (ref.kind === "finderQuery") return finderSnapshot;
+                throw new Error(`Unexpected transaction read: ${ref.kind}`);
+            });
+            const transactionUpdate = jest.fn((
+                ref: { kind: string; path: string },
+                data: Record<string, unknown>,
+            ) => {
+                operationOrder.push(`update:${ref.kind}`);
+                queuedWrites.push({ type: "update", ref, data });
+            });
+            const transactionDelete = jest.fn((ref: { kind: string; path: string }) => {
+                operationOrder.push(`delete:${ref.kind}`);
+                queuedWrites.push({ type: "delete", ref });
+            });
+
+            mockDb.collection.mockImplementation((name: unknown) => {
+                if (name === "matches") return { doc: jest.fn(() => matchRef) };
+                if (name === "users") return { doc: jest.fn(() => userRef) };
+                throw new Error(`Unexpected collection: ${String(name)}`);
+            });
+            mockDb.batch.mockReturnValue(directBatch);
+            mockDb.runTransaction.mockImplementation(async (callback: unknown) => {
+                const result = await (callback as (transaction: unknown) => Promise<unknown>)({
+                    get: transactionGet,
+                    update: transactionUpdate,
+                    delete: transactionDelete,
+                });
+                if (options.transactionFailure) throw options.transactionFailure;
+                committedWrites.push(...queuedWrites);
+                return result;
+            });
+
+            return {
+                committedWrites,
+                directBatch,
+                directMatchGet,
+                directMatchUpdate,
+                directUserUpdate,
+                finderRefs,
+                matchRef,
+                operationOrder,
+                queuedWrites,
+                transactionDelete,
+                transactionGet,
+                transactionUpdate,
+                userRef,
+            };
+        }
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            mockDb.batch.mockReset();
+            mockDb.runTransaction.mockReset();
+        });
+
+        it("commits status, all finder cleanup, and cooldown in one transaction", async () => {
             const authGuard = await import("../../src/middleware/authGuard");
             const validate = await import("../../src/middleware/validate");
             const { markMatchFound } = await import("../../src/modules/matches/matches.functions");
 
             jest.mocked(authGuard.requireAuth).mockReturnValue("userA");
             jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
-
-            const matchUpdate = jest.fn(async () => undefined);
-            const userUpdate = jest.fn(async () => undefined);
-            const matchGet = jest.fn(async () => ({
-                exists: true,
-                data: () => ({ userIds: ["userA", "userB"] }),
-            }));
-
-            mockDb.collection.mockImplementation((name: unknown) => {
-                if (name === "matches") {
-                    return { doc: jest.fn(() => ({ get: matchGet, update: matchUpdate })) };
-                }
-                if (name === "users") {
-                    return { doc: jest.fn(() => ({ update: userUpdate })) };
-                }
-                throw new Error(`Unexpected collection: ${String(name)}`);
-            });
+            const harness = setupMarkFoundDb();
 
             const callable = markMatchFound as unknown as (r: unknown) => Promise<unknown>;
             const result = await callable({
@@ -1292,41 +1436,67 @@ describe("Matches Module", () => {
                 data: { matchId: "userA_userB" },
             } as never);
 
-            expect(result).toMatchObject({ success: true });
-            expect(matchUpdate).toHaveBeenCalledWith(expect.objectContaining({
-                status: "found",
-                isFound: true,
-                foundAt: "SERVER_TIMESTAMP",
-            }));
-            expect(userUpdate).toHaveBeenCalledWith(expect.objectContaining({
-                lastWaveFoundAt: "SERVER_TIMESTAMP",
-            }));
+            expect(result).toEqual({ success: true });
+            expect(mockDb.runTransaction).toHaveBeenCalledTimes(1);
+            expect(harness.operationOrder.slice(0, 2)).toEqual([
+                "get:match",
+                "get:finderQuery",
+            ]);
+            expect(harness.transactionUpdate).toHaveBeenNthCalledWith(
+                1,
+                harness.matchRef,
+                {
+                    status: "found",
+                    isFound: true,
+                    foundAt: "SERVER_TIMESTAMP",
+                    finderOptIn: "DELETE_FIELD",
+                },
+            );
+            expect(harness.transactionDelete.mock.calls.map(([ref]) => ref)).toEqual(
+                harness.finderRefs,
+            );
+            expect(harness.transactionUpdate).toHaveBeenNthCalledWith(
+                2,
+                harness.userRef,
+                { lastWaveFoundAt: "SERVER_TIMESTAMP" },
+            );
+            expect(harness.committedWrites).toHaveLength(5);
+            expect(harness.directMatchUpdate).not.toHaveBeenCalled();
+            expect(harness.directBatch.commit).not.toHaveBeenCalled();
+            expect(harness.directUserUpdate).not.toHaveBeenCalled();
         });
 
-        it("rejects a non-participant with permission-denied and writes nothing", async () => {
+        it("commits none of status, purge, or cooldown when the transaction fails", async () => {
+            const authGuard = await import("../../src/middleware/authGuard");
+            const validate = await import("../../src/middleware/validate");
+            const { markMatchFound } = await import("../../src/modules/matches/matches.functions");
+
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userA");
+            jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
+            const transactionFailure = new Error("transaction commit failed");
+            const harness = setupMarkFoundDb({ transactionFailure });
+
+            const callable = markMatchFound as unknown as (r: unknown) => Promise<unknown>;
+            await expect(callable({
+                auth: { uid: "userA", token: {} },
+                data: { matchId: "userA_userB" },
+            } as never)).rejects.toBe(transactionFailure);
+
+            expect(harness.queuedWrites).toHaveLength(5);
+            expect(harness.committedWrites).toEqual([]);
+            expect(harness.directMatchUpdate).not.toHaveBeenCalled();
+            expect(harness.directBatch.commit).not.toHaveBeenCalled();
+            expect(harness.directUserUpdate).not.toHaveBeenCalled();
+        });
+
+        it("queues no transaction writes for a non-participant", async () => {
             const authGuard = await import("../../src/middleware/authGuard");
             const validate = await import("../../src/middleware/validate");
             const { markMatchFound } = await import("../../src/modules/matches/matches.functions");
 
             jest.mocked(authGuard.requireAuth).mockReturnValue("intruder");
             jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
-
-            const matchUpdate = jest.fn();
-            const userUpdate = jest.fn();
-            const matchGet = jest.fn(async () => ({
-                exists: true,
-                data: () => ({ userIds: ["userA", "userB"] }),
-            }));
-
-            mockDb.collection.mockImplementation((name: unknown) => {
-                if (name === "matches") {
-                    return { doc: jest.fn(() => ({ get: matchGet, update: matchUpdate })) };
-                }
-                if (name === "users") {
-                    return { doc: jest.fn(() => ({ update: userUpdate })) };
-                }
-                throw new Error(`Unexpected collection: ${String(name)}`);
-            });
+            const harness = setupMarkFoundDb({ participant: false });
 
             const callable = markMatchFound as unknown as (r: unknown) => Promise<unknown>;
             await expect(callable({
@@ -1334,8 +1504,38 @@ describe("Matches Module", () => {
                 data: { matchId: "userA_userB" },
             } as never)).rejects.toMatchObject({ code: "permission-denied" });
 
-            expect(matchUpdate).not.toHaveBeenCalled();
-            expect(userUpdate).not.toHaveBeenCalled();
+            expect(mockDb.runTransaction).toHaveBeenCalledTimes(1);
+            expect(harness.transactionGet).toHaveBeenCalledTimes(1);
+            expect(harness.queuedWrites).toEqual([]);
+            expect(harness.committedWrites).toEqual([]);
+            expect(harness.directMatchUpdate).not.toHaveBeenCalled();
+            expect(harness.directUserUpdate).not.toHaveBeenCalled();
+        });
+
+        it("still purges finder data when an already-found call is retried", async () => {
+            const authGuard = await import("../../src/middleware/authGuard");
+            const validate = await import("../../src/middleware/validate");
+            const { markMatchFound } = await import("../../src/modules/matches/matches.functions");
+
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userA");
+            jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
+            const harness = setupMarkFoundDb({ status: "found" });
+
+            const callable = markMatchFound as unknown as (r: unknown) => Promise<unknown>;
+            await expect(callable({
+                auth: { uid: "userA", token: {} },
+                data: { matchId: "userA_userB" },
+            } as never)).resolves.toEqual({ success: true });
+
+            expect(harness.transactionDelete.mock.calls.map(([ref]) => ref)).toEqual(
+                harness.finderRefs,
+            );
+            expect(harness.transactionUpdate).toHaveBeenNthCalledWith(
+                1,
+                harness.matchRef,
+                expect.objectContaining({ finderOptIn: "DELETE_FIELD" }),
+            );
+            expect(harness.committedWrites).toHaveLength(5);
         });
 
         it("rejects with not-found when the match document does not exist", async () => {
@@ -1345,20 +1545,17 @@ describe("Matches Module", () => {
 
             jest.mocked(authGuard.requireAuth).mockReturnValue("userA");
             jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
-
-            const matchGet = jest.fn(async () => ({ exists: false, data: () => undefined }));
-            mockDb.collection.mockImplementation((name: unknown) => {
-                if (name === "matches") {
-                    return { doc: jest.fn(() => ({ get: matchGet, update: jest.fn() })) };
-                }
-                throw new Error(`Unexpected collection: ${String(name)}`);
-            });
+            const harness = setupMarkFoundDb({ exists: false });
 
             const callable = markMatchFound as unknown as (r: unknown) => Promise<unknown>;
             await expect(callable({
                 auth: { uid: "userA", token: {} },
                 data: { matchId: "userA_userB" },
             } as never)).rejects.toMatchObject({ code: "not-found" });
+
+            expect(harness.transactionGet).toHaveBeenCalledTimes(1);
+            expect(harness.queuedWrites).toEqual([]);
+            expect(harness.committedWrites).toEqual([]);
         });
     });
 
