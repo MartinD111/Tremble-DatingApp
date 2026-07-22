@@ -180,6 +180,11 @@ service cloud.firestore {
       allow create, delete: if false;
     }
 
+    // FINDER — raw coordinates are accessible only through the Admin SDK.
+    match /matches/{matchId}/finder/{uid} {
+      allow read, write: if false;
+    }
+
     // WAVES — participants can read, only the sender can create, no mutation.
     match /waves/{waveId} {
       allow read: if isWaveParticipant(resource.data);
