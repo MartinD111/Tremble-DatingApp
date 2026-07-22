@@ -14,6 +14,7 @@ const mockMessagingSend = jest.fn<(message: unknown) => Promise<string>>();
 const mockSendMatchNotificationEmail = jest.fn<() => Promise<void>>();
 const mockTransactionSet = jest.fn();
 const mockTransactionUpdate = jest.fn();
+const mockTransactionDelete = jest.fn();
 const mockOnDocumentCreated = jest.fn((_: unknown, handler: unknown) => handler);
 const mockTimestampFromMillis = jest.fn((millis: number) => ({
     toMillis: () => millis,
@@ -138,7 +139,12 @@ function setupWaveTriggerDb(options: {
     reciprocalCreatedAt?: Date;
     profileGate?: Promise<void>;
     existingMatchOwnerWaveId?: string;
-    existingMatch?: { ownerWaveId?: string; status?: string; createdAt?: Date };
+    existingMatch?: {
+        ownerWaveId?: string;
+        status?: string;
+        createdAt?: Date;
+        finderOptIn?: Record<string, boolean>;
+    };
 } = {}): {
     where: jest.Mock;
     orderBy: jest.Mock;
@@ -147,7 +153,17 @@ function setupWaveTriggerDb(options: {
     const sender = options.sender ?? defaultSender;
     const receiver = options.receiver ?? defaultReceiver;
     const reciprocalRef = { kind: "reciprocal", path: "waves/reciprocal-wave" };
-    const matchRef = { kind: "match", path: "matches/senderUid_receiverUid" };
+    const matchRef = {
+        kind: "match",
+        path: "matches/senderUid_receiverUid",
+        collection: jest.fn((name: string) => ({
+            doc: jest.fn((uid: string) => ({
+                kind: name,
+                uid,
+                path: `matches/senderUid_receiverUid/${name}/${uid}`,
+            })),
+        })),
+    };
     const senderRef = { kind: "user", uid: "senderUid", path: "users/senderUid" };
     const receiverRef = { kind: "user", uid: "receiverUid", path: "users/receiverUid" };
     const whereCalls: Array<[unknown, unknown, unknown]> = [];
@@ -222,6 +238,7 @@ function setupWaveTriggerDb(options: {
                                 notificationOwnerWaveId:
                                     options.existingMatch!.ownerWaveId,
                                 status: options.existingMatch!.status,
+                                finderOptIn: options.existingMatch!.finderOptIn,
                                 createdAt: options.existingMatch!.createdAt
                                     ? { toDate: () => options.existingMatch!.createdAt }
                                     : undefined,
@@ -242,7 +259,7 @@ function setupWaveTriggerDb(options: {
             }),
             set: mockTransactionSet,
             update: mockTransactionUpdate,
-            delete: jest.fn(),
+            delete: mockTransactionDelete,
         };
         return (callback as (transaction: unknown) => Promise<unknown>)(transaction);
     });
@@ -1179,6 +1196,7 @@ describe("Matches Module", () => {
             mockSendMatchNotificationEmail.mockReset();
             mockTransactionSet.mockReset();
             mockTransactionUpdate.mockReset();
+            mockTransactionDelete.mockReset();
             logSpy = jest.spyOn(console, "log").mockImplementation(() => undefined);
         });
 
@@ -1235,6 +1253,36 @@ describe("Matches Module", () => {
                     }),
                 );
                 expect(mockMessagingSend).toHaveBeenCalled();
+            });
+
+        it("clears prior finder consent and coordinates on immediate re-engagement",
+            async () => {
+                setupWaveTriggerDb({
+                    reciprocal: () => true,
+                    existingMatch: {
+                        ownerWaveId: "old-wave",
+                        status: "found",
+                        finderOptIn: { senderUid: true, receiverUid: true },
+                    },
+                });
+                mockMessagingSend.mockResolvedValue("message-id");
+
+                await invokeWaveTrigger();
+
+                expect(mockTransactionUpdate).toHaveBeenCalledWith(
+                    expect.anything(),
+                    expect.objectContaining({ finderOptIn: "DELETE_FIELD" }),
+                );
+                expect(mockTransactionDelete).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        path: "matches/senderUid_receiverUid/finder/senderUid",
+                    }),
+                );
+                expect(mockTransactionDelete).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        path: "matches/senderUid_receiverUid/finder/receiverUid",
+                    }),
+                );
             });
 
         it("does NOT restart an in-flight window (same-burst reciprocal wave)",

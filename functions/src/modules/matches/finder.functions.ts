@@ -3,6 +3,7 @@ import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { z } from "zod";
 import { ENFORCE_APP_CHECK } from "../../config/env";
 import { requireAuth } from "../../middleware/authGuard";
+import { checkRateLimit } from "../../middleware/rateLimit";
 import { validateRequest } from "../../middleware/validate";
 import { computeBearing, haversineMeters } from "../proximity/bearing";
 
@@ -24,7 +25,10 @@ type FinderResponse =
     | { partnerSharing: true; bearing: number; distanceM: number };
 
 function millis(value: unknown): number | null {
-    if (value instanceof Date) return value.getTime();
+    if (value instanceof Date) {
+        const result = value.getTime();
+        return Number.isFinite(result) ? result : null;
+    }
     if (value && typeof value === "object" && "toMillis" in value) {
         const toMillis = (value as { toMillis?: unknown }).toMillis;
         if (typeof toMillis === "function") {
@@ -36,7 +40,9 @@ function millis(value: unknown): number | null {
         const toDate = (value as { toDate?: unknown }).toDate;
         if (typeof toDate === "function") {
             const result = toDate.call(value);
-            return result instanceof Date ? result.getTime() : null;
+            if (!(result instanceof Date)) return null;
+            const resultMillis = result.getTime();
+            return Number.isFinite(resultMillis) ? resultMillis : null;
         }
     }
     return null;
@@ -46,6 +52,10 @@ export const updateFinderLocation = onCall(
     { maxInstances: 100, enforceAppCheck: ENFORCE_APP_CHECK, region: "europe-west1" },
     async (request): Promise<FinderResponse> => {
         const callerUid = requireAuth(request);
+        await checkRateLimit(callerUid, "updateFinderLocation", {
+            maxRequests: 30,
+            windowMs: 60_000,
+        });
         const data = validateRequest(updateFinderLocationSchema, request.data);
         const matchRef = db.collection("matches").doc(data.matchId);
         const callerFinderRef = matchRef.collection("finder").doc(callerUid);
@@ -118,12 +128,22 @@ export const updateFinderLocation = onCall(
             if (!partnerSnapshot.exists) {
                 return { partnerSharing: false, reason: "partner_stale" };
             }
-            if (typeof partner?.accuracy !== "number" || partner.accuracy > MAX_ACCURACY_METERS) {
+            if (
+                typeof partner?.accuracy !== "number"
+                || !Number.isFinite(partner.accuracy)
+                || partner.accuracy < 0
+                || partner.accuracy > MAX_ACCURACY_METERS
+            ) {
                 return { partnerSharing: false, reason: "poor_accuracy" };
             }
 
             const partnerUpdatedAtMs = millis(partner.updatedAt);
-            if (partnerUpdatedAtMs === null || now - partnerUpdatedAtMs > PARTNER_FRESHNESS_MS) {
+            const partnerAgeMs = partnerUpdatedAtMs === null ? null : now - partnerUpdatedAtMs;
+            if (
+                partnerAgeMs === null
+                || partnerAgeMs < 0
+                || partnerAgeMs > PARTNER_FRESHNESS_MS
+            ) {
                 return { partnerSharing: false, reason: "partner_stale" };
             }
             if (

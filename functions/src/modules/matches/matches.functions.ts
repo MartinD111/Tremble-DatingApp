@@ -647,8 +647,12 @@ export const onWaveCreated = onDocumentCreated(
                         seenBy: [],
                         isFound: FieldValue.delete(),
                         foundAt: FieldValue.delete(),
+                        finderOptIn: FieldValue.delete(),
                         notificationOwnerWaveId: waveId,
                     });
+                    for (const uid of uids) {
+                        transaction.delete(matchRef.collection("finder").doc(uid));
+                    }
                     transaction.delete(snapshot.ref);
                     if (reciprocalWaveRef) transaction.delete(reciprocalWaveRef);
                     return true;

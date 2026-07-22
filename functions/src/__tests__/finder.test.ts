@@ -11,6 +11,7 @@ const mockOnCall = jest.fn((options: unknown, handler: unknown) => {
     return handler;
 });
 const mockRequireAuth = jest.fn<() => string>();
+const mockCheckRateLimit = jest.fn<() => Promise<void>>();
 const mockTimestampFromMillis = jest.fn((millis: number) => ({
     toDate: () => new Date(millis),
     toMillis: () => millis,
@@ -107,6 +108,10 @@ jest.mock("../../src/middleware/authGuard", () => ({
     requireAuth: mockRequireAuth,
 }));
 
+jest.mock("../../src/middleware/rateLimit", () => ({
+    checkRateLimit: mockCheckRateLimit,
+}));
+
 jest.mock("../../src/config/env", () => ({
     ENFORCE_APP_CHECK: true,
 }));
@@ -153,6 +158,7 @@ describe("updateFinderLocation", () => {
         jest.clearAllMocks();
         jest.useFakeTimers().setSystemTime(NOW_MS);
         mockRequireAuth.mockReturnValue(CALLER_UID);
+        mockCheckRateLimit.mockResolvedValue(undefined);
         matchExists = true;
         matchData = {
             userIds: [CALLER_UID, PARTNER_UID],
@@ -179,6 +185,19 @@ describe("updateFinderLocation", () => {
             enforceAppCheck: true,
             region: "europe-west1",
         }));
+    });
+
+    it("rate-limits the caller with a static cadence-aware endpoint before Firestore", async () => {
+        await invoke(request());
+
+        expect(mockCheckRateLimit).toHaveBeenCalledWith(
+            CALLER_UID,
+            "updateFinderLocation",
+            { maxRequests: 30, windowMs: 60_000 },
+        );
+        expect(mockCheckRateLimit.mock.invocationCallOrder[0]).toBeLessThan(
+            mockDb.runTransaction.mock.invocationCallOrder[0],
+        );
     });
 
     it("returns only rounded bearing and distance when both participants share fresh accurate locations", async () => {
@@ -252,6 +271,16 @@ describe("updateFinderLocation", () => {
         expect(callerSet).not.toHaveBeenCalled();
     });
 
+    it("fails closed for a malformed match expiry", async () => {
+        matchData.expiresAt = new Date(Number.NaN);
+
+        const result = await invoke(request());
+
+        expect(result).toEqual({ partnerSharing: false, reason: "window_over" });
+        expect(matchUpdate).not.toHaveBeenCalled();
+        expect(callerSet).not.toHaveBeenCalled();
+    });
+
     it("rechecks expiry when Firestore retries the transaction", async () => {
         matchData.expiresAt = new Date(NOW_MS + 1);
         mockDb.runTransaction.mockImplementationOnce(async (handler) => {
@@ -309,6 +338,18 @@ describe("updateFinderLocation", () => {
         expect(callerDelete).toHaveBeenCalledTimes(1);
     });
 
+    it("allows a found-match participant to revoke sharing", async () => {
+        matchData.status = "found";
+
+        const result = await invoke(request({ optIn: false }));
+
+        expect(result).toEqual({ partnerSharing: false });
+        expect(matchUpdate).toHaveBeenCalledWith({
+            [`finderOptIn.${CALLER_UID}`]: "DELETE_FIELD",
+        });
+        expect(callerDelete).toHaveBeenCalledTimes(1);
+    });
+
     it("preserves opt-in but never stores a caller coordinate with accuracy over 30m", async () => {
         const result = await invoke(request({ accuracy: 30.01 }));
 
@@ -327,6 +368,20 @@ describe("updateFinderLocation", () => {
         expectExactKeys(result, ["partnerSharing", "reason"]);
     });
 
+    it.each([
+        ["negative", -1],
+        ["NaN", Number.NaN],
+        ["negative infinity", Number.NEGATIVE_INFINITY],
+        ["malformed", "unknown"],
+    ])("fails closed for %s partner accuracy", async (_label, accuracy) => {
+        partnerData = { ...partnerData, accuracy };
+
+        const result = await invoke(request());
+
+        expect(result).toEqual({ partnerSharing: false, reason: "poor_accuracy" });
+        expectExactKeys(result, ["partnerSharing", "reason"]);
+    });
+
     it("treats a partner coordinate exactly ten seconds old as fresh", async () => {
         partnerData = {
             ...partnerData,
@@ -336,6 +391,30 @@ describe("updateFinderLocation", () => {
         const result = await invoke(request());
 
         expect(result.partnerSharing).toBe(true);
+    });
+
+    it("rejects a future-dated partner coordinate as stale", async () => {
+        partnerData = {
+            ...partnerData,
+            updatedAt: mockTimestampFromMillis(NOW_MS + 1),
+        };
+
+        const result = await invoke(request());
+
+        expect(result).toEqual({ partnerSharing: false, reason: "partner_stale" });
+        expectExactKeys(result, ["partnerSharing", "reason"]);
+    });
+
+    it("rejects a malformed partner timestamp as stale", async () => {
+        partnerData = {
+            ...partnerData,
+            updatedAt: new Date(Number.NaN),
+        };
+
+        const result = await invoke(request());
+
+        expect(result).toEqual({ partnerSharing: false, reason: "partner_stale" });
+        expectExactKeys(result, ["partnerSharing", "reason"]);
     });
 
     it("normalizes a rounded north-by-west bearing to the 0-359 range", async () => {
