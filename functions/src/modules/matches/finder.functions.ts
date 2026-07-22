@@ -95,9 +95,14 @@ export const updateFinderLocation = onCall(
                 return { partnerSharing: false, reason: "window_over" };
             }
 
+            // Only write the opt-in flag when it actually changes. The ~3s
+            // polling cadence would otherwise bump the match doc on every
+            // call, firing client snapshots that rebuild the radar
+            // controllers and blank the dot mid-session.
             const optInUpdate = { [`finderOptIn.${callerUid}`]: true };
+            const callerAlreadyOptedIn = match?.finderOptIn?.[callerUid] === true;
             if (data.accuracy > MAX_ACCURACY_METERS) {
-                transaction.update(matchRef, optInUpdate);
+                if (!callerAlreadyOptedIn) transaction.update(matchRef, optInUpdate);
                 transaction.delete(callerFinderRef);
                 return { partnerSharing: false, reason: "poor_accuracy" };
             }
@@ -109,7 +114,7 @@ export const updateFinderLocation = onCall(
 
             const partnerOptedIn = match?.finderOptIn?.[partnerUid] === true;
             if (!partnerOptedIn) {
-                transaction.update(matchRef, optInUpdate);
+                if (!callerAlreadyOptedIn) transaction.update(matchRef, optInUpdate);
                 transaction.set(callerFinderRef, {
                     lat: data.lat,
                     lng: data.lng,
@@ -123,7 +128,7 @@ export const updateFinderLocation = onCall(
             const partnerFinderRef = matchRef.collection("finder").doc(partnerUid);
             const partnerSnapshot = await transaction.get(partnerFinderRef);
 
-            transaction.update(matchRef, optInUpdate);
+            if (!callerAlreadyOptedIn) transaction.update(matchRef, optInUpdate);
             transaction.set(callerFinderRef, {
                 lat: data.lat,
                 lng: data.lng,

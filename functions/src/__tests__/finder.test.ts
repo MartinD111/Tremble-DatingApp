@@ -299,6 +299,39 @@ describe("updateFinderLocation", () => {
         expect(expireAt.toMillis()).toBe(NOW_MS + 120_000);
     });
 
+    it("steady-state poll skips the redundant match write once the caller is opted in", async () => {
+        // Regression: an unconditional finderOptIn write on every ~3s poll
+        // bumps the match doc version, firing client snapshots that rebuild
+        // SonarPingController and blank the radar dot mid-session.
+        matchData.finderOptIn = { [CALLER_UID]: true, [PARTNER_UID]: true };
+
+        const result = await invoke(request());
+
+        expect(result.partnerSharing).toBe(true);
+        expect(matchUpdate).not.toHaveBeenCalled();
+        expect(callerSet).toHaveBeenCalledTimes(1);
+    });
+
+    it("steady-state partner_not_opted poll also skips the match write", async () => {
+        matchData.finderOptIn = { [CALLER_UID]: true };
+
+        const result = await invoke(request());
+
+        expect(result).toEqual({ partnerSharing: false, reason: "partner_not_opted" });
+        expect(matchUpdate).not.toHaveBeenCalled();
+        expect(callerSet).toHaveBeenCalledTimes(1);
+    });
+
+    it("steady-state poor-accuracy poll skips the match write while deleting the coordinate", async () => {
+        matchData.finderOptIn = { [CALLER_UID]: true, [PARTNER_UID]: true };
+
+        const result = await invoke(request({ accuracy: 30.01 }));
+
+        expect(result).toEqual({ partnerSharing: false, reason: "poor_accuracy" });
+        expect(matchUpdate).not.toHaveBeenCalled();
+        expect(callerDelete).toHaveBeenCalledTimes(1);
+    });
+
     it("returns partner_not_opted with an exact safe response while retaining the caller update", async () => {
         matchData.finderOptIn = {};
 
