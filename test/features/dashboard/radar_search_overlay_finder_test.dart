@@ -155,4 +155,43 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
   });
+
+  testWidgets('a transient interruption (inactive) does NOT revoke the session',
+      (tester) async {
+    final finder = _FakeFinder(
+      const FinderState.active(
+        FinderReading(partnerSharing: true, bearing: 90, distanceM: 24),
+      ),
+    );
+    await tester.pumpWidget(_wrap(_session(), [
+      preciseFinderControllerProvider.overrideWith(() => finder),
+    ]));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // Incoming-call banner / Control Center / biometric prompt → inactive,
+    // while the user is still in the app. Sharing must survive it.
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+
+    expect(finder.stopCalls, 0);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+  });
+
+  testWidgets('the opt-in CTA keeps a 48dp minimum tap target', (tester) async {
+    final finder = _FakeFinder(const FinderState.idle());
+    await tester.pumpWidget(_wrap(_session(), [
+      preciseFinderControllerProvider.overrideWith(() => finder),
+    ]));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    final gesture = find.ancestor(
+      of: find.text('Help us find each other'),
+      matching: find.byType(GestureDetector),
+    );
+    final size = tester.getSize(gesture.first);
+    expect(size.height, greaterThanOrEqualTo(48));
+    expect(size.width, greaterThanOrEqualTo(48));
+  });
 }

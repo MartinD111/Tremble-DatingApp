@@ -86,10 +86,16 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
 
   /// Precise finding is strictly foreground-only (ADR-010): leaving the app
   /// revokes sharing immediately so no coordinate outlives the user's
-  /// attention. Re-opting in on return is one tap.
+  /// attention. Re-opting in on return is one tap. Only genuine backgrounding
+  /// counts — `inactive` fires for transient interruptions (incoming-call
+  /// banner, Control Center, biometric prompt) while the user is still in the
+  /// app, and must not revoke (same gate as `home_screen.dart`'s BLE stop).
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) return;
+    final isBackgrounded = state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached;
+    if (!isBackgrounded) return;
     if (widget.session.matchId == null) return;
     unawaited(ref.read(preciseFinderControllerProvider.notifier).stop());
   }
@@ -277,26 +283,33 @@ class _RadarSearchOverlayState extends ConsumerState<RadarSearchOverlay>
                   .optInAndStart(matchId),
             ),
             behavior: HitTestBehavior.opaque,
-            child: GlassCard(
-              opacity: 0.18,
-              borderRadius: 100,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(LucideIcons.locateFixed,
-                      size: 14, color: colorScheme.primary),
-                  const SizedBox(width: 6),
-                  Text(
-                    t('finder_cta', lang),
-                    style: GoogleFonts.instrumentSans(
-                      color: colorScheme.onSurface,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.4,
+            // The visual pill is slimmer than 48dp; the constrained wrapper
+            // guarantees the minimum touch target around it.
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              alignment: Alignment.center,
+              child: GlassCard(
+                opacity: 0.18,
+                borderRadius: 100,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(LucideIcons.locateFixed,
+                        size: 14, color: colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      t('finder_cta', lang),
+                      style: GoogleFonts.instrumentSans(
+                        color: colorScheme.onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
