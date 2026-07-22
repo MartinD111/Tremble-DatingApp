@@ -565,6 +565,10 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
   }
 
   Widget _buildFrontFace(String? photoUrl, String name) {
+    final trimmedName = name.trim();
+    final hasPhoto = photoUrl != null && photoUrl.trim().isNotEmpty;
+    final hasInitial = !_isPlaceholderRevealName(trimmedName);
+
     return Container(
       width: 188,
       height: 188,
@@ -579,25 +583,21 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
       child: ClipOval(
         child: Stack(
           children: [
-            if (photoUrl != null)
+            if (hasPhoto)
               CachedNetworkImage(
                 imageUrl: photoUrl,
                 width: 188,
                 height: 188,
                 fit: BoxFit.cover,
+                placeholder: (_, __) => _buildAvatarImagePlaceholder(),
+                errorWidget: (_, __, ___) => hasInitial
+                    ? _buildAvatarInitial(trimmedName)
+                    : _buildAvatarLoadingIndicator(),
               )
+            else if (hasInitial)
+              _buildAvatarInitial(trimmedName)
             else
-              Center(
-                child: Text(
-                  name.isNotEmpty ? name[0].toUpperCase() : '?',
-                  style: GoogleFonts.playfairDisplay(
-                    fontSize: 92,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    height: 1,
-                  ),
-                ),
-              ),
+              _buildAvatarLoadingIndicator(),
             // Inner highlight shimmer
             Positioned.fill(
               child: DecoratedBox(
@@ -614,6 +614,60 @@ class _MatchRevealScreenState extends ConsumerState<MatchRevealScreen>
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _isPlaceholderRevealName(String name) {
+    final normalized = name.toLowerCase();
+    return normalized.isEmpty ||
+        normalized == '?' ||
+        normalized == 'unknown' ||
+        normalized == 'neznano' ||
+        normalized == 'someone';
+  }
+
+  Widget _buildAvatarInitial(String name) {
+    return Center(
+      child: Text(
+        name.characters.first.toUpperCase(),
+        key: const Key('reveal-avatar-initial'),
+        style: GoogleFonts.playfairDisplay(
+          fontSize: 92,
+          fontWeight: FontWeight.w900,
+          color: Colors.white,
+          height: 1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarLoadingIndicator() {
+    return Center(
+      child: SizedBox(
+        key: const Key('reveal-avatar-loading'),
+        width: 30,
+        height: 30,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.4,
+          color: Colors.white.withValues(alpha: 0.82),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarImagePlaceholder() {
+    return const DecoratedBox(
+      key: Key('reveal-avatar-image-placeholder'),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF3C7F62),
+            Color(0xFF1F5D45),
           ],
         ),
       ),
