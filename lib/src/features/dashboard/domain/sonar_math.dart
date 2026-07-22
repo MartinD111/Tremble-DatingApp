@@ -37,6 +37,12 @@ double dotAngle({required double bearingDeg, required double headingDeg}) {
   return _wrapTwoPi(relativeRad - math.pi / 2);
 }
 
+/// Radar radius (0 = center, 1 = edge) for a precise partner distance in
+/// meters. The precise arrow owns roughly the final approach, so the radar's
+/// full scale is [fullScaleMeters]; anything beyond it pins to the edge.
+double preciseRadius(double distanceM, {double fullScaleMeters = 75}) =>
+    (distanceM / fullScaleMeters).clamp(0.0, 1.0);
+
 /// Angular exponential moving average for the noisy magnetometer heading.
 ///
 /// Blends [newDeg] into [prevDeg] by [alpha] (0–1; higher = snappier) taking

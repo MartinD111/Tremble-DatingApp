@@ -93,4 +93,26 @@ void main() {
       expect(v, lessThan(360));
     });
   });
+
+  group('preciseRadius', () {
+    test('maps 0m to the center', () {
+      expect(preciseRadius(0), 0.0);
+    });
+
+    test('maps half the full scale to the middle of the radar', () {
+      expect(preciseRadius(37.5), closeTo(0.5, 1e-9));
+    });
+
+    test('maps the full scale to the edge', () {
+      expect(preciseRadius(75), 1.0);
+    });
+
+    test('clamps distances beyond the full scale to the edge', () {
+      expect(preciseRadius(200), 1.0);
+    });
+
+    test('clamps negative distances to the center', () {
+      expect(preciseRadius(-5), 0.0);
+    });
+  });
 }

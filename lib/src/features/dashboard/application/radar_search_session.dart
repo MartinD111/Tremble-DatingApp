@@ -19,6 +19,11 @@ class RadarSearchSession {
   /// dev simulation with no real partner uid) → the intercept is hidden.
   final String? partnerUid;
 
+  /// The live match's id. Drives the precise turn-to-find opt-in (ADR-010).
+  /// Null when there is no real match window (dev simulation) → the finder
+  /// opt-in is hidden.
+  final String? matchId;
+
   /// Caller invokes this when the user wants to terminate the search
   /// successfully — "Found each other" or "Stop Search".
   ///
@@ -32,6 +37,7 @@ class RadarSearchSession {
     required this.expiresAt,
     required this.onStop,
     this.partnerUid,
+    this.matchId,
     this.showMutualFlash = false,
   });
 }
