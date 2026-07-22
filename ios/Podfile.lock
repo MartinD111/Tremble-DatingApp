@@ -1353,6 +1353,8 @@ PODS:
   - flutter_blue_plus_darwin (0.0.2):
     - Flutter
     - FlutterMacOS
+  - flutter_compass_v2 (0.0.1):
+    - Flutter
   - flutter_contacts (0.0.1):
     - Flutter
   - flutter_image_compress_common (1.0.0):
@@ -1596,6 +1598,7 @@ DEPENDENCIES:
   - flutter_background_service_ios (from `.symlinks/plugins/flutter_background_service_ios/ios`)
   - flutter_ble_peripheral (from `.symlinks/plugins/flutter_ble_peripheral/darwin`)
   - flutter_blue_plus_darwin (from `.symlinks/plugins/flutter_blue_plus_darwin/darwin`)
+  - flutter_compass_v2 (from `.symlinks/plugins/flutter_compass_v2/ios`)
   - flutter_contacts (from `.symlinks/plugins/flutter_contacts/ios`)
   - flutter_image_compress_common (from `.symlinks/plugins/flutter_image_compress_common/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
@@ -1692,6 +1695,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_ble_peripheral/darwin"
   flutter_blue_plus_darwin:
     :path: ".symlinks/plugins/flutter_blue_plus_darwin/darwin"
+  flutter_compass_v2:
+    :path: ".symlinks/plugins/flutter_compass_v2/ios"
   flutter_contacts:
     :path: ".symlinks/plugins/flutter_contacts/ios"
   flutter_image_compress_common:
@@ -1768,6 +1773,7 @@ SPEC CHECKSUMS:
   flutter_background_service_ios: 00d31bdff7b4bfe06d32375df358abe0329cf87e
   flutter_ble_peripheral: b141df08802a7f8be87a3fcdd1e04b933a5c5a40
   flutter_blue_plus_darwin: 20a08bfeaa0f7804d524858d3d8744bcc1b6dbc3
+  flutter_compass_v2: bdaac539c444ca34617debfa444b037c30be6e54
   flutter_contacts: 2ec1d6b62ca2869c3bbb3871bd74d4e3ef157135
   flutter_image_compress_common: 1697a328fd72bfb335507c6bca1a65fa5ad87df1
   flutter_local_notifications: ad39620c743ea4c15127860f4b5641649a988100
