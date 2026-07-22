@@ -17,7 +17,7 @@ const updateFinderLocationSchema = z.object({
     windowId: z.string().min(1).max(128).regex(/^[a-zA-Z0-9_-]+$/),
     lat: z.number().min(-90).max(90),
     lng: z.number().min(-180).max(180),
-    accuracy: z.number().min(0),
+    accuracy: z.number().finite().min(0),
     optIn: z.boolean(),
 }).strict();
 

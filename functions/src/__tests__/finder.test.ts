@@ -587,4 +587,14 @@ describe("updateFinderLocation", () => {
 
         expect(mockDb.runTransaction).not.toHaveBeenCalled();
     });
+
+    it("rejects positive Infinity caller accuracy before rate limiting or Firestore access", async () => {
+        await expect(invoke(request({ accuracy: Number.POSITIVE_INFINITY }))).rejects.toMatchObject({
+            code: "invalid-argument",
+        });
+
+        expect(mockCheckRateLimit).not.toHaveBeenCalled();
+        expect(mockDb.collection).not.toHaveBeenCalled();
+        expect(mockDb.runTransaction).not.toHaveBeenCalled();
+    });
 });
