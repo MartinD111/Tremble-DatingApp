@@ -1309,7 +1309,7 @@ describe("Matches Module", () => {
     // returned permission-denied and crashed the trembling window. These
     // callables perform the writes via the Admin SDK after a participant check.
     describe("markMatchFound", () => {
-        it("sets found status + caller cooldown when the caller is a participant", async () => {
+        it("sets found status, purges all finder data, and stamps caller cooldown", async () => {
             const authGuard = await import("../../src/middleware/authGuard");
             const validate = await import("../../src/middleware/validate");
             const { markMatchFound } = await import("../../src/modules/matches/matches.functions");
@@ -1323,10 +1323,33 @@ describe("Matches Module", () => {
                 exists: true,
                 data: () => ({ userIds: ["userA", "userB"] }),
             }));
+            const finderRefs = [
+                { path: "matches/userA_userB/finder/userA" },
+                { path: "matches/userA_userB/finder/userB" },
+                { path: "matches/userA_userB/finder/stale-extra-doc" },
+            ];
+            const finderGet = jest.fn(async () => ({
+                docs: finderRefs.map((ref) => ({ ref })),
+            }));
+            const finderCollection = { get: finderGet };
+            const purgeUpdate = jest.fn();
+            const purgeDelete = jest.fn();
+            const purgeCommit = jest.fn(async () => undefined);
+            mockDb.batch.mockReturnValue({
+                update: purgeUpdate,
+                delete: purgeDelete,
+                commit: purgeCommit,
+            });
 
             mockDb.collection.mockImplementation((name: unknown) => {
                 if (name === "matches") {
-                    return { doc: jest.fn(() => ({ get: matchGet, update: matchUpdate })) };
+                    return {
+                        doc: jest.fn(() => ({
+                            get: matchGet,
+                            update: matchUpdate,
+                            collection: jest.fn(() => finderCollection),
+                        })),
+                    };
                 }
                 if (name === "users") {
                     return { doc: jest.fn(() => ({ update: userUpdate })) };
@@ -1340,15 +1363,83 @@ describe("Matches Module", () => {
                 data: { matchId: "userA_userB" },
             } as never);
 
-            expect(result).toMatchObject({ success: true });
+            expect(result).toEqual({ success: true });
             expect(matchUpdate).toHaveBeenCalledWith(expect.objectContaining({
                 status: "found",
                 isFound: true,
                 foundAt: "SERVER_TIMESTAMP",
             }));
+            expect(finderGet).toHaveBeenCalledTimes(1);
+            expect(purgeUpdate).toHaveBeenCalledWith(
+                expect.anything(),
+                { finderOptIn: "DELETE_FIELD" },
+            );
+            expect(purgeDelete.mock.calls.map(([ref]) => ref)).toEqual(finderRefs);
+            expect(purgeCommit).toHaveBeenCalledTimes(1);
             expect(userUpdate).toHaveBeenCalledWith(expect.objectContaining({
                 lastWaveFoundAt: "SERVER_TIMESTAMP",
             }));
+        });
+
+        it("retries the complete finder purge after a partial mark-found failure", async () => {
+            const authGuard = await import("../../src/middleware/authGuard");
+            const validate = await import("../../src/middleware/validate");
+            const { markMatchFound } = await import("../../src/modules/matches/matches.functions");
+
+            jest.mocked(authGuard.requireAuth).mockReturnValue("userA");
+            jest.mocked(validate.assertValidDocumentId).mockReturnValue("userA_userB");
+
+            const matchUpdate = jest.fn(async () => undefined);
+            const userUpdate = jest.fn(async () => undefined);
+            const matchGet = jest.fn(async () => ({
+                exists: true,
+                data: () => ({ userIds: ["userA", "userB"], status: "found" }),
+            }));
+            const finderRef = { path: "matches/userA_userB/finder/userB" };
+            const finderGet = jest.fn(async () => ({ docs: [{ ref: finderRef }] }));
+            const purgeUpdate = jest.fn();
+            const purgeDelete = jest.fn();
+            const purgeCommit = jest.fn<() => Promise<void>>()
+                .mockRejectedValueOnce(new Error("purge interrupted"))
+                .mockResolvedValueOnce(undefined);
+            mockDb.batch.mockImplementation(() => ({
+                update: purgeUpdate,
+                delete: purgeDelete,
+                commit: purgeCommit,
+            }));
+
+            mockDb.collection.mockImplementation((name: unknown) => {
+                if (name === "matches") {
+                    return {
+                        doc: jest.fn(() => ({
+                            get: matchGet,
+                            update: matchUpdate,
+                            collection: jest.fn(() => ({ get: finderGet })),
+                        })),
+                    };
+                }
+                if (name === "users") {
+                    return { doc: jest.fn(() => ({ update: userUpdate })) };
+                }
+                throw new Error(`Unexpected collection: ${String(name)}`);
+            });
+
+            const callable = markMatchFound as unknown as (r: unknown) => Promise<unknown>;
+            const request = {
+                auth: { uid: "userA", token: {} },
+                data: { matchId: "userA_userB" },
+            } as never;
+
+            await expect(callable(request)).rejects.toThrow("purge interrupted");
+            await expect(callable(request)).resolves.toEqual({ success: true });
+
+            expect(matchUpdate).toHaveBeenCalledTimes(2);
+            expect(finderGet).toHaveBeenCalledTimes(2);
+            expect(purgeUpdate).toHaveBeenCalledTimes(2);
+            expect(purgeDelete).toHaveBeenNthCalledWith(1, finderRef);
+            expect(purgeDelete).toHaveBeenNthCalledWith(2, finderRef);
+            expect(purgeCommit).toHaveBeenCalledTimes(2);
+            expect(userUpdate).toHaveBeenCalledTimes(1);
         });
 
         it("rejects a non-participant with permission-denied and writes nothing", async () => {

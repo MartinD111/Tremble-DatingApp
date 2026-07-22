@@ -421,6 +421,17 @@ export const markMatchFound = onCall(
                 isFound: true,
                 foundAt: FieldValue.serverTimestamp(),
             });
+
+            const finderSnapshot = await matchRef.collection("finder").get();
+            const finderPurge = db.batch();
+            finderPurge.update(matchRef, {
+                finderOptIn: FieldValue.delete(),
+            });
+            for (const finderDoc of finderSnapshot.docs) {
+                finderPurge.delete(finderDoc.ref);
+            }
+            await finderPurge.commit();
+
             await db.collection("users").doc(uid).update({
                 lastWaveFoundAt: FieldValue.serverTimestamp(),
             });
