@@ -1,5 +1,12 @@
 import 'dart:math' as math;
 
+/// Whether a coarse server bearing is useful at this distance.
+///
+/// Geohash-derived bearings are intentionally ignored at close range, where
+/// cell-centre error can point in a misleading direction.
+bool bearingIsMeaningful(String? distanceBucket) =>
+    distanceBucket == '~150m' || distanceBucket == 'far';
+
 /// Slow orbit angle (radians) used when no real bearing is available yet —
 /// the "distance known, direction searching" state. Completes one full sweep
 /// every [period]. Result is in `[0, 2π)`.

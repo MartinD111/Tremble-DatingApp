@@ -93,6 +93,7 @@ void main() {
       seenBy: const [],
       gestures: const {'partner': true, 'me': true},
       bearingFor: const {'': 90.0},
+      distanceBucket: '~150m',
     );
 
     final container = ProviderContainer(overrides: [
@@ -114,6 +115,51 @@ void main() {
     // bearing 90°, heading 0° → partner to the right → painter angle 0.
     expect(ping.angle, closeTo(0.0, 1e-6));
     expect(ping.angle, isNot(closeTo(2 * math.pi, 1e-6)));
+  });
+
+  test('ignores a coarse bearing at close range and keeps orbiting', () async {
+    final bleController = StreamController<Map<String, int>>.broadcast();
+    final compassController = StreamController<double?>.broadcast();
+    addTearDown(bleController.close);
+    addTearDown(compassController.close);
+
+    // If used, bearing 0° and heading 0° would place the dot at the top
+    // (3π/2). A close bucket must instead retain the near-zero orbit fallback.
+    final search = Match(
+      id: 'm1',
+      userIds: const ['partner', 'me'],
+      createdAt: DateTime(2026),
+      seenBy: const [],
+      gestures: const {'partner': true, 'me': true},
+      bearingFor: const {'': 0.0},
+      distanceBucket: 'close',
+    );
+
+    final container = ProviderContainer(overrides: [
+      bleServiceProvider.overrideWithValue(_FakeBle(bleController.stream)),
+      currentSearchProvider.overrideWithValue(search),
+      effectiveIsPremiumProvider.overrideWithValue(false),
+      authRepositoryProvider.overrideWithValue(_FakeAuthRepo()),
+      compassHeadingProvider.overrideWith((ref) => compassController.stream),
+    ]);
+    addTearDown(container.dispose);
+
+    final freshPing = Completer<SonarPing>();
+    final keepAlive = container.listen(sonarPingControllerProvider, (_, next) {
+      if (next.signalState == SonarSignalState.fresh &&
+          !freshPing.isCompleted) {
+        freshPing.complete(next);
+      }
+    });
+    addTearDown(keepAlive.close);
+
+    final headingReady = container.read(compassHeadingProvider.future);
+    compassController.add(0.0);
+    expect(await headingReady, 0.0);
+
+    bleController.add({'partner': -50});
+    final ping = await freshPing.future.timeout(const Duration(seconds: 1));
+    expect(ping.angle, isNot(closeTo(3 * math.pi / 2, 1e-6)));
   });
 
   test('stays empty when no search is active', () {

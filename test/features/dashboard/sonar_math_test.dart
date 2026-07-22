@@ -3,6 +3,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tremble/src/features/dashboard/domain/sonar_math.dart';
 
 void main() {
+  group('bearingIsMeaningful', () {
+    for (final bucket in ['~150m', 'far']) {
+      test('returns true for exact approach bucket $bucket', () {
+        expect(bearingIsMeaningful(bucket), isTrue);
+      });
+    }
+
+    for (final bucket in <String?>['close', '~50m', null, 'unknown']) {
+      test('returns false for non-approach bucket $bucket', () {
+        expect(bearingIsMeaningful(bucket), isFalse);
+      });
+    }
+  });
+
   group('orbitAngle', () {
     test('starts at 0', () {
       expect(orbitAngle(Duration.zero), closeTo(0.0, 1e-9));

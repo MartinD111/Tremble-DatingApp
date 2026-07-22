@@ -152,13 +152,15 @@ class SonarPingController extends _$SonarPingController {
     }
   }
 
-  /// The dot's screen angle: the real bearing (partner direction relative to
-  /// where the phone points) when both server bearing and compass heading are
-  /// available, otherwise the slow searching orbit.
+  /// The dot's screen angle: the coarse bearing (partner direction relative
+  /// to where the phone points) only when it is meaningful at approach range,
+  /// otherwise the slow searching orbit.
   double _currentAngle() {
     final bearing = _bearing;
     final heading = _heading;
-    if (bearing != null && heading != null) {
+    if (bearing != null &&
+        heading != null &&
+        bearingIsMeaningful(_distanceBucket)) {
       return dotAngle(bearingDeg: bearing, headingDeg: heading);
     }
     return orbitAngle(_orbit.elapsed);
