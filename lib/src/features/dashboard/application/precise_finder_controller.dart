@@ -114,6 +114,7 @@ class PreciseFinderController extends _$PreciseFinderController {
   bool _locationAvailable = false;
   bool _disposed = false;
   int _generation = 0;
+  int _locationEpoch = 0;
   int _cadenceDelayGeneration = 0;
   late FinderRepository _repository;
   late FinderLocationStream _locationStream;
@@ -138,12 +139,11 @@ class PreciseFinderController extends _$PreciseFinderController {
   }
 
   Future<void> optInAndStart(String matchId) async {
+    final generation = ++_generation;
     final previousStop = _stopFuture;
     if (previousStop != null) await previousStop;
-    if (_disposed) return;
-    if (_sessionActive) return;
+    if (_disposed || generation != _generation || _sessionActive) return;
 
-    final generation = ++_generation;
     state = const FinderState.waiting();
     await _coordinator.waitForCleanup(matchId);
     if (_disposed || generation != _generation || _sessionActive) return;
@@ -211,10 +211,14 @@ class PreciseFinderController extends _$PreciseFinderController {
     _cadenceDelay = null;
     _requestInFlight = true;
     _lastSentAt = _clock();
-    unawaited(_sendPosition(position, _generation));
+    unawaited(_sendPosition(position, _generation, _locationEpoch));
   }
 
-  Future<void> _sendPosition(Position position, int generation) async {
+  Future<void> _sendPosition(
+    Position position,
+    int generation,
+    int locationEpoch,
+  ) async {
     final done = Completer<void>();
     _requestDone = done.future;
     FinderReading? reading;
@@ -239,13 +243,17 @@ class PreciseFinderController extends _$PreciseFinderController {
 
     if (!_isCurrent(generation)) return;
 
-    if (requestError != null) {
-      state = FinderState.fallback(reason: 'callable');
-    } else if (reading?.reason == 'window_over') {
-      await stop();
-      return;
-    } else {
-      _applyReading(reading!);
+    final canApplyResult =
+        _locationAvailable && locationEpoch == _locationEpoch;
+    if (canApplyResult) {
+      if (requestError != null) {
+        state = FinderState.fallback(reason: 'callable');
+      } else if (reading?.reason == 'window_over') {
+        await stop();
+        return;
+      } else {
+        _applyReading(reading!);
+      }
     }
 
     if (_locationAvailable) _pendingPosition ??= _latestPosition;
@@ -320,6 +328,7 @@ class PreciseFinderController extends _$PreciseFinderController {
   void _handleLocationError(Object _) {
     if (!_sessionActive) return;
     _locationAvailable = false;
+    _locationEpoch++;
     _pendingPosition = null;
     _cancelCadenceDelay();
     state = FinderState.fallback(reason: 'location');
@@ -328,6 +337,7 @@ class PreciseFinderController extends _$PreciseFinderController {
   void _handleLocationDone() {
     if (!_sessionActive) return;
     _locationAvailable = false;
+    _locationEpoch++;
     _pendingPosition = null;
     _cancelCadenceDelay();
     state = FinderState.fallback(reason: 'location');
@@ -339,6 +349,8 @@ class PreciseFinderController extends _$PreciseFinderController {
   }
 
   Future<void> stop() {
+    // Invalidate activation work even when cleanup is already in progress.
+    _generation++;
     final existing = _stopFuture;
     if (existing != null) return existing;
     final completer = Completer<void>();
@@ -363,7 +375,6 @@ class PreciseFinderController extends _$PreciseFinderController {
   Future<void> _performStop() async {
     _sessionActive = false;
     _locationAvailable = false;
-    _generation++;
     _cancelCadenceDelay();
     _pendingPosition = null;
 

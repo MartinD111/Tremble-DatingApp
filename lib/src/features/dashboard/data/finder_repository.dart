@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _finderRegion = 'europe-west1';
 const _updateFinderLocation = 'updateFinderLocation';
+// Slightly above Earth's maximum surface distance (~20,015 km).
+const maxFinderDistanceMeters = 20100000.0;
 const _allowedResponseKeys = <String>{
   'partnerSharing',
   'bearing',
@@ -44,7 +46,8 @@ class FinderReading {
         currentBearing < 360 &&
         currentDistance != null &&
         currentDistance.isFinite &&
-        currentDistance >= 0;
+        currentDistance >= 0 &&
+        currentDistance <= maxFinderDistanceMeters;
   }
 
   @override
@@ -185,7 +188,8 @@ class FirebaseFinderRepository implements FinderRepository {
           bearing < 0 ||
           bearing >= 360 ||
           distanceM == null ||
-          distanceM < 0) {
+          distanceM < 0 ||
+          distanceM > maxFinderDistanceMeters) {
         throw const FormatException('Invalid precise finder response.');
       }
       return FinderReading(

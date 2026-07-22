@@ -287,6 +287,69 @@ void main() {
         throwsFormatException,
       );
     });
+
+    test('rejects impossible distances but accepts the Earth-scale boundary',
+        () async {
+      final client = _FakeCallableClient();
+      final repository = FirebaseFinderRepository(
+        callableClient: client,
+        windowIdReader: (_) async => 'wave-window-1',
+      );
+
+      Future<FinderReading> updateWithDistance(double distanceM) {
+        client.response = <String, dynamic>{
+          'partnerSharing': true,
+          'bearing': 180,
+          'distanceM': distanceM,
+        };
+        return repository.updateLocation(
+          matchId: 'match-1',
+          windowId: 'wave-window-1',
+          latitude: 45.548,
+          longitude: 13.73,
+          accuracy: 8,
+          optIn: true,
+        );
+      }
+
+      for (final distance in <double>[
+        -1,
+        double.infinity,
+        double.nan,
+        20100000.001,
+      ]) {
+        await expectLater(updateWithDistance(distance), throwsFormatException);
+      }
+
+      final boundary = await updateWithDistance(20100000);
+      expect(boundary.distanceM, 20100000);
+      expect(boundary.hasPreciseData, isTrue);
+    });
+
+    test('rejects bearing 360', () async {
+      final client = _FakeCallableClient()
+        ..response = <String, dynamic>{
+          'partnerSharing': true,
+          'bearing': 360,
+          'distanceM': 24,
+        };
+      final repository = FirebaseFinderRepository(
+        callableClient: client,
+        windowIdReader: (_) async => 'wave-window-1',
+      );
+
+      await expectLater(
+        repository.updateLocation(
+          matchId: 'match-1',
+          windowId: 'wave-window-1',
+          latitude: 45.548,
+          longitude: 13.73,
+          accuracy: 8,
+          optIn: true,
+        ),
+        throwsFormatException,
+      );
+    });
   });
 
   group('PreciseFinderController', () {
@@ -614,6 +677,113 @@ void main() {
       );
     });
 
+    test('a response arriving after a location error cannot reactivate finder',
+        () async {
+      final harness = _harness();
+      addTearDown(harness.container.dispose);
+      addTearDown(harness.positions.close);
+      final keepAlive = harness.container.listen(
+        preciseFinderControllerProvider,
+        (_, __) {},
+      );
+      addTearDown(keepAlive.close);
+      final inFlight = Completer<FinderReading>();
+      harness.repository.responses
+        ..add(() => inFlight.future)
+        ..add(
+          () async => const FinderReading(
+            partnerSharing: true,
+            bearing: 90,
+            distanceM: 2,
+          ),
+        );
+
+      await harness.container
+          .read(preciseFinderControllerProvider.notifier)
+          .optInAndStart('match-1');
+      harness.positions.add(_position());
+      harness.positions.addError(Exception('GPS unavailable'));
+      await _flushAsync();
+
+      expect(
+        harness.container.read(preciseFinderControllerProvider),
+        FinderState.fallback(reason: 'location'),
+      );
+
+      inFlight.complete(
+        const FinderReading(
+          partnerSharing: true,
+          bearing: 180,
+          distanceM: 3,
+        ),
+      );
+      await _flushAsync();
+
+      expect(
+        harness.container.read(preciseFinderControllerProvider),
+        FinderState.fallback(reason: 'location'),
+      );
+      expect(harness.delay.durations, isEmpty);
+      expect(harness.repository.calls, hasLength(1));
+
+      harness.setNow(DateTime.utc(2026, 7, 22, 12, 0, 3));
+      harness.positions.add(_position(latitude: 45.549));
+      await _flushAsync();
+
+      expect(harness.repository.calls, hasLength(2));
+      expect(
+        harness.container.read(preciseFinderControllerProvider),
+        const FinderState.active(
+          FinderReading(
+            partnerSharing: true,
+            bearing: 90,
+            distanceM: 2,
+          ),
+        ),
+      );
+    });
+
+    test('a response arriving after location stream done cannot reactivate',
+        () async {
+      final harness = _harness();
+      addTearDown(harness.container.dispose);
+      final keepAlive = harness.container.listen(
+        preciseFinderControllerProvider,
+        (_, __) {},
+      );
+      addTearDown(keepAlive.close);
+      final inFlight = Completer<FinderReading>();
+      harness.repository.responses.add(() => inFlight.future);
+
+      await harness.container
+          .read(preciseFinderControllerProvider.notifier)
+          .optInAndStart('match-1');
+      harness.positions.add(_position());
+      await harness.positions.close();
+      await _flushAsync();
+
+      expect(
+        harness.container.read(preciseFinderControllerProvider),
+        FinderState.fallback(reason: 'location'),
+      );
+
+      inFlight.complete(
+        const FinderReading(
+          partnerSharing: true,
+          bearing: 180,
+          distanceM: 3,
+        ),
+      );
+      await _flushAsync();
+
+      expect(
+        harness.container.read(preciseFinderControllerProvider),
+        FinderState.fallback(reason: 'location'),
+      );
+      expect(harness.delay.durations, isEmpty);
+      expect(harness.repository.calls, hasLength(1));
+    });
+
     test('window_over stops, revokes, and never exposes precise data',
         () async {
       final harness = _harness();
@@ -750,6 +920,52 @@ void main() {
       await _flushAsync();
       expect(harness.repository.calls.last.windowId, 'wave-window-2');
       expect(harness.repository.calls.last.optIn, isTrue);
+    });
+
+    test('stop cancels an activation queued behind an existing cleanup',
+        () async {
+      final harness = _harness();
+      addTearDown(harness.container.dispose);
+      addTearDown(harness.positions.close);
+      final keepAlive = harness.container.listen(
+        preciseFinderControllerProvider,
+        (_, __) {},
+      );
+      addTearDown(keepAlive.close);
+      final revocation = Completer<FinderReading>();
+      harness.repository.responses
+        ..add(() async => const FinderReading(partnerSharing: false))
+        ..add(() => revocation.future);
+
+      final notifier =
+          harness.container.read(preciseFinderControllerProvider.notifier);
+      await notifier.optInAndStart('match-1');
+      harness.positions.add(_position());
+      await _flushAsync();
+
+      final firstStop = notifier.stop();
+      await _flushAsync();
+      expect(harness.repository.calls, hasLength(2));
+      expect(harness.repository.calls.last.optIn, isFalse);
+
+      harness.repository.windowId = 'wave-window-2';
+      final queuedActivation = notifier.optInAndStart('match-1');
+      final repeatedStop = notifier.stop();
+      revocation.complete(const FinderReading(partnerSharing: false));
+      await Future.wait([firstStop, repeatedStop, queuedActivation]);
+      await _flushAsync();
+
+      expect(
+        harness.repository.windowReadCount,
+        1,
+        reason: 'stop must invalidate activation queued behind old cleanup',
+      );
+      expect(harness.settings, hasLength(1));
+      expect(harness.repository.calls, hasLength(2));
+      expect(
+        harness.container.read(preciseFinderControllerProvider).status,
+        FinderStatus.stopped,
+      );
     });
 
     test('stream cancellation failure still revokes and exposes stopped',
