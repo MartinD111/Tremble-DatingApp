@@ -2,12 +2,43 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:geolocator/geolocator.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../features/map/domain/safe_zone_repository.dart';
 
 const geoServiceEffectivePremiumPrefsKey = 'geo_effective_is_premium';
+
+/// Attempts [write] up to [maxAttempts] times, backing off between attempts.
+///
+/// Returns true as soon as one attempt succeeds. When every attempt fails,
+/// reports the last error through [onFinalFailure] exactly once and returns
+/// false — it NEVER throws, because the caller (`GeoService.stop()`) must not
+/// crash toggle paths. [wait] is injectable so tests run without real delays.
+@visibleForTesting
+Future<bool> runRevocationWriteWithRetry(
+  Future<void> Function() write, {
+  int maxAttempts = 3,
+  Duration backoff = const Duration(milliseconds: 250),
+  Future<void> Function(Duration) wait = Future.delayed,
+  void Function(Object error, StackTrace stackTrace)? onFinalFailure,
+}) async {
+  for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await write();
+      return true;
+    } catch (error, stackTrace) {
+      if (attempt == maxAttempts) {
+        onFinalFailure?.call(error, stackTrace);
+        return false;
+      }
+      await wait(backoff * attempt);
+    }
+  }
+  return false;
+}
 
 /// Geo Service — uploads minimized location data to Firestore periodically.
 ///
@@ -75,6 +106,11 @@ class GeoService {
   }
 
   /// Stop all geo updates and mark user as inactive in Firestore.
+  ///
+  /// The revocation write is the MOST critical proximity write (Rule #105):
+  /// if it is lost the user stays discoverable, wave-able and matchable for
+  /// up to the 24h TTL. It retries before giving up and reports the final
+  /// failure to Sentry — but never throws into callers.
   Future<void> stop() async {
     await _positionSub?.cancel();
     _positionSub = null;
@@ -87,15 +123,20 @@ class GeoService {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
-    try {
-      await _firestore.collection('proximity').doc(uid).set({
+    await runRevocationWriteWithRetry(
+      () => _firestore.collection('proximity').doc(uid).set({
         'radarActive': false,
         'isActive': false,
         'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    } catch (_) {
-      // Non-critical — silently fail
-    }
+      }, SetOptions(merge: true)),
+      onFinalFailure: (error, stackTrace) {
+        unawaited(Sentry.captureException(
+          error,
+          stackTrace: stackTrace,
+          hint: Hint.withMap({'context': 'geo_revocation_write_failed'}),
+        ));
+      },
+    );
   }
 
   /// Returns whether geo is running in degraded (low power) mode.
