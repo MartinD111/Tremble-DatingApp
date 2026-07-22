@@ -23,6 +23,8 @@ import '../../matches/presentation/matches_screen.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/notification_service.dart'; // FCM Notifications
+import '../../../core/background_service.dart'
+    show persistRadarIntent; // Radar-intent mirror (Rule #105)
 import '../../../core/ble_service.dart'; // BLE must run in main isolate
 import '../../../core/ble_restore_service.dart'; // iOS BLE state restoration
 import '../../../core/geo_service.dart';
@@ -113,6 +115,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final current = ref.read(isScanningProvider);
       if (active == current) return; // already in sync
       ref.read(isScanningProvider.notifier).state = active;
+      // Mirror the native toggle into the Flutter-prefs radar intent so the
+      // FCM background handler sees the same truth (Rule #105).
+      unawaited(persistRadarIntent(active));
       if (active) {
         unawaited(
           _syncBackgroundEffectivePremium(ref.read(effectiveIsPremiumProvider)),
@@ -1097,6 +1102,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             final newState = !isScanning;
                             ref.read(isScanningProvider.notifier).state =
                                 newState;
+                            // Persist intent BEFORE starting/stopping so the
+                            // FCM background handler never reads a stale
+                            // value mid-transition (Rule #105).
+                            await persistRadarIntent(newState);
 
                             if (newState) {
                               if (kDebugMode) {
@@ -1664,6 +1673,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                       ref
                                           .read(isScanningProvider.notifier)
                                           .state = false;
+                                      unawaited(persistRadarIntent(false));
                                       BleService().stop();
                                       if (Platform.isAndroid) {
                                         RadarIntegrationService.instance

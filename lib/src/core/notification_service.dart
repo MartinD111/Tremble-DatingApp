@@ -16,14 +16,22 @@ import 'background_service.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // Background Message Handler — MUST be a top-level function.
 //
-// Message receipt is not user intent. This handler only refreshes proximity for
-// the two silent proximity wake types; notification actions are dispatched in
-// the foreground isolate from an explicit OS action identifier.
+// Message receipt is not user intent (Rule #105). Presence may only be
+// refreshed when the user's stored radar intent is ON — otherwise a stale
+// `isActive: true` proximity doc is kept fresh forever by the very
+// notifications it causes. Notification actions are dispatched in the
+// foreground isolate from an explicit OS action identifier.
 // ─────────────────────────────────────────────────────────────────────────────
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await processBackgroundNotificationData(
     message.data,
+    isRadarActive: () async {
+      final prefs = await SharedPreferences.getInstance();
+      // This isolate may outlive main-isolate writes — bypass the cache.
+      await prefs.reload();
+      return prefs.getBool(radarIntentPrefsKey) ?? false;
+    },
     refreshProximity: () async {
       final myUid = FirebaseAuth.instance.currentUser?.uid;
       if (myUid != null) {
@@ -50,11 +58,14 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 @visibleForTesting
 Future<void> processBackgroundNotificationData(
   Map<String, dynamic> data, {
+  required Future<bool> Function() isRadarActive,
   required Future<void> Function() refreshProximity,
 }) async {
   final type = data['type'];
   if (type == 'CROSSING_PATHS' || type == 'SECOND_ENCOUNTER') {
-    await refreshProximity();
+    if (await isRadarActive()) {
+      await refreshProximity();
+    }
   }
 }
 
