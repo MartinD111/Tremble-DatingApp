@@ -22,6 +22,26 @@ import { ENFORCE_APP_CHECK } from "../../config/env";
 
 const db = getFirestore();
 
+/**
+ * Freshness window for the sendWave radar gate — mirrors the
+ * scanProximityPairs discovery cutoff (proximity.functions.ts). A target
+ * whose presence is older than this is not discoverable, so it must not be
+ * wave-able either.
+ */
+export const RADAR_PRESENCE_FRESHNESS_MS = 2 * 60 * 1000;
+
+/** Duck-typed Timestamp → millis (null when absent or malformed). */
+function timestampToMillis(value: unknown): number | null {
+    if (
+        value
+        && typeof (value as { toMillis?: unknown }).toMillis === "function"
+    ) {
+        const millis = (value as { toMillis: () => number }).toMillis();
+        return Number.isFinite(millis) ? millis : null;
+    }
+    return null;
+}
+
 function logStructured(fields: Record<string, unknown>): void {
     console.log(JSON.stringify({
         timestamp: new Date().toISOString(),
@@ -342,6 +362,29 @@ export const sendWave = onCall(
         const targetBlockedIds: string[] = targetData?.blockedUserIds ?? [];
         if (targetBlockedIds.includes(uid)) {
             throw new HttpsError("permission-denied", "Cannot wave at this user.");
+        }
+
+        // Rule #105 defense-in-depth: radar off ⇒ invisible, unnotifiable,
+        // UNMATCHABLE. Discovery filtering alone is not enough — one stale
+        // proximity doc would make a radar-off user fully wave-able (and a
+        // wave-back would match them). Re-verify the target's CURRENT radar
+        // state with the same freshness window scanProximityPairs uses.
+        // Applies to wave-backs too: they go through this same callable.
+        const targetProximityDoc =
+            await db.collection("proximity").doc(targetUid).get();
+        const targetProximity = targetProximityDoc.data();
+        const targetPresenceMs = timestampToMillis(targetProximity?.updatedAt);
+        const targetRadarFresh =
+            targetProximityDoc.exists
+            && targetProximity?.radarActive === true
+            && targetPresenceMs !== null
+            && targetPresenceMs >= Date.now() - RADAR_PRESENCE_FRESHNESS_MS;
+        if (!targetRadarFresh) {
+            throw new HttpsError(
+                "failed-precondition",
+                "Target is not on the radar right now.",
+                { reason: "target_radar_off" }
+            );
         }
 
         // Soft DoS guard only. This is not the product mutual-wave entitlement.

@@ -1,9 +1,34 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/api_client.dart';
 
 part 'wave_repository.g.dart';
+
+/// Maps sendWave failures to user-facing messages. Returns the SAME instance
+/// when no mapping applies so callers can rethrow the original.
+@visibleForTesting
+TrembleApiException mapSendWaveException(TrembleApiException e) {
+  if (e.code == 'permission-denied') {
+    return TrembleApiException(
+      code: e.code,
+      message: "You can't wave at this person right now.",
+      details: e.details,
+    );
+  }
+  // Rule #105: server rejects waves at radar-off targets (defense-in-depth).
+  final details = e.details;
+  final reason = details is Map ? details['reason'] : null;
+  if (e.code == 'failed-precondition' && reason == 'target_radar_off') {
+    return TrembleApiException(
+      code: e.code,
+      message: "They're not on the radar right now.",
+      details: e.details,
+    );
+  }
+  return e;
+}
 
 class WaveRepository {
   final FirebaseFirestore _firestore;
@@ -23,14 +48,9 @@ class WaveRepository {
     } on AccountSuspendedException {
       rethrow;
     } on TrembleApiException catch (e) {
-      if (e.code == 'permission-denied') {
-        throw TrembleApiException(
-          code: e.code,
-          message: "You can't wave at this person right now.",
-          details: e.details,
-        );
-      }
-      rethrow;
+      final mapped = mapSendWaveException(e);
+      if (identical(mapped, e)) rethrow;
+      throw mapped;
     }
   }
 
